@@ -113,3 +113,4 @@ td>a{display:inline-block;padding:10px 0}
 .tabbar a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px}
 .hero2{grid-auto-columns:minmax(0,1fr)}.tile{overflow-wrap:anywhere}
 @media(max-width:760px){.nav .tabs{display:none}.nav{padding:8px 16px}}
+.side .strip{flex-direction:column}.side .sa{transform:rotate(90deg)}
