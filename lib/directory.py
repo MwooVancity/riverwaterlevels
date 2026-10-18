@@ -62,7 +62,7 @@ def conus_map(built, Gs, cap=120):
         shown += 1
     if not shown:
         return ""
-    key = '<div class="keyrow">Gauge colour, flow percentile for the date: <b class="d-lo"></b>below the 25th <b class="d-mid"></b>25th to 75th <b class="d-hi"></b>above the 75th <b class="d-na"></b>no percentile. %d gauges shown.</div>' % shown
+    key = '<div class="keyrow">Gauge colour, flow compared with past years on this date: <b class="d-lo"></b>below normal <b class="d-mid"></b>normal range <b class="d-hi"></b>above normal <b class="d-na"></b>no comparison available. %d gauges shown.</div>' % shown
     return ('<div class="card" style="margin-top:14px"><h2>Gauges on this site</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % (src, h, dots, key))
 
@@ -177,6 +177,18 @@ def prose_page(title, url, html_body, desc):
     return shell(title + " | " + BRAND, desc, url, '<div class="crumb"><a href="/">Home</a> / %s</div><div class="prose"><h1>%s</h1>%s</div>' % (esc(title), esc(title), html_body), ld=crumb_ld([("Home", "/"), (title, None)]))
 
 
+def status_page(built, Gs, built_at):
+    """Data freshness for every gauge on the site: the page a reader or the watchdog opens to see whether the numbers are current."""
+    trs = ""
+    for r in sorted(built, key=lambda r: -Gs[r["site"]]["age_min"]):
+        m = Gs[r["site"]]["age_min"]
+        cls = "fresh" if m <= 90 else "ageing" if m <= 360 else "stale"
+        trs += '<tr><td><a href="%s">%s</a></td><td>%s</td><td class="r"><span class="ab %s">%s</span></td></tr>' % (r["dashboard_url"], esc(river_at(r["river"], r["place"]) + ", " + r["state"]), esc(r["site"]), cls, ("%d min" % m) if m < 180 else ("%d h" % round(m / 60)))
+    body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Machine-readable: <a href="/status.json">status.json</a>.</p>'
+            '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>' % (esc(built_at), trs))
+    return prose_page("Data status", "/status/", body, "Age of the newest USGS reading at every gauge on River Water Levels, as of the last build.")
+
+
 def trust_pages(built_count, built_rows):
     t = {}
     t["/about/"] = prose_page("About", "/about/", (
@@ -195,7 +207,8 @@ def trust_pages(built_count, built_rows):
         ("cfs", "Cubic feet per second: the volume of water passing the gauge each second."),
         ("Gage height", "The height of the water surface above a fixed reference at the gauge, in feet. USGS spells it gage."),
         ("Percentile for date", "Where the current flow falls among the gauge's published daily percentiles for the same calendar date. Our estimate, interpolated between the USGS percentiles (5th, 10th, 20th, 25th, 50th, 75th, 80th, 90th, 95th)."),
-        ("Median for date", "The 50th percentile of flow for the calendar date over the gauge's record."),
+        ("Below normal, Normal range, Above normal", "The headline on each gauge page. It compares today's flow with the same calendar date in every year on record: Below normal means lower than three quarters of those years (under the 25th percentile), Normal range means between the 25th and 75th percentile, Above normal means higher than three quarters of them. Very low and Very high mean below the 5th or above the 95th percentile. The sentence under the headline states the same thing as a share of years."),
+        ("Median for date","The 50th percentile of flow for the calendar date over the gauge's record."),
         ("Provisional", "A USGS reading that has not yet been reviewed and may change."),
         ("Daily mean flow", "The average of the readings on one gauge-local date. Days with fewer than 80% of expected readings are marked partial."),
         ("Drainage area", "The land area, in square miles, that drains to the gauge."),

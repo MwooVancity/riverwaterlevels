@@ -123,7 +123,11 @@ def b_streamcat(G):
             ("pctwdwet2019ws", "Woody wetland, 2019", lambda x: "%.1f%%" % x), ("elevws", "Mean elevation", lambda x: "%s ft" % fmt(x * 3.28084)), ("precip8110ws", "Mean annual precipitation, 1981 to 2010", lambda x: "%.1f in" % (x / 25.4)),
             ("runoffws", "Mean annual runoff", lambda x: "%.1f in" % (x / 25.4)), ("bfiws", "Base-flow index", lambda x: "%.0f%%" % x), ("damdensws", "Dam density", lambda x: "%.3f per sq km" % x))
     rows = "".join(tr([lab, f(v[k])], right=(1,)) for k, lab, f in spec if k in v)
-    return block("watershed_characteristics", "Upstream watershed characteristics", "agency", table(["Measure (whole upstream watershed)", "Value"], rows, right=(1,)),
+    from lib import ui
+    pc = [(l, k) for k, l in (("pctimp2019ws", "Impervious surface, 2019"), ("pcturbmd2019ws", "Medium-intensity urban land, 2019"), ("pctcrop2019ws", "Cropland, 2019"), ("pctwdwet2019ws", "Woody wetland, 2019"), ("bfiws", "Base-flow index (share of streamflow from groundwater)")) if k in v]
+    wid = ui.bars([(l, v[k], "%.1f%%" % v[k]) for l, k in pc], 100) if pc else ""
+    ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
+    return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,
                  "Source: U.S. EPA StreamCat (NHDPlus reach %s), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(str(s["comid"])), esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
 
 

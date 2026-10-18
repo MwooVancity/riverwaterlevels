@@ -16,13 +16,19 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
          ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
+SOFT = []
+if os.name == "nt" and not os.environ.get("CI"):  # browser gates need the local Playwright install; a failure is logged, never blocks fresh data (design gates are fixed in code, not by holding the data back)
+    SOFT = [["node", "ui_gates.mjs"]]
+    STEPS.insert(3, SOFT[0])
 code = 0
 try:
     log.write("\n=== %s %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full"))
     for s in STEPS:
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, creationflags=NOWIN)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))
-        if p.returncode:
+        if p.returncode and s in SOFT:
+            log.write("UI GATES FAILED (not blocking)\n")
+        elif p.returncode:
             code = p.returncode
             log.write("STOPPED at %s\n" % s[2] if len(s) > 2 else "STOPPED\n")
             break

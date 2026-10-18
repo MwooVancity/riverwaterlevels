@@ -17,6 +17,7 @@ ICONS = {
     "download": _I % '<path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/>',
     "star": _I % '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
     "wind": _I % '<path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h16a3 3 0 1 1-3 3"/><path d="M3 16h7"/>',
+    "sun": _I % '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',
     "search": _I % '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/>',
 }
 
@@ -46,8 +47,8 @@ def dial(p):
     for v in (5, 25, 50, 75, 95):
         x0, y0 = pt(v / 100, r - 7)
         x1, y1 = pt(v / 100, r + 7)
-        tx, ty = pt(v / 100, r + 17)
-        ticks += '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" class="dt"/><text x="%.1f" y="%.1f" class="dl" text-anchor="middle">%d</text>' % (x0, y0, x1, y1, tx, ty + 3, v)
+        ticks += '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" class="dt"/>' % (x0, y0, x1, y1)
+    ticks += '<text x="%d" y="%d" class="dl" text-anchor="middle">Lower</text><text x="%d" y="%d" class="dl" text-anchor="middle">Higher</text><text x="%d" y="-1" class="dl" text-anchor="middle">Typical</text>' % (cx - r, cy + 17, cx + r, cy + 17, cx)
     needle = ""
     if p is not None:
         f = 0.0 if p == -1 else 1.0 if p == 101 else max(0.0, min(1.0, p / 100))
@@ -102,3 +103,33 @@ def ladder(cats, cur, fc=None):
         mk += '<path d="M%.1f 50 l-5 10 h10 z" class="mf"/>' % X(fc)
     txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; forecast high %.1f ft" % fc) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
     return '<svg class="ladder" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s">%s%s%s</svg>' % (W, H, txt, seg, lab, mk)
+
+
+def banner(n, names_html):
+    """Alert strip above the tiles when the NWS has active alerts for the gauge location."""
+    return '<a class="abanner" href="#alerts"><i class="ic">%s</i><b>%d active National Weather Service alert%s</b><span>%s</span><em>Details</em></a>' % (icon("bell"), n, "" if n == 1 else "s", names_html)
+
+
+def bars(rows, vmax, mark=None):
+    """Horizontal bars. rows = [(label_html, value, text_html)]; mark = value where a median or reference tick is drawn."""
+    out = ""
+    for lab, v, txt in rows:
+        w = 0 if (v is None or v <= 0) else max(2.0, min(100.0, v / vmax * 100))
+        tick = '<u style="left:%.1f%%"></u>' % (mark / vmax * 100) if mark is not None else ""
+        out += '<div class="br"><span>%s</span><div class="bt"><i style="width:%.1f%%"></i>%s</div><b>%s</b></div>' % (lab, w, tick, txt)
+    return '<div class="bars">%s</div>' % out
+
+
+def strip(nodes):
+    """Upstream to downstream chain of gauges. nodes = [{name, flow, sub, cur}] in flow direction."""
+    out = ""
+    for i, n in enumerate(nodes):
+        if i:
+            out += '<span class="sa" aria-hidden="true">&rarr;</span>'
+        out += '<div class="sn%s">%s<b>%s</b><small>%s</small></div>' % (" cur" if n.get("cur") else "", n["name"], n["flow"], n["sub"])
+    return '<div class="strip">%s</div>' % out
+
+
+def chips(items):
+    """Key facts as small cards. items = [(label, value_html)]."""
+    return '<div class="chips">%s</div>' % "".join('<div class="chip"><span>%s</span><b>%s</b></div>' % (l, v) for l, v in items)

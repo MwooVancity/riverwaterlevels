@@ -67,6 +67,10 @@ def main():
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
+        emit("/status/", directory.status_page(built, Gs, report["built_at"]))
+        ages = [Gs[r["site"]]["age_min"] for r in built]
+        json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
+                   "pages": len(urls) + 1, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
     redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301"]

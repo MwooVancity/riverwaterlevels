@@ -132,7 +132,7 @@ LIMIT_TEXT = {"alerts": "3 h", "air_obs": "3 h", "rain_totals": "6 h", "river_fo
 
 def render_block(b):
     amber = (' <span class="tag amber">Older than %s</span>' % LIMIT_TEXT.get(b["id"], "12 h")) if b.get("amber") else ""
-    return ('<section class="card blk" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s</h2>%s<p class="src">%s</p></section>' % (b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["body"], b["source"]))
+    return ('<section class="card blk" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<p class="src">%s</p></section>' % (b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"]))
 
 
 def table(heads, rows, right=(), hide=()):
@@ -197,13 +197,17 @@ def hero(G, pages=None):
         tiles += ui.tile("wtemp", "thermo", "Water temperature", '%.0f&deg;<small>F</small>' % c["wt"]["f"], '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     if c["air"]:
         a = c["air"]
-        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], '<small>%s</small>' % (("wind %.0f mph %s, " % (a["wind"], esc(a["dir"])) if a["wind"] is not None else "") + ("gusts %.0f mph, " % a["gust"] if a["gust"] is not None else "")) + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
+        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], '<small>%s</small>' % ((("wind calm, " if a["wind"] < 1 else "wind %.0f mph %s, " % (a["wind"], esc(a["dir"]))) if a["wind"] is not None else "") + ("gusts %.0f mph, " % a["gust"] if a["gust"] is not None else "")) + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
     if c["up"]:
         up = c["up"]
         tiles += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmt(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), (" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else ""))
     if c["rain"]:
         tiles += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
-    return '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles)
+    st_ = sun_times(G["lat"], G["lon"], G["ldate"])
+    if st_:
+        tiles += ui.tile("sun", "sun", "Sunset today", esc(tzl(st_[1], G["zone"], date=False)), '<small>Sunrise %s &middot; computed from location and date</small>' % esc(tzl(st_[0], G["zone"], date=False)))
+    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
+    return ban + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles)
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
@@ -377,7 +381,17 @@ def b_related(G, pages):
         rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), x["relation"].capitalize(), "%s cfs" % fmt(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
     if not rows:
         return None
-    return block("related_gauges", "Upstream and downstream gauges", "live", table(["Gauge", "Relation", "Latest flow", "Observed", "Observed lag"], rows, right=(2,)),
+    from lib import ui
+    nodes = []
+    for rel in ("upstream", "downstream"):
+        if rel == "downstream":
+            nodes.append({"name": "<span>This gauge</span>", "flow": "%s cfs" % fmt(G["lv"]), "sub": esc(G["obs"]), "cur": True})
+        for x in items:
+            pr = pages.get(x["site"])
+            if x["relation"] == rel and pr and pr.get("_built"):
+                nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmt(x["flow"]),
+                              "sub": esc(tzl(parse_t(x["time"]), G["zone"])) + ((" &middot; lag about %d h" % x["lag_h"]) if x.get("lag_h") else ""), "cur": False})
+    return block("related_gauges", "Upstream and downstream gauges", "live", ui.strip(nodes) + table(["Gauge", "Relation", "Latest flow", "Observed", "Observed lag"], rows, right=(2,)),
                  "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed. Observed lag is the shift, up to 72 h, that best matches hourly flow at the two gauges over the last 8 days (r = correlation, shown only at 0.85 or higher); it is empirical, not a travel time.", "usgs")
 
 
@@ -443,7 +457,10 @@ def b_rain(G):
     labs = (("last_24h", "Last 24 h"), ("last_2d", "Last 2 days"), ("last_3d", "Last 3 days"))
     vt = n.get("valid_through") or {}
     rows = "".join(tr(["%s, to %s" % (lab, esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else lab, "%.2f in" % v[k]], right=(1,)) for k, lab in labs if k in v)
-    return block("rain_totals", "Recent rain at the gauge location", "official", table(["Window and end time", "Rain"], rows, right=(1,)),
+    from lib import ui
+    vmax = max(0.5, max(v[k] for k, _ in labs if k in v))
+    wid = ui.bars([(lab, v[k], "%.2f in" % v[k]) for k, lab in labs if k in v], vmax)
+    return block("rain_totals", "Recent rain at the gauge location", "official", wid + table(["Window and end time", "Rain"], rows, right=(1,)),
                  "Source: NWS River Forecast Center multisensor precipitation estimate, 4 km grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=(age is not None and age > 6))
 
 
@@ -574,7 +591,7 @@ def b_alerts(G):
         items = ""
         for a in al:
             ends = esc(tzl(parse_t(a["ends"] or a["expires"]), zone)) if (a.get("ends") or a.get("expires")) else "not stated"
-            items += '<div class="alert"><b>%s</b> &middot; %s &middot; %s<br>%s<br>Ends %s</div>' % (esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), ends)
+            items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s<br>Ends %s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), ends)
         body = items
     return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=(age is not None and age > 3))
 
@@ -643,7 +660,7 @@ def b_multiyear(G):
     if (G["ldate"] - asof).days > 10:
         return None
     svg = _multi_svg(ser, years, asof, span, 760, 260, 11, 6, "cw") + _multi_svg(ser, years, asof, span, 340, 260, 12, 4, "cn")
-    legend = '<p class="legend">%s</p>' % " &nbsp; ".join('<b style="color:%s">%s&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(y)) for n, y in enumerate(years))
+    legend = '<p class="legend">%s</p>' % " &nbsp; ".join('<b><span style="color:%s" aria-hidden="true">%s</span>&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(y)) for n, y in enumerate(years))
     rows = ""
     for y in years:
         v = [x for x in ser[y] if x is not None]
@@ -759,7 +776,9 @@ def b_snotel(G):
         med = x.get("median_in")
         pct = ("%.0f%%" % (x["swe_in"] / med * 100)) if med else "–"
         rows += tr([esc(x["name"]), "%d mi" % round(x["km"] * 0.621371), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
-    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2)),
+    from lib import ui
+    sb = ui.bars([(esc(x["name"]), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median" % (x["swe_in"] / x["median_in"] * 100)) if x.get("median_in") else "%.1f in, no median" % x["swe_in"]) for x in st], 150, mark=100)
+    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", sb + table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2)),
                  "Source: USDA Natural Resources Conservation Service SNOTEL stations within 37 miles of the gauge (AWDB web service), fetched %s. Provisional data; stations may not drain to this gauge." % esc(tzl(parse_t(s["fetched_at"]), G["zone"])), "nrcs")
 
 
@@ -823,13 +842,13 @@ def tab_blocks(tab, G, pages):
         return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G),
                 b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G),
                 b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G),
-                b_radar(G), b_map(G), b_weather(G, 3), b_land(G), b_official_links(G), b2.b_about(G)]
+                ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_radar(G), b_map(G), b_weather(G, 3), b_land(G), b_official_links(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
 def footer():
     return ('<footer><span>%s &middot; Data: USGS, NOAA, NWS.</span><span><a href="/about/">About</a> &middot; <a href="/data-sources/">Data sources</a> &middot; <a href="/disclaimer/">Disclaimer</a> &middot; '
-            '<a href="/faq/">FAQ</a> &middot; <a href="/methodology/">Methodology</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/glossary/">Glossary</a></span></footer>' % esc(BRAND))
+            '<a href="/faq/">FAQ</a> &middot; <a href="/methodology/">Methodology</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/glossary/">Glossary</a> &middot; <a href="/status/">Data status</a></span></footer>' % esc(BRAND))
 
 
 def og_tags(title, desc, url):
@@ -937,15 +956,15 @@ def build_tab(tab, G, pages):
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ' <span class="tag amber">Older than 2 h</span>' if G["age_min"] > 120 else ""
     avail = ("dashboard", "forecast") if G["has_forecast"] else ("dashboard",)
-    tabs_html = ""
-    for t in avail:
+    tabs_html = ""  # a lone tab is a dead pill: show tabs only when a Forecast page exists
+    for t in (avail if len(avail) > 1 else ()):
         cur = ' class="on" aria-current="page"' if t == tab else ""
         tabs_html += '<a href="%s"%s>%s</a> ' % (row[t + "_url"], cur, TABS[t]["label"])
-    tabbar = '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in avail)
+    tabbar = "" if len(avail) == 1 else '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in avail)
     hub_part = "" if row.get("_single") else '<a href="%s">%s</a> / ' % (row["hub_url"], esc(river))
     crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (st.lower(), esc(st), hub_part, esc(place))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
-    sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span data-live="age" data-t="%s">%s</span> old%s' % (G["site"], drain, esc(G["obs"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
+    sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), "fresh" if G["age_min"] <= 90 else "ageing" if G["age_min"] <= 360 else "stale", iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
     ld_items = [("Home", "/"), (st, "/rivers/%s/" % st.lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(place, None)]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL}})
     ids = {b["id"] for b in shown}

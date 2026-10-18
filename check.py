@@ -23,6 +23,43 @@ def kind_of(rel):
     return "trust"
 
 
+JARGON = r"percentile|\bAEP\b|NWPS|NLDI|kcfs|StreamCat|\bSWE\b|\bTMDL\b"  # words a first-time reader cannot decode; allowed in Source lines, tables and the glossary, not in headings or stat tiles
+
+
+def ui_checks(body, plain=True):
+    """Reader-first gates on the page body: plain words in headings and tiles, no empty widgets, every image sized and described, heading order, no sentence stated twice."""
+    bad = []
+    heads = re.findall(r"<(h[1-6])[^>]*>(.*?)</\1>", body, re.S)
+    for tag, inner in heads:
+        t = re.sub(r"<[^>]+>", " ", inner)
+        if plain and tag in ("h1", "h2") and re.search(JARGON, t, re.I):
+            bad.append("jargon in %s: %r" % (tag, t.strip()[:50]))
+    prev = 1
+    for tag, _ in heads:
+        lv = int(tag[1])
+        if lv > prev + 1:
+            bad.append("heading level skips from h%d to h%d" % (prev, lv))
+        prev = lv
+    for mm in re.finditer(r'<div class="tile [^"]*"><i class="ic">.*?</i><span>(.*?)</span><b>(.*?)</b>', body, re.S):
+        t = re.sub(r"<[^>]+>", " ", mm.group(1) + " " + mm.group(2))
+        if re.search(JARGON, t, re.I):
+            bad.append("jargon in stat tile: %r" % t.strip()[:50])
+    for w in ("bars", "strip", "chips"):
+        if re.search(r'<div class="%s">\s*</div>' % w, body):
+            bad.append("empty %s widget" % w)
+    for mm in re.finditer(r"<img\b[^>]*>", body):
+        im = mm.group(0)
+        if not re.search(r'\swidth="\d+"', im) or not re.search(r'\sheight="\d+"', im):
+            bad.append("image without width and height (layout shift): %s" % im[:60])
+        if not re.search(r'\salt="[^"]+"', im):
+            bad.append("image without alt text: %s" % im[:60])
+    seen = collections.Counter(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", p)).strip() for p in re.findall(r"<p>(.*?)</p>", body, re.S))
+    for s, n in seen.items():
+        if n > 1 and len(s) >= 60:
+            bad.append("sentence stated %d times: %r" % (n, s[:60]))
+    return bad
+
+
 def check_html(h, rel):
     bad = []
     url = "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -51,6 +88,7 @@ def check_html(h, rel):
             bad.append("block %s has an empty table" % sid)
     if len(re.findall(r"<h1>", body)) != 1:
         bad.append("not exactly one h1")
+    bad += ui_checks(body, plain=kind_of(rel) != "trust")  # trust pages are where the terms are explained
     if kind_of(rel) == "gauge" and not rel.replace("\\", "/").endswith("/forecast/index.html"):
         # Line 0, first-screen contract: the stat tiles come before the first data block
         first_blk = body.find('<section class="card blk"')
@@ -98,7 +136,7 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
-    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
+    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     graph = {}
     for u, links in links_of.items():
         rel = rel_of[u]
@@ -164,7 +202,14 @@ def selftest():
     assert check_html(good, rel) == [], check_html(good, rel)
     broken = {"no source line": good.replace('<p class="src">Source: USGS</p>', ""), "wrong canonical": good.replace("/river/a/b/", "/river/x/y/"),
               "banned undefined": good.replace("<p>x</p>", "<p>undefined</p>"), "no unit": good.replace("<small>cfs</small>", "<small></small>"), "no zone": good.replace("CDT", ""),
-              "two h1": good.replace("<h1>X</h1>", "<h1>X</h1><h1>Y</h1>")}
+              "two h1": good.replace("<h1>X</h1>", "<h1>X</h1><h1>Y</h1>"),
+              "jargon heading": good.replace("<h2>H</h2>", "<h2>Percentile for the date</h2>"),
+              "jargon tile": good.replace('<div class="tile norm"></div>', '<div class="tile norm"><i class="ic"></i><span>Compared</span><b>23rd percentile</b></div>'),
+              "empty widget": good.replace("<p>x</p>", '<div class="bars"></div>'),
+              "image without size": good.replace("<p>x</p>", '<img src="/a.png" alt="a">'),
+              "image without alt": good.replace("<p>x</p>", '<img src="/a.png" width="5" height="5">'),
+              "heading skip": good.replace("<p>x</p>", "<h4>Deep</h4>"),
+              "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name
     print("selftest OK: good fixture passes, %d broken fixtures all fail" % len(broken))
