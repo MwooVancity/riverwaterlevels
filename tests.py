@@ -99,7 +99,7 @@ def main():
     site = "03011800"
     cp = os.path.join(ROOT, "cache", site + ".json")
     saved = open(cp, "rb").read()
-    live_before = hashes(os.path.join(ROOT, "dist")).get(os.path.join("river", "kinzua-creek", "guffey", "water", "index.html"))
+    live_before = hashes(os.path.join(ROOT, "dist")).get(os.path.join("river", "kinzua-creek", "guffey", "index.html"))
     try:
         rec = json.loads(saved)
         for x in rec["usgs"]["rows"]:
@@ -107,8 +107,8 @@ def main():
         json.dump(rec, open(cp, "w"))
         r = run("build.py", site, env={"BUILD_NOW": "2026-10-16T23:00:00+00:00"})
         crit = "CRITICAL" in r.stdout
-        built = os.path.exists(os.path.join(ROOT, "dist_next", "river", "kinzua-creek", "guffey", "water", "index.html"))
-        live_after = hashes(os.path.join(ROOT, "dist")).get(os.path.join("river", "kinzua-creek", "guffey", "water", "index.html"))
+        built = os.path.exists(os.path.join(ROOT, "dist_next", "river", "kinzua-creek", "guffey", "index.html"))
+        live_after = hashes(os.path.join(ROOT, "dist")).get(os.path.join("river", "kinzua-creek", "guffey", "index.html"))
         good = crit and not built and live_before == live_after and live_before is not None
         print("3. forced stale source: critical flagged %s, page not rebuilt %s, live release unchanged %s" % (crit, not built, live_before == live_after)); ok &= good
     finally:

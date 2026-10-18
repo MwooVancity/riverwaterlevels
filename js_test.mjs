@@ -13,7 +13,7 @@ const srv = http.createServer((q, r) => {
   r.writeHead(200, { 'content-type': p.endsWith('.html') ? 'text/html' : 'application/octet-stream' });
   r.end(readFileSync(p));
 }).listen(0);
-const url = 'http://localhost:' + srv.address().port + '/river/missouri-river-mo/kansas-city/water/';
+const url = 'http://localhost:' + srv.address().port + '/river/missouri-river-mo/kansas-city/';
 const b = await chromium.launch();
 const feat = (code, t, v) => ({ type: 'Feature', properties: { time: t, parameter_code: code, value: String(v), unit_of_measure: code === '00060' ? 'ft3/s' : 'ft' } });
 let fails = 0;

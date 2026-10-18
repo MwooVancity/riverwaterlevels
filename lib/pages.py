@@ -32,5 +32,5 @@ def load_effective():
             x["place_final"] = x["place_slug"] + ("-" + x["site"] if seen[x["place_slug"]] > 1 or not x["place_slug"] else "")
             base = "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
             x["hub_url"] = "/river/%s/" % x["hub_slug"]
-            x["dashboard_url"], x["water_url"], x["forecast_url"] = base, base + "water/", base + "forecast/"
+            x["dashboard_url"], x["water_url"], x["forecast_url"] = base, base, base + "forecast/"  # one page per gauge; /water/ redirects here
     return rows, hubs

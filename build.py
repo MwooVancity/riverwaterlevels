@@ -9,6 +9,9 @@ from lib.pages import load_effective
 from lib import render, directory
 
 
+FILE_BUDGET = 19000
+
+
 def write(root, url, html):
     path = os.path.join(root, url.strip("/"), "index.html") if url != "/" else os.path.join(root, "index.html")
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -51,10 +54,10 @@ def main():
         hashes[url] = hashlib.sha256(html.encode()).hexdigest()[:16]
 
     for s, G in Gs.items():
-        for tab in ("dashboard", "water", "forecast"):
+        for tab in (("dashboard", "forecast") if G["has_forecast"] else ("dashboard",)):  # one page per gauge; a Forecast page only where NWS issues a river forecast
             page, meta = render.build_tab(tab, G, rows)
             emit(meta["url"], page)
-        report["gauges"].append({"site": s, "url": rows[s]["water_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
+        report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
     if built:
         emit("/", directory.home(built, Gs))
         for st in sorted({r["state"] for r in built}):
@@ -65,7 +68,8 @@ def main():
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
-    redirects = ["/river/%s/ %s 301" % (hs, g[0]["dashboard_url"]) for (hs, st), g in by_hub.items() if len(g) == 1] + ["/river/%s %s 301" % (hs, g[0]["dashboard_url"]) for (hs, st), g in by_hub.items() if len(g) == 1]
+    # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
+    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301"]
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
     lm = json.load(open(lm_path)) if os.path.exists(lm_path) else {}
@@ -86,6 +90,8 @@ def main():
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
     json.dump({"urls": urls}, open(os.path.join(nxt, "_urls.json"), "w"))
     report["pages"] = len(urls)
+    if len(urls) > FILE_BUDGET and not preview:
+        raise SystemExit("file budget: %d pages is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (len(urls), FILE_BUDGET))
     runs = os.path.join(ROOT, "runs", now.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(runs, exist_ok=True)
     json.dump(report, open(os.path.join(runs, "report.json"), "w"), indent=1)

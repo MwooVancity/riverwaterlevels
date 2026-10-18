@@ -120,7 +120,7 @@ def ctx(site, row, rec, now):
     chg = (lv - ago[1]) / ago[1] * 100 if (not osc) and abs((ago[0] - (lt - datetime.timedelta(hours=24))).total_seconds()) <= tol and ago[1] > 0 else None
     return {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "river": row["river"], "place": row["place"], "st": row["state"],
-            "lat": rec["lat"], "lon": rec["lon"], "offline": age_min > 24 * 60, "osc": osc, "basis": basis, "basis_mean": method.startswith("trailing")}
+            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "basis": basis, "basis_mean": method.startswith("trailing")}
 
 
 def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
@@ -769,17 +769,17 @@ def b_map(G):
 
 # ---------------------------------------------------------------- tabs
 TABS = {
-    "dashboard": {"label": "Dashboard", "title": "%s, %s: river conditions", "desc": "%s, %s: current flow, alerts, forecast summary and public land near USGS gauge %s.", "hero": True},
-    "water": {"label": "Water", "title": "%s, %s: water level and flow", "desc": "%s, %s: flow, gage height and percentile for the date from USGS gauge %s.", "hero": True},
+    "dashboard": {"label": "Conditions", "title": "%s, %s: river level and flow", "desc": "%s, %s: current flow, gage height, percentile for the date, alerts, history and flood record from USGS gauge %s.", "hero": True},
     "forecast": {"label": "Forecast", "title": "%s, %s: river forecast", "desc": "%s, %s: river forecast, rain, radar and weather forecast for USGS gauge %s.", "hero": False},
 }
 
 
 def tab_blocks(tab, G, pages):
-    if tab == "water":
-        return [b2.b_offline(G), b_flow_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G), b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G), b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G)]
-    if tab == "dashboard":
-        return [b2.b_offline(G), b3.b_right_now(G, pages), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), ("PAIR", b_map(G), b_radar(G)), "AD", b_weather(G, 3), b_land(G), b2.b_about(G)]
+    if tab == "dashboard":  # one page per gauge: ordered by reader question (how high now, how fast, how unusual, what happened before, what is around it)
+        return [b2.b_offline(G), b3.b_right_now(G, pages), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G),
+                b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G),
+                b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G),
+                ("PAIR", b_map(G), b_radar(G)), b_weather(G, 3), b_land(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
@@ -863,6 +863,11 @@ def crumb_ld(items):
     return '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": els}, separators=(",", ":")).replace("</", "<" + chr(92) + "/")
 
 
+JUMP = (("right_now", "Right now"), ("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("month_chart", "30 days"), ("year_chart", "12 months"), ("multi_year", "Earlier years"),
+        ("record_comparison", "Record"), ("annual_peaks", "Peaks"), ("flood_frequency", "Flood frequency"), ("storm_events", "Flood history"), ("stage_flow_rating", "Rating"), ("related_gauges", "Nearby gauges"),
+        ("nws_forecast_point", "NWS point"), ("watershed_characteristics", "Watershed"), ("gauge_map", "Map"), ("about_gauge", "About"))
+
+
 def build_tab(tab, G, pages):
     T = TABS[tab]
     row = G["row"]
@@ -884,24 +889,28 @@ def build_tab(tab, G, pages):
     desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ' <span class="tag amber">Older than 2 h</span>' if G["age_min"] > 120 else ""
+    avail = ("dashboard", "forecast") if G["has_forecast"] else ("dashboard",)
     tabs_html = ""
-    for t in ("dashboard", "water", "forecast"):
+    for t in avail:
         cur = ' class="on" aria-current="page"' if t == tab else ""
         tabs_html += '<a href="%s"%s>%s</a> ' % (row[t + "_url"], cur, TABS[t]["label"])
-    tabbar = '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in ("dashboard", "water", "forecast"))
+    tabbar = '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in avail)
     hub_part = "" if row.get("_single") else '<a href="%s">%s</a> / ' % (row["hub_url"], esc(river))
     crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (st.lower(), esc(st), hub_part, esc(place))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span data-live="age" data-t="%s">%s</span> old%s' % (G["site"], drain, esc(G["obs"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
     ld_items = [("Home", "/"), (st, "/rivers/%s/" % st.lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(place, None)]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL}})
+    ids = {b["id"] for b in shown}
+    jl = [(i, t) for i, t in JUMP if i in ids]
+    jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
     body = ""
     first = True
     for b in blocks:
         body += ('<div class="ad">ADVERTISEMENT</div>' if ADS else "") if b == "AD" else ('<div class="pair">%s</div>' % "".join(render_block(x) for x in b)) if isinstance(b, list) else render_block(b)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G) + SAFETY) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G) + SAFETY + jump_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

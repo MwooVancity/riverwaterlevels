@@ -11,8 +11,8 @@ from lib.pages import WAVE0
 
 PAGES = r"C:\Users\mwoo7\Desktop\calcscrape\docs\research\prototypes\data\pages-all.csv"
 PER_DAY, PER_RIVER_DAY = 25, 3
-# Cloudflare Workers free plan: 20,000 static files per deploy. A gauge is 3 pages; rivers, states and trust pages add about 25 percent. 5,500 gauges is about 17,000 files, leaving margin.
-MAX_GAUGES = 5500
+# One page per gauge plus a Forecast page where NWS issues a river forecast: all 9,099 gauges are about 17,200 files, inside the Cloudflare free limit of 20,000 per deploy (build.py refuses above 19,000).
+MAX_GAUGES = 9099
 
 
 def load_recreation():

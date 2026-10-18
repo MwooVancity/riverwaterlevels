@@ -8,8 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL
 
 BANNED = [r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)"]
-MAX_BYTES = 150_000
-BUDGET = {"gauge": 70, "hub": 80, "state": 480, "home": 200, "trust": 40}
+MAX_BYTES = 230_000
+BUDGET = {"gauge": 110, "hub": 80, "state": 480, "home": 200, "trust": 40}
 
 
 def kind_of(rel):
@@ -102,20 +102,20 @@ def check_dir(d):
         k = kind_of(rel)
         if n_links[u] > BUDGET[k]:
             results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, BUDGET[k]))
-    # reciprocity: each gauge tab links to its two sibling tabs; hub and gauge link to each other when a hub page exists
+    # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
     for u in urls:
         parts = u.strip("/").split("/")
         if len(parts) >= 3 and parts[0] == "river":
             base = "/" + "/".join(parts[:3]) + "/"
-            if len(parts) == 3 or parts[3] in ("water", "forecast"):
-                sib = [base, base + "water/", base + "forecast/"]
-                for s in sib:
-                    if s != u and s not in graph.get(u, ()):
-                        results[urls[u]].append("missing link to sibling tab %s" % s)
+            if len(parts) == 3 or (len(parts) == 4 and parts[3] == "forecast"):
+                if len(parts) == 3 and base + "forecast/" in urls and base + "forecast/" not in graph.get(u, ()):
+                    results[urls[u]].append("missing link to its forecast page")
+                if len(parts) == 4 and base not in graph.get(u, ()):
+                    results[urls[u]].append("forecast page does not link back to its gauge page")
                 hub = "/river/%s/" % parts[1]
                 if hub in urls and hub not in graph.get(u, ()):
                     results[urls[u]].append("no link back to hub %s" % hub)
-                if hub in urls and (len(parts) == 3) and base not in graph.get(hub, ()) and base + "water/" not in graph.get(hub, ()):
+                if hub in urls and len(parts) == 3 and base not in graph.get(hub, ()):
                     results[urls[hub]].append("hub does not link to gauge %s" % base)
     # sitemap equals page set
     sp = os.path.join(d, "sitemap.xml")

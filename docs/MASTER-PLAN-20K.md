@@ -3,7 +3,7 @@
 Status: draft 1 for debate (2026-10-17). Owner: the site owner; every Claude and ChatGPT review reads this file first. Companion files: `docs/MASTER-FINAL.md` (what a finished page holds), `docs/MISSING-LIST.md` (everything not built), `docs/PLAN.md` (living status).
 
 ## 0. What "20,000" means here
-Cloudflare Workers free plan serves at most 20,000 static files per deploy. A gauge is 3 pages (Dashboard, Water, Forecast); river hubs, state pages, trust pages and sitemaps add about 25 percent. The site is capped at 5,500 gauges, about 17,700 files (`data/waves.csv`, `tools/rescore.py MAX_GAUGES`). That is the "20,000-page" end state: the best 5,500 gauges for water activities, not every river. Gauges beyond the cap (1,801) and gauges with unreliable names (1,798) are not planned. If the owner later pays for Workers ($5 a month, 100,000 files), the cap is a config value, not a redesign.
+Cloudflare Workers free plan serves at most 20,000 static files per deploy. A gauge is ONE page (Dashboard and Water merged, jump links) plus a Forecast page only where NWS issues a river forecast (6,436 of 9,099 gauges); river hubs, state pages, trust pages and sitemaps add about 1,700. All 9,099 gauges are about 17,200 files, so the whole inventory fits the free limit and no cap is needed. Order is by water-sports popularity (`data/waves.csv`). 1,801 gauges with unreliable names are held until the name cleaner is rerun. Lakes are phase 2. If the owner later pays for Workers ($5 a month, 100,000 files), the cap is a config value, not a redesign.
 
 ## 1. The staircase (each step opens only when the gate above it is green)
 | Step | Gauges | Pages | Earliest | What changes | Gate to enter |

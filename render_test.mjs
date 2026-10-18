@@ -65,12 +65,12 @@ for (const [w, h, mobile] of VIEWS) {
 // scripts off: readings must be in the static HTML
 const nojs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } });
 const np = await nojs.newPage();
-await np.goto(BASE + '/river/missouri-river-mo/kansas-city/water/', { waitUntil: 'load' });
+await np.goto(BASE + '/river/missouri-river-mo/kansas-city/', { waitUntil: 'load' });
 const hasFlow = await np.evaluate(() => /latest flow[\s\S]*\d/i.test(document.body.innerText));
 console.log('scripts off: latest flow present in static HTML:', hasFlow); if (!hasFlow) fails++;
 // phone screenshots for the record
 const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-for (const [name, p] of [['water', '/river/colorado-river-az/lees-ferry/water/'], ['home', '/'], ['forecast', '/river/missouri-river-mo/kansas-city/forecast/']]) {
+for (const [name, p] of [['water', '/river/colorado-river-az/lees-ferry/'], ['home', '/'], ['forecast', '/river/missouri-river-mo/kansas-city/forecast/']]) {
   const pg = await phone.newPage(); await pg.goto(BASE + p, { waitUntil: 'load' }); await pg.screenshot({ path: join(SHOTS, `phone390-${name}.png`), fullPage: true }); await pg.close();
 }
 await browser.close(); server.close();

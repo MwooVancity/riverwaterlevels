@@ -2,7 +2,7 @@
 Exit 1 if a page is not 200 or shows no flow value, so refresh.py stops and logs it."""
 import sys, re, urllib.request
 
-DEFAULT = ["https://riverwaterlevels.com/river/missouri-river-mo/kansas-city/water/", "https://riverwaterlevels.com/river/kinzua-creek/guffey/water/"]
+DEFAULT = ["https://riverwaterlevels.com/river/missouri-river-mo/kansas-city/", "https://riverwaterlevels.com/river/kinzua-creek/guffey/"]
 bad = 0
 for u in (sys.argv[1:] or DEFAULT):
     try:
