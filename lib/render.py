@@ -165,8 +165,18 @@ def hero(G, pages=None):
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmt(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + '<small>Observed <span data-live="flowobs">%s</span></small>' % esc(G["obs"]))
     tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
                      (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>%s</small>' % (('Observed <span data-live="stageobs">' + esc(tzl(sg[-1][0], G["zone"])) + "</span>") if sg else "No stage reported"))
-    tiles += ui.tile("norm", "map", "Compared with this date", '%s <small>percentile</small>' % esc(pv) if p is not None else "–",
-                     ui.dial(p) + ui.dial_legend() + ('<small class="nt">%s</small>' % pct_med if pct_med else "") + '<small id="pcap">%s</small>' % esc(cap), "wide")
+    if p is None:
+        word, plain = "–", ""
+    else:
+        word = "Very low" if p == -1 else "Very high" if p == 101 else "Below normal" if p < 25 else "Above normal" if p > 75 else "Normal range"
+        yrs = srow[0] if srow else 0
+        on = G["ldate"].strftime("%b %d")
+        plain = ("Lower than 95%% or more of the %d years on record for %s." % (yrs, on) if p == -1 else
+                 "Higher than 95%% or more of the %d years on record for %s." % (yrs, on) if p == 101 else
+                 "Higher than %d%% of the %d years on record for %s." % (round(p), yrs, on))
+        cap += " That is the %s percentile." % pv if p not in (-1, 101) else ""
+    tiles += ui.tile("norm", "map", "Compared with past years", word,
+                     ('<small class="nt">%s</small>' % esc(plain) if plain else "") + ui.dial(p) + ui.dial_legend() + ('<small class="nt">%s</small>' % pct_med if pct_med else "") + '<small id="pcap">%s</small>' % esc(cap), "wide")
     if G["osc"]:
         v24 = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         tiles += ui.tile("trend", "steady", "24 h range", '<span class="rng">%s to %s</span> <small>cfs</small>' % (fmt(min(v24)), fmt(max(v24))), '<small id="ccap">Lowest to highest reading in 24 h (tidal cycle)</small>')
