@@ -137,7 +137,19 @@ def render_block(b):
 
 def table(heads, rows, right=(), hide=()):
     th = "".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
-    cls = (' class="%s"' % " ".join("hc%d" % i for i in hide)) if hide else ""
+    names = ["hc%d" % i for i in hide]
+    if len(heads) - len(hide) >= 4:  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
+        names.append("stk")
+
+        def add(chunk):
+            n = [-1]
+
+            def sub(m):
+                n[0] += 1
+                return '<td data-l="%s"%s>' % (esc(heads[n[0]]) if n[0] < len(heads) else "", m.group(1) or "")
+            return re.sub(r'<td( class="r")?>', sub, chunk)
+        rows = "</tr>".join(add(c) for c in rows.split("</tr>"))
+    cls = (' class="%s"' % " ".join(names)) if names else ""
     return '<div class="scroll"><table%s><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (cls, th, rows)
 
 
@@ -190,7 +202,7 @@ def hero(G, pages=None):
                              ('<small>%s</small>' % parts if parts else "") + '<small id="ccap">Flow 24 h earlier: %s cfs</small>' % fmt(G["lv"] / (1 + chg / 100)))
     if c["fc"]:
         tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % c["fc"]["v"], '<small>%s &middot; NWS point %s</small>' % (esc(c["fc"]["t"]), esc(c["fc"]["lid"])))
-    if c["alerts"] is not None:
+    if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
         tiles += ui.tile("alrt " + ("on" if al["n"] else "off"), "bell", "NWS alerts", str(al["n"]), '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else "No alerts active here"))
     if c["wt"]:
@@ -819,7 +831,7 @@ def b_map(G):
 
 # ---------------------------------------------------------------- tabs
 TABS = {
-    "dashboard": {"label": "Conditions", "title": "%s, %s: river level and flow", "desc": "%s, %s: current flow, gage height, percentile for the date, alerts, history and flood record from USGS gauge %s.", "hero": True},
+    "dashboard": {"label": "Conditions", "title": "%s, %s: river level and flow", "desc": "%s, %s: current flow, gage height, how it compares with past years, alerts, history and flood record from USGS gauge %s.", "hero": True},
     "forecast": {"label": "Forecast", "title": "%s, %s: river forecast", "desc": "%s, %s: river forecast, rain, radar and weather forecast for USGS gauge %s.", "hero": False},
 }
 
@@ -841,7 +853,7 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge: ordered by reader question (how high now, how fast, how unusual, what happened before, what is around it)
         return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G),
                 b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G),
-                b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G),
+                b_related(G, pages), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G),
                 ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_radar(G), b_map(G), b_weather(G, 3), b_land(G), b_official_links(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 

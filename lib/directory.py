@@ -57,7 +57,7 @@ def conus_map(built, Gs, cap=120):
             continue
         p = G["p"]
         cls = "d-na" if p is None else "d-lo" if p < 25 else "d-hi" if p > 75 else "d-mid"
-        lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", %s percentile for the date" % ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p))) if p is not None else "")
+        lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", flow compared with past years on this date: %s" % band_word(p).lower()) if p is not None else "")
         dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s" title="%s" aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], esc(lab), esc(lab))
         shown += 1
     if not shown:
@@ -76,7 +76,7 @@ def all_gauges_table(built, Gs):
     for r in sorted(built, key=lambda r: (STATE_NAMES.get(r["state"], r["state"]), r["river"], r["place"])):
         G = Gs[r["site"]]
         p = G["p"]
-        ptxt = "–" if p is None else "below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)
+        ptxt = band_word(p)
         pv = "" if p is None else str({-1: 0, 101: 100}.get(p, p))
         chg = G["chg"]
         large = "1" if float(r["drainage_sqmi"] or 0) >= 1000 else "0"
@@ -86,10 +86,10 @@ def all_gauges_table(built, Gs):
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
             esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % G["lv"], fmt(G["lv"]), pv, ptxt,
             "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else "%+.0f%%" % chg, G["lt"].isoformat(), esc(G["obs"])))
-    heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Percentile", "n"), ("24 h", "n"), ("Observed", "s"))
+    heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
     return ('<div class="card"><h2>All gauges on this site</h2><div class="scroll"><table id="alltab"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">Source: USGS Water Data API latest readings; percentiles are estimates from USGS daily statistics. Select a column heading to sort.</p></div>%s' % (th, rows, ALLTAB_JS))
+            '<p class="src">Source: USGS Water Data API latest readings; the comparison is our estimate from USGS daily statistics for the date (below normal is under the 25th percentile, above normal over the 75th). Select a column heading to sort.</p></div>%s' % (th, rows, ALLTAB_JS))
 
 
 def item_line(g, Gs):
@@ -98,7 +98,7 @@ def item_line(g, Gs):
         return "%d gauges on this site" % len(g)
     G = Gs[g[0]["site"]]
     p = G["p"]
-    return "%s cfs%s" % (fmt(G["lv"]), "" if p is None else ", %s percentile" % ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)))
+    return "%s cfs%s" % (fmt(G["lv"]), "" if p is None else ", %s" % band_word(p).lower())
 
 
 def home(built, Gs):
@@ -133,7 +133,7 @@ def home(built, Gs):
     body = ('<h1>Live river levels and flows for US rivers &amp; creeks</h1><p class="sub">Flow and water level for %d gauges across the US, from USGS gauges and the National Weather Service.</p>'
             '<div id="saved" class="card" hidden></div><p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
             % (len(built), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + SAVED_JS + NEAR_JS))
-    return shell("Live river levels and flows | " + BRAND, "Flow, gage height and percentile for US river gauges, from USGS and the National Weather Service.", "/", body)
+    return shell("Live river levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service.", "/", body)
 
 
 def state_page(st, rows, Gs):
@@ -147,11 +147,11 @@ def state_page(st, rows, Gs):
         href = g[0]["hub_url"] if g[0].get("_hub") else g[0]["water_url"]
         cards += '<a class="card gc" href="%s" data-s="%s"><b>%s</b><small>%d gauge%s &middot; %s sq mi &middot; %s cfs%s, observed %s</small></a>' % (
             href, esc((rv + " " + " ".join(x["place"] for x in g)).lower()), esc(rv), len(g), "s" if len(g) > 1 else "", fmt(float(top["drainage_sqmi"] or 0)), fmt(G["lv"]),
-            ("" if G["p"] is None else ", %s percentile" % ("below 5th" if G["p"] == -1 else "above 95th" if G["p"] == 101 else ordinal(G["p"]))), esc(G["obs"]))
+            ("" if G["p"] is None else ", %s" % band_word(G["p"]).lower()), esc(G["obs"]))
     name = STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>Rivers in %s &mdash; %d rivers, %d gauges</h1><p class="sub">Live flow and water level for the river gauges in %s on %s. Source: USGS, with flow shown as the latest reading.</p>'
             '<div class="search"><input id="q" type="search" placeholder="Search rivers in %s" aria-label="Search rivers in %s"></div><div class="grid" style="margin-top:14px">%s</div>%s' % (esc(name), esc(name), len(groups), len(rows), esc(name), esc(BRAND), esc(name), esc(name), cards, SEARCH_JS))
-    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, gage height and percentile for each river gauge in %s, from USGS and National Weather Service data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
+    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, gage height and how it compares with normal for each river gauge in %s, from USGS and National Weather Service data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
 def hub_page(hub_slug, st, rows, inv_count, Gs):
@@ -159,7 +159,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
     trs = ""
     for r in rows:
         G = Gs[r["site"]]
-        pv = ("below 5th" if G["p"] == -1 else "above 95th" if G["p"] == 101 else ordinal(G["p"])) if G["p"] is not None else "–"
+        pv = band_word(G["p"])
         chg = G["chg"]
         ch = ("%s %+.0f%%" % ("&#9650;" if chg > 1 else "&#9660;" if chg < -1 else "&#9644;", chg)) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
@@ -167,7 +167,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
             r["water_url"], esc(r["place"]), r["site"], fmt(G["lv"]), pv, ch, fmt(float(r["drainage_sqmi"] or 0)), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
-            '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Percentile for date</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+            '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 st.lower(), esc(name), esc(river), esc(river), esc(name), len(rows), inv_count, esc(name), trs))
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))
 

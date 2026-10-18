@@ -92,6 +92,8 @@ for (const [label, w, h, scheme] of [['d-light', 1280, 900, 'light'], ['d-dark',
     if (w < 600 && scheme === 'light') {
       const t = await page.evaluate(tapJS); if (t.n) issues.push('tap targets under 36 px high or 24 px wide: ' + t.n + ', e.g. ' + t.bad.slice(0, 3).join(' | '));
       issues.push(...(await page.evaluate(firstScreenJS)));
+      const clip = await page.evaluate(() => [...document.querySelectorAll('.scroll')].filter(s => s.scrollWidth > s.clientWidth + 2 && !s.querySelector('table.hm')).map(s => (s.closest('section') || { id: 'page' }).id));
+      if (clip.length) issues.push('table columns cut off on a phone: ' + clip.join(', '));
     }
     if (errs.length) issues.push('console: ' + errs[0]);
     const f = join(OUT, label + p.replace(/[^a-z0-9]+/gi, '_') + '.png');

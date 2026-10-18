@@ -302,7 +302,7 @@ def b_stage_years(G):
     for k in ("minor", "moderate", "major"):
         if k in cats:
             out += tr(["%s flood stage" % k.capitalize(), "%.1f ft" % cats[k], "%d of %d" % (sum(1 for r in rows if r[2] >= cats[k]), len(rows))], right=(1, 2))
-    out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Years with a peak at or above it"], out, right=(1, 2)),
+    out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Years reaching it"], out, right=(1, 2)),
                  "Source: USGS annual peak gage heights (%d years with a recorded peak stage, %s to %s; peaks that USGS marks with any qualifier other than estimated are left out) compared with National Weather Service flood stages for forecast point %s. Shown because the latest USGS and NWS stage readings agree within 0.10 ft. Older stages can be on an older gauge datum." % (
                      len(rows), esc(rows[0][0][:4]), esc(rows[-1][0][:4]), esc(n.get("lid") or "")), "usgs")
     out_b["also"] = ["nwps"]

@@ -109,7 +109,7 @@ def _at(series, t, tol):
 
 
 def _arrow(pct):
-    return "&#9650;" if pct > 1 else "&#9660;" if pct < -1 else "&#9644;"
+    return "&#9650;" if pct > 1 else "&#9660;" if pct < -1 else "&rarr;"
 
 
 def b_rate(G):
@@ -135,9 +135,9 @@ def b_rate(G):
     hi, lo = max(week, key=lambda x: x[1]), min(week, key=lambda x: x[1])
     ago = lambda t: ("%.0f h earlier" % ((t1 - t).total_seconds() / 3600)) if (t1 - t).total_seconds() >= 3600 else "within the last hour"
     ext = tr(["Highest reading", "%s cfs" % fmt(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmt(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
-    body = table(["Window", "Flow then", "Change to latest", "Gage height then", "Gage height change"], rows, right=(1, 2, 3, 4)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,))
+    body = table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
-                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&#9644;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
+                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
 
 
 def _xy_svg(pts, cur, W, Hh, fs, cls, label):

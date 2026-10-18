@@ -92,3 +92,10 @@ def river_at(river, place):
     if first in ("above", "below", "near", "at"):
         return "%s %s%s" % (river, first, p[len(first):])
     return "%s at %s" % (river, p)
+
+
+def band_word(p):
+    """Plain-word position of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown)."""
+    if p is None:
+        return "–"
+    return "Very low" if p == -1 else "Very high" if p == 101 else "Below normal" if p < 25 else "Above normal" if p > 75 else "Normal range"

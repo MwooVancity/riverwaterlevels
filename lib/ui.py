@@ -79,7 +79,7 @@ def spark(values, w=150, h=34):
 
 
 def ladder(cats, cur, fc=None):
-    """Horizontal flood-stage scale: grey below action stage, then yellow, orange, red, purple for action, minor, moderate and major (NWS thresholds), with the latest stage and the forecast high marked. cats = {name: ft}, cur and fc in feet."""
+    """Horizontal flood-stage scale (NWS thresholds: action yellow, minor orange, moderate red, major purple) with the latest stage and the forecast high marked. cats = {name: ft}, cur and fc in feet. Drawn 420 units wide so the 12-unit labels stay readable on a phone; labels that would touch step down a row."""
     order = [(k, cats[k]) for k in ("action", "minor", "moderate", "major") if k in cats]
     if not order:
         return ""
@@ -87,18 +87,22 @@ def ladder(cats, cur, fc=None):
     top = max([order[-1][1] * 1.08, cur or 0, fc or 0]) or 1
     lo = min(0.0, cur or 0, fc or 0)
     span = (top - lo) or 1.0
-    W, H, L, R_ = 760, 86, 14, 14
+    W, H, L, R_ = 420, 118, 10, 10
     X = lambda v: L + (v - lo) / span * (W - L - R_)
     seg = '<rect x="%.1f" y="34" width="%.1f" height="14" rx="3" class="lg"/>' % (X(lo), X(order[0][1]) - X(lo))
     for i, (k, v) in enumerate(order):
         end = order[i + 1][1] if i + 1 < len(order) else top
         seg += '<rect x="%.1f" y="34" width="%.1f" height="14" fill="%s"/>' % (X(v), X(end) - X(v), cols[k])
-    lab = ""
+    lab, prev, row = "", -999, 0
     for k, v in order:
-        lab += '<line x1="%.1f" y1="30" x2="%.1f" y2="52" class="lt"/><text x="%.1f" y="68" class="ll" text-anchor="middle">%s</text><text x="%.1f" y="80" class="ll2" text-anchor="middle">%.1f ft</text>' % (X(v), X(v), X(v), k.capitalize(), X(v), v)
+        row = 1 - row if X(v) - prev < 78 else 0
+        y = 68 + row * 30
+        anchor = "end" if X(v) > W - 40 else "middle"
+        lab += '<line x1="%.1f" y1="30" x2="%.1f" y2="%d" class="lt"/><text x="%.1f" y="%d" class="ll" text-anchor="%s">%s</text><text x="%.1f" y="%d" class="ll2" text-anchor="%s">%.1f ft</text>' % (X(v), X(v), 52 + row * 30, X(v), y + 2, anchor, k.capitalize(), X(v), y + 15, anchor, v)
+        prev = X(v)
     mk = ""
     if cur is not None:
-        mk += '<path d="M%.1f 32 l-6 -12 h12 z" class="mk"/><text x="%.1f" y="12" class="ml" text-anchor="%s">Now %.2f ft</text>' % (X(cur), X(cur), "start" if X(cur) < 70 else "end" if X(cur) > W - 90 else "middle", cur)
+        mk += '<path d="M%.1f 32 l-6 -12 h12 z" class="mk"/><text x="%.1f" y="12" class="ml" text-anchor="%s">Now %.2f ft</text>' % (X(cur), X(cur), "start" if X(cur) < 60 else "end" if X(cur) > W - 80 else "middle", cur)
     if fc is not None and cur is not None and abs(X(fc) - X(cur)) > 3:
         mk += '<path d="M%.1f 50 l-5 10 h10 z" class="mf"/>' % X(fc)
     txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; forecast high %.1f ft" % fc) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
