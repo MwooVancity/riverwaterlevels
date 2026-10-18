@@ -1,6 +1,15 @@
 # River Water Levels (riverwaterlevels.com)
 
-Lakebrief-style, ad-supported US river gauge site. One page set per USGS gauge (Dashboard, Water, Forecast), river hubs, state pages, trust pages. Data from government APIs only. Domain bought 2026-10-16, served by a Cloudflare Worker with static assets. Pre-launch `noindex` hold in `templates/_headers`: remove it ONLY when the owner says so.
+## Line 0: the reader first (HARD, owner 2026-10-18: "make that line 0")
+Every decision, page, block, widget, rule and release is judged by one question: **does a person standing at the river, on a phone, understand every condition of this river in seconds and trust it?** Not "is it correct" (necessary, never enough), not "does it pass the gate". Concretely:
+- The first screen answers, without scrolling: how much water, how it compares with normal, which way it is moving, what is coming (forecast, alerts, rain), and how old the data is. `check.py` enforces the first-screen contract (tiles for flow, gage height, comparison with the date's record and 24 h change come before the first data block).
+- Look before you build: study the best competing pages (Lakebrief, USGS, NWS, American Whitewater) as screenshots, then design; view every change as a screenshot at 390 px and 1280 px, light and dark, before it ships.
+- Widgets over tables where a picture says it faster (dial, trend arrow, sparkline, stage ladder, heatmap); tables keep the exact numbers and sources.
+- Plain words, units everywhere, abbreviations explained on hover and in the glossary, a safety line next to the numbers.
+- Every feature is tested against a person: a paddler, an angler, a flood watcher, a first-time visitor. If a page serves the rules but not the person, the rules are changed or the page is rebuilt, never the person blamed.
+- Rules in this file are enforced in code, not left as notes.
+
+Lakebrief-style, ad-supported US river gauge site. One page per USGS gauge (conditions, history and flood record on one page with jump links) plus a Forecast page where NWS issues a river forecast, river hubs, state pages, trust pages. Data from government APIs only. Domain bought 2026-10-16, served by a Cloudflare Worker with static assets. Pre-launch `noindex` hold in `templates/_headers`: remove it ONLY when the owner says so.
 This folder is its own project: the car-repair site (calcscrape) rules do not apply here.
 
 ## Read first, every session and after every compaction

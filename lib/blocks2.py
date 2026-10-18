@@ -88,7 +88,9 @@ def b_stage_chart(G):
     if fc:
         hi = max(fc, key=lambda x: x[1])
         rows += tr(["Forecast high", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
-    body = svg + table(["Measure", "Gage height", "Note"], rows, right=(1,))
+    from lib import ui
+    lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None) if cats else ""
+    body = lad + svg + table(["Measure", "Gage height", "Note"], rows, right=(1,))
     src = "Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)

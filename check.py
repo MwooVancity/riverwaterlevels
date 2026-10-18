@@ -51,9 +51,16 @@ def check_html(h, rel):
             bad.append("block %s has an empty table" % sid)
     if len(re.findall(r"<h1>", body)) != 1:
         bad.append("not exactly one h1")
+    if kind_of(rel) == "gauge" and not rel.replace("\\", "/").endswith("/forecast/index.html"):
+        # Line 0, first-screen contract: the stat tiles come before the first data block
+        first_blk = body.find('<section class="card blk"')
+        head = body[:first_blk] if first_blk > 0 else body
+        for need in ('class="tile flow', 'class="tile stage', 'class="tile norm', 'class="tile trend'):
+            if need not in head:
+                bad.append("first screen missing %s" % need.split('"')[1])
     if kind_of(rel) == "gauge":
         for lab, unit in (("Latest flow", "cfs"), ("Gage height", "ft")):
-            for mm in re.finditer(r"<span>%s</span><b>(.*?)<small>([^<]*)</small>" % lab, body, re.S):
+            for mm in re.finditer(r"<span>%s</span><b>(.*?)<small>(?:<abbr[^>]*>)?([^<]*)" % lab, body, re.S):
                 if unit not in mm.group(2) and not (lab == "Gage height" and re.sub(r"<[^>]+>", "", mm.group(1)).strip() in ("–", "")):
                     bad.append("no unit on %s: %r" % (lab, mm.group(2)))
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
@@ -151,7 +158,7 @@ def check_dir(d):
 
 def selftest():
     good = ('<!doctype html><title>T</title><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
-            '<div class="hero"><div class="card"><span>Latest flow</span><b>5 <small>cfs</small></b></div></div>'
+            '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
     assert check_html(good, rel) == [], check_html(good, rel)
