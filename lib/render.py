@@ -850,11 +850,14 @@ def b_official_links(G):
 
 
 def tab_blocks(tab, G, pages):
-    if tab == "dashboard":  # one page per gauge: ordered by reader question (how high now, how fast, how unusual, what happened before, what is around it)
-        return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G),
-                b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G),
-                b_related(G, pages), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G),
-                ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_radar(G), b_map(G), b_weather(G, 3), b_land(G), b_official_links(G), b2.b_about(G)]
+    if tab == "dashboard":  # one page per gauge, ordered by reader question; "SEC:" is a heading, "FOLD:" a closed group (every block keeps its source line and permalink)
+        return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G),
+                ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_weather(G, 3), b_radar(G), b_quality(G), b_wtemp(G), b_snotel(G),
+                "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G),
+                "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b_impacts(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
+                "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
+                "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G), b_land(G),
+                b_related(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
@@ -878,7 +881,7 @@ def humanize_iso(text):
 
 
 def nav():
-    return '<a class="skip" href="#main">Skip to content</a><div class="nav"><a class="brand" href="/"><span class="logo"></span>%s</a><span class="tabs"><a href="/">Rivers</a><a href="/about/">About</a></span><span class="ns"><input id="gq" type="search" placeholder="Find a river or place" aria-label="Find a river or place" autocomplete="off"><span id="gr" class="gr" hidden></span></span></div>' % esc(BRAND) + NAVSEARCH_JS
+    return '<a class="skip" href="#main">Skip to content</a><div class="nav"><a class="brand" href="/"><span class="logo"></span>%s</a><span class="tabs"><a href="/">Rivers</a><a href="/about/">About</a></span><span class="ns"><input id="gq" type="search" placeholder="Find a river or place" aria-label="Find a river or place" autocomplete="off"><span id="gr" class="gr" hidden></span></span></div>' % esc(BRAND) + NAVSEARCH_JS + FOLD_JS
 
 
 def sources_block(blocks, G):
@@ -909,6 +912,8 @@ if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent
 run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600000)})();</script>"""
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning or a safety determination: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
+FOLD_JS = """<script>(function(){function o(){var h=location.hash.slice(1),e=h&&document.getElementById(h),d=e&&e.closest('details');if(d&&!d.open){d.open=true;e.scrollIntoView()}}
+window.addEventListener('hashchange',o);o();window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('details.fold')).forEach(function(d){d.open=true})})})();</script>"""
 NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
 function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0;j.forEach(function(g){if(n>=8)return;if(g[0].toLowerCase().replace(/\\bst\\.? /g,'saint ').indexOf(q)>=0){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++}});if(!n){var s=document.createElement('span');s.textContent='No match yet';o.appendChild(s)}o.hidden=false})}
 i.addEventListener('input',function(){show(i.value)});i.addEventListener('focus',load);document.addEventListener('click',function(e){if(!o.contains(e.target)&&e.target!==i)o.hidden=true})})();</script>"""
@@ -941,9 +946,8 @@ def crumb_ld(items):
     return '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": els}, separators=(",", ":")).replace("</", "<" + chr(92) + "/")
 
 
-JUMP = (("right_now", "Right now"), ("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("month_chart", "30 days"), ("year_chart", "12 months"), ("multi_year", "Earlier years"),
-        ("record_comparison", "Record"), ("annual_peaks", "Peaks"), ("flood_frequency", "Flood frequency"), ("storm_events", "Flood history"), ("stage_flow_rating", "Rating"), ("related_gauges", "Nearby gauges"),
-        ("nws_forecast_point", "NWS point"), ("watershed_characteristics", "Watershed"), ("gauge_map", "Map"), ("about_gauge", "About"))
+JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("hourly_heatmap", "Hourly forecast"), ("month_chart", "30 days"), ("multi_year", "Earlier years"),
+        ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Nearby gauges"), ("about_gauge", "About"))
 
 
 def build_tab(tab, G, pages):
@@ -953,14 +957,16 @@ def build_tab(tab, G, pages):
     ok = lambda b: b and (PREVIEW or SOURCES[b["src_id"]]["status"] in ("quoted", "owner-permission"))
     blocks = []
     for b in raw:
-        if isinstance(b, tuple):  # ("PAIR", a, b): two blocks side by side from 900 px up; a lone survivor renders as a normal block
+        if isinstance(b, str) and b.startswith(("SEC:", "FOLD:")):
+            blocks.append(b)
+        elif isinstance(b, tuple):  # ("PAIR", a, b): two blocks side by side from 900 px up; a lone survivor renders as a normal block
             g = [x for x in b[1:] if ok(x)]
             blocks.append(g if len(g) > 1 else (g[0] if g else None))
         elif b == "AD" or ok(b):
             blocks.append(b)
     blocks = [b for b in blocks if b]
     flat = [x for b in blocks for x in (b if isinstance(b, list) else [b])]
-    shown = [b for b in flat if b != "AD"]
+    shown = [b for b in flat if isinstance(b, dict)]
     river, place, st = G["river"], G["place"], G["st"]
     rp = river_at(river, place)
     title = mk_title(T["title"] % (rp, st))
@@ -985,12 +991,32 @@ def build_tab(tab, G, pages):
     SIDE = {"related_gauges", "nws_forecast_point", "flood_stages", "public_land", "about_gauge", "gauge_map", "sun", "air_obs", "official_links"}
     body = ""
     side = ""
-    first = True
+    fold = None  # [title, rendered blocks, headings] while inside a FOLD: group
+
+    def flush():
+        nonlocal body, fold
+        if fold and fold[1]:
+            body += ('<details class="fold"><summary><b>%s</b><span>%d sections: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), esc(", ".join(fold[2])), fold[1]))
+        fold = None
     for b in blocks:
+        if isinstance(b, str) and b.startswith("SEC:"):
+            flush()
+            body += '<h2 class="secth">%s</h2>' % esc(b[4:])
+            continue
+        if isinstance(b, str) and b.startswith("FOLD:"):
+            flush()
+            fold = [b[5:], "", []]
+            continue
         if T["hero"] and isinstance(b, dict) and b["id"] in SIDE:
             side += render_block(b)
             continue
-        body += ('<div class="ad">ADVERTISEMENT</div>' if ADS else "") if b == "AD" else ('<div class="pair">%s</div>' % "".join(render_block(x) for x in b)) if isinstance(b, list) else render_block(b)
+        html = ('<div class="ad">ADVERTISEMENT</div>' if ADS else "") if b == "AD" else ('<div class="pair">%s</div>' % "".join(render_block(x) for x in b)) if isinstance(b, list) else render_block(b)
+        if fold is not None and isinstance(b, dict):
+            fold[1] += html
+            fold[2].append(b["heading"])
+        else:
+            body += html
+    flush()
     if T["hero"] and side:
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'

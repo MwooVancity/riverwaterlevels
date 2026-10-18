@@ -68,6 +68,17 @@ const ok = (n, c) => { console.log(c ? 'PASS' : 'FAIL', n); if (!c) fails++; };
   ok('percentile caption notes build time', /as of/.test(await pg.textContent('#pcap')));
   await ctx.close();
 }
+// 4. a folded group opens when its anchor is used (jump link, permalink, shared URL) and when printing
+{
+  const ctx = await b.newContext();
+  const pg = await ctx.newPage();
+  await pg.goto(url, { waitUntil: 'networkidle' });
+  const closed = await pg.evaluate(() => { const d = document.querySelector('details.fold'); return !!d && !d.open; });
+  ok('flood record starts folded', closed);
+  await pg.goto(url + '#annual_peaks', { waitUntil: 'networkidle' });
+  ok('anchor to a folded block opens it', await pg.evaluate(() => { const e = document.getElementById('annual_peaks'); return !!e && e.closest('details').open && e.getBoundingClientRect().height > 50; }));
+  await ctx.close();
+}
 await b.close();
 srv.close();
 console.log(fails ? fails + ' FAILED' : 'ALL JS TESTS PASS');

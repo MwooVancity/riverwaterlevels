@@ -129,3 +129,17 @@ td>a{display:inline-block;padding:10px 0}
 table.hc0 td:nth-child(1),table.hc1 td:nth-child(2),table.hc2 td:nth-child(3),table.hc3 td:nth-child(4),table.hc4 td:nth-child(5){display:none!important}
 }
 @media(max-width:600px){.scroll td.r,.scroll th.r{white-space:normal}}
+
+/* ---- section headings and folded groups: the first screens are what is happening; history and reference sit one tap away ---- */
+.secth{font-size:1.35rem;margin:26px 0 8px;letter-spacing:-.01em}
+details.fold{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);margin:14px 0}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:14px 48px 14px 18px;position:relative;min-height:48px;border-radius:var(--r)}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::after{content:"";position:absolute;right:20px;top:50%;width:9px;height:9px;margin-top:-7px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);transition:transform .15s}
+details.fold[open]>summary::after{transform:rotate(225deg);margin-top:-2px}
+details.fold>summary b{font:600 1.15rem Georgia,'Times New Roman',serif}
+details.fold>summary span{color:var(--mut);font-size:.82rem;line-height:1.35}
+details.fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+details.fold[open]>summary{border-bottom:1px solid var(--line);border-radius:var(--r) var(--r) 0 0}
+details.fold>.blk,details.fold>.pair{margin:12px;box-shadow:none}
+details.fold>.blk{border:1px solid var(--line)}
