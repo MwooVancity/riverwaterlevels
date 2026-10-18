@@ -1,6 +1,6 @@
 """Planning tool (not part of the site build): rollout order at 25 pages per day.
 Reads pages-all.csv (inventory with drainage, record years, NWS forecast point, name confidence) and data/demand.csv (Wikipedia 12-month page views per river name; unknown is NOT zero).
-Score (MASTER-SPEC weights): demand 30, data completeness 25, record length 15, NWS forecast point 15, name confidence 10, diversity 5 (at most 3 gauges of one river per day).
+Score (owner 2026-10-17: water activities first): recreation fame 35 (data/recreation-rivers.txt), Wikipedia demand 20, data completeness 15, record length 10, NWS forecast point 10, name confidence 10; at most 3 gauges of one river per day.
 Pilot gauges (lib/pages.py WAVE0) are status "live". Low-confidence names are "held-names" until the name cleaner is rerun. Output: data/waves.csv. Usage: python -I tools/rescore.py
 """
 import os, sys, csv, math, collections
@@ -13,6 +13,16 @@ PAGES = r"C:\Users\mwoo7\Desktop\calcscrape\docs\research\prototypes\data\pages-
 PER_DAY, PER_RIVER_DAY = 25, 3
 
 
+def load_recreation():
+    out = []
+    for l in open(os.path.join(ROOT, "data", "recreation-rivers.txt"), encoding="utf-8"):
+        l = l.strip()
+        if l and not l.startswith("#") and "|" in l:
+            w, name = l.split("|", 1)
+            out.append((name.strip().lower(), int(w)))
+    return out
+
+
 def main():
     demand = {}
     dp = os.path.join(ROOT, "data", "demand.csv")
@@ -21,6 +31,7 @@ def main():
             if r["status"] == "found" and r["views_12m"]:
                 demand[(r["river"], r["state"])] = int(r["views_12m"])
     rows = list(csv.DictReader(open(PAGES, encoding="utf-8")))
+    rec_names = load_recreation()
     vmax = math.log10(1 + max(demand.values())) if demand else 1
     amax = math.log10(max(float(r["drainage_sqmi"] or 1) for r in rows))
     out = []
@@ -37,8 +48,11 @@ def main():
         rec = min(100, yrs / 60 * 100)
         fc = 100 if r["nws_lid"] else 0
         nm = {"high": 100, "medium": 60, "low": 20}[r["name_confidence"]]
-        score = 0.30 * known + 0.25 * comp + 0.15 * rec + 0.15 * fc + 0.10 * nm
-        out.append({"site": r["site"], "river": r["river"], "place": r["place"], "state": r["state"], "score": round(score, 1), "views": v if v is not None else "", "basis": basis, "name": r["name_confidence"], "url": r["water_url"]})
+        rn = r["river"].lower()
+        hit = max([w for n, w in rec_names if n in rn] or [0])
+        fame = {0: 0, 1: 70, 2: 100}[hit]
+        score = 0.35 * fame + 0.20 * known + 0.15 * comp + 0.10 * rec + 0.10 * fc + 0.10 * nm
+        out.append({"site": r["site"], "river": r["river"], "place": r["place"], "state": r["state"], "score": round(score, 1), "views": v if v is not None else "", "basis": basis, "name": r["name_confidence"], "url": r["water_url"], "fame": hit})
     live = set(WAVE0)
     queue = sorted([x for x in out if x["site"] not in live and x["name"] != "low"], key=lambda x: -x["score"])
     held = sorted([x for x in out if x["site"] not in live and x["name"] == "low"], key=lambda x: -x["score"])
