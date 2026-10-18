@@ -197,7 +197,7 @@ def hero(G, pages=None):
         tiles += ui.tile("wtemp", "thermo", "Water temperature", '%.0f&deg;<small>F</small>' % c["wt"]["f"], '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     if c["air"]:
         a = c["air"]
-        tiles += ui.tile("air", "wind", "Air and wind", '%.0f&deg;<small>F</small>' % a["f"], '<small>%s</small>' % ("wind %.0f mph %s &middot; " % (a["wind"], esc(a["dir"])) if a["wind"] is not None else "") + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
+        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], '<small>%s</small>' % (("wind %.0f mph %s, " % (a["wind"], esc(a["dir"])) if a["wind"] is not None else "") + ("gusts %.0f mph, " % a["gust"] if a["gust"] is not None else "")) + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
     if c["up"]:
         up = c["up"]
         tiles += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmt(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), (" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else ""))

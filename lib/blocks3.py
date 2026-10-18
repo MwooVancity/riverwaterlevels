@@ -224,7 +224,7 @@ def conditions(G, pages=None):
         wk = ob.get("wind_kmh")
         dirs = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
         wd = dirs[int((ob["wind_dir"] % 360) / 22.5 + 0.5) % 16] if ob.get("wind_dir") is not None else ""
-        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "dir": wd, "st": ob.get("station") or "", "t": tzl(parse_t(ob["timestamp"]), zone)}
+        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "t": tzl(parse_t(ob["timestamp"]), zone)}
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
