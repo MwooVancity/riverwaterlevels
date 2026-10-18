@@ -11,6 +11,8 @@ from lib.pages import WAVE0
 
 PAGES = r"C:\Users\mwoo7\Desktop\calcscrape\docs\research\prototypes\data\pages-all.csv"
 PER_DAY, PER_RIVER_DAY = 25, 3
+# Cloudflare Workers free plan: 20,000 static files per deploy. A gauge is 3 pages; rivers, states and trust pages add about 25 percent. 5,500 gauges is about 17,000 files, leaving margin.
+MAX_GAUGES = 5500
 
 
 def load_recreation():
@@ -54,11 +56,13 @@ def main():
         score = 0.35 * fame + 0.20 * known + 0.15 * comp + 0.10 * rec + 0.10 * fc + 0.10 * nm
         out.append({"site": r["site"], "river": r["river"], "place": r["place"], "state": r["state"], "score": round(score, 1), "views": v if v is not None else "", "basis": basis, "name": r["name_confidence"], "url": r["water_url"], "fame": hit})
     live = set(WAVE0)
-    queue = sorted([x for x in out if x["site"] not in live and x["name"] != "low"], key=lambda x: -x["score"])
+    ranked = sorted([x for x in out if x["site"] not in live and x["name"] != "low"], key=lambda x: -x["score"])
+    queue, beyond = ranked[:max(0, MAX_GAUGES - len(live))], ranked[max(0, MAX_GAUGES - len(live)):]
+    beyond_ids = {x["site"] for x in beyond}
     held = sorted([x for x in out if x["site"] not in live and x["name"] == "low"], key=lambda x: -x["score"])
     for x in out:
         x["day"] = ""
-        x["status"] = "live" if x["site"] in live else "held-names" if x["name"] == "low" and x["site"] not in live else "queue"
+        x["status"] = "live" if x["site"] in live else "held-names" if x["name"] == "low" and x["site"] not in live else "beyond-cap" if x["site"] in beyond_ids else "queue"
     day, pending = 1, list(queue)
     while pending:
         take, per, rest = [], collections.Counter(), []
@@ -74,9 +78,9 @@ def main():
     with open(os.path.join(ROOT, "data", "waves.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["status", "day", "site", "river", "place", "state", "score", "wikipedia_views_12m", "demand_basis", "name_confidence", "url"])
-        for x in sorted(out, key=lambda x: (x["status"] != "live", x["status"] == "held-names", x["day"] if x["day"] != "" else 9999, -x["score"])):
+        for x in sorted(out, key=lambda x: (x["status"] != "live", x["status"] in ("held-names", "beyond-cap"), x["day"] if x["day"] != "" else 9999, -x["score"])):
             w.writerow([x["status"], x["day"], x["site"], x["river"], x["place"], x["state"], x["score"], x["views"], x["basis"], x["name"], x["url"]])
-    print("demand found for %d rivers; queue %d over %d days; held for names %d; live %d" % (len(demand), len(queue), day - 1, len(held), len(live)))
+    print("demand found for %d rivers; queue %d over %d days (cap %d gauges); beyond the cap %d; held for names %d; live %d" % (len(demand), len(queue), day - 1, MAX_GAUGES, len(beyond), len(held), len(live)))
     first = [x for x in out if x["day"] == 1]
     print("day 1:", "; ".join("%s at %s %s (%s)" % (x["river"], x["place"], x["state"], x["views"] or "no wiki") for x in first[:10]))
 

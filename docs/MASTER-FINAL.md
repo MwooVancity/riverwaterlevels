@@ -11,6 +11,9 @@ Water `/water/`: 7-day chart, rate of rise and fall (hidden at tidal gauges), la
 Forecast `/forecast/`: river forecast table, National Water Model guidance (where NWS issues no forecast), rain totals (RFC QPE with valid-through times), forecast rain (gridpoint QPF), 6 to 10 and 8 to 14 day outlooks, hourly heatmap, weather, observations, sun times; ACIS, Atlas 14 and Drought Monitor hidden until terms are read.
 Site level: home (national map, near-me, search and filters that drive the all-gauges table and the state list, sortable all-gauges table), state pages, 301 redirects for single-gauge river hubs, trust pages (about, methodology, data sources, privacy, disclaimer, FAQ, glossary), Save gauge, CSV download, print CSS, dark mode, phone layout at 390 px.
 
+## Size cap (owner 2026-10-17)
+The site is capped at 5,500 gauges, chosen by the release score in `data/waves.csv` (recreation fame first). That is about 17,700 files, under the Cloudflare Workers free limit of 20,000 per deploy, so no paid plan is needed. Gauges ranked below the cap (1,801) and held-name gauges (1,798) are not planned. Raise the cap only with a paid plan decision.
+
 ## Not built, with the reason (do not add without clearing the reason)
 - Unit toggle (metric): tables and chart labels mix units inside text; a partial toggle would show mixed units on one page.
 - NOHRSC snow depth and water equivalent: the map service's pixel units are not documented in the service; a value without a verified unit is worse than none.

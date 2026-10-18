@@ -35,6 +35,9 @@ Fixed: privacy page now discloses Cloudflare Web Analytics (cookieless beacon in
 Added: USGS flood-frequency peak flows (StreamStats gage statistics, AEP 50 to 0.2 percent with published confidence intervals) and a sortable all-gauges table on the home page.
 Not changed on purpose: lag block (empirical, disclosed, 3 pages); datum note on old peaks; sitemap lastmod (honest: content changed today); owner dashboard items (HTTPS redirect, www redirect, remove noindex at launch).
 
+## Size cap
+Owner 2026-10-17: do not build every river. Cap at 5,500 gauges (about 17,700 files) so the site stays inside the Cloudflare free limit of 20,000 files. Order = `data/waves.csv` (tools/rescore.py, MAX_GAUGES). At 25 pages a day the cap is reached in about 219 days.
+
 ## Next (me)
 1. Prioritization: run the demand test (Wikipedia page views per river name, plus drainage area and NWS forecast point) and re-score `pages-all.csv` waves. Waves 1 to 3 are currently ordered by drainage area only; the demand proxy was never tested. Lakebrief's top page (Shasta Lake water, big famous reservoir in the news) shows demand follows big, famous, newsworthy waters.
 2. Fresh-review items not built: upstream gauge lag (needs upstream series), hub and state list columns (rising or falling, percentile) plus near-me and a gauge map, merge or reconcile historic crests with annual peaks, pre-dam and post-dam peak eras (Lees Ferry), NFHL flood zones, NCEI storm events, NWS local storm reports, StreamStats, NOHRSC snow, Reclamation releases (endpoint not found), NWPS probabilistic (path not found). Endpoints for these were unverified in the review.
