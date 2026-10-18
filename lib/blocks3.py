@@ -210,6 +210,57 @@ def b_field_meas(G):
                  "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The rating shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
 
+def b_right_now(G, pages=None):
+    """One table of every current condition the page holds, each row with its source and time. Data only: no ratings, no advice."""
+    from lib.blocks2 import _at
+    zone, fl, lt, lv = G["zone"], G["fl"], G["lt"], G["lv"]
+    rec = G["rec"]
+    ok = lambda sid: SOURCES[sid]["status"] in ("quoted", "owner-permission")
+    rows = tr(["Flow", "%s cfs" % fmt(lv), "USGS, observed %s" % esc(tzl(lt, zone))], right=(1,))
+    if G["sg"]:
+        rows += tr(["Gage height", "%.2f ft" % G["sg"][-1][1], "USGS, observed %s" % esc(tzl(G["sg"][-1][0], zone))], right=(1,))
+    srow = G.get("srow")
+    if G["p"] is not None and srow and srow[5]:
+        pct = "below the 5th percentile" if G["p"] == -1 else "above the 95th percentile" if G["p"] == 101 else "%s percentile" % ordinal(G["p"])
+        rows += tr(["This date in the record", "%s, %.0f%% of the median" % (pct, G["basis"] / srow[5] * 100), "USGS daily statistics, %s years, our calculation" % esc(str(srow[0]))], right=(1,))
+    if len(fl) >= 8 and not G.get("osc"):
+        steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(1, len(fl)))
+        tol = max(1200, 0.6 * steps[len(steps) // 2])
+        parts = []
+        for h in (1, 6, 24):
+            a = _at(fl, lt - datetime.timedelta(hours=h), tol)
+            if a and a[1] > 0:
+                parts.append("%s%.0f%% in %d h" % ("+" if lv >= a[1] else "-", abs(lv - a[1]) / a[1] * 100, h))
+        if parts:
+            rows += tr(["Change", ", ".join(parts), "USGS readings, our calculation"], right=(1,))
+    n = rec.get("nwps") or {}
+    f = n.get("forecast") if ok("nwps") else None
+    if f and f.get("points") and (f.get("primary_units") or "").lower() == "ft":
+        age = hours_old(f.get("issued"), G["now"]) if f.get("issued") else None
+        fut = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) > lt and p["primary"] > -900]
+        if fut and (age is None or age <= 72):
+            hi = max(fut, key=lambda x: x[1])
+            rows += tr(["Forecast high", "%.1f ft" % hi[1], "NWS forecast point %s, %s, issued %s" % (esc(n.get("lid") or ""), esc(tzl(hi[0], zone)), esc(tzl(parse_t(f["issued"]), zone)) if f.get("issued") else "time not stated")], right=(1,))
+    nws = rec.get("nws") or {}
+    if ok("nws") and nws.get("alerts") is not None:
+        al = [a for a in nws["alerts"] if (a.get("event") or "") not in IGNORED_ALERTS]
+        rows += tr(["Active NWS alerts", str(len(al)), ("; ".join(esc(a.get("event") or "") for a in al[:3])) if al else "NWS alerts for this location, fetched %s" % esc(tzl(parse_t(nws["fetched_at"]), zone))], right=(1,)) if nws.get("fetched_at") else ""
+    rn = rec.get("rain") or {}
+    if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
+        vt = (rn.get("valid_through") or {}).get("last_24h")
+        rows += tr(["Rain, last 24 h", "%.2f in" % rn["inches"]["last_24h"], "NWS RFC estimate" + (", to %s" % esc(tzl(parse_t(vt), zone)) if vt else "")], right=(1,))
+    up = next(((x, pages.get(x["site"])) for x in ((rec.get("related") or {}).get("items") or []) if x.get("relation") == "upstream" and pages and pages.get(x["site"]) and pages[x["site"]].get("_built")), None)
+    if up:
+        x, pr = up
+        rows += tr(["Nearest upstream gauge", '<a href="%s">%s</a> %s cfs' % (pr["water_url"], esc(river_at(pr["river"], pr["place"])), fmt(x["flow"])), ("USGS, observed %s%s" % (esc(tzl(parse_t(x["time"]), zone)), (", measured lag about %d h" % x["lag_h"]) if x.get("lag_h") else ""))], right=(1,))
+    if rows.count("<tr>") < 4:
+        return None
+    out_b = block("right_now", "Right now", "live", table(["Condition", "Value", "Source and time"], rows, right=(1,)),
+                  "Source: each row names its own source and time. Percentile and changes are calculations from USGS data; the forecast is the National Weather Service river forecast, not ours.", "usgs")
+    out_b["also"] = ["nws", "nwps", "rfc"]
+    return out_b
+
+
 def b_wpc(G):
     """WPC flood and excessive rainfall outlooks that cover the gauge point, and recent NWS flood reports within 50 miles. Hidden when there is nothing to show."""
     w = G["rec"].get("wpc")

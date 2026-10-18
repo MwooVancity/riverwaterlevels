@@ -779,7 +779,7 @@ def tab_blocks(tab, G, pages):
     if tab == "water":
         return [b2.b_offline(G), b_flow_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G), b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G), b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G)]
     if tab == "dashboard":
-        return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), ("PAIR", b_map(G), b_radar(G)), "AD", b_weather(G, 3), b_land(G), b2.b_about(G)]
+        return [b2.b_offline(G), b3.b_right_now(G, pages), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), ("PAIR", b_map(G), b_radar(G)), "AD", b_weather(G, 3), b_land(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
