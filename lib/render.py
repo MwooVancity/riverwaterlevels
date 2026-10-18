@@ -135,9 +135,10 @@ def render_block(b):
     return ('<section class="card blk" id="%s"><h2>%s <span class="tag">%s</span>%s</h2>%s<p class="src">%s</p></section>' % (b["id"], esc(b["heading"]), esc(TAGS[b["tag"]]), amber, b["body"], b["source"]))
 
 
-def table(heads, rows, right=()):
+def table(heads, rows, right=(), hide=()):
     th = "".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
-    return '<div class="scroll"><table><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (th, rows)
+    cls = (' class="%s"' % " ".join("hc%d" % i for i in hide)) if hide else ""
+    return '<div class="scroll"><table%s><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (cls, th, rows)
 
 
 def tr(cells, right=()):
@@ -727,7 +728,7 @@ def b_snotel(G):
         med = x.get("median_in")
         pct = ("%.0f%%" % (x["swe_in"] / med * 100)) if med else "–"
         rows += tr([esc(x["name"]), "%d mi" % round(x["km"] * 0.621371), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
-    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5)),
+    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2)),
                  "Source: USDA Natural Resources Conservation Service SNOTEL stations within 37 miles of the gauge (AWDB web service), fetched %s. Provisional data; stations may not drain to this gauge." % esc(tzl(parse_t(s["fetched_at"]), G["zone"])), "nrcs")
 
 
@@ -779,7 +780,7 @@ def tab_blocks(tab, G, pages):
         return [b2.b_offline(G), b_flow_chart(G), "AD", b2.b_rate(G), b3.b_rise(G), b3.b_month_chart(G), b3.b_year_chart(G), b_daily(G), b_multiyear(G), b_record(G), b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_field_meas(G), b3.b_storms(G), b3.b_declarations(G), b2.b_rating(G), b_snotel(G), b_wtemp(G), b_quality(G), b_related(G, pages), b_flood_stages(G), b3.b_nws_point(G, pages), b3.b_flood_outlook(G), b_impacts(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G)]
     if tab == "dashboard":
         return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), ("PAIR", b_map(G), b_radar(G)), "AD", b_weather(G, 3), b_land(G), b2.b_about(G)]
-    return [b2.b_offline(G), b_alerts(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
+    return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
 def footer():
@@ -832,6 +833,7 @@ function run(){fetch('https://api.waterdata.usgs.gov/ogcapi/v0/collections/lates
 if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent=lt(F.t);q('obs').textContent=lt(F.t);if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){var nt='. Flow above is newer; percentile and change are as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc&&pc.getAttribute('data-n')!=='1'){pc.textContent+=nt;pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}).catch(function(){})}
 run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600000)})();</script>"""
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
+SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning or a safety determination: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
 ACTS = '<p class="acts"><button type="button" class="pill" id="savebtn" hidden>Save gauge</button> <button type="button" class="pill" id="csvbtn" data-site="@SITE@" hidden>Download last 7 days (CSV)</button></p>'
 TOOLS_JS = """<script>(function(){var sb=document.getElementById('savebtn'),cb=document.getElementById('csvbtn'),K='rwl_saved';
 function ld(){try{return JSON.parse(localStorage.getItem(K))||[]}catch(e){return[]}}
@@ -892,14 +894,14 @@ def build_tab(tab, G, pages):
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span data-live="age" data-t="%s">%s</span> old%s' % (G["site"], drain, esc(G["obs"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
     ld_items = [("Home", "/"), (st, "/rivers/%s/" % st.lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(place, None)]
-    ld = crumb_ld(ld_items)
+    ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL}})
     body = ""
     first = True
     for b in blocks:
         body += ('<div class="ad">ADVERTISEMENT</div>' if ADS else "") if b == "AD" else ('<div class="pair">%s</div>' % "".join(render_block(x) for x in b)) if isinstance(b, list) else render_block(b)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G)) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G) + SAFETY) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

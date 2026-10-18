@@ -18,6 +18,35 @@ def hashes(d):
     return {os.path.relpath(p, d): hashlib.sha256(open(p, "rb").read()).hexdigest() for p in glob.glob(os.path.join(d, "**", "index.html"), recursive=True)}
 
 
+def unit_checks():
+    """Numbers and labels that a page must never get wrong: percentile interpolation, axis labels, place phrasing, blocks that must hide."""
+    sys.path.insert(0, ROOT)
+    import datetime
+    from lib.common import interp_pct, river_at
+    from lib import render
+    from lib.render import tf, area_short
+    from lib import blocks3
+    row = [60, 100, 200, 300, 400, 500, 700, 800, 1000, 1200]  # years, then p5 p10 p20 p25 p50 p75 p80 p90 p95
+    good = [
+        interp_pct(row, 500) == 50,                      # exactly the median
+        interp_pct(row, 50) == -1,                       # below the 5th percentile
+        interp_pct(row, 5000) == 101,                    # above the 95th percentile
+        20 < interp_pct(row, 350) < 25,                  # between p20 and p25
+        tf(12.5, [2.5, 5.0, 7.5, 10.0, 12.5]) == "12.5",  # 12.5 is never printed as 12
+        tf(0, [0, 1, 2]) == "0",
+        river_at("Gauley River", "above Belva") == "Gauley River above Belva" or river_at("Gauley River", "Above Belva") == "Gauley River above Belva",
+        river_at("Penns Creek", "Penns Creek") == "Penns Creek",
+        river_at("Missouri River", "Kansas City") == "Missouri River at Kansas City",
+        area_short("A; B; C; D; E; F; G; H", 6).endswith("and 2 more areas"),
+        area_short("Linn; Union; Snyder", 6, "Union County").startswith("Union"),
+    ]
+    G = {"rec": {"floodfreq": {"rows": [{"aep": 1.0, "q": 1, "lo": None, "hi": None}], "regulated": True, "conflict": False}}}
+    good.append(blocks3.b_floodfreq(G) is None)          # regulated gauge: no flood-frequency table
+    G["rec"]["floodfreq"].update(regulated=False, conflict=True)
+    good.append(blocks3.b_floodfreq(G) is None)          # conflicting preferred sets: no table
+    return all(good), [i for i, g in enumerate(good) if not g]
+
+
 def blocks_safety():
     """In-process: the final-form blocks return None on missing or stale data, and build_tab drops a block whose source status is not quoted/owner-permission."""
     import copy, datetime
@@ -92,6 +121,7 @@ def main():
     back = hashes(os.path.join(ROOT, "dist"))
     rb = r.returncode == 0 and back == before
     print("4. rollback and swap back works: %s" % rb); ok &= rb
+    t6, bad6 = unit_checks(); print("6. unit checks (percentile, axis labels, place phrasing, hidden blocks): %s %s" % (t6, bad6 or "")); ok &= t6
     t5 = blocks_safety(); print("5. new blocks: hidden without data, hidden when stale, hidden when the source is not cleared: %s" % t5); ok &= t5
     run("build.py")  # leave dist_next consistent with the real clock
     print("ALL PASS" if ok else "FAILURES")

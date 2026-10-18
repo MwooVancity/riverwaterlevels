@@ -75,7 +75,8 @@ def main():
             lm[u] = {"hash": h, "date": today}
     if not os.environ.get("BUILD_NOW") and not preview:
         json.dump(lm, open(lm_path, "w"), indent=0)
-    open(os.path.join(nxt, "sitemap.xml"), "w", encoding="utf-8").write(directory.sitemap(urls, {u: lm[u]["date"] for u in urls if u in lm}))
+    for name, xml in directory.sitemap_files(urls, {u: lm[u]["date"] for u in urls if u in lm}).items():
+        open(os.path.join(nxt, name), "w", encoding="utf-8").write(xml)
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found())
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)

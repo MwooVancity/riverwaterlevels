@@ -49,7 +49,7 @@ def b_declarations(G):
     area = ((items[0].get("area") if items else None) or "this county").replace(" (County)", " County")
     rows = "".join(tr([esc(i["id"] or ""), fdate(i["date"]) if i["date"][:4].isdigit() else "–", "%s to %s" % (fdate(i["begin"]), fdate(i["end"])) if i["begin"][:4].isdigit() and i["end"][:4].isdigit() else "–", esc(i["title"] or ""),
                        esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "–")]) for i in items)
-    body = ("<p>%d federal flood disaster declarations on file for %s.</p>" % (d["count"], esc(area))) + (table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows) if rows else "")
+    body = ("<p>%d federal flood disaster declarations on file for %s.</p>" % (d["count"], esc(area))) + (table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows, hide=(2, 4)) if rows else "")
     return block("flood_declarations", "Federal flood disaster declarations", "hist", body,
                  "Source: This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA. Dataset: Disaster Declarations Summaries, endpoint https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries (v2), accessed %s. Declarations whose type is Flood or whose title contains FLOOD; the 12 most recent are listed." % esc(tzl(parse_t(d["fetched_at"]), G["zone"])), "openfema")
 
@@ -262,12 +262,13 @@ def b_floodfreq(G):
     f = G["rec"].get("floodfreq")
     if not f or not f.get("rows") or f.get("regulated") or f.get("conflict"):
         return None
-    rows = "".join(tr(["%s%%" % ("%g" % r["aep"]), "%s years" % "{:,g}".format(round(100 / r["aep"], 1)), "%s cfs" % fmt(r["q"]),
-                       ("%s to %s cfs" % (fmt(r["lo"]), fmt(r["hi"]))) if r.get("lo") is not None and r.get("hi") is not None else "–"], right=(2, 3)) for r in f["rows"] if r["aep"] <= 50)
+    has_ci = any(r.get("lo") is not None and r.get("hi") is not None for r in f["rows"])
+    rows = "".join(tr(["%s%%" % ("%g" % r["aep"]), "%s years" % "{:,g}".format(round(100 / r["aep"], 1)), "%s cfs" % fmt(r["q"])]
+                      + ([("%s to %s cfs" % (fmt(r["lo"]), fmt(r["hi"]))) if r.get("lo") is not None and r.get("hi") is not None else "–"] if has_ci else []), right=(2, 3)) for r in f["rows"] if r["aep"] <= 50)
     if not rows:
         return None
     rec = ("record %s%s" % (esc(f["range"]), (", %s years" % fmt(f["years"])) if f.get("years") else "")) if f.get("range") else "record years not stated"
-    return block("flood_frequency", "Flood frequency: peak flows", "hist", table(["Chance in any year", "Average spacing", "Peak flow", "Confidence interval, as published"], rows, right=(2, 3)),
+    return block("flood_frequency", "Flood frequency: peak flows", "hist", table(["Chance in any year", "Average spacing", "Peak flow"] + (["Confidence interval, as published"] if has_ci else []), rows, right=(2, 3)),
                  "Source: USGS StreamStats gage statistics (peak-flow statistics, annual exceedance probability), %s. %s. Long-run statistics, not a forecast or a schedule. Fetched %s." % (
                      rec, esc(f.get("citation") or "citation not stated") + ((" " + esc(f["url"])) if f.get("url") else ""), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 

@@ -124,12 +124,15 @@ def home(built, Gs):
             wq = "1" if any(series(Gs[x["site"]]["rec"], c) for x in g for c in LABELS) else "0"
             items += '<a class="item" href="%s" data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><span>%s<small>%s</small></span><span>&rarr;</span></a>' % (href, esc((rv + " " + STATE_NAMES.get(st, st) + " " + " ".join(x["place"] for x in g)).lower().replace("st. ", "saint ")), large, fc, wq, esc(rv), item_line(g, Gs))
         secs += '<section class="st"><div class="stateh"><h2>%s</h2><a href="/rivers/%s/">View state &rarr;</a></div><div class="cols">%s</div></section>' % (STATE_NAMES.get(st, st), st.lower(), items)
+    if len(built) > 150:
+        secs = "".join('<section class="st"><div class="stateh"><h2>%s</h2><a href="/rivers/%s/">View all %d gauges &rarr;</a></div></section>' % (
+            STATE_NAMES.get(st, st), st.lower(), sum(len(v) for v in by_state[st].values())) for st in sorted(by_state, key=lambda s: STATE_NAMES.get(s, s)))
     tools = ('<div class="search"><input id="q" type="search" placeholder="Search rivers, places or states" aria-label="Search rivers, places or states"><span class="sub" id="gcount" style="margin:0">%d gauges</span></div>'
              '<p id="nomatch" class="sub" hidden>No rivers match that search.</p><div class="pills" aria-label="Filters"><button type="button" class="pill" data-f="large">Large rivers</button>'
              '<button type="button" class="pill" data-f="fc">Has river forecast</button><button type="button" class="pill" data-f="wq">Has water quality sensors</button></div>%s' % (len(built), jump))
     body = ('<h1>Live river levels and flows for US rivers &amp; creeks</h1><p class="sub">Flow and water level for %d gauges across the US, from USGS gauges and the National Weather Service.</p>'
             '<div id="saved" class="card" hidden></div><p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
-            % (len(built), conus_map(built, Gs), tools, all_gauges_table(built, Gs), secs, SEARCH_JS + SAVED_JS + NEAR_JS))
+            % (len(built), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + SAVED_JS + NEAR_JS))
     return shell("Live river levels and flows | " + BRAND, "Flow, gage height and percentile for US river gauges, from USGS and the National Weather Service.", "/", body)
 
 
@@ -241,6 +244,23 @@ def trust_pages(built_count, built_rows):
                                      '<h2>How often each source updates</h2><div class="card scroll"><table><thead><tr><th>Source</th><th>Source updates</th><th>This site refreshes</th></tr></thead><tbody>%s</tbody></table></div>'
                                      '<p class="src">NWS material is public domain and not subject to copyright. Sources whose terms are not yet settled are not used on the site.</p>' % (rows, updrows), "The data sources used by River Water Levels and the terms checked.")
     return t
+
+
+SITEMAP_MAX = 10000
+
+
+def sitemap_files(urls, lastmod):
+    """{file name: xml}. At most 10,000 URLs per file (Google allows 50,000); more than that becomes an index at /sitemap.xml."""
+    urls = sorted(urls)
+    if len(urls) <= SITEMAP_MAX:
+        return {"sitemap.xml": sitemap(urls, lastmod)}
+    out, idx = {}, ""
+    for i in range(0, len(urls), SITEMAP_MAX):
+        name = "sitemap-%d.xml" % (i // SITEMAP_MAX + 1)
+        out[name] = sitemap(urls[i:i + SITEMAP_MAX], lastmod)
+        idx += "<sitemap><loc>%s/%s</loc></sitemap>" % (SITE_URL, name)
+    out["sitemap.xml"] = '<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</sitemapindex>' % idx
+    return out
 
 
 def sitemap(urls, lastmod):

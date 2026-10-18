@@ -40,3 +40,5 @@ button:focus-visible,th[tabindex]:focus-visible,input:focus-visible{outline:2px 
 h2.bst{margin:22px 0 8px}
 .hero small{line-height:1.45}
 .scroll{background:linear-gradient(to right,var(--card) 30%,transparent),linear-gradient(to left,var(--card) 30%,transparent) 100% 0,radial-gradient(farthest-side at 0 50%,rgba(0,0,0,.2),transparent),radial-gradient(farthest-side at 100% 50%,rgba(0,0,0,.2),transparent) 100% 0;background-repeat:no-repeat;background-size:40px 100%,40px 100%,12px 100%,12px 100%;background-attachment:local,local,scroll,scroll}
+@media(max-width:600px){table.hc0 td:nth-child(1),table.hc0 th:nth-child(1){display:none}table.hc1 td:nth-child(2),table.hc1 th:nth-child(2){display:none}table.hc2 td:nth-child(3),table.hc2 th:nth-child(3){display:none}table.hc3 td:nth-child(4),table.hc3 th:nth-child(4){display:none}table.hc4 td:nth-child(5),table.hc4 th:nth-child(5){display:none}table.hc5 td:nth-child(6),table.hc5 th:nth-child(6){display:none}table.hc6 td:nth-child(7),table.hc6 th:nth-child(7){display:none}table.hc7 td:nth-child(8),table.hc7 th:nth-child(8){display:none}}
+.hero{align-items:start}.safety{margin:-4px 0 12px}
