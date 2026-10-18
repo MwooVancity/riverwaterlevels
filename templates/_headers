@@ -1,0 +1,11 @@
+https://riverwaterlevels.mwoo778.workers.dev/*
+  X-Robots-Tag: noindex
+# PRE-LAUNCH HOLD: remove the next two rules at launch (owner rule: every published page is indexable)
+https://riverwaterlevels.com/*
+  X-Robots-Tag: noindex
+https://www.riverwaterlevels.com/*
+  X-Robots-Tag: noindex
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000

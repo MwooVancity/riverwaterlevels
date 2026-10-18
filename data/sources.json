@@ -1,0 +1,265 @@
+{
+ "read_on": "2026-10-16",
+ "sources": [
+  {
+   "id": "usgs",
+   "name": "USGS Water Data API, NLDI, daily statistics",
+   "status": "quoted",
+   "terms_url": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+   "summary": "USGS-produced data and information are treated as U.S. public domain; USGS asks that it be credited; non-USGS images need the owner's permission; the USGS identifier is trademarked.",
+   "credit": "Data: U.S. Geological Survey",
+   "blocks": [
+    "latest_flow",
+    "gage_height",
+    "percentile",
+    "flow_chart",
+    "daily_readings",
+    "quality_sensors",
+    "related_gauges",
+    "public_land",
+    "record_comparison",
+    "multi_year",
+    "annual_peaks",
+    "water_temp_months"
+   ]
+  },
+  {
+   "id": "nws",
+   "name": "National Weather Service api.weather.gov",
+   "status": "quoted",
+   "terms_url": "https://www.weather.gov/disclaimer",
+   "summary": "NWS web content is public domain unless marked; free for any lawful purpose; may not be altered and presented as official, may not imply NWS or NOAA endorsement; NWS name and logo are protected; works consisting mostly of NWS material must name the NWS as source and state it is not subject to copyright; check data dates and times.",
+   "credit": "Forecasts, alerts and observations: National Weather Service. NWS material is not subject to copyright",
+   "blocks": [
+    "weather_forecast",
+    "hourly_forecast",
+    "hourly_heatmap",
+    "alerts",
+    "air_obs"
+   ]
+  },
+  {
+   "id": "nwps",
+   "name": "NOAA National Water Prediction Service (flood stages, river forecast, National Water Model)",
+   "status": "quoted",
+   "terms_url": "https://api.water.noaa.gov/nwps/v1/docs/",
+   "summary": "NWS/NOAA disclaimer (weather.gov/disclaimer): public domain unless noted, free for any lawful purpose; may not be altered and presented as official, may not imply NOAA or NWS endorsement. Applied to this NOAA product because its sites link to that disclaimer (inferred, not a product-specific statement). The site owner also reports permission; its wording has not been seen.",
+   "credit": "River forecasts, flood stages, crests and impact statements: National Weather Service",
+   "blocks": [
+    "flood_stages",
+    "river_forecast",
+    "historic_crests",
+    "flood_impacts",
+    "nws_forecast_point",
+    "flood_outlook"
+   ],
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "rfc",
+   "name": "NOAA River Forecast Center precipitation estimates and NWS radar imagery",
+   "status": "quoted",
+   "terms_url": "https://www.weather.gov/disclaimer",
+   "summary": "NWS/NOAA disclaimer (weather.gov/disclaimer): public domain unless noted, free for any lawful purpose; may not be altered and presented as official, may not imply NOAA or NWS endorsement. Applied to this NOAA product because its sites link to that disclaimer (inferred, not a product-specific statement). The site owner also reports permission; its wording has not been seen.",
+   "credit": "Rain estimates and radar: NOAA and National Weather Service",
+   "blocks": [
+    "rain_totals",
+    "radar"
+   ],
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "padus",
+   "name": "USGS PAD-US public land",
+   "status": "quoted",
+   "terms_url": "https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview",
+   "summary": "USGS PAD-US data overview: public domain; credit requested: USGS Gap Analysis Project, PAD-US (doi 10.5066/P96WBCHS). Quote taken from the agency page by a research agent on 2026-10-17.",
+   "credit": "Public land: USGS Gap Analysis Project, Protected Areas Database of the United States (PAD-US)",
+   "blocks": [
+    "public_land"
+   ],
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "epa",
+   "name": "EPA ATTAINS",
+   "status": "quoted",
+   "terms_url": "https://www.epa.gov/web-policies-and-procedures/epa-disclaimers",
+   "summary": "EPA disclaimers page: \"Unless otherwise specified, geospatial data produced by the EPA is by default in the public domain.\" Individual documents may carry other conditions (not used). Applied to the ATTAINS assessment layer and StreamCat watershed metrics. Reviewer note: other EPA wording is mixed; re-read in a browser.",
+   "blocks": [
+    "water_quality_assessment",
+    "watershed_characteristics"
+   ],
+   "credit": "Water quality assessments and watershed data: U.S. Environmental Protection Agency",
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "osm",
+   "name": "OpenStreetMap via Overpass",
+   "status": "off",
+   "terms_url": "https://www.openstreetmap.org/copyright",
+   "summary": "ODbL: attribution required; share-alike for derived databases; public Overpass instance not for production traffic. Off until decided.",
+   "blocks": [
+    "access"
+   ]
+  },
+  {
+   "id": "ridb",
+   "name": "Recreation.gov RIDB",
+   "status": "off",
+   "terms_url": "https://ridb.recreation.gov/docs",
+   "summary": "Terms not read.",
+   "blocks": [
+    "camping"
+   ]
+  },
+  {
+   "id": "hivis",
+   "name": "USGS HIVIS cameras",
+   "status": "off",
+   "terms_url": "https://apps.usgs.gov/hivis/",
+   "summary": "Image terms not read; USGS says non-USGS images need permission.",
+   "blocks": [
+    "camera"
+   ]
+  },
+  {
+   "id": "natmap",
+   "name": "USGS The National Map (USGS Topo map service)",
+   "status": "quoted",
+   "terms_url": "https://www.usgs.gov/faqs/what-are-terms-uselicensing-map-services-and-data-national-map",
+   "summary": "USGS FAQ: The National Map services and data are free with no license restrictions, public domain; USGS requests the credit line 'Map services and data available from U.S. Geological Survey, National Geospatial Program'. The FAQ does not name the basemap.nationalmap.gov host; applied to it by inference.",
+   "credit": "Map services and data available from U.S. Geological Survey, National Geospatial Program",
+   "blocks": [
+    "gauge_map"
+   ]
+  },
+  {
+   "id": "nrcs",
+   "name": "USDA NRCS SNOTEL (AWDB web service)",
+   "status": "quoted",
+   "terms_url": "https://www.usda.gov/policies-and-links",
+   "summary": "USDA policies page: most information on USDA websites is public domain and may be freely distributed or copied, with a byline credit requested ('U.S. Department of Agriculture'); some materials are copyrighted and labelled. No NRCS-specific SNOTEL terms page was found; applied from the USDA-wide policy.",
+   "credit": "Snow data: U.S. Department of Agriculture, Natural Resources Conservation Service",
+   "blocks": [
+    "snowpack"
+   ]
+  },
+  {
+   "id": "cpc",
+   "name": "NOAA Climate Prediction Center 8 to 14 day outlook (NWS map service)",
+   "status": "quoted",
+   "terms_url": "https://www.weather.gov/disclaimer",
+   "summary": "NOAA/NWS disclaimer wording: information on government servers is public domain unless annotated; may not be altered and presented as official, may not imply NOAA endorsement. No CPC-specific page was found; applied from the NWS/NOAA disclaimer (some CPC international pages carry their own notice, not this product).",
+   "credit": "Outlook: NOAA Climate Prediction Center",
+   "blocks": [
+    "cpc_outlook"
+   ]
+  },
+  {
+   "id": "usdm",
+   "name": "U.S. Drought Monitor",
+   "status": "off",
+   "terms_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
+   "summary": "Only a map credit line ('Map courtesy of NDMC') was found; no data or web-service terms found. Off until the terms are read.",
+   "blocks": [
+    "drought_monitor"
+   ]
+  },
+  {
+   "id": "nid",
+   "name": "USACE National Inventory of Dams",
+   "status": "off",
+   "terms_url": "https://nid.sec.usace.army.mil/",
+   "summary": "No terms page found; reporting says some dam details are restricted. Off until the terms are read.",
+   "blocks": [
+    "dams_nearby"
+   ]
+  },
+  {
+   "id": "hdsc",
+   "name": "NOAA Atlas 14 precipitation frequency (HDSC)",
+   "status": "off",
+   "terms_url": "https://hdsc.nws.noaa.gov/",
+   "summary": "Endpoint works (CSV); no readable terms page found. Off until the terms are read.",
+   "blocks": [
+    "rainfall_frequency"
+   ]
+  },
+  {
+   "id": "waterwatch",
+   "name": "USGS WaterWatch",
+   "status": "off",
+   "terms_url": "https://www.drought.gov/data-maps-tools/usgs-waterwatch",
+   "summary": "Retired by USGS in February 2026 per Drought.gov. Not used; the site computes its own percentile from USGS daily statistics.",
+   "blocks": []
+  },
+  {
+   "id": "openfema",
+   "name": "FEMA OpenFEMA API (Disaster Declarations Summaries)",
+   "status": "quoted",
+   "terms_url": "https://www.fema.gov/about/openfema/terms-conditions",
+   "summary": "OpenFEMA terms: \"This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA.\" is the requested notice; cite the endpoint and version; do not modify content while claiming FEMA as the source; no FEMA or DHS logos. Quote extracted by a summarising tool; re-read in a browser.",
+   "credit": "Declarations: FEMA OpenFEMA (not endorsed by FEMA)",
+   "blocks": [
+    "flood_declarations"
+   ],
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "ncei",
+   "name": "NOAA NCEI Storm Events Database",
+   "status": "quoted",
+   "terms_url": "https://www.ncei.noaa.gov/sites/default/files/2023-12/NCEI%20PD-10-2-02%20-%20Open%20Data%20Policy%20Signed.pdf",
+   "summary": "NCEI Open Data Policy: \"Environmental data and information produced by NOAA or any Federal agency are available fully and openly to data users ... These data are in the public domain in the United States.\" Cite the dataset as the source.",
+   "credit": "Storm events: NOAA National Centers for Environmental Information, Storm Events Database",
+   "blocks": [
+    "storm_events"
+   ],
+   "read_on": "2026-10-17"
+  },
+  {
+   "id": "usbr",
+   "name": "U.S. Bureau of Reclamation RISE",
+   "status": "off",
+   "terms_url": "https://data.usbr.gov/rise-api",
+   "summary": "No terms text could be read (hosts refused the connection from this machine). Off until read.",
+   "blocks": [
+    "dam_releases"
+   ]
+  },
+  {
+   "id": "fema_nfhl",
+   "name": "FEMA National Flood Hazard Layer (Esri Living Atlas copy)",
+   "status": "off",
+   "terms_url": "https://hazards.fema.gov/femaportal/resources/flood_map_svc.htm",
+   "summary": "FEMA host unreachable; the Esri copy is generalised and FEMA says the FIRM is the official designation. Off until terms are read.",
+   "blocks": [
+    "flood_zones"
+   ]
+  },
+  {
+   "id": "acis",
+   "name": "NOAA Regional Climate Centers ACIS",
+   "status": "off",
+   "terms_url": "https://www.rcc-acis.org/",
+   "summary": "Terms not yet read. Off until read.",
+   "blocks": [
+    "county_station_rain"
+   ]
+  },
+  {
+   "id": "nwm",
+   "name": "NOAA National Water Model guidance (via NWPS)",
+   "status": "quoted",
+   "terms_url": "https://www.weather.gov/disclaimer",
+   "summary": "NWS/NOAA disclaimer (weather.gov/disclaimer): public domain unless noted, free for any lawful purpose; may not be altered and presented as official, may not imply NOAA or NWS endorsement. Applied to this NOAA product because its sites link to that disclaimer (inferred, not a product-specific statement). The site owner also reports permission; its wording has not been seen.",
+   "credit": "National Water Model guidance: NOAA",
+   "blocks": [
+    "nwm_guidance",
+    "nwm_medium_range"
+   ],
+   "read_on": "2026-10-17"
+  }
+ ]
+}

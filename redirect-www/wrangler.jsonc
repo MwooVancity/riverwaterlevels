@@ -1,0 +1,8 @@
+{
+  "name": "riverwaterlevels-www",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "routes": [
+    { "pattern": "www.riverwaterlevels.com", "custom_domain": true }
+  ]
+}

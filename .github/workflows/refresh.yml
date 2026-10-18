@@ -1,0 +1,66 @@
+name: refresh
+
+# Rebuilds and deploys the site without the owner's computer.
+# Every 30 minutes: fast refresh (newest USGS readings, NWS, NWPS, rain). Every 6 hours: full refresh (all slow sources).
+on:
+  schedule:
+    - cron: "5,35 * * * *"
+    - cron: "20 3,9,15,21 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "fast or full"
+        default: "fast"
+
+# one run at a time: two runs would overwrite each other's data
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Restore the last data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cache
+            state
+          key: rwl-data-${{ github.run_id }}
+          restore-keys: |
+            rwl-data-
+      - name: Decide fast or full
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M="${{ github.event.inputs.mode }}";
+          elif [ "${{ github.event.schedule }}" = "20 3,9,15,21 * * *" ]; then M="full"; else M="fast"; fi
+          if [ ! -d cache ] || [ -z "$(ls -A cache 2>/dev/null)" ]; then M="full"; fi
+          echo "mode=$M" >> "$GITHUB_OUTPUT"
+          echo "mode: $M"
+      - name: Refresh (collect, build, check, publish, deploy, live check)
+        run: |
+          if [ "${{ steps.mode.outputs.mode }}" = "fast" ]; then python refresh.py --fast; else python refresh.py; fi
+      - name: Show the log when it fails
+        if: failure()
+        run: tail -n 120 runs/refresh.log || true
+      - name: Save the data cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            cache
+            state
+          key: rwl-data-${{ github.run_id }}
