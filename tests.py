@@ -93,9 +93,14 @@ def review_gate():
     from lib.reviewgate import unreviewed_new_pages as f
     live = ["/", "/river/a/b/", "/status/"]
     nxt = live + ["/river/c/d/", "/river/c/d/forecast/", "/status/x/", "/rivers/pa/"]
-    rv = {"pages": {"/river/c/d/": {"verdict": "SHIP"}, "/river/c/d/forecast/": {"verdict": "GRANDFATHERED"}}}
+    rv = {"pages": {"/river/c/d/": {"verdict": "SHIP"}, "/river/c/d/forecast/": {"verdict": "HOLD"}}}
+    from lib.reviewgate import hold_back
+    rows = {"s1": {"dashboard_url": "/river/a/b/", "forecast_url": "/river/a/b/forecast/"}, "s2": {"dashboard_url": "/river/c/d/", "forecast_url": "/river/c/d/forecast/"}, "s3": {"dashboard_url": "/river/e/f/", "forecast_url": "/river/e/f/forecast/"}}
+    held = hold_back(rows, ["/river/a/b/"], {"pages": {"/river/a/b/": {"verdict": "GRANDFATHERED"}, "/river/c/d/": {"verdict": "SHIP"}}}, {"s1", "s2"})
     return (f(nxt, live, {}) == ["/river/c/d/", "/river/c/d/forecast/"] and f(nxt, live, rv) == ["/river/c/d/forecast/"]
-            and f(live, live, {}) == [] and f(nxt, nxt, {}) == [])
+            and f(live, live, {}) == [] and f(nxt, nxt, {}) == []
+            and f(["/river/g/h/"], live, {"pages": {"/river/g/h/": {"verdict": "GRANDFATHERED"}}}) == []
+            and held == ({"s3"}, {"s1", "s2"}) and hold_back(rows, [], {}, None) == (set(), set()))
 
 
 def index_gate():

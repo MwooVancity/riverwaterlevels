@@ -197,15 +197,15 @@ def check_dir(d):
         from lib import indexing
         cfg = indexing.load(ROOT)
         if bool(cfg["open"]) != open_mode:
-            site_bad.append("state/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
+            site_bad.append("data/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
         if open_mode:
-            rvp = os.path.join(ROOT, "state", "reviews.json")
+            rvp = os.path.join(ROOT, "data", "reviews.json")
             pages = (json.load(open(rvp, encoding="utf-8")) if os.path.exists(rvp) else {}).get("pages", {})
             bad_ix = [u for u in sorted(want) if indexing.GAUGE.match(u) and pages.get(u.replace("forecast/", ""), pages.get(u, {})).get("verdict") != "SHIP" and pages.get(u, {}).get("verdict") != "SHIP"]
             if bad_ix:
                 site_bad.append("%d indexable gauge page(s) without a SHIP review, e.g. %s" % (len(bad_ix), bad_ix[:2]))
             if want != {u for u in urls if indexing.indexable(u, cfg)}:
-                site_bad.append("pages without a noindex tag differ from state/index-allow.json")
+                site_bad.append("pages without a noindex tag differ from data/index-allow.json")
         if sm != want:
             site_bad.append("sitemap differs from the indexable page set: %d only in sitemap, %d only in site" % (len(sm - want), len(want - sm)))
     else:

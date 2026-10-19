@@ -86,13 +86,24 @@ def fetch_related(site, inv, h):
 
 def fetch_nwps(site, lat, lon):
     """NWPS answers /gauges/<USGS id> directly; the returned usgsId must equal the gauge, so a coordinate match is never used."""
-    import urllib.error
+    import urllib.error, math
+    cw = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nws-crosswalk.json"))).get(site)
     try:
         det = thr_json(NWPS + "gauges/%s" % site, NWS_H)
     except urllib.error.HTTPError as e:
-        if e.code in (400, 404):
+        if e.code not in (400, 404):
+            raise
+        det = None
+        if cw:  # NWPS has the point but no usgsId on it: accept the crosswalk entry only when it sits within 1 km of this gauge
+            det = thr_json(NWPS + "gauges/%s" % cw, NWS_H)
+            la1, lo1, la2, lo2 = map(math.radians, (lat, lon, det.get("latitude") or 0, det.get("longitude") or 0))
+            km = 6371 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+            if km > 1.0:
+                det = None
+            else:
+                det["usgsId"] = site
+        if not det:
             return {"fetched_at": now_iso(), "lid": None}
-        raise
     if str(det.get("usgsId") or "") == site and det.get("lid"):
         x = {"lid": det["lid"]}
         if True:

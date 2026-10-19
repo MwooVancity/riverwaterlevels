@@ -24,10 +24,10 @@ import json
 def urls(d):
     f = os.path.join(d, "_urls.json")
     return json.load(open(f))["urls"] if os.path.exists(f) else []
-rv = os.path.join(ROOT, "state", "reviews.json")
+rv = os.path.join(ROOT, "data", "reviews.json")
 new = unreviewed_new_pages(urls(N), urls(D), json.load(open(rv, encoding="utf-8")) if os.path.exists(rv) else {}) if os.path.isdir(D) else []
 if new:
-    sys.exit("NEW PAGES NOT REVIEWED: %d new gauge page(s) have no SHIP verdict in state/reviews.json (e.g. %s). Run the review in docs/REVIEW-PROMPT.md first. Release NOT published, dist/ unchanged." % (len(new), ", ".join(new[:3])))
+    sys.exit("NEW PAGES NOT REVIEWED: %d new gauge page(s) have no SHIP verdict in data/reviews.json (e.g. %s). Run the review in docs/REVIEW-PROMPT.md first. Release NOT published, dist/ unchanged." % (len(new), ", ".join(new[:3])))
 shutil.rmtree(P, ignore_errors=True)
 if os.path.isdir(D):
     os.rename(D, P)

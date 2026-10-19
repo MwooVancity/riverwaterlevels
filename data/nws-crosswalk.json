@@ -1,0 +1,4 @@
+{
+ "_note": "USGS site id -> NWS forecast point (LID) where NWPS has the point but no usgsId on it. Accepted only when the NWS point is within 1 km of the USGS gauge and the names agree (tools/find_nws_points.py).",
+ "11447650": "FPOC1"
+}

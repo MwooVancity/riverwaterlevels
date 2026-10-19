@@ -242,6 +242,11 @@ def conditions(G, pages=None):
             a = _at(fl, lt - datetime.timedelta(hours=h), tol)
             if a and a[1] > 0:
                 out["chg"][h] = (lv - a[1]) / a[1] * 100
+    sgl = G["sg"]
+    out["sg6"] = None
+    if len(sgl) >= 8 and (sgl[-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
+        a6 = _at(sgl, sgl[-1][0] - datetime.timedelta(hours=6), 1800)
+        out["sg6"] = (sgl[-1][1] - a6[1]) if a6 else None
     n = rec.get("nwps") or {}
     f = n.get("forecast") if ok("nwps") else None
     if f and f.get("points") and (f.get("primary_units") or "").lower() == "ft":
@@ -249,7 +254,7 @@ def conditions(G, pages=None):
         fut = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1) and p["primary"] > -900]
         if fut and (age is None or age <= 72):
             hi = max(fut, key=lambda x: x[1])
-            out["fc"] = {"v": hi[1], "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
+            out["fc"] = {"v": hi[1], "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": sum(1 for _, v_ in fut if abs(v_ - hi[1]) <= 0.05) >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
                          "cur": G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):

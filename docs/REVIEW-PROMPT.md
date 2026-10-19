@@ -34,8 +34,8 @@ Read-only: do not edit the site, run refresh/build/publish, or deploy.
 2. `node tools/serve.mjs dist_next 8123` serves the not-yet-live pages; give the reviewers `http://localhost:8123/...` URLs for the NEW gauge pages (cross-checks against USGS and NWS still use the live agency sites). At about 25 new pages a day use one reviewer per 5 pages in parallel; a template change gets the full prompt on the hardest cases.
 3. Fix every P0 (and P1 where cheap), rebuild, rerun step 1. Turn each mechanical defect into a gate the same day.
 4. `python tools/record_review.py SHIP docs/research/FRESH-REVIEW-<n>.md` writes the verdict for the template hash and for every new gauge page in `dist_next`.
-5. `python publish.py` (or `refresh.py`) now publishes. `publish.py` REFUSES any new gauge page without a SHIP verdict in `state/reviews.json` ("NEW PAGES NOT REVIEWED"); pages already live, and the 30-minute data refresh, are never blocked. `refresh.py` also logs `SOFT GATE FAILED ... template_hash.py --check` when the live template has no SHIP verdict.
+5. `python publish.py` (or `refresh.py`) now publishes. `publish.py` REFUSES any new gauge page without a SHIP verdict in `data/reviews.json` ("NEW PAGES NOT REVIEWED"); pages already live, and the 30-minute data refresh, are never blocked. `refresh.py` also logs `SOFT GATE FAILED ... template_hash.py --check` when the live template has no SHIP verdict.
 The 43 pages live before this gate existed are marked GRANDFATHERED (honestly: not individually reviewed); the all-pages review that follows FRESH-REVIEW-6 replaces that mark with SHIP or a defect list.
 
 ## Record
-`state/reviews.json`: `{"templates": {"<hash>": {...}}, "pages": {"/river/x/y/": {"verdict": "SHIP|HOLD|GRANDFATHERED", "report": "...", "date": "..."}}}`. The hash is `python tools/template_hash.py`. Do not edit it by hand; use `tools/record_review.py`.
+`data/reviews.json`: `{"templates": {"<hash>": {...}}, "pages": {"/river/x/y/": {"verdict": "SHIP|HOLD|GRANDFATHERED", "report": "...", "date": "..."}}}`. The hash is `python tools/template_hash.py`. Do not edit it by hand; use `tools/record_review.py`.

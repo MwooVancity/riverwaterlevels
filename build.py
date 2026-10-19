@@ -18,6 +18,17 @@ def write(root, url, html):
     open(path, "w", encoding="utf-8").write(html)
 
 
+def live_urls(path):
+    """The page list of the release that is live now: the local copy when there is one, else the deployed list (a fresh CI checkout has no dist/)."""
+    try:
+        if os.path.exists(path):
+            return json.load(open(path))["urls"]
+        import urllib.request
+        return json.load(urllib.request.urlopen(urllib.request.Request(SITE_URL + "/_urls.json", headers={"User-Agent": "Mozilla/5.0 (build)"}), timeout=30))["urls"]
+    except Exception:
+        return []
+
+
 def main():
     rows, hubs = load_effective()
     now = datetime.datetime.fromisoformat(os.environ["BUILD_NOW"]) if os.environ.get("BUILD_NOW") else datetime.datetime.now(datetime.timezone.utc)
@@ -35,6 +46,16 @@ def main():
         except render.CriticalFail as e:
             report["failed"].append({"site": s, "reason": str(e)})
             print("CRITICAL", s, e, "(skipped; previous pages stay live)")
+    from lib.reviewgate import hold_back
+    live_f, rv_f = os.path.join(ROOT, "dist", "_urls.json"), os.path.join(ROOT, "data", "reviews.json")
+    skip_g, skip_f = hold_back({s: rows[s] for s in Gs}, live_urls(live_f) if not preview and "--no-hold" not in sys.argv else [], json.load(open(rv_f, encoding="utf-8")) if os.path.exists(rv_f) else {}, {s for s in Gs if Gs[s]["fc_page"]})
+    for s in skip_g:
+        del Gs[s]
+    for s in skip_f:
+        Gs[s]["fc_page"] = False
+    report["held_for_review"] = sorted(rows[s]["dashboard_url"] for s in skip_g) + sorted(rows[s]["forecast_url"] for s in skip_f)
+    if report["held_for_review"]:
+        print("HELD FOR REVIEW (new pages without a SHIP verdict; everything else still ships): %s" % ", ".join(report["held_for_review"]))
     built = [rows[s] for s in Gs]
     inv_size = {k: len(v) for k, v in hubs.items()}
     by_hub = collections.defaultdict(list)
@@ -58,7 +79,7 @@ def main():
         hashes[url] = hashlib.sha256(html.encode()).hexdigest()[:16]
 
     for s, G in Gs.items():
-        for tab in (("dashboard", "forecast") if G["has_forecast"] else ("dashboard",)):  # one page per gauge; a Forecast page only where NWS issues a river forecast
+        for tab in (("dashboard", "forecast") if G["fc_page"] else ("dashboard",)):  # one page per gauge; a Forecast page only where NWS issues a river forecast
             page, meta = render.build_tab(tab, G, rows)
             emit(meta["url"], page)
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})

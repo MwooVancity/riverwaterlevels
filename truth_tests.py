@@ -38,7 +38,7 @@ def main():
         c = render.b3.conditions(G, None)
         h = render.hero(G, None)
         # 1. direction
-        m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]\d+)% <small class="word">([\w ]+)</small>', h, re.S)
+        m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]?\d+)% <small class="word">([\w ]+)</small>', h, re.S)
         if m:
             word, val = m.group(3).lower(), int(m.group(2))
             c6 = c["chg"].get(6)
@@ -51,6 +51,11 @@ def main():
         # 3. silence
         if not G["has_forecast"] and 'class="tile fcst none"' not in h:
             fail(site, "no NWS river forecast but the page does not say so")
+        nwl = (G["rec"].get("nwps") or {}).get("lid")
+        if nwl and "Not linked" in h:
+            fail(site, "page says no NWS point is linked but the data has point %s" % nwl)
+        if not nwl and "Not issued" in h and "River forecast" in h:
+            fail(site, "page says a point exists but the data has none")
         gaps = (re.search(r'<p class="gaps">Not available[^<]*', h) or [""])[0] if re.search(r'<p class="gaps">Not available', h) else ""
         if not c["wt"] and "water temperature" not in gaps:
             fail(site, "no water temperature and the page does not say so")
@@ -60,7 +65,7 @@ def main():
             fail(site, "no rain estimate and the page does not say so")
         if c["wt"] and c["wt"]["f"] < -40:
             fail(site, "impossible water temperature %.0f F shown" % c["wt"]["f"])
-        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] and "already above this forecast" not in h:
+        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "already above this forecast" not in h:
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:

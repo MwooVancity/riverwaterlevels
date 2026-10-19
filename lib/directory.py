@@ -185,7 +185,7 @@ def status_page(built, Gs, built_at):
         cls = "fresh" if m <= 90 else "ageing" if m <= 360 else "stale"
         trs += '<tr><td><a href="%s">%s</a></td><td>%s</td><td class="r"><span class="ab %s">%s</span></td></tr>' % (r["dashboard_url"], esc(river_at(r["river"], r["place"]) + ", " + r["state"]), esc(r["site"]), cls, ("%d min" % m) if m < 180 else ("%d h" % round(m / 60)))
     built_at = datetime.datetime.fromisoformat(built_at).strftime("%b %d, %I:%M %p UTC").replace(" 0", " ")
-    body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Machine-readable: <a href="/status.json">status.json</a>.</p>'
+    body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Green: newest reading under 90 minutes old; amber: under 6 hours; red: older. Machine-readable: <a href="/status.json">status.json</a>.</p>'
             '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>' % (esc(built_at), trs))
     return prose_page("Data status", "/status/", body, "Age of the newest USGS reading at every gauge on River Water Levels, as of the last build.")
 

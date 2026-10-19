@@ -121,7 +121,7 @@ def ctx(site, row, rec, now):
     chg = (lv - ago[1]) / ago[1] * 100 if (not osc) and abs((ago[0] - (lt - datetime.timedelta(hours=24))).total_seconds()) <= tol and ago[1] > 0 else None
     return {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "river": row["river"], "place": row["place"], "st": row["state"],
-            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "basis": basis, "basis_mean": method.startswith("trailing")}
+            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "basis": basis, "basis_mean": method.startswith("trailing")}
 
 
 def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
@@ -159,6 +159,15 @@ def tr(cells, right=()):
 
 
 # ---------------------------------------------------------------- hero
+def upstream_dams(G):
+    """About how many dams the EPA counts in the watershed upstream of the gauge (density per sq km x drainage area); 0 when unknown."""
+    sc = ((G["rec"].get("streamcat") or {}).get("vals") or {}).get("damdensws")
+    try:
+        return round(float(sc) * float(G["row"]["drainage_sqmi"] or 0) * 2.58999)
+    except (TypeError, ValueError):
+        return 0
+
+
 def hero(G, pages=None):
     from lib import ui
     c = b3.conditions(G, pages)
@@ -174,10 +183,15 @@ def hero(G, pages=None):
     stage_txt = ("%.2f" % sg[-1][1]) if sg else "–"
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
     chg = G["chg"]
+    ndam = upstream_dams(G)
+    if p is not None and ndam >= 1:
+        cap += " Upstream dams may have changed flows during this record."
+    if p is not None and G["osc"]:
+        cap += " This gauge is tidal: the comparison uses the daily mean."
     d24 = G["lt"] - datetime.timedelta(hours=24)
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmt(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + '<small>Observed <span data-live="flowobs">%s</span></small>' % esc(G["obs"]))
     tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>Water level above the gauge\'s zero</small><small>%s</small>' % (('Observed <span data-live="stageobs">' + esc(tzl(sg[-1][0], G["zone"])) + "</span>") if sg else "No stage reported"))
+                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>Level relative to the gauge\'s zero</small><small>%s</small>' % (('Observed <span data-live="stageobs">' + esc(tzl(sg[-1][0], G["zone"])) + "</span>") if sg else "No stage reported"))
     if p is None:
         word, plain = "–", ""
     else:
@@ -210,13 +224,23 @@ def hero(G, pages=None):
             turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
             other = [("24 h", chg)] + [("%d h" % h, v) for h, v in sorted(c["chg"].items()) if h == 1 and span == "6 h"]
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)
-            tiles += ui.tile("trend " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.0f%% <small class="word">%s</small>' % ("+" if use >= 0 else "", use, word),
-                             '<small>%s</small>' % parts + ('<small>The direction changed within the last day.</small>' if turned else "") + '<small id="ccap">Flow 24 h earlier: %s cfs.</small>' % fmt(G["lv"] / (1 + chg / 100)))
+            uz = round(use)
+            tiles += ui.tile("trend " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%d%% <small class="word">%s</small>' % ("+" if uz > 0 else "-" if uz < 0 else "", abs(uz), word),
+                             '<small>%s</small>' % parts + ('<small>The direction changed within the last day.</small>' if turned else "")
+                             + ('<small>Gage height moved the other way: %+.2f ft in 6 h.</small>' % c["sg6"] if c6 is not None and c.get("sg6") is not None and abs(c6) >= 10 and abs(c["sg6"]) >= 0.1 and (c6 > 0) != (c["sg6"] > 0) else "") + '<small id="ccap">Flow 24 h earlier: %s cfs.</small>' % fmt(G["lv"] / (1 + chg / 100)))
+    nwl = (G["rec"].get("nwps") or {}).get("lid")
     if c["fc"]:
         fcw = c["fc"]
-        tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % fcw["v"], '<small>%s &middot; NWS point %s</small><small>Forecast issued %s.</small>' % (esc(fcw["t"]), esc(fcw["lid"]), esc(fcw["issued"]))
-                         + ('<small>The latest reading (%.2f ft) is already above this forecast.</small>' % fcw["cur"] if fcw["cur"] is not None and fcw["cur"] > fcw["v"] else ""))
-    elif not G["has_forecast"]:
+        above = fcw["cur"] is not None and fcw["cur"] > fcw["v"] + 0.1
+        tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % fcw["v"],
+                         '<small>%s%s &middot; NWS point %s</small><small>Forecast issued %s.</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), esc(fcw["issued"]))
+                         + ('<small>The forecast reaches this level again later (a regular cycle).</small>' if fcw["repeat"] else "")
+                         + ('<small>The latest reading (%.2f ft) is already above this forecast.</small>' % fcw["cur"] if above else ""))
+    elif nwl and G["has_forecast"]:
+        tiles += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
+    elif nwl:
+        tiles += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>NWS forecast point %s has no current river forecast. The weather forecast below is not a river forecast.</small>' % esc(nwl))
+    else:
         tiles += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>No NWS river forecast point is linked to this gauge in our data. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
@@ -249,12 +273,11 @@ def hero(G, pages=None):
         gone.append("NWS flood stages (none published for this location)")
     if not c["rain"]:
         gone.append("rain estimate")
+    if not G["fc_page"] and not (b_heatmap(G) or b_hourly(G)):
+        gone.append("hourly weather forecast")
+    if not G["rec"].get("record"):
+        gone.append("comparison with this gauge's own long daily record (it is not current)")
     notes = ('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else ""
-    sc = ((G["rec"].get("streamcat") or {}).get("vals") or {}).get("damdensws")
-    try:
-        ndam = round(float(sc) * float(G["row"]["drainage_sqmi"] or 0) * 2.58999)
-    except (TypeError, ValueError):
-        ndam = 0
     if ndam >= 1:
         notes += '<p class="gaps">Dams in the upstream watershed: about %d (EPA StreamCat). Flow below a dam can change with releases, not only rain.</p>' % ndam
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
@@ -846,7 +869,7 @@ def b_snotel(G):
         pct = ("%.0f%%" % (x["swe_in"] / med * 100)) if med else "–"
         rows += tr([esc(x["name"]), "%d mi" % round(x["km"] * 0.621371), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
     from lib import ui
-    sb = ui.bars([(esc(x["name"]), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median" % (x["swe_in"] / x["median_in"] * 100)) if x.get("median_in") else "%.1f in, no median" % x["swe_in"]) for x in st], 150, mark=100)
+    sb = ui.bars([(esc(x["name"]), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median (%.1f in, median %.1f in)" % (x["swe_in"] / x["median_in"] * 100, x["swe_in"], x["median_in"])) if x.get("median_in") else "%.1f in, no median" % x["swe_in"]) for x in st], 150, mark=100)
     return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", sb + table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2)),
                  "Source: USDA Natural Resources Conservation Service SNOTEL stations within 37 miles of the gauge (AWDB web service), fetched %s. Provisional data; stations may not drain to this gauge." % esc(tzl(parse_t(s["fetched_at"]), G["zone"])), "nrcs")
 
@@ -929,7 +952,7 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by reader question; "SEC:" is a heading, "FOLD:" a closed group (every block keeps its source line and permalink)
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G),
-                ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_weather(G, 3), b_radar(G), b_quality(G), b_wtemp(G), b_snotel(G),
+                ((b_heatmap(G) or b_hourly(G)) if not G["fc_page"] else None), b_weather(G, 3), b_radar(G), b_quality(G), b_wtemp(G), b_snotel(G),
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
@@ -1008,7 +1031,7 @@ var n=document.querySelector('[data-live="flow"]');if(n&&window.MutationObserver
 FOLD_JS = """<script>(function(){function o(){var h=location.hash.slice(1),e=h&&document.getElementById(h),d=e&&e.closest('details');if(d&&!d.open){d.open=true;e.scrollIntoView()}}
 window.addEventListener('hashchange',o);o();window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('details.fold')).forEach(function(d){d.open=true})})})();</script>"""
 NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
-function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0;j.forEach(function(g){if(n>=8)return;if(g[0].toLowerCase().replace(/\\bst\\.? /g,'saint ').indexOf(q)>=0){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++}});if(!n){var s=document.createElement('span');s.textContent='No match yet';o.appendChild(s)}o.hidden=false})}
+function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0;j.forEach(function(g){if(n>=8)return;if(g[0].toLowerCase().replace(/\\bst\\.? /g,'saint ').indexOf(q)>=0){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++}});if(!n){var s=document.createElement('span');s.textContent='No match: this site has '+j.length+' gauges so far';o.appendChild(s)}o.hidden=false})}
 i.addEventListener('input',function(){show(i.value)});i.addEventListener('focus',load);document.addEventListener('click',function(e){if(!o.contains(e.target)&&e.target!==i)o.hidden=true})})();</script>"""
 ACTS = '<p class="acts"><button type="button" class="pill" id="savebtn" hidden>Save gauge</button> <button type="button" class="pill" id="csvbtn" data-site="@SITE@" hidden>Download last 7 days (CSV)</button></p>'
 TOOLS_JS = """<script>(function(){var sb=document.getElementById('savebtn'),cb=document.getElementById('csvbtn'),K='rwl_saved';
@@ -1030,7 +1053,7 @@ if(!al.length){b.insertBefore(el('p','','No active National Weather Service aler
 al.forEach(function(p){var d=el('div','alert'),e=p.ends||p.expires;d.appendChild(el('b','',p.event||''));d.appendChild(document.createTextNode(' \\u00b7 '+(p.severity||'severity not stated')+' \\u00b7 '+(as(p.areaDesc||'')+ast(p))));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode(p.headline||''));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode('Ends '+(e?lt(new Date(e)):'not stated')));b.insertBefore(d,src)});
 src.textContent='Source: National Weather Service alerts for the gauge location, fetched '+lt(new Date())+' (live from the NWS when this page loaded).'}).catch(function(){})})();</script>"""
 SAVED_JS = """<script>(function(){var d=document.getElementById('saved');if(!d)return;try{var a=JSON.parse(localStorage.getItem('rwl_saved'))||[];if(!a.length)return;d.innerHTML='<h2>Your saved gauges</h2>'+a.filter(function(x){return String(x.u).charAt(0)==='/'}).map(function(x){var l=document.createElement('a');l.href=x.u;l.textContent=x.n;return l.outerHTML}).join(' &middot; ');d.hidden=false}catch(e){}})();</script>"""
-INDEX_CFG = None  # set by build.py from state/index-allow.json
+INDEX_CFG = None  # set by build.py from data/index-allow.json
 
 
 def robots_meta(path):
@@ -1074,7 +1097,7 @@ def build_tab(tab, G, pages):
     desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ' <span class="tag amber">Older than 2 h</span>' if G["age_min"] > 120 else ""
-    avail = ("dashboard", "forecast") if G["has_forecast"] else ("dashboard",)
+    avail = ("dashboard", "forecast") if G["fc_page"] else ("dashboard",)
     tabs_html = ""  # a lone tab is a dead pill: show tabs only when a Forecast page exists
     for t in (avail if len(avail) > 1 else ()):
         cur = ' class="on" aria-current="page"' if t == tab else ""
