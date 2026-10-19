@@ -3,7 +3,7 @@
 📄 Planning doc only: this file does not change the site. It is the complete list of what was done in response to `docs/research/FRESH-REVIEW-PLAN.md`, with a status for each line (DONE, PARTLY, DECIDED, RESEARCHED, LATER, OWNER). A line is DONE only when the artifact was checked in the session that wrote it; the checks are named. A hostile auditor is asked to verify every line (master prompt Mission L).
 
 ## A. Page model
-1. Forecast pages merged into the gauge page (one page per gauge, a Forecast section where NWS issues a river forecast, `/forecast/` and `/water/` redirect). DONE: build, `check.py`, `tests.py`, `ui_gates.mjs` pass; 49 pages; redirect rules in `dist_next/_redirects`. Live after the next deploy (needs the template review).
+1. Forecast pages merged into the gauge page (one page per gauge, a Forecast section where NWS issues a river forecast, `/forecast/` and `/water/` redirect). DONE: build, `check.py`, `tests.py`, `ui_gates.mjs` pass; 49 pages; redirect rules in `dist_next/_redirects`. LIVE (verified 2026-10-19: 49 pages, `/forecast/` and `/water/` return 301 to the gauge page).
 
 ## B. Release queue
 2. Free federal data downloaded for every gauge: USGS coordinates (9,099 of 9,099), Wild and Scenic segments (948, with 560 recreation and 467 fish values), Nationwide Rivers Inventory (4,496 segments), Census places (19,484 with population). DONE: `tools/fetch_geo.py`, files in `data/geo/`.
@@ -27,7 +27,7 @@
 16. File budget: total checked at 19,000 (`build.py`); per-page-class budgets: LATER.
 
 ## E. Gates and rules
-17. `ui_gates.mjs` and the template review block a deploy; CI installs Playwright. DONE in code (`refresh.py`, `refresh.yml`); first CI run with it: pending until the next push.
+17. `ui_gates.mjs` and the template review block a deploy; CI installs Playwright. DONE in code (`refresh.py`, `refresh.yml`); first CI run with it: pending (pushed 2026-10-19; the next scheduled GitHub run is the proof).
 18. Review verdicts signed against their report file; hand-written or edited verdicts refused. DONE: `tests.py` 8b. GRANDFATHERED pages stay (live before the gate); they cannot be indexed.
 19. NWS User-Agent carries the About page URL. DONE (a real contact address is OWNER).
 20. One CLAUDE.md and one PLAN.md; contradictions removed; older documents archived in `docs/archive/`; `MASTER-PLAN-20K.md` became `docs/RISKS-AND-STAGES.md` with corrected numbers; `REVIEW-PROMPT.md` helper path fixed and persona added. DONE; a hostile auditor is asked to find what is still stale.
@@ -35,7 +35,7 @@
 
 ## F. Master prompt and zip
 22. Master prompt rewritten (Missions K and L added, queue and claims verification, tens-of-thousands question). DONE: `calcscrape/docs/research/chatgpt-final-master-prompt.md`.
-23. Fresh-brain review of the changed template (FRESH-REVIEW-10-A, -B, -C). In progress when this line was written; see the verdict recorded in `data/reviews.json`.
+23. Fresh-brain review of the changed template: thirteen rounds (FRESH-REVIEW-10-A to -M); round M found no P0; signed SHIP recorded in `data/reviews.json` and deployed. DONE. P1 backlog in `docs/PLAN.md`.
 24. Zip rebuilt by `tools/pack_review.py` only after 1 to 23, key scan empty.
 
 ## Round-9 and round-10 page fixes (from the earlier reader reviews)
