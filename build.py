@@ -48,7 +48,7 @@ def main():
             print("CRITICAL", s, e, "(skipped; previous pages stay live)")
     from lib.reviewgate import hold_back
     live_f, rv_f = os.path.join(ROOT, "dist", "_urls.json"), os.path.join(ROOT, "data", "reviews.json")
-    skip_g, skip_f = hold_back({s: rows[s] for s in Gs}, live_urls(live_f) if not preview and "--no-hold" not in sys.argv else [], json.load(open(rv_f, encoding="utf-8")) if os.path.exists(rv_f) else {}, {s for s in Gs if Gs[s]["fc_page"]})
+    skip_g, skip_f = hold_back({s: rows[s] for s in Gs}, live_urls(live_f) if not preview and "--no-hold" not in sys.argv else [], json.load(open(rv_f, encoding="utf-8")) if os.path.exists(rv_f) else {}, set())
     if "--no-hold" in sys.argv:  # review builds: include the pages that are waiting for their review
         skip_g, skip_f = set(), set()
     for s in skip_g:
@@ -81,9 +81,8 @@ def main():
         hashes[url] = hashlib.sha256(html.encode()).hexdigest()[:16]
 
     for s, G in Gs.items():
-        for tab in (("dashboard", "forecast") if G["fc_page"] else ("dashboard",)):  # one page per gauge; a Forecast page only where NWS issues a river forecast
-            page, meta = render.build_tab(tab, G, rows)
-            emit(meta["url"], page)
+        page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one
+        emit(meta["url"], page)
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
     if built:
         emit("/", directory.home(built, Gs))
@@ -100,7 +99,7 @@ def main():
                    "pages": len(urls) + 1, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
-    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301"]
+    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301"]
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
     lm = json.load(open(lm_path)) if os.path.exists(lm_path) else {}

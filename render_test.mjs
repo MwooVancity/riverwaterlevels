@@ -29,7 +29,7 @@ function allPages() {
 const pages = allPages();
 const sample = process.argv.includes('--all') ? pages : [
   '/', '/rivers/pa/', ...pages.filter(p => /^\/river\/[^/]+\/$/.test(p)).slice(0, 2), '/about/', '/data-sources/',
-  ...['colorado-river-az/lees-ferry', 'missouri-river-mo/kansas-city', 'potomac-river-md/little-falls', 'kinzua-creek/guffey', 'sacramento-river/freeport'].flatMap(g => [`/river/${g}/`, `/river/${g}/water/`, `/river/${g}/forecast/`]),
+  ...['colorado-river-az/lees-ferry', 'missouri-river-mo/kansas-city', 'potomac-river-md/little-falls', 'kinzua-creek/guffey', 'sacramento-river/freeport'].flatMap(g => [`/river/${g}/`, `/river/${g}/water/`]),
 ].filter(p => pages.includes(p));
 const VIEWS = [[360, 800, true], [390, 844, true], [430, 932, true], [768, 1024, false], [1280, 900, false]];
 
@@ -70,7 +70,7 @@ const hasFlow = await np.evaluate(() => /latest flow[\s\S]*\d/i.test(document.bo
 console.log('scripts off: latest flow present in static HTML:', hasFlow); if (!hasFlow) fails++;
 // phone screenshots for the record
 const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-for (const [name, p] of [['water', '/river/colorado-river-az/lees-ferry/'], ['home', '/'], ['forecast', '/river/missouri-river-mo/kansas-city/forecast/']]) {
+for (const [name, p] of [['water', '/river/colorado-river-az/lees-ferry/'], ['home', '/'], ['forecast', '/river/missouri-river-mo/kansas-city/']]) {
   const pg = await phone.newPage(); await pg.goto(BASE + p, { waitUntil: 'load' }); await pg.screenshot({ path: join(SHOTS, `phone390-${name}.png`), fullPage: true }); await pg.close();
 }
 await browser.close(); server.close();

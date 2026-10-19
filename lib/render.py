@@ -328,8 +328,6 @@ def hero(G, pages=None):
     if pages is not None and b_nearby(G, pages) is None:
         gone.append("other gauges within 150 miles on this site")
     notes = ('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else ""
-    if G["fc_page"]:
-        notes += '<p class="gaps">The river forecast table, hourly weather and rain outlooks are on the <a href="%s">Forecast page</a>.</p>' % G["row"]["forecast_url"]
     if ndam >= 1:
         notes += '<p class="gaps">Dams in the upstream watershed: about %d (EPA StreamCat). Flow below a dam can change with releases, not only rain.</p>' % ndam
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
@@ -1010,8 +1008,9 @@ def b_official_links(G):
 def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by reader question; "SEC:" is a heading, "FOLD:" a closed group (every block keeps its source line and permalink)
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
-        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G),
-                ((b_heatmap(G) or b_hourly(G)) if not G["fc_page"] else None), b_weather(G, 3), b_radar(G), b_quality(G), b_wtemp(G), b_snotel(G),
+        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
+                "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_radar(G), b_air(G), b_sun(G), "SEC:Water and conditions now"] if G["fc_page"] else [
+                (b_heatmap(G) or b_hourly(G)), b_weather(G, 3), b_radar(G)]) + [b_quality(G), b_wtemp(G), b_snotel(G),
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
@@ -1129,7 +1128,7 @@ def crumb_ld(items):
     return '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": els}, separators=(",", ":")).replace("</", "<" + chr(92) + "/")
 
 
-JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("hourly_heatmap", "Hourly forecast"), ("month_chart", "30 days"), ("multi_year", "Earlier years"),
+JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("river_forecast", "River forecast"), ("hourly_heatmap", "Hourly forecast"), ("month_chart", "30 days"), ("multi_year", "Earlier years"),
         ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Upstream and downstream"), ("nearby_gauges", "Nearby gauges"), ("about_gauge", "About"))
 
 
@@ -1156,7 +1155,7 @@ def build_tab(tab, G, pages):
     desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ' <span class="tag amber">Older than 2 h</span>' if G["age_min"] > 120 else ""
-    avail = ("dashboard", "forecast") if G["fc_page"] else ("dashboard",)
+    avail = ("dashboard",)  # one page per gauge: no tabs
     tabs_html = ""  # a lone tab is a dead pill: show tabs only when a Forecast page exists
     for t in (avail if len(avail) > 1 else ()):
         cur = ' class="on" aria-current="page"' if t == tab else ""
