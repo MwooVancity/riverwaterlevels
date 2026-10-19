@@ -55,8 +55,21 @@ def main():
             z.write(os.path.join(D, f), "reviews/" + f)
     z.close()
     zz = zipfile.ZipFile(OUT)
-    pat = re.compile(r"7fT8K5|H2zfuUMn|b17a2ad6|TURSO|NOAA_API_TOKEN=\S{10,}|api_key=[A-Za-z0-9]{30,}|(?i:api[_-]?key[\"']?\s*[:=]\s*[\"'][A-Za-z0-9]{20,})")
-    bad = [n for n in zz.namelist() if pat.search(zz.read(n).decode("utf-8", "ignore"))]
+    # key scan: every secret value in the calcscrape .env (read here, never written), plus generic key-shaped strings; no key fragment is stored in this file
+    secrets = []
+    envp = r"C:\Users\mwoo7\Desktop\calcscrape\.env"
+    if os.path.exists(envp):
+        for line in open(envp, encoding="utf-8", errors="ignore"):
+            if "=" in line and not line.lstrip().startswith("#"):
+                v = line.split("=", 1)[1].strip().strip("\"'")
+                if len(v) >= 12:
+                    secrets.append(v)
+    generic = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|cloudflare_api_token|token)[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{24,}")
+    bad = []
+    for n in zz.namelist():
+        t = zz.read(n).decode("utf-8", "ignore")
+        if generic.search(t) or any(v in t for v in secrets):
+            bad.append(n)
     print("bytes", os.path.getsize(OUT), "files", len(zz.namelist()), "key-like", bad)
     if bad:
         zz.close()
