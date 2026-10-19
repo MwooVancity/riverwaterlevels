@@ -142,10 +142,10 @@ def render_block(b):
     return ('<section class="card blk" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<p class="src">%s</p></section>' % (b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"]))
 
 
-def table(heads, rows, right=(), hide=()):
+def table(heads, rows, right=(), hide=(), stack=False):
     th = "".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
     names = ["hc%d" % i for i in hide]
-    if len(heads) - len(hide) >= 4:  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
+    if len(heads) - len(hide) >= 4 or stack:  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
         names.append("stk")
 
         def add(chunk):
@@ -623,7 +623,7 @@ def b_record(G):
     if r.get("month"):
         m = r["month"]
         rows += tr(["%s 1 to %d, mean flow" % (m["month"], m["dom"]), "%s cfs" % fmt(m["mean"]), "rank %d highest of %d years" % (m["rank"], m["years"])], right=(1,))
-    return block("record_comparison", "Compared with this gauge’s record", "hist", table(["Measure", "Value", "When or rank"], rows, right=(1,)),
+    return block("record_comparison", "Compared with this gauge’s record", "hist", table(["Measure", "Value", "When or rank"], rows, right=(1,), stack=True),
                  "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s; method %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
                      r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"]), esc(r["method"])), "usgs")
 
