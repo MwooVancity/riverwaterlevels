@@ -82,7 +82,7 @@ def check_html(h, rel):
     for pat in BANNED:
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
-    for mm in re.finditer(r"\b(\w+) \1\b", text, re.I):
+    for mm in re.finditer(r"\b([A-Za-z]+) \1\b", text, re.I):  # words only: "19 19" is a day and an hour in "2026-10-19 19:38", not a typo
         if mm.group(1).lower() not in ("had", "that"):
             bad.append("doubled word %r" % mm.group(0))
     for sec in re.findall(r'<section class="card blk".*?</section>', body, re.S):
