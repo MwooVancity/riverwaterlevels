@@ -79,6 +79,25 @@ const ok = (n, c) => { console.log(c ? 'PASS' : 'FAIL', n); if (!c) fails++; };
   ok('anchor to a folded block opens it', await pg.evaluate(() => { const e = document.getElementById('annual_peaks'); return !!e && e.closest('details').open && e.getBoundingClientRect().height > 50; }));
   await ctx.close();
 }
+// 5. "Your range": the reader's own low and high flow, saved in the browser, compared with the latest flow; bad input is refused; clear removes it
+{
+  const ctx = await b.newContext();
+  const pg = await ctx.newPage();
+  await pg.goto(url, { waitUntil: 'networkidle' });
+  ok('range tile appears when storage works', await pg.evaluate(() => !document.querySelector('.tile.mine').hidden));
+  await pg.click('#mybtn');
+  await pg.fill('#mylo', '2000'); await pg.fill('#myhi', '1000'); await pg.click('#myform button[type=submit]');
+  ok('low above high is refused', /Enter the lowest flow/.test(await pg.textContent('#mysub')));
+  await pg.fill('#mylo', '1000'); await pg.fill('#myhi', '2000'); await pg.click('#myform button[type=submit]');
+  ok('flow far above the range says so', (await pg.textContent('#mylv')) === 'Above your range');
+  await pg.reload({ waitUntil: 'networkidle' });
+  ok('range survives a reload', (await pg.textContent('#mylv')) === 'Above your range');
+  await pg.click('#mybtn'); await pg.fill('#mylo', '50000'); await pg.fill('#myhi', '90000'); await pg.click('#myform button[type=submit]');
+  ok('flow inside the range says so', (await pg.textContent('#mylv')) === 'In your range');
+  await pg.click('#mybtn'); await pg.click('#myform .clr');
+  ok('clear removes the range', (await pg.textContent('#mylv')) === 'Set your range');
+  await ctx.close();
+}
 await b.close();
 srv.close();
 console.log(fails ? fails + ' FAILED' : 'ALL JS TESTS PASS');

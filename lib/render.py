@@ -205,6 +205,12 @@ def hero(G, pages=None):
     if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
         tiles += ui.tile("alrt " + ("on" if al["n"] else "off"), "bell", "NWS alerts", str(al["n"]), '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else "No alerts active here"))
+    mine = ui.tile("mine", "star", "Your range", '<span id="mylv">Set your range</span>',
+                   '<small id="mysub">Type the lowest and highest flow you want, in cfs. It stays in this browser only.</small>'
+                   '<form id="myform" hidden><input id="mylo" type="number" inputmode="numeric" min="0" placeholder="Low" aria-label="Lowest flow you want, in cfs"><input id="myhi" type="number" inputmode="numeric" min="0" placeholder="High" aria-label="Highest flow you want, in cfs">'
+                   '<button class="pill" type="submit">Save</button><button class="pill clr" type="button">Clear</button></form>'
+                   '<button class="pill" type="button" id="mybtn">Set range</button>')
+    tiles += mine.replace('<div class="tile mine"', '<div class="tile mine" hidden', 1)
     if c["wt"]:
         tiles += ui.tile("wtemp", "thermo", "Water temperature", '%.0f&deg;<small>F</small>' % c["wt"]["f"], '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     if c["air"]:
@@ -931,6 +937,22 @@ if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent
 run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600000)})();</script>"""
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning or a safety determination: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
+MYLV_JS = """<script>(function(){var t=document.querySelector('.tile.mine');if(!t)return;var K='rwl_levels',S='@SITE@',v=document.getElementById('mylv'),sub=document.getElementById('mysub'),btn=document.getElementById('mybtn'),f=document.getElementById('myform'),lo=document.getElementById('mylo'),hi=document.getElementById('myhi');
+function ld(){try{return JSON.parse(localStorage.getItem(K))||{}}catch(e){return{}}}
+function sv(o){try{localStorage.setItem(K,JSON.stringify(o))}catch(e){}}
+try{localStorage.getItem(K)}catch(e){return}
+t.hidden=false;
+function cur(){var s=document.querySelector('[data-live="flow"]'),x=s?parseFloat(s.textContent.replace(/,/g,'')):null;return x==x?x:null}
+function fm(n){return Math.round(n).toLocaleString('en-US')}
+function show(){var r=ld()[S],c=cur();f.hidden=true;btn.hidden=false;btn.textContent=r?'Change':'Set range';
+if(!r){v.textContent='Set your range';sub.textContent='Type the lowest and highest flow you want, in cfs. It stays in this browser only.';t.className='tile mine';return}
+var w=c===null?'':c<r.lo?'Below your range':c>r.hi?'Above your range':'In your range';
+v.textContent=w||'Your range';t.className='tile mine '+(w==='In your range'?'inr':w?'outr':'');
+sub.textContent='You set '+fm(r.lo)+' to '+fm(r.hi)+' cfs. Now '+(c===null?'unknown':fm(c)+' cfs')+'.'}
+btn.addEventListener('click',function(){var r=ld()[S];lo.value=r?r.lo:'';hi.value=r?r.hi:'';f.hidden=false;btn.hidden=true;sub.textContent='Lowest and highest flow you want, in cfs.';lo.focus()});
+f.addEventListener('submit',function(e){e.preventDefault();var a=parseFloat(lo.value),b=parseFloat(hi.value),o=ld();if(isNaN(a)||isNaN(b)||a<0||b<a){sub.textContent='Enter the lowest flow, then a higher flow, as numbers.';return}o[S]={lo:a,hi:b};sv(o);show()});
+f.querySelector('.clr').addEventListener('click',function(){var o=ld();delete o[S];sv(o);show()});
+var n=document.querySelector('[data-live="flow"]');if(n&&window.MutationObserver)new MutationObserver(show).observe(n,{childList:true,characterData:true,subtree:true});show()})();</script>"""
 FOLD_JS = """<script>(function(){function o(){var h=location.hash.slice(1),e=h&&document.getElementById(h),d=e&&e.closest('details');if(d&&!d.open){d.open=true;e.scrollIntoView()}}
 window.addEventListener('hashchange',o);o();window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('details.fold')).forEach(function(d){d.open=true})})})();</script>"""
 NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
@@ -1040,7 +1062,7 @@ def build_tab(tab, G, pages):
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G, pages) + SAFETY + jump_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G, pages) + SAFETY + jump_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS + MYLV_JS.replace("@SITE@", G["site"]) if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

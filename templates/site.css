@@ -144,3 +144,8 @@ details.fold[open]>summary{border-bottom:1px solid var(--line);border-radius:var
 details.fold>.blk,details.fold>.pair{margin:12px;box-shadow:none}
 details.fold>.blk{border:1px solid var(--line)}
 .nbr{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}.nbr li{display:flex;flex-direction:column;gap:1px;padding:9px 0;border-bottom:1px solid var(--line)}.nbr li:last-child{border-bottom:0}.nbr a{font-weight:600;padding:2px 0}.nbr span{color:var(--mut);font-size:.82rem}
+.tile.mine form{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.tile.mine input{width:92px;min-height:40px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:.95rem}.tile.mine input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.tile.mine .pill{margin-top:6px;align-self:flex-start}.tile.mine form .pill{margin-top:0}.tile.mine b{font-size:1.5rem}
+.tile.mine.inr b{color:var(--good)}.tile.mine.outr b{color:var(--low)}.tile.mine.inr{border-color:var(--good)}
+@media(prefers-color-scheme:dark){.tile.mine.outr b{color:var(--low)}}
+.tile.mine form[hidden],.tile.mine [hidden]{display:none!important}.nbr a{display:block;padding:8px 0}
