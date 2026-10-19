@@ -1,5 +1,6 @@
 """Truth against the sources, on the LIVE site: every gauge page's latest flow, stage and time, and its flood stages, versus the USGS and NWS APIs fetched now.
 Usage: python tools/truth_live.py            (exit 1 and print each mismatch). Run by tools/watchdog.py every hour and by hand.
+       python tools/truth_live.py --dir dist_next   the same comparison on the BUILT pages before they are published (refresh.py runs it as a blocking gate; if the USGS or NWS API does not answer it only warns, never blocks)
 Rules per gauge page:
  - the page's flow reading time equals USGS's latest: flow must match (within 1% or 1 cfs); stage must match within 0.02 ft
  - USGS has a newer reading: the page may be behind by at most 3 hours (the browser refreshes the numbers on load, so a short lag is normal)
@@ -14,16 +15,29 @@ H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 MAX_LAG_H = 3
 
 
+LOCAL = sys.argv[sys.argv.index("--dir") + 1] if "--dir" in sys.argv else None
+
+
+def page(path):
+    """A site path (/river/x/y/ or /gauges.json) from the live site, or from the local build with --dir."""
+    if LOCAL:
+        import os
+        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOCAL)
+        p = os.path.join(root, path.strip("/")) if path.endswith(".json") else os.path.join(root, path.strip("/"), "index.html")
+        return open(p, encoding="utf-8").read()
+    return get(SITE + path)
+
+
 def get(u, t=60):
     return urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=t).read().decode("utf-8", "replace")
 
 
 def main():
     bad = []
-    gauges = json.loads(get(SITE + "/gauges.json"))
+    gauges = json.loads(page("/gauges.json"))
     pages = {}
     for name, url, *_ in gauges:
-        h = get(SITE + url)
+        h = page(url)
         sid = re.search(r"USGS gauge (\d+)", h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)
         stage = re.search(r'data-live="stage">([\d.\-]+)<', h)
@@ -37,7 +51,13 @@ def main():
     ids = sorted(pages)
     latest = {}
     for i in range(0, len(ids), 40):
-        j = json.loads(get(USGS % ",".join("USGS-" + s for s in ids[i:i + 40])))
+        try:
+            j = json.loads(get(USGS % ",".join("USGS-" + s for s in ids[i:i + 40])))
+        except Exception as e:
+            if LOCAL:
+                print("truth_live: the USGS API did not answer (%s); comparison skipped, not blocking" % str(e)[:80])
+                return 1 if bad else 0
+            raise
         for f in j.get("features", []):
             p = f["properties"]
             latest[(p["monitoring_location_id"][5:], p["parameter_code"])] = (datetime.datetime.fromisoformat(p["time"]), float(p["value"]))

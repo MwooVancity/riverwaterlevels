@@ -1,0 +1,10 @@
+# The owner's other site (calcscrape): what happened
+
+(Summarised from the owner's project notes. The other site is separate from this one; this site copies its "data page" model.)
+
+- **What it is.** An Astro site of car-repair cost calculators built on public datasets (NHTSA complaints, NOAA, BLS, EPA and others): per-repair pages with a calculator, then data blocks each with an exact source, almost no prose. The model was a lake-level site called Lakebrief (measured public data per entity, templated).
+- **The cliff.** Google Search Console impressions ran about 800 a day from 2026-08-25 to 2026-09-12, then about 2 a day from 2026-09-14 and stayed there (18,147 impressions 08-15 to 09-13; 292 from 09-14 to 10-06). 81 of 86 pages with 20 or more impressions lost over 80% of impressions; home and guide pages fell as much as repair pages; only new research pages rose. Clicks were already near zero before the drop. Pages stayed indexed (URL Inspection 2026-09-22), robots.txt and canonicals were fine, no manual action visible via API.
+- **AdSense.** Rejected the site as "thin" on 2026-10-02.
+- **Hypotheses, none proven.** (1) New-domain "sandbox": first impressions 2026-08-12, 77% of impressions at position 51 or worse. (2) Indexing API misuse: deploys between 08-28 and 09-02 pushed every live page through Google's Indexing API (only allowed for job postings and broadcast events); removed afterwards; the cliff came 12 days later. (3) Google's August 2026 core update (08-26 to 09-21) and the 09-24 spam update aimed at scaled content. (4) A duplicate-brand domain overlap (that project is deleted).
+- **Lesson the owner drew.** Perfecting individual pages may not move impressions if the cause is site-level; do not claim page work fixes the cliff; judge by Search Console trend after each batch ships.
+- **Why it matters here.** Riverwaterlevels is also a templated, data-only, many-pages site on a new domain, funded by ads. The plan releases at most 25 gauge pages a day behind a noindex kill switch to avoid repeating a whole-site demotion, but no search data exists yet to know whether that is enough.
