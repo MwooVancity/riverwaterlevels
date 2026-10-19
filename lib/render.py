@@ -836,6 +836,25 @@ TABS = {
 }
 
 
+def b_nearby(G, pages):
+    """Other gauges on the site close to this one (up to five within 150 miles, nearest first), each with latest flow and the plain-word comparison. Upstream and downstream gauges are in their own strip and are skipped here."""
+    skip = {G["site"]} | {x["site"] for x in ((G["rec"].get("related") or {}).get("items") or [])}
+    out = []
+    for s, p in pages.items():
+        if s in skip or not p.get("_built") or not p.get("_ll"):
+            continue
+        la1, lo1, la2, lo2 = map(math.radians, (G["lat"], G["lon"], p["_ll"][0], p["_ll"][1]))
+        mi = 3958.8 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+        if mi <= 150:
+            out.append((mi, p))
+    if not out:
+        return None
+    out.sort(key=lambda x: x[0])
+    lis = "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmt(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in out[:5])
+    return block("nearby_gauges", "Other gauges nearby", "live", '<ul class="nbr">%s</ul>' % lis,
+                 "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
+
+
 def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
@@ -857,7 +876,7 @@ def tab_blocks(tab, G, pages):
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b_impacts(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
                 "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G), b_land(G),
-                b_related(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
+                b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return [b2.b_offline(G), b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_rain(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G), b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b_sun(G)]
 
 
@@ -947,7 +966,7 @@ def crumb_ld(items):
 
 
 JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("hourly_heatmap", "Hourly forecast"), ("month_chart", "30 days"), ("multi_year", "Earlier years"),
-        ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Nearby gauges"), ("about_gauge", "About"))
+        ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Upstream and downstream"), ("nearby_gauges", "Nearby gauges"), ("about_gauge", "About"))
 
 
 def build_tab(tab, G, pages):
@@ -988,7 +1007,7 @@ def build_tab(tab, G, pages):
     ids = {b["id"] for b in shown}
     jl = [(i, t) for i, t in JUMP if i in ids]
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
-    SIDE = {"related_gauges", "nws_forecast_point", "flood_stages", "public_land", "about_gauge", "gauge_map", "sun", "air_obs", "official_links"}
+    SIDE = {"related_gauges", "nearby_gauges", "nws_forecast_point", "flood_stages", "public_land", "about_gauge", "gauge_map", "sun", "air_obs", "official_links"}
     body = ""
     side = ""
     fold = None  # [title, rendered blocks, headings] while inside a FOLD: group
