@@ -105,7 +105,7 @@ def fetch_nwps(site, lat, lon):
                 j = thr_json(NWPS + "gauges/%s/stageflow/forecast" % x["lid"], NWS_H)
                 pts = [{"t": p.get("validTime"), "primary": p.get("primary"), "secondary": p.get("secondary")} for p in (j.get("data") or []) if isinstance(p.get("primary"), (int, float)) and p["primary"] > -990]
                 if pts:
-                    fc = {"issued": j.get("issuedTime"), "primary_units": j.get("primaryUnits"), "secondary_units": j.get("secondaryUnits"), "points": pts[:40]}
+                    fc = {"issued": j.get("issuedTime"), "primary_units": j.get("primaryUnits"), "secondary_units": j.get("secondaryUnits"), "points": pts[:400]}
             except Exception:
                 pass
             rflow = {}
@@ -625,7 +625,7 @@ def fetch_nws(lat, lon):
     try:
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
-        out["periods"] = [{k: p.get(k) for k in ("name", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
+        out["periods"] = [{k: p.get(k) for k in ("name", "startTime", "endTime", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
     except Exception:
         pass
     try:
@@ -727,15 +727,23 @@ def fetch_daily(site, h):
     p = os.path.join(CACHE, "daily", site + ".json.gz")
     if os.path.exists(p) and (datetime.datetime.now().timestamp() - os.path.getmtime(p)) < 20 * 3600:
         return json.load(gzip.open(p, "rt"))
-    d = thr_json(BASE + "daily/items?monitoring_location_id=USGS-%s&parameter_code=00060&statistic_id=00003&limit=50000&f=json" % site, h, 240)
     rows = []
-    for f in d.get("features", []):
-        q = f["properties"]
-        try:
-            rows.append([str(q["time"])[:10], float(q["value"])])
-        except (KeyError, TypeError, ValueError):
-            pass
-    rows.sort()
+
+    def pull(extra):
+        d = thr_json(BASE + "daily/items?monitoring_location_id=USGS-%s&parameter_code=00060&statistic_id=00003&limit=50000&f=json%s" % (site, extra), h, 240)
+        feats = d.get("features", [])
+        for f in feats:
+            q = f["properties"]
+            try:
+                rows.append([str(q["time"])[:10], float(q["value"])])
+            except (KeyError, TypeError, ValueError):
+                pass
+        return len(feats)
+    if pull("") >= 50000:  # the API answers at most 50,000 rows, in no time order, and refuses paging past that: a record that long (St. Louis since 1861) is pulled in 40-year windows instead
+        rows = []
+        for y in range(1850, datetime.date.today().year + 1, 40):
+            pull("&time=%d-01-01/%d-12-31" % (y, min(y + 39, datetime.date.today().year)))
+    rows = [list(x) for x in sorted({r[0]: r for r in rows}.values())]
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(rows, gzip.open(p, "wt"), separators=(",", ":"))
     return rows

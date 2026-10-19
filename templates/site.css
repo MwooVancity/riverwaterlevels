@@ -149,3 +149,9 @@ details.fold>.blk{border:1px solid var(--line)}
 .tile.mine.inr b{color:var(--good)}.tile.mine.outr b{color:var(--low)}.tile.mine.inr{border-color:var(--good)}
 @media(prefers-color-scheme:dark){.tile.mine.outr b{color:var(--low)}}
 .tile.mine form[hidden],.tile.mine [hidden]{display:none!important}.nbr a{display:block;padding:8px 0}
+
+/* ---- fresh-review round 2: ladder as a bar with a text key, absence notes ---- */
+.lad{margin:2px 0 12px}.lad-bar{position:relative;height:16px;border-radius:99px;background:var(--line);margin:14px 0 10px;overflow:visible}.lad-bar>i{position:absolute;top:0;bottom:0}
+.lad-now{position:absolute;top:-8px;width:4px;height:32px;margin-left:-2px;background:var(--ink);border-radius:2px}.lad-fc{position:absolute;top:-6px;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--accent);text-decoration:none}
+.lad-key{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem}.lad-key li{display:flex;align-items:center;gap:6px}.lad-key i{width:12px;height:12px;border-radius:3px;display:inline-block}.lad-sw{background:var(--ink)!important;width:4px!important;height:14px!important;border-radius:2px!important}.lad-fsw{background:var(--accent)!important;border-radius:50%!important}
+.gaps{color:var(--mut);font-size:.85rem;margin:8px 0 0;line-height:1.45}

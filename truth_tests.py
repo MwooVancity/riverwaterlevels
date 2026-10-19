@@ -38,17 +38,30 @@ def main():
         c = render.b3.conditions(G, None)
         h = render.hero(G, None)
         # 1. direction
-        m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]\d+)% <small class="word">(\w+)</small>', h, re.S)
+        m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]\d+)% <small class="word">([\w ]+)</small>', h, re.S)
         if m:
             word, val = m.group(3).lower(), int(m.group(2))
             c6 = c["chg"].get(6)
-            if word == "rising" and val < 0 or word == "falling" and val > 0:
+            if word in ("levelling off", "unsteady"):
+                pass  # direction words that say the last hour differs from the last 6 h; nothing to contradict
+            elif word == "rising" and val < 0 or word == "falling" and val > 0:
                 fail(site, "trend word %s contradicts headline %+d%%" % (word, val))
-            if c6 is not None and (word == "rising" and c6 <= 2 or word == "falling" and c6 >= -2 or word == "steady" and abs(c6) > 2):
+            if c6 is not None and word in ("rising", "falling", "steady") and (word == "rising" and c6 <= 1 or word == "falling" and c6 >= -1 or word == "steady" and abs(c6) > 1):
                 fail(site, "trend word %s disagrees with the last 6 h (%+.1f%%)" % (word, c6))
         # 3. silence
         if not G["has_forecast"] and 'class="tile fcst none"' not in h:
             fail(site, "no NWS river forecast but the page does not say so")
+        gaps = (re.search(r'<p class="gaps">Not available[^<]*', h) or [""])[0] if re.search(r'<p class="gaps">Not available', h) else ""
+        if not c["wt"] and "water temperature" not in gaps:
+            fail(site, "no water temperature and the page does not say so")
+        if not (G["rec"].get("nwps") or {}).get("categories") and "flood stages" not in gaps:
+            fail(site, "no NWS flood stages and the page does not say so")
+        if not c["rain"] and "rain estimate" not in gaps:
+            fail(site, "no rain estimate and the page does not say so")
+        if c["wt"] and c["wt"]["f"] < -40:
+            fail(site, "impossible water temperature %.0f F shown" % c["wt"]["f"])
+        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] and "already above this forecast" not in h:
+            fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:
             if al["n"] and ('class="abanner"' not in h or "NWS alerts</span>" in h):
@@ -91,12 +104,14 @@ def main():
             p = os.path.join(root, f)
             rel = os.path.relpath(p, d).replace("\\", "/")
             h = open(p, encoding="utf-8").read()
-            for m in re.finditer(r'class="ml"[^>]*>([^<]*)<', h):
+            for m in re.finditer(r'<li class="now"><i class="lad-sw"></i>([^<]*)<b>', h):
                 t = m.group(1)
                 if t.startswith("Now"):
                     fail(rel, "stage marker says Now: %r" % t)
-                elif t.startswith("Latest") and not re.search(r"\d{1,2}:\d{2}\s?[AP]M", t):
+                elif not re.search(r"\d{1,2}:\d{2}\s?[AP]M", t):
                     fail(rel, "stage marker has no time: %r" % t)
+            if re.search(r'<h2 class="secth">[^<]*</h2>\s*(<h2|<details|</div>)', h):
+                fail(rel, "a section heading has nothing under it")
             if rel == "index.html" or rel.startswith("rivers/"):  # home and state pages: plain words in tables, cards and tags; Source lines and the glossary may use the technical terms
                 vis = re.sub(r"<script.*?</script>|<meta[^>]*>|<p class=\"src\">.*?</p>", " ", h, flags=re.S)
                 for pat in (r"\d+(?:st|nd|rd|th)", r"above 95th", r"below 5th", r"percentile"):

@@ -18,7 +18,7 @@ def b_nws_point(G, pages=None):
         rows += tr(["Weather Forecast Office", esc(nm(n["wfo"]))])
     if n.get("rfc"):
         rows += tr(["River Forecast Center", esc(nm(n["rfc"]))])
-    if n.get("reliability"):
+    if n.get("reliability") and (n.get("forecast") or {}).get("points"):
         rows += tr(["Forecast reliability, as published", esc(n["reliability"])])
     rows += tr(["Flood inundation maps", '<a href="https://water.noaa.gov/gauges/%s" rel="noopener">Check this forecast point at water.noaa.gov</a>' % esc(n["lid"])])
     for key, lab in (("upstream", "Upstream forecast points"), ("downstream", "Downstream forecast points")):
@@ -246,10 +246,11 @@ def conditions(G, pages=None):
     f = n.get("forecast") if ok("nwps") else None
     if f and f.get("points") and (f.get("primary_units") or "").lower() == "ft":
         age = hours_old(f.get("issued"), G["now"]) if f.get("issued") else None
-        fut = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) > lt and p["primary"] > -900]
+        fut = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1) and p["primary"] > -900]
         if fut and (age is None or age <= 72):
             hi = max(fut, key=lambda x: x[1])
-            out["fc"] = {"v": hi[1], "t": tzl(hi[0], zone), "lid": n.get("lid") or ""}
+            out["fc"] = {"v": hi[1], "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
+                         "cur": G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = [x for x in nws["alerts"] if (x.get("event") or "") not in IGNORED_ALERTS]

@@ -52,7 +52,8 @@ def series(rec, code):
     for r in rec["usgs"]["rows"]:
         if r["parameter_code"] == code:
             try:
-                out.append((parse_t(r["time"]), float(r["value"]), r))
+                if float(r["value"]) > -900:  # USGS sentinel values (-999999) are not readings
+                    out.append((parse_t(r["time"]), float(r["value"]), r))
             except (TypeError, ValueError):
                 pass
     out.sort(key=lambda x: x[0])
@@ -189,7 +190,7 @@ def hero(G, pages=None):
                  "Higher than %d%% of the %d years on record for %s." % (round(p), yrs, on))
         cap += " That is the %s percentile." % pv if p not in (-1, 101) else ""
     tiles += ui.tile("norm", "map", "Compared with past years", word,
-                     ('<small class="nt">%s</small>' % esc(plain) if plain else "") + ui.dial(p) + ui.dial_legend() + ('<small class="nt">%s</small>' % pct_med if pct_med else "") + '<small id="pcap">%s</small>' % esc(cap), "wide")
+                     ('<small class="nt">%s</small>' % esc(plain) if plain else "") + ui.dial(p) + ui.dial_legend() + '<small id="pcap">%s</small>' % esc(cap), "wide")
     if G["osc"]:
         v24 = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         tiles += ui.tile("trend", "steady", "24 h range", '<span class="rng">%s to %s</span> <small>cfs</small>' % (fmt(min(v24)), fmt(max(v24))), '<small id="ccap">Lowest to highest reading in 24 h (tidal cycle)</small>')
@@ -199,16 +200,24 @@ def hero(G, pages=None):
         else:
             c6 = c["chg"].get(6)
             use, span = (c6, "6 h") if c6 is not None else (chg, "24 h")
-            word, ico = ("Rising", "up") if use > 2 else ("Falling", "down") if use < -2 else ("Steady", "steady")
+            c1 = c["chg"].get(1)
+            word, ico = ("Rising", "up") if use > 1 else ("Falling", "down") if use < -1 else ("Steady", "steady")
+            if c1 is not None and word != "Steady":
+                if abs(c1) >= 2 and (c1 > 0) != (use > 0):
+                    word, ico = "Unsteady", "steady"  # the last hour points the other way from the last 6 h
+                elif abs(c1) < 0.5 and abs(use) >= 3:
+                    word, ico = "Levelling off", "steady"  # it moved, and has stopped
             turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
             other = [("24 h", chg)] + [("%d h" % h, v) for h, v in sorted(c["chg"].items()) if h == 1 and span == "6 h"]
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)
-            tiles += ui.tile("trend " + word.lower(), ico, "Change, last %s" % span, '%s%.0f%% <small class="word">%s</small>' % ("+" if use >= 0 else "", use, word),
+            tiles += ui.tile("trend " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.0f%% <small class="word">%s</small>' % ("+" if use >= 0 else "", use, word),
                              '<small>%s</small>' % parts + ('<small>The direction changed within the last day.</small>' if turned else "") + '<small id="ccap">Flow 24 h earlier: %s cfs.</small>' % fmt(G["lv"] / (1 + chg / 100)))
     if c["fc"]:
-        tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % c["fc"]["v"], '<small>%s &middot; NWS point %s</small>' % (esc(c["fc"]["t"]), esc(c["fc"]["lid"])))
+        fcw = c["fc"]
+        tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % fcw["v"], '<small>%s &middot; NWS point %s</small><small>Forecast issued %s.</small>' % (esc(fcw["t"]), esc(fcw["lid"]), esc(fcw["issued"]))
+                         + ('<small>The latest reading (%.2f ft) is already above this forecast.</small>' % fcw["cur"] if fcw["cur"] is not None and fcw["cur"] > fcw["v"] else ""))
     elif not G["has_forecast"]:
-        tiles += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>The NWS publishes no river forecast for this gauge. The weather forecast below is not a river forecast.</small>')
+        tiles += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>No NWS river forecast point is linked to this gauge in our data. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
         tiles += ui.tile("alrt " + ("on" if al["n"] else "off"), "bell", "NWS alerts", str(al["n"]), '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else "No alerts active here"))
@@ -221,7 +230,8 @@ def hero(G, pages=None):
         tiles += ui.tile("wtemp", "thermo", "Water temperature", '%.0f&deg;<small>F</small>' % c["wt"]["f"], '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     if c["air"]:
         a = c["air"]
-        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], '<small>%s</small>' % ((("wind calm, " if a["wind"] < 1 else "wind %.0f mph %s, " % (a["wind"], esc(a["dir"]))) if a["wind"] is not None else "") + ("gusts %.0f mph, " % a["gust"] if a["gust"] is not None else "")) + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
+        wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else "wind %.0f mph %s" % (a["wind"], esc(a["dir"]))) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
+        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], ('<small>%s</small>' % wtxt if wtxt else "") + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
     if c["up"]:
         up = c["up"]
         tiles += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmt(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), (" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else ""))
@@ -232,8 +242,23 @@ def hero(G, pages=None):
         sh, _, sz = tzl(st_[1], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
         tiles += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s &middot; computed from location and date</small>' % esc(tzl(st_[0], G["zone"], date=False)))
     tiles += mine.replace('<div class="tile mine"', '<div class="tile mine" hidden', 1)
+    gone = []
+    if not c["wt"]:
+        gone.append("water temperature (no current USGS sensor reading)")
+    if not ((G["rec"].get("nwps") or {}).get("categories")):
+        gone.append("NWS flood stages (none published for this location)")
+    if not c["rain"]:
+        gone.append("rain estimate")
+    notes = ('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else ""
+    sc = ((G["rec"].get("streamcat") or {}).get("vals") or {}).get("damdensws")
+    try:
+        ndam = round(float(sc) * float(G["row"]["drainage_sqmi"] or 0) * 2.58999)
+    except (TypeError, ValueError):
+        ndam = 0
+    if ndam >= 1:
+        notes += '<p class="gaps">Dams in the upstream watershed: about %d (EPA StreamCat). Flow below a dam can change with releases, not only rain.</p>' % ndam
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
-    return ban + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles)
+    return ban + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + notes
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
@@ -507,7 +532,15 @@ def b_weather(G, n_periods=14):
     if age is not None and age > 48:
         return None
     cards = ""
-    for p in per[:n_periods]:
+    live = []
+    for p in per:
+        try:
+            gone_ = p.get("endTime") and parse_t(p["endTime"]) <= G["now"]
+        except (TypeError, ValueError):
+            gone_ = False
+        if not gone_ and not (not p.get("endTime") and p.get("isDaytime") and G["now"].astimezone(G["zone"]).hour >= 19):
+            live.append(p)
+    for p in live[:n_periods]:
         pop = p.get("pop")
         cards += ('<div class="fc"><div>%s</div><b>%s&deg;%s</b><div>%s</div><div class="legend">Wind %s %s</div><div class="legend">%s</div></div>' % (
             esc(p.get("name") or ""), esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), esc(p.get("windSpeed") or ""), esc(p.get("windDirection") or ""),
@@ -626,7 +659,12 @@ def b_land(G):
     land = G["rec"].get("land")
     if not land or not land.get("rows"):
         return None
-    rows = "".join(tr([esc(u), esc(PADMAN.get(m, m or "n/a")), esc(ACCESS.get(a, a or "n/a"))]) for u, m, a in land["rows"][:12])
+    seen_l, uniq = set(), []
+    for t in land["rows"]:
+        if tuple(t) not in seen_l:
+            seen_l.add(tuple(t))
+            uniq.append(t)
+    rows = "".join(tr([esc(u), esc(PADMAN.get(m, m or "n/a")), esc(ACCESS.get(a, a or "n/a"))]) for u, m, a in uniq[:12])
     return block("public_land", "Public land at this gauge", "map", table(["Unit", "Managed by", "Public access"], rows),
                  "Source: USGS Protected Areas Database (PAD-US), within about half a mile of the gauge, downloaded %s. Mapped land is not proof of legal access." % fdate(land["downloaded"]), "padus")
 
@@ -747,7 +785,12 @@ def b_impacts(G):
     if not im:
         return None
     unit = (n.get("stage_units") or "ft").lower()
-    rows = "".join(tr(["%.1f %s" % (i["stage"], esc(unit)), esc(i["statement"])], right=(0,)) for i in im)
+    by = {}
+    for i in im:
+        by.setdefault(i["stage"], [])
+        if i["statement"] not in by[i["stage"]]:
+            by[i["stage"]].append(i["statement"])
+    rows = "".join(tr(["%.1f %s" % (s_, esc(unit)), "<br>".join(esc(x) for x in by[s_])], right=(0,)) for s_ in sorted(by))
     return block("flood_impacts", "Flood impacts by stage", "official", table(["Stage", "National Weather Service impact statement"], rows, right=(0,)),
                  "Source: National Weather Service forecast point %s (%s). Statements are quoted from the NWS and describe that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
 
@@ -1043,18 +1086,21 @@ def build_tab(tab, G, pages):
     side = ""
     fold = None  # [title, rendered blocks, headings] while inside a FOLD: group
 
+    pending = None  # a "SEC:" heading is written only when a block follows it
+
     def flush():
         nonlocal body, fold
         if fold and fold[1]:
-            body += ('<details class="fold"><summary><b>%s</b><span>%d sections: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), esc(", ".join(fold[2])), fold[1]))
+            body += ('<details class="fold"><summary><b>%s</b><span>%d section%s: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), "" if len(fold[2]) == 1 else "s", esc(", ".join(fold[2])), fold[1]))
         fold = None
     for b in blocks:
         if isinstance(b, str) and b.startswith("SEC:"):
             flush()
-            body += '<h2 class="secth">%s</h2>' % esc(b[4:])
+            pending = '<h2 class="secth">%s</h2>' % esc(b[4:])
             continue
         if isinstance(b, str) and b.startswith("FOLD:"):
             flush()
+            pending = None
             fold = [b[5:], "", []]
             continue
         if T["hero"] and isinstance(b, dict) and b["id"] in SIDE:
@@ -1065,6 +1111,9 @@ def build_tab(tab, G, pages):
             fold[1] += html
             fold[2].append(b["heading"])
         else:
+            if pending and isinstance(b, (dict, list)):
+                body += pending
+                pending = None
             body += html
     flush()
     if T["hero"] and side:
