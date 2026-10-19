@@ -87,6 +87,17 @@ def blocks_safety():
     return bool(good)
 
 
+def review_gate():
+    """New gauge pages need a SHIP verdict; live pages and non-gauge pages are never blocked; GRANDFATHERED or FIX verdicts do not unlock a new page."""
+    sys.path.insert(0, ROOT)
+    from lib.reviewgate import unreviewed_new_pages as f
+    live = ["/", "/river/a/b/", "/status/"]
+    nxt = live + ["/river/c/d/", "/river/c/d/forecast/", "/status/x/", "/rivers/pa/"]
+    rv = {"pages": {"/river/c/d/": {"verdict": "SHIP"}, "/river/c/d/forecast/": {"verdict": "GRANDFATHERED"}}}
+    return (f(nxt, live, {}) == ["/river/c/d/", "/river/c/d/forecast/"] and f(nxt, live, rv) == ["/river/c/d/forecast/"]
+            and f(live, live, {}) == [] and f(nxt, nxt, {}) == [])
+
+
 def main():
     ok = True
     r = run("check.py", "--selftest"); print("1.", r.stdout.strip() or r.stderr.strip()[:200]); ok &= r.returncode == 0
@@ -123,6 +134,7 @@ def main():
     print("4. rollback and swap back works: %s" % rb); ok &= rb
     t6, bad6 = unit_checks(); print("6. unit checks (percentile, axis labels, place phrasing, hidden blocks): %s %s" % (t6, bad6 or "")); ok &= t6
     t5 = blocks_safety(); print("5. new blocks: hidden without data, hidden when stale, hidden when the source is not cleared: %s" % t5); ok &= t5
+    t8 = review_gate(); print("8. review gate: new gauge pages need a SHIP verdict, live pages never blocked: %s" % t8); ok &= t8
     run("build.py")  # leave dist_next consistent with the real clock
     r = run("truth_tests.py"); print("7.", (r.stdout.strip().splitlines() or [r.stderr.strip()[:200]])[0]); ok &= r.returncode == 0
     if r.returncode:

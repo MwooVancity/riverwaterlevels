@@ -24,7 +24,7 @@ def main():
     if "--check" in sys.argv:
         p = os.path.join(ROOT, "state", "reviews.json")
         rv = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
-        if rv.get(cur, {}).get("verdict") != "SHIP":
+        if rv.get("templates", {}).get(cur, {}).get("verdict") != "SHIP":
             print("TEMPLATE NOT REVIEWED: no SHIP verdict for template %s (see docs/REVIEW-PROMPT.md)" % cur)
             return 1
     return 0
