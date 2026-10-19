@@ -13,7 +13,7 @@ def template_hash():
         d = os.path.join(ROOT, sub)
         files += [os.path.join(d, f) for f in sorted(os.listdir(d)) if os.path.isfile(os.path.join(d, f))]
     for f in files:
-        h.update(os.path.relpath(f, ROOT).encode())
+        h.update(os.path.relpath(f, ROOT).replace("\\", "/").encode())  # the same hash on Windows and Linux (CI)
         h.update(open(f, "rb").read().replace(b"\r\n", b"\n"))
     return h.hexdigest()[:16]
 
