@@ -85,7 +85,7 @@ def all_gauges_table(built, Gs):
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
             esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % G["lv"], fmt(G["lv"]), pv, ptxt,
-            "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else "%+.0f%%" % chg, G["lt"].isoformat(), esc(G["obs"])))
+            "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%"), G["lt"].isoformat(), esc(G["obs"])))
     heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
     return ('<div class="card"><h2>All gauges on this site</h2><div class="scroll"><table id="alltab"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>'
@@ -161,7 +161,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         G = Gs[r["site"]]
         pv = band_word(G["p"])
         chg = G["chg"]
-        ch = ("%s %+.0f%%" % ("&#9650;" if chg > 1 else "&#9660;" if chg < -1 else "&#9644;", chg)) if chg is not None else "–"
+        ch = ("%s %s" % ("&#9650;" if chg > 1 else "&#9660;" if chg < -1 else "&#9644;", ("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
             r["water_url"], esc(r["place"]), r["site"], fmt(G["lv"]), pv, ch, fmt(float(r["drainage_sqmi"] or 0)), fcst, esc(G["obs"]))
@@ -241,7 +241,7 @@ def trust_pages(built_count, built_rows):
         "<h2>Snow, water temperature, outlook, watershed</h2><p>Snow water equivalent is from the three nearest USDA SNOTEL stations within 37 miles; a station may not drain to the gauge. Water temperature by month is the mean of all published daily mean values in each calendar month; months with fewer than 150 values are marked. The 8 to 14 day and 6 to 10 day outlooks are NOAA Climate Prediction Center products at the gauge location. Watershed characteristics and water quality assessments are U.S. EPA StreamCat and ATTAINS values for the reach and for assessment units within about 400 m of the gauge, shown as published.</p>"
         "<h2>Public land, maps and downloads</h2><p>Public land is from the USGS Protected Areas Database (PAD-US) within about half a mile of the gauge; mapped land is not proof of legal access. Maps are U.S. Geological Survey National Map services. The CSV download is built in your browser from the USGS API for the last 7 days of flow and gage height.</p>"
         "<h2>Freshness limits</h2><p>A gauge whose latest flow is more than 24 hours old shows a Gauge not reporting notice with the time of its last reading; after 30 days without a reading the page is no longer rebuilt. River forecasts older than 24 hours are marked and older than 72 hours hidden; hourly weather forecasts older than 12 hours are marked and older than 72 hours hidden. Weather observations older than 3 hours are marked and older than 12 hours hidden. Rain estimates older than 6 hours are marked and older than 24 hours hidden. Alerts older than 3 hours are marked. Snow data older than 5 days and outlooks older than 3 days are hidden.</p>"
-        "<h2>What we do not do</h2><p>We do not make forecasts, rate conditions or give advice. Every number is a source value or a calculation described on this page.</p>"
+        "<h2>What we do not do</h2><p>We do not make our own forecasts and we do not rate conditions as good or bad. Forecasts, outlooks and impact statements shown are National Weather Service products quoted as published; every other number is a source value or a calculation described on this page.</p>"
         "<h2>Corrections</h2><p>Errors that come from a source are the source's to correct; we show the source's current value on the next refresh. Errors in our calculations are corrected as soon as they are found. Last reviewed October 17, 2026.</p>")
     t["/methodology/"] = prose_page("Methodology", "/methodology/", meth, "How River Water Levels calculates percentiles, comparisons, rates and lags, and its freshness limits.")
     upd = (("USGS gauge readings", "About every 15 minutes (some gauges hourly)", "Every 30 minutes, and in your browser when the page loads"),

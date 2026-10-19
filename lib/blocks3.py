@@ -49,7 +49,7 @@ def b_declarations(G):
     area = ((items[0].get("area") if items else None) or "this county").replace(" (County)", " County")
     rows = "".join(tr([esc(i["id"] or ""), fdate(i["date"]) if i["date"][:4].isdigit() else "–", "%s to %s" % (fdate(i["begin"]), fdate(i["end"])) if i["begin"][:4].isdigit() and i["end"][:4].isdigit() else "–", esc(i["title"] or ""),
                        esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "–")]) for i in items)
-    body = ("<p>%d federal flood disaster declarations on file for %s.</p>" % (d["count"], esc(area))) + (table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows, hide=(4,)) if rows else "")  # four visible columns: on a phone the site stacks them as label-and-value rows instead of clipping
+    body = ("<p>%d federal flood disaster declarations on file for %s.</p>" % (d["count"], esc(area))) + (table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows) if rows else "")  # five visible columns: on a phone the site stacks them as label-and-value rows instead of clipping
     return block("flood_declarations", "Federal flood disaster declarations", "hist", body,
                  "Source: This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA. Dataset: Disaster Declarations Summaries, endpoint https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries (v2), accessed %s. Declarations whose type is Flood or whose title contains FLOOD; the 12 most recent are listed." % esc(tzl(parse_t(d["fetched_at"]), G["zone"])), "openfema")
 
@@ -306,7 +306,7 @@ def conditions(G, pages=None):
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = [x for x in nws["alerts"] if (x.get("event") or "") not in IGNORED_ALERTS]
-        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]]}
+        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "age_h": hours_old(nws["fetched_at"], G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
         vt = (rn.get("valid_through") or {}).get("last_24h")
@@ -325,7 +325,18 @@ def b_wpc(G):
     zone = G["zone"]
     body = ""
     if w.get("outlooks"):
-        rows = "".join(tr([esc(o["name"]), esc((o.get("category") or "").title()), esc(o["issued"] or "–"), "%s to %s" % (esc(o["start"] or "–"), esc(o["end"] or "–"))]) for o in w["outlooks"])
+        def loc(s_):
+            """WPC gives either an ISO UTC time or a bare MM/DD/YYYY date: times show in the gauge's zone, dates stay dates."""
+            if not s_:
+                return "–"
+            try:
+                if "T" in s_ or " " in s_:  # ISO with Z, or 'YYYY-MM-DD HH:MM:SS' (both UTC; the ERO valid times are 12:00 UTC)
+                    t_ = parse_t(s_.replace("Z", "+00:00").replace(" ", "T"))
+                    return tzl(t_ if t_.tzinfo else t_.replace(tzinfo=datetime.timezone.utc), zone)
+                return datetime.datetime.strptime(s_, "%m/%d/%Y").strftime("%b %d, %Y").replace(" 0", " ")
+            except ValueError:
+                return s_
+        rows = "".join(tr([esc(o["name"]), esc((o.get("category") or "").title()), esc(loc(o["issued"])), "%s to %s" % (esc(loc(o["start"])), esc(loc(o["end"])))]) for o in w["outlooks"])
         body += "<h3>Outlooks covering this location</h3>" + table(["Outlook", "Category", "Issued", "Valid"], rows)
     if w.get("reports"):
         rows = "".join(tr([esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "–", esc(r["type"] or ""), esc("%s, %s" % (r["where"], r["state"]) if r["where"] else (r["state"] or "")), esc(r["remarks"] or "–")]) for r in w["reports"])

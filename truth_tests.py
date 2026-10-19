@@ -104,6 +104,17 @@ def main():
         # 17. the site gives no advice (Methodology: we do not give advice)
         if re.search(r"(?i)get off the water|you should|we recommend|do not (?:enter|swim|boat)", h):
             fail(site, "advice wording on a data page")
+        # 18. alerts: a failed or old alert source never reads as "no alerts" (never fetched: Unknown; answer older than 3 h: says as-of and that it is old)
+        G3 = copy.deepcopy(G)
+        G3["rec"].setdefault("nws", {})["alerts"] = None
+        h3 = render.hero(G3, None)
+        if "Unknown" not in h3 or "No alerts active here" in h3:
+            fail(site, "alert source never answered but the page does not say Unknown")
+        G4 = copy.deepcopy(G)
+        G4["rec"].setdefault("nws", {}).update({"alerts": [], "fetched_at": (G["now"] - datetime.timedelta(hours=20)).isoformat()})
+        h4 = render.hero(G4, None)
+        if "has not answered since" not in h4 or "No alerts active here" in h4:
+            fail(site, "alert answer is 20 h old but the page says no alerts as if current")
         # 3. silence
         if not G["has_forecast"] and 'class="tile fcst none"' not in h:
             fail(site, "no NWS river forecast but the page does not say so")
