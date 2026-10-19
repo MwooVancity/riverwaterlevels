@@ -27,7 +27,7 @@
 16. File budget: total checked at 19,000 (`build.py`); per-page-class budgets: LATER.
 
 ## E. Gates and rules
-17. `ui_gates.mjs` and the template review block a deploy; CI installs Playwright. DONE in code (`refresh.py`, `refresh.yml`); first CI run with it: pending (pushed 2026-10-19; the next scheduled GitHub run is the proof).
+17. `ui_gates.mjs` and the template review block a deploy; CI installs Playwright. DONE in code (`refresh.py`, `refresh.yml`); CI run with all of them passed on 2026-10-19 (run 39208450854: template gate, first-screen gates, search test, table check, deploy, live check). It first failed twice and each failure was real: the template hash differed on Linux (backslashes in paths), and a table scrolled sideways with Linux fonts.
 18. Review verdicts signed against their report file; hand-written or edited verdicts refused. DONE: `tests.py` 8b. GRANDFATHERED pages stay (live before the gate); they cannot be indexed.
 19. NWS User-Agent carries the About page URL. DONE (a real contact address is OWNER).
 20. One CLAUDE.md and one PLAN.md; contradictions removed; older documents archived in `docs/archive/`; `MASTER-PLAN-20K.md` became `docs/RISKS-AND-STAGES.md` with corrected numbers; `REVIEW-PROMPT.md` helper path fixed and persona added. DONE; a hostile auditor is asked to find what is still stale.
