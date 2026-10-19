@@ -1,0 +1,27 @@
+# river|place (substring)|state: gauges that a paddler, angler, rafter or tuber would expect among the first 300 released, or already live (tools/rescore.py prints OK or MISS).
+# Chosen by the planner from well-known recreation water, not from the score; add a line when a miss is a real miss.
+Hermosa Creek|Hermosa|CO
+Yampa River|Steamboat|CO
+New River|Hinton|WV
+Gauley River|Summersville|WV
+Klamath River|Klamath|CA
+Skykomish River|Gold Bar|WA
+Snoqualmie River|Snoqualmie|WA
+Puyallup River|Puyallup|WA
+Rio Grande|Embudo|NM
+Suwannee River|White Springs|FL
+Salmon River|Salmon|ID
+Arkansas River|Canon City|CO
+Nantahala River|Rainbow|NC
+Ocoee River|Copperhill|TN
+Youghiogheny River|Confluence|PA
+Delaware River|Barryville|NY
+Current River|Montauk|MO
+Buffalo River|Ponca|AR
+Madison River|West Yellowstone|MT
+Bighorn River|Kane|WY
+South Platte River|Cheesman|CO
+Chattahoochee River|Atlanta|GA
+Blue River|Silverthorne|CO
+Roaring Fork River|Glenwood|CO
+Truckee River|Reno|NV

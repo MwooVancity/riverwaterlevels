@@ -9,7 +9,7 @@ from lib.pages import WAVE0
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
-NWS_H = {"User-Agent": "riverwaterlevels.com (contact: owner)", "Accept": "application/geo+json"}
+NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
 
 
@@ -313,7 +313,7 @@ def fetch_meta(site, h):
 def fetch_rating(site):
     """USGS expanded shifted rating table (gage height to flow), thinned to at most 90 points."""
     import urllib.request
-    req = urllib.request.Request("https://waterdata.usgs.gov/nwisweb/get_ratings?site_no=%s&file_type=exsa" % site, headers={"User-Agent": "riverwaterlevels.com"})
+    req = urllib.request.Request("https://waterdata.usgs.gov/nwisweb/get_ratings?site_no=%s&file_type=exsa" % site, headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"})
     txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")
     rows = [l.split("\t") for l in txt.split("\n") if l.strip() and not l.startswith("#")]
     if len(rows) < 3 or "INDEP" not in rows[0] or "DEP" not in rows[0]:
@@ -337,7 +337,7 @@ def fetch_rating(site):
 def fetch_atlas14(lat, lon):
     """NOAA Atlas 14 point precipitation frequency depth (inches, partial duration series)."""
     import urllib.request
-    req = urllib.request.Request("https://hdsc.nws.noaa.gov/cgi-bin/new/fe_text_mean.csv?lat=%.4f&lon=%.4f&type=pf&data=depth&units=english&series=pds" % (lat, lon), headers={"User-Agent": "riverwaterlevels.com"})
+    req = urllib.request.Request("https://hdsc.nws.noaa.gov/cgi-bin/new/fe_text_mean.csv?lat=%.4f&lon=%.4f&type=pf&data=depth&units=english&series=pds" % (lat, lon), headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"})
     txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")
     ari, rows = None, {}
     for l in txt.split("\n"):
@@ -401,7 +401,7 @@ def ncei_year(year):
     names = re.findall(r"StormEvents_details-ftp_v1\.0_d%d_c\d+\.csv\.gz" % year, get_text(base, timeout=60))
     if not names:
         return []
-    raw = urllib.request.urlopen(urllib.request.Request(base + max(names), headers={"User-Agent": "riverwaterlevels.com"}), timeout=300).read()
+    raw = urllib.request.urlopen(urllib.request.Request(base + max(names), headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"}), timeout=300).read()
     rows = []
     for r in csv.DictReader(io.TextIOWrapper(gzip.GzipFile(fileobj=io.BytesIO(raw)), encoding="utf-8", errors="replace")):
         if r.get("EVENT_TYPE") in ("Flood", "Flash Flood") and r.get("CZ_TYPE") == "C":
@@ -945,6 +945,33 @@ def fast_usgs(sites, h):
     return out
 
 
+def fast_fill(rec, site, h):
+    """The bulk latest call returns one reading per gauge, so between full collects the series gets one point per run and the 15-minute readings in between are missing (highest and lowest readings, charts and changes would be computed from a thinned tail). When the last 6 hours of flow or stage have gaps over 20 minutes, fetch those 6 hours for the two main parameters and merge them."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    t0 = (now - datetime.timedelta(hours=6)).isoformat()
+    need = False
+    for code in ("00060", "00065"):
+        ts = sorted(r["time"] for r in rec["usgs"]["rows"] if r["parameter_code"] == code and str(r["time"]) >= t0)
+        if code == "00060" or ts:
+            pts = [datetime.datetime.fromisoformat(t.replace("Z", "+00:00")) for t in ts]
+            if len(pts) < 2 or any((b_ - a_).total_seconds() > 1200 for a_, b_ in zip(pts, pts[1:])):
+                need = True
+    if not need:
+        return 0
+    have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
+    added = 0
+    for code in ("00060", "00065"):
+        d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&time=PT6H&limit=4000&f=json" % (site, code), h, 120)
+        for f in d.get("features", []):
+            p = f["properties"]
+            if p.get("value") in (None, "") or (code, p["time"]) in have:
+                continue
+            rec["usgs"]["rows"].append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
+            have.add((code, p["time"]))
+            added += 1
+    return added
+
+
 def fast(inv, sites):
     h = usgs_headers()
     try:
@@ -961,6 +988,14 @@ def fast(inv, sites):
         rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] + add if str(r["time"]) >= cutoff]
         if add:
             rec["usgs"]["fetched_at"] = now_iso()
+        try:
+            filled = fast_fill(rec, s, h)
+            if filled:
+                rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] if str(r["time"]) >= cutoff]
+                rec["usgs"]["fetched_at"] = now_iso()
+                log.append("filled %d readings" % filled)
+        except Exception as e:
+            log.append("fill FAILED (%s), kept the thinned tail" % str(e)[:60])
         for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"])), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
             try:
                 rec[key] = fn()

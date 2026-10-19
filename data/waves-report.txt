@@ -1,0 +1,31 @@
+gauges scored 9099: {'queue': 7549, 'live': 25, 'excluded': 1242, 'held-names': 283}; queue spans 304 days at 25 a day
+signals in the first 300 queue gauges: Counter({'fame': 175, 'nri': 168, 'nri-paddle': 123, 'nri-fish': 94, 'wsr': 65, 'wsr-rec': 46, 'wsr-fish': 34, 'tail': 11})
+signals in the whole queue: Counter({'nri': 1867, 'fame': 1514, 'nri-fish': 824, 'nri-paddle': 768, 'wsr': 244, 'tail': 178, 'wsr-rec': 152, 'wsr-fish': 147})
+back-test (data/backtest.txt: river|place|state should sit in the first 1500 queue positions (60 days)):
+  OK   Hermosa Creek                Hermosa                  position 1168
+  OK   Yampa River                  Steamboat                position 731
+  OK   New River                    Hinton                   position 402
+  OK   Gauley River                 Summersville             position 88
+  OK   Klamath River                Klamath                  position 1082
+  OK   Skykomish River              Gold Bar                 position 93
+  MISS Snoqualmie River             Snoqualmie               position 4467
+  MISS Puyallup River               Puyallup                 position 2265
+  OK   Rio Grande                   Embudo                   position 1286
+  OK   Suwannee River               White Springs            position 78
+  OK   Salmon River                 Salmon                   position 395
+  OK   Arkansas River               Canon City               position 935
+  OK   Nantahala River              Rainbow                  position 109
+  OK   Ocoee River                  Copperhill               position 1233
+  OK   Youghiogheny River           Confluence               position 1477
+  OK   Delaware River               Barryville               position 111
+  OK   Current River                Montauk                  position 439
+  MISS Buffalo River                Ponca                    position 2250
+  OK   Madison River                West Yellowstone         position 1393
+  MISS Bighorn River                Kane                     position 2666
+  MISS South Platte River           Cheesman                 position 1821
+  OK   Chattahoochee River          Atlanta                  position 926
+  MISS Blue River                   Silverthorne             no such gauge
+  OK   Roaring Fork River           Glenwood                 not queued (live:high)
+  OK   Truckee River                Reno                     position 308
+back-test: 19 of 25 in the first 1500
+day 1: Little Truckee River at Below Boca Dam Near Truckee CA (tail,fame); Truckee River at Below Derby Dam Near Wadsworth NV (tail,fame); Tuolumne River at Modesto CA (fame); Little Miami River at Milford OH (wsr-rec,wsr-fish,wsr,fame); Guadalupe River at Above Comal River At New Braunfels TX (fame); Roanoke River at Roanoke VA (fame); Rogue River at Rockford MI (nri,nri-paddle,nri-fish,fame); French Broad River at Asheville NC (nri,nri-paddle,nri-fish,fame); Youghiogheny River at Sutersville PA (fame); Deschutes River at Below Wickiup Reservoir Near La Pine OR (wsr-rec,wsr-fish,wsr,tail,fame); Truckee River at Farad CA (fame); Buffalo River at Dilworth MN (fame); South Branch Buffalo River at Sabin MN (fame); Threemile River at North Dighton MA (wsr-rec,wsr-fish,wsr); Rogue River at Grants Pass OR (nri,fame); Taunton River at Bridgewater MA (wsr-rec,wsr-fish,wsr); Little Miami River at Oldtown OH (wsr-rec,wsr-fish,wsr,fame); Animas River at Farmington NM (fame); Deschutes River at Benham Falls Near Bend OR (wsr-rec,wsr-fish,wsr,fame); Wekiva River at Sanford FL (wsr-rec,wsr-fish,wsr); Assabet River at Maynard MA (wsr-rec,wsr); Santa Fe River at Graham FL (nri,fame); Arkansas River at Parkdale CO (nri,nri-fish,fame); Susquehanna River at Conklin NY (fame); Rappahannock River at Fredericksburg VA (nri,nri-fish,fame)

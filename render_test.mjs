@@ -7,7 +7,10 @@ import { join, dirname, extname } from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
 
-const require = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json');
+const here = createRequire(import.meta.url);
+let pw;
+try { pw = here('playwright'); } catch { pw = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json')('playwright'); }  // this folder first (CI: npm install), else the owner's other project
+const require = () => pw;
 const { chromium } = require('playwright');
 const ROOT = dirname(fileURLToPath(import.meta.url)), DIST = join(ROOT, 'dist'), SHOTS = join(ROOT, 'shots');
 mkdirSync(SHOTS, { recursive: true });

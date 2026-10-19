@@ -1,5 +1,12 @@
 {
- "templates": {},
+ "templates": {
+  "d7970a0cbb71617d": {
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-M.md",
+   "date": "2026-10-18",
+   "sig": "18c504cea96436e1634a3ea0"
+  }
+ },
  "pages": {
   "/river/hudson-river/green-island/": {
    "verdict": "GRANDFATHERED",

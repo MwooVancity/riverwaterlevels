@@ -4,8 +4,11 @@ Usage: python tools/open_wave.py 25            dry run: prints the next 25 gauge
        python tools/open_wave.py --pull /river/x/y/ [...]   removes pages from the allow list (the kill switch for a batch)
 Then run build.py, check.py and deploy. check.py refuses the build if an allowed page has no SHIP review. Search engines act on a change only when they recrawl, so release small batches and measure each one."""
 import csv, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.reviewgate import is_ship
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IX = os.path.join(ROOT, "data", "index-allow.json")
+MIN_BLOCKS, MIN_YEARS = 15, 10  # the pilot pages render 26 to 38 blocks; re-set after a sample of tail gauges has been built
 
 
 def load(p, default):
@@ -25,11 +28,24 @@ def main():
     pages = load(os.path.join(ROOT, "data", "reviews.json"), {}).get("pages", {})
     have = set(cfg["allow"])
     pick = []
+    blocks = load(os.path.join(ROOT, "dist", "_blocks.json"), {})
+    years = {r["site"]: int(r["years_record"] or 0) for r in csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8"))}
+    skipped = {"gate": 0, "few blocks": 0, "short record": 0}
     for row in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")):
-        u = row["url"].replace("/water/", "/")  # waves.csv still carries the old three-tab address
+        u = row["url"]
         if u in have or u not in live:
             continue
-        if pages.get(u, {}).get("verdict") != "SHIP":
+        if not is_ship(pages.get(u), u):
+            continue
+        # indexability (docs/research/FRESH-REVIEW-PLAN.md 3.4): a page is released only if it passed the queue gate, shows enough data blocks and has a record long enough for a meaningful comparison
+        if row["status"] not in ("live", "queue"):
+            skipped["gate"] += 1
+            continue
+        if blocks.get(u, 0) < MIN_BLOCKS:
+            skipped["few blocks"] += 1
+            continue
+        if years.get(row["site"], 0) < MIN_YEARS:
+            skipped["short record"] += 1
             continue
         pick.append((u, row["river"], row["place"], row["score"]))
         if len(pick) >= n:
@@ -37,6 +53,7 @@ def main():
     print("next %d gauge pages (live, reviewed SHIP, by score):" % len(pick))
     for u, r, p, s in pick:
         print("  %s  %s at %s  score %s" % (u, r, p, s))
+    print("not eligible: %s" % skipped)
     if not pick:
         print("none: pages need a SHIP verdict in data/reviews.json first (docs/REVIEW-PROMPT.md)")
     if "--apply" in sys.argv and pick:

@@ -6,7 +6,7 @@ import os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import render, directory, indexing
+from lib import render, directory, indexing, related
 
 
 FILE_BUDGET = 19000
@@ -58,6 +58,7 @@ def main():
     report["held_for_review"] = sorted(rows[s]["dashboard_url"] for s in skip_g) + sorted(rows[s]["forecast_url"] for s in skip_f)
     if report["held_for_review"]:
         print("HELD FOR REVIEW (new pages without a SHIP verdict; everything else still ships): %s" % ", ".join(report["held_for_review"]))
+    related.close(Gs, iso)  # upstream/downstream pairs are listed on both pages
     built = [rows[s] for s in Gs]
     inv_size = {k: len(v) for k, v in hubs.items()}
     by_hub = collections.defaultdict(list)
@@ -80,10 +81,13 @@ def main():
         urls.append(url)
         hashes[url] = hashlib.sha256(html.encode()).hexdigest()[:16]
 
+    block_counts = {}
     for s, G in Gs.items():
         page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one
         emit(meta["url"], page)
+        block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
+    json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
         emit("/", directory.home(built, Gs))
         for st in sorted({r["state"] for r in built}):
@@ -96,10 +100,10 @@ def main():
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
-                   "pages": len(urls) + 1, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
+                   "pages": len(urls), "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
-    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301"]
+    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
     lm = json.load(open(lm_path)) if os.path.exists(lm_path) else {}
@@ -114,7 +118,7 @@ def main():
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found())
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
-    json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4)] for r in built], open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
+    json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built], open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))

@@ -14,9 +14,13 @@ def slug(s):
 def load_effective():
     rows = {r["site"]: dict(r) for r in csv.DictReader(open(os.path.join(DATA, "pages-all.csv"), encoding="utf-8"))}
     ov = {r["site"]: r for r in csv.DictReader(open(os.path.join(DATA, "name-overrides.csv"), encoding="utf-8"))}
+    fx_p = os.path.join(DATA, "name-fixes.csv")  # name cleaner v2 (tools/clean_names.py): low-confidence names it could read; human overrides win, live gauges are never renamed
+    fx = {r["site"]: r for r in csv.DictReader(open(fx_p, encoding="utf-8"))} if os.path.exists(fx_p) else {}
     for s, r in rows.items():
         if s in ov:
             r["river"], r["place"], r["name_confidence"] = ov[s]["river"], ov[s]["place"], "human"
+        elif s in fx and s not in WAVE0:
+            r["river"], r["place"], r["name_confidence"] = fx[s]["river"], fx[s]["place"], "auto2"
     by_rs = collections.defaultdict(set)
     for r in rows.values():
         r["river_slug"] = slug(r["river"])

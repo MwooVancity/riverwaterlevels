@@ -6,7 +6,7 @@ import json, sys, datetime, urllib.request
 URL = "https://riverwaterlevels.com/status.json"
 MAX_BUILD_AGE_MIN = 180
 MAX_MEDIAN_AGE_MIN = 180
-MIN_PAGES = 60  # raise as cohorts are released; a deploy that drops below this is a failure
+MIN_PAGES = 40  # 49 after the Forecast pages were merged into the gauge pages (2026-10-18); raise as cohorts are released; a deploy that drops below this is a failure
 
 
 def main():

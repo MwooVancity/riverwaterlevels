@@ -1,9 +1,33 @@
 """Pre-deploy review gate for NEW gauge pages: a gauge page (or its Forecast page) that is not in the live release may only go live when data/reviews.json records a SHIP verdict
 from a fresh-brain reader review (docs/REVIEW-PROMPT.md) for it. Pages already live are not blocked, so the 30-minute data refresh is never held up by this gate."""
-import re
+import hashlib, os, re
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+STRICT = True  # tests may switch it off for pure logic tests; production never does
+
+
+def sign(verdict, report, key):
+    """Signature of one verdict: the report file's content hash, the verdict and what it covers (a URL or a template hash). tools/record_review.py writes it; a hand-edited verdict has none and does not count."""
+    p = os.path.join(ROOT, report)
+    if not os.path.isfile(p):
+        return ""
+    return hashlib.sha256(("%s|%s|%s|%s" % (verdict, report, hashlib.sha256(open(p, "rb").read()).hexdigest(), key)).encode()).hexdigest()[:24]
+
+
+def is_ship(entry, key):
+    """True only for a SHIP verdict whose signature matches its report file (the report still exists and is unchanged)."""
+    e = entry or {}
+    if e.get("verdict") != "SHIP":
+        return False
+    return (not STRICT) or (bool(e.get("sig")) and e.get("sig") == sign("SHIP", e.get("report", ""), key))
+
+
+def is_ok(entry, key):
+    return (entry or {}).get("verdict") == "GRANDFATHERED" or is_ship(entry, key)
+
 
 GAUGE = re.compile(r"^/river/[^/]+/[^/]+/(forecast/)?$")
-OK = ("SHIP", "GRANDFATHERED")  # GRANDFATHERED = live before the gate existed; it never unlocks INDEXING (check.py needs SHIP for that)
+# GRANDFATHERED = live before the gate existed; it never unlocks INDEXING (check.py needs a signed SHIP for that)
 
 
 def unreviewed_new_pages(next_urls, live_urls, reviews):
@@ -12,7 +36,7 @@ def unreviewed_new_pages(next_urls, live_urls, reviews):
     live = set(live_urls)
     out = []
     for u in sorted(next_urls):
-        if GAUGE.match(u) and u not in live and pages.get(u, {}).get("verdict") not in OK:
+        if GAUGE.match(u) and u not in live and not is_ok(pages.get(u), u):
             out.append(u)
     return out
 
@@ -27,8 +51,8 @@ def hold_back(rows_by_site, live_urls, reviews, has_fc_page=None):
     skip_g, skip_f = set(), set()
     for site, row in rows_by_site.items():
         d, f = row["dashboard_url"], row["forecast_url"]
-        if d not in live and pages.get(d, {}).get("verdict") not in OK:
+        if d not in live and not is_ok(pages.get(d), d):
             skip_g.add(site)
-        elif (has_fc_page is None or site in has_fc_page) and f not in live and pages.get(f, {}).get("verdict") not in OK:
+        elif (has_fc_page is None or site in has_fc_page) and f not in live and not is_ok(pages.get(f), f):
             skip_f.add(site)
     return skip_g, skip_f

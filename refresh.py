@@ -16,12 +16,10 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
          ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
-SOFT = [PY + ["tools/template_hash.py", "--check"], PY + ["tools/truth_live.py"]]  # logged when the live template has no fresh-brain review (docs/REVIEW-PROMPT.md); never blocks fresh data
-STEPS.insert(3, SOFT[0])
-STEPS.append(SOFT[1])  # after the deploy: every live gauge page against USGS and NWS (logged, never blocks)
-if os.name == "nt" and not os.environ.get("CI"):  # browser gates need the local Playwright install; a failure is logged, never blocks fresh data (design gates are fixed in code, not by holding the data back)
-    SOFT.append(["node", "ui_gates.mjs"])
-    STEPS.insert(3, SOFT[-1])
+SOFT = [PY + ["tools/truth_live.py"]]  # after the deploy: every live gauge page against USGS and NWS; logged, the watchdog alerts on it
+GATES = [PY + ["tools/template_hash.py", "--check"], ["node", "ui_gates.mjs"], ["node", "tools/review/search_test.mjs"]]  # block a deploy: the template needs a fresh-brain SHIP (docs/REVIEW-PROMPT.md) and the first screen must pass at 390 px; the live site keeps its last good release
+STEPS[3:3] = GATES
+STEPS.append(SOFT[0])
 code = 0
 try:
     log.write("\n=== %s %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full"))

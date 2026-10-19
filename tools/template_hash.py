@@ -1,6 +1,6 @@
 """Hash of everything that decides how a page looks and what it says (lib/, templates/, build.py). A review verdict in data/reviews.json belongs to one hash.
 Usage: python tools/template_hash.py            prints the hash
-       python tools/template_hash.py --check    exit 1 and print TEMPLATE NOT REVIEWED when the current hash has no SHIP entry"""
+       python tools/template_hash.py --check    exit 1 and print TEMPLATE NOT REVIEWED when the current hash has no signed SHIP entry"""
 import hashlib, json, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,10 +24,13 @@ def main():
     if "--check" in sys.argv:
         p = os.path.join(ROOT, "data", "reviews.json")
         rv = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
-        if rv.get("templates", {}).get(cur, {}).get("verdict") != "SHIP":
+        sys.path.insert(0, ROOT)
+        from lib.reviewgate import is_ship
+        if not is_ship(rv.get("templates", {}).get(cur), cur):
             print("TEMPLATE NOT REVIEWED: no SHIP verdict for template %s (see docs/REVIEW-PROMPT.md)" % cur)
             return 1
     return 0
 
 
-sys.exit(main())
+if __name__ == "__main__":
+    sys.exit(main())

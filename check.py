@@ -3,11 +3,12 @@ Per page: canonical, banned strings, doubled words, source line per block, units
 Site: unique titles, every internal link resolves, sitemap equals page set, tab/hub/state reciprocity, link budgets, no orphans, depth from home.
 Exit 1 if anything fails.
 """
-import os, re, sys, json, collections
+import os, re, sys, json, collections, gzip, hashlib
+MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL
 
-BANNED = [r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b"]  # the last two: USGS sentinel values (-999999) must never be shown as readings
+BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b"]  # the last two: USGS sentinel values (-999999) must never be shown as readings
 MAX_BYTES = 230_000
 BUDGET = {"gauge": 110, "hub": 80, "state": 480, "home": 200, "trust": 40}
 
@@ -114,6 +115,9 @@ def check_html(h, rel):
             if need not in head:
                 bad.append("first screen missing %s" % need.split('"')[1])
     if kind_of(rel) == "gauge":
+        gz = len(gzip.compress(h.encode("utf-8"), 6))  # what the phone downloads (Cloudflare compresses HTML); the plan's old 150 KB bar was for the raw file
+        if gz > MAX_GZ:
+            bad.append("page weight %d KB compressed (limit %d KB)" % (gz // 1000, MAX_GZ // 1000))
         for lab, unit in (("Latest flow", "cfs"), ("Gage height", "ft")):
             for mm in re.finditer(r"<span>%s</span><b>(.*?)<small>(?:<abbr[^>]*>)?([^<]*)" % lab, body, re.S):
                 if unit not in mm.group(2) and not (lab == "Gage height" and re.sub(r"<[^>]+>", "", mm.group(1)).strip() in ("–", "")):
@@ -201,7 +205,8 @@ def check_dir(d):
         if open_mode:
             rvp = os.path.join(ROOT, "data", "reviews.json")
             pages = (json.load(open(rvp, encoding="utf-8")) if os.path.exists(rvp) else {}).get("pages", {})
-            bad_ix = [u for u in sorted(want) if indexing.GAUGE.match(u) and pages.get(u.replace("forecast/", ""), pages.get(u, {})).get("verdict") != "SHIP" and pages.get(u, {}).get("verdict") != "SHIP"]
+            from lib.reviewgate import is_ship
+            bad_ix = [u for u in sorted(want) if indexing.GAUGE.match(u) and not is_ship(pages.get(u), u)]
             if bad_ix:
                 site_bad.append("%d indexable gauge page(s) without a SHIP review, e.g. %s" % (len(bad_ix), bad_ix[:2]))
             if want != {u for u in urls if indexing.indexable(u, cfg)}:
@@ -247,6 +252,8 @@ def selftest():
               "bad structured data": good.replace("<p>x</p>", '<script type="application/ld+json">{oops</script>'),
               "double full stop": good.replace("<p>x</p>", "<p>That is the 82nd percentile..</p>"),
               "heading skip": good.replace("<p>x</p>", "<h4>Deep</h4>"),
+              "claims a page that does not exist": good.replace("<p>x</p>", "<p>The Forecast page has the river forecast.</p>"),
+              "page weight": good.replace("<p>x</p>", "<p>" + hashlib.sha256(b"a").hexdigest() * 0 + "".join(hashlib.sha256(str(i).encode()).hexdigest() for i in range(2600)) + "</p>"),
               "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name

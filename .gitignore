@@ -15,3 +15,4 @@ data/demand.csv
 data/inventory-ranked.csv
 docs/research/
 state/
+data/geo/*.geojson

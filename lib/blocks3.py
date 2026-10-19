@@ -214,6 +214,41 @@ def b_field_meas(G):
                  "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The rating shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
 
+def window_change(fl, lt, h):
+    """Flow change over h hours: the latest reading against the reading closest to h hours earlier (within 20 minutes or 60% of the reporting interval), exactly what the rate table shows and what anyone can read off USGS. Returns (latest, earlier, percent) or None.
+    A noisy gauge is not smoothed here: it is recognised (flow_jitter in lib/render.py, or the gage height contradicting the flow) and the headline says so. The headline tile, the rate table and the home and hub tables all use this."""
+    if len(fl) < 2:
+        return None
+    steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(max(1, len(fl) - 200), len(fl)))
+    tol = max(1200, 0.6 * (steps[len(steps) // 2] if steps else 900))
+    tgt = lt - datetime.timedelta(hours=h)
+    near = min(fl, key=lambda x: abs((x[0] - tgt).total_seconds()))
+    if abs((near[0] - tgt).total_seconds()) > tol or not near[1] or near[1] <= 0:
+        return None
+    return fl[-1][1], near[1], (fl[-1][1] - near[1]) / near[1] * 100
+
+
+def _fc_offset(G, pts, unit, gap):
+    """The forecast point nearest the latest reading, compared with that reading: a forecast that is hours out of step with the gauge (dam releases, tide) must say so. None when they agree."""
+    if not pts or (unit == "ft" and gap):
+        return None
+    t0 = G["lt"]
+    near = min(pts, key=lambda x: abs((x[0] - t0).total_seconds()))
+    if abs((near[0] - t0).total_seconds()) > 5400:
+        return None
+    if unit == "ft":
+        if not near[1] or not G["sg"] or (G["sg"][-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
+            return None
+        cur, fv = G["sg"][-1][1], near[1]
+        if abs(cur - fv) <= max(0.5, 0.05 * abs(cur)):
+            return None
+        return {"t": tzl(near[0], G["zone"], date=False), "f": "%.1f ft" % fv, "c": "%.2f ft" % cur}
+    cur, fv = G["lv"], near[2]
+    if not fv or abs(cur - fv) <= 0.25 * max(cur, fv):
+        return None
+    return {"t": tzl(near[0], G["zone"], date=False), "f": "%s cfs" % fmt(fv), "c": "%s cfs" % fmt(cur)}
+
+
 def conditions(G, pages=None):
     """Current conditions beyond flow and stage that the stat tiles show: change over 1, 6 and 24 h, forecast high, alert names, rain, each with its source time. Missing values are simply absent."""
     from lib.blocks2 import _at
@@ -236,15 +271,10 @@ def conditions(G, pages=None):
                 out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h")}
                 break
     if len(fl) >= 8 and not G.get("osc"):
-        def avg(lo_s, hi_s, ref):  # mean of the readings between lo_s and hi_s seconds before ref: one noisy 15-minute reading must not set the headline
-            xs = [v for t, v, _ in fl if lo_s <= (ref - t).total_seconds() <= hi_s]
-            return sum(xs) / len(xs) if xs else None
         for h in (1, 6, 24):
-            half = 900 if h == 1 else 1800
-            now_m = avg(0, half * 2, lt)
-            then_m = avg(h * 3600 - half, h * 3600 + half, lt)
-            if now_m is not None and then_m and then_m > 0:
-                out["chg"][h] = (now_m - then_m) / then_m * 100
+            wc = window_change(fl, lt, h)
+            if wc:
+                out["chg"][h] = wc[2]
     sgl = G["sg"]
     out["sg6"] = None
     if len(sgl) >= 8 and (sgl[-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
@@ -262,12 +292,16 @@ def conditions(G, pages=None):
         if fut and (age is None or age <= 72):
             hi = max(fut, key=lambda x: x[1])
             near = [i for i, (_, v_) in enumerate(fut) if v_ >= hi[1] - (0.05 if unit == "ft" else 0.01 * abs(hi[1]))]
-            peaks = 1 + sum(1 for a_, b_ in zip(near, near[1:]) if min(v_ for _, v_ in fut[a_:b_ + 1]) < hi[1] - (0.15 if unit == "ft" else 0.03 * abs(hi[1])))  # separate peaks, not neighbouring points of one peak
+            lo_f = min(v_ for _, v_ in fut)
+            depth = max(0.15 if unit == "ft" else 0.03 * abs(hi[1]), 0.25 * (hi[1] - lo_f))  # a second peak needs a valley at least a quarter as deep as the whole rise, not a wobble on a plateau
+            peaks = 1 + sum(1 for a_, b_ in zip(near, near[1:]) if min(v_ for _, v_ in fut[a_:b_ + 1]) < hi[1] - depth)
             end = fut[-1]
             first_hi = near[0]
             out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
                          "falls": first_hi <= 2 and end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600, "end_v": end[1], "end_t": tzl(end[0], zone),
                          "datum": gap,
+                         "flow_at": next((x[2] for x in pts if x[0] == hi[0]), None) if unit == "ft" else None,
+                         "offset": _fc_offset(G, pts, unit, gap),
                          "cur": (gap[0] if gap else (G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None)) if unit == "ft" else G["lv"]}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):

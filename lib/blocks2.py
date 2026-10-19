@@ -81,10 +81,12 @@ def b_stage_chart(G):
     label = "Gage height in feet over the last 7 days" + (" and the National Weather Service forecast" if fc else "")
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
     cur = obs[-1][1]
-    rows = tr(["Latest gage height (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    from lib.render import nws_point_note
+    pn_ = nws_point_note(G) if cats else ""
+    rows = (tr(["Flood stages from", esc(pn_)], right=()) if pn_ else "") + tr(["Gage height at page build (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
     if gap:
         cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
-        rows += tr(["Latest stage (NWS)", "%.2f ft" % gap[0], "NWS and USGS read this gauge on different zero points (USGS %.2f ft); the flood stages below are NWS stages" % gap[1]], right=(1,))
+        rows += tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))
     for k in CATS:
         if k in cats:
             d = cats[k] - cur
@@ -133,8 +135,10 @@ def b_rate(G):
         fa = _at(fl, t1 - datetime.timedelta(hours=h), tol)
         if not fa:
             continue
+        from lib.blocks3 import window_change
+        wc = window_change(fl, t1, h)  # the same function the headline tile uses
         d = fl[-1][1] - fa[1]
-        pct = d / fa[1] * 100 if fa[1] else 0
+        pct = wc[2] if wc else (d / fa[1] * 100 if fa[1] else 0)
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
         rows += tr(["%d h" % h, "%s cfs" % fmt(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct), "+" if d >= 0 else "-", fmt(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
@@ -144,7 +148,9 @@ def b_rate(G):
     hi, lo = max(week, key=lambda x: x[1]), min(week, key=lambda x: x[1])
     ago = lambda t: ("%.0f h earlier" % ((t1 - t).total_seconds() / 3600)) if (t1 - t).total_seconds() >= 3600 else "within the last hour"
     ext = tr(["Highest reading", "%s cfs" % fmt(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmt(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
-    body = table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,))
+    from lib.render import flow_jitter
+    note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the Height change column.</p>' if flow_jitter(G) else ""
+    body = note + table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
                  "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
 

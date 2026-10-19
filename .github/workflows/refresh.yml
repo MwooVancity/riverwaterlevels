@@ -42,6 +42,10 @@ jobs:
           key: rwl-data-${{ github.run_id }}
           restore-keys: |
             rwl-data-
+      - name: Install the browser for the first-screen gates
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
       - name: Decide fast or full
         id: mode
         run: |

@@ -90,6 +90,8 @@ def blocks_safety():
 def review_gate():
     """New gauge pages need a SHIP verdict; live pages and non-gauge pages are never blocked; GRANDFATHERED or FIX verdicts do not unlock a new page."""
     sys.path.insert(0, ROOT)
+    import lib.reviewgate as rg
+    rg.STRICT = False  # these checks are about which pages are held; signatures are tested in signed_review()
     from lib.reviewgate import unreviewed_new_pages as f
     live = ["/", "/river/a/b/", "/status/"]
     nxt = live + ["/river/c/d/", "/river/c/d/forecast/", "/status/x/", "/rivers/pa/"]
@@ -101,6 +103,42 @@ def review_gate():
             and f(live, live, {}) == [] and f(nxt, nxt, {}) == []
             and f(["/river/g/h/"], live, {"pages": {"/river/g/h/": {"verdict": "GRANDFATHERED"}}}) == []
             and held == ({"s3"}, {"s1", "s2"}) and hold_back(rows, [], {}, None) == (set(), set()))
+
+
+def signed_review():
+    """A SHIP counts only when its signature matches the report file: an unsigned (hand-written) SHIP, a SHIP whose report was edited afterwards, and a SHIP for another URL are all refused."""
+    sys.path.insert(0, ROOT)
+    import lib.reviewgate as rg
+    rg.STRICT = True
+    rp = os.path.join("runs", "_test-review.md")
+    open(os.path.join(ROOT, rp), "w", encoding="utf-8").write("verdict SHIP, no P0")
+    good = {"verdict": "SHIP", "report": rp, "sig": rg.sign("SHIP", rp, "/river/x/y/")}
+    res = (rg.is_ship(good, "/river/x/y/") and not rg.is_ship({"verdict": "SHIP", "report": rp}, "/river/x/y/") and not rg.is_ship(good, "/river/x/z/")
+           and rg.is_ok({"verdict": "GRANDFATHERED"}, "/q/") and not rg.is_ship({"verdict": "HOLD", "report": rp, "sig": good["sig"]}, "/river/x/y/"))
+    open(os.path.join(ROOT, rp), "w", encoding="utf-8").write("verdict SHIP, no P0 (edited)")
+    res = res and not rg.is_ship(good, "/river/x/y/")
+    os.remove(os.path.join(ROOT, rp))
+    return res
+
+
+def record_tools_import():
+    """tools/record_review.py imports tools/template_hash.py: importing it must not end the process (it once did, so no verdict was ever written)."""
+    r = subprocess.run([sys.executable, "-I", "-c", "import sys; sys.path.insert(0, 'tools'); import template_hash; print('imported')"], cwd=ROOT, capture_output=True, text=True)
+    return r.stdout.strip() == "imported" and r.returncode == 0
+
+
+def related_closure():
+    """Upstream/downstream pairs found from one side only are listed on both pages; a pair with a gauge that is not on the site is left alone."""
+    sys.path.insert(0, ROOT)
+    from lib import related
+    import datetime
+    t = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    Gs = {"a": {"rec": {"related": {"items": [{"site": "b", "relation": "upstream", "flow": 5, "time": "x", "lag_h": 6, "lag_r": 0.9}, {"site": "zz", "relation": "downstream", "flow": 1, "time": "x"}]}}, "lv": 100, "lt": t},
+          "b": {"rec": {}, "lv": 50, "lt": t}}
+    before = related.check(Gs)
+    added = related.close(Gs, lambda d: d.isoformat())
+    row = Gs["b"]["rec"]["related"]["items"][0]
+    return before == [("a", "b")] and added == 1 and row["site"] == "a" and row["relation"] == "downstream" and row["flow"] == 100 and row["lag_h"] == 6 and related.check(Gs) == [] and related.close(Gs, lambda d: d.isoformat()) == 0
 
 
 def index_gate():
@@ -156,6 +194,9 @@ def main():
     t6, bad6 = unit_checks(); print("6. unit checks (percentile, axis labels, place phrasing, hidden blocks): %s %s" % (t6, bad6 or "")); ok &= t6
     t5 = blocks_safety(); print("5. new blocks: hidden without data, hidden when stale, hidden when the source is not cleared: %s" % t5); ok &= t5
     t8 = review_gate(); print("8. review gate: new gauge pages need a SHIP verdict, live pages never blocked: %s" % t8); ok &= t8
+    t8d = record_tools_import(); print("8d. record_review can import template_hash without exiting: %s" % t8d); ok &= t8d
+    t8c = related_closure(); print("8c. upstream/downstream pairs are listed on both pages: %s" % t8c); ok &= t8c
+    t8b = signed_review(); print("8b. a SHIP needs a signature tied to its report; hand-written, edited-report and wrong-URL verdicts refused: %s" % t8b); ok &= t8b
     t9 = index_gate(); print("9. noindex kill switch: hold, open, allow list, header rule: %s" % t9); ok &= t9
     run("build.py")  # leave dist_next consistent with the real clock
     r = run("truth_tests.py"); print("7.", (r.stdout.strip().splitlines() or [r.stderr.strip()[:200]])[0]); ok &= r.returncode == 0

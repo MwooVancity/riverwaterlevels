@@ -1,15 +1,15 @@
 # Rivers and creeks best known in the USA for paddling, whitewater rafting, tubing, fishing and fly fishing (planning input for the release order only; never shown on a page).
 # One name per line, matched as a lowercase substring of the cleaned river name. Weight 1 = nationally known, 2 = very popular (counted double).
-2|Colorado River
+2|Colorado River|CO,UT,AZ,NV,CA
 2|Arkansas River
 2|Gauley River
-2|New River
+2|New River|WV,VA,NC
 2|Yellowstone River
-2|Madison River
+2|Madison River|MT,WY
 2|Deschutes River
-2|Salmon River
-2|Snake River
-2|Rogue River
+2|Salmon River|ID,NY
+2|Snake River|ID,WY,OR,WA
+2|Rogue River|OR,MI
 2|Youghiogheny
 2|Chattooga
 2|Nantahala
@@ -17,38 +17,38 @@
 2|Ocoee
 2|Potomac River
 2|Shenandoah River
-2|Delaware River
+2|Delaware River|NJ,PA,NY
 2|Susquehanna River
-2|Hudson River
+2|Hudson River|NY
 2|Kennebec River
 2|Penobscot
-2|Green River
+2|Green River|UT,WY,CO,KY
 2|San Juan River
 2|Rio Grande
 2|Verde River
-2|Salt River
+2|Salt River|AZ
 2|Truckee River
 2|American River
 2|Kern River
 2|Tuolumne River
 2|Klamath River
 2|Skykomish
-2|Clark Fork
+2|Clark Fork|MT,ID
 2|Bitterroot
 2|Big Hole River
 2|Henrys Fork
 2|South Platte
 2|Roaring Fork
 2|Animas River
-2|Eagle River
+2|Eagle River|CO
 2|Guadalupe River
 2|Buffalo River
 2|Current River
 2|Eleven Point
 2|Niobrara
-2|Missouri River
-2|Mississippi River
-2|Ohio River
+2|Missouri River|MT,MO,SD,NE,ND
+2|Mississippi River|MN,WI,IA,IL,MO,LA
+2|Ohio River|OH,KY,WV,IN,IL
 2|Pere Marquette
 2|Manistee
 2|Au Sable
@@ -58,25 +58,25 @@
 2|Brule River
 2|Kinzua Creek
 2|Penns Creek
-2|Spring Creek
+2|Spring Creek|PA
 2|Letort
 2|Yough
 2|Cheat River
 2|Tygart
 2|Greenbrier
-2|Elk River
-2|James River
+2|Elk River|WV
+2|James River|VA
 2|Rappahannock
 2|Rivanna
-2|Roanoke River
+2|Roanoke River|VA,NC
 2|Tuckasegee
-2|Pigeon River
+2|Pigeon River|TN,NC
 2|Watauga
 2|South Holston
 2|Clinch River
 2|Hiwassee
 2|Chattahoochee
-2|Flint River
+2|Flint River|GA
 2|Suwannee
 2|Ichetucknee
 2|Santa Fe River
@@ -87,11 +87,11 @@
 1|Frio River
 1|Comal River
 1|San Marcos River
-1|Platte River
+1|Platte River|NE,WY,CO
 1|North Platte
 1|Poudre
 1|Cache la Poudre
-1|Blue River
+1|Blue River|CO
 1|Gunnison River
 1|Dolores River
 1|Yampa River
@@ -121,13 +121,13 @@
 1|Umpqua
 1|Willamette River
 1|John Day River
-1|Illinois River
-1|Smith River
+1|Illinois River|OK,AR,OR
+1|Smith River|MT,CA,OR
 1|Trinity River
 1|Russian River
 1|Merced River
 1|Stanislaus River
-1|Kings River
+1|Kings River|CA
 1|Carson River
 1|Walker River
 1|Bighorn River
@@ -158,14 +158,14 @@
 1|Beaverkill
 1|Willowemoc
 1|Ausable River
-1|Black River
+1|Black River|NY,WI,MO
 1|Moose River
 1|Hudson River Gorge
 1|Lehigh River
 1|Brandywine
 1|Juniata River
 1|Loyalsock
-1|Pine Creek
+1|Pine Creek|PA
 1|Kettle Creek
 1|Allegheny River
 1|Clarion River
@@ -177,7 +177,7 @@
 1|Gunpowder
 1|Rapidan
 1|Staunton
-1|Dan River
+1|Dan River|VA,NC
 1|Haw River
 1|Eno River
 1|Neuse River
@@ -191,12 +191,12 @@
 1|Etowah
 1|Coosa River
 1|Cahaba River
-1|Little River
+1|Little River|GA,TN,NC
 1|Mulberry River
-1|Kings River Arkansas
-1|White River
+1|Kings River Arkansas|AR
+1|White River|AR,IN,VT
 1|North Fork River
-1|Spring River
+1|Spring River|AR,MO,KS
 1|Meramec River
 1|Jacks Fork
 1|Big Piney
@@ -207,9 +207,9 @@
 1|Verdigris
 1|Kiamichi
 1|Mountain Fork
-1|Illinois River Oklahoma
+1|Illinois River Oklahoma|OK
 1|Flint Creek
-1|Rock River
+1|Rock River|IL,WI
 1|Kickapoo River
 1|Black River Wisconsin
 1|Flambeau
@@ -217,7 +217,7 @@
 1|Menominee River
 1|Pigeon River Michigan
 1|Muskegon
-1|Grand River
+1|Grand River|MI,OH,ON
 1|Kalamazoo
 1|Huron River
 1|Rouge River
@@ -227,10 +227,10 @@
 1|Scioto
 1|Little Miami
 1|Great Miami
-1|Licking River
+1|Licking River|KY,OH
 1|Kentucky River
 1|Cumberland River
-1|Red River
+1|Red River|NM,KY,TX,OK
 1|Rockcastle
 1|Tennessee River
 1|Duck River

@@ -3,7 +3,10 @@ import http from 'http';
 import { readFileSync, existsSync, statSync } from 'fs';
 import { join } from 'path';
 import { createRequire } from 'module';
-const require = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json');
+const here = createRequire(import.meta.url);
+let pw;
+try { pw = here('playwright'); } catch { pw = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json')('playwright'); }  // this folder first (CI: npm install), else the owner's other project
+const require = () => pw;
 const { chromium } = require('playwright');
 const ROOT = 'C:/Users/mwoo7/Desktop/riverwaterlevels/dist';
 const srv = http.createServer((q, r) => {

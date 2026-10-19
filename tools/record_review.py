@@ -6,7 +6,7 @@ import json, os, sys, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
-from lib.reviewgate import GAUGE  # noqa: E402
+from lib.reviewgate import GAUGE, sign  # noqa: E402
 from template_hash import template_hash  # noqa: E402
 
 
@@ -25,11 +25,11 @@ def main():
     rv = json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
     rv.setdefault("templates", {}); rv.setdefault("pages", {})
     entry = {"verdict": verdict, "report": report, "date": datetime.date.today().isoformat()}
-    rv["templates"][template_hash()] = dict(entry)
+    rv["templates"][template_hash()] = dict(entry, sig=sign(verdict, report, template_hash()))
     live = set(urls("dist"))
     new = [u for u in urls("dist_next") if GAUGE.match(u) and u not in live]
     for u in new:
-        rv["pages"][u] = dict(entry, template=template_hash())
+        rv["pages"][u] = dict(entry, template=template_hash(), sig=sign(verdict, report, u))
     json.dump(rv, open(p, "w", encoding="utf-8"), indent=1)
     print("%s recorded for template %s and %d new gauge page(s)" % (verdict, template_hash(), len(new)))
 
