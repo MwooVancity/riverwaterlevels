@@ -124,6 +124,9 @@ def main():
     t6, bad6 = unit_checks(); print("6. unit checks (percentile, axis labels, place phrasing, hidden blocks): %s %s" % (t6, bad6 or "")); ok &= t6
     t5 = blocks_safety(); print("5. new blocks: hidden without data, hidden when stale, hidden when the source is not cleared: %s" % t5); ok &= t5
     run("build.py")  # leave dist_next consistent with the real clock
+    r = run("truth_tests.py"); print("7.", (r.stdout.strip().splitlines() or [r.stderr.strip()[:200]])[0]); ok &= r.returncode == 0
+    if r.returncode:
+        print(r.stdout.strip())
     print("ALL PASS" if ok else "FAILURES")
     sys.exit(0 if ok else 1)
 

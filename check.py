@@ -44,6 +44,10 @@ def ui_checks(body, plain=True):
         t = re.sub(r"<[^>]+>", " ", mm.group(1) + " " + mm.group(2))
         if re.search(JARGON, t, re.I):
             bad.append("jargon in stat tile: %r" % t.strip()[:50])
+    vis = re.sub(r"<[^>]+>", " ", re.sub(r"<script.*?</script>", " ", body, flags=re.S))
+    mm = re.search(r"[A-Za-z0-9)]\.\.(?!\.)|\.\s\.\s", vis)
+    if mm:
+        bad.append("double full stop near %r" % vis[max(0, mm.start() - 30):mm.end() + 20].strip())
     for w in ("bars", "strip", "chips"):
         if re.search(r'<div class="%s">\s*</div>' % w, body):
             bad.append("empty %s widget" % w)
@@ -208,6 +212,7 @@ def selftest():
               "empty widget": good.replace("<p>x</p>", '<div class="bars"></div>'),
               "image without size": good.replace("<p>x</p>", '<img src="/a.png" alt="a">'),
               "image without alt": good.replace("<p>x</p>", '<img src="/a.png" width="5" height="5">'),
+              "double full stop": good.replace("<p>x</p>", "<p>That is the 82nd percentile..</p>"),
               "heading skip": good.replace("<p>x</p>", "<h4>Deep</h4>"),
               "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():

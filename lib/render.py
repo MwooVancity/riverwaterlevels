@@ -176,7 +176,7 @@ def hero(G, pages=None):
     d24 = G["lt"] - datetime.timedelta(hours=24)
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmt(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + '<small>Observed <span data-live="flowobs">%s</span></small>' % esc(G["obs"]))
     tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>%s</small>' % (('Observed <span data-live="stageobs">' + esc(tzl(sg[-1][0], G["zone"])) + "</span>") if sg else "No stage reported"))
+                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>Water level above the gauge\'s zero</small><small>%s</small>' % (('Observed <span data-live="stageobs">' + esc(tzl(sg[-1][0], G["zone"])) + "</span>") if sg else "No stage reported"))
     if p is None:
         word, plain = "–", ""
     else:
@@ -185,6 +185,7 @@ def hero(G, pages=None):
         on = G["ldate"].strftime("%b %d")
         plain = ("Lower than 95%% or more of the %d years on record for %s." % (yrs, on) if p == -1 else
                  "Higher than 95%% or more of the %d years on record for %s." % (yrs, on) if p == 101 else
+                 "Lower than %d%% of the %d years on record for %s." % (100 - round(p), yrs, on) if p < 50 else
                  "Higher than %d%% of the %d years on record for %s." % (round(p), yrs, on))
         cap += " That is the %s percentile." % pv if p not in (-1, 101) else ""
     tiles += ui.tile("norm", "map", "Compared with past years", word,
@@ -196,12 +197,18 @@ def hero(G, pages=None):
         if chg is None:
             tiles += ui.tile("trend", "steady", "24 h change", "–", '<small id="ccap">No reading 24 h earlier</small>')
         else:
-            word, ico = ("Rising", "up") if chg > 5 else ("Falling", "down") if chg < -5 else ("Steady", "steady")
-            parts = " &middot; ".join("%s%.1f%% in %d h" % ("+" if v >= 0 else "", v, h) for h, v in sorted(c["chg"].items()) if h in (1, 6))
-            tiles += ui.tile("trend " + word.lower(), ico, "24 h change", '%s%.0f%% <small class="word">%s</small>' % ("+" if chg >= 0 else "", chg, word),
-                             ('<small>%s</small>' % parts if parts else "") + '<small id="ccap">Flow 24 h earlier: %s cfs</small>' % fmt(G["lv"] / (1 + chg / 100)))
+            c6 = c["chg"].get(6)
+            use, span = (c6, "6 h") if c6 is not None else (chg, "24 h")
+            word, ico = ("Rising", "up") if use > 2 else ("Falling", "down") if use < -2 else ("Steady", "steady")
+            turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
+            other = [("24 h", chg)] + [("%d h" % h, v) for h, v in sorted(c["chg"].items()) if h == 1 and span == "6 h"]
+            parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)
+            tiles += ui.tile("trend " + word.lower(), ico, "Change, last %s" % span, '%s%.0f%% <small class="word">%s</small>' % ("+" if use >= 0 else "", use, word),
+                             '<small>%s</small>' % parts + ('<small>The direction changed within the last day.</small>' if turned else "") + '<small id="ccap">Flow 24 h earlier: %s cfs.</small>' % fmt(G["lv"] / (1 + chg / 100)))
     if c["fc"]:
         tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % c["fc"]["v"], '<small>%s &middot; NWS point %s</small>' % (esc(c["fc"]["t"]), esc(c["fc"]["lid"])))
+    elif not G["has_forecast"]:
+        tiles += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>The NWS publishes no river forecast for this gauge. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
         tiles += ui.tile("alrt " + ("on" if al["n"] else "off"), "bell", "NWS alerts", str(al["n"]), '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else "No alerts active here"))
@@ -210,7 +217,6 @@ def hero(G, pages=None):
                    '<form id="myform" hidden><input id="mylo" type="number" inputmode="numeric" min="0" placeholder="Low" aria-label="Lowest flow you want, in cfs"><input id="myhi" type="number" inputmode="numeric" min="0" placeholder="High" aria-label="Highest flow you want, in cfs">'
                    '<button class="pill" type="submit">Save</button><button class="pill clr" type="button">Clear</button></form>'
                    '<button class="pill" type="button" id="mybtn">Set range</button>')
-    tiles += mine.replace('<div class="tile mine"', '<div class="tile mine" hidden', 1)
     if c["wt"]:
         tiles += ui.tile("wtemp", "thermo", "Water temperature", '%.0f&deg;<small>F</small>' % c["wt"]["f"], '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     if c["air"]:
@@ -223,7 +229,9 @@ def hero(G, pages=None):
         tiles += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
     st_ = sun_times(G["lat"], G["lon"], G["ldate"])
     if st_:
-        tiles += ui.tile("sun", "sun", "Sunset today", esc(tzl(st_[1], G["zone"], date=False)), '<small>Sunrise %s &middot; computed from location and date</small>' % esc(tzl(st_[0], G["zone"], date=False)))
+        sh, _, sz = tzl(st_[1], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
+        tiles += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s &middot; computed from location and date</small>' % esc(tzl(st_[0], G["zone"], date=False)))
+    tiles += mine.replace('<div class="tile mine"', '<div class="tile mine" hidden', 1)
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
     return ban + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles)
 
@@ -370,8 +378,8 @@ def b_record(G):
         m = r["month"]
         rows += tr(["%s 1 to %d, mean flow" % (m["month"], m["dom"]), "%s cfs" % fmt(m["mean"]), "rank %d highest of %d years" % (m["rank"], m["years"])], right=(1,))
     return block("record_comparison", "Compared with this gauge’s record", "hist", table(["Measure", "Value", "When or rank"], rows, right=(1,)),
-                 "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s, computed %s; method %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
-                     r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"]), fdate(r["computed_at"][:10]), esc(r["method"])), "usgs")
+                 "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s; method %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
+                     r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"]), esc(r["method"])), "usgs")
 
 
 def b_quality(G):
@@ -441,7 +449,7 @@ def b_river_forecast(G):
         flow = ("%s cfs" % fmt(sec * 1000 if kc else sec)) if isinstance(sec, (int, float)) and sec >= 0 else "–"
         rows += tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%.1f %s" % (p["primary"], esc(fc.get("primary_units") or "ft")), flow], right=(1, 2))
     issued = esc(tzl(parse_t(fc["issued"]), G["zone"])) if fc.get("issued") else "time not stated"
-    return block("river_forecast", "River forecast", "official", table(["Time (gauge-local)", "Gage height", "Flow"], rows, right=(1, 2)),
+    return block("river_forecast", "River forecast", "official", table(["Time (gauge-local)", "Gage height", "Flow (NWS value)"], rows, right=(1, 2)),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change." % (esc(n.get("lid") or ""), issued), "nwps", amber=(age is not None and age > 24))
 
 
@@ -712,7 +720,7 @@ def b_wtemp(G):
     if not w or not w.get("months"):
         return None
     cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, fmt(n), " (few)" if n < 150 else "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
-    return block("water_temp_months", "Water temperature by month", "hist", '<div class="fcs">%s</div>' % cards,
+    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs">%s</div>' % cards,
                  "Source: USGS daily mean water temperature (parameter 00010, Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values)." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
 
 
@@ -876,10 +884,11 @@ def b_official_links(G):
 
 def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by reader question; "SEC:" is a heading, "FOLD:" a closed group (every block keeps its source line and permalink)
-        return [b2.b_offline(G), b_alerts(G), b_flow_chart(G), b2.b_stage_chart(G), "AD", b2.b_rate(G),
+        has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
+        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G),
                 ((b_heatmap(G) or b_hourly(G)) if not G["has_forecast"] else None), b_weather(G, 3), b_radar(G), b_quality(G), b_wtemp(G), b_snotel(G),
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G),
-                "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b_impacts(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
+                "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G), b3.b_storms(G), b3.b_declarations(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
                 "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G), b_land(G),
                 b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
@@ -892,7 +901,7 @@ def footer():
 
 
 def og_tags(title, desc, url):
-    return ('<meta property="og:type" content="website"><meta property="og:site_name" content="%s"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:url" content="%s"><meta property="og:image" content="%s/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="River Water Levels: current flow, gage height and percentile for US river gauges"><meta name="twitter:card" content="summary_large_image">'
+    return ('<meta property="og:type" content="website"><meta property="og:site_name" content="%s"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:url" content="%s"><meta property="og:image" content="%s/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="River Water Levels: current flow, gage height and how it compares with normal for US river gauges"><meta name="twitter:card" content="summary_large_image">'
             % (esc(BRAND), esc(title), esc(desc), esc(url), SITE_URL))
 
 
@@ -933,7 +942,7 @@ function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'nu
 function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}
 var ag=q('age');if(ag)ag.textContent=age(new Date(snap));
 function run(){fetch('https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?monitoring_location_id='+ID+'&parameter_code=00060,00065&f=json').then(function(r){return r.json()}).then(function(j){var F=null,S=null;(j.features||[]).forEach(function(x){var p=x.properties,v=parseFloat(p.value);if(isNaN(v))return;if(p.parameter_code==='00060')F={v:v,t:new Date(p.time)};if(p.parameter_code==='00065')S={v:v,t:new Date(p.time)}});
-if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent=lt(F.t);q('obs').textContent=lt(F.t);if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){var nt=' Flow above is newer; percentile and change are as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc&&pc.getAttribute('data-n')!=='1'){pc.textContent+=nt;pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}).catch(function(){})}
+if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent=lt(F.t);q('obs').textContent=lt(F.t);if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc&&pc.getAttribute('data-n')!=='1'){pc.textContent+=nt;pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}).catch(function(){})}
 run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600000)})();</script>"""
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning or a safety determination: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'

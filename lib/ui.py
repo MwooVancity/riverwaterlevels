@@ -78,7 +78,7 @@ def spark(values, w=150, h=34):
     return '<svg class="spark" viewBox="0 0 %d %d" width="%d" height="%d" aria-hidden="true"><polyline points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"/></svg>' % (w, h, w, h, " ".join(pts), ex, ey)
 
 
-def ladder(cats, cur, fc=None):
+def ladder(cats, cur, fc=None, now_label="Now"):
     """Horizontal flood-stage scale (NWS thresholds: action yellow, minor orange, moderate red, major purple) with the latest stage and the forecast high marked. cats = {name: ft}, cur and fc in feet. Drawn 420 units wide so the 12-unit labels stay readable on a phone; labels that would touch step down a row."""
     order = [(k, cats[k]) for k in ("action", "minor", "moderate", "major") if k in cats]
     if not order:
@@ -102,7 +102,7 @@ def ladder(cats, cur, fc=None):
         prev = X(v)
     mk = ""
     if cur is not None:
-        mk += '<path d="M%.1f 32 l-6 -12 h12 z" class="mk"/><text x="%.1f" y="12" class="ml" text-anchor="%s">Now %.2f ft</text>' % (X(cur), X(cur), "start" if X(cur) < 60 else "end" if X(cur) > W - 80 else "middle", cur)
+        mk += '<path d="M%.1f 32 l-6 -12 h12 z" class="mk"/><text x="%.1f" y="12" class="ml" text-anchor="%s">%s %.2f ft</text>' % (X(cur), X(cur), "start" if X(cur) < 60 else "end" if X(cur) > W - 80 else "middle", now_label, cur)
     if fc is not None and cur is not None and abs(X(fc) - X(cur)) > 3:
         mk += '<path d="M%.1f 50 l-5 10 h10 z" class="mf"/>' % X(fc)
     txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; forecast high %.1f ft" % fc) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
