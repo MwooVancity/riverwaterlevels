@@ -49,6 +49,8 @@ def main():
     from lib.reviewgate import hold_back
     live_f, rv_f = os.path.join(ROOT, "dist", "_urls.json"), os.path.join(ROOT, "data", "reviews.json")
     skip_g, skip_f = hold_back({s: rows[s] for s in Gs}, live_urls(live_f) if not preview and "--no-hold" not in sys.argv else [], json.load(open(rv_f, encoding="utf-8")) if os.path.exists(rv_f) else {}, {s for s in Gs if Gs[s]["fc_page"]})
+    if "--no-hold" in sys.argv:  # review builds: include the pages that are waiting for their review
+        skip_g, skip_f = set(), set()
     for s in skip_g:
         del Gs[s]
     for s in skip_f:

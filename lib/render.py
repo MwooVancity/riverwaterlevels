@@ -159,6 +159,46 @@ def tr(cells, right=()):
 
 
 # ---------------------------------------------------------------- hero
+def fc_points(f):
+    """NWS forecast points as (time, stage_ft or None, flow_cfs or None). NWS lists the stage first for most gauges but the flow first (kcfs or cfs) for some, so units decide, never position."""
+    pu, su = (f.get("primary_units") or "").lower(), (f.get("secondary_units") or "").lower()
+    out = []
+    for p in f.get("points") or []:
+        stage = flow = None
+        for val, u in ((p.get("primary"), pu), (p.get("secondary"), su)):
+            if not isinstance(val, (int, float)) or val <= -900:
+                continue
+            if u in ("ft", "feet"):
+                stage = val
+            elif u == "kcfs":
+                flow = val * 1000
+            elif u == "cfs":
+                flow = val
+        out.append((parse_t(p["t"]), stage, flow))
+    return out
+
+
+def datum_gap(G):
+    """(NWS stage, USGS stage) when the two agencies read the same gauge on different zero points (latest readings within 30 minutes of each other differ by more than 0.3 ft); None when they agree or one is missing."""
+    o = (G["rec"].get("nwps") or {}).get("obs_stage")
+    sg = G["sg"]
+    if not o or not sg or (sg[-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
+        return None
+    try:
+        t, v = parse_t(o["t"]), float(o["v"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    u = min(sg, key=lambda x: abs((x[0] - t).total_seconds()))
+    if abs((u[0] - t).total_seconds()) > 1800:
+        return None
+    return (v, u[1]) if abs(v - u[1]) > 0.3 else None
+
+
+def miles_between(la1, lo1, la2, lo2):
+    la1, lo1, la2, lo2 = map(math.radians, (la1, lo1, la2, lo2))
+    return 3958.8 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+
+
 def upstream_dams(G):
     """About how many dams the EPA counts in the watershed upstream of the gauge (density per sq km x drainage area); 0 when unknown."""
     sc = ((G["rec"].get("streamcat") or {}).get("vals") or {}).get("damdensws")
@@ -231,11 +271,19 @@ def hero(G, pages=None):
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     if c["fc"]:
         fcw = c["fc"]
-        above = fcw["cur"] is not None and fcw["cur"] > fcw["v"] + 0.1
-        tiles += ui.tile("fcst", "crest", "Forecast high", '%.1f <small>ft</small>' % fcw["v"],
-                         '<small>%s%s &middot; NWS point %s</small><small>Forecast issued %s.</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), esc(fcw["issued"]))
-                         + ('<small>The forecast reaches this level again later (a regular cycle).</small>' if fcw["repeat"] else "")
-                         + ('<small>The latest reading (%.2f ft) is already above this forecast.</small>' % fcw["cur"] if above else ""))
+        unit = fcw["unit"]
+        above = fcw["cur"] is not None and fcw["cur"] > fcw["v"] + (0.02 if unit == "ft" else 0.02 * abs(fcw["v"]))
+        val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmt(fcw["v"]))
+        sub = '<small>%s%s &middot; NWS point %s</small><small>Forecast issued %s.</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), esc(fcw["issued"]))
+        if fcw["repeat"]:
+            sub += '<small>The forecast reaches this level again later (a regular cycle).</small>'
+        if fcw["falls"]:
+            sub += '<small>It then falls to %s by %s.</small>' % ((("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmt(fcw["end_v"]))), esc(fcw["end_t"]))
+        if fcw["datum"]:
+            sub += '<small>NWS reads this gauge at %.2f ft where USGS reads %.2f ft (different zero points); the forecast is in NWS stage.</small>' % fcw["datum"]
+        if above:
+            sub += '<small class="fcnote">The latest reading (%s) is already above this forecast.</small>' % (("%.2f ft" % fcw["cur"]) if unit == "ft" else ("%s cfs" % fmt(fcw["cur"])))
+        tiles += ui.tile("fcst", "crest", "Forecast high" if unit == "ft" else "Forecast high flow", val, sub)
     elif nwl and G["has_forecast"]:
         tiles += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:
@@ -255,7 +303,7 @@ def hero(G, pages=None):
     if c["air"]:
         a = c["air"]
         wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else "wind %.0f mph %s" % (a["wind"], esc(a["dir"]))) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
-        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], ('<small>%s</small>' % wtxt if wtxt else "") + '<small>NWS station %s, %s</small>' % (esc(a["st"]), esc(a["t"])))
+        tiles += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], ('<small>%s</small>' % wtxt if wtxt else "") + '<small>Weather station %s%s%s, %s</small>' % (esc(a["st"]), (" (" + esc(a["name"]) + ")") if a.get("name") else "", (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])))
     if c["up"]:
         up = c["up"]
         tiles += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmt(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), (" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else ""))
@@ -276,8 +324,12 @@ def hero(G, pages=None):
     if not G["fc_page"] and not (b_heatmap(G) or b_hourly(G)):
         gone.append("hourly weather forecast")
     if not G["rec"].get("record"):
-        gone.append("comparison with this gauge's own long daily record (it is not current)")
+        gone.append("the highest and lowest daily flows of the last 7 days against this gauge's record (USGS daily values are not current for it)")
+    if pages is not None and b_nearby(G, pages) is None:
+        gone.append("other gauges within 150 miles on this site")
     notes = ('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else ""
+    if G["fc_page"]:
+        notes += '<p class="gaps">The river forecast table, hourly weather and rain outlooks are on the <a href="%s">Forecast page</a>.</p>' % G["row"]["forecast_url"]
     if ndam >= 1:
         notes += '<p class="gaps">Dams in the upstream watershed: about %d (EPA StreamCat). Flow below a dam can change with releases, not only rain.</p>' % ndam
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
@@ -360,9 +412,13 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
     line = "".join('<polyline points="%s" fill="none" stroke="var(--accent)" stroke-width="2.4"/>' % " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v, _ in sg_) for sg_ in segs if len(sg_) > 1)
     grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks)
     xl = ""
-    for k in range(nx):
-        tt = t0 + (t1 - t0) * k / (nx - 1)
-        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (X(tt), Hh - 8, fs, "start" if k == 0 else "end" if k == nx - 1 else "middle", tt.astimezone(zone).strftime("%b %d").replace(" 0", " "))
+    mids, d0 = [], t0.astimezone(zone).date() + datetime.timedelta(days=1)
+    while datetime.datetime.combine(d0, datetime.time(0), zone) < t1:
+        mids.append(datetime.datetime.combine(d0, datetime.time(0), zone))
+        d0 += datetime.timedelta(days=1)
+    for m in mids[::max(1, -(-len(mids) // nx))]:  # one label per local midnight (every second one on a phone)
+        x_ = X(m)
+        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (x_, Hh - 8, fs, "start" if x_ < L + 16 else "end" if x_ > W - 30 else "middle", m.strftime("%b %d").replace(" 0", " "))
     return ('<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs over the last 7 days with the 25th to 75th percentile band">%s%s%s%s'
            '<circle cx="%.1f" cy="%.1f" r="5" fill="var(--accent)"/></svg>' % (cls, W, Hh, "".join(band), grid, xl, line, X(lt), Y(G["lv"])))
 
@@ -487,17 +543,17 @@ def b_river_forecast(G):
     age = hours_old(fc.get("issued"), G["now"]) if fc.get("issued") else None
     if age is not None and age > 72:
         return None
-    kc = "kcfs" in (fc.get("secondary_units") or "").lower()
     rows = ""
-    fut = [x for x in fc["points"] if parse_t(x["t"]) >= G["now"] - datetime.timedelta(hours=1)]
+    fut = [x for x in fc_points(fc) if x[0] >= G["now"] - datetime.timedelta(hours=1)]
     if not fut:
         return None
-    for p in fut[:28]:
-        sec = p.get("secondary")
-        flow = ("%s cfs" % fmt(sec * 1000 if kc else sec)) if isinstance(sec, (int, float)) and sec >= 0 else "–"
-        rows += tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%.1f %s" % (p["primary"], esc(fc.get("primary_units") or "ft")), flow], right=(1, 2))
+    gap = datum_gap(G)
+    for t_, s_, f_ in fut[:28]:
+        rows += tr([esc(tzl(t_, G["zone"])), ("%.1f ft" % s_) if s_ is not None else "–", ("%s cfs" % fmt(f_)) if f_ is not None else "–"], right=(1, 2))
+    if gap:
+        rows += tr(["NWS and USGS read this gauge on different zero points", "NWS stage %.2f ft now" % gap[0], "USGS %.2f ft" % gap[1]], right=(1, 2))
     issued = esc(tzl(parse_t(fc["issued"]), G["zone"])) if fc.get("issued") else "time not stated"
-    return block("river_forecast", "River forecast", "official", table(["Time (gauge-local)", "Gage height", "Flow (NWS value)"], rows, right=(1, 2)),
+    return block("river_forecast", "River forecast", "official", table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2)),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change." % (esc(n.get("lid") or ""), issued), "nwps", amber=(age is not None and age > 24))
 
 
@@ -541,6 +597,9 @@ def b_rain(G):
 def b_radar(G):
     st = (G["rec"].get("nws") or {}).get("radar")
     if not st:
+        return None
+    rl = (G["rec"].get("nws") or {}).get("radar_ll")
+    if rl and miles_between(G["lat"], G["lon"], rl[1], rl[0]) > 140:  # about 230 km: beyond it the loop does not cover the gauge
         return None
     return block("radar", "Radar", "official", '<img src="https://radar.weather.gov/ridge/standard/%s_loop.gif" alt="Radar loop, station %s" width="600" height="550" loading="lazy" style="max-width:100%%;height:auto">' % (esc(st), esc(st)),
                  "Source: National Weather Service radar, station %s. The loop is served live by the NWS and shows its own frame times." % esc(st), "rfc")
@@ -1008,7 +1067,7 @@ function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'nu
 function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}
 var ag=q('age');if(ag)ag.textContent=age(new Date(snap));
 function run(){fetch('https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?monitoring_location_id='+ID+'&parameter_code=00060,00065&f=json').then(function(r){return r.json()}).then(function(j){var F=null,S=null;(j.features||[]).forEach(function(x){var p=x.properties,v=parseFloat(p.value);if(isNaN(v))return;if(p.parameter_code==='00060')F={v:v,t:new Date(p.time)};if(p.parameter_code==='00065')S={v:v,t:new Date(p.time)}});
-if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent=lt(F.t);q('obs').textContent=lt(F.t);if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc&&pc.getAttribute('data-n')!=='1'){pc.textContent+=nt;pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}).catch(function(){})}
+if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);q('flowobs').textContent=lt(F.t);q('obs').textContent=lt(F.t);if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc&&pc.getAttribute('data-n')!=='1'){pc.textContent+=nt;pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}).catch(function(){var a=q('age');if(a&&!document.getElementById('lf')){var s=document.createElement('span');s.id='lf';s.className='lf';s.textContent=' \u00b7 live update unavailable, showing the last build';a.parentNode.parentNode.appendChild(s)}})}
 run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600000)})();</script>"""
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning or a safety determination: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
@@ -1031,7 +1090,7 @@ var n=document.querySelector('[data-live="flow"]');if(n&&window.MutationObserver
 FOLD_JS = """<script>(function(){function o(){var h=location.hash.slice(1),e=h&&document.getElementById(h),d=e&&e.closest('details');if(d&&!d.open){d.open=true;e.scrollIntoView()}}
 window.addEventListener('hashchange',o);o();window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('details.fold')).forEach(function(d){d.open=true})})})();</script>"""
 NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
-function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0;j.forEach(function(g){if(n>=8)return;if(g[0].toLowerCase().replace(/\\bst\\.? /g,'saint ').indexOf(q)>=0){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++}});if(!n){var s=document.createElement('span');s.textContent='No match: this site has '+j.length+' gauges so far';o.appendChild(s)}o.hidden=false})}
+function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0;j.forEach(function(g){if(n>=8)return;if(g[0].toLowerCase().replace(/\\bst\\.? /g,'saint ').indexOf(q)>=0){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++}});if(!n){var s=document.createElement('span');s.innerHTML='No match: this site has '+j.length+' gauges so far. <a href="https://water.noaa.gov/" rel="noopener">Look up any river at water.noaa.gov</a>';o.appendChild(s)}o.hidden=false})}
 i.addEventListener('input',function(){show(i.value)});i.addEventListener('focus',load);document.addEventListener('click',function(e){if(!o.contains(e.target)&&e.target!==i)o.hidden=true})})();</script>"""
 ACTS = '<p class="acts"><button type="button" class="pill" id="savebtn" hidden>Save gauge</button> <button type="button" class="pill" id="csvbtn" data-site="@SITE@" hidden>Download last 7 days (CSV)</button></p>'
 TOOLS_JS = """<script>(function(){var sb=document.getElementById('savebtn'),cb=document.getElementById('csvbtn'),K='rwl_saved';

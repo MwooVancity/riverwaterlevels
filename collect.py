@@ -130,9 +130,10 @@ def fetch_nwps(site, lat, lon):
             obs_stage = None
             try:
                 ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWS_H)
-                pts = [p for p in (ob.get("data") or []) if isinstance(p.get("primary"), (int, float)) and p["primary"] > -900]
-                if pts and (ob.get("primaryUnits") or "").lower() == "ft":
-                    obs_stage = {"t": pts[-1]["validTime"], "v": pts[-1]["primary"]}
+                col = "primary" if (ob.get("primaryUnits") or "").lower() == "ft" else "secondary" if (ob.get("secondaryUnits") or "").lower() == "ft" else None  # the height column is found by its units, not its position
+                pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
+                if pts:
+                    obs_stage = {"t": pts[-1]["validTime"], "v": pts[-1][col]}
             except Exception:
                 pass
             fl = det.get("flood") or {}
@@ -632,7 +633,12 @@ def grid_hours(gp, hours=168):
 
 def fetch_nws(lat, lon):
     pt = thr_json("https://api.weather.gov/points/%.4f,%.4f" % (lat, lon), NWS_H).get("properties", {})
-    out = {"fetched_at": now_iso(), "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "periods": [], "alerts": None, "obs": None}
+    out = {"fetched_at": now_iso(), "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": None, "periods": [], "alerts": None, "obs": None}
+    try:
+        if pt.get("radarStation"):
+            out["radar_ll"] = thr_json("https://api.weather.gov/radar/stations/%s" % pt["radarStation"], NWS_H).get("geometry", {}).get("coordinates")
+    except Exception:
+        pass
     try:
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
@@ -664,7 +670,7 @@ def fetch_nws(lat, lon):
             x = obs[0]
             def v(k): return (x.get(k) or {}).get("value")
             old = next((y for y in obs if (y.get("barometricPressure") or {}).get("value") is not None and (parse_t(x["timestamp"]) - parse_t(y["timestamp"])).total_seconds() >= 2.5 * 3600), None)
-            out["obs"] = {"station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
+            out["obs"] = {"name": (st.get("properties") or {}).get("name"), "ll": (st.get("geometry") or {}).get("coordinates"), "station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
                           "pressure_pa": v("barometricPressure"), "pressure_prev_pa": (old.get("barometricPressure") or {}).get("value") if old else None, "visibility_m": v("visibility")}
     except Exception:
         pass

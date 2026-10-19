@@ -228,7 +228,7 @@ def conditions(G, pages=None):
         wk = ob.get("wind_kmh")
         dirs = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
         wd = dirs[int((ob["wind_dir"] % 360) / 22.5 + 0.5) % 16] if ob.get("wind_dir") is not None else ""
-        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "t": tzl(parse_t(ob["timestamp"]), zone)}
+        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone)}
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
@@ -236,12 +236,15 @@ def conditions(G, pages=None):
                 out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h")}
                 break
     if len(fl) >= 8 and not G.get("osc"):
-        steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(1, len(fl)))
-        tol = max(1200, 0.6 * steps[len(steps) // 2])
+        def avg(lo_s, hi_s, ref):  # mean of the readings between lo_s and hi_s seconds before ref: one noisy 15-minute reading must not set the headline
+            xs = [v for t, v, _ in fl if lo_s <= (ref - t).total_seconds() <= hi_s]
+            return sum(xs) / len(xs) if xs else None
         for h in (1, 6, 24):
-            a = _at(fl, lt - datetime.timedelta(hours=h), tol)
-            if a and a[1] > 0:
-                out["chg"][h] = (lv - a[1]) / a[1] * 100
+            half = 900 if h == 1 else 1800
+            now_m = avg(0, half * 2, lt)
+            then_m = avg(h * 3600 - half, h * 3600 + half, lt)
+            if now_m is not None and then_m and then_m > 0:
+                out["chg"][h] = (now_m - then_m) / then_m * 100
     sgl = G["sg"]
     out["sg6"] = None
     if len(sgl) >= 8 and (sgl[-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
@@ -249,13 +252,23 @@ def conditions(G, pages=None):
         out["sg6"] = (sgl[-1][1] - a6[1]) if a6 else None
     n = rec.get("nwps") or {}
     f = n.get("forecast") if ok("nwps") else None
-    if f and f.get("points") and (f.get("primary_units") or "").lower() == "ft":
+    if f and f.get("points"):
         age = hours_old(f.get("issued"), G["now"]) if f.get("issued") else None
-        fut = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1) and p["primary"] > -900]
+        pts = [x for x in fc_points(f) if x[0] >= G["now"] - datetime.timedelta(hours=1)]
+        stage = [(t_, s_) for t_, s_, _ in pts if s_ is not None]
+        flow = [(t_, f_) for t_, _, f_ in pts if f_ is not None]
+        gap = datum_gap(G)
+        fut, unit = (stage, "ft") if stage else (flow, "cfs")
         if fut and (age is None or age <= 72):
             hi = max(fut, key=lambda x: x[1])
-            out["fc"] = {"v": hi[1], "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": sum(1 for _, v_ in fut if abs(v_ - hi[1]) <= 0.05) >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
-                         "cur": G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None}
+            near = [i for i, (_, v_) in enumerate(fut) if v_ >= hi[1] - (0.05 if unit == "ft" else 0.01 * abs(hi[1]))]
+            peaks = 1 + sum(1 for a_, b_ in zip(near, near[1:]) if min(v_ for _, v_ in fut[a_:b_ + 1]) < hi[1] - (0.15 if unit == "ft" else 0.03 * abs(hi[1])))  # separate peaks, not neighbouring points of one peak
+            end = fut[-1]
+            first_hi = near[0]
+            out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
+                         "falls": first_hi <= 2 and end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600, "end_v": end[1], "end_t": tzl(end[0], zone),
+                         "datum": gap,
+                         "cur": (gap[0] if gap else (G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None)) if unit == "ft" else G["lv"]}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = [x for x in nws["alerts"] if (x.get("event") or "") not in IGNORED_ALERTS]

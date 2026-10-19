@@ -64,23 +64,27 @@ def b_stage_chart(G):
     nws = cleared("nwps")
     fc, issued = [], None
     f = n.get("forecast") if nws else None
-    if f and f.get("points") and (f.get("primary_units") or "").lower() == "ft":
+    gap = datum_gap(G)  # NWS and USGS stages on different zero points: the forecast and the flood stages belong to the NWS scale, so they are never drawn on the USGS axis
+    if f and f.get("points") and not gap:
         age = hours_old(f.get("issued"), now) if f.get("issued") else None
         if age is None or age <= 72:
             issued = f.get("issued")
-            fc = [(parse_t(p["t"]), p["primary"]) for p in f["points"] if parse_t(p["t"]) > t1 and p["primary"] > -900]
+            fc = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1]
     cats = (n.get("categories") or {}) if nws else {}
     vals = [v for _, v in obs] + [v for _, v in fc]
     lo, hi = min(vals), max(vals)
     if hi - lo < 1.0:  # a tiny rise must not look like a flood: keep at least one foot of axis
         lo, hi = (lo + hi) / 2 - 0.5, (lo + hi) / 2 + 0.5
     vmin, vmax, ticks = nice_ticks(lo, hi)
-    hl = [(k.capitalize(), cats[k]) for k in CATS if k in cats and vmin <= cats[k] <= vmax]
+    hl = [(k.capitalize(), cats[k]) for k in CATS if k in cats and vmin <= cats[k] <= vmax] if not gap else []
     tend = fc[-1][0] if fc else t1
     label = "Gage height in feet over the last 7 days" + (" and the National Weather Service forecast" if fc else "")
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
     cur = obs[-1][1]
-    rows = tr(["Latest gage height", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = tr(["Latest gage height (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    if gap:
+        cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
+        rows += tr(["Latest stage (NWS)", "%.2f ft" % gap[0], "NWS and USGS read this gauge on different zero points (USGS %.2f ft); the flood stages below are NWS stages" % gap[1]], right=(1,))
     for k in CATS:
         if k in cats:
             d = cats[k] - cur
@@ -88,6 +92,11 @@ def b_stage_chart(G):
     if fc:
         hi = max(fc, key=lambda x: x[1])
         rows += tr(["Forecast high", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
+    if gap and f and f.get("points"):
+        fs_ = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1]
+        if fs_:
+            hi = max(fs_, key=lambda x: x[1])
+            rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
     lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, "Latest, %s:" % tzl(G["sg"][-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
     body = lad + svg + table(["Measure", "Gage height", "Note"], rows, right=(1,))
