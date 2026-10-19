@@ -73,6 +73,29 @@ const firstScreenJS = () => {
   return out;
 };
 
+// accessibility rules a person using a screen reader or a keyboard would hit (run in the page)
+const a11yJS = () => {
+  const out = [], q = s => [...document.querySelectorAll(s)];
+  if (document.documentElement.lang !== 'en') out.push('html lang is not en');
+  if (!document.title.trim()) out.push('empty title');
+  if (q('main').length !== 1) out.push('main landmarks: ' + q('main').length);
+  if (!q('nav').length) out.push('no nav landmark');
+  const name = e => (e.getAttribute('aria-label') || e.getAttribute('title') || e.textContent || '').trim() || (e.id && document.querySelector('label[for="' + e.id + '"]') ? 'label' : '');
+  q('a[href]').forEach(e => { if (!name(e) && !e.querySelector('img[alt]:not([alt=""])')) out.push('link without a name: ' + e.getAttribute('href')); });
+  q('button').forEach(e => { if (!name(e)) out.push('button without a name'); });
+  q('input,select,textarea').forEach(e => { if (!name(e) && e.type !== 'hidden') out.push('form field without a label: ' + (e.id || e.type)); });
+  q('svg[role="img"]').forEach(e => { if (!e.getAttribute('aria-label')) out.push('chart svg without aria-label'); });
+  q('svg:not([role]):not([aria-hidden])').forEach(e => { if (!e.closest('[aria-hidden="true"],button,a') && !e.querySelector('title')) out.push('svg that is neither labelled nor hidden'); });
+  q('img').forEach(e => { if (!e.hasAttribute('alt')) out.push('img without alt'); });
+  const ids = {}; q('[id]').forEach(e => { ids[e.id] = (ids[e.id] || 0) + 1; }); Object.keys(ids).forEach(k => { if (ids[k] > 1) out.push('duplicate id ' + k); });
+  const sk = document.querySelector('a.skip'); if (!sk || sk.getAttribute('href') !== '#main') out.push('no skip link to #main');
+  q('details > summary').forEach(e => { if (!e.textContent.trim()) out.push('empty summary'); });
+  return [...new Set(out)].slice(0, 8);
+};
+const focusJS = async () => {  // tab through the first 12 stops: each must show a visible focus style
+  return null;
+};
+
 let fails = 0;
 const b = await chromium.launch();
 const sheet = [];
@@ -80,6 +103,7 @@ for (const [label, w, h, scheme] of [['d-light', 1280, 900, 'light'], ['d-dark',
   const ctx = await b.newContext({ viewport: { width: w, height: h }, colorScheme: scheme, deviceScaleFactor: w < 600 ? 2 : 1, isMobile: w < 600, hasTouch: w < 600 });
   for (const p of PATHS) {
     const page = await ctx.newPage(); const errs = [];
+    await page.addInitScript(() => { window.__cls = 0; try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {} });
     page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text().slice(0, 80)); });
     page.on('pageerror', e => errs.push(String(e).slice(0, 80)));
     await page.goto(BASE + p, { waitUntil: 'load' }).catch(() => {});
@@ -96,12 +120,38 @@ for (const [label, w, h, scheme] of [['d-light', 1280, 900, 'light'], ['d-dark',
       if (clip.length) issues.push('table columns cut off on a phone: ' + clip.join(', '));
     }
     if (errs.length) issues.push('console: ' + errs[0]);
+    if (scheme === 'light' && w >= 1000) {
+      const a = await page.evaluate(a11yJS); a.forEach(x => issues.push('accessibility: ' + x));
+      let bad = [];
+      for (let i = 0; i < 12; i++) {
+        await page.keyboard.press('Tab');
+        const st = await page.evaluate(() => { const e = document.activeElement; if (!e || e === document.body) return null; const c = getComputedStyle(e); return { tag: e.tagName, label: (e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 20), ok: (c.outlineStyle !== 'none' && parseFloat(c.outlineWidth) > 0) || c.boxShadow !== 'none' || e.matches(':focus-visible') && c.outlineStyle !== 'none' }; });
+        if (st && !st.ok) bad.push(st.tag + ' "' + st.label + '"');
+      }
+      if (bad.length) issues.push('keyboard focus not visible on: ' + [...new Set(bad)].slice(0, 3).join(', '));
+      const cls = await page.evaluate(() => window.__cls || 0);
+      if (cls > 0.1) issues.push('layout shift (CLS) ' + cls.toFixed(3) + ' is over 0.1');
+    }
     const f = join(OUT, label + p.replace(/[^a-z0-9]+/gi, '_') + '.png');
     await page.screenshot({ path: f });
     sheet.push(f);
     if (issues.length) { fails++; console.log('FAIL ' + label + ' ' + p + '\n   ' + issues.join('\n   ')); }
     await page.close();
   }
+  await ctx.close();
+}
+{
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  const page = await ctx.newPage();
+  const cdp = await ctx.newCDPSession(page);
+  await cdp.send('Network.enable');
+  await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 400, downloadThroughput: 50 * 1024, uploadThroughput: 25 * 1024 });  // about 400 kbit/s, 400 ms latency
+  const t0 = Date.now();
+  const gp = PATHS.find(p => p.startsWith('/river/')) || PATHS[0];
+  await page.goto(BASE + gp, { waitUntil: 'commit' }).catch(() => {});
+  const seen = await page.waitForSelector('.tile.flow b', { timeout: 20000 }).then(() => (Date.now() - t0) / 1000).catch(() => null);
+  if (seen === null || seen > 8) { fails++; console.log('FAIL slow connection ' + gp + '\n   flow tile visible after ' + (seen === null ? 'more than 20' : seen.toFixed(1)) + ' s on a 400 kbit/s phone connection (limit 8 s)'); }
+  else console.log('slow connection: flow tile visible after ' + seen.toFixed(1) + ' s on 400 kbit/s');
   await ctx.close();
 }
 await b.close(); srv.close();

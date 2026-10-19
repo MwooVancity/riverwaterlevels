@@ -1,7 +1,8 @@
 name: watchdog
 
 # Hourly check of the LIVE site. A failure makes GitHub email the repository owner.
-# Fails when the live build is older than 3 hours, the readings are stale, or the page count dropped below the floor in tools/watchdog.py.
+# Fails when the live build is older than 3 hours, the readings are stale, or the page count dropped below the floor in tools/watchdog.py,
+# and when any gauge page disagrees with USGS (flow, stage, time) or NWS (flood stages): tools/truth_live.py.
 on:
   schedule:
     - cron: "17 * * * *"
@@ -17,3 +18,5 @@ jobs:
         with:
           python-version: "3.12"
       - run: python tools/watchdog.py
+      - name: Truth against USGS and NWS (every gauge page)
+        run: python tools/truth_live.py

@@ -958,7 +958,7 @@ def humanize_iso(text):
 
 
 def nav():
-    return '<a class="skip" href="#main">Skip to content</a><div class="nav"><a class="brand" href="/"><span class="logo"></span>%s</a><span class="tabs"><a href="/">Rivers</a><a href="/about/">About</a></span><span class="ns"><input id="gq" type="search" placeholder="Find a river or place" aria-label="Find a river or place" autocomplete="off"><span id="gr" class="gr" hidden></span></span></div>' % esc(BRAND) + NAVSEARCH_JS + FOLD_JS
+    return '<a class="skip" href="#main">Skip to content</a><nav class="nav" aria-label="Site"><a class="brand" href="/"><span class="logo"></span>%s</a><span class="tabs"><a href="/">Rivers</a><a href="/about/">About</a></span><span class="ns"><input id="gq" type="search" placeholder="Find a river or place" aria-label="Find a river or place" autocomplete="off"><span id="gr" class="gr" hidden></span></span></nav>' % esc(BRAND) + NAVSEARCH_JS + FOLD_JS
 
 
 def sources_block(blocks, G):
@@ -1030,6 +1030,14 @@ if(!al.length){b.insertBefore(el('p','','No active National Weather Service aler
 al.forEach(function(p){var d=el('div','alert'),e=p.ends||p.expires;d.appendChild(el('b','',p.event||''));d.appendChild(document.createTextNode(' \\u00b7 '+(p.severity||'severity not stated')+' \\u00b7 '+(as(p.areaDesc||'')+ast(p))));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode(p.headline||''));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode('Ends '+(e?lt(new Date(e)):'not stated')));b.insertBefore(d,src)});
 src.textContent='Source: National Weather Service alerts for the gauge location, fetched '+lt(new Date())+' (live from the NWS when this page loaded).'}).catch(function(){})})();</script>"""
 SAVED_JS = """<script>(function(){var d=document.getElementById('saved');if(!d)return;try{var a=JSON.parse(localStorage.getItem('rwl_saved'))||[];if(!a.length)return;d.innerHTML='<h2>Your saved gauges</h2>'+a.filter(function(x){return String(x.u).charAt(0)==='/'}).map(function(x){var l=document.createElement('a');l.href=x.u;l.textContent=x.n;return l.outerHTML}).join(' &middot; ');d.hidden=false}catch(e){}})();</script>"""
+INDEX_CFG = None  # set by build.py from state/index-allow.json
+
+
+def robots_meta(path):
+    from lib import indexing
+    return indexing.robots_meta(path, INDEX_CFG) if INDEX_CFG is not None else ""
+
+
 HEAD_EXTRA = '<link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#1d5fa8">'
 
 
@@ -1120,7 +1128,7 @@ def build_tab(tab, G, pages):
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld, CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G, pages) + SAFETY + jump_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS + MYLV_JS.replace("@SITE@", G["site"]) if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (ACTS.replace("@SITE@", G["site"]) + hero(G, pages) + SAFETY + jump_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + TOOLS_JS + MYLV_JS.replace("@SITE@", G["site"]) if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

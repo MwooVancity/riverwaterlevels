@@ -54,7 +54,7 @@ def main():
         hit = max([w for n, w in rec_names if n in rn] or [0])
         fame = {0: 0, 1: 70, 2: 100}[hit]
         score = 0.35 * fame + 0.20 * known + 0.15 * comp + 0.10 * rec + 0.10 * fc + 0.10 * nm
-        out.append({"site": r["site"], "river": r["river"], "place": r["place"], "state": r["state"], "score": round(score, 1), "views": v if v is not None else "", "basis": basis, "name": r["name_confidence"], "url": r["water_url"], "fame": hit})
+        out.append({"site": r["site"], "river": r["river"], "place": r["place"], "state": r["state"], "score": round(score, 1), "views": v if v is not None else "", "basis": basis, "name": r["name_confidence"], "url": r["water_url"].replace("/water/", "/"), "fame": hit})
     live = set(WAVE0)
     ranked = sorted([x for x in out if x["site"] not in live and x["name"] != "low"], key=lambda x: -x["score"])
     queue, beyond = ranked[:max(0, MAX_GAUGES - len(live))], ranked[max(0, MAX_GAUGES - len(live)):]

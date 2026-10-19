@@ -6,7 +6,7 @@ import os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import render, directory
+from lib import render, directory, indexing
 
 
 FILE_BUDGET = 19000
@@ -24,6 +24,8 @@ def main():
     cached = [f[:-5] for f in sorted(os.listdir(CACHE)) if f.endswith(".json") and not f.startswith("_") and f[:-5] in rows]
     preview = "--preview" in sys.argv
     render.PREVIEW = preview
+    ix = indexing.load(ROOT)
+    render.INDEX_CFG = ix
     sites = [a for a in sys.argv[1:] if not a.startswith("--")] or cached
     report = {"built_at": iso(now), "gauges": [], "failed": [], "pages": 0}
     Gs = {}
@@ -85,14 +87,14 @@ def main():
             lm[u] = {"hash": h, "date": today}
     if not os.environ.get("BUILD_NOW") and not preview:
         json.dump(lm, open(lm_path, "w"), indent=0)
-    for name, xml in directory.sitemap_files(urls, {u: lm[u]["date"] for u in urls if u in lm}).items():
+    for name, xml in directory.sitemap_files([u for u in urls if indexing.sitemap_ok(u, ix)], {u: lm[u]["date"] for u in urls if u in lm}).items():
         open(os.path.join(nxt, name), "w", encoding="utf-8").write(xml)
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found())
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
     json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4)] for r in built], open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
-    shutil.copy(os.path.join(ROOT, "templates", "_headers"), os.path.join(nxt, "_headers"))
+    open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
     json.dump({"urls": urls}, open(os.path.join(nxt, "_urls.json"), "w"))
     report["pages"] = len(urls)

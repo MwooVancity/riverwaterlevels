@@ -7,7 +7,7 @@ import os, re, sys, json, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL
 
-BANNED = [r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)"]
+BANNED = [r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b"]  # the last two: USGS sentinel values (-999999) must never be shown as readings
 MAX_BYTES = 230_000
 BUDGET = {"gauge": 110, "hub": 80, "state": 480, "home": 200, "trust": 40}
 
@@ -92,7 +92,20 @@ def check_html(h, rel):
             bad.append("block %s has an empty table" % sid)
     if len(re.findall(r"<h1>", body)) != 1:
         bad.append("not exactly one h1")
-    bad += ui_checks(body, plain=kind_of(rel) != "trust")  # trust pages are where the terms are explained
+    bad += ui_checks(body, plain=kind_of(rel) != "trust")
+    for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S):
+        try:
+            j = json.loads(ld)
+            if not (isinstance(j, dict) and j.get("@context") and j.get("@type")):
+                bad.append("structured data without @context and @type")
+        except ValueError:
+            bad.append("structured data is not valid JSON")
+    md = re.search(r'<meta name="description" content="([^"]*)"', h)
+    if not md or not (40 <= len(md.group(1)) <= 200):
+        bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
+    for tag in ("og:title", "og:description", "og:url", "og:image"):
+        if 'property="%s"' % tag not in h and rel != "404.html":
+            bad.append("missing %s" % tag)  # trust pages are where the terms are explained
     if kind_of(rel) == "gauge" and not rel.replace("\\", "/").endswith("/forecast/index.html"):
         # Line 0, first-screen contract: the stat tiles come before the first data block
         first_blk = body.find('<section class="card blk"')
@@ -114,7 +127,7 @@ def check_html(h, rel):
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
-    results, titles, links_of, n_links, rel_of = {}, collections.defaultdict(list), {}, {}, {}
+    results, titles, links_of, n_links, rel_of, noindex_of = {}, collections.defaultdict(list), {}, {}, {}, {}
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith(".html") and f != "404.html":
@@ -127,6 +140,7 @@ def check_dir(d):
                 u = urlof(rel)
                 rel_of[u] = rel
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
+                noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
     site_bad = []
     urls = rel_of
@@ -175,8 +189,25 @@ def check_dir(d):
             cp = os.path.join(d, sub.lstrip("/"))
             if os.path.exists(cp):
                 sm |= set(re.findall(r"<loc>https://[^/]+(/[^<]*)</loc>", open(cp, encoding="utf-8").read()))
-        if sm != set(urls):
-            site_bad.append("sitemap differs from page set: %d only in sitemap, %d only in site" % (len(sm - set(urls)), len(set(urls) - sm)))
+        hp = os.path.join(d, "_headers")
+        hdr = open(hp, encoding="utf-8").read() if os.path.exists(hp) else ""
+        open_mode = not re.search(r"https://riverwaterlevels\.com/\*\s*\n\s*X-Robots-Tag: noindex", hdr)
+        want = {u for u in urls if not noindex_of.get(u)} if open_mode else set(urls)
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from lib import indexing
+        cfg = indexing.load(ROOT)
+        if bool(cfg["open"]) != open_mode:
+            site_bad.append("state/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
+        if open_mode:
+            rvp = os.path.join(ROOT, "state", "reviews.json")
+            pages = (json.load(open(rvp, encoding="utf-8")) if os.path.exists(rvp) else {}).get("pages", {})
+            bad_ix = [u for u in sorted(want) if indexing.GAUGE.match(u) and pages.get(u.replace("forecast/", ""), pages.get(u, {})).get("verdict") != "SHIP" and pages.get(u, {}).get("verdict") != "SHIP"]
+            if bad_ix:
+                site_bad.append("%d indexable gauge page(s) without a SHIP review, e.g. %s" % (len(bad_ix), bad_ix[:2]))
+            if want != {u for u in urls if indexing.indexable(u, cfg)}:
+                site_bad.append("pages without a noindex tag differ from state/index-allow.json")
+        if sm != want:
+            site_bad.append("sitemap differs from the indexable page set: %d only in sitemap, %d only in site" % (len(sm - want), len(want - sm)))
     else:
         site_bad.append("no sitemap.xml")
     # reachability and depth from home
@@ -199,7 +230,7 @@ def check_dir(d):
 
 
 def selftest():
-    good = ('<!doctype html><title>T</title><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
+    good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
@@ -212,12 +243,30 @@ def selftest():
               "empty widget": good.replace("<p>x</p>", '<div class="bars"></div>'),
               "image without size": good.replace("<p>x</p>", '<img src="/a.png" alt="a">'),
               "image without alt": good.replace("<p>x</p>", '<img src="/a.png" width="5" height="5">'),
+              "sentinel value": good.replace("<p>x</p>", "<p>Water temperature -999999 degrees</p>"),
+              "bad structured data": good.replace("<p>x</p>", '<script type="application/ld+json">{oops</script>'),
               "double full stop": good.replace("<p>x</p>", "<p>That is the 82nd percentile..</p>"),
               "heading skip": good.replace("<p>x</p>", "<h4>Deep</h4>"),
               "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name
     print("selftest OK: good fixture passes, %d broken fixtures all fail" % len(broken))
+
+
+SECRET = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|cloudflare_api_token)[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{20,}")
+
+
+def secret_scan(d):
+    """No key, token or secret in any built text file, and none of this machine's own key values."""
+    bad, own = [], [v for k_, v in os.environ.items() if k_ in ("USGS_API_KEY", "CLOUDFLARE_API_TOKEN") and len(v) >= 12]
+    for root, _, fs in os.walk(d):
+        for f in fs:
+            if f.endswith((".png", ".gz", ".ico")):
+                continue
+            t = open(os.path.join(root, f), encoding="utf-8", errors="ignore").read()
+            if SECRET.search(t) or any(v in t for v in own):
+                bad.append(os.path.relpath(os.path.join(root, f), d))
+    return bad
 
 
 def main():
@@ -232,6 +281,10 @@ def main():
             print("   ", x)
     for x in site_bad:
         print("SITE FAIL", x)
+    leaks = secret_scan(d)
+    for x in leaks[:5]:
+        print("SITE FAIL secret-like text in built file", x)
+    site_bad += ["secret-like text in %d built file(s)" % len(leaks)] if leaks else []
     print("pages %d, failing %d, site-level failures %d, max click depth from home %d" % (len(res), len(fails), len(site_bad), maxd))
     sys.exit(1 if (fails or site_bad) else 0)
 

@@ -98,6 +98,22 @@ def review_gate():
             and f(live, live, {}) == [] and f(nxt, nxt, {}) == [])
 
 
+def index_gate():
+    """The per-batch kill switch: hold means nothing is indexable; open means only allowed gauge pages (and, with site_pages, the non-gauge pages); the production noindex header rule is dropped only when open."""
+    sys.path.insert(0, ROOT)
+    from lib import indexing as ix
+    hold = {"open": False, "site_pages": False, "allow": set()}
+    opn = {"open": True, "site_pages": False, "allow": {"/river/a/b/"}}
+    sp = {"open": True, "site_pages": True, "allow": set()}
+    tpl = open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read()
+    return (not ix.indexable("/river/a/b/", hold) and not ix.indexable("/", hold)
+            and ix.indexable("/river/a/b/", opn) and ix.indexable("/river/a/b/forecast/", opn) and not ix.indexable("/river/c/d/", opn) and not ix.indexable("/", opn)
+            and ix.indexable("/", sp) and ix.indexable("/rivers/pa/", sp) and not ix.indexable("/river/c/d/", sp)
+            and "X-Robots-Tag" in ix.headers(tpl, hold) and "riverwaterlevels.com/*" in ix.headers(tpl, hold)
+            and "https://riverwaterlevels.com/*" not in ix.headers(tpl, opn) and "workers.dev" in ix.headers(tpl, opn) and "Strict-Transport-Security" in ix.headers(tpl, opn)
+            and ix.sitemap_ok("/river/c/d/", hold) and not ix.sitemap_ok("/river/c/d/", opn))
+
+
 def main():
     ok = True
     r = run("check.py", "--selftest"); print("1.", r.stdout.strip() or r.stderr.strip()[:200]); ok &= r.returncode == 0
@@ -135,6 +151,7 @@ def main():
     t6, bad6 = unit_checks(); print("6. unit checks (percentile, axis labels, place phrasing, hidden blocks): %s %s" % (t6, bad6 or "")); ok &= t6
     t5 = blocks_safety(); print("5. new blocks: hidden without data, hidden when stale, hidden when the source is not cleared: %s" % t5); ok &= t5
     t8 = review_gate(); print("8. review gate: new gauge pages need a SHIP verdict, live pages never blocked: %s" % t8); ok &= t8
+    t9 = index_gate(); print("9. noindex kill switch: hold, open, allow list, header rule: %s" % t9); ok &= t9
     run("build.py")  # leave dist_next consistent with the real clock
     r = run("truth_tests.py"); print("7.", (r.stdout.strip().splitlines() or [r.stderr.strip()[:200]])[0]); ok &= r.returncode == 0
     if r.returncode:

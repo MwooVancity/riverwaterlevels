@@ -1,7 +1,7 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
 import os, json, math, datetime, collections
 from lib.common import *
-from lib.render import CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, SAVED_JS, og_tags
+from lib.render import robots_meta, CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, SAVED_JS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
                "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
@@ -27,7 +27,7 @@ if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEac
 def shell(title, desc, url, body, extra_main_class="", ld=""):
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s%s</style></head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
-                esc(title), esc(desc), SITE_URL + url, HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld, CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
+                esc(title), esc(desc), SITE_URL + url, HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
 
 def latest_text(G):
