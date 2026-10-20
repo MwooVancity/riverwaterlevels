@@ -32,8 +32,25 @@ def get(u, t=60):
     return urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=t).read().decode("utf-8", "replace")
 
 
+def record(status, compared, bad, skipped):
+    """With --dir: write _truth.json into the build so the live site says when its numbers were last checked against USGS and NWS (read by tools/watchdog.py). A skipped check is recorded as skipped, never as ok."""
+    if not LOCAL:
+        return
+    import os
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
+    last_ok = now if status == "ok" else None
+    if last_ok is None:
+        try:
+            last_ok = json.loads(get(SITE + "/_truth.json", 20)).get("last_ok_at")
+        except Exception:
+            last_ok = None
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOCAL)
+    json.dump({"checked_at": now, "status": status, "compared": compared, "skipped": skipped, "mismatches": bad[:10], "last_ok_at": last_ok}, open(os.path.join(root, "_truth.json"), "w", encoding="utf-8"))
+
+
 def main():
     bad = []
+    skipped = []
     gauges = json.loads(page("/gauges.json"))
     pages = {}
     for name, url, *_ in gauges:
@@ -55,7 +72,8 @@ def main():
             j = json.loads(get(USGS % ",".join("USGS-" + s for s in ids[i:i + 40])))
         except Exception as e:
             if LOCAL:
-                print("truth_live: the USGS API did not answer (%s); comparison skipped, not blocking" % str(e)[:80])
+                print("truth_live: the USGS API did not answer (%s); comparison skipped, not blocking, recorded as skipped in _truth.json" % str(e)[:80])
+                record("mismatch" if bad else "skipped", 0, bad, ["USGS API"])
                 return 1 if bad else 0
             raise
         for f in j.get("features", []):
@@ -81,13 +99,17 @@ def main():
             try:
                 cats = (json.loads(get(NWPS % pg["lid"])).get("flood") or {}).get("categories") or {}
             except Exception as e:
+                if LOCAL:  # an NWS outage must not freeze fresh USGS data: the flood stages stay unchecked and the skip is recorded
+                    skipped.append(pg["lid"])
+                    continue
                 bad.append("%s: NWS forecast point %s did not answer (%s)" % (pg["url"], pg["lid"], str(e)[:60]))
                 continue
             for k, v in pg["cats"].items():
                 nv = (cats.get(k) or {}).get("stage")
                 if not isinstance(nv, (int, float)) or abs(nv - v) > 0.05:
                     bad.append("%s: %s flood stage %.1f ft on the page, %s at NWS %s" % (pg["url"], k, v, nv, pg["lid"]))
-    print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches" % (len(pages), len(bad)))
+    record("mismatch" if bad else ("skipped" if skipped else "ok"), len(pages), bad, skipped)
+    print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches%s" % (len(pages), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
     return 1 if bad else 0
