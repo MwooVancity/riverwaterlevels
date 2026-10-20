@@ -8,7 +8,7 @@ Authored by humans or the assistant: `code/CLAUDE.md`, `code/docs/*.md`, `prompt
 | `prompts/` | the four prompts (see README-FIRST.md) | |
 | `site/` | the PUBLISHED build (59 files: the 25 gauge pages, home, 15 state pages, trust pages, status, sitemap, robots, headers). Open the home page, two river pages, one state page, About, Disclaimer. | 1, 2 |
 | `evidence/competitors/` | screenshots of a competitor's and the government's pages for the same gauge (USGS WaterData and American Whitewater for the Gauley above Belva) next to ours (desktop and phone) | 1 |
-| `evidence/our-screens/` | 12 chosen screenshots of our pages (desktop and phone, light and dark) | 1 |
+| `evidence/our-screens/` | 11 chosen screenshots of our pages (desktop and phone, light and dark) | 1 |
 | `evidence/calcscrape-history.md` | what happened to the owner's other site | 1 |
 | `evidence/ci-runs.txt` | the last 40 GitHub Actions runs: event, result, duration, time (shows the real cadence and cost) | 1, 3 |
 | `evidence/ci-run-gates.log` | the gate lines of a real passing CI run (template gate, browser gates, deploy, live check) | 3 |
@@ -25,7 +25,7 @@ Authored by humans or the assistant: `code/CLAUDE.md`, `code/docs/*.md`, `prompt
 | `code/data/sources.json` | the terms register: every source, its terms URL, status (quoted / owner-permission / off) | 2 |
 | `code/data/pages-all.csv`, `hubs.csv`, `states.csv`, `demand.csv`, `name-fixes.csv`, `name-overrides.csv`, `recreation-rivers.txt`, `geo/` | inventory of 9,099 gauges and the inputs of the queue | 2 |
 | `appendix/missions-A-to-L.md` | the assistant's old audit prompt (12 missions): subject of pass 4 | 4 |
-| `late/` | earlier AI reviews (reader reviews 10-A to 10-O of the template, the plan review). Anchoring risk: read only in pass 2 to check a claim | 2 |
+| `late/` | earlier AI reviews (reader reviews 10-A to 10-R of the template (the last, 10-R, is the one that signed the current template), the plan review). Anchoring risk: read only in pass 2 to check a claim | 2 |
 
 Omitted on purpose: 373 screenshot slices, the original 2026-10-15 specs (superseded), older reviews 1 to 5, the old three-tab design, build caches. Stale files that a model might open first have been removed.
 
