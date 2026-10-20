@@ -4,6 +4,7 @@ Lakebrief-style, ad-supported US river gauge site. One page per USGS gauge (cond
 This folder is its own project: the car-repair site (calcscrape) rules do not apply here. Inherited on purpose from the owner's global rules: gates are code, not notes; "verified" means the artifact was read in the same turn; a fix that needs a third iteration has the wrong target, so redefine what the rule matches.
 
 ## Read first, every session and after every compaction
+0. `docs/OPEN-ITEMS.md` (HARD, owner 2026-10-20: "so I never forget we still got stuff"): everything still missing, in sections A to H. Run `python -I tools/open_items.py` at session start and say the open count to the owner. Never end a session or call the project ready while it lists open items in A to E without naming them; tick an item only with the proof (file read, command output, live page) from the same turn and move it to the DONE log; add every new gap the same turn it is found.
 1. `docs/PLAN.md`: decisions in force, numbers, release queue, backlog, owner-only items. Update it at every milestone.
 2. `docs/REVIEW-PROMPT.md`: the fresh-brain review that gates new pages and template changes. `docs/RISKS-AND-STAGES.md`: release stages and risk register. `docs/WORK-LIST.md`: what the last hostile review asked for and its status.
 3. `data/sources.json`: the API and terms register (status quoted / owner-permission / off per source).

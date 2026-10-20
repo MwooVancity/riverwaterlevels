@@ -1,0 +1,7 @@
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "python -I tools/open_items.py --brief" } ] }
+    ]
+  }
+}
