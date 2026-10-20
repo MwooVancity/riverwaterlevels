@@ -2,10 +2,13 @@
 import { createRequire } from 'module';
 import http from 'http';
 import { readFileSync, existsSync, statSync } from 'fs';
-import { join } from 'path';
-const require = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json');
-const { chromium } = require('playwright');
-const DIST = 'C:/Users/mwoo7/Desktop/riverwaterlevels/dist_next';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+const here = createRequire(import.meta.url);
+let pw;
+try { pw = here('playwright'); } catch { pw = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json')('playwright'); }
+const { chromium } = pw;
+const DIST = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dist_next');
 const types = { '.html': 'text/html', '.json': 'application/json', '.svg': 'image/svg+xml', '.css': 'text/css' };
 const srv = http.createServer((q, r) => { let p = join(DIST, decodeURIComponent(q.url.split('?')[0])); if (existsSync(p) && statSync(p).isDirectory()) p = join(p, 'index.html'); if (!existsSync(p)) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': types[p.slice(p.lastIndexOf('.'))] || 'application/octet-stream' }); r.end(readFileSync(p)); }).listen(0);
 const base = process.env.BASE || ('http://localhost:' + srv.address().port);
