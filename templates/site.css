@@ -165,3 +165,14 @@ details.fold>.blk{border:1px solid var(--line)}
 .safety a,.card .src a{display:inline-block;padding:9px 3px}
 
 .srcnote{color:var(--mut);font-size:.78rem;display:block;margin-top:4px}
+
+/* polish 2026-10-19: the range tile is a full-width bar (no hole in the tile grid), the notes under the tiles read as notes, the safety line as a boxed statement */
+.tile.mine{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}.tile.mine b{font-size:1.15rem;display:inline}.tile.mine form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hero2~p.gaps{border-left:3px solid var(--line);padding:2px 0 2px 12px;margin:10px 0}
+.hero2~.safety{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:14px 0;font-size:.82rem;line-height:1.5}
+@media(max-width:760px){.jump{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}}
+.hero2{align-items:stretch}
+.tile.mine{display:grid;grid-template-columns:1fr auto;column-gap:16px;align-items:center;text-align:left}.tile.mine>*{grid-column:1}.tile.mine>.ic{display:none}.tile.mine>form,.tile.mine>button{grid-column:2;grid-row:1/span 3;align-self:center}.tile.mine small{display:block}
+
+@media(max-width:480px){.tile.mine{grid-template-columns:1fr}.tile.mine>form,.tile.mine>button{grid-column:1;grid-row:auto;justify-self:start}}
+.tile.sun{align-self:stretch}

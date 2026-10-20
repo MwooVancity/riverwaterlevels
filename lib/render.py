@@ -90,8 +90,44 @@ def usgs_tz(rec):
     return USGS_TZ.get((loc.get("time_zone_abbreviation"), loc.get("uses_daylight_savings")))
 
 
+_SCALAR_KEYS = ("site", "stats_source", "tz", "fetched_at", "lat", "lon", "year")
+try:
+    _SHAPE = json.load(open(os.path.join(DATA, "cache_shape.json"), encoding="utf-8"))
+except Exception:
+    _SHAPE = {}
+
+
+def _normalise(rec):
+    """A source record is a dict; each field keeps the type real data has for it (list, dict, string, number, ISO time: data/cache_shape.json). Anything else, an API that changed shape, counts as empty."""
+    out = {k: (None if k not in _SCALAR_KEYS and not isinstance(v, (dict, type(None))) else v) for k, v in rec.items()}
+    for k, sub in _SHAPE.items():
+        v = out.get(k)
+        if isinstance(v, dict):
+            v = dict(v)
+            for sk, want in sub.items():
+                x = v.get(sk)
+                if x is None:
+                    continue
+                if want in ("list", "dict"):
+                    if not isinstance(x, list if want == "list" else dict):
+                        v[sk] = [] if want == "list" else {}
+                elif want == "num":
+                    if isinstance(x, bool) or not isinstance(x, (int, float)):
+                        v[sk] = None
+                elif not isinstance(x, str):  # "str" and "iso"
+                    v[sk] = None
+                elif want == "iso":
+                    try:
+                        datetime.datetime.fromisoformat(x)
+                    except ValueError:
+                        v[sk] = None
+            out[k] = v
+    return out
+
+
 def ctx(site, row, rec, now):
     """Everything derived once per gauge; blocks only read this."""
+    rec = _normalise(rec)
     tzname = usgs_tz(rec) or rec.get("tz") or "UTC"
     zone = zoneinfo.ZoneInfo(tzname)
     fl, sg = series(rec, "00060"), series(rec, "00065")
@@ -286,7 +322,7 @@ def nws_point_note(G):
         return ""
     if all(w in nm for w in pl):  # every word of the gauge's place is in the NWS name
         return ""
-    return "NWS forecast point %s is named \u201c%s\u201d, a different place name from this USGS gauge; its flood stages and impact statements belong to that point." % (n.get("lid") or "", n.get("name"))
+    return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading." % (n.get("lid") or "", n.get("name"))
 
 
 def dam_count(G):
@@ -428,12 +464,12 @@ def hero(G, pages=None):
     if c["alerts"] is not None and not c["alerts"]["n"]:  # with an active alert the banner above the tiles carries it
         al = c["alerts"]
         old = al.get("age_h") is not None and al["age_h"] > 3  # the alert source has not answered for over 3 h: "none" must not read as current
-        tiles += ui.tile("alrt " + ("on" if al["n"] else "off") + (" stale" if old else ""), "bell", "NWS alerts", str(al["n"]), '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else ("No alerts in the last answer from the NWS, as of %s. The alert service has not answered since; check weather.gov." % esc(al["asof"]) if old else "No alerts active here")))
+        tiles += ui.tile("alrt " + ("on" if al["n"] else "off") + (" stale" if old else ""), "bell", "NWS alerts", str(al["n"]) if al["n"] else "No alerts", '<small>%s</small>' % (esc("; ".join(al["names"])) if al["n"] else ("No alerts in the last answer from the NWS, as of %s. The alert service has not answered since; check weather.gov." % esc(al["asof"]) if old else "No alerts active here")))
     elif c["alerts"] is None:
         tiles += ui.tile("alrt unknown", "bell", "NWS alerts", "Unknown", '<small>We have no answer from the National Weather Service alert service for this location. Check weather.gov.</small>')
     mine = ui.tile("mine", "star", "Your range", '<span id="mylv">Set your range</span>',
                    '<small id="mysub">Type the lowest and highest flow you want, in cfs. It stays in this browser only.</small>'
-                   '<form id="myform" hidden><input id="mylo" type="number" inputmode="numeric" min="0" placeholder="Low" aria-label="Lowest flow you want, in cfs"><input id="myhi" type="number" inputmode="numeric" min="0" placeholder="High" aria-label="Highest flow you want, in cfs">'
+                   '<form id="myform" hidden><input id="mylo" type="text" inputmode="decimal" autocomplete="off" placeholder="Low" aria-label="Lowest flow you want, in cfs"><input id="myhi" type="text" inputmode="decimal" autocomplete="off" placeholder="High" aria-label="Highest flow you want, in cfs">'
                    '<button class="pill" type="submit">Save</button><button class="pill clr" type="button">Clear</button></form>'
                    '<button class="pill" type="button" id="mybtn">Set range</button>')
     if c["wt"]:
@@ -615,7 +651,7 @@ def b_record(G):
     if r.get("prior"):
         rows += tr(["Last time, before the last 7 days, that daily flow was this high or higher", "%s cfs" % fmt(r["prior"]["value"]), "%s (%s earlier)" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))], right=(1,))
     else:
-        rows += tr(["Last time, before the last 7 days, that daily flow was this high or higher", "None in record", "Record begins %d" % r["first_year"]], right=(1,))
+        rows += tr(["Last time, before the last 7 days, that daily flow was this high or higher", "No earlier day on record", "Record begins %d" % r["first_year"]], right=(1,))
     if r.get("last_p90"):
         rows += tr(["Last day above the 90th percentile for its date, before the last 7 days", fdate(r["last_p90"]["date"]), "%s earlier" % human_span(r["last_p90"]["days_before"])], right=(1,))
     if r.get("above_p75"):
@@ -1270,9 +1306,9 @@ var w=c===null?'':c<r.lo?'Below your range':c>r.hi?'Above your range':'In your r
 v.textContent=w||'Your range';t.className='tile mine '+(w==='In your range'?'inr':w?'outr':'');
 sub.textContent='You set '+fm(r.lo)+' to '+fm(r.hi)+' cfs. Now '+(c===null?'unknown':fm(c)+' cfs')+'.'}
 btn.addEventListener('click',function(){var r=ld()[S];lo.value=r?r.lo:'';hi.value=r?r.hi:'';f.hidden=false;btn.hidden=true;sub.textContent='Lowest and highest flow you want, in cfs.';lo.focus()});
-f.addEventListener('submit',function(e){e.preventDefault();var a=parseFloat(lo.value),b=parseFloat(hi.value),o=ld();if(isNaN(a)||isNaN(b)||a<0||b<a){sub.textContent='Enter the lowest flow, then a higher flow, as numbers.';return}o[S]={lo:a,hi:b};sv(o);show()});
+f.addEventListener('submit',function(e){e.preventDefault();var x=lo.value.replace(/[, ]/g,''),y=hi.value.replace(/[, ]/g,''),a=parseFloat(x),b=parseFloat(y),o=ld();if(!/^[0-9]+([.][0-9]+)?$/.test(x)||!/^[0-9]+([.][0-9]+)?$/.test(y)||a<0||b<a){sub.textContent='Enter the lowest flow, then a higher flow, as numbers.';return}o[S]={lo:a,hi:b};sv(o);show()});
 f.querySelector('.clr').addEventListener('click',function(){var o=ld();delete o[S];sv(o);show()});
-var n=document.querySelector('[data-live="flow"]');if(n&&window.MutationObserver)new MutationObserver(show).observe(n,{childList:true,characterData:true,subtree:true});show()})();</script>"""
+var n=document.querySelector('[data-live="flow"]');if(n&&window.MutationObserver)new MutationObserver(function(){if(f.hidden)show()}).observe(n,{childList:true,characterData:true,subtree:true});show()})();</script>"""
 FOLD_JS = """<script>(function(){function o(){var h=location.hash.slice(1),e=h&&document.getElementById(h),d=e&&e.closest('details');if(d&&!d.open){d.open=true;e.scrollIntoView()}}
 window.addEventListener('hashchange',o);o();window.addEventListener('beforeprint',function(){[].slice.call(document.querySelectorAll('details.fold')).forEach(function(d){d.open=true})})})();</script>"""
 NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
@@ -1297,7 +1333,7 @@ Array.prototype.slice.call(b.children).forEach(function(c){if(c.tagName!=='H2'&&
 if(!al.length){b.insertBefore(el('p','','No active National Weather Service alerts were returned for this location. This is not a statement that conditions are safe.'),src)}
 al.forEach(function(p){var d=el('div','alert'),e=p.ends||p.expires;d.appendChild(el('b','',p.event||''));d.appendChild(document.createTextNode(' \\u00b7 '+(p.severity||'severity not stated')+' \\u00b7 '+(as(p.areaDesc||'')+ast(p))));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode(p.headline||''));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode('Ends '+(e?lt(new Date(e)):'not stated')));b.insertBefore(d,src)});
 var bn=document.querySelector('a.abanner'),hr=document.querySelector('.hero');if(al.length){if(!bn&&hr){bn=el('a','abanner');bn.href='#alerts';hr.parentNode.insertBefore(bn,hr)}if(bn){bn.textContent='';bn.appendChild(el('b','',al.length+' active National Weather Service alert'+(al.length===1?'':'s')));bn.appendChild(el('span','',al.map(function(p){return p.event}).join('; ')));bn.appendChild(el('em','','Details'))}}else if(bn){bn.parentNode.removeChild(bn)}
-var t=document.querySelector('.tile.alrt');if(t){var tv=t.querySelector('b'),ts=t.querySelector('small');t.className='tile alrt '+(al.length?'on':'off');if(tv)tv.textContent=al.length;if(ts)ts.textContent=al.length?al.map(function(p){return p.event}).join('; '):'No alerts active here. Checked live '+lt(new Date())+'.'}
+var t=document.querySelector('.tile.alrt');if(t){var tv=t.querySelector('b'),ts=t.querySelector('small');t.className='tile alrt '+(al.length?'on':'off');if(tv)tv.textContent=al.length||'No alerts';if(ts)ts.textContent=al.length?al.map(function(p){return p.event}).join('; '):'No alerts active here. Checked live '+lt(new Date())+'.'}
 src.textContent='Source: National Weather Service alerts for the gauge location, fetched '+lt(new Date())+' (live from the NWS when this page loaded).'}).catch(function(){})})();</script>"""
 SAVED_JS = """<script>(function(){var d=document.getElementById('saved');if(!d)return;try{var a=JSON.parse(localStorage.getItem('rwl_saved'))||[];if(!a.length)return;d.innerHTML='<h2>Your saved gauges</h2>'+a.filter(function(x){return String(x.u).charAt(0)==='/'}).map(function(x){var l=document.createElement('a');l.href=x.u;l.textContent=x.n;return l.outerHTML}).join(' &middot; ');d.hidden=false}catch(e){}})();</script>"""
 INDEX_CFG = None  # set by build.py from data/index-allow.json
@@ -1406,3 +1442,37 @@ def build_tab(tab, G, pages):
 
 from lib import blocks2 as b2  # noqa: E402  (blocks added after the fresh-eyes review; uses the helpers above)
 from lib import blocks3 as b3  # noqa: E402
+
+
+# One malformed optional record (a source that changed its shape, a half-written cache) must hide ITS block, never stop the page or the build.
+# Every block function b_* is wrapped: an exception hides that block and is logged in BLOCK_ERRORS (build.py reports it, truth_tests.py requires none on the real caches).
+BLOCK_ERRORS = []
+SAFETY_BLOCKS = ("b_alerts", "b_river_forecast", "b_impacts", "b_stage_chart", "b_flow_chart", "b_offline", "b_flood_stages", "b_noforecast", "b_nws_point")  # a hidden one of these fails the gauge instead of shipping a page that looks complete
+
+
+def _safe(fn):
+    import functools
+
+    @functools.wraps(fn)
+    def w(*a, **k):
+        try:
+            return fn(*a, **k)
+        except CriticalFail:
+            raise
+        except Exception as e:
+            G = a[0] if a and isinstance(a[0], dict) else {}
+            BLOCK_ERRORS.append("%s: %s: %s %s" % (G.get("site", "?"), fn.__name__, type(e).__name__, str(e)[:90]))
+            return None
+    w._guarded = True
+    return w
+
+
+def _guard_blocks():
+    import sys
+    for mod in (sys.modules[__name__], b2, b3):
+        for name, fn in list(vars(mod).items()):
+            if name.startswith("b_") and callable(fn) and not getattr(fn, "_guarded", False):
+                setattr(mod, name, _safe(fn))
+
+
+_guard_blocks()

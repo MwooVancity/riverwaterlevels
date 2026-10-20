@@ -83,7 +83,7 @@ def b_stage_chart(G):
     cur = obs[-1][1]
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", esc(pn_)], right=()) if pn_ else "") + tr(["Gage height at page build (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Gage height at page build (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
     if gap:
         cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
         rows += tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))

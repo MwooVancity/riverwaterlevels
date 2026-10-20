@@ -29,7 +29,14 @@ def page(path):
 
 
 def get(u, t=60):
-    return urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=t).read().decode("utf-8", "replace")
+    import time
+    for i, wait in enumerate((0, 5, 20, 45)):  # a rate limit (429) or a hiccup is retried before anything is recorded as skipped
+        time.sleep(wait)
+        try:
+            return urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=t).read().decode("utf-8", "replace")
+        except Exception as e:
+            if i == 3 or getattr(e, "code", 0) not in (0, 429, 500, 502, 503, 504):
+                raise
 
 
 def record(status, compared, bad, skipped):

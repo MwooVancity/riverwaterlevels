@@ -5,8 +5,8 @@ Authored by humans or the assistant: `code/CLAUDE.md`, `code/docs/*.md`, `prompt
 | Path | What it is | Pass |
 |---|---|---|
 | `00-CONTEXT.md` | goal, constraints, history, unknowns, glossary | 1 first |
-| `prompts/` | the four prompts (see README-FIRST.md) | |
-| `site/` | the PUBLISHED build (59 files: the 25 gauge pages, home, 15 state pages, trust pages, status, sitemap, robots, headers). Open the home page, two river pages, one state page, About, Disclaimer. | 1, 2 |
+| `prompts/` | the four pass prompts (see README-FIRST.md) PROMPT-ALL.md (one exhaustive prompt covering everything) and PROMPT-TEMPLATE.md (browse the LIVE site, judge the UI, design a Fort Knox template and gate process) | |
+| `site/` | the PUBLISHED build (about 60 files: the 25 gauge pages, home, 15 state pages, trust pages, status, sitemap, robots, headers). Open the home page, two river pages, one state page, About, Disclaimer. | 1, 2 |
 | `evidence/competitors/` | screenshots of a competitor's and the government's pages for the same gauge (USGS WaterData and American Whitewater for the Gauley above Belva) next to ours (desktop and phone) | 1 |
 | `evidence/our-screens/` | 11 chosen screenshots of our pages (desktop and phone, light and dark) | 1 |
 | `evidence/calcscrape-history.md` | what happened to the owner's other site | 1 |

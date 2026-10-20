@@ -10,6 +10,8 @@ This zip is a review packet for **riverwaterlevels.com**, a US river-conditions 
 | 3 | `prompts/PROMPT-3-gates-and-process.md` | Are the release gates real? What is missing for a safety-relevant data site at thousands of pages? Is the review process converging? | `code/refresh.py`, `code/check.py`, tests, workflows, `evidence/` |
 | 4 | `prompts/PROMPT-4-missions.md` | Judge the assistant's old audit missions (`appendix/missions-A-to-L.md`): which are the wrong questions, what is missing, then run the best three. | `appendix/`, plus whatever each mission needs |
 
+Two more prompts exist: `prompts/PROMPT-ALL.md` (one exhaustive prompt covering everything, answered in parts) and `prompts/PROMPT-TEMPLATE.md` (BROWSE the live site, judge the UI, design a Fort Knox template and gate process). Passes 1 to 4 were already run once; this packet is the updated version: it adds new gates (`code/truth_types.py`, `_truth.json` verification record, data-plausibility contract 19, USGS identity check), a UI polish release, and review reports 10-P to 10-S in `late/`. The site is still noindex.
+
 Run pass 1 first and on its own: do not read `late/` or `appendix/` before you have answered it. Pass 2 may build on pass 1's top findings if you paste them in; pass 3 and 4 may also. Each pass is meant to fit one chat; a pass that cannot be finished in one answer should say what it skipped and why.
 
 ## Ground rules for every pass

@@ -6,6 +6,7 @@ import json, sys, datetime, urllib.request
 URL = "https://riverwaterlevels.com/status.json"
 MAX_BUILD_AGE_MIN = 180
 MAX_MEDIAN_AGE_MIN = 180
+MAX_OLDEST_MIN = 360  # one gauge stale for 6 h fails even when the median is healthy
 MAX_UNVERIFIED_H = 6  # numbers not compared with USGS and NWS for this long fail the watchdog
 MIN_PAGES = 40  # 49 after the Forecast pages were merged into the gauge pages (2026-10-18); raise as cohorts are released; a deploy that drops below this is a failure
 
@@ -24,6 +25,12 @@ def main():
         bad.append("last build is %d min old (limit %d)" % (age, MAX_BUILD_AGE_MIN))
     if s["median_age_min"] > MAX_MEDIAN_AGE_MIN:
         bad.append("median newest-reading age is %d min (limit %d)" % (s["median_age_min"], MAX_MEDIAN_AGE_MIN))
+    if s.get("oldest_age_min", 0) > MAX_OLDEST_MIN:
+        bad.append("the oldest gauge reading is %d min old (limit %d)" % (s["oldest_age_min"], MAX_OLDEST_MIN))
+    if s.get("failed_urls"):
+        bad.append("%d gauge page(s) kept their previous page because the build failed: %s" % (len(s["failed_urls"]), ", ".join(s["failed_urls"][:3])))
+    if s.get("block_errors"):
+        bad.append("blocks were hidden by the guard: %s" % "; ".join(s["block_errors"][:3]))
     if s["pages"] < MIN_PAGES:
         bad.append("only %d pages (minimum %d)" % (s["pages"], MIN_PAGES))
     try:  # when were the numbers last checked against USGS and NWS (tools/truth_live.py writes _truth.json at every build)
@@ -35,7 +42,7 @@ def main():
         if ok_age is None or ok_age > MAX_UNVERIFIED_H:
             bad.append("the numbers were last verified against USGS and NWS %s (limit %d h); the latest check was %s" % ("never" if ok_age is None else "%.1f h ago" % ok_age, MAX_UNVERIFIED_H, tr.get("status")))
     except Exception as e:
-        print("watchdog note: no _truth.json yet (%s); expected only until the first build after this check was added" % str(e)[:60])
+        bad.append("cannot read _truth.json (%s): the numbers cannot be shown to have been verified" % str(e)[:60])
     print("built %s (%d min ago), %d gauges, %d pages, median reading age %d min, oldest %d min" % (s["built_at"], age, s["gauges"], s["pages"], s["median_age_min"], s["oldest_age_min"]))
     for b in bad:
         print("WATCHDOG FAIL:", b)

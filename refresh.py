@@ -21,7 +21,7 @@ PLAN = subprocess.run(PY + ["tools/gate_plan.py"], cwd=ROOT, capture_output=True
 # Always run, they block a deploy: the template needs a signed fresh-brain SHIP (docs/REVIEW-PROMPT.md); every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
 ALWAYS = [PY + ["tools/stamp_template.py"], PY + ["tools/template_hash.py", "--check"], PY + ["truth_tests.py"], PY + ["truth_types.py"], PY + ["tools/truth_live.py", "--dir", "dist_next"]]
 # Only when the template changed (or the live template cannot be read): browser layout gates. They passed for this exact template when it was released, so a font or browser hiccup can never freeze fresh data.
-BROWSER = [["node", "ui_gates.mjs"], ["node", "tools/review/search_test.mjs"], ["node", "tools/review/clip_all.mjs"], ["node", "tools/review/alerts_live_test.mjs"]]
+BROWSER = [["node", "ui_gates.mjs"], ["node", "tools/review/search_test.mjs"], ["node", "tools/review/clip_all.mjs"], ["node", "tools/review/alerts_live_test.mjs"], ["node", "tools/review/range_test.mjs"], PY + ["truth_fuzz.py"]]
 STEPS[3:3] = ALWAYS + (BROWSER if PLAN == "full" else [])
 STEPS.append(SOFT[0])
 code = 0

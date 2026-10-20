@@ -219,6 +219,16 @@ def main():
         for v in ls:
             if v in links and u not in links[v]:
                 fail(u, "lists %s as an upstream or downstream gauge but that page does not list it back" % v)
+    try:  # 20. the block guard must never fire on the real caches: a hidden block is a bug, not a feature (build.py lists them in status.json)
+        be = json.load(open(os.path.join(ROOT, "dist_next", "status.json"), encoding="utf-8")).get("block_errors") or []
+    except Exception:
+        be = []
+    if be:  # one or two gauges: their old pages stay live and the watchdog alerts; three or more (or 10%), the shape of a source changed for everyone: stop the release
+        hit = {e.split(":")[0] for e in be}
+        if len(hit) >= max(3, n // 10):
+            fail("blocks", "the block guard hid blocks on %d gauges, a systemic break: %s" % (len(hit), "; ".join(be[:5])))
+        else:
+            print("  note: the block guard hid blocks on %d gauge(s), their previous pages stay live: %s" % (len(hit), "; ".join(be[:3])))
     print("truth tests: %d gauges, %d failures" % (n, len(bad)))
     for b in bad[:30]:
         print("  FAIL", b)

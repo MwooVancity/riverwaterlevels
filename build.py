@@ -44,7 +44,7 @@ def main():
         try:
             Gs[s] = render.ctx(s, rows[s], load_cache(s), now)
         except render.CriticalFail as e:
-            report["failed"].append({"site": s, "reason": str(e)})
+            report["failed"].append({"site": s, "reason": str(e), "url": rows[s]["dashboard_url"]})
             print("CRITICAL", s, e, "(skipped; previous pages stay live)")
     from lib.reviewgate import hold_back
     live_f, rv_f = os.path.join(ROOT, "dist", "_urls.json"), os.path.join(ROOT, "data", "reviews.json")
@@ -83,10 +83,24 @@ def main():
 
     block_counts = {}
     for s, G in Gs.items():
-        page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one
+        n_err = len(render.BLOCK_ERRORS)
+        try:
+            page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one
+            hurt = [e for e in render.BLOCK_ERRORS[n_err:] if e.split(": ")[1:2] and e.split(": ")[1] in render.SAFETY_BLOCKS]
+            if hurt:  # a hidden alerts, forecast, stage or flow section is not an acceptable page: keep the previous one
+                raise RuntimeError("safety block failed: " + "; ".join(hurt)[:160])
+        except Exception as e:  # one gauge's page must never stop the other 9,000: it is reported as failed and its previous page stays live
+            report["failed"].append({"site": s, "reason": "page build raised %s: %s" % (type(e).__name__, str(e)[:100]), "url": rows[s]["dashboard_url"]})
+            print("PAGE BUILD CRASH", s, type(e).__name__, str(e)[:100], "(skipped; previous page stays live)")
+            continue
         emit(meta["url"], page)
         block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
+    if not block_counts:
+        sys.exit("every gauge failed to build (%d failures, first: %s): nothing to publish, dist/ unchanged" % (len(report["failed"]), report["failed"][0]["reason"][:120] if report["failed"] else "no gauge pages"))
+    report["block_errors"] = render.BLOCK_ERRORS[:50]
+    if render.BLOCK_ERRORS:
+        print("BLOCKS HIDDEN BY THE GUARD (%d): %s" % (len(render.BLOCK_ERRORS), "; ".join(render.BLOCK_ERRORS[:5])))
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
         emit("/", directory.home(built, Gs))
@@ -100,7 +114,7 @@ def main():
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
-                   "pages": len(urls), "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
+                   "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
     redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]

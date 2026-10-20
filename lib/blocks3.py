@@ -65,7 +65,7 @@ def b_storms(G):
     raw = s.get("county") or ""
     county = raw.title().replace(" (C)", "")
     kind = s.get("kind") or "County"
-    summary = tr([str(s["n"]), str(s["deaths"]), str(s["injuries"]), _usd(s["damage"])], right=(0, 1, 2, 3))
+    summary = tr([fmt(s["n"]), fmt(s["deaths"]), fmt(s["injuries"]), _usd(s["damage"])], right=(0, 1, 2, 3))
     body = table(["Flood and flash flood events", "Deaths", "Injuries", "Property and crop damage"], summary, right=(0, 1, 2, 3))
     if s.get("recent"):
         rows = "".join(tr([fdate(r[2]) if r[2][:4].isdigit() and len(r[2]) == 10 else esc(r[2]), esc(r[3]), esc(r[7] or "–"), esc(((r[9] if len(r) > 9 else "") or "–").title()), str(r[4]), _usd(r[6])], right=(4, 5)) for r in s["recent"])
@@ -128,7 +128,7 @@ def b_streamcat(G):
     wid = ui.bars([(l, v[k], "%.1f%%" % v[k]) for l, k in pc], 100) if pc else ""
     ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
     return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,
-                 "Source: U.S. EPA StreamCat (NHDPlus reach %s), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(str(s["comid"])), esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
+                 "Source: U.S. EPA StreamCat (NHDPlus reach %s), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(str(s.get("comid") or "id not recorded")), esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
 
 
 def b_fema_zone(G):
