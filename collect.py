@@ -44,7 +44,7 @@ def haversine(a, b, c, d):
 
 
 def fetch_usgs(site, h):
-    rows, trunc = [], []
+    rows, trunc, wrong = [], [], None
     for code in CODES.split(","):
         d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&time=P8D&limit=4000&f=json" % (site, code), h, 120)
         fs = d.get("features", [])
@@ -54,9 +54,12 @@ def fetch_usgs(site, h):
             p = f["properties"]
             if p.get("value") in (None, ""):
                 continue
+            if p.get("monitoring_location_id") not in (None, "USGS-" + site):  # the API filters by id; a row for another gauge is dropped, never shown
+                wrong = p.get("monitoring_location_id")
+                continue
             rows.append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
     if not rows:
-        raise RuntimeError("no USGS rows")
+        raise RuntimeError("no USGS rows" + (" for USGS-%s (the API returned %s)" % (site, wrong) if wrong else ""))
     return {"fetched_at": now_iso(), "rows": rows, "truncated": trunc}
 
 
