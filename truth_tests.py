@@ -5,6 +5,7 @@ Usage: python -I truth_tests.py     (run by tests.py after a build; needs dist_n
  3. Silence: a gauge with no NWS river forecast says so; with an active alert there is a banner and no empty-alert tile; without one the tile says so.
  4. Time: a marker called "Now" never appears; the stage marker carries the time of the reading.
  5. Plain words on home and state pages (no ordinals like 91st or "above 95th" in tables).
+19. Plausible numbers: no sentinel, negative non-tidal flow or impossible temperature in the series a page uses; a flat 72 h flow is printed as a note.
 Every check prints the page and the quote when it fails. Exit 1 on any failure."""
 import os, sys, re, json, copy, datetime
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +38,22 @@ def main():
             base = G
         c = render.b3.conditions(G, None)
         h = render.hero(G, None)
+        # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
+        vals = [x[1] for x in G["fl"]]
+        if any(v <= -900 or v >= 1e7 for v in vals):
+            fail(site, "flow series holds a sentinel or impossible value (%s)" % [v for v in vals if v <= -900 or v >= 1e7][:2])
+        if G["lv"] < 0 and not G["osc"]:
+            fail(site, "latest flow is negative (%s cfs) at a gauge that is not tidal or oscillating" % G["lv"])
+        if G["sg"] and any(x[1] <= -900 for x in G["sg"]):
+            fail(site, "gage height series holds a sentinel value")
+        if c.get("wt") and not -2 <= (c["wt"]["f"] - 32) / 1.8 <= 42:
+            fail(site, "water temperature %s F is outside -2 to 42 C" % c["wt"]["f"])
+        if c.get("air") and not -60 <= c["air"]["f"] <= 130:
+            fail(site, "air temperature %s F is outside -60 to 130 F" % c["air"]["f"])
+        d1 = G["lt"] - datetime.timedelta(hours=72)
+        w72 = [x[1] for x in G["fl"] if x[0] >= d1]
+        if len(w72) >= 200 and len(set(w72)) == 1 and w72[0] > 0:
+            print("  note: %s flow is identical in all %d readings of the last 72 h (stuck sensor or a fixed release?)" % (site, len(w72)))
         # 1. direction
         m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]?\d+(?:\.\d+)?)% <small class="word">([\w ]+)</small>', h, re.S)
         if m:
