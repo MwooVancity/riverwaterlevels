@@ -34,6 +34,18 @@ def usgs_headers():
     return h
 
 
+def http_open(url, headers=None, timeout=40, tries=3):
+    """urlopen that retries a reset, timeout or 5xx twice (5 s, then 20 s) before raising: one hiccup on our own site must not turn a run red (run 39672840649, 2026-10-21)."""
+    import time, urllib.request
+    for i in range(tries):
+        try:
+            return urllib.request.urlopen(urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels.com check"}), timeout=timeout)
+        except Exception as e:
+            if i == tries - 1 or getattr(e, "code", 0) not in (0, 429, 500, 502, 503, 504):
+                raise
+            time.sleep(5 if i == 0 else 20)
+
+
 def http_json(url, headers=None, timeout=90):
     req = urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels-build"})
     return json.loads(urllib.request.urlopen(req, timeout=timeout).read())

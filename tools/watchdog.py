@@ -1,7 +1,9 @@
 """Live-site watchdog: fails (so GitHub emails the owner) when the live data is stale or the site shrank.
 Reads https://riverwaterlevels.com/status.json (written by build.py). Run by .github/workflows/watchdog.yml every hour; also works by hand: python tools/watchdog.py
 Fail rules: build older than 3 h, median newest-reading age over 3 h, fewer pages than MIN_PAGES, status.json missing or unreadable."""
-import json, sys, datetime, urllib.request
+import json, sys, datetime, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.common import http_open
 
 URL = "https://riverwaterlevels.com/status.json"
 MAX_BUILD_AGE_MIN = 180
@@ -12,9 +14,8 @@ MIN_PAGES = 40  # 49 after the Forecast pages were merged into the gauge pages (
 
 
 def main():
-    req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0 (watchdog)"})
     try:
-        s = json.load(urllib.request.urlopen(req, timeout=30))
+        s = json.load(http_open(URL, {"User-Agent": "Mozilla/5.0 (watchdog)"}, 30))
     except Exception as e:
         print("WATCHDOG FAIL: cannot read %s: %s" % (URL, e))
         return 1
@@ -34,7 +35,7 @@ def main():
     if s["pages"] < MIN_PAGES:
         bad.append("only %d pages (minimum %d)" % (s["pages"], MIN_PAGES))
     try:  # when were the numbers last checked against USGS and NWS (tools/truth_live.py writes _truth.json at every build)
-        tr = json.load(urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com/_truth.json", headers={"User-Agent": "Mozilla/5.0 (watchdog)"}), timeout=30))
+        tr = json.load(http_open("https://riverwaterlevels.com/_truth.json", {"User-Agent": "Mozilla/5.0 (watchdog)"}, 30))
         if tr.get("status") == "mismatch":
             bad.append("the build-time check against USGS and NWS found mismatches: %s" % tr.get("mismatches"))
         ok = tr.get("last_ok_at")

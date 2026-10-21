@@ -1,12 +1,14 @@
 """Fetches live pages on the real domain and reports status, noindex header, flow value, title. Usage: python -I livecheck.py [url ...]
 Exit 1 if a page is not 200 or shows no flow value, so refresh.py stops and logs it."""
-import sys, re, urllib.request
+import sys, re, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from lib.common import http_open
 
 DEFAULT = ["https://riverwaterlevels.com/river/missouri-river-mo/kansas-city/", "https://riverwaterlevels.com/river/kinzua-creek/guffey/"]
 bad = 0
 for u in (sys.argv[1:] or DEFAULT):
     try:
-        r = urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "livecheck"}), timeout=30)
+        r = http_open(u, {"User-Agent": "livecheck"}, 30)
         h = r.read().decode("utf-8", "ignore")
         t = re.search(r"<title>(.*?)</title>", h)
         fl = re.search(r"Latest flow</span><b>(.*?)<small>", h, re.S)

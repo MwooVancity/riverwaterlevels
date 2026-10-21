@@ -9,13 +9,15 @@ Rules:
 import json, os, re, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from lib.common import http_open
 SITE = "https://riverwaterlevels.com"
 H = {"User-Agent": "Mozilla/5.0 (index-live)"}
 GAUGE = re.compile(r"^/river/[^/]+/[^/]+/(forecast/)?$")
 
 
 def get(url):
-    r = urllib.request.urlopen(urllib.request.Request(url, headers=H), timeout=40)
+    r = http_open(url, H, 40)
     return r.headers.get("x-robots-tag", ""), r.read().decode("utf-8", "replace")
 
 
