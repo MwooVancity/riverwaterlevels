@@ -112,6 +112,8 @@ def check_html(h, rel):
         first_blk = body.find('<section class="card blk"')
         head = body[:first_blk] if first_blk > 0 else body
         for need in ('class="tile flow', 'class="tile stage', 'class="tile norm', 'class="tile trend'):
+            if need == 'class="tile trend' and "Tidal reach:" in head:
+                continue  # a tidal reach has no 6 h direction; hero.py prints the day's range instead
             if need not in head:
                 bad.append("first screen missing %s" % need.split('"')[1])
     if kind_of(rel) == "gauge":
