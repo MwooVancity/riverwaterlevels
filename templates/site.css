@@ -176,3 +176,51 @@ details.fold>.blk{border:1px solid var(--line)}
 
 @media(max-width:480px){.tile.mine{grid-template-columns:1fr}.tile.mine>form,.tile.mine>button{grid-column:1;grid-row:auto;justify-self:start}}
 .tile.sun{align-self:stretch}
+
+/* reader-first 2026-10-20: one-line answer, slim range bar instead of the 350 px dial */
+.answer{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}.answer span{font-size:.95rem;font-weight:600;line-height:1.25;padding:7px 12px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--ink)}
+.answer .la{border-color:var(--low)}.answer .lb{border-color:var(--accent)}.answer .lp{border-color:var(--hi)}.answer .ay{background:var(--amber);color:#fff;border-color:var(--amber)}@media(prefers-color-scheme:dark){.answer .ay{color:#1a1203}}.answer .ax{border-style:dashed}
+.rb{position:relative;display:flex;height:12px;border-radius:6px;margin:16px 2px 6px}.rb>span{height:100%;display:block}.rba{width:25%;background:var(--low);border-radius:6px 0 0 6px}.rbb{width:50%;background:var(--accent)}.rbp{width:25%;background:var(--hi);border-radius:0 6px 6px 0}
+.rbm{position:absolute;top:-6px;width:5px;height:24px;margin-left:-2.5px;background:var(--ink);border-radius:3px;border:1px solid var(--card)}
+.rbl{display:flex;justify-content:space-between;font:600 .7rem system-ui;color:var(--mut);margin:0 2px 6px}
+.acts{margin:10px 0 0}.acts .pill{background:none;border-color:transparent;color:var(--mut);padding:6px 10px;font-size:.85rem;text-decoration:underline;text-underline-offset:3px}
+
+/* release A 2026-10-20: strip, quiet sources, phone tabs, band colour */
+.cstrip{scrollbar-width:thin;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 10px;padding:2px 2px 8px;-webkit-overflow-scrolling:touch}.cstrip .tile{flex:0 0 min(210px,62%);scroll-snap-align:start}
+.tile.b-la{border-top:4px solid var(--low)}.tile.b-lb{border-top:4px solid var(--accent)}.tile.b-lp{border-top:4px solid var(--hi)}
+.answer .la{background:color-mix(in srgb,var(--low) 16%,var(--card))}.answer .lb{background:color-mix(in srgb,var(--accent) 12%,var(--card))}.answer .lp{background:color-mix(in srgb,var(--hi) 14%,var(--card))}
+.srcd{margin:8px 0 0}.srcd>summary{cursor:pointer;list-style:none;color:var(--mut);font-size:.78rem;padding:6px 0;display:inline-block;border-bottom:1px dotted var(--mut)}.srcd>summary::-webkit-details-marker{display:none}.srcd[open]>summary{border-bottom-color:transparent}.srcd .src{border-top:0;padding-top:2px;margin-top:2px}
+a.pl{opacity:0;transition:opacity .15s}h2:hover a.pl,a.pl:focus{opacity:.7}
+.gtabs{display:none}
+@media(max-width:760px){.tag{display:none}
+ html.tabsjs [data-g]:not(.gon){display:none}
+ html.tabsjs .jump{display:none}
+ html.tabsjs body{padding-bottom:72px}
+ html.tabsjs .gtabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(15,42,74,.08);padding-bottom:env(safe-area-inset-bottom)}
+ .gtabs button{flex:1;min-height:56px;border:0;background:none;color:var(--mut);font:600 .8rem system-ui;border-top:3px solid transparent}
+ .gtabs button.on{color:var(--accent);border-top-color:var(--accent)}}
+@media print{.gtabs{display:none!important}[data-g]{display:block!important}}
+
+.srcd>summary{min-height:38px;line-height:38px;padding:0 6px}
+
+.answer span{font-size:.84rem;padding:5px 10px}.answer{gap:6px;margin:8px 0 2px}
+
+/* rails: same-shaped items in a sideways row, like a weather widget (owner 2026-10-20) */
+.rail{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:8px -4px 4px;padding:2px 4px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.rail:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.rc{flex:0 0 min(190px,60%);scroll-snap-align:start;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rc .rt{display:block;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);line-height:1.25}
+.rc b{display:block;font-size:1.25rem;font-weight:600;line-height:1.2;margin:5px 0 3px;overflow-wrap:anywhere}.rc b small{font-size:.75rem;font-weight:400;color:var(--mut)}
+.rc small{display:block;font-size:.78rem;color:var(--mut);line-height:1.35}
+.more{margin:6px 0 0}.more>summary{cursor:pointer;color:var(--accent);font-size:.88rem;font-weight:600;min-height:40px;line-height:40px;list-style:none}.more>summary::-webkit-details-marker{display:none}.more>summary::after{content:" \25BE"}
+@media(min-width:900px){.rail{flex-wrap:wrap;overflow:visible}.rc{flex:1 1 180px;max-width:260px}}
+
+.rseg{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 8px}.rseg button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:0 14px;min-height:40px;font:600 .85rem system-ui;cursor:pointer}.rseg button.on{background:var(--soft);border:2px solid var(--accent);color:var(--accent)}
+.rgh{font-size:.9rem;color:var(--mut);margin:6px 0 2px}.js .rg:not(.on){display:none}.js .rgh{display:none}
+@media print{.rseg{display:none}.js .rg:not(.on){display:block}.js .rgh{display:block}}
+
+/* weather and outlook cards ride in a sideways row on a phone */
+.rc.crest{border-color:var(--hi);box-shadow:0 0 0 1px var(--hi)}
+@media(max-width:760px){.fcs{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 10px;-webkit-overflow-scrolling:touch}.fcs .fc{flex:0 0 150px;scroll-snap-align:start}}
+
+#flood_impacts .rc{flex-basis:min(260px,76%)}#flood_impacts .rc b{font-size:.92rem;line-height:1.35;font-weight:500}

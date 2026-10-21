@@ -40,7 +40,10 @@ for (const pg of pages) {
     const before = await page.evaluate(() => ({ ban: !!document.querySelector('a.abanner'), tile: (document.querySelector('.tile.alrt') || {}).textContent || '' }));
     await page.waitForTimeout(900);
     const after = await page.evaluate(() => ({ ban: !!document.querySelector('a.abanner'), bantxt: (document.querySelector('a.abanner') || {}).textContent || '', tile: (document.querySelector('.tile.alrt') || {}).textContent || '' }));
+    const pill = await page.evaluate(() => (document.querySelector('.answer .a3') || {}).textContent || '');
     const tag = `${pg.url} [${mode}]`;
+    if (mode === 'warn' && !/1 active NWS alert/.test(pill)) bad.push(tag + ': answer pill says "' + pill + '" next to a live warning');
+    if (mode === 'none' && !/No active NWS alerts/.test(pill)) bad.push(tag + ': answer pill says "' + pill + '" after a live answer of no alerts');
     if (mode === 'warn' && !(after.ban && /Flood Warning/.test(after.bantxt))) bad.push(tag + ': banner does not show the live warning');
     if (mode === 'warn' && after.tile && !/Flood Warning/.test(after.tile)) bad.push(tag + ': tile does not show the live warning');
     if (mode === 'none' && after.ban) bad.push(tag + ': banner left standing after the live answer said no alerts');

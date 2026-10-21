@@ -100,6 +100,9 @@ def main():
     add("evidence/ci-runs.txt", "\n".join(lines).encode("utf-8"))
     add("evidence/ci-run-gates.log", ci_log.encode("utf-8"))
     add("evidence/calcscrape-history.md", os.path.join(pk, "calcscrape-history.md"))
+    wa = os.path.join(R, "docs", "research", "GATE-WIRING-AUDIT.md")
+    if os.path.exists(wa):
+        add("evidence/GATE-WIRING-AUDIT.md", wa)
     comp = os.path.join(R, "shots", "competitors")
     if os.path.isdir(comp):
         for f in sorted(os.listdir(comp)):

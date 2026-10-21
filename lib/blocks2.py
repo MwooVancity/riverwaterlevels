@@ -131,6 +131,7 @@ def b_rate(G):
     tol = max(1200, 0.6 * steps[len(steps) // 2])
     t1 = fl[-1][0]
     rows = ""
+    cards = []
     for h in (1, 3, 6, 12, 24):
         fa = _at(fl, t1 - datetime.timedelta(hours=h), tol)
         if not fa:
@@ -141,6 +142,7 @@ def b_rate(G):
         pct = wc[2] if wc else (d / fa[1] * 100 if fa[1] else 0)
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
+        cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmt(abs(d)), fmt(fa[1]), (", height %s" % sd) if sa else "")))
         rows += tr(["%d h" % h, "%s cfs" % fmt(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct), "+" if d >= 0 else "-", fmt(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
     if not rows:
         return None
@@ -150,7 +152,8 @@ def b_rate(G):
     ext = tr(["Highest reading", "%s cfs" % fmt(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmt(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
     from lib.render import flow_jitter
     note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the Height change column.</p>' if flow_jitter(G) else ""
-    body = note + table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,))
+    cards += [card("Highest, 7 days", "%s <small>cfs</small>" % fmt(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest, 7 days", "%s <small>cfs</small>" % fmt(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
+    body = note + rail(cards, "Change over the last hours") + more("Full table", table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,)))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
                  "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
 

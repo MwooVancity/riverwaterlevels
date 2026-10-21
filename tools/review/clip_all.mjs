@@ -28,7 +28,7 @@ for (const w of [390, 360, 340]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 800 }, deviceScaleFactor: 1 });
   const pg = await ctx.newPage();
   for (const u of pages) {
-    await pg.goto(BASE + u);
+    await pg.goto(BASE + u + (u.indexOf('?') < 0 ? '?tabs=off' : ''));
     const clip = await pg.evaluate(() => [...document.querySelectorAll('.scroll')].filter(s => s.scrollWidth > s.clientWidth + 2 && !s.querySelector('table.hm')).map(s => (s.closest('section') || { id: 'page' }).id));
     if (clip.length) bad.push(`${w}px ${u}: ${clip.join(', ')}`);
   }

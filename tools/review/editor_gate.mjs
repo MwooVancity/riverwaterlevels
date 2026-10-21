@@ -1,0 +1,66 @@
+// Forbes-editor gate (owner 2026-10-20: "add the Forbes editor gate"): node tools/review/editor_gate.mjs [dist_dir]
+// Measures what a demanding editor flags on the first phone screen of every gauge page and fails when a page is worse than data/ui-budget.json "editor".
+//   repeat      most times one timestamp or one line of text is repeated across the top block (answer pills, tiles, swipe strip)
+//   trendRepeat most times the trend word (Rising/Falling/Steady) is written in the top block
+//   tileChars   longest swipe-strip tile (characters): a tile that runs to six lines reads as small print
+//   firstWords  words visible in the first 844 px of the phone screen
+//   unitShown   the unit "cfs" is spelled out in visible text on the page (a hover title does not work on a phone)
+// The budget is a RATCHET: lower the numbers after a release improves them; never raise one without writing why in docs/UI-REDESIGN.md.
+import http from 'http';
+import { readFileSync, existsSync, statSync, readdirSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+const here = createRequire(import.meta.url);
+let pw;
+try { pw = here('playwright'); } catch { pw = createRequire('C:/Users/mwoo7/Desktop/calcscrape/package.json')('playwright'); }
+const { chromium } = pw;
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const DIST = join(ROOT, process.argv[2] || 'dist_next');
+const B = JSON.parse(readFileSync(join(ROOT, 'data', 'ui-budget.json'), 'utf8')).editor || {};
+const types = { '.html': 'text/html', '.json': 'application/json', '.svg': 'image/svg+xml', '.css': 'text/css' };
+const srv = http.createServer((q, r) => { let p = join(DIST, decodeURIComponent(q.url.split('?')[0])); if (existsSync(p) && statSync(p).isDirectory()) p = join(p, 'index.html'); if (!existsSync(p)) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': types[p.slice(p.lastIndexOf('.'))] || 'application/octet-stream' }); r.end(readFileSync(p)); }).listen(0);
+const base = 'http://localhost:' + srv.address().port;
+const urls = [];
+for (const st of readdirSync(join(DIST, 'river'))) for (const g of readdirSync(join(DIST, 'river', st))) if (existsSync(join(DIST, 'river', st, g, 'index.html'))) urls.push(`/river/${st}/${g}/`);
+const b = await chromium.launch();
+const rows = [], bad = [];
+for (const u of urls) {
+  const c = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const p = await c.newPage();
+  await p.goto(base + u, { waitUntil: 'load' });
+  await p.waitForSelector('.gtabs button', { timeout: 10000 }).catch(() => {});
+  await p.waitForTimeout(300);
+  const m = await p.evaluate(() => {
+    const top = [...document.querySelectorAll('.hero, .answer, .cstrip')];
+    const text = top.map(e => e.innerText || '').join('\n');
+    const count = {};
+    for (const t of text.match(/[A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,4}/g) || []) count[t] = (count[t] || 0) + 1;
+    for (const l of text.split('\n').map(s => s.trim()).filter(s => s.length >= 12)) count[l] = (count[l] || 0) + 1;
+    const repeat = Math.max(0, ...Object.values(count));
+    const trendRepeat = (text.match(/\b(Rising|Falling|Steady)\b/g) || []).length;
+    const tileChars = Math.max(0, ...[...document.querySelectorAll('.cstrip .tile')].map(t => (t.innerText || '').length));
+    let firstWords = 0;
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n; (n = w.nextNode());) {
+      const e = n.parentElement; if (!e || ['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(e.tagName)) continue;
+      const r = e.getBoundingClientRect(); if (r.width === 0 || r.height === 0 || r.top >= 844 || getComputedStyle(e).visibility === 'hidden') continue;
+      firstWords += (n.textContent.trim().split(/\s+/).filter(Boolean)).length;
+    }
+    const hasFlow = !!document.querySelector('.tile.flow');
+    const unitShown = !hasFlow || /cubic feet per second/i.test(document.body.innerText);
+    return { repeat, trendRepeat, tileChars, firstWords, unitShown };
+  });
+  rows.push({ u, ...m });
+  if (m.repeat > (B.repeat ?? 1e9)) bad.push(`${u}: one timestamp or line repeated ${m.repeat} times in the top block > ${B.repeat}`);
+  if (m.trendRepeat > (B.trendRepeat ?? 1e9)) bad.push(`${u}: trend word written ${m.trendRepeat} times in the top block > ${B.trendRepeat}`);
+  if (m.tileChars > (B.tileChars ?? 1e9)) bad.push(`${u}: a swipe-strip tile runs to ${m.tileChars} characters > ${B.tileChars}`);
+  if (m.firstWords > (B.firstWords ?? 1e9)) bad.push(`${u}: ${m.firstWords} words on the first phone screen > ${B.firstWords}`);
+  if (B.unitShown && !m.unitShown) bad.push(`${u}: "cfs" is never spelled out in visible text`);
+  await c.close();
+}
+await b.close(); srv.close();
+const mx = k => Math.max(...rows.map(r => r[k]));
+console.log(`editor gate: ${rows.length} pages; worst repeat ${mx('repeat')}, trend word ${mx('trendRepeat')}, longest tile ${mx('tileChars')} chars, first screen ${mx('firstWords')} words, unit spelled out on ${rows.filter(r => r.unitShown).length}/${rows.length}; budget ${JSON.stringify(B)}`);
+if (bad.length) { console.log('EDITOR GATE FAILED:\n' + bad.slice(0, 25).join('\n')); process.exit(1); }
+console.log('editor gate passes');

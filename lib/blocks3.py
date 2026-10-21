@@ -49,7 +49,9 @@ def b_declarations(G):
     area = ((items[0].get("area") if items else None) or "this county").replace(" (County)", " County")
     rows = "".join(tr([esc(i["id"] or ""), fdate(i["date"]) if i["date"][:4].isdigit() else "–", "%s to %s" % (fdate(i["begin"]), fdate(i["end"])) if i["begin"][:4].isdigit() and i["end"][:4].isdigit() else "–", esc(i["title"] or ""),
                        esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "–")]) for i in items)
-    body = ("<p>%d federal flood disaster declarations on file for %s.</p>" % (d["count"], esc(area))) + (table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows) if rows else "")  # five visible columns: on a phone the site stacks them as label-and-value rows instead of clipping
+    cards = [card(fdate(i["date"]) if i["date"][:4].isdigit() else "–", esc(i["title"] or "Declaration"), "%s &middot; %s" % (esc(i["id"] or ""), esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "no assistance programs listed"))) for i in items[:4]]
+    full = table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows) if rows else ""
+    body = ("<p>%d federal flood disaster declarations on file for %s. The latest %d:</p>" % (d["count"], esc(area), len(cards))) + (rail(cards, "Latest federal flood declarations") + (more("All %d on file here" % len(items), full) if len(items) > len(cards) else "") if cards else "")  # five visible columns: on a phone the site stacks them as label-and-value rows instead of clipping
     return block("flood_declarations", "Federal flood disaster declarations", "hist", body,
                  "Source: This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA. Dataset: Disaster Declarations Summaries, endpoint https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries (v2), accessed %s. Declarations whose type is Flood or whose title contains FLOOD; the 12 most recent are listed." % esc(tzl(parse_t(d["fetched_at"]), G["zone"])), "openfema")
 
@@ -66,10 +68,11 @@ def b_storms(G):
     county = raw.title().replace(" (C)", "")
     kind = s.get("kind") or "County"
     summary = tr([fmt(s["n"]), fmt(s["deaths"]), fmt(s["injuries"]), _usd(s["damage"])], right=(0, 1, 2, 3))
-    body = table(["Flood and flash flood events", "Deaths", "Injuries", "Property and crop damage"], summary, right=(0, 1, 2, 3))
+    body = rail([card("Flood and flash flood events", fmt(s["n"])), card("Deaths", fmt(s["deaths"])), card("Injuries", fmt(s["injuries"])), card("Property and crop damage", _usd(s["damage"]))], "Flood events, totals")
     if s.get("recent"):
+        evc = [card(fdate(r[2]) if r[2][:4].isdigit() and len(r[2]) == 10 else esc(r[2]), esc(r[3]), "%s &middot; %s &middot; deaths %s &middot; damage %s" % (esc(r[7] or "cause not stated"), esc(((r[9] if len(r) > 9 else "") or "location not stated").title()), r[4], _usd(r[6]))) for r in s["recent"][:3]]
         rows = "".join(tr([fdate(r[2]) if r[2][:4].isdigit() and len(r[2]) == 10 else esc(r[2]), esc(r[3]), esc(r[7] or "–"), esc(((r[9] if len(r) > 9 else "") or "–").title()), str(r[4]), _usd(r[6])], right=(4, 5)) for r in s["recent"])
-        body += "<h3>Most recent events</h3>" + table(["Date", "Type", "Cause", "Location", "Deaths", "Damage"], rows, right=(4, 5))
+        body += "<h3>Most recent events</h3>" + rail(evc, "Most recent flood events") + (more("All %d recent events" % len(s["recent"]), table(["Date", "Type", "Cause", "Location", "Deaths", "Damage"], rows, right=(4, 5))) if len(s["recent"]) > 3 else "")
     return block("storm_events", "Flood events in %s %s, %d to %d" % (esc(county or "this"), kind, s["years"][0], s["years"][1]), "hist", body,
                  "Source: NOAA National Centers for Environmental Information, Storm Events Database (county-level Flood and Flash Flood events), %d to %d, fetched %s. Deaths include direct and indirect; damage is as reported to NCEI. NCEI data are in the public domain in the United States." % (
                      s["years"][0], s["years"][1], esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "ncei")

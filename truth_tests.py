@@ -38,6 +38,29 @@ def main():
             base = G
         c = render.b3.conditions(G, None)
         h = render.hero(G, None)
+        # 21. the one-line answer says what the tiles say: same trend chip, same comparison word, same alert state
+        ans = re.search(r'<p class="answer"[^>]*>(.*?)</p>', h, re.S)
+        if not ans:
+            fail(site, "no one-line answer above the tiles")
+        else:
+            spans = re.findall(r"<span[^>]*>(.*?)</span>", ans.group(1))
+            chip = re.search(r'<small class="dirchip">(.*?)</small>', h, re.S)
+            if len(spans) != 3:
+                fail(site, "answer strip does not hold three statements: %r" % spans)
+            else:
+                if chip and spans[0] != chip.group(1):
+                    fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[0], chip.group(1)))
+                nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
+                if nw and G["p"] is not None and not spans[1].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
+                    fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[1], nw.group(1)))
+                if G["p"] is None and "No past-years" not in spans[1]:
+                    fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[1])
+                if c["alerts"] is not None and c["alerts"]["n"] and "active NWS alert" not in spans[2]:
+                    fail(site, "active alert not stated in the answer strip: %r" % spans[2])
+                if c["alerts"] is not None and not c["alerts"]["n"] and "active NWS alert" in spans[2] and "No active" not in spans[2]:
+                    fail(site, "no alert but the strip claims one: %r" % spans[2])
+                if c["alerts"] is None and "unknown" not in spans[2]:
+                    fail(site, "alert source unknown but the strip does not say so: %r" % spans[2])
         # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):
@@ -155,7 +178,7 @@ def main():
         if al is not None:
             if al["n"] and ('class="abanner"' not in h or "NWS alerts</span>" in h):
                 fail(site, "active alert: banner missing or empty-alert tile still shown")
-            if not al["n"] and "No alerts active here" not in h:
+            if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No alerts active here" not in h:  # an old answer says so instead (contract 18)
                 fail(site, "no alert: the tile does not say so")
     if n < 5:
         fail("setup", "only %d gauges rendered" % n)
