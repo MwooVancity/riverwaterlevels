@@ -26,7 +26,7 @@ def main():
     n = int(next((a for a in sys.argv[1:] if a.isdigit()), 25))
     pub = load(os.path.join(ROOT, "data", "publisher.json"), {})
     if "--apply" in sys.argv and "@" not in str(pub.get("email") or "") and not pub.get("waived"):
-        sys.exit("refused: data/publisher.json has no contact email and no owner waiver. A page may not be indexed without a named publisher and a corrections contact unless the owner waives it in writing there (docs/INDEXING-RULES.md, precondition 6).")
+        sys.exit("refused: data/publisher.json has no contact email and no owner waiver. A page may not be indexed without a named publisher and a corrections contact unless the owner waives it in writing there (docs/RUNBOOK.md, precondition 6).")
     live = set(load(os.path.join(ROOT, "dist", "_urls.json"), {"urls": []})["urls"])
     pages = load(os.path.join(ROOT, "data", "reviews.json"), {}).get("pages", {})
     have = set(cfg["allow"])
