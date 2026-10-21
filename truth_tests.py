@@ -93,7 +93,7 @@ def main():
                 fail(site, "trend word %s disagrees with the last 6 h (%+.1f%%)" % (word, c6))
         # 6. storms: the lightning line says thunderstorms exactly when the NWS hourly forecast for the next 24 h does
         sl = render.storm_line(G)
-        if sl:
+        if sl and " h old" not in sl:  # a stale hourly forecast prints its age instead of hours, and that is the honest line
             hr24 = [q for q in ((G["rec"].get("nws") or {}).get("hourly") or []) if render.parse_t(q["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]
             if any("thunder" in (q.get("shortForecast") or "").lower() for q in hr24) != ("Thunderstorms in the forecast" in sl):
                 fail(site, "storm line disagrees with the hourly forecast: %s" % sl[:90])
@@ -170,7 +170,7 @@ def main():
             fail(site, "no NWS flood stages and the stage block does not say so")
         if c["wt"] and c["wt"]["f"] < -40:
             fail(site, "impossible water temperature %.0f F shown" % c["wt"]["f"])
-        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "already above this forecast" not in h and not G["osc"]:  # a tidal reach prints the tidal note instead
+        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "below the latest reading" not in h and not G["osc"]:  # a tidal reach prints the tidal note instead
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:

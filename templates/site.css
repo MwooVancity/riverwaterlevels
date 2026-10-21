@@ -101,9 +101,9 @@ img{max-width:100%;height:auto}.mapimg img{display:block;width:100%}
 @media(max-width:1060px){.cols{grid-template-columns:minmax(0,1fr)}}
 /* ---- gate fixes: contrast, text size, tap targets ---- */
 .tag{font-size:.7rem}
-.ab{color:#0f5f36}.ab.ageing{color:#7a4500}.ab.stale{color:#9b1c14}
+.ab{color:#083a21;background:#e3f1e8}.ab.ageing{color:#5c3300;background:#fbe9d2}.ab.stale{color:#7d1410;background:#fbe3e1}
 .tile.falling .word{color:#7a4500}.tile.rising .word{color:var(--hi)}
-:root:not([data-theme=light]) .ab{color:var(--good)}:root:not([data-theme=light]) .ab.ageing{color:var(--low)}:root:not([data-theme=light]) .ab.stale{color:var(--warn)}:root:not([data-theme=light]) .tile.falling .word{color:var(--low)}
+:root:not([data-theme=light]) .ab,:root:not([data-theme=light]) .ab.ageing,:root:not([data-theme=light]) .ab.stale{background:color-mix(in srgb,currentColor 16%,var(--card))}:root:not([data-theme=light]) .ab{color:var(--good)}:root:not([data-theme=light]) .ab.ageing{color:var(--low)}:root:not([data-theme=light]) .ab.stale{color:var(--warn)}:root:not([data-theme=light]) .tile.falling .word{color:var(--low)}
 .brand{min-height:44px}.tabs a{display:inline-flex;align-items:center;min-height:44px;padding:6px 14px}
 .pill,.jump a{display:inline-flex;align-items:center;min-height:40px;padding:6px 14px}
 footer a{display:inline-block;padding:12px 6px}
@@ -161,7 +161,7 @@ details.fold>.blk{border:1px solid var(--line)}
 .crumb a{min-width:28px;text-align:center}
 @media(max-width:760px){.nav{position:static}}
 .lf{color:var(--mut);font-weight:400}
-.storm{margin:0 0 10px;padding:8px 12px;border-radius:8px;font-size:.95rem}.storm.ok{background:var(--card2,rgba(0,0,0,.04));color:var(--mut)}.storm.warn{background:rgba(217,119,6,.14);border:1px solid rgba(217,119,6,.5)}
+.storm{margin:0 0 10px;padding:8px 12px;border-radius:8px;font-size:.95rem}.storm.ok{background:var(--card2,rgba(0,0,0,.04));color:inherit}.storm.warn{background:rgba(217,119,6,.14);border:1px solid rgba(217,119,6,.5)}
 .dirchip{font-weight:600;color:var(--ink,inherit)}.lf2{margin:6px 0 10px}
 .safety a,.card .src a{display:inline-block;padding:9px 3px}
 

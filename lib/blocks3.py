@@ -73,13 +73,20 @@ def b_rise(G):
                  "Source: U.S. Bureau of Reclamation RISE, daily values for %s (date is the UTC day of the record), fetched %s." % (esc(r["dam"]), esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usbr")
 
 
+def acis_name(n):
+    """ACIS station names arrive in capitals: title-case the place, keep the compass suffix ("CHEVY CHASE 1.2 SW" -> "Chevy Chase 1.2 SW")."""
+    import re
+    t = (n or "").title()
+    return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)
+
+
 def b_acis(G):
     a = G["rec"].get("acis")
     if not a or not a.get("stations"):
         return None
     heads = ["Station", "Distance"] + [datetime.date.fromisoformat(d).strftime("%b %d").replace(" 0", " ") for d in a["days"]]
     cell = lambda v: "–" if v in ("M", "S", "A") else ("trace" if v == "T" else "%s in" % v if v.replace(".", "", 1).isdigit() else esc(v))
-    rows = "".join(tr([esc((x["name"] or "").title()), "%.0f mi" % (x["km"] * 0.621371)] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
+    rows = "".join(tr([esc(acis_name(x["name"])), "%.0f mi" % (x["km"] * 0.621371)] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
     return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", table(heads, rows, right=tuple(range(1, 9))),
                  "Source: NOAA Regional Climate Centers ACIS, daily precipitation at the nearest county weather stations, fetched %s. Each value is a 24-hour total for the station's observation day; trace means less than 0.01 in." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "acis")
 

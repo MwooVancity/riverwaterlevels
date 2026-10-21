@@ -45,13 +45,23 @@
    "date": "2026-10-20",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
    "sig": "d8914c489b025ce47cfb33d1"
+  },
+  "8309e9eea73c1430": {
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "sig": "4ff39c980d059cae574db281"
   }
  },
  "pages": {
   "/river/hudson-river/green-island/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "8309e9eea73c1430",
+   "sig": "e6be2c5e5bd049da2b858e4f"
   },
   "/river/hudson-river/green-island/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -60,11 +70,11 @@
   },
   "/river/delaware-river-nj/trenton/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "0c186811d44132c11c67b58c"
+   "template": "8309e9eea73c1430",
+   "sig": "3a798e9078f66cf267ce95b2"
   },
   "/river/delaware-river-nj/trenton/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -73,11 +83,11 @@
   },
   "/river/penns-creek/penns-creek/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "48dcd04d7254c8b4b163c401"
+   "template": "8309e9eea73c1430",
+   "sig": "66b8065120fc717d67f5f462"
   },
   "/river/penns-creek/penns-creek/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -86,11 +96,11 @@
   },
   "/river/susquehanna-river-pa/marietta/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "8f594e487f1ce3335d60c6c0"
+   "template": "8309e9eea73c1430",
+   "sig": "09c480fd65151729227eecca"
   },
   "/river/susquehanna-river-pa/marietta/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -99,11 +109,11 @@
   },
   "/river/shenandoah-river/millville/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "bfb617d535fdddfc244a8d68"
+   "template": "8309e9eea73c1430",
+   "sig": "1b3f085c99fedb2e6c20a5fc"
   },
   "/river/shenandoah-river/millville/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -112,11 +122,11 @@
   },
   "/river/potomac-river-md/little-falls/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "e968a4fc2cd6200e8659fc24"
+   "template": "8309e9eea73c1430",
+   "sig": "951f5f88e5a3824b13545543"
   },
   "/river/potomac-river-md/little-falls/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -125,11 +135,11 @@
   },
   "/river/chattahoochee-river/atlanta/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "6b3e4df5678985e0eea1e3eb"
+   "template": "8309e9eea73c1430",
+   "sig": "f08e234f0593ea1ac5a6846c"
   },
   "/river/chattahoochee-river/atlanta/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -138,35 +148,35 @@
   },
   "/river/kinzua-creek/guffey/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "64c6646d024af68184cd9bb2"
+   "template": "8309e9eea73c1430",
+   "sig": "1fbba23350fc0ddda98930a7"
   },
   "/river/new-river-wv/thurmond/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "dd262631819c247e274ffae1"
+   "template": "8309e9eea73c1430",
+   "sig": "70ba554d9c311cdf52e324bd"
   },
   "/river/gauley-river/above-belva/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "540e5031b0fc6940ed0402ab"
+   "template": "8309e9eea73c1430",
+   "sig": "92dff6c1cdd5a6a6aae47fe0"
   },
   "/river/ohio-river-ky/louisville/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "5f277b7b8d21537196a40074"
+   "template": "8309e9eea73c1430",
+   "sig": "37af044035faef0b50f679c1"
   },
   "/river/ohio-river-ky/louisville/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -175,27 +185,27 @@
   },
   "/river/madison-river/below-ennis-lake/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "800a3f8d0d0dd4036e3cf6e3"
+   "template": "8309e9eea73c1430",
+   "sig": "d96fc57f665580a3e0b22f87"
   },
   "/river/yellowstone-river-mt/livingston/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "7f4bea86e6b4419e3c2d3b72"
+   "template": "8309e9eea73c1430",
+   "sig": "7d9a5804b0550f9b17c7939a"
   },
   "/river/missouri-river-mo/kansas-city/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "a360527d913823f9c0d8e1fb"
+   "template": "8309e9eea73c1430",
+   "sig": "40ac76bc22c30d10690e8b98"
   },
   "/river/missouri-river-mo/kansas-city/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -204,11 +214,11 @@
   },
   "/river/mississippi-river-mo/saint-louis/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "fa54e54860d885c97938acfa"
+   "template": "8309e9eea73c1430",
+   "sig": "f9ac493d7f01cbc17e2b6a34"
   },
   "/river/mississippi-river-mo/saint-louis/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -217,11 +227,11 @@
   },
   "/river/arkansas-river-co/avondale-07109500/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "0935d52596a5a295dc7466d4"
+   "template": "8309e9eea73c1430",
+   "sig": "513f8ed4b53ede17221a52d2"
   },
   "/river/arkansas-river-co/avondale-07109500/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -230,11 +240,11 @@
   },
   "/river/roaring-fork-river/glenwood-springs/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "b3412bd2cb88e0bf21cde751"
+   "template": "8309e9eea73c1430",
+   "sig": "2cc0b578f894ff9c16492a31"
   },
   "/river/roaring-fork-river/glenwood-springs/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -243,11 +253,11 @@
   },
   "/river/colorado-river-az/lees-ferry/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "c028e19dd1bed16912d842b7"
+   "template": "8309e9eea73c1430",
+   "sig": "e08d3302813079e70585d768"
   },
   "/river/colorado-river-az/lees-ferry/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -256,11 +266,11 @@
   },
   "/river/salt-river-az/roosevelt/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "2800df6adac4a97a97de64a2"
+   "template": "8309e9eea73c1430",
+   "sig": "77510f3ce58dce88e91c2163"
   },
   "/river/salt-river-az/roosevelt/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -269,11 +279,11 @@
   },
   "/river/verde-river/camp-verde/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "e0f68116cfbe99ea79803d70"
+   "template": "8309e9eea73c1430",
+   "sig": "bdcc092b04758bb570584601"
   },
   "/river/verde-river/camp-verde/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -282,19 +292,19 @@
   },
   "/river/sacramento-river/freeport/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "a871fcf1342316b96cb4f2bd"
+   "template": "8309e9eea73c1430",
+   "sig": "60149d600a4b40c7e123f283"
   },
   "/river/salmon-river-id/white-bird/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-V.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "0cce61d1697e07ba",
-   "sig": "eb4593e85a2108ffcf8379ed"
+   "template": "8309e9eea73c1430",
+   "sig": "a059786cd87d686372151d0b"
   },
   "/river/salmon-river-id/white-bird/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -303,11 +313,11 @@
   },
   "/river/snake-river-wa/anatone/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "e534812316f92fbd8614e7e6"
+   "template": "8309e9eea73c1430",
+   "sig": "9400b394f55e934ad6967d01"
   },
   "/river/snake-river-wa/anatone/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -316,11 +326,11 @@
   },
   "/river/deschutes-river-or/moody/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "d8d24074f6f259c049cbbd49"
+   "template": "8309e9eea73c1430",
+   "sig": "0aeb1dcf6e685729cec9fa49"
   },
   "/river/deschutes-river-or/moody/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -329,11 +339,11 @@
   },
   "/river/columbia-river-or/the-dalles/": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-W.md",
-   "date": "2026-10-20",
+   "report": "docs/research/FRESH-REVIEW-10-Z.md",
+   "date": "2026-10-21",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "template": "4fec235dd797d85d",
-   "sig": "03e7103369053d19d6569fa1"
+   "template": "8309e9eea73c1430",
+   "sig": "9569b225e8e0586315423657"
   }
  }
 }
