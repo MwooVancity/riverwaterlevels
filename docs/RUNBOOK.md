@@ -17,13 +17,13 @@ The email body lists the reason. Match it:
 - **"blocks were hidden by the guard"**: a section of a page failed to build. Tell Claude the page and block name from the email.
 
 ## Email: "Run failed" for the workflow "refresh"
-Open the run, read the last red step, and tell Claude the step name. Common ones: "template signed review" (the template changed without a signed review), "truth contracts" (a number contradicts another on a page), "editor" or "UI" (a layout problem on a template change). The live site stays on its last good release.
+Open the run, read the last red step, and tell Claude the step name. Common ones: "check.py" (a page is missing a Source line or a unit), "truth_tests" (a number contradicts another on a page), "truth_live" (a built number differs from USGS or NWS). The live site stays on its last good release.
 
 ## You see nothing wrong but Google traffic dropped
 Do not change pages. Tell Claude "traffic dropped" with the Search Console screenshot. Claude pulls pages with `open_wave.py --pull` only on a wrong or stale number, never to chase a traffic number.
 
 ## Indexing: which pages Google may see
-The switch is `data/index-allow.json`: `open` (master), `site_pages` (home, state, about), `allow` (gauge page URLs). `lib/indexing.py` turns it into the robots tag and the sitemap; `check.py` refuses a build when an allowed page has no signed SHIP review or the sitemap and allow list disagree. `python -I tools/open_wave.py N` is a dry run of the next N pages; `--apply` writes them; `--pull <url>` removes one. `python -I tools/index_live.py` reads the live site after every deploy and reports any page whose tag disagrees with the list. You decide the pace (2026-10-21: all 25 pages and the site pages are open). Each opening is recorded in `docs/OPEN-ITEMS.md` with the date, URLs and template hash.
+The switch is `data/index-allow.json`: `open` (master), `site_pages` (home, state, about), `allow` (gauge page URLs). `lib/indexing.py` turns it into the robots tag and the sitemap; `check.py` refuses a build when the sitemap and the allow list disagree. `python -I tools/open_wave.py N` is a dry run of the next N pages; `--apply` writes them; `--pull <url>` removes one. `python -I tools/index_live.py` reads the live site after every deploy and reports any page whose tag disagrees with the list. You decide the pace (2026-10-21: all 25 pages and the site pages are open). Each opening is recorded in `docs/OPEN-ITEMS.md` with the date and URLs.
 
 ## Deployer
 GitHub Actions `refresh.yml` is the only deployer (push to main, every 30 min fast, every 6 h full). The two Windows scheduled tasks are disabled (2026-10-20). If the site flips between two versions, tell Claude "deployers racing".

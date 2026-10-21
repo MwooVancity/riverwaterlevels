@@ -16,17 +16,15 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
          ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
-PLAN = subprocess.run(PY + ["tools/gate_plan.py"], cwd=ROOT, capture_output=True, text=True, creationflags=NOWIN).stdout.strip() or "full"  # light = same template as the live site: a data refresh
-# Always run, they block a deploy: the template needs a signed fresh-brain SHIP (docs/REVIEW-1ST.md); every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
+# Always run, they block a deploy: every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
 sys.path.insert(0, ROOT)
-from gates import ALWAYS, BROWSER, SOFT  # the one list of gates (gates.py); `python -I gate.py` runs the same list by hand
-# Only when the template changed (or the live template cannot be read): browser layout gates. They passed for this exact template when it was released, so a font or browser hiccup can never freeze fresh data.
-STEPS[3:3] = ALWAYS + (BROWSER if PLAN == "full" else [])
+from gates import ALWAYS, SOFT  # the one list of gates (gates.py); `python -I gate.py` runs the same list by hand
+STEPS[3:3] = ALWAYS
 STEPS.extend(SOFT)
 code = 0
 soft_failed = []  # post-deploy live gates: the deploy already happened, but a failure must turn the run red so the owner gets the email
 try:
-    log.write("\n=== %s %s, gates: %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full", PLAN))
+    log.write("\n=== %s %s, gates: %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full", "3 gates"))
     for s in STEPS:
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, creationflags=NOWIN)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))

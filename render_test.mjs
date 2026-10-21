@@ -43,7 +43,7 @@ for (const [w, h, mobile] of VIEWS) {
   for (const p of sample) {
     const page = await ctx.newPage();
     const errs = [], bad = [];
-    page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text()); });  // remote radar and map images are rate-limited by their hosts when tests run back to back; ui_gates.mjs does the same
+    page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text()); });  // remote radar and map images are rate-limited by their hosts when tests run back to back;
     page.on('pageerror', e => errs.push(String(e)));
     page.on('requestfailed', r => { if (r.url().startsWith(BASE)) bad.push('request failed ' + r.url()); });
     await page.goto(BASE + p, { waitUntil: 'load' });

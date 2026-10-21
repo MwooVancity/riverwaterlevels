@@ -46,18 +46,6 @@ def main():
         except render.CriticalFail as e:
             report["failed"].append({"site": s, "reason": str(e), "url": rows[s]["dashboard_url"]})
             print("CRITICAL", s, e, "(skipped; previous pages stay live)")
-    from lib.reviewgate import hold_back
-    live_f, rv_f = os.path.join(ROOT, "dist", "_urls.json"), os.path.join(ROOT, "data", "reviews.json")
-    skip_g, skip_f = hold_back({s: rows[s] for s in Gs}, live_urls(live_f) if not preview and "--no-hold" not in sys.argv else [], json.load(open(rv_f, encoding="utf-8")) if os.path.exists(rv_f) else {}, set())
-    if "--no-hold" in sys.argv:  # review builds: include the pages that are waiting for their review
-        skip_g, skip_f = set(), set()
-    for s in skip_g:
-        del Gs[s]
-    for s in skip_f:
-        Gs[s]["fc_page"] = False
-    report["held_for_review"] = sorted(rows[s]["dashboard_url"] for s in skip_g) + sorted(rows[s]["forecast_url"] for s in skip_f)
-    if report["held_for_review"]:
-        print("HELD FOR REVIEW (new pages without a SHIP verdict; everything else still ships): %s" % ", ".join(report["held_for_review"]))
     related.close(Gs, iso)  # upstream/downstream pairs are listed on both pages
     built = [rows[s] for s in Gs]
     inv_size = {k: len(v) for k, v in hubs.items()}

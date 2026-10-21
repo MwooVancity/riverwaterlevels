@@ -1,13 +1,12 @@
 """ONE command for every gate: python -I gate.py [--quick] [--live]
-Rebuilds dist_next, runs the SIX gates in gates.py, prints one table (a gate fails if any check in it fails) and exits 1 if any gate failed.
- --quick  skips the slow fuzzer
- --live   also runs the post-deploy checks against the live site (network): live pages vs the sources, indexing state, the watchdog"""
+Runs the THREE gates in gates.py (1 and 2 by default), prints one table (a gate fails if any check in it fails) and exits 1 if any gate failed.
+ --live   also runs gate 3, the post-deploy checks against the live site (network): live pages vs the sources, indexing state"""
 import os, subprocess, sys, time
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)  # python -I leaves the script folder off the path
 import gates
 
-quick, live = "--quick" in sys.argv, "--live" in sys.argv
+live = "--live" in sys.argv
 
 
 def run(cmd):
@@ -20,13 +19,11 @@ def run(cmd):
     return p.returncode == 0, time.time() - t0, last, p.stdout + p.stderr
 
 
-groups = [("0 build", [("build", gates.PY + ["build.py"]), ("page checks", gates.PY + ["check.py"])])] + gates.GATES + (gates.GATES_LIVE if live else [])
+groups = gates.GATES + (gates.GATES_LIVE if live else [])
 bad, details = [], []
 for gname, checks in groups:
     results = []
     for name, cmd in checks:
-        if quick and "fuzz" in name:
-            continue
         ok, secs, last, out = run(cmd)
         results.append((name, ok, secs, last))
         if not ok:

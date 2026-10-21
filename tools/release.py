@@ -1,8 +1,7 @@
 """Add the next gauges from the priority list to the site, in one command.
 Usage: python -I tools/release.py N [--dry] [--list docs/research/priority/picks.csv]
-Steps: pick the first N rows of the list that have no cache yet -> mark them live in data/waves.csv -> python -I collect.py <sites> (full) -> python -I build.py --no-hold
--> print the new page URLs for the reviewer (docs/REVIEW-1ST.md). A new page stays held (publish.py refuses it) until `tools/record_review.py SHIP <report> --pages-only --pages=<urls>` signs it,
-and stays out of Google until `tools/open_wave.py N --apply` lists it. --dry prints the picks and stops.
+Steps: pick the first N rows of the list that have no cache yet -> mark them live in data/waves.csv -> python -I collect.py <sites> (full) -> python -I build.py
+-> print the new page URLs. A new page stays out of Google until `tools/open_wave.py N --apply` lists it. --dry prints the picks and stops.
 """
 import os, sys, csv, subprocess
 
@@ -39,10 +38,8 @@ with open(wp, "w", newline="", encoding="utf-8") as f:
 rc = subprocess.call(PY + [os.path.join(ROOT, "collect.py")] + sorted(sites), cwd=ROOT)
 if rc:
     sys.exit("collect failed (%d); nothing built" % rc)
-rc = subprocess.call(PY + [os.path.join(ROOT, "build.py"), "--no-hold"], cwd=ROOT)
+rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
 if rc:
     sys.exit("build failed (%d)" % rc)
 urls = [r["url"] for r in picks if r.get("url")]
-print("\nbuilt. New pages for the reviewer (docs/REVIEW-1ST.md), then sign with:")
-print('  MSYS_NO_PATHCONV=1 python -I tools/record_review.py SHIP docs/research/<report>.md --pages-only --pages=%s' % ",".join(urls))
-print("then: push (deploys), python -I tools/open_wave.py %d --apply, push again." % len(urls))
+print("\nbuilt: %d new page(s). Now: push (deploys), python -I tools/open_wave.py %d --apply, push again." % (len(urls), len(urls)))

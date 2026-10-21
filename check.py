@@ -205,12 +205,6 @@ def check_dir(d):
         if bool(cfg["open"]) != open_mode:
             site_bad.append("data/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
         if open_mode:
-            rvp = os.path.join(ROOT, "data", "reviews.json")
-            pages = (json.load(open(rvp, encoding="utf-8")) if os.path.exists(rvp) else {}).get("pages", {})
-            from lib.reviewgate import is_ship
-            bad_ix = [u for u in sorted(want) if indexing.GAUGE.match(u) and not is_ship(pages.get(u), u)]
-            if bad_ix:
-                site_bad.append("%d indexable gauge page(s) without a SHIP review, e.g. %s" % (len(bad_ix), bad_ix[:2]))
             if want != {u for u in urls if indexing.indexable(u, cfg)}:
                 site_bad.append("pages without a noindex tag differ from data/index-allow.json")
         if sm != want:

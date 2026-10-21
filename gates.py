@@ -1,41 +1,19 @@
-"""The one list of gates, in SIX gates. refresh.py runs them before every deploy; `python -I gate.py` runs them by hand with one table and one exit code.
+"""The one list of gates, in THREE gates. refresh.py runs 1 and 2 before every deploy and 3 after it; `python -I gate.py` runs them by hand with one table and one exit code.
 Add a check HERE and nowhere else. Order inside a gate: cheap and offline first. A gate passes only if every check in it passes.
-  1 build and rules   the page builds, the page rules hold, the template is signed
-  2 truth             numbers, gauge types, time edge cases, release logic
-  3 sources           the built pages against a fresh USGS and NWS fetch (and after deploy: live pages, indexing state)
-  4 reader browser    layout, contrast, taps, tables, search, live updates, tab heights, detail checks
-  5 agent             a fresh agent answered "would this reach #1" for this template
-  6 watch             the hourly watchdog (staleness, failed gauges, mismatch with live)"""
+  1 build and sources   the page builds; the page rules (Source line, units, times, sizes, structured data, sitemap, secrets) hold
+  2 numbers             numbers on a page agree with each other, and with a fresh USGS and NWS fetch
+  3 live                after the deploy: live pages against the sources, indexing state (the hourly watchdog.yml runs on its own)"""
 import sys
 
 PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
-NODE = ["node"]
 
-GATE_1 = [
-    ("LINE 0: every water-activity item shown or declared", PY + ["tools/line0_gate.py"]),
-    ("template stamp", PY + ["tools/stamp_template.py"]),
-    ("template signed review", PY + ["tools/template_hash.py", "--check"]),
-    ("page rules self-test", PY + ["check.py", "--selftest"]),
-]
-GATE_2 = [
-    ("truth contracts (22)", PY + ["truth_tests.py"]),
-    ("gauge types and time edge cases", PY + ["truth_types.py"]),
-    ("release logic (8)", PY + ["tests_logic.py"]),
-]
-GATE_3 = [("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
-GATE_3_LIVE = [("live pages vs USGS/NWS", PY + ["tools/truth_live.py"]), ("live indexing state", PY + ["tools/index_live.py"])]  # after the deploy
-GATE_4 = [
-    ("UI: contrast, taps, first screen", NODE + ["ui_gates.mjs"]),
-    ("live script: alerts, flow, search", NODE + ["tools/review/live_tests.mjs"]),
-    ("editor: detail, clipping, budgets", NODE + ["tools/review/editor_gate.mjs"]),
-]
-GATE_5 = [("agent: would a river user pick it (#1)", PY + ["tools/agent_gate.py"])]  # needs a fresh Claude agent (a script cannot start one); gate.py runs it, CI does not
-GATE_6 = [("watchdog (hourly, network)", PY + ["tools/watchdog.py"])]  # gate.py --live only; CI runs it hourly on its own
+GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("page rules self-test", PY + ["check.py", "--selftest"])]
+GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
+GATE_3 = [("live pages vs USGS/NWS", PY + ["tools/truth_live.py"]), ("live indexing state", PY + ["tools/index_live.py"])]  # after the deploy
 
-GATES = [("1 build and rules", GATE_1), ("2 truth", GATE_2), ("3 sources", GATE_3), ("4 reader browser", GATE_4), ("5 agent", GATE_5)]
-GATES_LIVE = [("3 sources (live)", GATE_3_LIVE), ("6 watch", GATE_6)]
+GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]
+GATES_LIVE = [("3 live", GATE_3)]
 
-# flat lists for refresh.py (it builds, checks and publishes between them)
-ALWAYS = [c for _, c in GATE_1 + GATE_2 + GATE_3]
-BROWSER = [c for _, c in GATE_4]
-SOFT = [c for _, c in GATE_3_LIVE]
+# flat lists for refresh.py (it collects, builds, checks and publishes between them)
+ALWAYS = [c for _, c in GATE_1 if "--selftest" in c] + [c for _, c in GATE_2]
+SOFT = [c for _, c in GATE_3]

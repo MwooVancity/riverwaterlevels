@@ -7,11 +7,11 @@ Start with `CLAUDE.md` (Line 0, rules, pipeline), then `docs/RUNBOOK.md` (how to
 ```
 python -I collect.py [--fast] [site ...]   # the only network code; refreshes cache/
 python -I build.py                          # builds dist_next/ from cache/ only
-python -I gate.py [--quick] [--live]        # every gate in one table: rules, truth contracts, live USGS/NWS check, browser checks, agent review, watchdog
+python -I gate.py [--quick] [--live]        # the three gates in one table: build and sources, numbers, (--live) live
 python -I publish.py                        # atomic swap into dist/, previous release kept; --rollback to undo
 python -I refresh.py [--fast]               # the whole chain with a lock and a log (runs/refresh.log); GitHub Actions runs it on a schedule and on push
 ```
 
-Releases: a template change (`lib/`, `templates/`, `build.py`) needs a signed SHIP from the review in `docs/REVIEW-1ST.md` (`tools/record_review.py`); `gate.py` refuses otherwise. Deploys run only through `.github/workflows/refresh.yml`.
+Releases: `python -I gate.py` once (three gates). Deploys run only through `.github/workflows/refresh.yml`.
 
 Keys: read from the owner's other project's `.env` at run time by `lib/common.py`, never copied here. `docs/research/` (reviews and research notes) is git-ignored.

@@ -2,7 +2,5 @@
   "name": "riverwaterlevels-gates",
   "private": true,
   "description": "Test tooling only (browser gates). The site itself has no dependencies.",
-  "devDependencies": {
-    "playwright": "^1.60.0"
-  }
+  "devDependencies": {}
 }

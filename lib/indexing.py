@@ -2,8 +2,7 @@
 - open false (the pre-launch hold): the production hosts send X-Robots-Tag: noindex for every page (templates/_headers) and every page also carries <meta name="robots" content="noindex,follow">.
 - open true: the header rule for the production hosts is removed. A page is indexable only when it is allowed: gauge pages (and their Forecast page) only if the gauge URL is in "allow";
   every other page (home, state, river hubs, trust pages, status) only if "site_pages" is true. Every other page keeps <meta name="robots" content="noindex,follow"> and is left out of sitemap.xml.
-- To pull a batch back: remove its URLs from "allow" (or set open false) and deploy; the next 30-minute refresh serves noindex for them. Search engines drop a page only after they recrawl it, so this is fast to apply and slow to take effect: release small batches.
-check.py refuses to build when an allowed gauge page has no SHIP verdict in data/reviews.json."""
+- To pull a batch back: remove its URLs from "allow" (or set open false) and deploy; the next 30-minute refresh serves noindex for them. Search engines drop a page only after they recrawl it, so this is fast to apply and slow to take effect: release small batches."""
 import json, os, re
 
 GAUGE = re.compile(r"^/river/[^/]+/[^/]+/(forecast/)?$")
