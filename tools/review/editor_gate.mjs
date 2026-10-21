@@ -28,6 +28,7 @@ const rows = [], bad = [];
 for (const u of urls) {
   const c = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const p = await c.newPage();
+  await p.route('**/*', r => (r.request().url().startsWith(base) ? r.continue() : r.abort()));  // the gate judges the page as built: a live USGS answer would date the pills and change the repeat count with the clock
   await p.goto(base + u, { waitUntil: 'load' });
   await p.waitForSelector('.gtabs button', { timeout: 10000 }).catch(() => {});
   await p.waitForTimeout(300);
