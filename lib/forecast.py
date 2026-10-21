@@ -1,0 +1,153 @@
+"""River forecast, model guidance, impacts, alerts and crests."""
+import statistics, os, re, json, math, collections, hashlib, datetime, zoneinfo
+from lib.common import *
+from lib.core import *
+from lib.hero import *
+
+
+def b_flood_stages(G):
+    n = G["rec"].get("nwps") or {}
+    cats = n.get("categories") or {}
+    if not cats:
+        return None
+    rows = "".join(tr([k.capitalize(), "%.1f ft" % cats[k]], right=(1,)) for k in ("action", "minor", "moderate", "major") if k in cats)
+    return block("flood_stages", "Flood stages", "official", table(["Category", "Gage height (ft)"], rows, right=(1,)),
+                 "Source: National Weather Service forecast point %s (%s), fetched %s. Compare with the gage height above; thresholds belong to that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or ""), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
+
+
+def b_river_forecast(G):
+    n = G["rec"].get("nwps") or {}
+    fc = n.get("forecast")
+    if not fc or not fc.get("points"):
+        return None
+    age = hours_old(fc.get("issued"), G["now"]) if fc.get("issued") else None
+    if age is not None and age > 72:
+        return None
+    rows = ""
+    fut = [x for x in fc_points(fc) if x[0] >= G["now"] - datetime.timedelta(hours=1)]
+    if not fut:
+        return None
+    gap = datum_gap(G)
+    keep = list(range(len(fut)))
+    thin = ""
+    if len(fut) > 48:
+        step = max(2, (len(fut) - 24) // 24)
+        top = max(range(len(fut)), key=lambda i: (fut[i][1] if fut[i][1] is not None else (fut[i][2] or 0)))
+        keep = sorted(set(range(24)) | set(range(24, len(fut), step)) | {top, len(fut) - 1})
+        thin = " After the first day the table shows about every %d hours; the highest forecast value and the last point are always included." % step
+    for t_, s_, f_ in [fut[i] for i in keep]:
+        rows += tr([esc(tzl(t_, G["zone"])), ("%.1f ft" % s_) if s_ is not None else "–", ("%s cfs" % fmt(f_)) if f_ is not None else "–"], right=(1, 2))
+    if gap:
+        rows += tr(["NWS and USGS read this gauge on different zero points", "NWS %.2f ft at %s" % (gap[0], esc(tzl(gap[2], G["zone"], date=False))), "USGS %.2f ft at that time" % gap[1]], right=(1, 2))
+    issued = esc(tzl(parse_t(fc["issued"]), G["zone"])) if fc.get("issued") else "time not stated"
+    lead = ""
+    pts_ = fc_points(fc)
+    if pts_:
+        near = min(pts_, key=lambda x: abs((x[0] - G["lt"]).total_seconds()))
+        if abs((near[0] - G["lt"]).total_seconds()) <= 5400 and near[2] and G["lv"] and abs(near[2] - G["lv"]) > 0.25 * max(near[2], G["lv"]):
+            lead = '<p class="src">At %s the NWS forecast flow is %s cfs; the USGS measured %s cfs at %s. The NWS converts its stage forecast to flow with its own rating, which can differ from the USGS flow at the same level.</p>' % (esc(tzl(near[0], G["zone"], date=False)), fmt(near[2]), fmt(G["lv"]), esc(tzl(G["lt"], G["zone"], date=False)))
+    sel = [fut[i] for i in keep]
+    top_i = max(range(len(sel)), key=lambda i: (sel[i][1] if sel[i][1] is not None else (sel[i][2] or 0)))
+    pick = list(range(len(sel))) if len(sel) <= 10 else sorted({round(k * (len(sel) - 1) / 9) for k in range(10)} | {top_i})  # whole span, not only the first hours
+    pick.sort(key=lambda i: i != top_i)  # the highest forecast point is the first card
+    fcards = []
+    for i in pick:
+        t_, s_, f_ = sel[i]
+        main = ("%.1f <small>ft</small>" % s_) if s_ is not None else (("%s <small>cfs</small>" % fmt(f_)) if f_ is not None else "–")
+        subf = ("%s cfs" % fmt(f_)) if (s_ is not None and f_ is not None) else ""
+        fcards.append(card(("Highest forecast &middot; " if i == top_i else "") + esc(tzl(t_, G["zone"])), main, subf, "crest" if i == top_i else ""))
+    ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
+    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more("All %d forecast points" % len(sel), ftable),
+                 "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=(age is not None and age > 24))
+
+
+def b_nwm(G):
+    if (G["rec"].get("nwps") or {}).get("forecast"):
+        return None
+    n = G["rec"].get("nwm") or {}
+    pts = n.get("points") or []
+    if len(pts) < 4:
+        return None
+    age = hours_old(n.get("reference_time"), G["now"]) if n.get("reference_time") else None
+    if age is not None and age > 72:
+        return None
+    fut = [p for p in pts if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1)]
+    if len(fut) < 4:
+        return None
+    rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmt(p["flow"])], right=(1,)) for p in fut[::3][:8])
+    ref = esc(tzl(parse_t(n["reference_time"]), G["zone"])) if n.get("reference_time") else "time not stated"
+    return block("nwm_guidance", "Model guidance", "model", table(["Time (gauge-local)", "Modelled flow"], rows, right=(1,)),
+                 "Source: NOAA National Water Model, reach %s, run %s. Model guidance, not an official forecast and not a measurement." % (esc(str(n["comid"])) if isinstance(n.get("comid"), (int, str)) and str(n.get("comid")).strip() else "id not stated", ref), "nwm", amber=(age is not None and age > 12))
+
+
+def b_alerts(G):
+    n = G["rec"].get("nws") or {}
+    al = n.get("alerts")
+    if al:
+        al = [a for a in al if (a.get("event") or "") not in IGNORED_ALERTS]  # NWS system test messages are not alerts
+    zone = G["zone"]
+    when = esc(tzl(parse_t(n["fetched_at"]), zone)) if n.get("fetched_at") else "time not stated"
+    age = hours_old(n.get("fetched_at"), G["now"]) if n.get("fetched_at") else None
+    if al is None:
+        body = '<p>Alerts could not be loaded at the last fetch.</p>'
+    elif not al:
+        body = '<p>No active National Weather Service alerts were returned for this location. This is not a statement that conditions are safe.</p>'
+    else:
+        items = ""
+        for a in al:
+            ends = esc(tzl(parse_t(a["ends"] or a["expires"]), zone)) if (a.get("ends") or a.get("expires")) else "not stated"
+            items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s<br>Ends %s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), ends)
+        body = items
+    return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=(age is not None and age > 3))
+
+
+def crest_date(t, zone):
+    if str(t).endswith("T00:00:00Z"):  # date-only value stored as midnight UTC: not a moment, so no zone shift
+        return fdate(str(t)[:10])
+    return fdate(parse_t(t).astimezone(zone).date().isoformat())
+
+
+def b_crests(G):
+    n = G["rec"].get("nwps") or {}
+    cr = n.get("crests") or []
+    if not cr:
+        return None
+    unit = (n.get("stage_units") or "ft").lower()
+    rows = "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc(unit)), ("%s cfs" % fmt(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"], right=(1, 2)) for c in cr)
+    return block("historic_crests", "Historic crests", "official", table(["Date", "Crest stage", "Flow"], rows, right=(1, 2)),
+                 "Source: National Weather Service forecast point %s (%s), historic crests as published by the NWS; the NWS may have recorded them on an older gauge datum. The USGS annual peaks above are a separate record and can differ in date, flow and datum." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
+
+
+def b_impacts(G):
+    n = G["rec"].get("nwps") or {}
+    im = n.get("impacts") or []
+    if not im:
+        return None
+    unit = (n.get("stage_units") or "ft").lower()
+    by = {}
+    for i in im:
+        by.setdefault(i["stage"], [])
+        if i["statement"] not in by[i["stage"]]:
+            by[i["stage"]].append(i["statement"])
+    rows = "".join(tr(["%.1f %s" % (s_, esc(unit)), "<br>".join(esc(x) for x in by[s_])], right=(0,)) for s_ in sorted(by))
+    pn = nws_point_note(G)
+    gap_ = datum_gap(G)
+    cur_ = gap_[0] if gap_ else (G["sg"][-1][1] if G["sg"] else None)  # the reading on the NWS scale
+    ss = sorted(by)
+    below_ = [x for x in ss if cur_ is not None and x <= cur_]
+    start = ss.index(below_[-1]) if below_ else 0
+    icards = []
+    for s_ in ss[start:start + 6]:
+        txt = " / ".join(by[s_])
+        short, cut = txt, False
+        if len(txt) > 260:  # cut only at the end of a sentence and say so; never mid-sentence
+            k = txt.rfind(". ", 0, 260)
+            if k > 60 and txt[k - 1] != ".":
+                short, cut = txt[:k + 1], True
+        margin = "" if cur_ is None else ("reached at the latest reading" if s_ <= cur_ else "%.1f %s above the latest reading" % (s_ - cur_, esc(unit)))
+        if cut:
+            margin = (margin + "; " if margin else "") + "rest of the statement in the full list below"
+        icards.append(card("%s%s" % ("At " if s_ <= (cur_ if cur_ is not None else -1e9) else "Next: ", "%.1f %s" % (s_, esc(unit))), esc(short), margin))
+    itable = table(["Stage", "National Weather Service impact statement"], rows, right=(0,))
+    return block("flood_impacts", "Flood impacts by stage", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
+                 "Source: National Weather Service forecast point %s (%s). Statements are quoted from the NWS and describe that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
