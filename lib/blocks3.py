@@ -356,7 +356,8 @@ def b_tides(G):
     if not t or not t.get("rows") or not (G.get("osc") or t.get("mi", 99) <= 10):  # tidal by the flow cycle, or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
         return None
     rows = "".join(tr([esc(_tide_t(r["t"], i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10])), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % r["v"]], right=(2,)) for i, r in enumerate(t["rows"]))
-    return block("tides", "Tides, next two days", "noaa", table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
+    near = "" if G.get("osc") else '<p class="src">The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, %.0f mi away, where the river is tidal.</p>' % t["mi"]
+    return block("tides", "Tides, next two days" if G.get("osc") else "Tides nearby, next two days", "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
                  "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops")
 
 

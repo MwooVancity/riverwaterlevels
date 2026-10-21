@@ -36,7 +36,7 @@ def ctx(site, row, rec, now):
     ago = min(fl, key=lambda x: abs((x[0] - (lt - datetime.timedelta(hours=24))).total_seconds()))
     steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(max(1, len(fl) - 200), len(fl)))
     tol = max(1200, 0.6 * (steps[len(steps) // 2] if steps else 900))
-    osc = oscillating(fl) or (rec.get("tides") or {}).get("mi", 99) <= 10  # tidal by the flow cycle, or by a NOAA tide-prediction station within 10 mi (Hudson at Green Island: Troy, 2.5 mi)
+    osc = oscillating(fl)  # tidal only when the flow itself cycles within the day; a nearby NOAA station shows a tide table but does not make this gauge tidal (Potomac at Little Falls and Delaware at Trenton sit just above the head of tide)
     wc24 = b3.window_change(fl, lt, 24)
     chg = wc24[2] if (not osc) and wc24 and abs((ago[0] - (lt - datetime.timedelta(hours=24))).total_seconds()) <= tol else None  # the same smoothed value as the rate table
     _pn = rec.get("nwps")
@@ -353,7 +353,7 @@ def next_impact(G):
     elif len(txt) > 160:
         cut = txt.rfind(" ", 0, 157)
         txt = txt[:cut if cut > 40 else 157] + "\u2026"
-    return "Next NWS impact statement at %.1f %s, %.1f %s higher than now" % (i["stage"], esc(unit), i["stage"] - cur, esc(unit))
+    return "Next NWS impact at %.1f %s (%.1f %s higher)" % (i["stage"], esc(unit), i["stage"] - cur, esc(unit))
 
 
 def sun_times(lat, lon, d, alt=-0.833):
