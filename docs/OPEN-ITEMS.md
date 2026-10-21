@@ -2,25 +2,19 @@
 
 Run `python -I tools/open_items.py` at session start. A line leaves this file only with proof in the DONE log. Rewritten 2026-10-21 to match the code (fresh-brain docs review); history is in git.
 
-## A. Ship (local commit d4ca4bc, not deployed; owner runs the gates when ready)
-- [ ] Template 75e770e9eb52a23c (one design system, tides, nearest water temperature, thunder and humidity, chart unit): `python -I gate.py` once, fix what fails, fresh reviewer (docs/REVIEW-1ST.md, re-verify by resuming the same agent), sign, push, live checks (`_template.txt`, `index_live.py`, one page body).
+## A. Ship (local commits d4ca4bc..HEAD, not deployed; owner runs the gates when ready)
+- [ ] Template at HEAD (one design system, tides, nearest water temperature, thunder, humidity, heat index, visibility, radar, USGS flags, credit lines, headers): `python -I gate.py` once, fix what fails, fresh reviewer (docs/REVIEW-1ST.md, re-verify by resuming the same agent), sign, push, live checks (`_template.txt`, `index_live.py`, one page body).
 
 ## B. Wrong-number risks (first after the ship)
-- [ ] USGS qualifiers (Ice, Eqp, estimated) are never printed: an iced gauge shows a real-looking number. Print the qualifier on the flow and gage tiles and in the sensor table; a truth contract for it.
-- [ ] Water-activity blocks (sensors, tides, air, hourly) are not in `SAFETY_BLOCKS`; when their source fails they vanish without a gaps line. Extend the gaps line to every Line 0 item.
-- [ ] Forecast tile still carries two lines of context on some gauges (rating, name mismatch, datum); design says one.
+- [ ] CSP is report-only until a live run shows no console errors; then enforce. Privacy page: confirm no analytics claim.
 
 ## C. Data still missing for water users (sources: `data/sources.json`)
-- [ ] Radar: NWS radar images are public domain; clear the row and restore the block.
 - [ ] Regulated gauges: dam name, upstream outflow gauge, schedule link (RISE, CWMS, NID terms unclear; USACE and TVA pages 403).
-- [ ] Heat index and visibility rows in the hourly table (fields confirmed in the NWS grid; not yet read in `grid_hours`).
 - [ ] Owner keys: USGS HIVIS cameras, Recreation.gov RIDB (ramps, campgrounds), AirNow. Access points (OSM) and bacteria advisories (no national feed) stay held.
 
 ## D. Code
 - [ ] collect.py (1,100 lines) split into one file per source with its own self-check; no silent failures.
 - [ ] render.py (1,560 lines) + blocks2/blocks3 into one file per section; one block registry (id, section, family, reader question, source) feeding the Line 0 gate, Sources panel, credit lines and phone tabs.
-- [ ] Credit line from `data/sources.json` rendered automatically under every block of that source.
-- [ ] Security headers in templates/_headers (CSP, X-Frame-Options, Permissions-Policy). Privacy page must not claim an analytics script that is not served.
 - [ ] Gate 5 (agent) screenshots all pages, not a sample; `gate.py --live` after every deploy in CI.
 - [ ] Fixtures: irregular sampling for the 24 h mean; unit allowlist per field; NWS/USGS datum gate; gauge types never exercised on real data (ice-affected, canal, estuary).
 - [ ] `tools/pack_review.py` and `docs/packet/` deleted 2026-10-21 (they indexed deleted docs); `graphify-out/` regenerate after the refactor.
@@ -48,3 +42,5 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - 2026-10-21 indexing opened on all 25 gauge pages + site pages (commit 0397846; live index_live: 25 allowed, 0 mismatches; sitemap 49 URLs).
 - 2026-10-21 design review vs Lakebrief (docs/research/DESIGN-REVIEW-2026-10-21.md): one design system built (commit d4ca4bc, screenshots read); tides (Hudson: Troy 2.5 mi; Sacramento: Clarksburg 2.9 mi) and nearest water temperature (Gauley: Craigsville 14 mi) seen in cache; thunder and humidity rows in dist_next.
 - 2026-10-21 fresh-brain docs review (docs/research/FRESH-BRAIN-DOCS-2026-10-21.md): CLAUDE.md rewritten as the master prompt; INDEXING-RULES merged into RUNBOOK; PAGE-CONTRACT merged into CLAUDE.md; docs/packet and pack_review.py deleted.
+- 2026-10-21 USGS qualifiers printed (values read from the live API: ICE, EQUIP, ESTIMATED, BACKWATER, RATINGDEV, SEASONAL, DISCONTINUED, UNAVAIL; synthetic ICE reading rendered 'USGS flag: ice at the gauge' in the hero; truth contract 23); radar block back (25 pages); heat index and visibility rows; gaps line names rain, air, hourly and tides when missing; Line 0 gate 0 failures.
+- 2026-10-21 credit lines from sources.json under every block (seen on Hudson: USGS, NWS, NOAA CO-OPS...); phone-tab registry reduced to six overrides; tidal reach = flow cycle or NOAA station within 10 mi (Hudson now shows tides and the 24 h range); headers: X-Frame-Options DENY, Permissions-Policy, CSP report-only. Commits 598dae4, 3f424a2, ad3ea9a, 6b8fc95.

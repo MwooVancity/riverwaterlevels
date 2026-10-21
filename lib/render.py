@@ -407,8 +407,7 @@ def hero(G, pages=None):
     norm_word, norm_plain = word, plain  # the trend tile below reuses the name `word`
     pre, dir_chip, word_note = tiles, "", ""
     if G["osc"]:
-        v24 = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
-        tiles += ui.tile("trend", "steady", "24 h range", '<span class="rng">%s to %s</span> <small>cfs</small>' % (fmt(min(v24)), fmt(max(v24))), '<small id="ccap">Lowest to highest reading in 24 h (tidal cycle)</small>')
+        pass  # the 24 h range already sits on the flow tile and in the answer sentence of a tidal reach (no third copy)
     elif flow_jitter(G) and c.get("sg6") is not None:
         lo_, hi_, rg_ = flow_jitter(G)
         d6 = c["sg6"]
