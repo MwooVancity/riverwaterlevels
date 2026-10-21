@@ -47,6 +47,21 @@ def hours_old(iso_s, now):
         return None
 
 
+QUAL = {"ICE": "ice at the gauge, reading affected", "EQUIP": "equipment problem", "ESTIMATED": "estimated, not measured", "BACKWATER": "backwater from downstream, flow uncertain",
+        "RATINGDEV": "flow rating under review", "SEASONAL": "seasonal gauge", "DISCONTINUED": "discontinued", "UNAVAIL": "reading unavailable"}
+
+
+def qual_text(r):
+    """USGS qualifier on one reading, in plain words; '' when none. The flag is printed wherever the number is: an iced gauge must never read as a plain number."""
+    q = (r or {}).get("qualifier")
+    if isinstance(q, str):
+        q = [q]
+    if not isinstance(q, list):
+        return ""
+    words = [QUAL.get(str(x).upper(), str(x)) for x in q if str(x).strip()]
+    return ("USGS flag: " + "; ".join(esc(w) for w in words)) if words else ""
+
+
 def series(rec, code):
     out = []
     for r in rec["usgs"]["rows"]:
@@ -367,7 +382,7 @@ def hero(G, pages=None):
     bcls = "" if p is None else "b-la" if p != 101 and p < 25 else "b-lp" if p == 101 or p > 75 else "b-lb"
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmt(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
     tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>%s</small>%s' % (next_impact(G) or "Level relative to the gauge\'s zero", "" if sg else ""))
+                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>%s</small>%s' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if sg and qual_text(sg[-1][2]) else "") or next_impact(G) or "Level relative to the gauge\'s zero", "" if sg else ""))
     if p is None:
         word, plain = "–", ""
     else:
@@ -420,7 +435,7 @@ def hero(G, pages=None):
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + '<small id="pcap">%s</small>' % esc(cap), ("wide " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     trend_html = tiles[len(pre):]
-    tiles = pre.replace("@@DIR@@", "<small>%s</small>" % esc(dir_chip or "Last 24 hours")) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
+    tiles = pre.replace("@@DIR@@", "<small>%s</small>" % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
         fcw = c["fc"]
@@ -505,6 +520,14 @@ def hero(G, pages=None):
         gone.append("water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river)")
     if b_quality(G) is None:
         gone.append("clarity (no USGS turbidity or water-quality sensor at this gauge)")
+    if not c["rain"]:
+        gone.append("rain estimate (no NWS precipitation estimate in the last 6 h)")
+    if not c["air"]:
+        gone.append("air observation (no NWS station report in the last 12 h)")
+    if not ((G["rec"].get("nws") or {}).get("hourly")):
+        gone.append("hourly weather (no NWS hourly forecast for this location)")
+    if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
+        gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not measured at this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 
@@ -667,7 +690,7 @@ def b_quality(G):
             t, v, r = s[-1]
             unit = UNITS.get(r.get("unit_of_measure"), r.get("unit_of_measure") or "")
             shown = ("%.1f °F (%.1f °C)" % (v * 9 / 5 + 32, v)) if (code == "00010" and unit == "°C") else ("%s %s" % (fmt(v), esc(unit)))
-            rows += tr([esc(lab), shown, esc(tzl(t, G["zone"]))], right=(1,))
+            rows += tr([esc(lab), shown + ((' <b class="qual">%s</b>' % qual_text(r)) if qual_text(r) else ""), esc(tzl(t, G["zone"]))], right=(1,))
     if not rows:
         return None
     return block("quality_sensors", "Water quality sensors", "live", table(["Measure", "Latest value", "Observed"], rows, right=(1,)), "Source: USGS Water Data API (continuous values). Values as reported by the gauge, provisional.", "usgs")
@@ -1193,6 +1216,14 @@ def b_air(G):
     return block("air_obs", "Air conditions", "obs", body, "Source: National Weather Service station %s, observed %s." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
 
 
+def b_radar(G):
+    st = (G["rec"].get("nws") or {}).get("radar")
+    if not st:
+        return None
+    return block("radar", "Radar", "official", '<img src="https://radar.weather.gov/ridge/standard/%s_loop.gif" alt="Radar loop, station %s" width="600" height="550" loading="lazy" style="max-width:100%%;height:auto">' % (esc(st), esc(st)),
+                 "Source: National Weather Service radar, station %s. The loop is served live by the NWS and shows its own frame times." % esc(st), "rfc")
+
+
 def b_weather(G, n_periods=14):
     n = G["rec"].get("nws") or {}
     per = n.get("periods") or []
@@ -1259,6 +1290,8 @@ def b_heatmap(G):
             ("Cloud %", lambda h: h.get("sky"), lambda v: v / 100, "%.0f"),
             ("Thunder %", lambda h: h.get("thunder"), lambda v: v / 100, "%.0f"),
             ("Humidity %", lambda h: h.get("rh"), lambda v: v / 100, "%.0f"),
+            ("Heat index &deg;F", lambda h: None if h.get("heat_c") is None else h["heat_c"] * 9 / 5 + 32, lambda v: (v - 20) / 90, "%.0f"),
+            ("Visibility mi", lambda h: None if h.get("vis_m") is None else h["vis_m"] / 1609.344, lambda v: v / 10, "%.0f"),
             ("Rain in/h", lambda h: None if h.get("qpf_mm") is None else h["qpf_mm"] / 25.4, lambda v: v / 0.1, "%.2f"),
             ("Rain chance %", lambda h: pop.get(parse_t(h["t"])), lambda v: v / 100, "%.0f"))
     rows = ""
@@ -1281,7 +1314,7 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
-                "SEC:What the water is like now", b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b_rain(G),
+                "SEC:What the water is like now", b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b_rain(G), b_radar(G),
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
                 "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G)]) + [
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G), b_wtemp(G), b_snotel(G),
@@ -1343,7 +1376,7 @@ run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning and it does not decide for you: no alert does not mean conditions are safe. It shows the readings a person uses to judge whether to fish, paddle, swim, tube or wade today; the judgement is yours. <a href="/disclaimer/">Disclaimer</a></p>'
 # the phone tab of a block: by id, because a gauge with no river forecast has no "Forecast" heading to start the weather group
-GROUP_OF = {i: "weather" for i in ("river_forecast", "nwm_forecast", "nwm_medium", "no_forecast", "rain_totals", "forecast_rain_totals", "wpc_outlooks", "cpc_outlook", "hourly_heatmap", "hourly_forecast", "weather_forecast", "radar")}
+GROUP_OF = {i: "weather" for i in ("river_forecast", "nwm_forecast", "nwm_medium", "no_forecast", "rain_totals", "forecast_rain_totals", "wpc_outlooks", "cpc_outlook", "hourly_heatmap", "hourly_forecast", "weather_forecast")}
 GROUP_OF.update({i: "data" for i in ("quality_sensors", "snowpack", "water_temp_months")})
 GROUP_OF["rate_of_change"] = "history"
 GROUP_OF.update({i: "now" for i in ("quality_sensors", "hourly_heatmap", "hourly_forecast", "weather_forecast", "rain_totals")})  # what the water is like now: on the Now tab  # the rise-and-fall table is detail, not the answer: it leaves the Now tab

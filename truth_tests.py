@@ -64,6 +64,10 @@ def main():
         # 22. a forecast flow "by the NWS rating" belongs to the NWS point's own rating: never shown at a tidal reach or when the point is another place (Hudson at Green Island showed 2,170 cfs against a measured 6,060)
         if "by the NWS rating" in h and (G["osc"] or render.nws_point_note(G)):
             fail(site, "forecast cfs by the NWS rating shown at a tidal gauge or at a forecast point in another place")
+        # 23. a USGS qualifier on the latest flow or stage reading (ICE, EQUIP, ESTIMATED...) is printed next to the number
+        for nm, ser in (("flow", G["fl"]), ("stage", G["sg"])):
+            if ser and render.qual_text(ser[-1][2]) and "USGS flag:" not in h:
+                fail(site, "latest %s reading carries a USGS qualifier %s but the page prints it as a plain number" % (nm, ser[-1][2].get("qualifier")))
         # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):

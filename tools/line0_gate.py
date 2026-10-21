@@ -21,6 +21,7 @@ ITEMS = [  # name, regex that proves the item is shown OR honestly declared abse
     ("hourly weather", r'id="hourly_(heatmap|forecast)"'),
     ("thunder chance row in the hourly table (or no hourly table)", r'Thunder %|id="hourly_forecast"'),
     ("daylight (sunset tile)", r'class="tile sun'),
+    ("radar loop (or no NWS radar station)", r'(?s)id="radar"|^(?!.*"radar": "[A-Z])'),
     ("trend pill", r'<span class="a1">'),
     ("tide table on a tidal reach (or not tidal)", r'(?s)id="tides"|^(?!.*This reach is tidal)'),
     ("river forecast tile (incl. Not issued)", r'class="tile fcst'),

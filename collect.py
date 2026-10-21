@@ -572,7 +572,7 @@ def fetch_nwm(site):
 
 def grid_hours(gp, hours=168):
     """Expand NWS gridpoint interval values to one row per hour: temp, wind, gust, direction, sky cover and rain amount (mm per hour)."""
-    keys = {"temperature": "temp_c", "windSpeed": "wind_kmh", "windGust": "gust_kmh", "windDirection": "dir", "skyCover": "sky", "quantitativePrecipitation": "qpf_mm", "probabilityOfThunder": "thunder", "relativeHumidity": "rh"}
+    keys = {"temperature": "temp_c", "windSpeed": "wind_kmh", "windGust": "gust_kmh", "windDirection": "dir", "skyCover": "sky", "quantitativePrecipitation": "qpf_mm", "probabilityOfThunder": "thunder", "relativeHumidity": "rh", "heatIndex": "heat_c", "visibility": "vis_m"}
     now = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
     rows = [{"t": (now + datetime.timedelta(hours=i)).isoformat()} for i in range(hours)]
     for src, dst in keys.items():
