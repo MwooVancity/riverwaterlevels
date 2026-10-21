@@ -294,7 +294,7 @@ def conditions(G, pages=None):
 def b_tides(G):
     """High and low tide predictions at the nearest NOAA station, shown on reaches whose flow cycles within the day (tidal)."""
     t = G["rec"].get("tides")
-    if not t or not G.get("osc") or not t.get("rows"):
+    if not t or not t.get("rows") or not (G.get("osc") or t.get("mi", 99) <= 10):  # tidal by the flow cycle, or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
         return None
     rows = "".join(tr([esc(r["t"][11:16] + (" " + r["t"][:10] if i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10] else "")), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % r["v"]], right=(2,)) for i, r in enumerate(t["rows"]))
     return block("tides", "Tides, next two days", "official", table(["Time (station local)", "Tide", "Height above MLLW"], rows, right=(2,)),

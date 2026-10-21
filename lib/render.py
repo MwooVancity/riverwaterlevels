@@ -181,6 +181,16 @@ def ctx(site, row, rec, now):
     return out
 
 
+def credit_line(b):
+    """The credit sentence the source's terms ask for (data/sources.json `credit`), printed once under every block of that source; '' when the register has none."""
+    out = []
+    for sid in [b.get("src_id")] + list(b.get("also") or []):
+        c = (SOURCES.get(sid) or {}).get("credit")
+        if c and c not in out:
+            out.append(c)
+    return "".join(" Credit: %s." % esc(c.rstrip(".")) for c in out)
+
+
 def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
     return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber}
 
@@ -195,7 +205,7 @@ FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}
 
 def render_block(b):
     amber = (' <span class="tag amber">Older than %s</span>' % LIMIT_TEXT.get(b["id"], "12 h")) if b.get("amber") else ""
-    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<details class="srcd"><summary>Where this comes from</summary><p class="src">%s</p></details></section>' % (FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now"), b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"]))
+    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<details class="srcd"><summary>Where this comes from</summary><p class="src">%s%s</p></details></section>' % (FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now"), b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"], credit_line(b)))
 
 
 def table(heads, rows, right=(), hide=(), stack=False):
@@ -1376,10 +1386,8 @@ run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning and it does not decide for you: no alert does not mean conditions are safe. It shows the readings a person uses to judge whether to fish, paddle, swim, tube or wade today; the judgement is yours. <a href="/disclaimer/">Disclaimer</a></p>'
 # the phone tab of a block: by id, because a gauge with no river forecast has no "Forecast" heading to start the weather group
-GROUP_OF = {i: "weather" for i in ("river_forecast", "nwm_forecast", "nwm_medium", "no_forecast", "rain_totals", "forecast_rain_totals", "wpc_outlooks", "cpc_outlook", "hourly_heatmap", "hourly_forecast", "weather_forecast")}
-GROUP_OF.update({i: "data" for i in ("quality_sensors", "snowpack", "water_temp_months")})
-GROUP_OF["rate_of_change"] = "history"
-GROUP_OF.update({i: "now" for i in ("quality_sensors", "hourly_heatmap", "hourly_forecast", "weather_forecast", "rain_totals")})  # what the water is like now: on the Now tab  # the rise-and-fall table is detail, not the answer: it leaves the Now tab
+# phone tab of a block: its "SEC:" heading decides (What the water / Level, flow = Now; Forecast = Forecast; How today = History; folds and the side column = Data / Area); these few ids override their section
+GROUP_OF = {"rate_of_change": "history", "snowpack": "data", "water_temp_months": "data", "forecast_rain_totals": "weather", "wpc_outlooks": "weather", "cpc_outlook": "weather"}
 RANGE_JS = """<script>(function(){var s=document.querySelectorAll('.rseg');if(!s.length)return;document.documentElement.classList.add('js');s.forEach(function(g){var b=g.parentNode;g.addEventListener('click',function(e){var t=e.target.closest('button');if(!t)return;var r=t.getAttribute('data-r');g.querySelectorAll('button').forEach(function(x){var on=x===t;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on)});b.querySelectorAll('.rg').forEach(function(p){p.classList.toggle('on',p.getAttribute('data-r')===r)})})})})();</script>"""
 GTABS_JS = """<script>(function(){var bar=document.querySelector('.gtabs');if(!bar||location.search.indexOf('tabs=off')>=0)return;var m=window.matchMedia('(max-width:760px)'),btns=[].slice.call(bar.querySelectorAll('button')),top=document.getElementById('tabtop');
 function grp(el){var g=el&&el.closest?el.closest('[data-g]'):null;return g?g.getAttribute('data-g'):null}
