@@ -29,6 +29,11 @@ valid: value, unit, time, Source line. valid-empty: the source said "nothing", p
 - The editor gate judges the page as built (external requests blocked); `truth_fuzz.py` skips itself until `lib/*` changes. Windows: PowerShell has no `&&`; Git Bash needs `MSYS_NO_PATHCONV=1` for `/paths/`; `python -I` drops the script folder from `sys.path` (scripts insert ROOT). Never write code through a shell heredoc; write a script file.
 - Commit with explicit paths; `git add -f docs/research/<report>` (that folder is git-ignored). Trailer per the current attribution reminder.
 
+## Adding gauges (the site grows here)
+- `python -I tools/release.py N` takes the next N gauges from the priority list (`docs/research/priority/picks.csv`, the owner's order; the formula in `tools/rescore.py` is a tiebreaker), marks them live in `data/waves.csv`, collects them in full and builds them held. A new page goes live only with a signed SHIP (`tools/record_review.py --pages-only`) and into Google only through `tools/open_wave.py N --apply`. One river, one gauge first: the gauge nearest the put-in or the fishing town; more gauges on the same river come later.
+- The scheduled refresh covers EVERY gauge with a cache file (`collect.py` with no site arguments; never a hard-coded list). A page that is not refreshed every 30 minutes is a wrong page.
+- Pace: 25 a wave; the next wave opens when the last one has been crawled and no number incident happened. Order is re-cut from Search Console queries once the owner verifies the property.
+
 ## New data source
 Row in `data/sources.json` with the quoted terms, credit line and `read_on` (research by WebSearch, evidence level recorded; nothing from memory); fetch in `collect.py` (`fetch_extras` tuple); `python -I tools/gen_cache_shape.py`; one `b_*` block with its four states; one line in `tools/line0_gate.py`; new hash, new review. Held sources and why: `data/sources.json` `off` rows (access points, ramps, cameras, dams, rainfall frequency, reservoir releases, flood zones: terms unclear or an owner key).
 
