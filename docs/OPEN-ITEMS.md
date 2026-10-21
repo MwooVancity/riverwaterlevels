@@ -2,6 +2,7 @@
 
 Run `python -I tools/open_items.py` at session start. A line leaves this file only with proof in the DONE log. Rewritten 2026-10-21 to match the code (fresh-brain docs review); history is in git.
 
+- Scale (owner says no more rivers for now): before 70 gauges, bulk-only fast lane and per-state alerts; before 150, matrix collect by state with TTLs; before 5,000, per-gauge build; before 16,000, Workers Paid. Numbers in CLAUDE.md "Scale ceilings" and docs/research/SCALE-AUDIT-2026-10-21.md.
 ## A. Ship (local commits d4ca4bc..HEAD, not deployed; owner runs the gates when ready)
 
 ## B. Wrong-number risks (first after the ship)
