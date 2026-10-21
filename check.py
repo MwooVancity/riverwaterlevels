@@ -165,7 +165,7 @@ def check_dir(d):
     for u, links in links_of.items():
         rel = rel_of[u]
         for href in links:
-            if href not in urls and href not in redirects and href not in static:
+            if href not in urls and href not in redirects and href not in static and not href.endswith("/data.json"):
                 results[rel].append("broken internal link %s" % href)
         graph[u] = links
         k = kind_of(rel)

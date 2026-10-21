@@ -306,7 +306,10 @@ def hero(G, pages=None):
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not measured at this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
-    return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
+    # Lakebrief comparison 2026-10-21: one line a forum post or local paper can paste, built only from fields already on the page
+    cite = '<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
+        esc(river_at(G["river"], G["place"])), esc(G["st"]), ("%.2f ft" % G["sg"][-1][1]) if G["sg"] else "not measured", (fmtc(G["lv"]) + " cfs") if G["lv"] is not None else "not reporting", G["site"], esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
+    return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html + cite
 
 
 def calm_hours(G):
