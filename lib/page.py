@@ -281,7 +281,9 @@ def build_tab(tab, G, pages):
     shown = [b for b in flat if isinstance(b, dict)]
     river, place, st = G["river"], G["place"], G["st"]
     rp = river_at(river, place)
-    title = mk_title(T["title"] % (rp, st))
+    # SEO review 2026-10-21: the query is "<river> water level"; the one templated competitor that ranks carries the reading in its title
+    reading = ", ".join(x for x in (("water level %.2f ft" % G["sg"][-1][1]) if G["sg"] else "", ("flow %s cfs" % fmtc(G["lv"])) if G["lv"] is not None else "") if x) or "water level and flow"
+    title = mk_title("%s, %s: %s" % (rp, st, reading)) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ""  # the age chip in the same line already says how old and colours by age (design review 2026-10-21: one statement of age)

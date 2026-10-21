@@ -153,5 +153,5 @@ def b_impacts(G):
             margin = (margin + "; " if margin else "") + "rest of the statement in the full list below"
         icards.append(card("%s%s" % ("At " if s_ <= (cur_ if cur_ is not None else -1e9) else "Next: ", "%.1f %s" % (s_, esc(unit))), esc(short), margin))
     itable = table(["Stage", "National Weather Service impact statement"], rows, right=(0,))
-    return block("flood_impacts", "Flood impacts by stage", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
+    return block("flood_impacts", "Flood impacts by stage, as issued by NWS", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
                  "Source: National Weather Service forecast point %s (%s). Statements are quoted from the NWS and describe that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
