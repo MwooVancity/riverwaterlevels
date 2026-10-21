@@ -13,7 +13,7 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - [ ] Access points (OSM terms) and bacteria advisories (no national feed) stay held. Lees Ferry has no AirNow monitor within reach (declared on the page).
 
 ## D. Code
-- [ ] Musk pass (owner 2026-10-21): fold six test files into two (number contracts, page structure) and six browser checks into two (visual, live script); one reviewer round per template change.
+- [ ] One reviewer round per template change (Musk pass); the test and check folds are done.
 - [ ] Fixtures: irregular sampling for the 24 h mean; unit allowlist per field; NWS/USGS datum gate; gauge types never exercised on real data (ice-affected, canal, estuary).
 
 ## E. Owner only
@@ -43,3 +43,5 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - 2026-10-21 credit lines from sources.json under every block (seen on Hudson: USGS, NWS, NOAA CO-OPS...); phone-tab registry reduced to six overrides; tidal reach = flow cycle or NOAA station within 10 mi (Hudson now shows tides and the 24 h range); headers: X-Frame-Options DENY, Permissions-Policy, CSP report-only. Commits 598dae4, 3f424a2, ad3ea9a, 6b8fc95.
 - 2026-10-21 owner keys: USGS, RIDB, AirNow in .env and GitHub secrets; cameras at 4 gauges, air quality at 24, recreation sites at 15 (dist_next grep); Line 0 gate 0 failures; commits e9c221d, 2599b70.
 - 2026-10-21 render.py split into core/hero/charts/weather/forecast/page with a facade; build byte-identical (60 files compared); fuzzer deleted (owner); commits 7a8af88, 41c9bc9. Collector split struck: every source already logs its failure and keeps the previous value.
+- 2026-10-21 test and check files folded (tests.py, truth_time.py, five browser scripts gone; truth_types, tests_logic, live_tests, editor_gate carry every check; same results as the baseline); fuzzer deleted (owner). Commit fc83e85.
+- 2026-10-21 copy editor and trust audit (docs/research/COPY-REVIEW-2026-10-21.md) applied: trust pages true to the build, publisher waiver on About, American spelling, one time and date format, raw source codes gone, NOAA and EPA tags; truth_tests, truth_types, tests_logic, line0_gate, editor_gate all pass on dist_next. Commit b518967. Left: FNU and µS/cm glossed, NAVD88 expanded, ACIS station compass suffixes, quoted NWS phrase casing.
