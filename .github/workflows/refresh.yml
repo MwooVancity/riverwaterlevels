@@ -57,7 +57,7 @@ jobs:
       - name: Refresh (collect, build, check, publish, deploy, live check)
         run: |
           if [ "${{ steps.mode.outputs.mode }}" = "fast" ]; then python refresh.py --fast; else python refresh.py; fi
-      - name: Percentile cross-check against USGS daily history (full runs, after the deploy: a mismatch fails the run so the owner gets the email)
+      - name: "Percentile cross-check against USGS daily history (full runs, after the deploy; a mismatch fails the run so the owner gets the email)"
         if: success() && steps.mode.outputs.mode == 'full'
         run: python tools/pct_crosscheck.py
       - name: Show the log when it fails

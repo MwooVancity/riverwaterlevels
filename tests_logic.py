@@ -11,6 +11,27 @@ CHECKS = [("unit checks (percentile, axis labels, place phrasing, hidden blocks)
           ("upstream/downstream pairs are listed on both pages", tests.related_closure),
           ("a SHIP needs a signature tied to its report", tests.signed_review),
           ("noindex kill switch: hold, open, allow list, header rule", tests.index_gate)]
+def workflows_parse():
+    """A workflow file that is not valid YAML never starts: GitHub shows a 0-second failure and every scheduled refresh stops silently (happened 2026-10-20)."""
+    import glob
+    try:
+        import yaml
+    except ImportError:
+        return True  # PyYAML missing on this machine: nothing to check with
+    root = os.path.dirname(os.path.abspath(__file__))
+    for f in glob.glob(os.path.join(root, ".github", "workflows", "*.yml")):
+        try:
+            d = yaml.safe_load(open(f, encoding="utf-8"))
+        except Exception as e:
+            print("  workflow does not parse:", os.path.basename(f), str(e).splitlines()[-1][:100])
+            return False
+        if not isinstance(d, dict) or not (d.get("on") or d.get(True)) or not d.get("jobs"):
+            print("  workflow lacks on/jobs:", os.path.basename(f))
+            return False
+    return True
+
+
+CHECKS.append(("GitHub workflow files are valid YAML with triggers and jobs", workflows_parse))
 bad = [name for name, fn in CHECKS if not fn()]
 print("tests logic: %d checks, %d failures" % (len(CHECKS), len(bad)))
 for b in bad:
