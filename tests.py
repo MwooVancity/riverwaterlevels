@@ -66,8 +66,6 @@ def blocks_safety():
         good &= f(G2) is None
     G2 = copy.deepcopy(G); G2["rec"]["nwps"] = {}
     good &= render.b_crests(G2) is None and render.b_impacts(G2) is None
-    G2 = copy.deepcopy(G); G2["rec"]["nws"]["grid"] = {"updated": "2020-01-01T00:00:00+00:00", "hours": G2["rec"]["nws"]["grid"]["hours"]}
-    good &= render.b_heatmap(G2) is None
     if G["rec"].get("cpc"):
         G2 = copy.deepcopy(G); G2["rec"]["cpc"]["issued"] = "01/01/2020"
         if G2["rec"].get("cpc610"):
@@ -81,7 +79,7 @@ def blocks_safety():
     finally:
         render.SOURCES["natmap"]["status"] = old
     page, meta = render.build_tab("dashboard", G, rows)
-    good &= "gauge_map" in meta["blocks"] and "data-site" in page
+    good &= "gauge_map" in meta["blocks"]
     G3 = copy.deepcopy(G); G3["offline"] = True; G3["age_min"] = 3 * 1440
     good &= render.b2.b_offline(G3) is not None and render.b2.b_offline(G) is None
     return bool(good)

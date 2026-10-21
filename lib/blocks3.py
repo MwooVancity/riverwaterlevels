@@ -41,41 +41,8 @@ def b_nws_point(G, pages=None):
                  "Source: National Weather Service National Water Prediction Service, forecast point %s, fetched %s." % (esc(n["lid"]), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
 
 
-def b_declarations(G):
-    d = G["rec"].get("openfema")
-    if not d:
-        return None
-    items = d.get("items") or []
-    area = ((items[0].get("area") if items else None) or "this county").replace(" (County)", " County")
-    rows = "".join(tr([esc(i["id"] or ""), fdate(i["date"]) if i["date"][:4].isdigit() else "–", "%s to %s" % (fdate(i["begin"]), fdate(i["end"])) if i["begin"][:4].isdigit() and i["end"][:4].isdigit() else "–", esc(i["title"] or ""),
-                       esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "–")]) for i in items)
-    cards = [card(fdate(i["date"]) if i["date"][:4].isdigit() else "–", esc(i["title"] or "Declaration"), "%s &middot; %s" % (esc(i["id"] or ""), esc(", ".join(x for x, f in (("Public assistance", i.get("pa")), ("Individual assistance", i.get("ia"))) if f) or "no assistance programs listed"))) for i in items[:4]]
-    full = table(["Declaration", "Declared", "Incident period", "Title", "Programs"], rows) if rows else ""
-    body = ("<p>%d federal flood disaster declarations on file for %s. The latest %d:</p>" % (d["count"], esc(area), len(cards))) + (rail(cards, "Latest federal flood declarations") + (more("All %d on file here" % len(items), full) if len(items) > len(cards) else "") if cards else "")  # five visible columns: on a phone the site stacks them as label-and-value rows instead of clipping
-    return block("flood_declarations", "Federal flood disaster declarations", "hist", body,
-                 "Source: This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA. Dataset: Disaster Declarations Summaries, endpoint https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries (v2), accessed %s. Declarations whose type is Flood or whose title contains FLOOD; the 12 most recent are listed." % esc(tzl(parse_t(d["fetched_at"]), G["zone"])), "openfema")
-
-
 def _usd(v):
     return "$%s" % fmt(v) if v else "$0"
-
-
-def b_storms(G):
-    s = G["rec"].get("storms")
-    if not s:
-        return None
-    raw = s.get("county") or ""
-    county = raw.title().replace(" (C)", "")
-    kind = s.get("kind") or "County"
-    summary = tr([fmt(s["n"]), fmt(s["deaths"]), fmt(s["injuries"]), _usd(s["damage"])], right=(0, 1, 2, 3))
-    body = rail([card("Flood and flash flood events", fmt(s["n"])), card("Deaths", fmt(s["deaths"])), card("Injuries", fmt(s["injuries"])), card("Property and crop damage", _usd(s["damage"]))], "Flood events, totals")
-    if s.get("recent"):
-        evc = [card(fdate(r[2]) if r[2][:4].isdigit() and len(r[2]) == 10 else esc(r[2]), esc(r[3]), "%s &middot; %s &middot; deaths %s &middot; damage %s" % (esc(r[7] or "cause not stated"), esc(((r[9] if len(r) > 9 else "") or "location not stated").title()), r[4], _usd(r[6]))) for r in s["recent"][:3]]
-        rows = "".join(tr([fdate(r[2]) if r[2][:4].isdigit() and len(r[2]) == 10 else esc(r[2]), esc(r[3]), esc(r[7] or "–"), esc(((r[9] if len(r) > 9 else "") or "–").title()), str(r[4]), _usd(r[6])], right=(4, 5)) for r in s["recent"])
-        body += "<h3>Most recent events</h3>" + rail(evc, "Most recent flood events") + (more("All %d recent events" % len(s["recent"]), table(["Date", "Type", "Cause", "Location", "Deaths", "Damage"], rows, right=(4, 5))) if len(s["recent"]) > 3 else "")
-    return block("storm_events", "Flood events in %s %s, %d to %d" % (esc(county or "this"), kind, s["years"][0], s["years"][1]), "hist", body,
-                 "Source: NOAA National Centers for Environmental Information, Storm Events Database (county-level Flood and Flash Flood events), %d to %d, fetched %s. Deaths include direct and indirect; damage is as reported to NCEI. NCEI data are in the public domain in the United States." % (
-                     s["years"][0], s["years"][1], esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "ncei")
 
 
 def b_dams(G):
@@ -340,10 +307,12 @@ def b_wpc(G):
             except ValueError:
                 return s_
         rows = "".join(tr([esc(o["name"]), esc((o.get("category") or "").title()), esc(loc(o["issued"])), "%s to %s" % (esc(loc(o["start"])), esc(loc(o["end"])))]) for o in w["outlooks"])
-        body += "<h3>Outlooks covering this location</h3>" + table(["Outlook", "Category", "Issued", "Valid"], rows)
+        ocards = [card(esc(o["name"]), esc((o.get("category") or "–").title()), "issued %s &middot; valid %s to %s" % (esc(loc(o["issued"])), esc(loc(o["start"])), esc(loc(o["end"])))) for o in w["outlooks"]]
+        body += "<h3>Outlooks covering this location</h3>" + rail(ocards, "Flood outlooks covering this location") + more("Outlooks as a table", table(["Outlook", "Category", "Issued", "Valid"], rows))
     if w.get("reports"):
         rows = "".join(tr([esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "–", esc(r["type"] or ""), esc("%s, %s" % (r["where"], r["state"]) if r["where"] else (r["state"] or "")), esc(r["remarks"] or "–")]) for r in w["reports"])
-        body += "<h3>Flood reports within 50 miles, last 72 hours (%d)</h3>" % w["n_reports"] + table(["Reported", "Type", "Location", "Report as received"], rows)
+        rcards = [card(esc(r["type"] or "Report"), esc("%s, %s" % (r["where"], r["state"]) if r["where"] else (r["state"] or "–")), esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "") for r in w["reports"][:6]]
+        body += "<h3>Flood reports within 50 miles, last 72 hours (%d)</h3>" % w["n_reports"] + rail(rcards, "Flood reports within 50 miles") + more("All %d reports with the text as received" % len(w["reports"]), table(["Reported", "Type", "Location", "Report as received"], rows))
     if not body:
         return None
     out_b = block("wpc_outlooks", "Flood outlooks and reports", "official", body,

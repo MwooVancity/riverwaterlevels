@@ -84,7 +84,7 @@ def spark(values, w=150, h=34):
     lo = (hi + lo) / 2 - span / 2
     pts = ["%.1f,%.1f" % (2 + i * (w - 4) / (len(v) - 1), 3 + (1 - (x - lo) / span) * (h - 6)) for i, x in enumerate(v)]
     ex, ey = pts[-1].split(",")
-    return '<svg class="spark" viewBox="0 0 %d %d" width="%d" height="%d" aria-hidden="true"><polyline points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"/></svg>' % (w, h, w, h, " ".join(pts), ex, ey)
+    return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"/></svg>' % (w, h, w, h, " ".join(pts), ex, ey)
 
 
 def ladder(cats, cur, fc=None, now_label="Latest"):

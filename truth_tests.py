@@ -61,6 +61,9 @@ def main():
                     fail(site, "no alert but the strip claims one: %r" % spans[2])
                 if c["alerts"] is None and "unknown" not in spans[2]:
                     fail(site, "alert source unknown but the strip does not say so: %r" % spans[2])
+        # 22. a forecast flow "by the NWS rating" belongs to the NWS point's own rating: never shown at a tidal reach or when the point is another place (Hudson at Green Island showed 2,170 cfs against a measured 6,060)
+        if "by the NWS rating" in h and (G["osc"] or render.nws_point_note(G)):
+            fail(site, "forecast cfs by the NWS rating shown at a tidal gauge or at a forecast point in another place")
         # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):
@@ -120,9 +123,7 @@ def main():
             t24 = re.search(r"<td[^>]*>24 h</td>.*?\(([+-]?\d+\.\d)%\)", rb["body"], re.S) if rb else None
             if m24 and t24 and abs(float(m24.group(1)) - float(t24.group(1))) > 0.051:
                 fail(site, "tile says %s%% in 24 h but the rate table says %s%%" % (m24.group(1), t24.group(1)))
-        # 13. dams: every gauge page says something about upstream dams (a count, "below a dam", none counted, or not available), never silence
-        if not re.search(r"Dams in the upstream watershed|below a dam|counts no dams|number of dams upstream", h):
-            fail(site, "no statement about upstream dams on the page")
+        # 13. (dropped 2026-10-20, owner: the upstream-dams note is not useful to the reader)
         # 14. the forecast high on the tile appears in the river forecast table (the table must reach the peak it headlines)
         if c["fc"]:
             fb = render.b_river_forecast(G)
@@ -163,23 +164,20 @@ def main():
             fail(site, "page says no NWS point is linked but the data has point %s" % nwl)
         if not nwl and "Not issued" in h and "River forecast" in h:
             fail(site, "page says a point exists but the data has none")
-        gaps = (re.search(r'<p class="gaps">Not available[^<]*', h) or [""])[0] if re.search(r'<p class="gaps">Not available', h) else ""
-        if not c["wt"] and "water temperature" not in gaps:
-            fail(site, "no water temperature and the page does not say so")
-        if not (G["rec"].get("nwps") or {}).get("categories") and "flood stages" not in gaps:
-            fail(site, "no NWS flood stages and the page does not say so")
-        if not c["rain"] and "rain estimate" not in gaps:
-            fail(site, "no rain estimate and the page does not say so")
+        # (the "not available for this gauge" list was removed 2026-10-20 by the owner; a missing tile needs no note) but missing flood stages must still be said, inside the stage block: silence there reads as "no flood risk"
+        sb_ = render.b2.b_stage_chart(G)
+        if sb_ and not (G["rec"].get("nwps") or {}).get("categories") and "publishes no flood stages" not in sb_["body"]:
+            fail(site, "no NWS flood stages and the stage block does not say so")
         if c["wt"] and c["wt"]["f"] < -40:
             fail(site, "impossible water temperature %.0f F shown" % c["wt"]["f"])
-        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "already above this forecast" not in h:
+        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "already above this forecast" not in h and not G["osc"]:  # a tidal reach prints the tidal note instead
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:
             if al["n"] and ('class="abanner"' not in h or "NWS alerts</span>" in h):
                 fail(site, "active alert: banner missing or empty-alert tile still shown")
-            if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No alerts active here" not in h:  # an old answer says so instead (contract 18)
-                fail(site, "no alert: the tile does not say so")
+            if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No active NWS alerts" not in h:  # an old answer says so instead (contract 18); a fresh none is the answer pill
+                fail(site, "no alert: the answer pill does not say so")
     if n < 5:
         fail("setup", "only %d gauges rendered" % n)
 
@@ -193,7 +191,7 @@ def main():
             G2 = copy.deepcopy(base)
             G2["p"] = p
             h = render.hero(G2, None)
-            m = re.search(r'<span>Compared with past years</span><b>([^<]+)</b><small class="nt">([^<]+)</small>', h)
+            m = re.search(r'<span>Is this normal for [^<]*\?</span><b>([^<]+)</b><small class="nt">([^<]+)</small>', h)
             if not m:
                 fail("band %s" % p, "comparison tile not found")
                 continue

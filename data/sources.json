@@ -159,12 +159,14 @@
   {
    "id": "usdm",
    "name": "U.S. Drought Monitor",
-   "status": "off",
+   "status": "quoted",
    "terms_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
-   "summary": "Only a map credit line ('Map courtesy of NDMC') was found; no data or web-service terms found. Off until the terms are read.",
+   "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '©2026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
+   "credit": "The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.",
    "blocks": [
     "drought_monitor"
-   ]
+   ],
+   "read_on": "2026-10-20"
   },
   {
    "id": "nid",
@@ -241,12 +243,14 @@
   {
    "id": "acis",
    "name": "NOAA Regional Climate Centers ACIS",
-   "status": "off",
-   "terms_url": "https://www.rcc-acis.org/",
-   "summary": "Terms not yet read. Off until read.",
+   "status": "quoted",
+   "terms_url": "https://www.rcc-acis.org/disclaimer.html",
+   "summary": "ACIS Terms of Use and Disclaimer: products 'provide users with a means to routinely access recent weather and climate data'; 'near-real-time data are preliminary in nature and sometimes contain errors'; 'use preliminary data and information at their own risk'; 'Through use of the data services through the ACIS website, you automatically agree to the terms of use and disclaimer.' No licence or credit sentence.",
+   "credit": "Station climate data: NOAA Regional Climate Centers, ACIS (preliminary)",
    "blocks": [
     "county_station_rain"
-   ]
+   ],
+   "read_on": "2026-10-20"
   },
   {
    "id": "nwm",

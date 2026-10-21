@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import WAVE0
 
-CODES = "00060,00065,00010,00300,63680,00400,00095,99133"
+CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
@@ -369,20 +369,6 @@ def county_codes(rec):
     return STATE_FIPS[ugc[:2]], ugc[3:]
 
 
-def fetch_openfema(rec):
-    """Federal flood disaster declarations for the gauge's county (OpenFEMA DisasterDeclarationsSummaries)."""
-    cc = county_codes(rec)
-    if not cc:
-        return None
-    flt = "fipsStateCode eq '%s' and fipsCountyCode eq '%s' and (incidentType eq 'Flood' or substringof('FLOOD',declarationTitle))" % cc
-    q = urllib.parse.urlencode({"$filter": flt, "$orderby": "declarationDate desc", "$top": "12", "$inlinecount": "allpages",
-                                "$select": "femaDeclarationString,declarationDate,incidentBeginDate,incidentEndDate,declarationTitle,paProgramDeclared,iaProgramDeclared,designatedArea"}, quote_via=urllib.parse.quote)
-    j = json.loads(get_text("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?" + q))
-    items = [{"id": x.get("femaDeclarationString"), "date": str(x.get("declarationDate"))[:10], "begin": str(x.get("incidentBeginDate"))[:10], "end": str(x.get("incidentEndDate"))[:10], "title": x.get("declarationTitle"),
-              "pa": x.get("paProgramDeclared"), "ia": x.get("iaProgramDeclared"), "area": x.get("designatedArea")} for x in j.get("DisasterDeclarationsSummaries", [])]
-    return {"fetched_at": now_iso(), "count": (j.get("metadata") or {}).get("count", len(items)), "items": items}
-
-
 def _money(v):
     v = str(v or "").strip().upper()
     if not v:
@@ -417,34 +403,6 @@ def ncei_year(year):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     json.dump(rows, open(path, "w"), separators=(",", ":"))
     return rows
-
-
-def fetch_storms(rec, years=10):
-    """Flood and flash flood events recorded for the gauge's county over the last `years` years (NOAA NCEI Storm Events Database)."""
-    cc = county_codes(rec)
-    if not cc:
-        return None
-    sf, cf = cc
-    last = datetime.date.today().year
-    ev = []
-    for y in range(last - years, last + 1):
-        try:
-            ev += [r for r in ncei_year(y) if r[0].lstrip("0") == sf.lstrip("0") and r[1].lstrip("0") == cf.lstrip("0")]
-        except Exception:
-            continue
-    ev.sort(key=lambda r: r[2], reverse=True)
-    return {"fetched_at": now_iso(), "years": [last - years, last], "n": len(ev), "deaths": sum(r[4] for r in ev), "injuries": sum(r[5] for r in ev), "damage": sum(r[6] for r in ev),
-            "county": ev[0][8] if ev else None, "kind": "City" if int(cf) >= 500 else "County", "recent": ev[:10]}
-
-
-def fetch_echo(lat, lon):
-    """EPA ECHO: Clean Water Act individual-permit facilities within 5 miles (summary counts only)."""
-    q = urllib.parse.urlencode({"output": "JSON", "p_lat": "%.4f" % lat, "p_long": "%.4f" % lon, "p_radius": "5", "p_act": "Y", "p_ptype": "NPD"})
-    j = json.loads(get_text("https://echodata.epa.gov/echo/cwa_rest_services.get_facilities?" + q))
-    r = j.get("Results", j)
-    keys = ("QueryRows", "SVRows", "CVRows", "V3Rows", "INSPRows", "VioLast4QRows", "TotalPenalties")
-    out = {k: r.get(k) for k in keys}
-    return {"fetched_at": now_iso(), "counts": out} if out.get("QueryRows") is not None else None
 
 
 def fetch_acis(rec):
@@ -813,10 +771,12 @@ def record_summary(rows, stats):
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
+    for gone in ("echo", "openfema", "storms"):  # sources no page shows any more (owner 2026-10-20): drop them from caches restored from older runs
+        rec.pop(gone, None)
     want = next((a[7:].split(",") for a in sys.argv if a.startswith("--keys=")), None)
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
-                    ("related", lambda: related_lag(rec, h)), ("openfema", lambda: fetch_openfema(rec)), ("storms", lambda: fetch_storms(rec)), ("echo", lambda: fetch_echo(lat, lon)), ("acis", lambda: fetch_acis(rec)),
+                    ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)),
                     ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):

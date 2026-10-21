@@ -29,10 +29,6 @@
 "start": "str",
 "temp": "dict"
 },
-"echo": {
-"counts": "dict",
-"fetched_at": "iso"
-},
 "fema_zone": {
 "fetched_at": "iso",
 "meters": "num",
@@ -108,11 +104,6 @@
 "radar": "str",
 "radar_ll": "list",
 "tz": "str"
-},
-"openfema": {
-"count": "num",
-"fetched_at": "iso",
-"items": "list"
 },
 "peaks": {
 "fetched_at": "iso",
@@ -521,17 +512,6 @@
 "12-29": "list",
 "12-30": "list",
 "12-31": "list"
-},
-"storms": {
-"county": "str",
-"damage": "num",
-"deaths": "num",
-"fetched_at": "iso",
-"injuries": "num",
-"kind": "str",
-"n": "num",
-"recent": "list",
-"years": "list"
 },
 "streamcat": {
 "comid": "num",

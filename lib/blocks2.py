@@ -101,7 +101,7 @@ def b_stage_chart(G):
             rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
     lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, "Latest, %s:" % tzl(G["sg"][-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
-    body = lad + svg + table(["Measure", "Gage height", "Note"], rows, right=(1,))
+    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
     src = "Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)

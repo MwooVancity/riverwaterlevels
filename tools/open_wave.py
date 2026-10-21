@@ -58,7 +58,7 @@ def main():
         print("  %s  %s at %s  score %s" % (u, r, p, s))
     print("not eligible: %s" % skipped)
     if not pick:
-        print("none: pages need a SHIP verdict in data/reviews.json first (docs/REVIEW-PROMPT.md)")
+        print("none: pages need a SHIP verdict in data/reviews.json first (docs/REVIEW-1ST.md)")
     if "--apply" in sys.argv and pick:
         cfg["open"] = True
         cfg["allow"] = sorted(have | {u for u, *_ in pick})

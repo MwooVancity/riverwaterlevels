@@ -1,2 +1,2 @@
-{"maxTabHeight": 7200, "answerBottom": 600, "gridTiles": 4, "maxRepeat": 7, "minTabs": 3,
- "editor": {"repeat": 2, "trendRepeat": 1, "tileChars": 340, "firstWords": 180, "unitShown": true}}
+{"maxTabHeight": 6150, "maxNowHeight": 5800, "answerBottom": 600, "gridTiles": 4, "maxRepeat": 7, "minTabs": 3,
+ "editor": {"repeat": 2, "trendRepeat": 1, "tileChars": 380, "firstWords": 200, "unitShown": true}}

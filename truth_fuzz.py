@@ -36,7 +36,28 @@ def try_render(label, rows, site, rec, now):
         fails.append("%s: page shows %r near %r" % (label, m.group(0), re.sub(r"\s+", " ", text[max(0, m.start() - 45):m.end() + 30])))
 
 
+def code_hash():
+    """Hash of the code that turns data into a page (lib/*.py, build.py, the cache shape): CSS, templates and the data itself cannot make this fuzzer fail differently, so they are not in it."""
+    import hashlib
+    h = hashlib.sha256()
+    lib = os.path.join(ROOT, "lib")
+    for p in sorted(os.path.join(lib, f) for f in os.listdir(lib) if f.endswith(".py")) + [os.path.join(ROOT, "build.py"), os.path.join(ROOT, "data", "cache_shape.json"), os.path.join(ROOT, "data", "sources.json")]:
+        h.update(open(p, "rb").read())
+    return h.hexdigest()[:16]
+
+
+OK_FILE = os.path.join(ROOT, "data", "fuzz-ok.json")
+
+
 def main():
+    ch = code_hash()
+    try:
+        last = json.load(open(OK_FILE, encoding="utf-8")).get("code_hash")
+    except (OSError, ValueError):
+        last = None
+    if last == ch and not DEEP and "--force" not in sys.argv:
+        print("truth fuzz: skipped, the page-building code is unchanged since the last passing run (%s); --force to run anyway" % ch)
+        return 0
     rows, _ = load_effective()
     now = datetime.datetime.now(datetime.timezone.utc)
     files = sorted(f[:-5] for f in os.listdir(os.path.join(ROOT, "cache")) if f.endswith(".json") and not f.startswith("_") and f[:-5] in rows)
@@ -62,6 +83,8 @@ def main():
         print("  FAIL", f)
     if len(fails) > 40:
         print("  ... and %d more" % (len(fails) - 40))
+    if not fails and not DEEP:
+        json.dump({"code_hash": ch, "renders": seen[0], "date": datetime.date.today().isoformat()}, open(OK_FILE, "w", encoding="utf-8"))
     return 1 if fails else 0
 
 

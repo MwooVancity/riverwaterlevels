@@ -47,15 +47,26 @@ for (const u of urls) {
       const r = e.getBoundingClientRect(); if (r.width === 0 || r.height === 0 || r.top >= 844 || getComputedStyle(e).visibility === 'hidden') continue;
       firstWords += (n.textContent.trim().split(/\s+/).filter(Boolean)).length;
     }
+    // detail checks (2026-10-20, "be autistic and adhd about everything on the page"): the things one notices only when staring at it
+    const all = document.body.innerText, ex = [];
+    const bare = (all.match(/(?<!gauge )(?<![\d.,A-Za-z-])\d{5,}(?![\d,.A-Za-z])/g) || []).filter(n => !/^(19|20)\d\d$/.test(n)); if (bare.length) ex.push('number without thousands comma: ' + bare[0]);
+    const odd = all.match(/ ,| \.(?!\d)|\.\.(?!\.)|,,|\( | \)|\bundefined\b|\bNaN\b|\[object/); if (odd) ex.push('stray punctuation or code text: "' + odd[0] + '"');
+    const cf = new Set((all.match(/\bcfs\b/gi) || [])); if (cf.size > 1) ex.push('cfs written two ways: ' + [...cf].join(' and '));
+    const dup = all.match(/\b(\w{3,})[ \t]+\1\b/i);  // same line only: a unit ending one tile and starting the next is not a typo if (dup && !/^(that|had)$/i.test(dup[1])) ex.push('repeated word: "' + dup[0] + '"');
+    const empty = [...document.querySelectorAll('.tile,.card.blk')].filter(e => e.getBoundingClientRect().height > 0 && (e.innerText || '').trim().length < 3).length; if (empty) ex.push(empty + ' empty tile or block');
+    const rowH = {}; for (const t of document.querySelectorAll('.cstrip .tile')) { const r = t.getBoundingClientRect(); if (r.height) (rowH[Math.round(r.top)] = rowH[Math.round(r.top)] || []).push(Math.round(r.height)); }
+    const uneven = Object.values(rowH).filter(h => h.length > 1 && Math.max(...h) - Math.min(...h) > 2).length; if (uneven) ex.push(uneven + ' tile row(s) with tiles of different height');
+    const detail = ex;
     const hasFlow = !!document.querySelector('.tile.flow');
     const unitShown = !hasFlow || /cubic feet per second/i.test(document.body.innerText);
-    return { repeat, trendRepeat, tileChars, firstWords, unitShown };
+    return { repeat, trendRepeat, tileChars, firstWords, unitShown, detail };
   });
   rows.push({ u, ...m });
   if (m.repeat > (B.repeat ?? 1e9)) bad.push(`${u}: one timestamp or line repeated ${m.repeat} times in the top block > ${B.repeat}`);
   if (m.trendRepeat > (B.trendRepeat ?? 1e9)) bad.push(`${u}: trend word written ${m.trendRepeat} times in the top block > ${B.trendRepeat}`);
   if (m.tileChars > (B.tileChars ?? 1e9)) bad.push(`${u}: a swipe-strip tile runs to ${m.tileChars} characters > ${B.tileChars}`);
   if (m.firstWords > (B.firstWords ?? 1e9)) bad.push(`${u}: ${m.firstWords} words on the first phone screen > ${B.firstWords}`);
+  for (const d of m.detail) bad.push(`${u}: ${d}`);
   if (B.unitShown && !m.unitShown) bad.push(`${u}: "cfs" is never spelled out in visible text`);
   await c.close();
 }

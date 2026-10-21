@@ -16,14 +16,13 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
          ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
-SOFT = [PY + ["tools/truth_live.py"], PY + ["tools/index_live.py"]]  # after the deploy: every live gauge page against USGS and NWS; logged, the watchdog alerts on it
 PLAN = subprocess.run(PY + ["tools/gate_plan.py"], cwd=ROOT, capture_output=True, text=True, creationflags=NOWIN).stdout.strip() or "full"  # light = same template as the live site: a data refresh
-# Always run, they block a deploy: the template needs a signed fresh-brain SHIP (docs/REVIEW-PROMPT.md); every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
-ALWAYS = [PY + ["tools/stamp_template.py"], PY + ["tools/template_hash.py", "--check"], PY + ["check.py", "--selftest"], PY + ["truth_tests.py"], PY + ["truth_types.py"], PY + ["truth_time.py"], PY + ["tests_logic.py"], PY + ["tools/truth_live.py", "--dir", "dist_next"]]
+# Always run, they block a deploy: the template needs a signed fresh-brain SHIP (docs/REVIEW-1ST.md); every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
+sys.path.insert(0, ROOT)
+from gates import ALWAYS, BROWSER, SOFT  # the one list of gates (gates.py); `python -I gate.py` runs the same list by hand
 # Only when the template changed (or the live template cannot be read): browser layout gates. They passed for this exact template when it was released, so a font or browser hiccup can never freeze fresh data.
-BROWSER = [["node", "ui_gates.mjs"], ["node", "tools/review/search_test.mjs"], ["node", "tools/review/clip_all.mjs"], ["node", "tools/review/alerts_live_test.mjs"], ["node", "tools/review/range_test.mjs"], ["node", "tools/review/reader_budget.mjs"], ["node", "tools/review/editor_gate.mjs"], ["node", "tools/review/live_flow_test.mjs"], PY + ["truth_fuzz.py"]]
 STEPS[3:3] = ALWAYS + (BROWSER if PLAN == "full" else [])
-STEPS.append(SOFT[0])
+STEPS.extend(SOFT)
 code = 0
 try:
     log.write("\n=== %s %s, gates: %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full", PLAN))
@@ -39,5 +38,13 @@ try:
 finally:
     log.close()
     os.remove(LOCK)
+    try:  # runs/ retention: keep 14 days of per-run folders (repo audit 2026-10-20: 476 folders, unbounded growth)
+        import shutil, time
+        for d in os.listdir(os.path.join(ROOT, "runs")):
+            p = os.path.join(ROOT, "runs", d)
+            if os.path.isdir(p) and time.time() - os.path.getmtime(p) > 14 * 86400:
+                shutil.rmtree(p, ignore_errors=True)
+    except OSError:
+        pass
 print("refresh", "OK" if code == 0 else "FAILED (see runs/refresh.log)")
 sys.exit(code)

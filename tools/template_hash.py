@@ -27,7 +27,7 @@ def main():
         sys.path.insert(0, ROOT)
         from lib.reviewgate import is_ship
         if not is_ship(rv.get("templates", {}).get(cur), cur):
-            print("TEMPLATE NOT REVIEWED: no SHIP verdict for template %s (see docs/REVIEW-PROMPT.md)" % cur)
+            print("TEMPLATE NOT REVIEWED: no SHIP verdict for template %s (see docs/REVIEW-1ST.md)" % cur)
             return 1
     return 0
 

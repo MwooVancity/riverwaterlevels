@@ -3,6 +3,8 @@ name: refresh
 # Rebuilds and deploys the site without the owner's computer.
 # Every 30 minutes: fast refresh (newest USGS readings, NWS, NWPS, rain). Every 6 hours: full refresh (all slow sources).
 on:
+  push:
+    branches: [main]  # every push runs the gates and, only if they pass, deploys (repo audit 2026-10-20: a push never ran a gate before)
   schedule:
     - cron: "5,35 * * * *"
     - cron: "20 3,9,15,21 * * *"

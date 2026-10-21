@@ -23,13 +23,15 @@ const bad = [], rows = [];
 for (const u of urls) {
   const c = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const p = await c.newPage();
+  await p.route('**/*', r => (r.request().url().startsWith(base) ? r.continue() : r.abort()));  // external images (radar) load at different speeds: block them so heights are the same on every run
   await p.goto(base + u, { waitUntil: 'load' });
   await p.waitForSelector('.gtabs button', { timeout: 10000 }).catch(() => {});  // a page that really has no tabs still fails below
   await p.waitForTimeout(300);
   const m = await p.evaluate(() => {
     const tabs = [...document.querySelectorAll('.gtabs button')];
     let maxTab = document.documentElement.scrollHeight, tabCount = tabs.length;
-    for (const t of tabs) { t.click(); maxTab = Math.max(maxTab, document.documentElement.scrollHeight); }
+    const nowTab = maxTab, perTab = {};  // the page opens on the Now tab: its height is the first thing a reader scrolls
+    for (const t of tabs) { t.click(); const h = document.documentElement.scrollHeight; perTab[t.textContent.trim()] = h; maxTab = Math.max(maxTab, h); }
     if (tabs[0]) tabs[0].click();
     window.scrollTo(0, 0);
     const ans = document.querySelector('.answer');
@@ -42,18 +44,23 @@ for (const u of urls) {
       for (const mm of (s.innerText || '').matchAll(/[-+]?[0-9][0-9,]*\.?[0-9]*\s?(cfs|ft|%|in|mph|years)/g)) { const f = mm[0].replace(/\s+/g, ' '); (figs[f] = figs[f] || new Set()).add(k); }
     }
     const maxRepeat = Math.max(0, ...Object.values(figs).map(v => v.size));
-    return { maxTab, tabCount, answerBottom, grid, rails, maxRepeat };
+    return { maxTab, nowTab, perTab, tabCount, answerBottom, grid, rails, maxRepeat };
   });
   rows.push({ u, ...m });
-  if (m.maxTab > BUDGET.maxTabHeight) bad.push(`${u}: tallest phone tab ${m.maxTab} px > budget ${BUDGET.maxTabHeight}`);
+  const warn = [];
+  if (m.maxTab > BUDGET.maxTabHeight) warn.push(`${u}: tallest phone tab ${m.maxTab} px > budget ${BUDGET.maxTabHeight}`);
+  if (BUDGET.maxNowHeight && m.nowTab > BUDGET.maxNowHeight) warn.push(`${u}: the Now tab is ${m.nowTab} px > budget ${BUDGET.maxNowHeight}`);
   if (m.answerBottom > BUDGET.answerBottom) bad.push(`${u}: one-line answer ends at ${m.answerBottom} px > ${BUDGET.answerBottom}`);
   if (m.grid > BUDGET.gridTiles) bad.push(`${u}: ${m.grid} tiles in the grid > ${BUDGET.gridTiles}`);
   if (m.maxRepeat > BUDGET.maxRepeat) bad.push(`${u}: one figure repeated in ${m.maxRepeat} blocks > ${BUDGET.maxRepeat}`);
   if (m.tabCount < BUDGET.minTabs) bad.push(`${u}: only ${m.tabCount} phone tabs (< ${BUDGET.minTabs})`);
+  for (const w of warn) console.log('WARN (height, not blocking: a Line 0 block is never cut for length) ' + w);
   await c.close();
 }
 await b.close(); srv.close();
 const worst = rows.reduce((a, r) => (r.maxTab > a.maxTab ? r : a), rows[0]);
+const tall = rows.reduce((a, r) => { for (const [k, v] of Object.entries(r.perTab)) if (v > a[1]) a = [k + ' ' + r.u, v]; return a; }, ['', 0]);
+console.log(`Now tab at most ${Math.max(...rows.map(r => r.nowTab))} px; tallest tab is ${tall[0]} at ${tall[1]} px`);
 console.log(`reader budget: ${rows.length} pages; tallest phone tab ${worst.maxTab} px (${worst.u}); budget ${BUDGET.maxTabHeight}; max repeat ${Math.max(...rows.map(r => r.maxRepeat))}; max grid tiles ${Math.max(...rows.map(r => r.grid))}; answer ends by ${Math.max(...rows.map(r => r.answerBottom))} px`);
 if (bad.length) { console.log('READER BUDGET FAILED:\n' + bad.slice(0, 25).join('\n')); process.exit(1); }
 console.log('reader budget passes');

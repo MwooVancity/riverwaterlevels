@@ -1,4 +1,4 @@
-"""Record a fresh-brain review verdict (docs/REVIEW-PROMPT.md) in data/reviews.json.
+"""Record a fresh-brain review verdict (docs/REVIEW-1ST.md) in data/reviews.json.
 Usage: python tools/record_review.py SHIP docs/research/FRESH-REVIEW-7.md [--reviewer="who or what reviewed"]            marks the current template hash and every NEW gauge page in dist_next (not yet live)
        python tools/record_review.py HOLD docs/research/FRESH-REVIEW-7.md            records a HOLD (nothing unlocks)
 Only run it after the report is written and its P0 list is empty; publish.py refuses new gauge pages without a SHIP entry."""
@@ -35,6 +35,8 @@ def main():
     # --pages=/river/a/b/,/river/c/d/ : live pages this report names and read (each one needs its own signed SHIP before it may be indexed; GRANDFATHERED never unlocks indexing)
     named = [u for a_ in sys.argv if a_.startswith("--pages=") for u in a_.split("=", 1)[1].split(",") if u]
     text = open(os.path.join(ROOT, report), encoding="utf-8").read()
+    if verdict == "SHIP" and "## #1 COMPARISON" not in text:
+        sys.exit("refused: the report has no '## #1 COMPARISON' section. The reviewer must answer 'would this reach #1 against the top 3 results' (docs/REVIEW-1ST.md).")
     for u in named:
         if not GAUGE.match(u) or u not in set(urls("dist")):
             sys.exit("not a live gauge page: " + u)
