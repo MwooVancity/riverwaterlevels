@@ -254,7 +254,7 @@ def hero(G, pages=None):
         strip += ui.tile("wtemp near", "thermo", "Water temperature nearby", '%.0f<small>&deg;F</small>' % nw["f"], '<small>No sensor at this gauge. %s: %s, %.0f mi away%s &middot; %s</small>' % ("Nearest on this river" if _same else "Nearest sensor", esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
     if c["up"]:
         up = c["up"]
-        strip += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), (" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else "") + ((" &middot; " + esc(up["time"])) if up.get("time") else "") + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
+        strip += ui.tile("upst", "up", "Upstream gauge now", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), ((" &middot; measured lag about %d h" % up["lag"]) if up.get("lag") else "") + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
     al_ = c["alerts"]
     if al_ is None:
