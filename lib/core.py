@@ -12,7 +12,7 @@ CSS = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
 LABELS = {"00010": "Water temperature", "00300": "Dissolved oxygen", "63680": "Turbidity", "00400": "pH", "00095": "Specific conductance", "99133": "Nitrate plus nitrite", "00045": "Rain at the gauge (precipitation)", "00055": "Water velocity", "72255": "Water velocity", "00480": "Salinity"}
 
 
-UNITS = {"degC": "°C", "deg C": "°C", "mg/l": "mg/L", "_FNU": "FNU", "uS/cm": "µS/cm", "pH Units": "pH units", "ft3/s": "cfs"}
+UNITS = {"degC": "°C", "deg C": "°C", "mg/l": "mg/L", "_FNU": "FNU (turbidity units)", "uS/cm": "µS/cm (conductance)", "pH Units": "pH units", "ft3/s": "cfs"}
 
 
 TAGS = {"agency": "Agency data", "live": "Live gauge", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}

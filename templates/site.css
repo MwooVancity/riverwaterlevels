@@ -246,7 +246,7 @@ h1{font-size:1.75rem;line-height:1.15;margin:8px 0 6px}
 .tile>span::before{display:none}.tile .ic,.cstrip .tile .ic{display:none}
 .tile b,.tile.flow b,.tile.stage b,.tile.norm b{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px;font:700 2.75rem/1 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:lining-nums tabular-nums;margin:0}
 .tile b small,.tile b small abbr{font:500 1rem/1 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);text-decoration:none}
-.tile.norm b{font-size:1.9rem;letter-spacing:-.01em}.tile.fcst.none b,.tile.alrt b{font-size:1.4rem;letter-spacing:0}
+.tile.norm b{font-size:1.9rem;letter-spacing:-.01em}.tile.calm b{font-size:1.6rem;letter-spacing:0}.tile.fcst.none b,.tile.alrt b{font-size:1.4rem;letter-spacing:0}
 .tile>small,.cstrip .tile>small,body .tile small{display:block;font:400 .8rem/1.4 system-ui,sans-serif;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile.norm>small,.tile small.cold,.tile.alrt>small,.tile.fcst>small{white-space:normal}
 .tile small.cold{color:var(--warn)}.tile small.word{font:600 .9rem system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}

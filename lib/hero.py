@@ -193,9 +193,11 @@ def hero(G, pages=None):
             dir_chip = ("Steady: no change in %s" % span) if word == "Steady" and abs(use) < 0.05 else "%s: %s%.1f%% flow in %s" % (("%s, leveling off" % ("Falling" if use < 0 else "Rising")) if word == "Leveling off" else word, "+" if use > 0 else "-" if use < 0 else "", abs(use), span)
             word_note = word_note or {"Leveling off": "<small>It moved over %s but has changed by less than 0.5%% in the last hour.</small>" % span, "Unsteady": "<small>The last hour points the other way from the last %s.</small>" % span}.get(word, "")
             tiles += ui.tile("trend " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%% <small class="word">%s</small>' % ("+" if use > 0 else "-" if use < 0 else "", abs(use), word),
-                             '<small>%s</small>' % parts + (word_note if word == "Unclear" else "") + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
+                             '<small>%s%s</small>' % (parts, (" &middot; gage %+.2f ft/h" % gr) if (gr := gage_rate(G)) is not None else "") + (word_note if word == "Unclear" else "")
+                             + (('<small>Last 20%% rise: %s.</small>' % (("%.0f days ago" % lbr if lbr >= 1.5 else "%.0f hours ago" % (lbr * 24)) if lbr is not None and lbr >= 0 else "none in the last 7 days")) if (lbr := last_big_rise(G)) != -1 else "")
+                             + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % G["ldate"].strftime("%b %d").replace(" 0", " "), norm_word,
-                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + '<small id="pcap">%s</small>' % esc(cap), ("wide " + bcls).strip())
+                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>%s last year: %s cfs (USGS daily mean).</small>' % (ly[1], fmtc(ly[0]))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
@@ -283,6 +285,11 @@ def hero(G, pages=None):
     if st_:
         sh, _, sz = tzl(st_[1], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
         strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], G["ldate"], -6.0)) else "", moon_phase(G["ldate"])[0].lower(), moon_phase(G["ldate"])[1]))
+    ch = calm_hours(G)
+    if ch:
+        runs_, n_ = ch
+        strip += ui.tile("calm", "sun", "Calm daylight hours today", (esc(runs_[0]) if runs_ else "No calm hour") + (' <small>+%d more</small>' % (len(runs_) - 1) if len(runs_) > 1 else ""),
+                         '<small>%s</small>' % esc(("; ".join(runs_) + ": " if runs_ else "No daylight hour today: ") + "no thunder, wind under 15 mph, no rain in the NWS hourly grid (%d daylight hours checked)" % n_))
     gone = []
     if not c["wt"] and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
         gone.append("water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river)")
@@ -300,6 +307,98 @@ def hero(G, pages=None):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not measured at this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
+
+
+def calm_hours(G):
+    """Daylight hours today with no thunder, wind under 15 mph and no rain in the NWS hourly grid, as runs like '7a to 11a'; None when the grid or the sun times are missing."""
+    hrs = ((G["rec"].get("nws") or {}).get("grid") or {}).get("hours") or []
+    st_ = sun_times(G["lat"], G["lon"], G["ldate"])
+    if not hrs or not st_:
+        return None
+    zone = G["zone"]
+    ok = []
+    for h in hrs:
+        try:
+            t = parse_t(h["t"]).astimezone(zone)
+        except (TypeError, ValueError):
+            continue
+        if t.date() != G["ldate"] or t < st_[0].astimezone(zone) or t > st_[1].astimezone(zone):
+            continue
+        calm = (h.get("thunder") or 0) < 30 and (h.get("wind_kmh") or 0) < 24.1 and (h.get("qpf_mm") or 0) < 0.3
+        ok.append((t, calm))
+    if not ok:
+        return None
+    runs, cur = [], None
+    for t, calm in ok:
+        if calm and cur is None:
+            cur = [t, t]
+        elif calm:
+            cur[1] = t
+        elif cur:
+            runs.append(cur); cur = None
+    if cur:
+        runs.append(cur)
+    def hh(t):
+        return "%d%s" % (t.hour % 12 or 12, "a" if t.hour < 12 else "p")
+    sunset = st_[1].astimezone(zone)
+    return [("%s to %s" % (hh(a), hh(min(b + datetime.timedelta(hours=1), sunset)))) if a != b else hh(a) for a, b in runs], len(ok)
+
+
+def last_year_flow(G):
+    """Daily mean flow on this date a year ago from the multi-year window (USGS daily means); None when the window does not cover it."""
+    m = G["rec"].get("multiyear") or {}
+    ser, span, as_of = m.get("series") or {}, m.get("span"), m.get("as_of")
+    if not ser or not span or not as_of:
+        return None
+    try:
+        off = (datetime.date.fromisoformat(as_of) - G["ldate"]).days
+    except ValueError:
+        return None
+    idx = span - 1 - off
+    row = ser.get(str(G["ldate"].year - 1))
+    if row is None:
+        return None
+    if off < 0 and len(row):  # the daily window ends at as_of (USGS daily means lag a day or two): use its last day and name the date
+        idx, when = len(row) - 1, datetime.date.fromisoformat(as_of)
+    else:
+        when = G["ldate"]
+    if not (0 <= idx < len(row)) or row[idx] is None:
+        return None
+    return row[idx], when.strftime("%b %d").replace(" 0", " ")
+
+
+def gage_rate(G):
+    """Gage height change over the last hour in ft/h (two readings an hour apart); None when under 0.05 ft/h or no stage."""
+    sg = G["sg"]
+    if not sg:
+        return None
+    t1, v1, _ = sg[-1]
+    past = [x for x in sg if x[0] <= t1 - datetime.timedelta(minutes=55)]
+    if not past:
+        return None
+    t0, v0, _ = past[-1]
+    hrs = (t1 - t0).total_seconds() / 3600
+    if hrs <= 0:
+        return None
+    r = (v1 - v0) / hrs
+    return r if abs(r) >= 0.05 else None
+
+
+def last_big_rise(G):
+    """Days since the flow last rose 20% or more within 6 h (7-day series); None when no rise, -1 when the series is too short."""
+    fl = G["fl"]
+    if len(fl) < 12:
+        return -1
+    best = None
+    for i in range(len(fl) - 1, 0, -1):
+        t, v, _ = fl[i]
+        lo = min((x[1] for x in fl if t - datetime.timedelta(hours=6) <= x[0] < t), default=None)
+        if lo and lo > 0 and v >= 1.2 * lo:
+            best = t
+            break
+    if best is None:
+        return None
+    return (G["lt"] - best).total_seconds() / 86400
 
 
 def storm_line(G):
