@@ -26,7 +26,8 @@ def main():
     rv.setdefault("templates", {}); rv.setdefault("pages", {})
     rv_by = next((a_.split("=", 1)[1] for a_ in sys.argv if a_.startswith("--reviewer=")), "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)")
     entry = {"verdict": verdict, "report": report, "date": datetime.date.today().isoformat(), "reviewer": rv_by}
-    rv["templates"][template_hash()] = dict(entry, sig=sign(verdict, report, template_hash()))
+    if "--pages-only" not in sys.argv:  # --pages-only: sign the named live pages for a report that reviewed them on an already-signed template, without writing a template entry for the (possibly newer) working tree
+        rv["templates"][template_hash()] = dict(entry, sig=sign(verdict, report, template_hash()))
     live = set(urls("dist"))
     new = [u for u in urls("dist_next") if GAUGE.match(u) and u not in live]
     for u in new:

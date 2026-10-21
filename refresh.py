@@ -16,7 +16,7 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
          ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
-SOFT = [PY + ["tools/truth_live.py"]]  # after the deploy: every live gauge page against USGS and NWS; logged, the watchdog alerts on it
+SOFT = [PY + ["tools/truth_live.py"], PY + ["tools/index_live.py"]]  # after the deploy: every live gauge page against USGS and NWS; logged, the watchdog alerts on it
 PLAN = subprocess.run(PY + ["tools/gate_plan.py"], cwd=ROOT, capture_output=True, text=True, creationflags=NOWIN).stdout.strip() or "full"  # light = same template as the live site: a data refresh
 # Always run, they block a deploy: the template needs a signed fresh-brain SHIP (docs/REVIEW-PROMPT.md); every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
 ALWAYS = [PY + ["tools/stamp_template.py"], PY + ["tools/template_hash.py", "--check"], PY + ["check.py", "--selftest"], PY + ["truth_tests.py"], PY + ["truth_types.py"], PY + ["truth_time.py"], PY + ["tests_logic.py"], PY + ["tools/truth_live.py", "--dir", "dist_next"]]

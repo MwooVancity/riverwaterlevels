@@ -59,9 +59,12 @@
    "date": "2026-10-19"
   },
   "/river/delaware-river-nj/trenton/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "0c186811d44132c11c67b58c"
   },
   "/river/delaware-river-nj/trenton/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -82,9 +85,12 @@
    "date": "2026-10-19"
   },
   "/river/susquehanna-river-pa/marietta/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "8f594e487f1ce3335d60c6c0"
   },
   "/river/susquehanna-river-pa/marietta/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -139,14 +145,20 @@
    "sig": "64c6646d024af68184cd9bb2"
   },
   "/river/new-river-wv/thurmond/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "dd262631819c247e274ffae1"
   },
   "/river/gauley-river/above-belva/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "540e5031b0fc6940ed0402ab"
   },
   "/river/ohio-river-ky/louisville/": {
    "verdict": "SHIP",
@@ -162,19 +174,28 @@
    "date": "2026-10-19"
   },
   "/river/madison-river/below-ennis-lake/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "800a3f8d0d0dd4036e3cf6e3"
   },
   "/river/yellowstone-river-mt/livingston/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "7f4bea86e6b4419e3c2d3b72"
   },
   "/river/missouri-river-mo/kansas-city/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "a360527d913823f9c0d8e1fb"
   },
   "/river/missouri-river-mo/kansas-city/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -182,9 +203,12 @@
    "date": "2026-10-19"
   },
   "/river/mississippi-river-mo/saint-louis/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "fa54e54860d885c97938acfa"
   },
   "/river/mississippi-river-mo/saint-louis/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -192,9 +216,12 @@
    "date": "2026-10-19"
   },
   "/river/arkansas-river-co/avondale-07109500/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "0935d52596a5a295dc7466d4"
   },
   "/river/arkansas-river-co/avondale-07109500/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -202,9 +229,12 @@
    "date": "2026-10-19"
   },
   "/river/roaring-fork-river/glenwood-springs/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "b3412bd2cb88e0bf21cde751"
   },
   "/river/roaring-fork-river/glenwood-springs/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -238,9 +268,12 @@
    "date": "2026-10-19"
   },
   "/river/verde-river/camp-verde/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "e0f68116cfbe99ea79803d70"
   },
   "/river/verde-river/camp-verde/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -248,9 +281,12 @@
    "date": "2026-10-19"
   },
   "/river/sacramento-river/freeport/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "a871fcf1342316b96cb4f2bd"
   },
   "/river/salmon-river-id/white-bird/": {
    "verdict": "SHIP",
@@ -266,9 +302,12 @@
    "date": "2026-10-19"
   },
   "/river/snake-river-wa/anatone/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "e534812316f92fbd8614e7e6"
   },
   "/river/snake-river-wa/anatone/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -276,9 +315,12 @@
    "date": "2026-10-19"
   },
   "/river/deschutes-river-or/moody/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "d8d24074f6f259c049cbbd49"
   },
   "/river/deschutes-river-or/moody/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -286,9 +328,12 @@
    "date": "2026-10-19"
   },
   "/river/columbia-river-or/the-dalles/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-W.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "4fec235dd797d85d",
+   "sig": "03e7103369053d19d6569fa1"
   }
  }
 }
