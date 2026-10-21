@@ -4,7 +4,7 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 
 ## The site is up but a number looks wrong on a page
 1. Do not wait. Tell Claude: "Wrong number on <page URL>: I see <what> and the official source says <what>."
-2. Claude pulls the page from Google the same hour (`python -I tools/open_wave.py --pull <url>`), rolls back if needed (`python -I publish.py --rollback`) and finds the cause.
+2. Claude pulls the page from Google the same hour (`python -I tools/open_wave.py --pull <url>`), rolls back the live site if needed (`npx wrangler rollback`, Cloudflare keeps the previous releases) and finds the cause.
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
 ## Email: "watchdog failed" (hourly check of the live site)

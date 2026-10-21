@@ -5,6 +5,7 @@ name: refresh
 on:
   push:
     branches: [main]  # every push runs the gates and, only if they pass, deploys (repo audit 2026-10-20: a push never ran a gate before)
+    paths-ignore: ["**.md", "docs/**"]  # a docs push must not cancel the pending data run (sweep 2026-10-21)
   schedule:
     - cron: "5,35 * * * *"
     - cron: "20 3,9,15,21 * * *"

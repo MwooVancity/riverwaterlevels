@@ -1,17 +1,10 @@
-"""Atomic publish with rollback. Usage: python -I publish.py   (checks dist_next, then swaps)   |   python -I publish.py --rollback
-dist/ is the live release, dist_prev/ the previous one. Nothing is published if any check fails.
+"""Atomic publish. Usage: python -I publish.py   (checks dist_next, then swaps)
+dist/ is the live release, dist_prev/ the previous one. Nothing is published if any check fails. Live rollback: npx wrangler rollback.
 """
 import os, sys, shutil, subprocess
 ROOT = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
 D, N, P = (os.path.join(ROOT, x) for x in ("dist", "dist_next", "dist_prev"))
 
-if "--rollback" in sys.argv:
-    if not os.path.isdir(P):
-        sys.exit("no previous release")
-    tmp = D + "_swap"
-    os.rename(D, tmp); os.rename(P, D); os.rename(tmp, P)
-    print("rolled back: dist is the previous release")
-    sys.exit(0)
 if not os.path.isdir(N):
     sys.exit("nothing to publish: run build.py first")
 # a gauge whose build failed keeps its previous page: copied in BEFORE the checks so no link to it breaks
@@ -23,6 +16,14 @@ except Exception:
 kept = []
 for u in failed_urls:
     old, new_ = os.path.join(D, u.strip("/"), "index.html"), os.path.join(N, u.strip("/"), "index.html")
+    if not os.path.isfile(old) and not os.path.exists(new_):  # CI has no dist/ (fresh checkout): the live page is the previous page
+        try:
+            import urllib.request
+            html = urllib.request.urlopen("https://riverwaterlevels.com" + u, timeout=30).read()
+            os.makedirs(os.path.dirname(old), exist_ok=True)
+            open(old, "wb").write(html)
+        except Exception as e:
+            print("could not fetch the live copy of %s (%s); the gauge is dropped from this release" % (u, str(e)[:80]))
     if os.path.isfile(old) and not os.path.exists(new_):
         os.makedirs(os.path.dirname(new_), exist_ok=True)
         shutil.copy2(old, new_)

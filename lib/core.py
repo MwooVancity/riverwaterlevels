@@ -3,7 +3,9 @@ import statistics, os, re, json, math, collections, hashlib, datetime, zoneinfo
 from lib.common import *
 
 
-SOURCES = {s["id"]: s for s in json.load(open(os.path.join(DATA, "sources.json"), encoding="utf-8"))["sources"]}
+_SJ = json.load(open(os.path.join(DATA, "sources.json"), encoding="utf-8"))
+SOURCES = {s["id"]: s for s in _SJ["sources"]}
+SOURCES_READ_ON = _SJ["read_on"]  # the date the terms were read for every source without its own read_on
 
 
 CSS = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()

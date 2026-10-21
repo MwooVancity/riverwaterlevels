@@ -10,7 +10,6 @@ node_modules/
 .wrangler/
 *.pyc
 .env
-data/waves.csv
 data/demand.csv
 data/inventory-ranked.csv
 docs/research/

@@ -5,7 +5,6 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 import os, sys, json, math, re, datetime, urllib.parse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
-from lib.pages import WAVE0
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
@@ -897,9 +896,9 @@ def fetch_cameras(site, h):
 
 
 def default_sites():
-    """Every gauge that has a cache file: the scheduled refresh covers all of them (a page that is not refreshed is a wrong page). The first 25 (WAVE0) only before any cache exists."""
-    got = sorted(f[:-5] for f in os.listdir(CACHE) if f.endswith(".json") and f[:-5].isdigit()) if os.path.isdir(CACHE) else []
-    return got or WAVE0.split()
+    """Every gauge marked live in data/waves.csv (tracked in git): the scheduled refresh covers all of them, cache or no cache (sweep 2026-10-21: the live list must not depend on the CI cache surviving)."""
+    import csv
+    return sorted(r["site"] for r in csv.DictReader(open(os.path.join(os.path.dirname(CACHE), "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live")
 
 
 def fetch_extras(site, rec, h, log):

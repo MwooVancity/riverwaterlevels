@@ -261,7 +261,7 @@ def conditions(G, pages=None):
     f = n.get("forecast") if ok("nwps") else None
     if f and f.get("points"):
         age = hours_old(f.get("issued"), G["now"]) if f.get("issued") else None
-        pts = [x for x in fc_points(f) if x[0] >= G["now"] - datetime.timedelta(hours=1)]
+        pts = [x for x in fc_points(f) if x[0] >= G["now"]]
         stage = [(t_, s_) for t_, s_, _ in pts if s_ is not None]
         flow = [(t_, f_) for t_, _, f_ in pts if f_ is not None]
         gap = datum_gap(G)

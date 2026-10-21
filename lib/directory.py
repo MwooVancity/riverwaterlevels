@@ -1,6 +1,7 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
 import os, json, math, datetime, collections
 from lib.common import *
+from lib.core import SOURCES_READ_ON
 from lib.render import robots_meta, CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -267,7 +268,7 @@ def trust_pages(built_count, built_rows):
     rows = ""
     for s in SOURCES.values():
         if s["status"] in ("quoted", "owner-permission") and s.get("id") not in ("openfema", "ncei"):  # terms read, but no block on any page shows them yet
-            basis = {"quoted": "Terms read " + (s.get("read_on") or "2026-10-16"), "owner-permission": "Written permission reported by the site owner"}[s["status"]]
+            basis = {"quoted": "Terms read " + (s.get("read_on") or SOURCES_READ_ON), "owner-permission": "Written permission reported by the site owner"}[s["status"]]
             rows += '<tr><td>%s</td><td>%s</td><td>%s</td><td><a href="%s" rel="noopener">Terms</a></td></tr>' % (esc(s["name"]), esc(s.get("credit") or ""), esc(basis), esc(s["terms_url"]))
     t["/data-sources/"] = prose_page("Data sources", "/data-sources/", '<div class="card scroll"><table><thead><tr><th>Source</th><th>Credit</th><th>Basis for reuse</th><th>Link</th></tr></thead><tbody>%s</tbody></table></div>'
                                      '<h2>How often each source updates</h2><div class="card scroll"><table><thead><tr><th>Source</th><th>Source updates</th><th>This site refreshes</th></tr></thead><tbody>%s</tbody></table></div>'
