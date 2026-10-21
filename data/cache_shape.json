@@ -4,6 +4,10 @@
 "fetched_at": "iso",
 "stations": "list"
 },
+"airnow": {
+"fetched_at": "iso",
+"rows": "list"
+},
 "atlas14": {
 "ari": "list",
 "fetched_at": "iso",
@@ -12,6 +16,10 @@
 "attains": {
 "fetched_at": "iso",
 "units": "list"
+},
+"cameras": {
+"cams": "list",
+"fetched_at": "iso"
 },
 "cpc": {
 "end": "str",
@@ -59,6 +67,15 @@
 "as_of": "iso",
 "series": "dict",
 "span": "num"
+},
+"near_wtemp": {
+"c": "num",
+"f": "num",
+"fetched_at": "iso",
+"mi": "num",
+"name": "str",
+"site": "str",
+"t": "iso"
 },
 "nid": {
 "count": "num",
@@ -135,6 +152,11 @@
 "related": {
 "fetched_at": "iso",
 "items": "list"
+},
+"ridb": {
+"fetched_at": "iso",
+"radius_mi": "num",
+"sites": "list"
 },
 "rise": {
 "dam": "str",
@@ -517,6 +539,13 @@
 "comid": "num",
 "fetched_at": "iso",
 "vals": "dict"
+},
+"tides": {
+"fetched_at": "iso",
+"mi": "num",
+"name": "str",
+"rows": "list",
+"station": "str"
 },
 "usdm": {
 "county": "str",

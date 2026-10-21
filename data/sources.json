@@ -105,23 +105,27 @@
   },
   {
    "id": "ridb",
-   "name": "Recreation.gov RIDB",
-   "status": "off",
-   "terms_url": "https://ridb.recreation.gov/docs",
-   "summary": "Terms not read.",
+   "name": "Recreation.gov RIDB (federal recreation facilities)",
+   "status": "quoted",
+   "terms_url": "https://catalog.data.gov/dataset/?tags=ridb",
+   "summary": "data.gov catalog lists the Recreation Information Database under 'Creative Commons Attribution'; 'available to the public for various other uses'; federal agencies 'are responsible for the quality of data' and 'some data may be missing or incomplete'. Key: RIDB_API_KEY, header 'apikey', 50 requests a minute. Evidence: search-result 2026-10-21; the RIDB developer portal terms page could not be fetched (JavaScript app).",
    "blocks": [
-    "camping"
-   ]
+    "recreation_sites"
+   ],
+   "credit": "Recreation sites: Recreation.gov (RIDB)",
+   "read_on": "2026-10-21"
   },
   {
    "id": "hivis",
-   "name": "USGS HIVIS cameras",
-   "status": "off",
-   "terms_url": "https://apps.usgs.gov/hivis/",
-   "summary": "Image terms not read; USGS says non-USGS images need permission.",
+   "name": "USGS HIVIS gaging-station cameras (NIMS API)",
+   "status": "quoted",
+   "terms_url": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+   "summary": "USGS copyrights and credits page: 'USGS-authored or produced data and information are considered to be in the U.S. Public Domain'; 'proper credit' is requested. The NIMS API describes its content as 'imagery from USGS gaging stations for public consumption'. Items the API lists as hidden (hideCam) are never shown. Evidence: search-result 2026-10-21 plus the API description read 2026-10-21. Key: USGS_API_KEY (api.waterdata.usgs.gov/signup).",
    "blocks": [
     "camera"
-   ]
+   ],
+   "credit": "Camera images: U.S. Geological Survey, HIVIS",
+   "read_on": "2026-10-21"
   },
   {
    "id": "natmap",
@@ -276,6 +280,18 @@
     "tides"
    ],
    "read_on": "2026-10-20"
+  },
+  {
+   "id": "airnow",
+   "name": "EPA AirNow current air quality (airnowapi.org)",
+   "status": "quoted",
+   "terms_url": "https://docs.airnowapi.org/faq",
+   "summary": "AirNow API FAQ: access 'is available to the public'; 'These data are not fully verified or validated and should be considered preliminary and subject to change'; each key has a call limit per service. Service: /aq/observation/current/ziplatlong/ (the 2026-10-01 replacement; the latLong service answers 410). Key: AIRNOW_API_KEY. Evidence: search-result 2026-10-21 and a live call read 2026-10-21.",
+   "credit": "Air quality: EPA AirNow and the reporting agency named on the row (preliminary data)",
+   "blocks": [
+    "air_quality"
+   ],
+   "read_on": "2026-10-21"
   }
  ]
 }

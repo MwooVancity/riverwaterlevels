@@ -25,6 +25,8 @@ jobs:
     timeout-minutes: 150
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+      AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:

@@ -820,6 +820,76 @@ def series_has(site, code, h):
         return True  # unknown: do not fetch a neighbour on a guess
 
 
+def secret(name):
+    """A key from the environment (CI secrets) or the owner's .env (lib.common.ENV_FILE), never logged or written to a page; '' when absent."""
+    v = os.environ.get(name)
+    if v:
+        return v.strip()
+    try:
+        for l in open(ENV_FILE, encoding="utf-8-sig"):
+            if l.startswith(name + "="):
+                return l.split("=", 1)[1].strip().strip('"')
+    except OSError:
+        pass
+    return ""
+
+
+def fetch_airnow(lat, lon):
+    """EPA AirNow current observation nearest the gauge (service /aq/observation/current/ziplatlong/, the 2026-10-01 replacement): NowCast AQI per pollutant with its category and reporting agency. Needs AIRNOW_API_KEY."""
+    k = secret("AIRNOW_API_KEY")
+    if not k:
+        return None
+    j = json.loads(get_text("https://www.airnowapi.org/aq/observation/current/ziplatlong/?format=application/json&latitude=%.4f&longitude=%.4f&API_KEY=%s" % (lat, lon, k)))
+    if not isinstance(j, list):
+        return None
+    rows = [{"pollutant": x.get("parameterName"), "aqi": x.get("nowcastAQI"), "category": x.get("aqiCategoryName"), "area": x.get("reportingAreaName"), "site": x.get("siteName"), "agency": x.get("reportingAgency"),
+             "date": x.get("dateObserved"), "hour": x.get("hourObserved"), "tz": x.get("localTimeZone")} for x in j if isinstance(x, dict) and x.get("nowcastAQI") is not None]
+    return {"fetched_at": now_iso(), "rows": rows} if rows else None
+
+
+def fetch_ridb(lat, lon, radius_mi=15):
+    """Recreation.gov RIDB: federal recreation facilities within radius_mi of the gauge (campgrounds, ramps, visitor centers, trailheads) with their listed activities. Needs RIDB_API_KEY (header apikey)."""
+    k = secret("RIDB_API_KEY")
+    if not k:
+        return None
+    j = json.loads(get_text("https://ridb.recreation.gov/api/v1/facilities?latitude=%.4f&longitude=%.4f&radius=%d&limit=50&full=true" % (lat, lon, radius_mi), {"apikey": k, "User-Agent": "riverwaterlevels.com"}))
+    out = []
+    for f in j.get("RECDATA") or []:
+        try:
+            flat, flon = float(f.get("FacilityLatitude")), float(f.get("FacilityLongitude"))
+        except (TypeError, ValueError):
+            continue
+        acts = sorted({(a.get("ActivityName") or "").title() for a in f.get("ACTIVITY") or [] if a.get("ActivityName")})
+        water = [a for a in acts if any(w in a.upper() for w in ("BOAT", "FISH", "PADDL", "SWIM", "KAYAK", "CANOE", "RAFT", "TUB", "WATER"))]
+        typ = f.get("FacilityTypeDescription") or ""
+        if not water and typ not in ("Campground",) and "ramp" not in (f.get("FacilityName") or "").lower():
+            continue
+        addr = (f.get("FACILITYADDRESS") or [{}])[0]
+        out.append({"name": f.get("FacilityName"), "type": typ, "mi": round(haversine(lat, lon, flat, flon), 1), "activities": acts[:8], "water": water[:6],
+                    "city": addr.get("City"), "phone": (f.get("FacilityPhone") or "").strip(), "url": f.get("FacilityReservationURL") or ("https://www.recreation.gov/camping/campgrounds/%s" % f["FacilityID"] if typ == "Campground" and f.get("FacilityID") else ""),
+                    "id": f.get("FacilityID")})
+    out.sort(key=lambda x: x["mi"])
+    return {"fetched_at": now_iso(), "radius_mi": radius_mi, "sites": out[:12]} if out else None
+
+
+def fetch_cameras(site, h):
+    """USGS NIMS / HIVIS: the gaging-station cameras at this site (api.waterdata.usgs.gov/nims/v0, key sent in X-Api-Key), with the newest 720 px image URL, the thumbnail and the timelapse video."""
+    cams = thr_json("https://api.waterdata.usgs.gov/nims/v0/cameras?siteId=%s" % site, h, 60)
+    out = []
+    for c in (cams if isinstance(cams, list) else []):
+        if c.get("hideCam") or not c.get("camId") or not c.get("smallDir"):
+            continue
+        files = thr_json("https://api.waterdata.usgs.gov/nims/v0/listFiles?camId=%s&limit=1&recent=true" % c["camId"], h, 60)
+        fn = files[0] if isinstance(files, list) and files and isinstance(files[0], str) else None
+        if not fn:
+            continue
+        out.append({"camId": c["camId"], "name": c.get("camName") or c["camId"], "taken": c.get("newestImageDT"), "tz": c.get("tz"),
+                    "small": c["smallDir"] + fn, "thumb": (c.get("thumbDir") or c["smallDir"]) + fn,
+                    "timelapse": (c["tlDir"] + c["camId"] + "_720.mp4") if c.get("TL_enabled") and c.get("tlDir") else None,
+                    "page": "https://apps.usgs.gov/hivis/camera/%s" % c["camId"]})
+    return {"fetched_at": now_iso(), "cams": out} if out else None
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -828,7 +898,7 @@ def fetch_extras(site, rec, h, log):
     want = next((a[7:].split(",") for a in sys.argv if a.startswith("--keys=")), None)
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
-                    ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
+                    ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
                     ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
