@@ -252,7 +252,7 @@ h1{font-size:1.75rem;line-height:1.15;margin:8px 0 6px}
 .tile small.cold{color:var(--warn)}.tile small.word{font:600 .9rem system-ui,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
 .tile svg.spark{display:block;width:100%;height:28px;color:var(--accent);margin:2px 0}.tile svg.spark circle{display:none}
 .hero2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:10px 0}.tile.norm{grid-column:span 2}
-.cstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:12px 0;padding:0;overflow:visible}
+.cstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px;margin:12px 0;padding:0;overflow:visible}
 .cstrip .tile.fcst,.cstrip .tile.alrt,.cstrip .tile.air,.cstrip .tile.upst{grid-column:span 1}
 .dleg{display:none}
 .hero2~p.gaps{border:0;padding:0;margin:8px 0 0;font-size:.8rem;color:var(--mut)}

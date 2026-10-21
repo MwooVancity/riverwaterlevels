@@ -170,7 +170,7 @@ def ctx(site, row, rec, now):
     ago = min(fl, key=lambda x: abs((x[0] - (lt - datetime.timedelta(hours=24))).total_seconds()))
     steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(max(1, len(fl) - 200), len(fl)))
     tol = max(1200, 0.6 * (steps[len(steps) // 2] if steps else 900))
-    osc = oscillating(fl)
+    osc = oscillating(fl) or (rec.get("tides") or {}).get("mi", 99) <= 10  # tidal by the flow cycle, or by a NOAA tide-prediction station within 10 mi (Hudson at Green Island: Troy, 2.5 mi)
     wc24 = b3.window_change(fl, lt, 24)
     chg = wc24[2] if (not osc) and wc24 and abs((ago[0] - (lt - datetime.timedelta(hours=24))).total_seconds()) <= tol else None  # the same smoothed value as the rate table
     out = {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
@@ -445,6 +445,10 @@ def hero(G, pages=None):
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + '<small id="pcap">%s</small>' % esc(cap), ("wide " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     trend_html = tiles[len(pre):]
+    if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
+        v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
+        if v24_:
+            dir_chip = "Tidal reach: %s to %s cfs over 24 h" % (fmt(min(v24_)), fmt(max(v24_)))
     tiles = pre.replace("@@DIR@@", "<small>%s</small>" % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
@@ -454,15 +458,13 @@ def hero(G, pages=None):
         val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmt(fcw["v"]))
         _pn = nws_point_note(G)
         sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else "")
-        if fcw["repeat"]:
-            sub += '<small>Reached again later: a regular cycle.</small>'
         rating_txt = (" (about %s cfs by the NWS rating)" % fmt(fcw["flow_at"])) if fcw.get("flow_at") and not _pn and not G["osc"] else ""  # a rating belongs to its own forecast point: another place, or a tidal reach, makes the cfs disagree with this gauge
         turn_txt = "; falling now, the NWS expects a rise" if unit == "ft" and fcw["cur"] is not None and not fcw["datum"] and fcw["v"] - fcw["cur"] >= 0.5 and c.get("sg6") is not None and c["sg6"] < -0.1 else ""
         if G["osc"]:
-            sub += '<small>This reach is tidal: the NWS forecast is a net level, so compare it with the day\'s range, not with one reading.</small>'
+            sub += '<small>This reach is tidal: a net level, compare with the day\'s range%s.</small>' % (("; then %s by %s" % ((("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmt(fcw["end_v"]))), esc(fcw["end_t"]))) if fcw["falls"] else "")
         elif unit == "ft" and fcw["cur"] is not None and not fcw["datum"] and abs(fcw["v"] - fcw["cur"]) >= 0.05 and not above:
             sub += '<small>%.1f ft above the latest reading%s%s.</small>' % (abs(fcw["v"] - fcw["cur"]), rating_txt, turn_txt)
-        if fcw["falls"] and not (above and not G["osc"]):
+        if fcw["falls"] and not above and not G["osc"]:
             sub += '<small>Then falls to %s by %s.</small>' % ((("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmt(fcw["end_v"]))), esc(fcw["end_t"]))
         if fcw["datum"]:
             sub += '<small>At %s the NWS read this gauge at %.2f ft and the USGS at %.2f ft (different zero points); the forecast is in NWS stage.</small>' % (esc(tzl(fcw["datum"][2], G["zone"], date=False)), fcw["datum"][0], fcw["datum"][1])
