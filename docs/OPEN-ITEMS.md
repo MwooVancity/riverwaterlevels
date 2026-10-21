@@ -10,14 +10,11 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 
 ## C. Data still missing for water users (sources: `data/sources.json`)
 - [ ] Regulated gauges: dam name, upstream outflow gauge, schedule link (RISE, CWMS, NID terms unclear; USACE and TVA pages 403).
-- [ ] USGS key received 2026-10-21 (in .env and the GitHub secret; collector sends it, rate limit 4,000): build the HIVIS camera block. Still waiting: Recreation.gov RIDB (ramps, campgrounds), AirNow. Access points (OSM) and bacteria advisories (no national feed) stay held.
+- [ ] Access points (OSM terms) and bacteria advisories (no national feed) stay held. Lees Ferry has no AirNow monitor within reach (declared on the page).
 
 ## D. Code
-- [ ] collect.py (1,100 lines) split into one file per source with its own self-check; no silent failures.
-- [ ] render.py (1,560 lines) + blocks2/blocks3 into one file per section; one block registry (id, section, family, reader question, source) feeding the Line 0 gate, Sources panel, credit lines and phone tabs.
-- [ ] Gate 5 (agent) screenshots all pages, not a sample; `gate.py --live` after every deploy in CI.
+- [ ] Musk pass (owner 2026-10-21): fold six test files into two (number contracts, page structure) and six browser checks into two (visual, live script); one reviewer round per template change.
 - [ ] Fixtures: irregular sampling for the 24 h mean; unit allowlist per field; NWS/USGS datum gate; gauge types never exercised on real data (ice-affected, canal, estuary).
-- [ ] `tools/pack_review.py` and `docs/packet/` deleted 2026-10-21 (they indexed deleted docs); `graphify-out/` regenerate after the refactor.
 
 ## E. Owner only
 - [ ] Publisher name and contact email on About (waived in data/publisher.json).
@@ -44,3 +41,5 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - 2026-10-21 fresh-brain docs review (docs/research/FRESH-BRAIN-DOCS-2026-10-21.md): CLAUDE.md rewritten as the master prompt; INDEXING-RULES merged into RUNBOOK; PAGE-CONTRACT merged into CLAUDE.md; docs/packet and pack_review.py deleted.
 - 2026-10-21 USGS qualifiers printed (values read from the live API: ICE, EQUIP, ESTIMATED, BACKWATER, RATINGDEV, SEASONAL, DISCONTINUED, UNAVAIL; synthetic ICE reading rendered 'USGS flag: ice at the gauge' in the hero; truth contract 23); radar block back (25 pages); heat index and visibility rows; gaps line names rain, air, hourly and tides when missing; Line 0 gate 0 failures.
 - 2026-10-21 credit lines from sources.json under every block (seen on Hudson: USGS, NWS, NOAA CO-OPS...); phone-tab registry reduced to six overrides; tidal reach = flow cycle or NOAA station within 10 mi (Hudson now shows tides and the 24 h range); headers: X-Frame-Options DENY, Permissions-Policy, CSP report-only. Commits 598dae4, 3f424a2, ad3ea9a, 6b8fc95.
+- 2026-10-21 owner keys: USGS, RIDB, AirNow in .env and GitHub secrets; cameras at 4 gauges, air quality at 24, recreation sites at 15 (dist_next grep); Line 0 gate 0 failures; commits e9c221d, 2599b70.
+- 2026-10-21 render.py split into core/hero/charts/weather/forecast/page with a facade; build byte-identical (60 files compared); fuzzer deleted (owner); commits 7a8af88, 41c9bc9. Collector split struck: every source already logs its failure and keeps the previous value.
