@@ -2,6 +2,18 @@
 
 One static page per USGS river gauge. Government data only (USGS, NOAA/NWS, USDA, EPA). Ad-supported later. The owner is a non-coder and never runs commands: do the work, short plain replies, no "Next:" line, decide defaults yourself. This folder is its own project; the car-repair site's rules do not apply here.
 
+## The procedure (HARD, owner 2026-10-21: "it's just APIs on pages, it shouldn't keep fucking up")
+Every change, no exceptions:
+1. Say in one line what will change. Nothing that runs gates, a reviewer or a deploy starts until the owner says go.
+2. Change code through a script file (Write, then run), never a shell heredoc. One batch of edits, then one check run.
+3. Build. Screenshot one page (`PICK=<slug> node <rand_shot>` or the review tools). Look at it before anything else runs.
+4. `python -I gate.py` once. A failure is fixed at its cause, never by loosening or deleting the check. A third failure on one check means stop and report the cause.
+5. One reviewer round on the template hash (docs/REVIEW-1ST.md; resume the same agent to re-verify). Sign.
+6. Commit with explicit paths. A push is a deploy. Read the live page. "Done" means read live this turn.
+7. One line in docs/OPEN-ITEMS.md's done log with the proof.
+Adding gauges: `python -I tools/release.py N` prints the full gauge names; read them (wrong place or wrong gauge: fix the list first); it collects and builds the pages held; one reviewer round; sign the pages; push; `tools/open_wave.py N --apply`; push; `tools/index_live.py`.
+A rule without a check is a note. A check not in `gates.py` does not exist.
+
 ## Reader (Line 0, owner 2026-10-20: "every data block for every water activity, in priority for the user")
 A person at or near this river today, on a phone, about to fish, paddle, swim, tube, wade, boat, row, dive, pan, hunt, camp, guide, or who lives, drives or rescues beside it. Flood watchers are one reader among twenty, not the first. Every page answers, in this order: is it dangerous now, what is the water like, is it normal, what is coming, how today compares. Correct is necessary, never enough: the page must be understood in seconds and look made by a person (design review 2026-10-21 against Lakebrief: one page colour, white 12 px cards, one label style, one numeral face, unit beside the number, one line under each number, the data age said once).
 
