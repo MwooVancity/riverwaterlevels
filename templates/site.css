@@ -149,7 +149,7 @@ details.fold>.blk{border:1px solid var(--line)}
 .tile.mine .pill{margin-top:6px;align-self:flex-start}.tile.mine form .pill{margin-top:0}.tile.mine b{font-size:1.5rem}
 .tile.mine.inr b{color:var(--good)}.tile.mine.outr b{color:var(--low)}.tile.mine.inr{border-color:var(--good)}
 :root:not([data-theme=light]) .tile.mine.outr b{color:var(--low)}
-.tile.mine form[hidden],.tile.mine [hidden]{display:none!important}.qual{color:var(--warn);font-weight:600}.nbr a{display:block;padding:8px 0}
+.tile.mine form[hidden],.tile.mine [hidden]{display:none!important}.qual{color:var(--warn);font-weight:600}.cam{margin:0}.cam img{border-radius:8px;display:block}.cam figcaption{font-size:.8rem;color:var(--mut);margin-top:6px}.aq{font-weight:600;margin:0 0 8px}.nbr a{display:block;padding:8px 0}
 
 /* ---- fresh-review round 2: ladder as a bar with a text key, absence notes ---- */
 .lad{margin:2px 0 12px}.lad-bar{position:relative;height:16px;border-radius:99px;background:var(--line);margin:14px 0 10px;overflow:visible}.lad-bar>i{position:absolute;top:0;bottom:0}

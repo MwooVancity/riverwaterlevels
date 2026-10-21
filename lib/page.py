@@ -101,14 +101,14 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
-                "SEC:What the water is like now", b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b_rain(G), b_radar(G),
+                "SEC:What the water is like now", b3.b_camera(G), b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
                 "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b2.b_atlas14(G), b_cpc(G)]) + [
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b_record(G), b_wtemp(G), b_snotel(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
                 "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G), b_land(G),
-                b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
+                b3.b_recreation(G), b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return []  # only the dashboard tab is built (one page per gauge)
 
 
@@ -300,7 +300,7 @@ def build_tab(tab, G, pages):
     ids = {b["id"] for b in shown}
     jl = [(i, t) for i, t in JUMP if i in ids]
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
-    SIDE = {"related_gauges", "nearby_gauges", "nws_forecast_point", "flood_stages", "public_land", "about_gauge", "gauge_map", "sun", "air_obs", "official_links"}
+    SIDE = {"recreation_sites", "related_gauges", "nearby_gauges", "nws_forecast_point", "flood_stages", "public_land", "about_gauge", "gauge_map", "sun", "air_obs", "official_links"}
     body = ""
     side = ""
     fold = None  # [title, rendered blocks, headings] while inside a FOLD: group

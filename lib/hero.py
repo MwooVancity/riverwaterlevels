@@ -285,6 +285,8 @@ def hero(G, pages=None):
         gone.append("rain estimate (no NWS precipitation estimate in the last 6 h)")
     if not c["air"]:
         gone.append("air observation (no NWS station report in the last 12 h)")
+    if not ((G["rec"].get("airnow") or {}).get("rows")):
+        gone.append("air quality (no EPA AirNow monitor reports for this location)")
     if not ((G["rec"].get("nws") or {}).get("hourly")):
         gone.append("hourly weather (no NWS hourly forecast for this location)")
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):

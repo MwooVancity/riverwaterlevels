@@ -291,6 +291,44 @@ def conditions(G, pages=None):
     return out
 
 
+def b_camera(G):
+    """USGS gaging-station camera at this site: the newest image (720 px), with the timelapse link and the HIVIS page."""
+    c = G["rec"].get("cameras")
+    if not c or not c.get("cams"):
+        return None
+    body = ""
+    for x in c["cams"]:
+        try:
+            taken = tzl(parse_t(x["taken"]), G["zone"]) if x.get("taken") else "time not stated"
+        except (TypeError, ValueError):
+            taken = "time not stated"
+        body += '<figure class="cam"><a href="%s" rel="noopener"><img src="%s" alt="USGS camera: %s" width="720" height="405" loading="lazy" style="max-width:100%%;height:auto"></a><figcaption>%s &middot; taken %s%s</figcaption></figure>' % (
+            esc(x["page"]), esc(x["small"]), esc(x["name"]), esc(x["name"]), esc(taken), (' &middot; <a href="%s" rel="noopener">timelapse video</a>' % esc(x["timelapse"])) if x.get("timelapse") else "")
+    return block("camera", "Camera at the gauge", "live", body,
+                 "Source: U.S. Geological Survey HIVIS camera (NIMS API), newest image at build time; the image file is served by USGS. Fetched %s." % esc(tzl(parse_t(c["fetched_at"]), G["zone"])), "hivis")
+
+
+def b_air_quality(G):
+    """EPA AirNow NowCast AQI per pollutant at the nearest reporting site: the air a person breathes on the water today."""
+    a = G["rec"].get("airnow")
+    if not a or not a.get("rows"):
+        return None
+    rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(r.get("site") or ""), esc("%s %s %s" % (r.get("date") or "", r.get("hour") or "", r.get("tz") or ""))], right=(1,)) for r in a["rows"])
+    worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
+    return block("air_quality", "Air quality now", "obs", '<p class="aq">AQI %s, %s (%s), at %s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), esc(worst.get("site") or "")) + table(["Pollutant", "NowCast AQI", "Category", "Monitor", "Observed"], rows, right=(1,)),
+                 "Source: EPA AirNow, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
+
+
+def b_recreation(G):
+    """Recreation.gov facilities within 15 mi that list a water activity, are campgrounds, or are ramps: where a person gets on or stays by this river."""
+    r = G["rec"].get("ridb")
+    if not r or not r.get("sites"):
+        return None
+    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(x["name"]))) if x.get("url") else esc(x["name"]), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3])), esc(x.get("phone") or "")], right=(2,)) for x in r["sites"])
+    return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency", table(["Site", "Type", "Distance", "Water activities listed", "Phone"], rows, right=(2,)),
+                 "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")
+
+
 def b_tides(G):
     """High and low tide predictions at the nearest NOAA station, shown on reaches whose flow cycles within the day (tidal)."""
     t = G["rec"].get("tides")
