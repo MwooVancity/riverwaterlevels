@@ -1,15 +1,31 @@
 {
  "open": true,
- "site_pages": false,
+ "site_pages": true,
  "allow": [
+  "/river/arkansas-river-co/avondale-07109500/",
   "/river/chattahoochee-river/atlanta/",
   "/river/colorado-river-az/lees-ferry/",
+  "/river/columbia-river-or/the-dalles/",
+  "/river/delaware-river-nj/trenton/",
+  "/river/deschutes-river-or/moody/",
+  "/river/gauley-river/above-belva/",
+  "/river/hudson-river/green-island/",
   "/river/kinzua-creek/guffey/",
+  "/river/madison-river/below-ennis-lake/",
+  "/river/mississippi-river-mo/saint-louis/",
+  "/river/missouri-river-mo/kansas-city/",
+  "/river/new-river-wv/thurmond/",
   "/river/ohio-river-ky/louisville/",
   "/river/penns-creek/penns-creek/",
   "/river/potomac-river-md/little-falls/",
+  "/river/roaring-fork-river/glenwood-springs/",
+  "/river/sacramento-river/freeport/",
   "/river/salmon-river-id/white-bird/",
   "/river/salt-river-az/roosevelt/",
-  "/river/shenandoah-river/millville/"
+  "/river/shenandoah-river/millville/",
+  "/river/snake-river-wa/anatone/",
+  "/river/susquehanna-river-pa/marietta/",
+  "/river/verde-river/camp-verde/",
+  "/river/yellowstone-river-mt/livingston/"
  ]
 }
