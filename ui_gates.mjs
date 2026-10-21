@@ -109,8 +109,10 @@ for (const [label, w, h, scheme] of [['d-light', 1280, 900, 'light'], ['d-dark',
     await page.addInitScript(() => { window.__cls = 0; try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch (e) {} });
     page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text().slice(0, 80)); });
     page.on('pageerror', e => errs.push(String(e).slice(0, 80)));
-    await page.goto(BASE + p, { waitUntil: 'load' }).catch(() => {});
+    let loaded = false;  // a slow machine must not turn into "no nav landmark": retry once, then report the real cause
+    for (let k = 0; k < 2 && !loaded; k++) loaded = await page.goto(BASE + p, { waitUntil: 'load', timeout: 60000 }).then(() => true).catch(() => false);
     const issues = [];
+    if (!loaded) issues.push('page did not load in 60 s (twice)');
     const sw = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (sw > 1) issues.push('page scrolls sideways by ' + sw + ' px');
     const c = await page.evaluate(contrastJS);
