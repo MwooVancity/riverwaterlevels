@@ -16,7 +16,7 @@ ITEMS = [  # name, regex that proves the item is shown OR honestly declared abse
     ("water temperature tile or 'not measured'", r'class="tile wtemp|Not measured at this gauge: [^<]*water temperature'),
     ("clarity sensors or 'not measured'", r'id="quality_sensors"|Not measured at this gauge: [^<]*clarity'),
     ("rain tile or rain block", r'class="tile rain|id="rain_totals"'),
-    ("wind (air observation tile)", r'class="tile air'),
+    ("wind (air observation tile, or declared missing)", r'class="tile air|Not measured at this gauge: [^<]*air observation'),
     ("thunderstorm line", r'class="storm (ok|warn)"'),
     ("hourly weather", r'id="hourly_(heatmap|forecast)"'),
     ("thunder chance row in the hourly table (or no hourly table)", r'Thunder %|id="hourly_forecast"'),
