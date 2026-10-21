@@ -41,10 +41,10 @@
   },
   "0cce61d1697e07ba": {
    "verdict": "SHIP",
-   "report": "docs/research/FRESH-REVIEW-10-U.md",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
    "date": "2026-10-20",
    "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
-   "sig": "f6bfb38f504218eeaccbd055"
+   "sig": "d8914c489b025ce47cfb33d1"
   }
  },
  "pages": {
@@ -69,9 +69,12 @@
    "date": "2026-10-19"
   },
   "/river/penns-creek/penns-creek/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "48dcd04d7254c8b4b163c401"
   },
   "/river/penns-creek/penns-creek/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -89,9 +92,12 @@
    "date": "2026-10-19"
   },
   "/river/shenandoah-river/millville/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "bfb617d535fdddfc244a8d68"
   },
   "/river/shenandoah-river/millville/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -99,9 +105,12 @@
    "date": "2026-10-19"
   },
   "/river/potomac-river-md/little-falls/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "e968a4fc2cd6200e8659fc24"
   },
   "/river/potomac-river-md/little-falls/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -109,9 +118,12 @@
    "date": "2026-10-19"
   },
   "/river/chattahoochee-river/atlanta/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "6b3e4df5678985e0eea1e3eb"
   },
   "/river/chattahoochee-river/atlanta/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -119,9 +131,12 @@
    "date": "2026-10-19"
   },
   "/river/kinzua-creek/guffey/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "64c6646d024af68184cd9bb2"
   },
   "/river/new-river-wv/thurmond/": {
    "verdict": "GRANDFATHERED",
@@ -134,9 +149,12 @@
    "date": "2026-10-19"
   },
   "/river/ohio-river-ky/louisville/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "5f277b7b8d21537196a40074"
   },
   "/river/ohio-river-ky/louisville/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -194,9 +212,12 @@
    "date": "2026-10-19"
   },
   "/river/colorado-river-az/lees-ferry/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "c028e19dd1bed16912d842b7"
   },
   "/river/colorado-river-az/lees-ferry/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -204,9 +225,12 @@
    "date": "2026-10-19"
   },
   "/river/salt-river-az/roosevelt/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "2800df6adac4a97a97de64a2"
   },
   "/river/salt-river-az/roosevelt/forecast/": {
    "verdict": "GRANDFATHERED",
@@ -229,9 +253,12 @@
    "date": "2026-10-19"
   },
   "/river/salmon-river-id/white-bird/": {
-   "verdict": "GRANDFATHERED",
-   "note": "live before the review gate existed; reviewed as a group in docs/research/FRESH-REVIEW-6.md and the all-pages review that follows it",
-   "date": "2026-10-19"
+   "verdict": "SHIP",
+   "report": "docs/research/FRESH-REVIEW-10-V.md",
+   "date": "2026-10-20",
+   "reviewer": "fresh-context Claude subagent (same vendor as the author; independence is of context, not of vendor)",
+   "template": "0cce61d1697e07ba",
+   "sig": "eb4593e85a2108ffcf8379ed"
   },
   "/river/salmon-river-id/white-bird/forecast/": {
    "verdict": "GRANDFATHERED",

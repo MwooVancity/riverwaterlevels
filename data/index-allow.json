@@ -1,5 +1,15 @@
 {
- "open": false,
+ "open": true,
  "site_pages": false,
- "allow": []
+ "allow": [
+  "/river/chattahoochee-river/atlanta/",
+  "/river/colorado-river-az/lees-ferry/",
+  "/river/kinzua-creek/guffey/",
+  "/river/ohio-river-ky/louisville/",
+  "/river/penns-creek/penns-creek/",
+  "/river/potomac-river-md/little-falls/",
+  "/river/salmon-river-id/white-bird/",
+  "/river/salt-river-az/roosevelt/",
+  "/river/shenandoah-river/millville/"
+ ]
 }

@@ -31,8 +31,17 @@ def main():
     new = [u for u in urls("dist_next") if GAUGE.match(u) and u not in live]
     for u in new:
         rv["pages"][u] = dict(entry, template=template_hash(), sig=sign(verdict, report, u))
+    # --pages=/river/a/b/,/river/c/d/ : live pages this report names and read (each one needs its own signed SHIP before it may be indexed; GRANDFATHERED never unlocks indexing)
+    named = [u for a_ in sys.argv if a_.startswith("--pages=") for u in a_.split("=", 1)[1].split(",") if u]
+    text = open(os.path.join(ROOT, report), encoding="utf-8").read()
+    for u in named:
+        if not GAUGE.match(u) or u not in set(urls("dist")):
+            sys.exit("not a live gauge page: " + u)
+        if u not in text:
+            sys.exit("the report does not name this page, so it cannot cover it: " + u)
+        rv["pages"][u] = dict(entry, template=template_hash(), sig=sign(verdict, report, u))
     json.dump(rv, open(p, "w", encoding="utf-8"), indent=1)
-    print("%s recorded for template %s and %d new gauge page(s)" % (verdict, template_hash(), len(new)))
+    print("%s recorded for template %s, %d new gauge page(s) and %d named live page(s)" % (verdict, template_hash(), len(new), len(named)))
 
 
 main()

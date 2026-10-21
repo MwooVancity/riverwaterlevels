@@ -25,7 +25,9 @@ Owner rule 2026-10-20: "this should be in the harness of CLAUDE.md so I never fo
 - [ ] RETURN: weekly digest email (backend); "biggest changes today" regional pages.
 
 ## C. Gates still open
-- [ ] `tests.py` into the release chain (split it first: it rewrites the real dist/ and cache/). [`check.py --selftest` is in the chain since 2026-10-20.]
+- [x] `tests.py` split 2026-10-20: the pure-logic checks run as `tests_logic.py` in refresh.py ALWAYS (8 checks incl. workflow-YAML parse; 0 failures this turn). Determinism, forced failure and rollback stay in `tests.py` by hand (they rewrite dist/ and cache/).
+- [ ] Reviewer P2s from FRESH-REVIEW-10-U: comparison card keeps its build-time value under a newer live flow tile; clipped impact cards drop the consequence sentence (Atlanta 19/20 ft); odd forecast-high cards (Atlanta, Hudson); desktop swipe strip cuts its last card; footer Terms links 21 px high. "No earlier day" never seen rendered.
+- [ ] Forbes-editor items not yet done: one-sentence verdict line, uneven tile lengths (longest 338 chars), unlabelled sparklines, "Set your range" row placement, dense grey notes. Lower the editor budget in data/ui-budget.json as each is fixed.
 - [ ] Fixtures: irregular sampling for the 24 h mean. [DST, leap-day key, tied and missing percentile values, naive timestamps: `truth_time.py`, in the chain since 2026-10-20.]
 - [ ] Unit allowlist for every field beyond forecast units, forecast time-alignment gate, NWS/USGS datum gate (not only wording). [Forecast unit handling is tested in `truth_time.py`.]
 - [ ] Pre-deploy truth check can still skip on a USGS outage without blocking: decide a limit (for example block after 2 consecutive skipped builds).
@@ -92,5 +94,7 @@ Owner rule 2026-10-20: "this should be in the harness of CLAUDE.md so I never fo
 - 2026-10-20 block guard + failure isolation + page carried forward (publish test in a throwaway copy); fuzzer 0 failures at 9,354 renders.
 - 2026-10-20 range tile: commas accepted, live refresh does not close the form (range_test.mjs passes on live).
 - 2026-10-20 docs: INDEXING-RULES, RUNBOOK, UNIQUE-VALUE, CORRECTIONS, PAGE-CONTRACT, UI-REDESIGN.
+- 2026-10-20 editor_gate.mjs + live_flow_test.mjs + tests_logic.py added to the release chain (all pass on dist_next; editor gate caught "cfs" spelled out on 0/25 pages, fixed to 25/25). Release A SHIP signed for 0cce61d1697e07ba (FRESH-REVIEW-10-U), commit f4cad14. NOT yet live: confirm with the refresh run and the live `_template.txt`.
+- 2026-10-20 refresh.yml was invalid YAML since 549c95b (scheduled refreshes could not start); fixed and gated by the workflow-parse check in tests_logic.py.
 - 2026-10-20 independent percentile cross-check agrees within 8 points on 5 gauges (tools/pct_crosscheck.py output seen).
 - 2026-10-20 `truth_time.py` (DST, leap-day key, ties, unit handling, naive timestamps) and `check.py --selftest` wired into refresh.py ALWAYS; reader-quality budget `tools/review/reader_budget.mjs` + `data/ui-budget.json` in the browser gates.
