@@ -19,20 +19,15 @@ GATE_1 = [
 ]
 GATE_2 = [
     ("truth contracts (22)", PY + ["truth_tests.py"]),
-    ("gauge types (10)", PY + ["truth_types.py"]),
-    ("time edge cases", PY + ["truth_time.py"]),
+    ("gauge types and time edge cases", PY + ["truth_types.py"]),
     ("release logic (8)", PY + ["tests_logic.py"]),
 ]
 GATE_3 = [("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATE_3_LIVE = [("live pages vs USGS/NWS", PY + ["tools/truth_live.py"]), ("live indexing state", PY + ["tools/index_live.py"])]  # after the deploy
 GATE_4 = [
     ("UI: contrast, taps, first screen", NODE + ["ui_gates.mjs"]),
-    ("tables never scroll sideways", NODE + ["tools/review/clip_all.mjs"]),
-    ("search", NODE + ["tools/review/search_test.mjs"]),
-    ("live alerts", NODE + ["tools/review/alerts_live_test.mjs"]),
-    ("live flow", NODE + ["tools/review/live_flow_test.mjs"]),
-    ("reader budget: tab heights", NODE + ["tools/review/reader_budget.mjs"]),
-    ("editor: detail checks", NODE + ["tools/review/editor_gate.mjs"]),
+    ("live script: alerts, flow, search", NODE + ["tools/review/live_tests.mjs"]),
+    ("editor: detail, clipping, budgets", NODE + ["tools/review/editor_gate.mjs"]),
 ]
 GATE_5 = [("agent: would a river user pick it (#1)", PY + ["tools/agent_gate.py"])]  # needs a fresh Claude agent (a script cannot start one); gate.py runs it, CI does not
 GATE_6 = [("watchdog (hourly, network)", PY + ["tools/watchdog.py"])]  # gate.py --live only; CI runs it hourly on its own

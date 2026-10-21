@@ -33,7 +33,7 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - 2026-10-19 template review chain S/R/Q/P signed; CI green; live `_template.txt` = signed hash.
 - 2026-10-20 block guard + failure isolation + page carried forward; fuzzer 0 failures at 9,354 renders.
 - 2026-10-20 refresh.yml invalid YAML since 549c95b fixed; workflow-parse check in tests_logic.py.
-- 2026-10-20 editor_gate, live_flow_test, truth_time, reader_budget, line0_gate, agent_gate, index_live in the gate list (gates.py); gate.py one table.
+- 2026-10-20 editor_gate (now with clip_all and reader_budget), live_tests (alerts, live flow, search), truth_types (with truth_time), line0_gate, agent_gate, index_live in the gate list (gates.py); gate.py one table.
 - 2026-10-21 Drought Monitor and ACIS cleared with quoted credit; USGS codes 00045 00055 72255 00480 on pages; NWM "reach None" bug caught by fuzz and fixed; seven planning docs deleted; commit 300303a.
 - 2026-10-21 template edd92a4a816f2974 live (curl /_template.txt), signed SHIP on all 25 pages (FRESH-REVIEW-10-Y HOLD, Z SHIP, ZA SHIP); push run 39581344330 success; index_live 0 mismatches.
 - 2026-10-21 indexing opened on all 25 gauge pages + site pages (commit 0397846; live index_live: 25 allowed, 0 mismatches; sitemap 49 URLs).
