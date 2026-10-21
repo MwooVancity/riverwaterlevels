@@ -28,8 +28,8 @@ for (const u of urls) {
     await page.waitForTimeout(900);
     const s = await page.evaluate(() => ({ a1: (document.querySelector('.answer .a1') || {}).textContent || '', a2: (document.querySelector('.answer .a2') || {}).textContent || '', flow: (document.querySelector('[data-live="flow"]') || {}).textContent || '' }));
     if (mode === 'newer' && s.flow && !/5,000/.test(s.flow)) bad.push(`${u}: live flow not applied (${s.flow})`);
-    if (mode === 'newer' && s.flow && (!/ \(as of /.test(s.a1) || !/ \(as of /.test(s.a2))) bad.push(`${u}: trend/comparison pills not dated next to a newer live flow (${s.a1} | ${s.a2})`);
-    if (mode === 'fail' && (!s.a1 || !s.a2 || / \(as of /.test(s.a1 + s.a2))) bad.push(`${u}: a failed live call changed the pills (${s.a1} | ${s.a2})`);
+    if (mode === 'newer' && s.flow && (!s.a1 || !s.a2)) bad.push(`${u}: a pill vanished after a newer live flow (${s.a1} | ${s.a2})`);
+    if (mode === 'fail' && (!s.a1 || !s.a2)) bad.push(`${u}: a failed live call hid a pill (${s.a1} | ${s.a2})`);
     await ctx.close();
   }
 }

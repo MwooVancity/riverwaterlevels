@@ -291,6 +291,16 @@ def conditions(G, pages=None):
     return out
 
 
+def b_tides(G):
+    """High and low tide predictions at the nearest NOAA station, shown on reaches whose flow cycles within the day (tidal)."""
+    t = G["rec"].get("tides")
+    if not t or not G.get("osc") or not t.get("rows"):
+        return None
+    rows = "".join(tr([esc(r["t"][11:16] + (" " + r["t"][:10] if i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10] else "")), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % r["v"]], right=(2,)) for i, r in enumerate(t["rows"]))
+    return block("tides", "Tides, next two days", "official", table(["Time (station local)", "Tide", "Height above MLLW"], rows, right=(2,)),
+                 "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops")
+
+
 def b_wpc(G):
     """WPC flood and excessive rainfall outlooks that cover the gauge point, and recent NWS flood reports within 50 miles. Hidden when there is nothing to show."""
     w = G["rec"].get("wpc")

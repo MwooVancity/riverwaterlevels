@@ -57,9 +57,10 @@ for (const u of urls) {
     const empty = [...document.querySelectorAll('.tile,.card.blk')].filter(e => e.getBoundingClientRect().height > 0 && (e.innerText || '').trim().length < 3).length; if (empty) ex.push(empty + ' empty tile or block');
     const rowH = {}; for (const t of document.querySelectorAll('.cstrip .tile')) { const r = t.getBoundingClientRect(); if (r.height) (rowH[Math.round(r.top)] = rowH[Math.round(r.top)] || []).push(Math.round(r.height)); }
     const uneven = Object.values(rowH).filter(h => h.length > 1 && Math.max(...h) - Math.min(...h) > 2).length; if (uneven) ex.push(uneven + ' tile row(s) with tiles of different height');
+    const tiny = [...document.querySelectorAll('.tile b small')].filter(s => parseFloat(getComputedStyle(s).fontSize) < 0.4 * parseFloat(getComputedStyle(s.parentElement).fontSize)).length; if (tiny) ex.push(tiny + ' unit(s) printed at under 40% of the number height');
     const detail = ex;
     const hasFlow = !!document.querySelector('.tile.flow');
-    const unitShown = !hasFlow || /cubic feet per second/i.test(document.body.innerText);
+    const unitShown = !hasFlow || /cubic feet per second/i.test(document.body.innerText) || !!document.querySelector('.tile.flow abbr[title*="cubic feet"]');
     return { repeat, trendRepeat, tileChars, firstWords, unitShown, detail };
   });
   rows.push({ u, ...m });

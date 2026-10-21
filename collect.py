@@ -572,7 +572,7 @@ def fetch_nwm(site):
 
 def grid_hours(gp, hours=168):
     """Expand NWS gridpoint interval values to one row per hour: temp, wind, gust, direction, sky cover and rain amount (mm per hour)."""
-    keys = {"temperature": "temp_c", "windSpeed": "wind_kmh", "windGust": "gust_kmh", "windDirection": "dir", "skyCover": "sky", "quantitativePrecipitation": "qpf_mm"}
+    keys = {"temperature": "temp_c", "windSpeed": "wind_kmh", "windGust": "gust_kmh", "windDirection": "dir", "skyCover": "sky", "quantitativePrecipitation": "qpf_mm", "probabilityOfThunder": "thunder", "relativeHumidity": "rh"}
     now = datetime.datetime.now(datetime.timezone.utc).replace(minute=0, second=0, microsecond=0)
     rows = [{"t": (now + datetime.timedelta(hours=i)).isoformat()} for i in range(hours)]
     for src, dst in keys.items():
@@ -768,6 +768,58 @@ def record_summary(rows, stats):
     return out
 
 
+_COOPS = {}
+
+
+def fetch_tides(lat, lon, miles=50):
+    """NOAA CO-OPS tide predictions (public domain, attribution requested): the nearest harmonic prediction station within `miles`, today's and tomorrow's highs and lows."""
+    if "st" not in _COOPS:
+        j = json.loads(get_text("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=tidepredictions"))
+        _COOPS["st"] = [(s["id"], s.get("name"), float(s["lat"]), float(s["lng"])) for s in j.get("stations", []) if s.get("lat") is not None]
+    best = min(((haversine(lat, lon, a, b), i, n) for i, n, a, b in _COOPS["st"]), default=None)
+    if not best or best[0] > miles:
+        return None
+    d0 = datetime.date.today()
+    url = ("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&station=%s&datum=MLLW&time_zone=lst_ldt&units=english&interval=hilo&begin_date=%s&end_date=%s&format=json"
+           % (best[1], d0.strftime("%Y%m%d"), (d0 + datetime.timedelta(days=1)).strftime("%Y%m%d")))
+    p = json.loads(get_text(url)).get("predictions") or []
+    rows = [{"t": x["t"], "v": float(x["v"]), "type": x["type"]} for x in p if x.get("type") in ("H", "L")]
+    return {"fetched_at": now_iso(), "station": best[1], "name": best[2], "mi": round(best[0], 1), "rows": rows} if rows else None
+
+
+def fetch_near_wtemp(site, lat, lon, river, h):
+    """When this gauge has no temperature sensor: the nearest USGS gauge on the same river (name match) reporting water temperature now, within about 40 miles."""
+    if series_has(site, "00010", h):
+        return None
+    d = thr_json(BASE + "latest-continuous/items?parameter_code=00010&bbox=%.3f,%.3f,%.3f,%.3f&limit=400&f=json" % (lon - 0.6, lat - 0.6, lon + 0.6, lat + 0.6), h, 120)
+    word = (river or "").split()[0].lower() if river else ""
+    cands = []
+    for f in d.get("features", []):
+        q, g = f["properties"], (f.get("geometry") or {}).get("coordinates") or []
+        try:
+            v, mi = float(q["value"]), haversine(lat, lon, float(g[1]), float(g[0]))
+        except (KeyError, TypeError, ValueError, IndexError):
+            continue
+        if q.get("monitoring_location_id") == "USGS-" + site or mi > 40:
+            continue
+        cands.append((mi, q["monitoring_location_id"], v, q.get("time"), q.get("unit_of_measure")))
+    for mi, sid, v, t, unit in sorted(cands)[:8]:
+        m = thr_json(BASE + "monitoring-locations/items?id=%s&f=json" % sid, h, 60)
+        name = ((m.get("features") or [{}])[0].get("properties") or {}).get("monitoring_location_name") or ""
+        if word and word in name.lower():
+            c = v if (unit or "").lower() in ("degc", "deg c", "°c", "c") else (v - 32) * 5 / 9
+            return {"fetched_at": now_iso(), "site": sid.replace("USGS-", ""), "name": name, "c": round(c, 1), "f": round(c * 9 / 5 + 32, 1), "t": t, "mi": round(mi, 1)}
+    return None
+
+
+def series_has(site, code, h):
+    try:
+        d = thr_json(BASE + "latest-continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&f=json" % (site, code), h, 60)
+        return bool(d.get("features"))
+    except Exception:
+        return True  # unknown: do not fetch a neighbour on a guess
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -776,7 +828,7 @@ def fetch_extras(site, rec, h, log):
     want = next((a[7:].split(",") for a in sys.argv if a.startswith("--keys=")), None)
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
-                    ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)),
+                    ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
                     ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
@@ -795,6 +847,7 @@ def collect(site, inv):
     g = inv[site]
     lat, lon = float(g["lat"]), float(g["lon"])
     rec["lat"], rec["lon"] = lat, lon
+    rec["river_name"] = g.get("name")
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
     for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
