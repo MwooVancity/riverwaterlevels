@@ -172,6 +172,18 @@ def workflows_parse():
 
 
 CHECKS.append(("GitHub workflow files are valid YAML with triggers and jobs", workflows_parse))
+
+
+def refresh_covers_every_gauge():
+    """The scheduled refresh (collect.py with no site arguments) must default to every gauge with a cache file, never a hard-coded list: a page that is not refreshed is a wrong page (CLAUDE.md, Adding gauges)."""
+    src = open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read()
+    if "] or WAVE0" in src or "sys.argv[1:] or WAVE0" in src:  # the argv default; the empty-cache fallback inside default_sites() is allowed
+        print("  collect.py still defaults to the hard-coded WAVE0 list")
+        return False
+    return "def default_sites" in src
+
+
+CHECKS.append(("the refresh covers every cached gauge, not a hard-coded list", refresh_covers_every_gauge))
 bad = [name for name, fn in CHECKS if not fn()]
 print("tests logic: %d checks, %d failures" % (len(CHECKS), len(bad)))
 for b in bad:

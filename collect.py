@@ -890,6 +890,12 @@ def fetch_cameras(site, h):
     return {"fetched_at": now_iso(), "cams": out} if out else None
 
 
+def default_sites():
+    """Every gauge that has a cache file: the scheduled refresh covers all of them (a page that is not refreshed is a wrong page). The first 25 (WAVE0) only before any cache exists."""
+    got = sorted(f[:-5] for f in os.listdir(CACHE) if f.endswith(".json") and f[:-5].isdigit()) if os.path.isdir(CACHE) else []
+    return got or WAVE0.split()
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -1116,11 +1122,11 @@ def main():
             inv[c[1]] = {"lat": c[4], "lon": c[5], "name": c[2]}
     os.makedirs(CACHE, exist_ok=True)
     if "--fast" in sys.argv:  # freshest-possible refresh: one bulk USGS latest call for every gauge, then NWS, NWPS forecast and rain; the slow history is left as cached
-        fast(inv, [a for a in sys.argv[1:] if not a.startswith("--")] or WAVE0)
+        fast(inv, [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites())
         return
     if "--extras-only" in sys.argv:  # new-source blocks plus NWPS and NWS; skips the critical USGS series so it cannot trip that rate limit
         h = usgs_headers()
-        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or WAVE0:
+        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
             path = os.path.join(CACHE, s + ".json")
             rec, log = json.load(open(path)), []
             for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"]))):
@@ -1137,7 +1143,7 @@ def main():
                   "multiyear", bool(rec.get("multiyear")), "crests", len((rec.get("nwps") or {}).get("crests") or []), "impacts", len((rec.get("nwps") or {}).get("impacts") or []), "grid", len(((rec.get("nws") or {}).get("grid") or {}).get("hours") or []), "; ".join(log))
         return
     if "--nws-only" in sys.argv:  # refresh only the NWS block (no USGS calls) when USGS rate-limits
-        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or WAVE0:
+        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
             path = os.path.join(CACHE, s + ".json")
             rec = json.load(open(path))
             try:
@@ -1149,7 +1155,7 @@ def main():
             os.replace(path + ".tmp", path)
             print("ok nws", s, "hourly", len(rec["nws"].get("hourly") or []))
         return
-    for s in sys.argv[1:] or WAVE0:
+    for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
         try:
             rec, log = collect(s, inv)
         except Exception as e:
