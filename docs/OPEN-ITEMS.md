@@ -10,7 +10,7 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 
 ## C. Data still missing for water users (sources: `data/sources.json`)
 - [ ] Regulated gauges: dam name, upstream outflow gauge, schedule link (RISE, CWMS, NID terms unclear; USACE and TVA pages 403).
-- [ ] Owner keys: USGS HIVIS cameras, Recreation.gov RIDB (ramps, campgrounds), AirNow. Access points (OSM) and bacteria advisories (no national feed) stay held.
+- [ ] USGS key received 2026-10-21 (in .env and the GitHub secret; collector sends it, rate limit 4,000): build the HIVIS camera block. Still waiting: Recreation.gov RIDB (ramps, campgrounds), AirNow. Access points (OSM) and bacteria advisories (no national feed) stay held.
 
 ## D. Code
 - [ ] collect.py (1,100 lines) split into one file per source with its own self-check; no silent failures.
