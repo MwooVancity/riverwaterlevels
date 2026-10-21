@@ -874,7 +874,13 @@ def fetch_ridb(lat, lon, radius_mi=15):
 
 def fetch_cameras(site, h):
     """USGS NIMS / HIVIS: the gaging-station cameras at this site (api.waterdata.usgs.gov/nims/v0, key sent in X-Api-Key), with the newest 720 px image URL, the thumbnail and the timelapse video."""
-    cams = thr_json("https://api.waterdata.usgs.gov/nims/v0/cameras?siteId=%s" % site, h, 60)
+    import urllib.error
+    try:
+        cams = thr_json("https://api.waterdata.usgs.gov/nims/v0/cameras?siteId=%s" % site, h, 60)
+    except urllib.error.HTTPError as e:
+        if e.code == 404:  # the NIMS API answers 404 for a site with no camera: that is "none", not a failure
+            return None
+        raise
     out = []
     for c in (cams if isinstance(cams, list) else []):
         if c.get("hideCam") or not c.get("camId") or not c.get("smallDir"):

@@ -178,7 +178,7 @@ def main():
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:
-            if al["n"] and ('class="abanner"' not in h or "NWS alerts</span>" in h):
+            if al["n"] and ('class="abanner"' not in h or 'class="tile alrt off' in h):  # the answer sentence says "2 active NWS alerts"; the empty-alert TILE is what must not show
                 fail(site, "active alert: banner missing or empty-alert tile still shown")
             if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No active NWS alerts" not in h:  # an old answer says so instead (contract 18); a fresh none is the answer pill
                 fail(site, "no alert: the answer pill does not say so")
