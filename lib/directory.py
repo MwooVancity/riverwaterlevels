@@ -213,6 +213,12 @@ def trust_pages(built_count, built_rows):
         "It is not a flood warning service. For emergencies, follow official warnings.</p><p>%s Corrections are handled as described on the Methodology page.</p>" % (esc(BRAND), _publisher_line())), "About River Water Levels: current river conditions from USGS and National Weather Service data.")
     t["/disclaimer/"] = prose_page("Disclaimer", "/disclaimer/", "<p>%s</p><p>Data is shown as received from the named sources, with the time it was observed or issued. Provisional USGS data are subject to revision. "
                                    "Forecasts change. Percentiles and other comparisons on this site are our calculations from published USGS statistics and are labeled as estimates.</p>" % esc(DISCLAIMER), "Data, accuracy and safety disclaimer for River Water Levels: provisional USGS data, changing forecasts, and not a flood warning service.")
+    t["/embed/"] = prose_page("Add to your site", "/embed/", (
+        "<p>Every gauge page has a small live panel you can put on your own site: the current flow, gage height, how today compares with the record, and any active NWS alert, rebuilt about every 30 minutes. It is free; the panel links back to the full page.</p>"
+        "<h2>How</h2><p>Open the gauge page you want, click <b>Put this gauge's live panel on your own site</b> under Official pages, and copy its address. Then paste this where you want the panel, with that address:</p>"
+        "<pre class=\"card\">&lt;iframe src=\"%s/embed/river/&lt;river&gt;/&lt;place&gt;/\" width=\"100%%\" height=\"520\" loading=\"lazy\" title=\"River conditions from %s\"&gt;&lt;/iframe&gt;</pre>"
+        "<p>Example for the Potomac River at Little Falls: <code>%s/embed/river/potomac-river-md/little-falls/</code>.</p>"
+        "<h2>Terms</h2><p>Free for any site. Keep the link to the full page that is inside the panel. The data stays the agencies' (USGS, NOAA National Weather Service), shown with its observed time; it is not a flood warning.</p>" % (SITE_URL, esc(BRAND), SITE_URL)), "Put a free live panel of a river gauge (flow, gage height, alerts) on your own site with one iframe.")
     t["/privacy/"] = prose_page("Privacy", "/privacy/", "<p>This site sets no cookies and runs no analytics script. It is served by Cloudflare, which keeps standard server logs.</p>"
                                 "<p>Your browser contacts government servers directly when a page loads: radar images from radar.weather.gov, camera images from USGS (usgs-nims-images.s3.amazonaws.com), map images from basemap.nationalmap.gov, and, to show the newest readings and alerts, the USGS Water Data API (api.waterdata.usgs.gov) and the National Weather Service API (api.weather.gov). Those servers receive your IP address and browser details, as with any web request.</p>"
                                 "<p>The dark or light choice is kept in your browser's local storage, on your device only. The Find gauges near me button on the home page asks your browser for your location only when you press it; the position is used in your browser to sort a list and is not sent anywhere.</p>"
@@ -296,6 +302,15 @@ def sitemap_files(urls, lastmod):
 def sitemap(urls, lastmod):
     items = "".join("<url><loc>%s%s</loc><lastmod>%s</lastmod></url>" % (SITE_URL, u, lastmod.get(u, datetime.date.today().isoformat())) for u in sorted(urls))
     return '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % items
+
+
+def llms(built):
+    """llms.txt: what the site is, where the pages and the data files are, how to credit the sources."""
+    lines = ["# %s" % BRAND, "", "> One page per USGS river gauge: current flow and gage height, how today compares with the gauge's own record, NWS forecasts, alerts and flood record. Government data only (USGS, NOAA/NWS), every number with its observed time and source.", "",
+             "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each gauge page has a machine-readable copy at <page URL>data.json (7-day flow and gage height, daily mean flow by year).", "- Embeddable panel per gauge at %s/embed/river/<river>/<place>/" % SITE_URL,
+             "- Credits: Data: U.S. Geological Survey; NOAA National Weather Service. Provisional USGS data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL), "", "## Gauge pages", ""]
+    lines += ["- [%s, %s](%s%s)" % (river_at(r["river"], r["place"]), r["state"], SITE_URL, r["dashboard_url"]) for r in sorted(built, key=lambda r: (r["state"], r["river"], r["place"]))]
+    return "\n".join(lines) + "\n"
 
 
 def robots():

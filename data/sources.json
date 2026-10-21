@@ -165,7 +165,7 @@
    "name": "U.S. Drought Monitor",
    "status": "quoted",
    "terms_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
-   "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '©2026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
+   "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '\u00a92026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
    "credit": "The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.",
    "blocks": [
     "drought_monitor"
@@ -292,6 +292,21 @@
     "air_quality"
    ],
    "read_on": "2026-10-21"
+  },
+  {
+   "id": "ncwsa",
+   "name": "National Center for Cold Water Safety, water temperature safety guide",
+   "status": "quoted",
+   "terms_url": "https://www.coldwatersafety.org/water-temperature-safety-guide",
+   "summary": "Short attributed quotation of the guide's temperature categories with a link to the guide; the guide is the center's public safety material.",
+   "credit": "Guidance: National Center for Cold Water Safety",
+   "blocks": [
+    "water_temp_months"
+   ],
+   "read_on": "2026-10-21",
+   "evidence": "search-result",
+   "evidence_phrase": "labels 50-60F as 'Very Dangerous / Immediately Life-threatening'; categorizes 60-70F as Dangerous; advises caution below 70F and recommends thermal protection like wetsuits or drysuits",
+   "evidence_url": "https://www.coldwatersafety.org/water-temperature-safety-guide"
   }
  ]
 }

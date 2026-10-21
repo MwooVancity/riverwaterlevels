@@ -287,3 +287,4 @@ html.tabsjs .gtabs button{border-radius:0}
 [hidden]{display:none!important}.tile.b-la,.tile.b-lb,.tile.b-lp{border-top:1px solid var(--line)}.answer .la,.answer .lb,.answer .lp,.answer .ay,.answer .an{background:transparent;border:0;color:var(--ink)}
 
 .cite{margin:6px 0 0;color:var(--mut);font-size:.8rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cite small{font-size:inherit}.cite .cp{font:inherit;font-size:.75rem;padding:2px 8px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--accent);cursor:pointer}
+pre.card{white-space:pre-wrap;word-break:break-all;font-size:.85rem}

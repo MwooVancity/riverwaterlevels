@@ -19,7 +19,7 @@ def load(root):
 
 
 def indexable(url, cfg):
-    if not cfg["open"]:
+    if not cfg["open"] or url.startswith("/embed/river/"):  # embed panels are framed copies of the gauge page, never indexed
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]

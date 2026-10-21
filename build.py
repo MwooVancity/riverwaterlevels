@@ -87,6 +87,7 @@ def main():
             print("PAGE BUILD CRASH", s, type(e).__name__, str(e)[:100], "(skipped; previous page stays live)")
             continue
         emit(meta["url"], page)
+        write(nxt, "/embed" + meta["url"], render.embed_page(G, rows))
         ur = G["rec"]["usgs"]["rows"]
         ser = lambda code: [[r["time"], float(r["value"])] for r in ur if r["parameter_code"] == code and r.get("value") not in (None, "")]
         my = G["rec"].get("multiyear") or {}
@@ -129,6 +130,7 @@ def main():
     for name, xml in directory.sitemap_files([u for u in urls if indexing.sitemap_ok(u, ix)], {u: lm[u]["date"] for u in urls if u in lm}).items():
         open(os.path.join(nxt, name), "w", encoding="utf-8").write(xml)
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
+    open(os.path.join(nxt, "llms.txt"), "w", encoding="utf-8").write(directory.llms(built))
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found())
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
     json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built], open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))

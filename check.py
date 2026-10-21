@@ -10,7 +10,7 @@ from lib.common import ROOT, SITE_URL
 
 BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d"]  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 110, "hub": 80, "state": 480, "home": 200, "trust": 40}
+BUDGET = {"gauge": 110, "hub": 80, "state": 480, "home": 200, "trust": 60}  # trust 40 -> 60 on 2026-10-21: the footer gained "Add to your site" and the status page lists every gauge (41 links at 25 gauges)
 
 
 def kind_of(rel):
@@ -160,7 +160,7 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
-    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
+    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     graph = {}
     for u, links in links_of.items():
         rel = rel_of[u]

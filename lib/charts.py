@@ -216,8 +216,14 @@ def b_wtemp(G):
     if not w or not w.get("months"):
         return None
     cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, fmt(n), " (few)" if n < 150 else "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
-    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs">%s</div>' % cards,
-                 "Source: USGS daily mean water temperature (Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values)." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
+    mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}
+    def under(lo, hi):
+        ms = [MONTHS[m - 1][:3] for m in sorted(mf) if lo <= mf[m] < hi]
+        return ", ".join(ms) if ms else "none"
+    # Lakebrief comparison 2026-10-21: the thresholds a swimmer or paddler reads against this table, quoted from the guide, no verdict of ours
+    guide = table(["Typical water temperature", "National Center for Cold Water Safety category (quoted)", "Months in that band here"], tr(["50 to 60&deg;F", "&ldquo;Very Dangerous / Immediately Life-threatening&rdquo;", under(50, 60)]) + tr(["60 to 70&deg;F", "&ldquo;Dangerous&rdquo;", under(60, 70)]) + tr(["Under 50&deg;F", "the guide's maximum cold-shock range starts at 50&deg;F", under(-100, 50)]) + tr(["70&deg;F and above", "the guide advises caution and thermal protection below 70&deg;F", under(70, 200)]))
+    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs">%s</div>' % cards + "<h3>Cold-water guidance against these months</h3>" + guide,
+                 "Source: USGS daily mean water temperature (Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values). Categories quoted from the <a href=\"https://www.coldwatersafety.org/water-temperature-safety-guide\" rel=\"noopener\">National Center for Cold Water Safety water temperature safety guide</a>; a monthly mean says nothing about a given day." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
 
 
 def b_snotel(G):
