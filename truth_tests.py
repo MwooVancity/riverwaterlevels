@@ -89,7 +89,7 @@ def main():
         if m:
             word, val = m.group(3).lower(), float(m.group(2))
             c6 = c["chg"].get(6)
-            if word in ("levelling off", "unsteady", "unclear"):
+            if word in ("leveling off", "unsteady", "unclear"):
                 pass  # direction words that say the last hour differs from the last 6 h; nothing to contradict
             elif word == "rising" and val < 0 or word == "falling" and val > 0:
                 fail(site, "trend word %s contradicts headline %+d%%" % (word, val))

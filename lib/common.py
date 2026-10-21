@@ -63,6 +63,11 @@ def fmt(v):
     return "{:,.0f}".format(v) if abs(v) >= 100 else ("%.0f" % v if abs(v) >= 10 else "%.2f" % v if abs(v) < 1 else "%.1f" % v)
 
 
+def fmtc(v):
+    """Whole cfs with a thousands comma (style sheet 6); fmt keeps decimals for sensor values."""
+    return "–" if v is None else "{:,.0f}".format(v)
+
+
 def interp_pct(stats_row, v):
     """Percentile of v within a published daily-percentile row [years, p5, p10, p20, p25, p50, p75, p80, p90, p95]."""
     pts = [(p, stats_row[i + 1]) for i, p in enumerate(PCT) if stats_row[i + 1] is not None]

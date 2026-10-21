@@ -5,6 +5,13 @@ from lib.core import *
 from lib.hero import *
 
 
+def _wind(p, label=True):
+    sp, d = (p.get("windSpeed") or "").strip(), (p.get("windDirection") or "").strip()
+    if sp.startswith("0 "):
+        return "calm" if label else "Calm"
+    return esc(("%s %s" % (d, sp)).strip())
+
+
 def b_rain(G):
     n = G["rec"].get("rain") or {}
     v = n.get("inches") or {}
@@ -21,7 +28,7 @@ def b_rain(G):
     wid = ui.bars([(lab, v[k], "%.2f in" % v[k]) for k, lab in labs if k in v], vmax)
     rcards = [card(lab, "%.2f <small>in</small>" % v[k], ("to %s" % esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else "") for k, lab in labs if k in v]
     return block("rain_totals", "Recent rain at the gauge location", "official", wid,
-                 "Source: NWS River Forecast Center multisensor precipitation estimate, 4 km grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=(age is not None and age > 6))
+                 "Source: NWS River Forecast Center multisensor precipitation estimate, about 2.5-mile grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=(age is not None and age > 6))
 
 
 def b_cpc(G):
@@ -110,8 +117,8 @@ def b_weather(G, n_periods=14):
             live.append(p)
     for p in live[:n_periods]:
         pop = p.get("pop")
-        cards += ('<div class="fc"><div>%s</div><b>%s&deg;%s</b><div>%s</div><div class="legend">Wind %s %s</div><div class="legend">%s</div></div>' % (
-            esc(p.get("name") or ""), esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), esc(p.get("windSpeed") or ""), esc(p.get("windDirection") or ""),
+        cards += ('<div class="fc"><div>%s</div><b>%s&deg;%s</b><div>%s</div><div class="legend">Wind %s</div><div class="legend">%s</div></div>' % (
+            esc(p.get("name") or ""), esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), _wind(p),
             ("%s%% rain" % pop) if pop is not None else ""))
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
     return block("weather_forecast", "Weather forecast", "official", '<div class="fcs">%s</div>' % cards, "Source: National Weather Service point forecast, updated %s." % upd, "nws", amber=(age is not None and age > 12))
@@ -127,7 +134,7 @@ def b_hourly(G):
     for p in [p for p in hr if parse_t(p["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]:
         pop = p.get("pop")
         rows += tr([esc(tzl(parse_t(p["startTime"]), G["zone"], date=False)), "%s °%s" % (esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F")),
-                    "%s %s" % (esc(p.get("windDirection") or ""), esc(p.get("windSpeed") or "")), "%s%%" % pop if pop is not None else "–", esc(p.get("shortForecast") or "")], right=(1, 3))
+                    _wind(p, False), "%s%%" % pop if pop is not None else "–", esc(p.get("shortForecast") or "")], right=(1, 3))
     if not rows:
         return None
     return block("hourly_forecast", "Hourly forecast, next 24 hours", "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance", "Sky"], rows, right=(1, 3)),

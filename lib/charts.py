@@ -110,9 +110,9 @@ def b_daily(G):
         o = official.get(d.isoformat())
         if o is not None:
             n_off += 1
-            val, note = fmt(o) + " cfs", ""
+            val, note = fmtc(o) + " cfs", ""
         elif full:
-            val, note = fmt(sum(vs) / len(vs)) + " cfs", "Mean of readings, not yet published by USGS"
+            val, note = fmtc(sum(vs) / len(vs)) + " cfs", "Mean of readings, not yet published by USGS"
         else:
             val, note = "–", "Partial day"
         rows += tr([d.strftime("%b %d, %Y").replace(" 0", " "), val, note], right=(1,))
@@ -125,9 +125,9 @@ def b_record(G):
     if not r:
         return None
     pk = r["peak"]
-    cards = [card("Peak, last 7 days", "%s <small>cfs</small>" % fmt(pk["value"]), fdate(pk["date"]))]
+    cards = [card("Peak, last 7 days", "%s <small>cfs</small>" % fmtc(pk["value"]), fdate(pk["date"]))]
     if r.get("prior"):
-        cards.append(card("Last this high", "%s <small>cfs</small>" % fmt(r["prior"]["value"]), "%s (%s before this peak)" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))))
+        cards.append(card("Last this high", "%s <small>cfs</small>" % fmtc(r["prior"]["value"]), "%s (%s before this peak)" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))))
     else:
         cards.append(card("Last this high", "No earlier day", "Record begins %d" % r["first_year"]))
     if r.get("last_p90"):
@@ -136,10 +136,10 @@ def b_record(G):
         cards.append(card("Days above the 75th percentile", "%d of %d" % (r["above_p75"]["n"], r["above_p75"]["of"]), "last %d days" % r["above_p75"]["of"]))
     if r.get("month"):
         m = r["month"]
-        cards.append(card("%s 1 to %d, mean flow" % (m["month"], m["dom"]), "%s <small>cfs</small>" % fmt(m["mean"]), "rank %d highest of %d years" % (m["rank"], m["years"])))
+        cards.append(card("%s 1 to %d, mean flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), "rank %d highest of %d years" % (m["rank"], m["years"])))
     return block("record_comparison", "Compared with this gauge’s record", "hist", rail(cards, "Compared with this gauge’s record"),
-                 "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s; method %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
-                     r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"]), esc(r["method"])), "usgs")
+                 "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
+                     r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"])), "usgs")
 
 
 def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls):
@@ -187,7 +187,7 @@ def b_multiyear(G):
     for y in years:
         v = [x for x in ser[y] if x is not None]
         if len(v) >= 0.8 * span:
-            rows += tr([esc(y), "%s cfs" % fmt(sum(v) / len(v)), "%s cfs" % fmt(max(v))], right=(1, 2))
+            rows += tr([esc(y), "%s cfs" % fmtc(sum(v) / len(v)), "%s cfs" % fmtc(max(v))], right=(1, 2))
     start = asof - datetime.timedelta(days=span - 1)
     return block("multi_year", "The same %d days in earlier years" % span, "hist", svg + legend + table(["Year", "Mean flow", "Highest day"], rows, right=(1, 2)),
                  "Source: USGS daily mean flows (Water Data API). Each line is the %d days from %s to %s, shifted to the same calendar dates in earlier years; gaps are days without a published value. Recent days are provisional." % (
@@ -199,13 +199,13 @@ def b_peaks(G):
     rows = [r for r in (p or {}).get("rows", []) if r[1] is not None]
     if len(rows) < 5:
         return None
-    top = "".join(tr([fdate(r[0]), "%s cfs" % fmt(r[1]), ("%.2f ft" % r[2]) if r[2] is not None else "–"], right=(1, 2)) for r in sorted(rows, key=lambda r: -r[1])[:10])
-    recent = "".join(tr([fdate(r[0]), "%s cfs" % fmt(r[1]), ("%.2f ft" % r[2]) if r[2] is not None else "–"], right=(1, 2)) for r in sorted(rows, key=lambda r: r[0], reverse=True)[:5])
+    top = "".join(tr([fdate(r[0]), "%s cfs" % fmtc(r[1]), ("%.2f ft" % r[2]) if r[2] is not None else "–"], right=(1, 2)) for r in sorted(rows, key=lambda r: -r[1])[:10])
+    recent = "".join(tr([fdate(r[0]), "%s cfs" % fmtc(r[1]), ("%.2f ft" % r[2]) if r[2] is not None else "–"], right=(1, 2)) for r in sorted(rows, key=lambda r: r[0], reverse=True)[:5])
     heads = ["Date", "Peak flow", "Gage height at peak"]
     dec = {}
     for r in rows:
         dec.setdefault(r[0][:3] + "0s", []).append(r[1])
-    drows = "".join(tr([d, str(len(v)), "%s cfs" % fmt(sorted(v)[len(v) // 2] if len(v) % 2 else (sorted(v)[len(v) // 2 - 1] + sorted(v)[len(v) // 2]) / 2), "%s cfs" % fmt(max(v))], right=(1, 2, 3)) for d, v in sorted(dec.items()) if len(v) >= 5)
+    drows = "".join(tr([d, str(len(v)), "%s cfs" % fmtc(sorted(v)[len(v) // 2] if len(v) % 2 else (sorted(v)[len(v) // 2 - 1] + sorted(v)[len(v) // 2]) / 2), "%s cfs" % fmtc(max(v))], right=(1, 2, 3)) for d, v in sorted(dec.items()) if len(v) >= 5)
     by_decade = ("<h3>Median annual peak by decade (calendar year of the peak date)</h3>" + table(["Decade", "Peaks on file", "Median peak", "Largest peak"], drows, right=(1, 2, 3))) if drows else ""
     return block("annual_peaks", "Largest annual peaks", "hist", "<h3>Ten largest peaks of record</h3>" + table(heads, top, right=(1, 2)) + "<h3>Five most recent annual peaks</h3>" + table(heads, recent, right=(1, 2)) + by_decade,
                  "Source: USGS annual peak streamflow (Water Data API), %d annual peaks, %s to %s. A water year's peak is its highest instantaneous flow. Gage height at older peaks can be on a different datum. Decades with fewer than 5 peaks are left out." % (len(rows), rows[0][0][:4], rows[-1][0][:4]), "usgs")
@@ -217,7 +217,7 @@ def b_wtemp(G):
         return None
     cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, fmt(n), " (few)" if n < 150 else "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
     return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs">%s</div>' % cards,
-                 "Source: USGS daily mean water temperature (parameter 00010, Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values)." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
+                 "Source: USGS daily mean water temperature (Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values)." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
 
 
 def b_snotel(G):

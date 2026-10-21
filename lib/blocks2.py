@@ -83,7 +83,7 @@ def b_stage_chart(G):
     cur = obs[-1][1]
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Gage height at page build (USGS)", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest USGS gage height", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
     if gap:
         cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
         rows += tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))
@@ -105,6 +105,7 @@ def b_stage_chart(G):
     src = "Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)
+        what = what[:1].upper() + what[1:]
         src += " %s from National Weather Service forecast point %s%s.%s" % (
             what, esc(n.get("lid") or ""), (", forecast issued %s" % esc(tzl(parse_t(issued), zone))) if issued else "",
             " Dashed horizontal lines are drawn only where they fall inside the axis; all stages are in the table." if cats else "")
@@ -142,17 +143,17 @@ def b_rate(G):
         pct = wc[2] if wc else (d / fa[1] * 100 if fa[1] else 0)
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
-        cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmt(abs(d)), fmt(fa[1]), (", height %s" % sd) if sa else "")))
-        rows += tr(["%d h" % h, "%s cfs" % fmt(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct), "+" if d >= 0 else "-", fmt(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
+        cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmtc(abs(d)), fmtc(fa[1]), (", height %s" % sd) if sa else "")))
+        rows += tr(["%d h" % h, "%s cfs" % fmtc(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct), "+" if d >= 0 else "-", fmtc(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
     if not rows:
         return None
     week = [x for x in fl if x[0] >= t1 - datetime.timedelta(days=7)]
     hi, lo = max(week, key=lambda x: x[1]), min(week, key=lambda x: x[1])
     ago = lambda t: ("%.0f h earlier" % ((t1 - t).total_seconds() / 3600)) if (t1 - t).total_seconds() >= 3600 else "within the last hour"
-    ext = tr(["Highest reading", "%s cfs" % fmt(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmt(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
+    ext = tr(["Highest reading", "%s cfs" % fmtc(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmtc(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
     from lib.render import flow_jitter
     note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the Height change column.</p>' if flow_jitter(G) else ""
-    cards += [card("Highest, 7 days", "%s <small>cfs</small>" % fmt(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest, 7 days", "%s <small>cfs</small>" % fmt(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
+    cards += [card("Highest, 7 days", "%s <small>cfs</small>" % fmtc(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest, 7 days", "%s <small>cfs</small>" % fmtc(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
     body = note + rail(cards, "Change over the last hours") + more("Full table", table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,)))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
                  "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
@@ -180,9 +181,9 @@ def b_rating(G):
     cur = (G["sg"][-1][1], G["lv"])
     lbl = "USGS stage-discharge rating: gage height in feet against flow in cfs"
     svg = _xy_svg(pts, cur, 760, 280, 11, "cw", lbl) + _xy_svg(pts, cur, 340, 280, 12, "cn", lbl)
-    legend = '<p class="legend">Line: current USGS rating, gage height (ft, horizontal) to flow (cfs, vertical). <b style="color:%s">&#9679;</b> latest reading, %.2f ft and %s cfs.</p>' % (AMBER, cur[0], fmt(cur[1]))
+    legend = '<p class="legend">Line: current USGS rating, gage height (ft, horizontal) to flow (cfs, vertical). <b style="color:%s">&#9679;</b> latest reading, %.2f ft and %s cfs.</p>' % (AMBER, cur[0], fmtc(cur[1]))
     return block("stage_flow_rating", "Gage height to flow rating", "hist", svg + legend,
-                 "Source: USGS rating table for the gauge (NWIS rating depot, expanded shifted rating, %s rows, thinned to %d points), fetched %s. Ratings are provisional and change with the channel." % (fmt(r.get("n") or len(pts)), len(pts), esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usgs")
+                 "Source: USGS rating table for the gauge, thinned for display), fetched %s. Ratings are provisional and change with the channel." % (esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usgs")
 
 
 def b_about(G):
@@ -225,9 +226,9 @@ def b_nwm_medium(G):
         return None
     dt = (parse_t(fut[1]["t"]) - parse_t(fut[0]["t"])).total_seconds() or 3600
     stride = max(1, round(43200 / dt))
-    rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmt(p["flow"])], right=(1,)) for p in fut[::stride][:20])
+    rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmtc(p["flow"])], right=(1,)) for p in fut[::stride][:20])
     ref = esc(tzl(parse_t(n["medium_reference_time"]), G["zone"])) if n.get("medium_reference_time") else "time not stated"
-    return block("nwm_medium_range", "Model guidance, days 1 to 10", "model", table(["Time (gauge-local)", "Modelled flow (ensemble mean)"], rows, right=(1,)),
+    return block("nwm_medium_range", "Model guidance, days 1 to 10", "model", table(["Time (gauge-local)", "Modeled flow (ensemble mean)"], rows, right=(1,)),
                  "Source: NOAA National Water Model medium-range ensemble mean, reach %s, run %s. Model guidance, not an official forecast and not a measurement; error is larger on small basins." % (esc(str(n.get("comid"))), ref), "nwm", amber=(age is not None and age > 12))
 
 
@@ -299,8 +300,8 @@ def b_attains(G):
         return None
     rows = "".join(tr([esc(u.get("name") or u["id"]), esc(u.get("status") or "–"), esc(u.get("category") or "–"), esc(u.get("impaired") or "–"), esc(u.get("tmdl") or "–"), esc(u.get("cycle") or "–"),
                        ('<a href="%s" rel="noopener">EPA report</a>' % esc(u["link"])) if str(u.get("link") or "").startswith("https://") else "–"]) for u in a["units"])
-    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", table(["Assessment unit", "Overall status", "Category", "Impaired", "Has TMDL", "Cycle", "Report"], rows),
-                 "Source: EPA ATTAINS assessment units within about 400 m of the gauge, as reported by the state, fetched %s. Values are the state's assessment, quoted." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "epa")
+    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", table(["Assessment unit", "Overall status", "Category", "Impaired", "Has a cleanup plan (TMDL)", "Assessment cycle", "Report"], rows),
+                 "Source: EPA ATTAINS assessment units within about a quarter mile of the gauge, as reported by the state, fetched %s. Values are the state's assessment, quoted." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "epa")
 
 
 def b_offline(G):

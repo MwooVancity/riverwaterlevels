@@ -15,7 +15,7 @@ LABELS = {"00010": "Water temperature", "00300": "Dissolved oxygen", "63680": "T
 UNITS = {"degC": "°C", "deg C": "°C", "mg/l": "mg/L", "_FNU": "FNU", "uS/cm": "µS/cm", "pH Units": "pH units", "ft3/s": "cfs"}
 
 
-TAGS = {"agency": "Agency data", "live": "Live gauge", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed"}
+TAGS = {"agency": "Agency data", "live": "Live gauge", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}
 
 
 PADMAN = {"USFS": "US Forest Service", "NPS": "National Park Service", "BLM": "Bureau of Land Management", "FWS": "US Fish and Wildlife Service", "SDNR": "State natural resources agency",
@@ -175,7 +175,7 @@ LIMIT_TEXT = {"alerts": "3 h", "air_obs": "3 h", "rain_totals": "6 h", "river_fo
 
 
 # colour means one thing on every page: now (live gauge, weather station), fc (official forecasts, model guidance), rec (records, computed comparisons), area (agency data, map layers), safe (alerts, impacts, offline gauge)
-FAMILY = {"live": "now", "obs": "now", "official": "fc", "model": "fc", "hist": "rec", "calc": "rec", "agency": "area", "map": "area"}
+FAMILY = {"live": "now", "obs": "now", "official": "fc", "model": "fc", "hist": "rec", "calc": "rec", "agency": "area", "map": "area", "noaa": "fc", "epa": "now"}
 
 
 FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}

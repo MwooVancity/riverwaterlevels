@@ -17,18 +17,18 @@ def b_related(G, pages):
         if not pr or not pr.get("_built"):
             continue
         lag = ("about %d h (r %.2f)" % (x["lag_h"], x["lag_r"])) if x.get("lag_h") else "–"
-        rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), x["relation"].capitalize(), "%s cfs" % fmt(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
+        rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), x["relation"].capitalize(), "%s cfs" % fmtc(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
     if not rows:
         return None
     from lib import ui
     nodes = []
     for rel in ("upstream", "downstream"):
         if rel == "downstream":
-            nodes.append({"name": "<span>This gauge</span>", "flow": "%s cfs" % fmt(G["lv"]), "sub": esc(G["obs"]), "cur": True})
+            nodes.append({"name": "<span>This gauge</span>", "flow": "%s cfs" % fmtc(G["lv"]), "sub": esc(G["obs"]), "cur": True})
         for x in items:
             pr = pages.get(x["site"])
             if x["relation"] == rel and pr and pr.get("_built"):
-                nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmt(x["flow"]),
+                nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmtc(x["flow"]),
                               "sub": x["relation"].capitalize() + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + ((" &middot; lag about %d h" % x["lag_h"]) if x.get("lag_h") else ""), "cur": False})
     return block("related_gauges", "Upstream and downstream gauges", "live", ui.strip(nodes),
                  "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed. Observed lag is the shift, up to 72 h, that best matches hourly flow at the two gauges over the last 8 days (r = correlation, shown only at 0.85 or higher); it is empirical, not a travel time.", "usgs")
@@ -54,8 +54,8 @@ def b_map(G):
     cx, cy = R * math.radians(lon), R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
     bbox = "%.0f,%.0f,%.0f,%.0f" % (cx - half, cy - half * 0.5625, cx + half, cy + half * 0.5625)
     src = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export?bbox=%s&bboxSR=3857&imageSR=3857&size=640,360&format=png&f=image" % bbox
-    return block("gauge_map", "Gauge location", "map", '<div class="mapimg"><img src="%s" alt="USGS topographic map centred on %s, about 10 miles across" width="640" height="360" loading="lazy"><i aria-hidden="true"></i></div>' % (src, esc(G["place"])),
-                 "Source: Map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Map about 10 miles across, centred on the gauge at %.4f, %.4f." % (lat, lon), "natmap")
+    return block("gauge_map", "Gauge location", "map", '<div class="mapimg"><img src="%s" alt="USGS topographic map centered on %s, about 10 miles across" width="640" height="360" loading="lazy"><i aria-hidden="true"></i></div>' % (src, esc(G["place"])),
+                 "Source: Map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Map about 10 miles across, centered on the gauge at %.4f, %.4f." % (lat, lon), "natmap")
 
 
 # ---------------------------------------------------------------- tabs
@@ -79,7 +79,7 @@ def b_nearby(G, pages):
     if not out:
         return None
     out.sort(key=lambda x: x[0])
-    lis = "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmt(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in out[:5])
+    lis = "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in out[:5])
     return block("nearby_gauges", "Other gauges nearby", "live", '<ul class="nbr">%s</ul>' % lis,
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 
@@ -165,7 +165,7 @@ run();var iv=setInterval(function(){if(++n>6)return clearInterval(iv);run()},600
 AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
 
 
-SAFETY = '<p class="src safety">Information from government sources, shown with the time it was observed or issued. It is not a flood warning and it does not decide for you: no alert does not mean conditions are safe. It shows the readings a person uses to judge whether to fish, paddle, swim, tube or wade today; the judgement is yours. <a href="/disclaimer/">Disclaimer</a></p>'
+SAFETY = '<p class="src safety">Government data, shown with the time it was observed or issued. It is not a flood warning, and it does not decide for you: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
 
 
 # the phone tab of a block: by id, because a gauge with no river forecast has no "Forecast" heading to start the weather group
@@ -316,7 +316,7 @@ def build_tab(tab, G, pages):
     def flush():
         nonlocal body, fold
         if fold and fold[1]:
-            body += gtag('<details class="fold"><summary><b>%s</b><span>%d section%s: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), "" if len(fold[2]) == 1 else "s", esc(", ".join(fold[2])), fold[1]), "history" if fold[0].startswith("Flood record") else "data")
+            body += gtag('<details class="fold"><summary><b>%s</b><span>%d section%s: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), "" if len(fold[2]) == 1 else "s", " &middot; ".join(esc(x) for x in fold[2]), fold[1]), "history" if fold[0].startswith("Flood record") else "data")
         fold = None
     for b in blocks:
         if isinstance(b, str) and b.startswith("SEC:"):

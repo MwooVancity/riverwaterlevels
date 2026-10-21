@@ -26,7 +26,7 @@ def b_nws_point(G, pages=None):
         on_site = {(p.get("nws_lid") or "").upper(): p for p in (pages or {}).values() if p.get("_built") and p.get("nws_lid")}
 
         def nm_link(x):
-            nm = esc(x.get("Name") or x.get("LID") or "")
+            nm = esc(re.sub(r"\s*\(IN MLLW\)", "", x.get("Name") or x.get("LID") or "", flags=re.I))
             p = on_site.get((x.get("LID") or "").upper())
             return '<a href="%s">%s</a>' % (p["water_url"], nm) if p else nm
         nm_list = [x for x in (rfl.get(key) or []) if isinstance(x, dict)]
@@ -76,7 +76,7 @@ def b_rise(G):
 def acis_name(n):
     """ACIS station names arrive in capitals: title-case the place, keep the compass suffix ("CHEVY CHASE 1.2 SW" -> "Chevy Chase 1.2 SW")."""
     import re
-    t = (n or "").title()
+    t = re.sub(r"\bAp\b", "Airport", (n or "").title())
     return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)
 
 
@@ -85,7 +85,7 @@ def b_acis(G):
     if not a or not a.get("stations"):
         return None
     heads = ["Station", "Distance"] + [datetime.date.fromisoformat(d).strftime("%b %d").replace(" 0", " ") for d in a["days"]]
-    cell = lambda v: "–" if v in ("M", "S", "A") else ("trace" if v == "T" else "%s in" % v if v.replace(".", "", 1).isdigit() else esc(v))
+    cell = lambda v: (lambda w: "–" if w in ("M", "S", "A") else ("trace" if w == "T" else "%s in" % w if w.replace(".", "", 1).isdigit() else esc(w)))(v.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ") if v[:1].isdigit() else v)  # a trailing ACIS flag letter ("0.00A") is a source code, not part of the value
     rows = "".join(tr([esc(acis_name(x["name"])), "%.0f mi" % (x["km"] * 0.621371)] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
     return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", table(heads, rows, right=tuple(range(1, 9))),
                  "Source: NOAA Regional Climate Centers ACIS, daily precipitation at the nearest county weather stations, fetched %s. Each value is a 24-hour total for the station's observation day; trace means less than 0.01 in." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "acis")
@@ -98,14 +98,14 @@ def b_streamcat(G):
     v = s["vals"]
     spec = (("pctimp2019ws", "Impervious surface, 2019", lambda x: "%.1f%%" % x), ("pcturbmd2019ws", "Medium-intensity urban land, 2019", lambda x: "%.1f%%" % x), ("pctcrop2019ws", "Cropland, 2019", lambda x: "%.1f%%" % x),
             ("pctwdwet2019ws", "Woody wetland, 2019", lambda x: "%.1f%%" % x), ("elevws", "Mean elevation", lambda x: "%s ft" % fmt(x * 3.28084)), ("precip8110ws", "Mean annual precipitation, 1981 to 2010", lambda x: "%.1f in" % (x / 25.4)),
-            ("runoffws", "Mean annual runoff", lambda x: "%.1f in" % (x / 25.4)), ("bfiws", "Base-flow index", lambda x: "%.0f%%" % x), ("damdensws", "Dam density", lambda x: "%.3f per sq km" % x))
+            ("runoffws", "Mean annual runoff", lambda x: "%.1f in" % (x / 25.4)), ("bfiws", "Base-flow index", lambda x: "%.0f%%" % x), ("damdensws", "Dam density", lambda x: "%.3f per sq mi" % (x * 2.58999)))
     rows = "".join(tr([lab, f(v[k])], right=(1,)) for k, lab, f in spec if k in v)
     from lib import ui
     pc = [(l, k) for k, l in (("pctimp2019ws", "Impervious surface, 2019"), ("pcturbmd2019ws", "Medium-intensity urban land, 2019"), ("pctcrop2019ws", "Cropland, 2019"), ("pctwdwet2019ws", "Woody wetland, 2019"), ("bfiws", "Base-flow index (share of streamflow from groundwater)")) if k in v]
     wid = ui.bars([(l, v[k], "%.1f%%" % v[k]) for l, k in pc], 100) if pc else ""
     ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
     return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,
-                 "Source: U.S. EPA StreamCat (NHDPlus reach %s), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(str(s.get("comid") or "id not recorded")), esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
+                 "Source: U.S. EPA StreamCat ), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
 
 
 def b_fema_zone(G):
@@ -186,7 +186,7 @@ def b_field_meas(G):
     f = G["rec"].get("fieldmeas")
     if not f or not f.get("rows"):
         return None
-    rows = "".join(tr([fdate(r["t"][:10]), "%s cfs" % fmt(r["flow"]), ("%.2f ft" % r["stage"]) if r.get("stage") is not None else "–", esc(r.get("rating") or "–")], right=(1, 2)) for r in f["rows"][:10])
+    rows = "".join(tr([fdate(r["t"][:10]), "%s cfs" % fmtc(r["flow"]), ("%.2f ft" % r["stage"]) if r.get("stage") is not None else "–", esc(r.get("rating") or "–")], right=(1, 2)) for r in f["rows"][:10])
     return block("field_measurements", "USGS field measurements", "hist", table(["Date", "Measured flow", "Gage height", "Rated"], rows, right=(1, 2)),
                  "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The rating shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
@@ -223,7 +223,7 @@ def _fc_offset(G, pts, unit, gap):
     cur, fv = G["lv"], near[2]
     if not fv or abs(cur - fv) <= 0.25 * max(cur, fv):
         return None
-    return {"t": tzl(near[0], G["zone"], date=False), "f": "%s cfs" % fmt(fv), "c": "%s cfs" % fmt(cur)}
+    return {"t": tzl(near[0], G["zone"], date=False), "f": "%s cfs" % fmtc(fv), "c": "%s cfs" % fmtc(cur)}
 
 
 def conditions(G, pages=None):
@@ -245,7 +245,7 @@ def conditions(G, pages=None):
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
             if x.get("relation") == "upstream" and pr and pr.get("_built") and x.get("flow") is not None:
-                out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h")}
+                out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h"), "time": tzl(parse_t(x["time"]), zone) if x.get("time") else ""}
                 break
     if len(fl) >= 8 and not G.get("osc"):
         for h in (1, 6, 24):
@@ -308,15 +308,31 @@ def b_camera(G):
                  "Source: U.S. Geological Survey HIVIS camera (NIMS API), newest image at build time; the image file is served by USGS. Fetched %s." % esc(tzl(parse_t(c["fetched_at"]), G["zone"])), "hivis")
 
 
+def _aq_site(s):
+    return "not stated" if not s or s.strip().upper() in ("NEW", "N/A") else s
+
+
+def _aq_time(r):
+    try:
+        d = datetime.datetime.strptime("%s %s" % (r.get("date"), r.get("hour")), "%Y-%m-%d %H:%M")
+    except (TypeError, ValueError):
+        return "%s %s %s" % (r.get("date") or "", r.get("hour") or "", r.get("tz") or "")
+    return ("%s %s" % (d.strftime("%b %d, %I:%M %p").replace(" 0", " "), r.get("tz") or "")).strip()
+
+
 def b_air_quality(G):
     """EPA AirNow NowCast AQI per pollutant at the nearest reporting site: the air a person breathes on the water today."""
     a = G["rec"].get("airnow")
     if not a or not a.get("rows"):
         return None
-    rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(r.get("site") or ""), esc("%s %s %s" % (r.get("date") or "", r.get("hour") or "", r.get("tz") or ""))], right=(1,)) for r in a["rows"])
+    rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(_aq_site(r.get("site"))), esc(_aq_time(r))], right=(1,)) for r in a["rows"])
     worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
-    return block("air_quality", "Air quality now", "obs", '<p class="aq">AQI %s, %s (%s), at %s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), esc(worst.get("site") or "")) + table(["Pollutant", "NowCast AQI", "Category", "Monitor", "Observed"], rows, right=(1,)),
+    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s, %s (%s), at %s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), esc(_aq_site(worst.get("site")))) + table(["Pollutant", "Air quality index (NowCast)", "Category", "Monitor", "Observed"], rows, right=(1,)),
                  "Source: EPA AirNow, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
+
+
+def _ridb_name(n):
+    return re.sub(r"\(([A-Za-z]{2})\)$", lambda m: "(" + m.group(1).upper() + ")", n.title()) if n.isupper() else n
 
 
 def b_recreation(G):
@@ -324,9 +340,14 @@ def b_recreation(G):
     r = G["rec"].get("ridb")
     if not r or not r.get("sites"):
         return None
-    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(x["name"]))) if x.get("url") else esc(x["name"]), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3])), esc(x.get("phone") or "")], right=(2,)) for x in r["sites"])
+    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if x.get("url") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3])), esc("" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(2,)) for x in r["sites"])
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency", table(["Site", "Type", "Distance", "Water activities listed", "Phone"], rows, right=(2,)),
                  "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")
+
+
+def _tide_t(s, with_date):
+    d = datetime.datetime.strptime(s, "%Y-%m-%d %H:%M")
+    return (d.strftime("%b %d, %I:%M %p") if with_date else d.strftime("%I:%M %p")).replace(" 0", " ").lstrip("0")
 
 
 def b_tides(G):
@@ -334,8 +355,8 @@ def b_tides(G):
     t = G["rec"].get("tides")
     if not t or not t.get("rows") or not (G.get("osc") or t.get("mi", 99) <= 10):  # tidal by the flow cycle, or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
         return None
-    rows = "".join(tr([esc(r["t"][11:16] + (" " + r["t"][:10] if i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10] else "")), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % r["v"]], right=(2,)) for i, r in enumerate(t["rows"]))
-    return block("tides", "Tides, next two days", "official", table(["Time (station local)", "Tide", "Height above MLLW"], rows, right=(2,)),
+    rows = "".join(tr([esc(_tide_t(r["t"], i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10])), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % r["v"]], right=(2,)) for i, r in enumerate(t["rows"]))
+    return block("tides", "Tides, next two days", "noaa", table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
                  "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops")
 
 
@@ -405,12 +426,12 @@ def b_floodfreq(G):
     if not f or not f.get("rows") or f.get("regulated") or f.get("conflict"):
         return None
     has_ci = any(r.get("lo") is not None and r.get("hi") is not None for r in f["rows"])
-    rows = "".join(tr(["%s%%" % ("%g" % r["aep"]), "%s years" % "{:,g}".format(round(100 / r["aep"], 1)), "%s cfs" % fmt(r["q"])]
-                      + ([("%s to %s cfs" % (fmt(r["lo"]), fmt(r["hi"]))) if r.get("lo") is not None and r.get("hi") is not None else "–"] if has_ci else []), right=(2, 3)) for r in f["rows"] if r["aep"] <= 50)
+    rows = "".join(tr(["%s%%" % ("%g" % r["aep"]), "%s years" % "{:,g}".format(round(100 / r["aep"], 1)), "%s cfs" % fmtc(r["q"])]
+                      + ([("%s to %s cfs" % (fmtc(r["lo"]), fmtc(r["hi"]))) if r.get("lo") is not None and r.get("hi") is not None else "–"] if has_ci else []), right=(2, 3)) for r in f["rows"] if r["aep"] <= 50)
     if not rows:
         return None
     rec = ("record %s%s" % (esc(f["range"]), (", %s years" % fmt(f["years"])) if f.get("years") else "")) if f.get("range") else "record years not stated"
-    return block("flood_frequency", "Flood frequency: peak flows", "hist", table(["Chance in any year", "Average spacing", "Peak flow"] + (["Confidence interval, as published"] if has_ci else []), rows, right=(2, 3)),
+    return block("flood_frequency", "Flood frequency of peak flows", "hist", table(["Chance in any year", "Average spacing", "Peak flow"] + (["Confidence interval, as published"] if has_ci else []), rows, right=(2, 3)),
                  "Source: USGS StreamStats gage statistics (peak-flow statistics, annual exceedance probability), %s. %s. Long-run statistics, not a forecast or a schedule. Fetched %s." % (
                      rec, esc(f.get("citation") or "citation not stated") + ((" " + esc(f["url"])) if f.get("url") else ""), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
