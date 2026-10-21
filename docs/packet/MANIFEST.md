@@ -9,6 +9,7 @@ Authored by humans or the assistant: `code/CLAUDE.md`, `code/docs/*.md`, `prompt
 | `site/` | the PUBLISHED build (about 60 files: the 25 gauge pages, home, 15 state pages, trust pages, status, sitemap, robots, headers). Open the home page, two river pages, one state page, About, Disclaimer. | 1, 2 |
 | `evidence/competitors/` | screenshots of a competitor's and the government's pages for the same gauge (USGS WaterData and American Whitewater for the Gauley above Belva) next to ours (desktop and phone) | 1 |
 | `evidence/our-screens/` | 11 chosen screenshots of our pages (desktop and phone, light and dark) | 1 |
+| `evidence/GATE-WIRING-AUDIT.md` | an independent audit of whether every gate is wired into the release chain, with mutation proofs (read it in pass 3) | 3 |
 | `evidence/calcscrape-history.md` | what happened to the owner's other site | 1 |
 | `evidence/ci-runs.txt` | the last 40 GitHub Actions runs: event, result, duration, time (shows the real cadence and cost) | 1, 3 |
 | `evidence/ci-run-gates.log` | the gate lines of a real passing CI run (template gate, browser gates, deploy, live check) | 3 |

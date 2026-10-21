@@ -48,3 +48,19 @@ Persona: a person at the river with one bar of signal who does not care how many
 
 ## Rules while redesigning
 Nothing is removed that a data rule requires (source, exact record link, observation time). No verdict words. Every merged block keeps its four states (docs/PAGE-CONTRACT.md). A phone first screen shows: title, one-line answer, flow, stage, comparison, alerts, with no scrolling past 900 px.
+
+## The rail rule (owner 2026-10-20: "horizontal sliding blocks like a weather widget; the user must not scroll for 10 minutes")
+Anything made of repeating same-shaped items is a sideways RAIL (scroll-snap cards, next card peeking, no JS, keyboard reachable, labelled region). Only text stays vertical (alerts, impact statements, safety). Block, current phone height (Gauley), new form, saving:
+- Flood declarations (3,330) and flood events (2,542): rail of the 3 latest, "all N" in a details. About 5,000.
+- Largest annual peaks (2,440): bar of peaks against flood stages + top-5 rail. About 2,000.
+- Hourly forecast (550) + weather forecast (438 to 1,095): one weather widget, hourly rail + day rail. About 700 to 1,300.
+- Rate of rise and fall (545): rail of 1 h / 3 h / 6 h / 12 h / 24 h chips. About 400.
+- Compared with the record (1,069): rail of 5 stat cards. About 850.
+- 7 d, 30 d, 12 mo, earlier years (1,966): ONE chart with a range switch. About 1,500.
+- River forecast (947): rail of forecast points, crest highlighted. About 700.
+- Rain now (587) + rain forecast (394): one row of rain chips. About 780.
+- Stage chart + flood impacts (1,799): chart + rail of stage cards (Action / Minor / Moderate / Major with margin), impact text on tap. About 1,000.
+- Nearby gauges, official links, watershed facts (about 1,350): gauge-card rail, link chips, fact chips. About 1,000.
+- Hero tiles (1,204): 2 big tiles + comparison, everything else in ONE swipe rail. About 640.
+- Field measurements (1,629), daily readings (639), about gauge (731): 5-row tables with "show all", compact definition grid. About 1,500.
+Target: each phone tab 1,500 to 2,500 px (today 13,365 in one scroll). Build order: rails for declarations, storms, rate of change, record comparison, hero rail; then weather widget and the single range-switch chart; then forecast, rain, stage ladder, tables.

@@ -1,5 +1,8 @@
 # River Water Levels: plan and status (read after CLAUDE.md, every session)
 
+> **STATUS 2026-10-20 (owner: keep this top note).** Numbers and stage text below were written 2026-10-18 and are partly older than the live site. Current truth lives in: `docs/OPEN-ITEMS.md` (everything still missing), `docs/INDEXING-RULES.md` (cohorts and stop rules), `docs/UI-REDESIGN.md` (reader-first redesign and the page-height budget in `data/ui-budget.json`), `docs/PAGE-CONTRACT.md` (block states), `docs/RUNBOOK.md`, `docs/CORRECTIONS.md`, `docs/LINK-BUILDING.md`. Where this file disagrees with those, they win.
+
+
 Last updated 2026-10-18 (local time). Dates are local; the site and the data use UTC or gauge-local times as each page states. History of earlier plan versions: `docs/archive/`. Risk register and release stages: `docs/RISKS-AND-STAGES.md`. Review procedure: `docs/REVIEW-PROMPT.md`. What the last hostile review found and what was done about it: `docs/WORK-LIST.md`.
 
 ## What this is

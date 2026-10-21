@@ -1,5 +1,8 @@
 # Risks and release stages: from 25 pilot gauges to the whole inventory
 
+> **STATUS 2026-10-20 (owner: keep this top note).** Numbers and stage text below were written 2026-10-18 and are partly older than the live site. Current truth lives in: `docs/OPEN-ITEMS.md` (everything still missing), `docs/INDEXING-RULES.md` (cohorts and stop rules), `docs/UI-REDESIGN.md` (reader-first redesign and the page-height budget in `data/ui-budget.json`), `docs/PAGE-CONTRACT.md` (block states), `docs/RUNBOOK.md`, `docs/CORRECTIONS.md`, `docs/LINK-BUILDING.md`. Where this file disagrees with those, they win.
+
+
 Status: corrected 2026-10-18 after the plan review (`docs/research/FRESH-REVIEW-PLAN.md`; this file was `MASTER-PLAN-20K.md`, written when a gauge had three tabs). Companion files: `docs/PLAN.md` (living status and decisions), `CLAUDE.md` (rules), `docs/archive/` (older contract and backlog lists, superseded).
 
 ## 0. What "20,000" means here

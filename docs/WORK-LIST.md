@@ -1,5 +1,8 @@
 # Work list after the plan review (2026-10-18)
 
+> **STATUS 2026-10-20 (owner: keep this top note).** Numbers and stage text below were written 2026-10-18 and are partly older than the live site. Current truth lives in: `docs/OPEN-ITEMS.md` (everything still missing), `docs/INDEXING-RULES.md` (cohorts and stop rules), `docs/UI-REDESIGN.md` (reader-first redesign and the page-height budget in `data/ui-budget.json`), `docs/PAGE-CONTRACT.md` (block states), `docs/RUNBOOK.md`, `docs/CORRECTIONS.md`, `docs/LINK-BUILDING.md`. Where this file disagrees with those, they win.
+
+
 📄 Planning doc only: this file does not change the site. It is the complete list of what was done in response to `docs/research/FRESH-REVIEW-PLAN.md`, with a status for each line (DONE, PARTLY, DECIDED, RESEARCHED, LATER, OWNER). A line is DONE only when the artifact was checked in the session that wrote it; the checks are named. A hostile auditor is asked to verify every line (master prompt Mission L).
 
 ## A. Page model
