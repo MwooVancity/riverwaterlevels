@@ -5,7 +5,7 @@ Spawn ONE fresh agent (Agent tool, general-purpose, background) with the prompt 
 ---
 You are a hostile, detail-obsessed reader: a person about to fish, paddle, swim, tube, wade or boat THIS river today, and a Google quality rater. Rip these pages apart. Question to answer for EACH page: "Would that person pick this page over the pages that rank today for its query, and would it reach #1; if not, why not?"
 Repo: C:\Users\mwoo7\Desktop\riverwaterlevels. Template hash under review: <HASH> (confirm with tools/template_hash.py). Live site https://riverwaterlevels.com (indexing may still be off). Do NOT edit code or data; write only the report.
-Pages: <PAGES>  (sample at least 6 distinct gauge types if more than 6 are listed; script the rest).
+Pages: <PAGES>  (screenshot EVERY page listed, phone and desktop, light and dark, and read every screenshot; the web comparison in step 1 covers at least 6 distinct gauge types; the USGS number check in step 3 covers all).
 
 Method:
 1. For each sampled page, the query is "<river> at <place> water level" (and "<place> river level"). Search the web for it and open the top 3 results (usually the USGS monitoring-location page, weather.gov/NWPS, and one river or fishing site). Screenshot each, and our page, on a phone (390 px) and desktop (1280 px).

@@ -24,13 +24,15 @@ from gates import ALWAYS, BROWSER, SOFT  # the one list of gates (gates.py); `py
 STEPS[3:3] = ALWAYS + (BROWSER if PLAN == "full" else [])
 STEPS.extend(SOFT)
 code = 0
+soft_failed = []  # post-deploy live gates: the deploy already happened, but a failure must turn the run red so the owner gets the email
 try:
     log.write("\n=== %s %s, gates: %s ===\n" % (datetime.datetime.now().isoformat(timespec="seconds"), "fast" if FAST else "full", PLAN))
     for s in STEPS:
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, creationflags=NOWIN)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))
         if p.returncode and s in SOFT:
-            log.write("SOFT GATE FAILED (not blocking): %s\n" % " ".join(s[-2:]))
+            log.write("LIVE GATE FAILED after the deploy (run turns red, site stays up): %s\n" % " ".join(s[-2:]))
+            soft_failed.append(" ".join(s[-2:]))
         elif p.returncode:
             code = p.returncode
             log.write("STOPPED at %s\n" % s[2] if len(s) > 2 else "STOPPED\n")
@@ -46,5 +48,8 @@ finally:
                 shutil.rmtree(p, ignore_errors=True)
     except OSError:
         pass
+if code == 0 and soft_failed:
+    print("refresh DEPLOYED, but a live gate failed afterwards: %s (see runs/refresh.log)" % "; ".join(soft_failed))
+    sys.exit(2)
 print("refresh", "OK" if code == 0 else "FAILED (see runs/refresh.log)")
 sys.exit(code)
