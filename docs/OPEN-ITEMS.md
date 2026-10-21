@@ -3,8 +3,7 @@
 Run `python -I tools/open_items.py` at session start. A line leaves this file only with proof in the DONE log. Rewritten 2026-10-21 after the planning docs were deleted; everything before that date is in git history.
 
 ## A. Ship (blocks indexing)
-- [ ] Template 927463f2a915ed1c: signed SHIP from docs/REVIEW-1ST.md (report FRESH-REVIEW-10-Y), `gate.py` green, push, `gh workflow run refresh.yml -f mode=fast`, live `_template.txt` equals the hash, `tools/index_live.py` 0 mismatches.
-- [ ] Open indexing on every live page with a signed SHIP (`tools/open_wave.py N --apply`); owner 2026-10-21: "index asap". Record date, URLs, hash below.
+- [ ] Search Console: watch the 25 URLs and the site pages after 7, 14, 30 days (owner verifies the property first).
 
 ## B. Data every river user still lacks (sources cleared, code not written)
 - [ ] NOAA CO-OPS tide predictions on tidal gauges (Hudson, Sacramento): nearest station from stations.json?type=tidepredictions, high/low table, credit "Tide predictions: NOAA National Ocean Service, CO-OPS".
@@ -44,3 +43,5 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - 2026-10-20 editor_gate, live_flow_test, truth_time, reader_budget, line0_gate, agent_gate, index_live in the gate list (gates.py); gate.py one table.
 - 2026-10-20 wave 0: 9 pages indexable live (index_live 0 mismatches); 15 more signed under FRESH-REVIEW-10-W.
 - 2026-10-21 Drought Monitor and ACIS cleared with quoted credit (data/sources.json); USGS codes 00045 00055 72255 00480 on pages (4 rain, 2 velocity, 1 salinity seen in dist_next); NWM "reach None" bug caught by fuzz and fixed (9,048 renders, 0 failures); gate.py --quick green except the unsigned template; seven planning docs deleted; commit 300303a.
+- 2026-10-21 template edd92a4a816f2974 live (curl /_template.txt), signed SHIP on all 25 pages (FRESH-REVIEW-10-Y HOLD, Z SHIP, ZA SHIP); reviewer P1s fixed (pills kept and dated after a live check, full NWS impact sentence on the gage tile, crest-below-reading labelled as a forecast fall); push run 39581344330 success; index_live 0 mismatches.
+- 2026-10-21 indexing opened on all 25 gauge pages + site pages (commit 0397846, open_wave 25 --apply).
