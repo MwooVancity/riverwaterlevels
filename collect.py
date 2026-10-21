@@ -591,14 +591,33 @@ def grid_hours(gp, hours=168):
     return {"updated": gp.get("updateTime"), "hours": [r for r in rows if len(r) > 1]}
 
 
-def fetch_nws(lat, lon):
+def nws_static(lat, lon, prev):
+    """The /points lookup, the radar station position and the nearest observation station do not change: fetched once a week and kept in nws["static"] (sweep 2026-10-21: 3 of the 8 NWS calls per gauge per 30-min run were these)."""
+    old = (prev.get("static") or {}) if isinstance(prev, dict) else {}
+    try:
+        if old.get("points") and (datetime.datetime.now(datetime.timezone.utc) - parse_t(old["fetched_at"])).total_seconds() < 7 * 86400:
+            return old
+    except (TypeError, ValueError, KeyError):
+        pass
     pt = thr_json("https://api.weather.gov/points/%.4f,%.4f" % (lat, lon), NWS_H).get("properties", {})
-    out = {"fetched_at": now_iso(), "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": None, "periods": [], "alerts": None, "obs": None}
+    out = {"fetched_at": now_iso(), "points": {k: pt.get(k) for k in ("timeZone", "county", "radarStation", "forecast", "forecastHourly", "forecastGridData", "observationStations")}, "radar_ll": None, "station": None}
     try:
         if pt.get("radarStation"):
             out["radar_ll"] = thr_json("https://api.weather.gov/radar/stations/%s" % pt["radarStation"], NWS_H).get("geometry", {}).get("coordinates")
     except Exception:
         pass
+    try:
+        st = thr_json(pt["observationStations"], NWS_H)["features"][0]
+        out["station"] = {"id": st["id"], "name": (st.get("properties") or {}).get("name"), "ll": (st.get("geometry") or {}).get("coordinates")}
+    except Exception:
+        pass
+    return out
+
+
+def fetch_nws(lat, lon, prev=None):
+    S = nws_static(lat, lon, prev)
+    pt = S["points"]
+    out = {"fetched_at": now_iso(), "static": S, "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": S["radar_ll"], "periods": [], "alerts": None, "obs": None}
     try:
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
@@ -623,14 +642,14 @@ def fetch_nws(lat, lon):
     except Exception:
         pass
     try:
-        st = thr_json(pt["observationStations"], NWS_H)["features"][0]
+        st = S["station"]
         o = thr_json(st["id"] + "/observations?limit=8", NWS_H)
         obs = [f["properties"] for f in o.get("features", []) if (f["properties"].get("temperature") or {}).get("value") is not None]
         if obs:
             x = obs[0]
             def v(k): return (x.get(k) or {}).get("value")
             old = next((y for y in obs if (y.get("barometricPressure") or {}).get("value") is not None and (parse_t(x["timestamp"]) - parse_t(y["timestamp"])).total_seconds() >= 2.5 * 3600), None)
-            out["obs"] = {"name": (st.get("properties") or {}).get("name"), "ll": (st.get("geometry") or {}).get("coordinates"), "station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
+            out["obs"] = {"name": st.get("name"), "ll": st.get("ll"), "station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
                           "pressure_pa": v("barometricPressure"), "pressure_prev_pa": (old.get("barometricPressure") or {}).get("value") if old else None, "visibility_m": v("visibility")}
     except Exception:
         pass
@@ -931,7 +950,7 @@ def collect(site, inv):
     rec["river_name"] = g.get("name")
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
-    for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
+    for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
         try:
             rec[key] = fn()
         except Exception as e:
@@ -1047,11 +1066,15 @@ def fast_fill(rec, site, h):
     now = datetime.datetime.now(datetime.timezone.utc)
     t0 = (now - datetime.timedelta(hours=6)).isoformat()
     need = False
+    t24 = (now - datetime.timedelta(hours=24)).isoformat()
     for code in ("00060", "00065"):
-        ts = sorted(r["time"] for r in rec["usgs"]["rows"] if r["parameter_code"] == code and str(r["time"]) >= t0)
+        ts = sorted(r["time"] for r in rec["usgs"]["rows"] if r["parameter_code"] == code and str(r["time"]) >= t24)
         if code == "00060" or ts:
             pts = [datetime.datetime.fromisoformat(t.replace("Z", "+00:00")) for t in ts]
-            if len(pts) < 2 or any((b_ - a_).total_seconds() > 1200 for a_, b_ in zip(pts, pts[1:])):
+            gaps = sorted((b_ - a_).total_seconds() for a_, b_ in zip(pts, pts[1:]))
+            step = gaps[len(gaps) // 2] if gaps else 900  # the gauge's own interval (15 min, 30 min or hourly); sweep 2026-10-21: a fixed 20-min test refetched hourly gauges every run
+            recent = [t_ for t_ in pts if t_.isoformat() >= t0]
+            if len(recent) < 2 or any((b_ - a_).total_seconds() > 2 * max(step, 900) for a_, b_ in zip(recent, recent[1:])):
                 need = True
     if not need:
         return 0
@@ -1093,7 +1116,7 @@ def fast(inv, sites):
                 log.append("filled %d readings" % filled)
         except Exception as e:
             log.append("fill FAILED (%s), kept the thinned tail" % str(e)[:60])
-        for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"])), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
+        for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
             try:
                 rec[key] = fn()
             except Exception as e:
@@ -1134,7 +1157,7 @@ def main():
         for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
             path = os.path.join(CACHE, s + ".json")
             rec, log = json.load(open(path)), []
-            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"]))):
+            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws")))):
                 if any(a.startswith("--keys=") for a in sys.argv):
                     continue
                 try:
@@ -1152,7 +1175,7 @@ def main():
             path = os.path.join(CACHE, s + ".json")
             rec = json.load(open(path))
             try:
-                rec["nws"] = fetch_nws(rec["lat"], rec["lon"])
+                rec["nws"] = fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))
             except Exception as e:
                 print("FAIL nws", s, str(e)[:80])
                 continue
