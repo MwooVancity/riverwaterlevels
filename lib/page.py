@@ -77,12 +77,17 @@ def b_nearby(G, pages):
     if len(out) < 3:  # a page must not be a dead end (Lakebrief comparison 2026-10-21): the nearest gauges in the same state, up to eight
         seen = {id(p) for _, p in out}
         same = sorted((x for x in cand if x[1].get("state") == G["st"] and id(x[1]) not in seen), key=lambda x: x[0])[:8]
-    if not out and not same:
+    shown = {id(p) for _, p in out[:5] + same}
+    far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: 24 of 25 pages linked fewer than 3 other gauges; fill to five with the nearest anywhere, distance shown
+    if not out and not same and not far:
         return None
-    lis = "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in out[:5])
+    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in grp)
+    lis = li(out[:5])
     if same:
-        lis += '</ul><p class="src">Other rivers in %s on this site</p><ul class="nbr">' % esc(G["st"]) + "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in same)
-    return block("nearby_gauges", "Other gauges nearby", "live", '<ul class="nbr">%s</ul>' % lis,
+        lis += '</ul><p class="src">Other rivers in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
+    if far:
+        lis += '</ul><p class="src">Nearest gauges elsewhere on this site</p><ul class="nbr">' + li(far)
+    return block("nearby_gauges", "Other gauges nearby" if out else "Other gauges on this site", "live", '<ul class="nbr">%s</ul>' % lis,
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 
 
