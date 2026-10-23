@@ -341,10 +341,10 @@
   {
    "id": "wqp",
    "name": "Water Quality Portal (EPA, USGS, state agencies)",
-   "status": "quoted",
+   "status": "off",
    "terms_url": "https://www.waterqualitydata.us/",
    "credit": "Water samples: Water Quality Portal (EPA, USGS, states)",
-   "summary": "Public national aggregator of discrete water-quality samples; the most recent value per measure near the gauge, each labelled with its sample date; not continuous readings.",
+   "summary": "Held off: samples cannot be reliably tied to THIS river (bbox catches tributaries); misleading as a per-gauge block. Re-add only with same-river station matching.",
    "read_on": "2026-10-23",
    "evidence": "search-result",
    "blocks": [

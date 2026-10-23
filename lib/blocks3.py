@@ -102,8 +102,10 @@ def b_access(G):
     a = G["rec"].get("access")
     if not a or not a.get("rows"):
         return None
-    rows = "".join(tr([esc(x["name"] or "(unnamed)"), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in a["rows"])
-    return block("access_points", "Boat ramps and put-ins nearby", "map",
+    pri = {"Boat ramp": 0, "Whitewater put-in": 0, "Canoe/kayak put-in": 0, "Marina": 1}  # actual launch points before marinas, nearest first
+    ordered = sorted(a["rows"], key=lambda x: (pri.get(x["type"], 2), x["mi"]))
+    rows = "".join(tr([esc(x["name"] or "(unnamed)"), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in ordered)
+    return block("access_points", "Boat ramps, put-ins and marinas nearby", "map",
                  table(["Name", "Type", "Distance"], rows, right=(2,)),
                  "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
 
