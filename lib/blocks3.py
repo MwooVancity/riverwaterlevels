@@ -56,6 +56,20 @@ def b_dams(G):
                      d["count"], d["miles"], len(d["dams"]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "nid")
 
 
+def b_uv(G):
+    """Peak UV index today at the gauge (EPA hourly), with the official EPA category. Sun-exposure data for anyone on the water."""
+    u = G["rec"].get("uv")
+    if not u or u.get("peak") is None:
+        return None
+    import re
+    m = re.search(r"(\d{1,2}) ?(AM|PM)", u.get("peak_t", "") or "")
+    hr = ("%d %s" % (int(m.group(1)) % 12 or 12, m.group(2))) if m else esc(u.get("peak_t", ""))
+    cat = next((c for lim, c in ((2, "low"), (5, "moderate"), (7, "high"), (10, "very high"), (99, "extreme")) if u["peak"] <= lim), "")
+    return block("uv_index", "Peak UV index today", "epa",
+                 '<p class="aq">UV %d, %s, at %s</p>' % (u["peak"], esc(cat), hr),
+                 "Source: U.S. EPA Envirofacts hourly UV index at the gauge location, today, fetched %s. Category from the EPA UV Index scale (0 to 2 low, 3 to 5 moderate, 6 to 7 high, 8 to 10 very high, 11 or more extreme)." % esc(tzl(parse_t(u["fetched_at"]), G["zone"])), "uv")
+
+
 def b_stocking(G):
     """Recent hatchery stocking near the gauge (species, date, count, water), from the state's public stocking layer. Hidden where the state has no adapter or no recent record."""
     s = G["rec"].get("stocking")

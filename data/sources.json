@@ -196,6 +196,19 @@
    ]
   },
   {
+   "id": "uv",
+   "name": "U.S. EPA Envirofacts hourly UV index",
+   "status": "quoted",
+   "terms_url": "https://www.epa.gov/enviro/envirofacts-data-service-api",
+   "summary": "EPA public UV index API, no auth; hourly forecast UV at the point for today, credited to EPA; category from the published EPA UV Index scale.",
+   "credit": "UV index: U.S. Environmental Protection Agency",
+   "read_on": "2026-10-23",
+   "evidence": "search-result",
+   "blocks": [
+    "uv_index"
+   ]
+  },
+  {
    "id": "hdsc",
    "name": "NOAA Atlas 14 precipitation frequency (HDSC)",
    "status": "off",
