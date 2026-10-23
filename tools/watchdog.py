@@ -21,13 +21,14 @@ def main():
         return 1
     built = datetime.datetime.fromisoformat(s["built_at"])
     age = (datetime.datetime.now(datetime.timezone.utc) - built).total_seconds() / 60
-    bad = []
+    bad, warn = [], []
     if age > MAX_BUILD_AGE_MIN:
         bad.append("last build is %d min old (limit %d)" % (age, MAX_BUILD_AGE_MIN))
+    # reading-age is USGS-side: when USGS stops sending, our pages show the real age. The RUNBOOK says "nothing to fix", so this warns, it does not fail the run (owner 2026-10-23: stop the failure emails for non-actionable lag).
     if s["median_age_min"] > MAX_MEDIAN_AGE_MIN:
-        bad.append("median newest-reading age is %d min (limit %d)" % (s["median_age_min"], MAX_MEDIAN_AGE_MIN))
+        warn.append("median newest-reading age is %d min (limit %d) — USGS lag, pages show the real age" % (s["median_age_min"], MAX_MEDIAN_AGE_MIN))
     if s.get("oldest_age_min", 0) > MAX_OLDEST_MIN:
-        bad.append("the oldest gauge reading is %d min old (limit %d)" % (s["oldest_age_min"], MAX_OLDEST_MIN))
+        warn.append("the oldest gauge reading is %d min old (limit %d) — USGS lag on one gauge, its page shows the age" % (s["oldest_age_min"], MAX_OLDEST_MIN))
     if s.get("failed_urls"):
         bad.append("%d gauge page(s) kept their previous page because the build failed: %s" % (len(s["failed_urls"]), ", ".join(s["failed_urls"][:3])))
     if s.get("block_errors"):
@@ -45,6 +46,8 @@ def main():
     except Exception as e:
         bad.append("cannot read _truth.json (%s): the numbers cannot be shown to have been verified" % str(e)[:60])
     print("built %s (%d min ago), %d gauges, %d pages, median reading age %d min, oldest %d min" % (s["built_at"], age, s["gauges"], s["pages"], s["median_age_min"], s["oldest_age_min"]))
+    for w in warn:
+        print("WATCHDOG WARN:", w)
     for b in bad:
         print("WATCHDOG FAIL:", b)
     return 1 if bad else 0

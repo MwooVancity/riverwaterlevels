@@ -13,6 +13,7 @@ USGS = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/i
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 MAX_LAG_H = 3
+STALE_FAIL_H = 12  # a lag up to here is a warning (USGS lag or a single slow gauge, not a wrong number); beyond it the refresh is genuinely broken and the run should go red
 
 
 LOCAL = sys.argv[sys.argv.index("--dir") + 1] if "--dir" in sys.argv else None
@@ -58,6 +59,7 @@ def record(status, compared, bad, skipped):
 def main():
     bad = []
     skipped = []
+    stale = []
     gauges = json.loads(page("/gauges.json"))
     pages = {}
     for name, url, *_ in gauges:
@@ -100,8 +102,11 @@ def main():
                 bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
         elif ut > pg["t"]:
             lag = (ut - pg["t"]).total_seconds() / 3600
-            if lag > MAX_LAG_H:
+            # a lagging page is stale, not WRONG (it shows its real age). A short lag is normal; only an extreme lag means our refresh is actually broken.
+            if lag > STALE_FAIL_H:
                 bad.append("%s: page is %.1f h behind USGS (page %s, USGS %s)" % (pg["url"], lag, pg["t"].isoformat(), ut.isoformat()))
+            elif lag > MAX_LAG_H:
+                stale.append("%s: page is %.1f h behind USGS (USGS reads %s; the page shows this age)" % (pg["url"], lag, ut.isoformat()))
         if pg["lid"] and pg["cats"]:
             try:
                 cats = (json.loads(get(NWPS % pg["lid"])).get("flood") or {}).get("categories") or {}
@@ -119,6 +124,10 @@ def main():
     print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches%s" % (len(pages), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
+    for s in stale[:25]:
+        print("  STALE (warning, not a failure)", s)
+    if stale:
+        print("truth_live: %d gauge(s) lagging USGS by 3 to %d h (warning only; the pages show their real age)" % (len(stale), STALE_FAIL_H))
     return 1 if bad else 0
 
 
