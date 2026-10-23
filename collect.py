@@ -460,6 +460,43 @@ def fetch_nid(lat, lon, miles=15):
     return {"fetched_at": now_iso(), "miles": miles, "count": len(dams), "dams": dams[:15]}
 
 
+STOCK_SOURCES = [
+    # Per-state fish-stocking point layers. Each is one ArcGIS query by envelope around the gauge. Add a state = one entry (bbox gate, field map, credit). All verified to return point geometry + date + species + count.
+    {"id": "mt", "name": "Montana FWP fish stocking records", "url": "https://fwp-gis.mt.gov/arcgis/rest/services/fish/fishViewer/MapServer/38/query",
+     "bbox": (-116.1, 44.3, -104.0, 49.1), "credit": "Montana Fish, Wildlife & Parks",
+     "f": {"species": "SPECIES", "date": "PLANTDATE", "num": "NUMFISH", "water": "WATERBODY", "size": "FISHSIZE"}},
+]
+
+
+def fetch_stocking(lat, lon, miles=35):
+    """Recent hatchery stocking near the gauge, from the state's public stocking layer (species, date, count, water). Returns None where the state has no adapter or no record. Stocking is a release event, not a fish-population measure."""
+    for s in STOCK_SOURCES:
+        x0, y0, x1, y1 = s["bbox"]
+        if not (x0 <= lon <= x1 and y0 <= lat <= y1):
+            continue
+        fm, dd = s["f"], miles / 69.0
+        q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(fm.values()), "returnGeometry": "true", "resultRecordCount": "500", "f": "json"})
+        j = json.loads(get_text(s["url"] + "?" + q))
+        cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
+        rows = []
+        for ft in j.get("features", []):
+            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+            d = a.get(fm["date"])
+            iso = (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=d)).date().isoformat() if isinstance(d, (int, float)) else (str(d)[:10] if d else "")
+            if not iso or iso < cut:
+                continue
+            mi = round(hav_km(lat, lon, g["y"], g["x"]) * 0.621371, 1) if g.get("y") is not None and g.get("x") is not None else None
+            if mi is not None and mi > miles:
+                continue
+            rows.append({"species": a.get(fm["species"]), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
+                         "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
+        rows.sort(key=lambda r: r["date"], reverse=True)
+        if rows:
+            return {"fetched_at": now_iso(), "source": s["name"], "credit": s["credit"], "url": s["url"], "miles": miles, "rows": rows[:12]}
+    return None
+
+
 def fetch_fema_zone(lat, lon):
     """FEMA flood hazard zones within 500 m of the gauge (Esri Living Atlas copy of the FIRM data; generalised, not parcel level)."""
     q = urllib.parse.urlencode({"geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "distance": "500", "units": "esriSRUnit_Meter",
@@ -929,7 +966,7 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:

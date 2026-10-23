@@ -183,6 +183,19 @@
    ]
   },
   {
+   "id": "stocking",
+   "name": "State fish and wildlife hatchery stocking records",
+   "status": "quoted",
+   "terms_url": "https://fwp-gis.mt.gov/arcgis/rest/services/fish/fishViewer/MapServer/38",
+   "summary": "Public state ArcGIS stocking layers (no auth), credited to the issuing agency. Shown as released species, date and count near the gauge; a release event, not a measure of fish now present.",
+   "credit": "Stocking: state fish and wildlife agency",
+   "read_on": "2026-10-22",
+   "evidence": "search-result",
+   "blocks": [
+    "stocking"
+   ]
+  },
+  {
    "id": "hdsc",
    "name": "NOAA Atlas 14 precipitation frequency (HDSC)",
    "status": "off",

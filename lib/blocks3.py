@@ -56,6 +56,19 @@ def b_dams(G):
                      d["count"], d["miles"], len(d["dams"]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "nid")
 
 
+def b_stocking(G):
+    """Recent hatchery stocking near the gauge (species, date, count, water), from the state's public stocking layer. Hidden where the state has no adapter or no recent record."""
+    s = G["rec"].get("stocking")
+    if not s or not s.get("rows"):
+        return None
+    rows = "".join(tr([fdate(x["date"]), esc(x["species"] or "–"), fmt(x["num"]) if x.get("num") else "–", esc(x["water"] or "–"),
+                       ("%.1f mi" % x["mi"]) if x.get("mi") is not None else "–"], right=(2, 4)) for x in s["rows"])
+    return block("stocking", "Recent fish stocking nearby", "hist",
+                 table(["Date", "Species", "Number", "Water", "Distance"], rows, right=(2, 4)),
+                 "Source: %s, hatchery stocking records within about %d miles of the gauge, most recent first, fetched %s. Credit: %s. Stocking is a release event, not a measure of fish now present in the river." % (
+                     esc(s["source"]), s.get("miles", 35), esc(tzl(parse_t(s["fetched_at"]), G["zone"])), esc(s["credit"])), "stocking")
+
+
 def b_rise(G):
     r = G["rec"].get("rise")
     if not r or not r.get("series"):
