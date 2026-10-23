@@ -56,6 +56,47 @@ def b_dams(G):
                      d["count"], d["miles"], len(d["dams"]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "nid")
 
 
+def sustained_pct(G, days):
+    """Average percentile of the last N daily mean flows vs USGS daily statistics for those dates: 'has flow sat low/normal/high over the week/month', for irrigators and anglers."""
+    rec = G["rec"]
+    stats, m = rec.get("stats"), rec.get("multiyear") or {}
+    if not stats or not m.get("as_of"):
+        return None
+    as_of = datetime.date.fromisoformat(m["as_of"])
+    ser = (m.get("series") or {}).get(str(as_of.year)) or []
+    if len(ser) < days:
+        return None
+    pcts = []
+    for i in range(1, days + 1):
+        v = ser[-i]
+        if v is None:
+            continue
+        srow = stats.get((as_of - datetime.timedelta(days=i - 1)).isoformat()[5:10])
+        if srow:
+            p = interp_pct(srow, v)
+            if p is not None:
+                pcts.append(p)
+    return round(sum(pcts) / len(pcts)) if len(pcts) >= max(3, days - 3) else None
+
+
+def b_sustained(G):
+    p7, p28 = sustained_pct(G, 7), sustained_pct(G, 28)
+    if p7 is None and p28 is None:
+        return None
+    def band(p):
+        return "below the normal range" if p < 10 else "in the lower half of normal" if p < 40 else "near the middle of normal" if p <= 60 else "in the upper half of normal" if p <= 90 else "above the normal range"
+    def ordp(p):
+        suf = "th" if 10 <= p % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(p % 10, "th")
+        return "%d%s percentile" % (p, suf)
+    parts = []
+    if p7 is not None:
+        parts.append("Past 7 days: %s, %s" % (ordp(p7), band(p7)))
+    if p28 is not None:
+        parts.append("Past 28 days: %s, %s" % (ordp(p28), band(p28)))
+    return block("sustained_flow", "Flow over recent weeks", "hist", "<p>%s</p>" % " &middot; ".join(parts),
+                 "Source: USGS daily mean flow for each date through %s compared with USGS daily statistics for those same dates; the percentile shown is the average of the daily percentiles over the window." % esc(fdate(G["rec"]["multiyear"]["as_of"])), "usgs")
+
+
 def b_uv(G):
     """Peak UV index today at the gauge (EPA hourly), with the official EPA category. Sun-exposure data for anyone on the water."""
     u = G["rec"].get("uv")
