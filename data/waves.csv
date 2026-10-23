@@ -167,7 +167,7 @@ queue,6,06065500,Missouri River,Below Hauser Dam Near Helena,MT,83.5,100,66,60,"
 queue,6,01427510,Delaware River,Callicoon,PA,83.5,100,50,70,"wsr-rec,wsr,fame",,,high,/river/delaware-river-pa/callicoon/
 queue,6,01073500,Lamprey River,Newmarket,NH,83.4,90,69,70,"wsr-fish,wsr,nri",,,high,/river/lamprey-river/newmarket/
 queue,6,01427500,Callicoon Creek,Callicoon,NY,83.3,100,50,70,"wsr-rec,wsr",,,high,/river/callicoon-creek/callicoon/
-queue,6,06610000,Missouri River,Omaha,NE,83.2,100,88,40,fame,,,high,/river/missouri-river-ne/omaha/
+live,6,06610000,Missouri River,Omaha,NE,83.2,100,88,40,fame,,,high,/river/missouri-river-ne/omaha/
 queue,6,08361000,Rio Grande,Below Elephant Butte Dam,NM,83.2,100,56,60,"tail,fame",,,auto2,/river/rio-grande-nm/below-elephant-butte-dam/
 queue,6,03230500,Big Darby Creek,Darbyville,OH,83.2,90,68,70,wsr,,,high,/river/big-darby-creek/darbyville/
 queue,6,02019500,James River,Buchanan,VA,83.2,100,53,70,"nri,fame",,,high,/river/james-river-va/buchanan/
@@ -876,7 +876,7 @@ queue,34,03221000,Scioto River,Below O'Shaughnessy Dam Near Dublin,OH,72.5,70,90
 queue,34,02318000,Little River,Adel,GA,72.5,70,60,70,fame,,,high,/river/little-river-ga/adel/
 queue,35,03216500,Little Sandy River,Grayson,KY,72.5,70,59,70,fame,,,high,/river/little-sandy-river-ky/grayson/
 queue,35,02337000,Sweetwater Creek,Austell,GA,72.5,60,87,70,nri,,,high,/river/sweetwater-creek-ga/austell/
-queue,35,08330000,Rio Grande,Albuquerque,NM,72.5,100,93,40,fame,,,auto2,/river/rio-grande-nm/albuquerque/
+live,35,08330000,Rio Grande,Albuquerque,NM,72.5,100,93,40,fame,,,auto2,/river/rio-grande-nm/albuquerque/
 queue,35,021556525,Pacolet River,Below Lake Blalock Near Cowpens,SC,72.5,65,70,90,tail,,,high,/river/pacolet-river/below-lake-blalock-near-cowpens/
 queue,35,06294000,Little Bighorn River,Hardin,MT,72.4,70,56,70,fame,,,high,/river/little-bighorn-river/hardin/
 queue,35,05078000,Clearwater River,Plummer,MN,72.4,70,56,70,fame,,,high,/river/clearwater-river-mn/plummer/
@@ -969,7 +969,7 @@ queue,38,01087000,Blackwater River,Webster,NH,71.3,85,70,30,"nri,nri-paddle,nri-
 queue,38,02291597,South Branch Estero River,Estero,FL,71.3,85,78,40,"nri,nri-paddle",,,high,/river/south-branch-estero-river/estero/
 queue,38,12144000,South Fork Snoqualmie River,North Bend,WA,71.3,85,70,30,"nri,nri-paddle,nri-fish",,,high,/river/south-fork-snoqualmie-river/north-bend/
 queue,38,01410820,Great Egg Harbor River,Blue Anchor,NJ,71.3,100,70,70,"wsr-rec,wsr",,,auto2,/river/great-egg-harbor-river/blue-anchor/
-queue,38,08057000,Trinity River,Dallas,TX,71.2,70,98,40,fame,,,high,/river/trinity-river-tx/dallas/
+live,38,08057000,Trinity River,Dallas,TX,71.2,70,98,40,fame,,,high,/river/trinity-river-tx/dallas/
 queue,38,03365500,East Fork White River,Seymour,IN,71.2,85,69,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/east-fork-white-river-in/seymour/
 queue,38,03604400,Buffalo River,Below Lobelville,TN,71.2,100,25,70,"nri,fame",,4282,high,/river/buffalo-river-tn/below-lobelville/
 queue,38,09364010,Animas River,Below Aztec,NM,71.2,100,70,70,fame,,,high,/river/animas-river-nm/below-aztec/
@@ -5201,7 +5201,7 @@ queue,207,04138030,East Branch Au Gres River,East Andrews Road Near Alabaster,MI
 queue,207,06727500,Fourmile Creek,Orodell,CO,43.2,30,79,30,,,,high,/river/fourmile-creek-co/orodell/
 queue,208,12172000,Big Beaver Creek,Newhalem,WA,43.2,60,0,30,nri,,,high,/river/big-beaver-creek/newhalem/
 queue,208,05435943,Badger Mill Creek,Verona,WI,43.2,30,83,30,,,,high,/river/badger-mill-creek/verona/
-queue,208,07032000,Mississippi River,Memphis,TN,43.1,10,91,40,,,,high,/river/mississippi-river-tn/memphis/
+live,208,07032000,Mississippi River,Memphis,TN,43.1,10,91,40,,,,high,/river/mississippi-river-tn/memphis/
 queue,208,07161450,Cimarron River,Ripley,OK,43.1,70,69,40,fame,,,high,/river/cimarron-river-ok/ripley/
 queue,208,13148500,Little Wood River,Carey,ID,43.1,30,48,70,,,694,high,/river/little-wood-river/carey/
 queue,208,06403700,Cheyenne River,Red Shirt,SD,43.1,75,0,40,"nri,nri-fish",,,high,/river/cheyenne-river-sd/red-shirt/
@@ -6436,7 +6436,7 @@ queue,257,05551545,Waubonsee Creek,Oswego,IL,33.8,10,83,40,,,,high,/river/waubon
 queue,257,09135920,Leroux Creek,Above Mouth Near Hotchkiss,CO,33.8,30,49,30,,,,high,/river/leroux-creek/above-mouth-near-hotchkiss/
 queue,257,07332605,Bois D'Arc Creek,Highway 56 Near Bonham,TX,33.8,30,58,30,,,559,medium,/river/bois-darc-creek/highway-56-near-bonham/
 queue,257,07344100,Anderson Creek,Highway 98 Near Simms,TX,33.8,30,55,30,,,,medium,/river/anderson-creek-tx/highway-98-near-simms/
-queue,257,08158000,Colorado River,Austin,TX,33.7,10,95,40,,,,high,/river/colorado-river-tx/austin/
+live,257,08158000,Colorado River,Austin,TX,33.7,10,95,40,,,,high,/river/colorado-river-tx/austin/
 queue,257,05483450,Middle Raccoon River,Bayard,IA,33.7,30,0,70,,,,high,/river/middle-raccoon-river/bayard/
 queue,257,01626850,South River,Dooms,VA,33.7,30,70,70,,,,high,/river/south-river-va/dooms/
 queue,257,06408700,Rhoads Fork,Rochford,SD,33.7,10,48,40,,,,high,/river/rhoads-fork/rochford/
