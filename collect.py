@@ -555,6 +555,34 @@ def fetch_access(lat, lon, radius_m=25000):
     return {"fetched_at": now_iso(), "count": len(rows), "rows": rows[:10]}
 
 
+WQP_CHARS = ["Escherichia coli", "Fecal Coliform", "Enterococcus", "Nitrate", "Turbidity", "Dissolved oxygen", "pH", "Specific conductance", "Lead", "Chlorophyll a"]
+
+
+def fetch_wqp(lat, lon, deg=0.2):
+    """Water Quality Portal (EPA/USGS/states) discrete lab samples near the gauge: the most recent value per measure over 3 years (bacteria, nutrients, metals the live sensors do not carry). For anglers, swimmers, researchers."""
+    import csv, io
+    lo = (datetime.date.today() - datetime.timedelta(days=1095)).strftime("%m-%d-%Y")
+    q = [("bBox", "%.4f,%.4f,%.4f,%.4f" % (lon - deg, lat - deg, lon + deg, lat + deg)), ("startDateLo", lo), ("mimeType", "csv"), ("zip", "no"), ("dataProfile", "resultPhysChem"), ("siteType", "Stream")]
+    for c in WQP_CHARS:
+        q.append(("characteristicName", c))
+    try:
+        r = urllib.request.urlopen(urllib.request.Request("https://www.waterqualitydata.us/data/Result/search?" + urllib.parse.urlencode(q), headers={"User-Agent": "riverwaterlevels.com water samples"}), timeout=90)
+        rows = list(csv.DictReader(io.StringIO(r.read().decode("utf-8", "replace"))))
+    except Exception:
+        return None
+    latest = {}
+    for x in rows:
+        c, dt, v = x.get("CharacteristicName"), x.get("ActivityStartDate"), x.get("ResultMeasureValue")
+        if not c or not dt or v in (None, ""):
+            continue
+        if c not in latest or dt > latest[c]["date"]:
+            latest[c] = {"char": c, "value": v, "unit": (x.get("ResultMeasure/MeasureUnitCode") or "").strip(), "date": dt, "station": x.get("MonitoringLocationName"), "org": x.get("OrganizationFormalName")}
+    if not latest:
+        return None
+    order = {c: i for i, c in enumerate(WQP_CHARS)}
+    return {"fetched_at": now_iso(), "count": len(rows), "rows": sorted(latest.values(), key=lambda r: order.get(r["char"], 99))}
+
+
 def fetch_fema_zone(lat, lon):
     """FEMA flood hazard zones within 500 m of the gauge (Esri Living Atlas copy of the FIRM data; generalised, not parcel level)."""
     q = urllib.parse.urlencode({"geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "distance": "500", "units": "esriSRUnit_Meter",
@@ -1024,7 +1052,7 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)), ("uv", lambda: fetch_uv(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)), ("uv", lambda: fetch_uv(lat, lon)), ("access", lambda: fetch_access(lat, lon)), ("wqp", lambda: fetch_wqp(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:

@@ -337,6 +337,19 @@
    "evidence": "search-result",
    "evidence_phrase": "labels 50-60F as 'Very Dangerous / Immediately Life-threatening'; categorizes 60-70F as Dangerous; advises caution below 70F and recommends thermal protection like wetsuits or drysuits",
    "evidence_url": "https://www.coldwatersafety.org/water-temperature-safety-guide"
+  },
+  {
+   "id": "wqp",
+   "name": "Water Quality Portal (EPA, USGS, state agencies)",
+   "status": "quoted",
+   "terms_url": "https://www.waterqualitydata.us/",
+   "credit": "Water samples: Water Quality Portal (EPA, USGS, states)",
+   "summary": "Public national aggregator of discrete water-quality samples; the most recent value per measure near the gauge, each labelled with its sample date; not continuous readings.",
+   "read_on": "2026-10-23",
+   "evidence": "search-result",
+   "blocks": [
+    "water_samples"
+   ]
   }
  ]
 }

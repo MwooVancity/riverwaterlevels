@@ -108,6 +108,17 @@ def b_access(G):
                  "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
 
 
+def b_watersamples(G):
+    """Most recent discrete lab sample per measure near the gauge (Water Quality Portal): bacteria, nutrients, metals the live sensors do not carry. Each row shows the sample date; these are not continuous readings."""
+    w = G["rec"].get("wqp")
+    if not w or not w.get("rows"):
+        return None
+    rows = "".join(tr([esc(x["char"]), esc(("%s %s" % (x["value"], x["unit"])).strip() if x["unit"] and x["unit"].lower() != "none" else str(x["value"])), fdate(x["date"]), esc(x["station"] or "–")]) for x in w["rows"])
+    return block("water_samples", "Recent lab water samples nearby", "agency",
+                 table(["Measured", "Latest value", "Sampled", "Station"], rows),
+                 "Source: Water Quality Portal (EPA, USGS and state agencies) discrete stream samples within about 14 miles of the gauge, the most recent value for each measure over the last 3 years, fetched %s. These are laboratory samples taken on the dates shown, not continuous readings; a past sample does not describe today's water." % esc(tzl(parse_t(w["fetched_at"]), G["zone"])), "wqp")
+
+
 def b_uv(G):
     """Peak UV index today at the gauge (EPA hourly), with the official EPA category. Sun-exposure data for anyone on the water."""
     u = G["rec"].get("uv")

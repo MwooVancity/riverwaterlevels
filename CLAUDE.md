@@ -2,6 +2,12 @@
 
 One static page per USGS river gauge. Government data only (USGS, NOAA/NWS, USDA, EPA). Ad-supported later. The owner is a non-coder and never runs commands: do the work, short plain replies, no "Next:" line, decide defaults yourself. This folder is its own project; the car-repair site's rules do not apply here.
 
+## Line 0 (HARD, owner 2026-10-23): this is the absolute most useful river page on the internet
+Every public dataset that answers a real question about this river for any water user goes on the page, with its exact source and the time. We maximise information gain and close every data gap: if a reliable public feed carries a value a reader would want, we show it; a gap stays only because no trustworthy public feed exists (wrong, misleading reporting-habit, padding, or no mechanism are the only reasons to withhold). No other page in the world should carry more useful, sourced river data than ours. When in doubt whether a dataset belongs, the answer is show it with its caveat, not hide it.
+
+## Line 1 (HARD, owner 2026-10-23): user first, clean UI, never Google first
+The page is built for the person at the river, not for a search engine. Every block earns its place by helping that reader decide, in seconds, on a phone; the layout stays clean and presentable (one page colour, white cards, one label and numeral style, unit beside the number, one line under each number, data age said once). No SEO gaming, no keyword stuffing, no doorway pages, no padding for ranking. If a choice helps Google but not the reader, we do not make it. Usefulness and clarity beat page count and search tricks every time.
+
 ## The procedure (HARD, owner 2026-10-21: "it's just APIs on pages, it shouldn't keep fucking up")
 Every change, no exceptions:
 1. Say in one line what will change. Nothing that runs gates or a deploy starts until the owner says go.
