@@ -2,7 +2,7 @@
 Each source is fetched independently; a failed source keeps its previous cached value (and old fetched_at), it never blanks the record.
 Usage: python -I collect.py [site ...]   (default: wave 0)
 """
-import os, sys, json, math, re, datetime, urllib.parse
+import os, sys, json, math, re, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 
@@ -518,6 +518,43 @@ def fetch_uv(lat, lon):
     return {"fetched_at": now_iso(), "peak": peak["uv"], "peak_t": peak["t"], "rows": rows}
 
 
+def fetch_access(lat, lon, radius_m=25000):
+    """Boat ramps, canoe/kayak and whitewater put-ins and marinas near the gauge, from OpenStreetMap (Overpass). Where paddlers, anglers and boaters get on the water. ODbL, attributed."""
+    parts = []
+    for sel in ('node["leisure"="slipway"]', 'way["leisure"="slipway"]', 'node["canoe"="put_in"]', 'node["whitewater"="put_in"]', 'node["leisure"="marina"]', 'way["leisure"="marina"]'):
+        parts.append("%s(around:%d,%.4f,%.4f);" % (sel, radius_m, lat, lon))
+    q = "[out:json][timeout:25];(" + "".join(parts) + ");out center tags;"
+    els = None
+    for attempt in range(2):  # Overpass public API rate-limits (429); one polite retry, then leave it for the next 6 h run (the block self-hides)
+        try:
+            r = urllib.request.urlopen(urllib.request.Request("https://overpass-api.de/api/interpreter", data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": "riverwaterlevels.com river gauge access points"}), timeout=50)
+            els = json.loads(r.read().decode("utf-8", "replace")).get("elements", [])
+            break
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt == 0:
+                import time
+                time.sleep(8)
+                continue
+            return None
+        except Exception:
+            return None
+    if els is None:
+        return None
+    rows = []
+    for e in els:
+        t = e.get("tags", {})
+        y = e.get("lat") if e.get("lat") is not None else (e.get("center") or {}).get("lat")
+        x = e.get("lon") if e.get("lon") is not None else (e.get("center") or {}).get("lon")
+        if y is None or x is None:
+            continue
+        label = "Whitewater put-in" if t.get("whitewater") == "put_in" else "Canoe/kayak put-in" if t.get("canoe") == "put_in" else "Marina" if t.get("leisure") == "marina" else "Boat ramp"
+        rows.append({"name": t.get("name"), "type": label, "mi": round(hav_km(lat, lon, y, x) * 0.621371, 1)})
+    rows.sort(key=lambda r: (r["name"] is None, r["mi"]))  # named first, then nearest
+    if not rows:
+        return None
+    return {"fetched_at": now_iso(), "count": len(rows), "rows": rows[:10]}
+
+
 def fetch_fema_zone(lat, lon):
     """FEMA flood hazard zones within 500 m of the gauge (Esri Living Atlas copy of the FIRM data; generalised, not parcel level)."""
     q = urllib.parse.urlencode({"geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "distance": "500", "units": "esriSRUnit_Meter",
@@ -987,7 +1024,7 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)), ("uv", lambda: fetch_uv(lat, lon)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)), ("uv", lambda: fetch_uv(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:

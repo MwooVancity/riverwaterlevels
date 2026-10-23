@@ -117,7 +117,7 @@ def tab_blocks(tab, G, pages):
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G), b3.b_rise(G),
                 "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b3.b_dams(G), b3.b_fema_zone(G), b_land(G),
-                b3.b_recreation(G), b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
+                b3.b_access(G), b3.b_recreation(G), b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return []  # only the dashboard tab is built (one page per gauge)
 
 

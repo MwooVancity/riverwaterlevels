@@ -96,12 +96,16 @@
   {
    "id": "osm",
    "name": "OpenStreetMap via Overpass",
-   "status": "off",
+   "status": "quoted",
    "terms_url": "https://www.openstreetmap.org/copyright",
-   "summary": "ODbL: attribution required; share-alike for derived databases; public Overpass instance not for production traffic. Off until decided.",
+   "summary": "OpenStreetMap boat ramps, put-ins and marinas near the gauge via the Overpass API; open data under ODbL, used with attribution.",
    "blocks": [
-    "access"
-   ]
+    "access",
+    "access_points"
+   ],
+   "credit": "Access points: \u00a9 OpenStreetMap contributors (ODbL)",
+   "read_on": "2026-10-23",
+   "evidence": "search-result"
   },
   {
    "id": "ridb",

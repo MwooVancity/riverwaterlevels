@@ -97,6 +97,17 @@ def b_sustained(G):
                  "Source: USGS daily mean flow for each date through %s compared with USGS daily statistics for those same dates; the percentile shown is the average of the daily percentiles over the window." % esc(fdate(G["rec"]["multiyear"]["as_of"])), "usgs")
 
 
+def b_access(G):
+    """Boat ramps, put-ins and marinas near the gauge (OpenStreetMap). Where people get on the water."""
+    a = G["rec"].get("access")
+    if not a or not a.get("rows"):
+        return None
+    rows = "".join(tr([esc(x["name"] or "(unnamed)"), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in a["rows"])
+    return block("access_points", "Boat ramps and put-ins nearby", "map",
+                 table(["Name", "Type", "Distance"], rows, right=(2,)),
+                 "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
+
+
 def b_uv(G):
     """Peak UV index today at the gauge (EPA hourly), with the official EPA category. Sun-exposure data for anyone on the water."""
     u = G["rec"].get("uv")
