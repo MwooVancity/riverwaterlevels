@@ -465,6 +465,12 @@ STOCK_SOURCES = [
     {"id": "mt", "name": "Montana FWP fish stocking records", "url": "https://fwp-gis.mt.gov/arcgis/rest/services/fish/fishViewer/MapServer/38/query",
      "bbox": (-116.1, 44.3, -104.0, 49.1), "credit": "Montana Fish, Wildlife & Parks",
      "f": {"species": "SPECIES", "date": "PLANTDATE", "num": "NUMFISH", "water": "WATERBODY", "size": "FISHSIZE"}},
+    {"id": "md", "name": "Maryland DNR trout stocking", "url": "https://dnr.geodata.md.gov/dnrdata/rest/services/Fisheries/TroutStockingActivities/MapServer/0/query",
+     "bbox": (-79.5, 37.8, -74.9, 39.8), "credit": "Maryland Department of Natural Resources",
+     "f": {"species": "Species", "date": "ActivityDate", "num": "NumOfFish", "water": "LOCATION", "size": None}},
+    {"id": "nd", "name": "North Dakota Game & Fish stocking", "url": "https://ndgishub.nd.gov/arcgis/rest/services/Applications/GNF_FishingWaters/MapServer/3/query",
+     "bbox": (-104.2, 45.8, -96.5, 49.1), "credit": "North Dakota Game and Fish Department",
+     "f": {"species": "Species", "date": "StockDate", "num": "Total_Stocked", "water": "Lake_Name", "size": "StockSizeDescription"}},
 ]
 
 
@@ -476,7 +482,7 @@ def fetch_stocking(lat, lon, miles=35):
             continue
         fm, dd = s["f"], miles / 69.0
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
-                                    "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(fm.values()), "returnGeometry": "true", "resultRecordCount": "500", "f": "json"})
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(v for v in fm.values() if v), "returnGeometry": "true", "resultRecordCount": "500", "f": "json"})
         j = json.loads(get_text(s["url"] + "?" + q))
         cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
         rows = []
