@@ -71,14 +71,18 @@ def b_nearby(G, pages):
     def dist(p):
         la1, lo1, la2, lo2 = map(math.radians, (G["lat"], G["lon"], p["_ll"][0], p["_ll"][1]))
         return 3958.8 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
-    cand = [(dist(p), p) for s, p in pages.items() if s not in skip and p.get("_built") and p.get("_ll")]
-    out = sorted((x for x in cand if x[0] <= 60), key=lambda x: x[0])  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
-    same = []
-    if len(out) < 3:  # a page must not be a dead end (Lakebrief comparison 2026-10-21): the nearest gauges in the same state, up to eight
-        seen = {id(p) for _, p in out}
-        same = sorted((x for x in cand if x[1].get("state") == G["st"] and id(x[1]) not in seen), key=lambda x: x[0])[:8]
-    shown = {id(p) for _, p in out[:5] + same}
-    far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: 24 of 25 pages linked fewer than 3 other gauges; fill to five with the nearest anywhere, distance shown
+    usable = lambda s, p: s not in skip and p.get("_built") and p.get("_ll")
+    # bounding box before the haversine: 60 mi is under 1 deg lat and ~2 deg lon in CONUS, so only distance-test the handful in the box (was an O(n) trig scan per page = O(n^2) per build)
+    box = [(dist(p), p) for s, p in pages.items() if usable(s, p) and abs(p["_ll"][0] - G["lat"]) <= 1.0 and abs(p["_ll"][1] - G["lon"]) <= 2.0]
+    out = sorted((x for x in box if x[0] <= 60), key=lambda x: x[0])  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
+    same, far = [], []
+    if len(out) < 5:  # fewer than five truly-nearby: fall back to the full set for the dead-end backfill (Lakebrief comparison 2026-10-21). This full scan fires only where gauges are sparse, so it fades out as areas fill in.
+        cand = [(dist(p), p) for s, p in pages.items() if usable(s, p)]
+        if len(out) < 3:  # the nearest gauges in the same state, up to eight
+            seen = {id(p) for _, p in out}
+            same = sorted((x for x in cand if x[1].get("state") == G["st"] and id(x[1]) not in seen), key=lambda x: x[0])[:8]
+        shown = {id(p) for _, p in out[:5] + same}
+        far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: fill to five with the nearest anywhere, distance shown
     if not out and not same and not far:
         return None
     li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in grp)
