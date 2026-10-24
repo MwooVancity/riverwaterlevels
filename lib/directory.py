@@ -141,18 +141,30 @@ def state_page(st, rows, Gs):
     groups = collections.defaultdict(list)
     for r in rows:
         groups[(r["hub_slug"], r["river"])].append(r)
-    cards = ""
-    for (hs, rv), g in sorted(groups.items(), key=lambda kv: kv[0][1]):
-        top = max(g, key=lambda x: float(x["drainage_sqmi"] or 0))
-        G = Gs[top["site"]]
-        href = g[0]["hub_url"] if g[0].get("_hub") else g[0]["water_url"]
-        cards += '<a class="card gc" href="%s" data-s="%s"><b>%s</b><small>%d gauge%s &middot; %s sq mi &middot; %s cfs%s, observed %s</small></a>' % (
-            href, esc((rv + " " + " ".join(x["place"] for x in g)).lower()), esc(rv), len(g), "s" if len(g) > 1 else "", fmt(float(top["drainage_sqmi"] or 0)), fmt(G["lv"]),
-            ("" if G["p"] is None else ", %s" % band_word(G["p"]).lower()), esc(G["obs"]))
     name = STATE_NAMES.get(st, st)
-    body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>Rivers in %s: %d river%s, %d gauge%s</h1><p class="sub">Flow and water level for the river gauges in %s on %s. Source: USGS, with flow shown as the latest reading.</p>'
-            '<div class="search"><input id="q" type="search" placeholder="Search rivers in %s" aria-label="Search rivers in %s"></div><div class="grid" style="margin-top:14px">%s</div>%s' % (esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", esc(name), esc(BRAND), esc(name), esc(name), cards, SEARCH_JS))
-    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, gage height and how it compares with normal for each river gauge in %s, from USGS and National Weather Service data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
+    # rollup from our own data: how this state's gauges compare with the same date in past years, right now
+    bands = collections.Counter(band_word(Gs[r["site"]]["p"]) for r in rows)
+    order = ["Above normal", "Very high", "Normal range", "Below normal", "Very low"]
+    parts = ["%d %s" % (bands[b], b.lower()) for b in order if bands.get(b)]
+    nun = bands.get("–", 0)
+    roll = "%d gauge%s on this site in %s. Compared with this date in past years: %s%s." % (
+        len(rows), "" if len(rows) == 1 else "s", esc(name), ", ".join(parts) if parts else "no past-years comparison available",
+        ("; %d with no comparison for this date" % nun) if nun else "")
+    # one conditions row per gauge across the state (flow, how it compares, 24 h change, whether NWS issues a river forecast, observed time)
+    trs = ""
+    for (hs, rv), g in sorted(groups.items(), key=lambda kv: kv[0][1]):
+        for r in sorted(g, key=lambda x: -float(x["drainage_sqmi"] or 0)):
+            G = Gs[r["site"]]
+            chg = G["chg"]
+            ch = "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%")
+            fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
+            trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
+                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmt(G["lv"]), band_word(G["p"]), ch, fcst, esc(G["obs"]))
+    body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
+            '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>'
+            '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, trs))
+    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for every river gauge in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
 def hub_page(hub_slug, st, rows, inv_count, Gs):
