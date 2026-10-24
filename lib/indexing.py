@@ -23,8 +23,6 @@ def indexable(url, cfg):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
-    if re.match(r"^/rivers/[a-z]{2}/$", url):  # state hubs are thin navigation link-lists: keep them crawlable (noindex,follow) so link equity still reaches gauges, but out of the index so they cannot drag the sitewide quality signal
-        return False
     return bool(cfg["site_pages"])
 
 

@@ -1266,6 +1266,63 @@ def fast(inv, sites):
         print("ok fast related flows")
     except Exception as e:
         print("FAIL related flows", str(e)[:100])
+    fetch_states(sites)  # statewide alerts + drought for each state hub
+
+
+STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
+
+
+def fetch_state(st):
+    """Statewide conditions for a state hub: active NWS alerts and the latest U.S. Drought Monitor percentages. Both public, sourced, no verdict."""
+    out = {"st": st, "fetched_at": now_iso()}
+    try:
+        j = json.loads(get_text("https://api.weather.gov/alerts/active?area=%s" % st, {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}, 60))
+        ev = {}
+        for f in j.get("features", []):
+            e = (f.get("properties") or {}).get("event")
+            if e:
+                ev[e] = ev.get(e, 0) + 1
+        out["alerts"] = {"n": sum(ev.values()), "events": sorted(ev.items(), key=lambda kv: -kv[1])}
+    except Exception as e:
+        out["alerts_err"] = str(e)[:80]
+    fips = STATE_FIPS.get(st.upper())
+    if fips:
+        try:
+            end = datetime.date.today()
+            start = end - datetime.timedelta(days=28)
+            url = "https://usdmdataservices.unl.edu/api/StateStatistics/GetDroughtSeverityStatisticsByAreaPercent?aoi=%s&startdate=%s&enddate=%s&statisticsType=1" % (fips, start.strftime("%m/%d/%Y"), end.strftime("%m/%d/%Y"))
+            rows = json.loads(get_text(url, {"Accept": "application/json", "User-Agent": "riverwaterlevels.com"}, 60))
+            if rows:
+                r0 = rows[0]
+                out["drought"] = {"mapDate": str(r0.get("mapDate"))[:10], "none": r0.get("none"), "d0": r0.get("d0"), "d1": r0.get("d1"), "d2": r0.get("d2"), "d3": r0.get("d3"), "d4": r0.get("d4")}
+        except Exception as e:
+            out["drought_err"] = str(e)[:80]
+    return out
+
+
+def states_of(sites):
+    """States that have at least one of these gauges, from the page rows (data/pages-all.csv)."""
+    import csv
+    want, out = set(sites), set()
+    try:
+        for r in csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8")):
+            if r.get("site") in want and r.get("state"):
+                out.add(r["state"])
+    except Exception as e:
+        print("states_of FAILED", str(e)[:80])
+    return out
+
+
+def fetch_states(sites):
+    for st in sorted(states_of(sites)):
+        try:
+            d = fetch_state(st)
+            p = os.path.join(CACHE, "state-%s.json" % st.lower())
+            json.dump(d, open(p + ".tmp", "w"), separators=(",", ":"))
+            os.replace(p + ".tmp", p)
+            print("ok state", st, "alerts", (d.get("alerts") or {}).get("n"), "drought D1+%", (d.get("drought") or {}).get("d1"))
+        except Exception as e:
+            print("FAIL state", st, str(e)[:80])
 
 
 def main():
@@ -1309,7 +1366,8 @@ def main():
             os.replace(path + ".tmp", path)
             print("ok nws", s, "hourly", len(rec["nws"].get("hourly") or []))
         return
-    for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
+    sites = [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites()
+    for s in sites:
         try:
             rec, log = collect(s, inv)
         except Exception as e:
@@ -1323,6 +1381,7 @@ def main():
             s, len(n["usgs"]["rows"]), n.get("tz"), (n.get("nwps") or {}).get("lid"), bool((n.get("nwps") or {}).get("forecast")), bool((n.get("nwm") or {}).get("points")),
             len((n.get("nws") or {}).get("periods") or []), len((n.get("nws") or {}).get("alerts") or []) if (n.get("nws") or {}).get("alerts") is not None else None, bool((n.get("nws") or {}).get("obs")),
             bool(n.get("rain")), len((n.get("related") or {}).get("items") or []), len((n.get("land") or {}).get("rows") or []) if n.get("land") else 0, "; ".join(log)))
+    fetch_states(sites)  # statewide alerts + drought for each state hub
 
 
 main()

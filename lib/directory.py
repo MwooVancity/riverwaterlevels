@@ -137,7 +137,7 @@ def home(built, Gs):
     return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service.", "/", body)
 
 
-def state_page(st, rows, Gs):
+def state_page(st, rows, Gs, sd=None):
     groups = collections.defaultdict(list)
     for r in rows:
         groups[(r["hub_slug"], r["river"])].append(r)
@@ -150,6 +150,19 @@ def state_page(st, rows, Gs):
     roll = "%d gauge%s on this site in %s. Compared with this date in past years: %s%s." % (
         len(rows), "" if len(rows) == 1 else "s", esc(name), ", ".join(parts) if parts else "no past-years comparison available",
         ("; %d with no comparison for this date" % nun) if nun else "")
+    # statewide conditions beyond our own gauges: active NWS alerts and the latest U.S. Drought Monitor percentages (both sourced, no verdict)
+    sw = ""
+    if sd:
+        al = sd.get("alerts") or {}
+        if al.get("events"):
+            sw += '<p class="sub">Active National Weather Service alerts in %s: %d &mdash; %s. Source: National Weather Service (api.weather.gov).</p>' % (
+                esc(name), al.get("n", 0), ", ".join("%d %s" % (c, esc(e)) for e, c in al["events"][:6]))
+        elif "alerts" in sd:
+            sw += '<p class="sub">No active National Weather Service alerts in %s right now. Source: National Weather Service (api.weather.gov).</p>' % esc(name)
+        dr = sd.get("drought")
+        if dr and dr.get("d0") is not None:
+            sw += '<p class="sub">U.S. Drought Monitor, week of %s: %.0f%% of %s is abnormally dry or worse (D0 or above), %.0f%% in moderate drought or worse (D1 or above), %.0f%% in severe drought or worse (D2 or above). Source: U.S. Drought Monitor (National Drought Mitigation Center, USDA, NOAA).</p>' % (
+                esc(dr.get("mapDate", "")), dr.get("d0") or 0, esc(name), dr.get("d1") or 0, dr.get("d2") or 0)
     # one conditions row per gauge across the state (flow, how it compares, 24 h change, whether NWS issues a river forecast, observed time)
     trs = ""
     for (hs, rv), g in sorted(groups.items(), key=lambda kv: kv[0][1]):
@@ -161,9 +174,9 @@ def state_page(st, rows, Gs):
             trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
                 r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmt(G["lv"]), band_word(G["p"]), ch, fcst, esc(G["obs"]))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
-            '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>'
+            '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, trs))
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw, trs))
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for every river gauge in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
