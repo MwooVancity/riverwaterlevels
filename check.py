@@ -11,6 +11,7 @@ from lib.common import ROOT, SITE_URL
 BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d"]  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 480, "home": 200, "trust": 60}  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
+FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs are noindex (lib/indexing) so they aren't floored here. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
 
 
 def kind_of(rel):
@@ -133,7 +134,7 @@ def check_html(h, rel):
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
-    results, titles, links_of, n_links, rel_of, noindex_of = {}, collections.defaultdict(list), {}, {}, {}, {}
+    results, titles, links_of, n_links, rel_of, noindex_of, vis_of = {}, collections.defaultdict(list), {}, {}, {}, {}, {}
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith(".html") and f != "404.html":
@@ -148,6 +149,7 @@ def check_dir(d):
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
+                vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
     for t, rels in titles.items():
@@ -171,6 +173,8 @@ def check_dir(d):
         k = kind_of(rel)
         if n_links[u] > BUDGET[k]:
             results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, BUDGET[k]))
+        if not noindex_of.get(u) and k in FLOOR and vis_of.get(u, 0) < FLOOR[k]:
+            results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - add data or noindex it" % (vis_of.get(u, 0), k, FLOOR[k]))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
     for u in urls:
         parts = u.strip("/").split("/")
