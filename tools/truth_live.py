@@ -99,8 +99,11 @@ def main():
             if abs(uv - pg["flow"]) > max(1.0, 0.01 * abs(uv)):
                 bad.append("%s: flow %s on the page, %s at USGS for the same time %s" % (pg["url"], pg["flow"], uv, ut.isoformat()))
             s_ = latest.get((sid, "00065"))
-            if s_ and s_[0] == pg["t"] and pg["stage"] is not None and abs(s_[1] - pg["stage"]) > 0.02:
-                bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
+            if s_ and s_[0] == pg["t"] and pg["stage"] is not None:
+                if abs(s_[1] - pg["stage"]) > 0.02:
+                    bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
+            elif pg["stage"] is not None:  # stage shown on the page but USGS has no stage at the page's timestamp: record as skipped, not silently ignored
+                skipped.append("%s: stage not verified (no USGS stage at the page's timestamp)" % pg["url"])
         elif ut > pg["t"]:
             lag = (ut - pg["t"]).total_seconds() / 3600
             # a lagging page is stale, not WRONG (it shows its real age). A short lag is normal; only an extreme lag means our refresh is actually broken.

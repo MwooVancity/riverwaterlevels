@@ -37,7 +37,7 @@ def main():
         if u in have or u not in live:
             continue
         # indexability (docs/research/FRESH-REVIEW-PLAN.md 3.4): a page is released only if it passed the queue gate, shows enough data blocks and has a record long enough for a meaningful comparison
-        if row["status"] not in ("live", "queue"):
+        if row["status"] != "live":  # only a gauge actually marked live is deployed; a queue gauge must not enter the index
             skipped["gate"] += 1
             continue
         if blocks.get(u, 0) < MIN_BLOCKS:

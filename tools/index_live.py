@@ -35,7 +35,16 @@ def main():
     except Exception as e:
         print("index live: site did not answer (%s); skipped" % str(e)[:80])
         return 0
-    listed = {u.replace(SITE, "") for u in re.findall(r"<loc>([^<]+)</loc>", sm)}
+    locs = re.findall(r"<loc>([^<]+)</loc>", sm)
+    if "<sitemapindex" in sm:  # the sitemap is an index: its <loc>s are child sitemaps, so union the page URLs from each child (past 10k URLs, else every allowed page false-fails as "missing from sitemap")
+        pages_ = []
+        for c in locs:
+            try:
+                pages_ += re.findall(r"<loc>([^<]+)</loc>", get(c)[1])
+            except Exception:
+                pass
+        locs = pages_
+    listed = {u.replace(SITE, "") for u in locs}
     gauges = sorted({g[1] for g in urls if len(g) > 1 and GAUGE.match(g[1])})
     if cfg.get("open"):
         for u in sorted(allow):
