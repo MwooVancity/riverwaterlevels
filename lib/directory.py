@@ -28,7 +28,7 @@ if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEac
 def shell(title, desc, url, body, extra_main_class="", ld=""):
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s%s</style></head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
-                esc(title), esc(desc), SITE_URL + url, HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
+                esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
 
 def latest_text(G):

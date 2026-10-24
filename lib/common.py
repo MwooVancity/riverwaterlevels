@@ -111,6 +111,9 @@ def river_at(river, place):
     return "%s at %s" % (river, p)
 
 
+ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997828618122077" crossorigin="anonymous"></script>'  # AdSense site loader (owner 2026-10-23); head of indexable pages only, never the embed panel or 404
+
+
 def band_word(p):
     """Plain-word USGS WaterWatch class of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown). Boundaries follow USGS WaterWatch: <10 much below, 10-24 below, 25-75 normal, 76-90 above, >90 much above."""
     if p is None:
