@@ -1224,6 +1224,9 @@ def fast(inv, sites):
         new = {}
     for s in sites:
         path = os.path.join(CACHE, s + ".json")
+        if not os.path.exists(path):  # a newly-added live gauge has no cache until a full collect creates it; skip in fast mode instead of crashing the whole refresh
+            print("skip fast (no cache yet; a full collect will create it)", s)
+            continue
         rec, log = json.load(open(path)), []
         have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
         add = [r for r in new.get(s, []) if (r["parameter_code"], r["time"]) not in have]
@@ -1254,7 +1257,7 @@ def fast(inv, sites):
         json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
         os.replace(path + ".tmp", path)
         print("ok fast", s, "new usgs rows", len(add), "; ".join(log))
-    recs = {s: json.load(open(os.path.join(CACHE, s + ".json"))) for s in sites}
+    recs = {s: json.load(open(os.path.join(CACHE, s + ".json"))) for s in sites if os.path.exists(os.path.join(CACHE, s + ".json"))}
     try:
         fast_related(recs, h)
         for s, r in recs.items():

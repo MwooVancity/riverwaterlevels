@@ -213,6 +213,8 @@ def _keep(c):
     """Table text: a one-day span shows one date; a date or a station id never breaks across lines."""
     c = re.sub(r"(%s) to \1(?![0-9])" % _DATE, r"\1", c)
     c = re.sub(_DATE, lambda m: m.group(0).replace(" ", " "), c)
+    if "href=" in c:  # ponytail: a station id inside a link must keep its real hyphen or the URL breaks; the non-breaking hyphen is cosmetic only
+        return c
     return re.sub(r"\b([A-Za-z]+)-(\d{6,})\b", r"\1‑\2", c)
 
 

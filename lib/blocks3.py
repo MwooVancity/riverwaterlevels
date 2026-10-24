@@ -75,7 +75,7 @@ def sustained_pct(G, days):
         if srow:
             p = interp_pct(srow, v)
             if p is not None:
-                pcts.append(p)
+                pcts.append(max(0, min(100, p)))  # interp_pct returns -1/101 sentinels for below/above all published percentiles; clamp so the averaged percentile never prints as "-1th"/"101st"
     return round(sum(pcts) / len(pcts)) if len(pcts) >= max(3, days - 3) else None
 
 

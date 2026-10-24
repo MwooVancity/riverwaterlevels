@@ -139,8 +139,10 @@ def main():
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
     json.dump({"urls": urls}, open(os.path.join(nxt, "_urls.json"), "w"))
     report["pages"] = len(urls)
-    if len(urls) > FILE_BUDGET and not preview:
-        raise SystemExit("file budget: %d pages is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (len(urls), FILE_BUDGET))
+    nfiles = sum(len(fs) for _, _, fs in os.walk(nxt))  # the real deploy count: pages + per-gauge embed/data.json + sitemaps + infra, not just len(urls)
+    report["files"] = nfiles
+    if nfiles > FILE_BUDGET and not preview:
+        raise SystemExit("file budget: %d files is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (nfiles, FILE_BUDGET))
     runs = os.path.join(ROOT, "runs", now.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(runs, exist_ok=True)
     json.dump(report, open(os.path.join(runs, "report.json"), "w"), indent=1)

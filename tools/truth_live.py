@@ -76,14 +76,15 @@ def main():
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)}}
     ids = sorted(pages)
     latest = {}
+    failed_ids = set()
     for i in range(0, len(ids), 40):
         try:
             j = json.loads(get(USGS % ",".join("USGS-" + s for s in ids[i:i + 40])))
         except Exception as e:
-            if LOCAL:
-                print("truth_live: the USGS API did not answer (%s); comparison skipped, not blocking, recorded as skipped in _truth.json" % str(e)[:80])
-                record("mismatch" if bad else "skipped", 0, bad, ["USGS API"])
-                return 1 if bad else 0
+            if LOCAL:  # one batch's outage must not abandon the other batches (a later-batch wrong value would otherwise ship unchecked); skip only this batch's gauges
+                print("truth_live: USGS batch %d did not answer (%s); that batch skipped, continuing" % (i // 40, str(e)[:80]))
+                failed_ids.update(ids[i:i + 40])
+                continue
             raise
         for f in j.get("features", []):
             p = f["properties"]
@@ -91,7 +92,7 @@ def main():
     for sid, pg in pages.items():
         u = latest.get((sid, "00060"))
         if not u:
-            bad.append("%s: USGS returned no latest flow" % pg["url"])
+            (skipped if sid in failed_ids else bad).append("%s: USGS %s" % (pg["url"], "batch did not answer (skipped)" if sid in failed_ids else "returned no latest flow"))
             continue
         ut, uv = u
         if ut == pg["t"]:
