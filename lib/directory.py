@@ -144,7 +144,7 @@ def state_page(st, rows, Gs):
     name = STATE_NAMES.get(st, st)
     # rollup from our own data: how this state's gauges compare with the same date in past years, right now
     bands = collections.Counter(band_word(Gs[r["site"]]["p"]) for r in rows)
-    order = ["Above normal", "Very high", "Normal range", "Below normal", "Very low"]
+    order = ["Much above normal", "Above normal", "Normal range", "Below normal", "Much below normal"]
     parts = ["%d %s" % (bands[b], b.lower()) for b in order if bands.get(b)]
     nun = bands.get("–", 0)
     roll = "%d gauge%s on this site in %s. Compared with this date in past years: %s%s." % (

@@ -45,22 +45,25 @@ def main():
         else:
             spans = re.findall(r"<span[^>]*>(.*?)</span>", ans.group(1))
             chip = re.search(r'<small class="dirchip">(.*?)</small>', h, re.S)
-            if len(spans) != 3:
-                fail(site, "answer strip does not hold three statements: %r" % spans)
+            # answer strip: an optional lead reading (present when a flow value exists), then comparison word, trend chip, alert state
+            if len(spans) not in (3, 4):
+                fail(site, "answer strip should hold 3 or 4 statements: %r" % spans)
             else:
-                if chip and spans[0] != chip.group(1):
-                    fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[0], chip.group(1)))
+                lead = len(spans) == 4
+                ni, ti, ai = (1, 2, 3) if lead else (0, 1, 2)
+                if chip and spans[ti] != chip.group(1):
+                    fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
-                if nw and G["p"] is not None and not spans[1].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
-                    fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[1], nw.group(1)))
-                if G["p"] is None and "No past-years" not in spans[1]:
-                    fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[1])
-                if c["alerts"] is not None and c["alerts"]["n"] and "active NWS alert" not in spans[2]:
-                    fail(site, "active alert not stated in the answer strip: %r" % spans[2])
-                if c["alerts"] is not None and not c["alerts"]["n"] and "active NWS alert" in spans[2] and "No active" not in spans[2]:
-                    fail(site, "no alert but the strip claims one: %r" % spans[2])
-                if c["alerts"] is None and "unknown" not in spans[2]:
-                    fail(site, "alert source unknown but the strip does not say so: %r" % spans[2])
+                if nw and G["p"] is not None and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
+                    fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[ni], nw.group(1)))
+                if G["p"] is None and "No past-years" not in spans[ni]:
+                    fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[ni])
+                if c["alerts"] is not None and c["alerts"]["n"] and "active NWS alert" not in spans[ai]:
+                    fail(site, "active alert not stated in the answer strip: %r" % spans[ai])
+                if c["alerts"] is not None and not c["alerts"]["n"] and "active NWS alert" in spans[ai] and "No active" not in spans[ai]:
+                    fail(site, "no alert but the strip claims one: %r" % spans[ai])
+                if c["alerts"] is None and "unknown" not in spans[ai]:
+                    fail(site, "alert source unknown but the strip does not say so: %r" % spans[ai])
         # 22. a forecast flow "by the NWS rating" belongs to the NWS point's own rating: never shown at a tidal reach or when the point is another place (Hudson at Green Island showed 2,170 cfs against a measured 6,060)
         if "by the NWS rating" in h and (G["osc"] or render.nws_point_note(G)):
             fail(site, "forecast cfs by the NWS rating shown at a tidal gauge or at a forecast point in another place")
@@ -189,8 +192,8 @@ def main():
     if base is None:
         fail("setup", "no gauge with statistics to test the bands")
     else:
-        want = {-1: "Very low", 3: "Below normal", 10: "Below normal", 24: "Below normal", 25: "Normal range", 40: "Normal range", 49.9: "Normal range", 50: "Normal range", 60: "Normal range",
-                75: "Normal range", 76: "Above normal", 94: "Above normal", 99: "Above normal", 101: "Very high"}
+        want = {-1: "Much below normal", 3: "Much below normal", 9: "Much below normal", 10: "Below normal", 24: "Below normal", 25: "Normal range", 40: "Normal range", 49.9: "Normal range", 50: "Normal range", 60: "Normal range",
+                75: "Normal range", 76: "Above normal", 90: "Above normal", 91: "Much above normal", 94: "Much above normal", 99: "Much above normal", 101: "Much above normal"}
         for p, w in want.items():
             G2 = copy.deepcopy(base)
             G2["p"] = p

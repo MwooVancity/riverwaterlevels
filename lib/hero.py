@@ -150,7 +150,7 @@ def hero(G, pages=None):
     if p is None:
         word, plain = "–", ""
     else:
-        word = "Very low" if p == -1 else "Very high" if p == 101 else "Below normal" if p < 25 else "Above normal" if p > 75 else "Normal range"
+        word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
         on = G["ldate"].strftime("%b %d")
         plain = ("Lower than at least 95%% of the %d years on record for %s." % (yrs, on) if p == -1 else

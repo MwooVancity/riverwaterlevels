@@ -112,7 +112,15 @@ def river_at(river, place):
 
 
 def band_word(p):
-    """Plain-word position of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown)."""
+    """Plain-word USGS WaterWatch class of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown). Boundaries follow USGS WaterWatch: <10 much below, 10-24 below, 25-75 normal, 76-90 above, >90 much above."""
     if p is None:
         return "–"
-    return "Very low" if p == -1 else "Very high" if p == 101 else "Below normal" if p < 25 else "Above normal" if p > 75 else "Normal range"
+    if p == 101 or p > 90:
+        return "Much above normal"
+    if p == -1 or p < 10:
+        return "Much below normal"
+    if p < 25:
+        return "Below normal"
+    if p <= 75:
+        return "Normal range"
+    return "Above normal"
