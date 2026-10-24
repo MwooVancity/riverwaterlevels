@@ -272,8 +272,12 @@ def hero(G, pages=None):
         big_rise = (fc_["v"] - fc_["cur"] >= 1.0) if fu_ == "ft" else (fc_["cur"] > 0 and fc_["v"] >= 1.25 * fc_["cur"])
         if big_rise:
             dir_chip = (dir_chip or "Direction unclear") + "; NWS forecast rises to %s by %s" % (("%.1f ft" % fc_["v"]) if fu_ == "ft" else ("%s cfs" % fmtc(fc_["v"])), fc_["t"])
-    answer = ('<p class="answer" aria-label="Summary"><span class="a1">%s</span><span class="a2 %s">%s</span>%s</p>' % (
-        esc(dir_chip or "Direction unclear"), band_cls, esc(("%s for %s" % (norm_word, G["ldate"].strftime("%b %d").replace(" 0", " "))) if p is not None else "No past-years comparison for this date"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+    lv = G.get("lv")
+    lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
+    norm_txt = ("%s for %s" % (norm_word, G["ldate"].strftime("%b %d").replace(" 0", " "))) if p is not None else "No past-years comparison for this date"
+    # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
+    answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 %s">%s</span><span class="a1">%s</span>%s</p>' % (
+        ('<span class="a1">%s</span>' % esc(lead)) if lead else "", band_cls, esc(norm_txt), esc(dir_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
         strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
     if c["air"]:
