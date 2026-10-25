@@ -300,7 +300,7 @@ def b_attains(G):
         return None
     rows = "".join(tr([esc(u.get("name") or u["id"]), esc(u.get("status") or "–"), esc(u.get("category") or "–"), esc(u.get("impaired") or "–"), esc(u.get("tmdl") or "–"), esc(u.get("cycle") or "–"),
                        ('<a href="%s" rel="noopener">EPA report</a>' % esc(u["link"])) if str(u.get("link") or "").startswith("https://") else "–"]) for u in a["units"])
-    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", table(["Assessment unit", "Overall status", "Category", "Impaired", "Has a cleanup plan (TMDL)", "Assessment cycle", "Report"], rows),
+    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", "<p>This is the state's Clean Water Act designated-use assessment (a multi-year regulatory status), not a current swim, bacteria or recreation advisory.</p>" + table(["Assessment unit", "Overall status", "Category", "Impaired", "Has a cleanup plan (TMDL)", "Assessment cycle", "Report"], rows),
                  "Source: EPA ATTAINS assessment units within about a quarter mile of the gauge, as reported by the state, fetched %s. Values are the state's assessment, quoted." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "epa")
 
 

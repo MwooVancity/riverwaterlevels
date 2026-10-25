@@ -459,7 +459,13 @@ def next_impact(G):
     elif len(txt) > 160:
         cut = txt.rfind(" ", 0, 157)
         txt = txt[:cut if cut > 40 else 157] + "\u2026"
-    return "Next NWS impact at %.1f %s (%.1f %s higher)" % (i["stage"], esc(unit), i["stage"] - cur, esc(unit))
+    base = "Next NWS impact at %.1f %s (%.1f %s higher)" % (i["stage"], esc(unit), i["stage"] - cur, esc(unit))
+    gr = gage_rate(G)  # time-to-flood: pure arithmetic from the rate of rise already on the page, labelled "at the current rate", no verdict
+    if gr and gr > 0:
+        hrs = (i["stage"] - cur) / gr
+        if hrs <= 72:  # only a near-term, actionable estimate; past ~3 days a straight-line rate says nothing
+            base += "; %s away at the current +%.2f %s/h rise" % ("under 1 h" if hrs < 1 else ("about %d h" % round(hrs)), gr, esc(unit))
+    return base
 
 
 def sun_times(lat, lon, d, alt=-0.833):
