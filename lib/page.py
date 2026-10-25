@@ -312,7 +312,15 @@ def build_tab(tab, G, pages):
     # SEO review 2026-10-21: the query is "<river> water level"; the one templated competitor that ranks carries the reading in its title
     reading = ", ".join(x for x in (("water level %.2f ft" % G["sg"][-1][1]) if G["sg"] else "", ("flow %s cfs" % fmtc(G["lv"])) if G["lv"] is not None else "") if x) or "water level and flow"
     title = mk_title("%s, %s: %s" % (rp, st, reading)) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
-    desc = T["desc"] % (rp, st, G["site"])
+    if tab == "dashboard":  # dynamic meta description: lead with the live reading + comparison so the SERP snippet / AI citation carries the number, not boilerplate
+        cls = band_word(G["p"]) if G.get("p") is not None else ""
+        norm = (", %s for %s" % (cls.lower(), G["ldate"].strftime("%b %d").replace(" 0", " "))) if cls and cls != "–" else ""
+        desc = "%s, %s: %s%s." % (rp, st, reading, norm)
+        tail = " Live USGS flow, gage height and how it compares with past years."
+        if len(desc) + len(tail) <= 198:  # check.py caps the meta description at 200 chars; keep the valuable reading lead, add the tail only when it fits
+            desc += tail
+    else:
+        desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
     amber = ""  # the age chip in the same line already says how old and colours by age (design review 2026-10-21: one statement of age)
     avail = ("dashboard",)  # one page per gauge: no tabs
