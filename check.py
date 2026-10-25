@@ -174,7 +174,7 @@ def check_dir(d):
         if n_links[u] > BUDGET[k]:
             results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, BUDGET[k]))
         if not noindex_of.get(u) and k in FLOOR and vis_of.get(u, 0) < FLOOR[k]:
-            results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - add data or noindex it" % (vis_of.get(u, 0), k, FLOOR[k]))
+            results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - enrich it (noindex is never the fix)" % (vis_of.get(u, 0), k, FLOOR[k]))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
     for u in urls:
         parts = u.strip("/").split("/")
