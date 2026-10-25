@@ -328,13 +328,18 @@ def _safe(fn):
 
 def b_quality(G):
     rows = ""
+    has_turb = False
     for code, lab in LABELS.items():
         s = series(G["rec"], code)
         if s:
+            if code == "63680":
+                has_turb = True
             t, v, r = s[-1]
             unit = UNITS.get(r.get("unit_of_measure"), r.get("unit_of_measure") or "")
             shown = ("%.1f °F (%.1f °C)" % (v * 9 / 5 + 32, v)) if (code == "00010" and unit == "°C") else ("%s %s" % (fmt(v), esc(unit)))
             rows += tr([esc(lab), shown + ((' <b class="qual">%s</b>' % qual_text(r)) if qual_text(r) else ""), esc(tzl(t, G["zone"]))], right=(1,))
     if not rows:
         return None
-    return block("quality_sensors", "Water quality sensors", "live", table(["Measure", "Latest value", "Observed"], rows, right=(1,)), "Source: USGS Water Data API (continuous values). Values as reported by the gauge, provisional.", "usgs")
+    # clarity frame for anglers, where turbidity is measured: a sourced fact, not a verdict (no federal recreation cutoff exists)
+    note = '<p class="src">Reading turbidity: USGS notes rivers at base flow usually run under about 10 turbidity units (NTU/FNU); a higher reading means more suspended sediment, usually after rain or snowmelt. <a href="https://www.usgs.gov/special-topics/water-science-school/science/turbidity-and-water" rel="noopener">USGS Water Science School</a>.</p>' if has_turb else ""
+    return block("quality_sensors", "Water quality sensors", "live", table(["Measure", "Latest value", "Observed"], rows, right=(1,)) + note, "Source: USGS Water Data API (continuous values). Values as reported by the gauge, provisional.", "usgs")
