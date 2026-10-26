@@ -1,44 +1,54 @@
-// Edge live layer, fetch-on-open (owner 2026-10-26: "ur not downloading shit"): nothing is pulled on a timer and nothing is stored.
-// When a gauge page is opened, the worker asks USGS for THAT gauge's newest flow and gage height, keeps the answer in this Cloudflare
-// location's cache for 3 minutes (the next reader there reuses it), and swaps it into the page with HTMLRewriter. Text the build derived
-// from its own reading is stamped with that reading's time. Any error, a missing, older or flagged reading, or a non-gauge path serves the
-// static page untouched: never older than the build, never broken. /live/<site>.json gives the browser the same answer.
+// Edge live layer (plan approved 2026-10-26: readers' phones + one tiny "what changed" poll).
+// A cron every 3 minutes asks USGS only which flow / gage height readings CHANGED since the last poll (last_modified cursor; Phase 0
+// measured 20 changed rows of 105 in 10 min at 53 gauges, one national call covers the whole US) and merges them into ONE stored copy
+// (KV "live"). It is the only writer and never steps a reading back. Every gauge page and /live/<site>.json read that copy: no USGS call
+// on any page view, so people and crawlers cost our key nothing. Readers' browsers also ask USGS directly (lib/page.py LIVE_JS).
+// Pages: HTMLRewriter swaps in the stored reading when it is newer than the build's; text the build derived from its own reading is
+// stamped with that reading's time. Any error, a missing, older or flagged reading, or a non-gauge path serves the static page untouched.
 
 const LATEST = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items";
 const UA = "riverwaterlevels.com (https://riverwaterlevels.com/about/)";
-const TTL_S = 180; // one USGS call per gauge per Cloudflare location per 3 min, only for pages someone opens
-let SITES = null; // url -> [site, built reading time, time zone], from the built live-sites.json; kept for the life of this isolate
+const CHUNK = 300; // ids per call; ponytail: past ~1,500 gauges switch to one national query filtered in code (Phase 0: 1 call, 804 KB / 10 min)
+const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits late is not missed (the merge drops repeats)
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(poll(env));
+  },
+
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     try {
       const lj = url.pathname.match(/^\/live\/(\d{8,15})\.json$/);
       if (lj) {
-        const g = await latest(lj[1], env, ctx);
-        return secure(new Response(JSON.stringify({ t: g ? g.at : null, g: g ? { [lj[1]]: g } : {} }), {
+        const L = await stored(env), g = L && L.g && L.g[lj[1]];
+        const o = new Response(JSON.stringify({ t: L ? L.t : null, g: g ? { [lj[1]]: g } : {} }), {
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" },
-        }), url);
+        });
+        if (L && L.rem != null) o.headers.set("x-rwl-usgs-remaining", String(L.rem)); // our key's hourly budget after the last poll (watchdog reads it)
+        return secure(o, url);
       }
       if (!url.pathname.startsWith("/river/")) return env.ASSETS.fetch(req);
       let res = await env.ASSETS.fetch(req);
       if (res.status !== 304 && (!res.ok || !(res.headers.get("content-type") || "").includes("text/html"))) return secure(res, url);
-      const m = (await sites(env))[url.pathname];
-      const g = m && await latest(m[0], env, ctx);
+      const [m, L] = await Promise.all([sites(env).then((s) => s[url.pathname]), stored(env)]);
+      const g = m && L && L.g && L.g[m[0]];
       // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
-      if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", g), url);
+      if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", L), url);
       if (res.status === 304) { // the browser holds the built copy but a newer reading exists: send the full page so it can be updated
         const h = new Headers(req.headers);
         h.delete("if-none-match");
         h.delete("if-modified-since");
         res = await env.ASSETS.fetch(new Request(req, { headers: h }));
       }
-      return secure(tag(rewrite(res, g, m), "swapped", g), url);
+      return secure(tag(rewrite(res, g, m), "swapped", L), url);
     } catch (e) {
       return env.ASSETS.fetch(req);
     }
   },
 };
+
+let SITES = null; // url -> [site, built reading time, time zone], from the built live-sites.json; kept for the life of this isolate
 
 async function sites(env) {
   if (!SITES) {
@@ -48,24 +58,43 @@ async function sites(env) {
   return SITES;
 }
 
-// newest flow (f) and gage height (h) for one gauge: [value, time, qualifier?]; from this location's cache when under TTL_S old
-async function latest(site, env, ctx) {
-  const key = new Request("https://riverwaterlevels.com/__usgs/" + site);
-  const hit = await caches.default.match(key);
-  if (hit) return hit.json();
-  const r = await fetch(LATEST + "?monitoring_location_id=USGS-" + site + "&parameter_code=00060,00065&skipGeometry=true&properties=parameter_code,value,time,qualifier&f=json",
-    { headers: env.USGS_API_KEY ? { "X-Api-Key": env.USGS_API_KEY, "User-Agent": UA } : { "User-Agent": UA } });
-  if (!r.ok) return null;
-  const j = await r.json(), g = { at: new Date().toISOString() }, cutoff = Date.now() - 8 * 86400000; // dead sensors return decades-old values
-  for (const f of j.features || []) {
-    const p = f.properties || {}, v = parseFloat(p.value), t = Date.parse(p.time);
-    const k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
-    if (!k || isNaN(v) || isNaN(t) || t < cutoff) continue;
-    const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
-    if (!g[k] || Date.parse(g[k][1]) < t) g[k] = q ? [v, p.time, q] : [v, p.time];
+function stored(env) {
+  return env.LIVE.get("live", { type: "json", cacheTtl: 30 }); // ponytail: one key; past ~1,500 gauges read one gauge by text slice instead of parsing all
+}
+
+// the cron: ask USGS what changed since the cursor, merge, write once if anything changed
+async function poll(env) {
+  const list = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json();
+  const ids = list.map((x) => x[0]);
+  const prev = (await env.LIVE.get("live", { type: "json" })) || {};
+  const g = {};
+  for (const s of ids) if (prev.g && prev.g[s]) g[s] = prev.g[s]; // gauges no longer live drop out
+  const since = prev.cur ? new Date(Date.parse(prev.cur) - OVERLAP_MS).toISOString() : null; // first run: everything
+  const cutoff = Date.now() - 8 * 86400000; // the service returns decades-old values for dead sensors
+  let changed = 0, cur = prev.cur || null, rem = prev.rem;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    let next = LATEST + "?monitoring_location_id=" + ids.slice(i, i + CHUNK).map((x) => "USGS-" + x).join(",") + "&parameter_code=00060,00065"
+      + (since ? "&last_modified=" + since + "/.." : "") + "&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier,last_modified&limit=10000&f=json";
+    for (let page = 0; next && page < 5; page++) {
+      const r = await fetch(next, { headers: env.USGS_API_KEY ? { "X-Api-Key": env.USGS_API_KEY, "User-Agent": UA } : { "User-Agent": UA } });
+      if (r.headers.get("x-ratelimit-remaining")) rem = Number(r.headers.get("x-ratelimit-remaining"));
+      if (!r.ok) return; // keep the stored copy and the cursor as they are; the next poll retries
+      const j = await r.json();
+      for (const f of j.features || []) {
+        const p = f.properties || {}, v = parseFloat(p.value), t = Date.parse(p.time);
+        if (p.last_modified && (!cur || p.last_modified > cur)) cur = p.last_modified;
+        const k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
+        const s = String(p.monitoring_location_id || "").slice(5);
+        if (!k || isNaN(v) || isNaN(t) || t < cutoff) continue;
+        const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
+        g[s] = g[s] || {};
+        if (!g[s][k] || Date.parse(g[s][k][1]) < t) { g[s][k] = q ? [v, p.time, q] : [v, p.time]; changed++; } // never steps back
+      }
+      next = ((j.links || []).find((l) => l.rel === "next") || {}).href;
+    }
   }
-  ctx.waitUntil(caches.default.put(key, new Response(JSON.stringify(g), { headers: { "cache-control": "max-age=" + TTL_S } })));
-  return g;
+  if (!changed && prev.t && Object.keys(g).length === Object.keys(prev.g || {}).length) return; // nothing new: no KV write (free plan: 1,000 writes/day)
+  await env.LIVE.put("live", JSON.stringify({ t: new Date().toISOString(), cur, rem, g }));
 }
 
 // _headers rules may not apply to responses that pass through this worker (Cloudflare docs), so gauge pages set them here when missing.
@@ -85,10 +114,10 @@ function secure(res, url) {
   return o;
 }
 
-// x-rwl-edge says what the edge did with this page (swapped / static / static-unknown) and how old its USGS answer is, so the live gate can see it
-function tag(res, what, g) {
+// x-rwl-edge says what the edge did with this page (swapped / static / static-unknown) and how old the stored copy is, so the live gate can see it
+function tag(res, what, L) {
   const o = new Response(res.body, res);
-  o.headers.set("x-rwl-edge", what + (g && g.at ? "; live-age-s=" + Math.round((Date.now() - Date.parse(g.at)) / 1000) : "; live-age-s=none"));
+  o.headers.set("x-rwl-edge", what + (L && L.t ? "; live-age-s=" + Math.round((Date.now() - Date.parse(L.t)) / 1000) : "; live-age-s=none"));
   return o;
 }
 

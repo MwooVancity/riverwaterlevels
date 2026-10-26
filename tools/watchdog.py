@@ -14,7 +14,7 @@ from lib.source_list import UNIVERSAL
 SITE = "https://riverwaterlevels.com"
 UA = {"User-Agent": "Mozilla/5.0 (rwl-doctor)"}
 REBUILD_MIN = 60      # the 30-min refresh missed twice: ask for one
-EDGE_MAX_S = 600      # an edge answer older than this means the per-gauge cache is not refreshing
+EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
 # a source that has not worked for this long is reported dead: 3 h for the 30-min lane, 30 h for once-a-day sources
 DEAD_H = {"usgs": 3, "nws": 3, "rain": 3, "wpc": 3, "nwps": 3}
 DEAD_DAILY_H = 30
@@ -63,9 +63,12 @@ def main():
     try:  # the edge asks USGS when a page is opened: one gauge's answer must be fresh, and Google must get the same page a phone gets
         pages = get("/live-sites.json")
         site, path = pages[0][0], pages[0][1]
-        lj = get("/live/%s.json" % site)
+        rr = http_open(SITE + "/live/%s.json" % site, UA, 30)
+        lj = json.load(rr)
         la = hours_since(lj["t"]) * 3600 if lj.get("t") else None
-        (bad if la is None or la > EDGE_MAX_S else ok).append("edge answer for %s is %s old" % (site, "missing" if la is None else "%d s" % la))
+        (bad if la is None or la > EDGE_MAX_S else ok).append("edge stored copy last updated %s ago" % ("never" if la is None else "%d s" % la))
+        if rr.headers.get("x-rwl-usgs-remaining"):
+            ok.append("USGS key budget left this hour: %s of 1,000" % rr.headers.get("x-rwl-usgs-remaining"))
         import re
         flows = {}
         for who, ua in (("phone", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148 Safari/604.1"), ("googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")):

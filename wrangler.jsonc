@@ -1,9 +1,10 @@
 {
   "name": "riverwaterlevels",
   "compatibility_date": "2026-10-01",
-  // edge live layer, fetch-on-open: gauge pages and /live/<site>.json run through worker/index.js; every other file is served straight
-  // from dist/. No cron and no KV (owner 2026-10-26: nothing pulled on a timer, nothing stored). Free plan limits are per ACCOUNT and
-  // shared with asmrregistry: 5 cron triggers, 100,000 worker requests/day, 10 ms CPU per request.
+  // edge live layer (plan 2026-10-26): a */3 cron asks USGS only what changed and stores ONE copy in KV; gauge pages and
+  // /live/<site>.json read it (no USGS call on any page view). Every other file is served straight from dist/.
+  // Free plan limits are per ACCOUNT, shared with asmrregistry: 5 crons (asmrregistry 2 + asmrregistry-cron 1 + this 1 = 4),
+  // 1,000 KV writes/day (*/3 = at most 480), 100,000 worker requests/day, 10 ms CPU, 20,000 files. Paid ($5/mo) before ~1,500 gauges.
   "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
@@ -12,6 +13,10 @@
     "html_handling": "auto-trailing-slash",
     "run_worker_first": ["/river/*", "/live/*"]
   },
+  "kv_namespaces": [
+    { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }
+  ],
+  "triggers": { "crons": ["*/3 * * * *"] },
   "routes": [
     { "pattern": "riverwaterlevels.com", "custom_domain": true }
   ]
