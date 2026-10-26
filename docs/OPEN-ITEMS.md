@@ -30,6 +30,7 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - Indexing and incidents: docs/RUNBOOK.md. Corrections: docs/CORRECTIONS.md.
 
 ## DONE log (date, item, proof)
+- 2026-10-25 edge live layer (worker/index.js, KV, */2 cron; local proof: Austin built 825 cfs served 201 cfs = USGS latest; empty KV = byte-identical built page); gates rebuilt (block only wrong pages; watchdog heals, never emails; 3 incident fixtures); health on every run (/_health.json); USGS calls ~3x fewer per full run; 4 unused Cloudflare Workers deleted (account crons 3 + ours of 5). Commits 7dc302d..923b1a2. Live verification pending at time of writing.
 - 2026-10-20 block guard + failure isolation + page carried forward; fuzzer 0 failures at 9,354 renders.
 - 2026-10-21 Drought Monitor and ACIS cleared with quoted credit; USGS codes 00045 00055 72255 00480 on pages; NWM "reach None" bug caught by fuzz and fixed; seven planning docs deleted; commit 300303a.
 - 2026-10-21 indexing opened on all 25 gauge pages + site pages (commit 0397846; live index_live: 25 allowed, 0 mismatches; sitemap 49 URLs).

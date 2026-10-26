@@ -8,6 +8,7 @@
 const LATEST = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items";
 const UA = "riverwaterlevels.com (https://riverwaterlevels.com/about/)";
 const CHUNK = 300; // gauge ids per call: keeps the URL under ~5 KB
+const CALLS_PER_H = 250; // live refresh may use at most a quarter of the USGS key's 1,000/h: the interval stretches as gauges are added (2 min at 53, ~7.5 min at 9,099)
 
 export default {
   async scheduled(event, env, ctx) {
@@ -35,7 +36,8 @@ export default {
       refreshIfOld(L, env, ctx);
       const site = L && L.u && L.u[url.pathname];
       const g = site && L.g[site], m = site && L.m[site];
-      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0]))) return tag(res, site ? "static" : "static-unknown", L);
+      // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
+      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0])) || g.f[2] || !(g.f[0] > -999)) return tag(res, site ? "static" : "static-unknown", L);
       return tag(rewrite(res, g, m), "swapped", L);
     } catch (e) {
       return env.ASSETS.fetch(req);
@@ -88,7 +90,7 @@ function rewrite(res, g, m) {
       const built = e.getAttribute("data-t");
       e.after('<p id="lbn" class="src lf2">Flow and gage height at the top updated ' + local(ft, tz) + ". Charts, tables and comparisons below are as of the page build" + (built ? ", " + local(built, tz) : "") + ".</p>", { html: true });
     } });
-  if (g.h && Date.parse(g.h[1]) > Date.parse(m[0])) out.on('span[data-live="stage"]', text(Number(g.h[0]).toFixed(2)));
+  if (g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(m[0])) out.on('span[data-live="stage"]', text(Number(g.h[0]).toFixed(2)));
   const r = out.transform(res);
   const o = new Response(r.body, r);
   o.headers.delete("etag");
@@ -99,12 +101,13 @@ function rewrite(res, g, m) {
 async function refresh(env) {
   const sites = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json(); // [[site, url, built iso, tz]]
   const prev = (await env.LIVE.get("live", { type: "json" })) || {};
-  if (prev.t && Date.now() - Date.parse(prev.t) < MAX_AGE - 20000) return; // another location just refreshed: keeps KV writes under the free 1,000/day
+  const every = Math.max(MAX_AGE, Math.ceil(Math.ceil(sites.length / CHUNK) * 3600000 / CALLS_PER_H));
+  if (prev.t && Date.now() - Date.parse(prev.t) < every - 20000) return; // refreshed recently enough (another location, or the quota-capped interval): also keeps KV writes under the free 1,000/day
   const g = {}, cutoff = Date.now() - 8 * 86400000; // the service returns decades-old values for dead sensors
   for (const [s] of sites) if (prev.g && prev.g[s]) g[s] = prev.g[s]; // a failed chunk keeps the previous reading
   let got = 0;
   for (let i = 0; i < sites.length; i += CHUNK) {
-    let next = LATEST + "?monitoring_location_id=" + sites.slice(i, i + CHUNK).map((x) => "USGS-" + x[0]).join(",") + "&parameter_code=00060,00065&limit=10000&f=json";
+    let next = LATEST + "?monitoring_location_id=" + sites.slice(i, i + CHUNK).map((x) => "USGS-" + x[0]).join(",") + "&parameter_code=00060,00065&limit=10000&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier&f=json"; // ~30% smaller replies
     for (let page = 0; next && page < 5; page++) {
       const r = await fetch(next, { headers: env.USGS_API_KEY ? { "X-Api-Key": env.USGS_API_KEY, "User-Agent": UA } : { "User-Agent": UA } }); // no key set yet: anonymous (lower limit); on failure the page serves as built
       if (!r.ok) break;
@@ -115,7 +118,8 @@ async function refresh(env) {
         const s = String(p.monitoring_location_id || "").slice(5), k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
         if (!k) continue;
         g[s] = g[s] || {};
-        if (!g[s][k] || Date.parse(g[s][k][1]) < t) { g[s][k] = [v, p.time]; got++; }
+        const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
+        if (!g[s][k] || Date.parse(g[s][k][1]) < t) { g[s][k] = q ? [v, p.time, q] : [v, p.time]; got++; }
       }
       next = ((j.links || []).find((l) => l.rel === "next") || {}).href;
     }
