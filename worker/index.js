@@ -1,6 +1,6 @@
 // Edge live layer (plan 2026-10-25: freshness stops depending on builds).
-// A */2 cron pulls the newest USGS flow and gage height for every live gauge in a few bulk calls and stores one KV value. Backup: when
-// a gauge page or /live.json is requested and the stored readings are over 2 minutes old, the same refresh runs after the response.
+// A */2 cron pulls the newest USGS flow and gage height for every live gauge in a few bulk calls and stores one KV value. The cron is the
+// ONLY writer (2026-10-25 review: a request-driven backup made several writers that could push readings backwards and dodge the quota cap).
 // Every gauge page is served through HTMLRewriter: when the stored reading is newer than the one the page was built with, the
 // flow, gage height, observed time and age are swapped in and a note says the charts below are as of the build. Any error, a missing
 // or older reading, or a non-gauge path serves the static file untouched: never older than the build, never broken.
@@ -21,41 +21,46 @@ export default {
       if (url.pathname === "/live.json") {
         const v = await env.LIVE.get("live", { cacheTtl: 60 });
         const j = v ? JSON.parse(v) : {};
-        refreshIfOld(j, env, ctx);
-        return new Response(JSON.stringify({ t: j.t || null, g: j.g || {} }), {
+        return secure(new Response(JSON.stringify({ t: j.t || null, g: j.g || {} }), {
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" },
-        });
+        }), url);
       }
       if (!url.pathname.startsWith("/river/")) return env.ASSETS.fetch(req);
-      const h = new Headers(req.headers);
-      h.delete("if-none-match"); // a 304 would let the browser keep a stale copy of a page we are about to update
-      h.delete("if-modified-since");
-      const res = await env.ASSETS.fetch(new Request(req, { headers: h }));
-      if (!res.ok || !(res.headers.get("content-type") || "").includes("text/html")) return res;
+      let res = await env.ASSETS.fetch(req);
+      if (res.status !== 304 && (!res.ok || !(res.headers.get("content-type") || "").includes("text/html"))) return secure(res, url);
       const L = await env.LIVE.get("live", { type: "json", cacheTtl: 60 });
-      refreshIfOld(L, env, ctx);
       const site = L && L.u && L.u[url.pathname];
       const g = site && L.g[site], m = site && L.m[site];
       // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
-      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0])) || g.f[2] || !(g.f[0] > -999)) return tag(res, site ? "static" : "static-unknown", L);
-      return tag(rewrite(res, g, m), "swapped", L);
+      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, site ? "static" : "static-unknown", L), url);
+      if (res.status === 304) { // the browser holds the built copy but a newer reading exists: send the full page so it can be updated
+        const h = new Headers(req.headers);
+        h.delete("if-none-match");
+        h.delete("if-modified-since");
+        res = await env.ASSETS.fetch(new Request(req, { headers: h }));
+      }
+      return secure(tag(rewrite(res, g, m), "swapped", L), url);
     } catch (e) {
       return env.ASSETS.fetch(req);
     }
   },
 };
 
-const MAX_AGE = 120000; // refresh when the stored readings are older than 2 minutes
+// _headers rules may not apply to responses that pass through this worker (Cloudflare docs), so gauge pages set them here when missing.
+// Keep in step with templates/_headers (the /* block); the live gate reads x-frame-options on a gauge page.
+const SECURITY = {
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "strict-transport-security": "max-age=31536000",
+  "x-frame-options": "DENY",
+  "permissions-policy": "geolocation=(), camera=(), microphone=(), payment=(), usb=()",
+};
 
-function refreshIfOld(L, env, ctx) {
-  if (L && L.t && Date.now() - Date.parse(L.t) < MAX_AGE) return;
-  ctx.waitUntil((async () => {
-    // one refresh per Cloudflare location per ~2 min: a cache entry is the lock (free, no KV write)
-    const lock = new Request("https://riverwaterlevels.com/__live_refresh_lock");
-    if (await caches.default.match(lock)) return;
-    await caches.default.put(lock, new Response("1", { headers: { "cache-control": "max-age=110" } }));
-    await refresh(env);
-  })().catch(() => {}));
+function secure(res, url) {
+  const o = new Response(res.body, res);
+  for (const [k, v] of Object.entries(SECURITY)) if (!o.headers.has(k)) o.headers.set(k, v);
+  if (url.hostname.endsWith(".workers.dev")) o.headers.set("x-robots-tag", "noindex"); // the workers.dev mirror is never indexed
+  return o;
 }
 
 // x-rwl-edge says what the edge did with this page (swapped / static / static-unknown) and how old its stored readings are, so the live gate can see it
@@ -75,22 +80,24 @@ function age(iso) {
 }
 
 function rewrite(res, g, m) {
+  // every string is computed HERE, before streaming starts: a throw inside a handler mid-stream would cut the page off (HTMLRewriter docs)
   const [fv, ft] = g.f, tz = m[1], mins = (Date.now() - Date.parse(ft)) / 60000;
+  const builtAt = local(m[0], tz), nowAt = local(ft, tz), flow = Math.round(fv).toLocaleString("en-US"), ageTxt = age(ft);
+  const ab = "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale");
+  const asofHtml = '<small class="asof"> (as of the ' + builtAt + " reading)</small>";
+  const note = '<p id="lbn" class="src lf2">Flow and gage height at the top updated ' + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
+  const stage = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(m[0]) ? Number(g.h[0]).toFixed(2) : null;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
-  const asof = " (as of the " + local(m[0], tz) + " reading)";
   const out = new HTMLRewriter()
-    .on('span[data-live="flow"]', text(Math.round(fv).toLocaleString("en-US"))) // same rounding as fmtc() in lib/common.py
-    .on('span[data-live="lead"]', text(Math.round(fv).toLocaleString("en-US") + " cfs"))
+    .on('span[data-live="flow"]', text(flow)) // same rounding as fmtc() in lib/common.py
+    .on('span[data-live="lead"]', text(flow + " cfs"))
     // dv = text the build derived from its own reading (class word, trend, flood distance, forecast vs now): not recomputed here, so it carries its own time
-    .on(".dv", { element(e) { e.append('<small class="asof">' + asof + "</small>", { html: true }); } })
-    .on('span[data-live="obs"]', text(local(ft, tz)))
-    .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(age(ft)); } })
-    .on("span.ab", { element(e) { e.setAttribute("class", "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale")); } })
-    .on(".hero", { element(e) {
-      const built = e.getAttribute("data-t");
-      e.after('<p id="lbn" class="src lf2">Flow and gage height at the top updated ' + local(ft, tz) + ". Charts, tables and comparisons below are as of the page build" + (built ? ", " + local(built, tz) : "") + ".</p>", { html: true });
-    } });
-  if (g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(m[0])) out.on('span[data-live="stage"]', text(Number(g.h[0]).toFixed(2)));
+    .on(".dv", { element(e) { e.append(asofHtml, { html: true }); } })
+    .on('span[data-live="obs"]', text(nowAt))
+    .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
+    .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
+    .on(".hero", { element(e) { e.after(note, { html: true }); } });
+  if (stage) out.on('span[data-live="stage"]', text(stage));
   const r = out.transform(res);
   const o = new Response(r.body, r);
   o.headers.delete("etag");
@@ -101,7 +108,7 @@ function rewrite(res, g, m) {
 async function refresh(env) {
   const sites = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json(); // [[site, url, built iso, tz]]
   const prev = (await env.LIVE.get("live", { type: "json" })) || {};
-  const every = Math.max(MAX_AGE, Math.ceil(Math.ceil(sites.length / CHUNK) * 3600000 / CALLS_PER_H));
+  const every = Math.max(120000, Math.ceil(Math.ceil(sites.length / CHUNK) * 3600000 / CALLS_PER_H));
   if (prev.t && Date.now() - Date.parse(prev.t) < every - 20000) return; // refreshed recently enough (another location, or the quota-capped interval): also keeps KV writes under the free 1,000/day
   const g = {}, cutoff = Date.now() - 8 * 86400000; // the service returns decades-old values for dead sensors
   for (const [s] of sites) if (prev.g && prev.g[s]) g[s] = prev.g[s]; // a failed chunk keeps the previous reading

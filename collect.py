@@ -1248,47 +1248,22 @@ def fast_related(recs, h):
 
 
 def fast_usgs(sites, h):
-    """One bulk latest-continuous call: newest reading per gauge and parameter, as rows in the same shape as fetch_usgs. Readings older than the 8-day window are ignored (the service returns decades-old values for dead sensors)."""
-    d = thr_json(BASE + "latest-continuous/items?monitoring_location_id=%s&parameter_code=%s&limit=10000&f=json" % (",".join("USGS-" + s for s in sites), CODES), h, 120, gap=1.0)  # ponytail: one call, fine to ~2,000 gauges; page or chunk the id list past that (URL length)
-    cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
+    """Every reading of the last 3 hours for every gauge, in bulk: 300 ids per call (URL stays ~5 KB) with next-link paging, so
+    nothing is dropped past 10,000 rows. Rows in the same shape as fetch_usgs. One or two calls at today's size; it replaces the
+    per-gauge fast_fill calls (2026-10-25 review: about one call per gauge per run, ~18,000/h at 9,099 gauges)."""
     out = {}
-    for f in d.get("features", []):
-        p = f["properties"]
-        if p.get("value") in (None, "") or str(p.get("time") or "") < cutoff:
-            continue
-        out.setdefault(p["monitoring_location_id"][5:], []).append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
+    for i in range(0, len(sites), 300):
+        url, pages = BASE + "continuous/items?monitoring_location_id=%s&parameter_code=%s&time=PT3H&limit=10000&skipGeometry=true&f=json" % (",".join("USGS-" + s for s in sites[i:i + 300]), CODES), 0
+        while url and pages < 20:
+            d = thr_json(url, h, 120, gap=1.0)
+            pages += 1
+            for f in d.get("features", []):
+                p = f["properties"]
+                if p.get("value") in (None, ""):
+                    continue
+                out.setdefault(str(p.get("monitoring_location_id", ""))[5:], []).append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
+            url = next((l.get("href") for l in d.get("links", []) if l.get("rel") == "next"), None)
     return out
-
-
-def fast_fill(rec, site, h):
-    """The bulk latest call returns one reading per gauge, so between full collects the series gets one point per run and the 15-minute readings in between are missing (highest and lowest readings, charts and changes would be computed from a thinned tail). When the last 6 hours of flow or stage have gaps over 20 minutes, fetch those 6 hours for the two main parameters and merge them."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    t0 = (now - datetime.timedelta(hours=6)).isoformat()
-    need = False
-    t24 = (now - datetime.timedelta(hours=24)).isoformat()
-    for code in ("00060", "00065"):
-        ts = sorted(r["time"] for r in rec["usgs"]["rows"] if r["parameter_code"] == code and str(r["time"]) >= t24)
-        if code == "00060" or ts:
-            pts = [datetime.datetime.fromisoformat(t.replace("Z", "+00:00")) for t in ts]
-            gaps = sorted((b_ - a_).total_seconds() for a_, b_ in zip(pts, pts[1:]))
-            step = gaps[len(gaps) // 2] if gaps else 900  # the gauge's own interval (15 min, 30 min or hourly); sweep 2026-10-21: a fixed 20-min test refetched hourly gauges every run
-            recent = [t_ for t_ in pts if t_.isoformat() >= t0]
-            if len(recent) < 2 or any((b_ - a_).total_seconds() > 2 * max(step, 900) for a_, b_ in zip(recent, recent[1:])):
-                need = True
-    if not need:
-        return 0
-    have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
-    added = 0
-    d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=00060,00065&time=PT6H&limit=4000&f=json" % site, h, 120)  # both codes in one call
-    for f in d.get("features", []):
-        p = f["properties"]
-        code = p.get("parameter_code")
-        if p.get("value") in (None, "") or (code, p["time"]) in have:
-            continue
-        rec["usgs"]["rows"].append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
-        have.add((code, p["time"]))
-        added += 1
-    return added
 
 
 def fast(inv, sites):
@@ -1311,14 +1286,6 @@ def fast(inv, sites):
         rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] + add if str(r["time"]) >= cutoff]
         if add:
             rec["usgs"]["fetched_at"] = now_iso()
-        try:
-            filled = fast_fill(rec, s, h)
-            if filled:
-                rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] if str(r["time"]) >= cutoff]
-                rec["usgs"]["fetched_at"] = now_iso()
-                log.append("filled %d readings" % filled)
-        except Exception as e:
-            log.append("fill FAILED (%s), kept the thinned tail" % str(e)[:60])
         note("usgs", "ok" if s in new else "absent")
         for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
             run_source(rec, key, fn, log)
