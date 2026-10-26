@@ -202,7 +202,8 @@
   {
    "id": "uv",
    "name": "U.S. EPA Envirofacts hourly UV index",
-   "status": "quoted",
+   "status": "off",
+   "off_reason": "2026-10-25: the hourly UV service we called by LATITUDE/LONGITUDE now returns 404 (verified across gauges); the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so a keyless lat/lon->ZIP step must be wired before UV returns. Documented gap, not a silent failure.",
    "terms_url": "https://www.epa.gov/enviro/envirofacts-data-service-api",
    "summary": "EPA public UV index API, no auth; hourly forecast UV at the point for today, credited to EPA; category from the published EPA UV Index scale.",
    "credit": "UV index: U.S. Environmental Protection Agency",

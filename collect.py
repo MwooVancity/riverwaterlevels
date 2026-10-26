@@ -5,6 +5,7 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 import os, sys, json, math, re, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
+from lib.source_list import ALL_SOURCES
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
@@ -504,7 +505,10 @@ def fetch_stocking(lat, lon, miles=35):
 
 
 def fetch_uv(lat, lon):
-    """EPA Envirofacts hourly UV index at the point for today (sun exposure for anyone on the water: swimmers, paddlers, anglers)."""
+    """EPA Envirofacts UV index (sun exposure for anyone on the water: swimmers, paddlers, anglers).
+    OFF (source 'uv' off in data/sources.json, 2026-10-25): the hourly service never supported LATITUDE/LONGITUDE and now 404s;
+    the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so re-wiring needs a keyless lat/lon->ZIP step. Until then UV is a documented gap, not a silent failure."""
+    return None
     j = json.loads(get_text("https://data.epa.gov/efservice/getEnvirofactsUVHOURLY/LATITUDE/%.2f/LONGITUDE/%.2f/JSON" % (lat, lon)))
     rows = []
     for r in (j if isinstance(j, list) else []):
@@ -809,6 +813,16 @@ def fetch_wpc(lat, lon):
     return {"fetched_at": now_iso(), "outlooks": outlooks, "reports": reports[:8], "n_reports": len(reports)}
 
 
+def _parse_issued(s):
+    """The RFC QPE footprint's issue time, UTC. NOAA has sent it as '%m/%d/%Y %I:%M:%S %p', 24-hour, and date-only; try each and return None rather than raise, so a format change never loses the precip values."""
+    for fmt in ("%m/%d/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %I:%M %p", "%m/%d/%Y"):
+        try:
+            return datetime.datetime.strptime(s, fmt).replace(tzinfo=datetime.timezone.utc).isoformat()
+        except ValueError:
+            continue
+    return None
+
+
 def fetch_rain(lat, lon):
     g = urllib.parse.quote(json.dumps({"x": lon, "y": lat, "spatialReference": {"wkid": 4326}}))
     j = http_json("https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json" % g, NWS_H)
@@ -816,7 +830,9 @@ def fetch_rain(lat, lon):
     for r in j.get("results", []):
         a = r.get("attributes") or {}
         if a.get("idp_issueddate"):  # each image layer N has a footprint layer N-1 carrying the product's issue (valid-through) time, UTC
-            issued[r["layerId"]] = datetime.datetime.strptime(a["idp_issueddate"], "%m/%d/%Y %I:%M:%S %p").replace(tzinfo=datetime.timezone.utc).isoformat()
+            iss = _parse_issued(a["idp_issueddate"])  # tolerant: a date-only or reformatted value must not abort the whole precip fetch (NOAA changed the format 2026-10)
+            if iss:
+                issued[r["layerId"]] = iss
             continue
         try:
             v = float(a.get("Service Pixel Value"))
@@ -1367,6 +1383,7 @@ def main():
             print("ok nws", s, "hourly", len(rec["nws"].get("hourly") or []))
         return
     sites = [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites()
+    health = {s: {"ok": 0, "absent": 0, "failed": 0} for s in ALL_SOURCES}  # per-source outcome across this full run, for the source-health gate
     for s in sites:
         try:
             rec, log = collect(s, inv)
@@ -1376,11 +1393,19 @@ def main():
         tmp = os.path.join(CACHE, s + ".json.tmp")
         json.dump(rec, open(tmp, "w"), separators=(",", ":"))
         os.replace(tmp, os.path.join(CACHE, s + ".json"))
+        failed = {ln.split()[0] for ln in log if "FAILED" in ln}  # a source that errored this run (even if stale "kept previous" data remains in rec)
+        for src in ALL_SOURCES:
+            health[src]["failed" if src in failed else ("ok" if rec.get(src) else "absent")] += 1
         n = rec
         print("ok %s rows %d tz %s | nwps %s fc %s | nwm %s | nws periods %d alerts %s obs %s | rain %s | related %d | land %s %s" % (
             s, len(n["usgs"]["rows"]), n.get("tz"), (n.get("nwps") or {}).get("lid"), bool((n.get("nwps") or {}).get("forecast")), bool((n.get("nwm") or {}).get("points")),
             len((n.get("nws") or {}).get("periods") or []), len((n.get("nws") or {}).get("alerts") or []) if (n.get("nws") or {}).get("alerts") is not None else None, bool((n.get("nws") or {}).get("obs")),
             bool(n.get("rain")), len((n.get("related") or {}).get("items") or []), len((n.get("land") or {}).get("rows") or []) if n.get("land") else 0, "; ".join(log)))
+    if not any(a.startswith("--keys=") for a in sys.argv):  # record source health only on a full, unfiltered run (every source was attempted)
+        os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
+        nh = max((c["ok"] + c["absent"] + c["failed"] for c in health.values()), default=0)  # gauges that actually collected (a 429/500 on the critical USGS call skips the gauge before health)
+        json.dump({"at": now_iso(), "gauges": nh, "attempted": len(sites), "sources": health},
+                  open(os.path.join(ROOT, "state", "source-health.json"), "w"), indent=1)
     fetch_states(sites)  # statewide alerts + drought for each state hub
 
 

@@ -7,7 +7,7 @@ import sys
 
 PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 
-GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("page rules self-test", PY + ["check.py", "--selftest"])]
+GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("page rules self-test", PY + ["check.py", "--selftest"]), ("source health", PY + ["tools/source_health_gate.py"])]
 GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATE_3 = [("live pages vs USGS/NWS", PY + ["tools/truth_live.py"]), ("live indexing state", PY + ["tools/index_live.py"])]  # after the deploy
 
@@ -15,5 +15,5 @@ GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]
 GATES_LIVE = [("3 live", GATE_3)]
 
 # flat lists for refresh.py (it collects, builds, checks and publishes between them)
-ALWAYS = [c for _, c in GATE_1 if "--selftest" in c] + [c for _, c in GATE_2]
+ALWAYS = [c for _, c in GATE_1 if "--selftest" in c] + [PY + ["tools/source_health_gate.py"]] + [c for _, c in GATE_2]
 SOFT = [c for _, c in GATE_3]
