@@ -38,6 +38,7 @@ with open(wp, "w", newline="", encoding="utf-8") as f:
 rc = subprocess.call(PY + [os.path.join(ROOT, "collect.py")] + sorted(sites), cwd=ROOT)
 if rc:
     sys.exit("collect failed (%d); nothing built" % rc)
+subprocess.call(PY + [os.path.join(ROOT, "tools", "sync_legacy.py")], cwd=ROOT)  # CI builds from the repo: the new gauges' daily stats and land files must be committed with the wave (push legacy/ too)
 rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
 if rc:
     sys.exit("build failed (%d)" % rc)
