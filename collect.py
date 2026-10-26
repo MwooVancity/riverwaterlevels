@@ -5,7 +5,6 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 import os, sys, json, math, re, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
-from lib.source_list import ALL_SOURCES
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
@@ -1072,6 +1071,50 @@ DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains",
          "ridb", "streamcat", "nid", "fema_zone", "rise", "stocking", "access", "rating", "atlas14", "multiyear"}
 
 
+RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()
+
+
+def note(src, outcome, err=""):
+    c = RUN.setdefault(src, {"ok": 0, "absent": 0, "failed": 0, "err": ""})
+    c[outcome] += 1
+    if err:
+        c["err"] = str(err)[:80]
+
+
+def run_source(rec, key, fn, log):
+    """Fetch one source into rec[key]. A failure keeps the previous value AND is recorded as failed: kept-previous is never counted as success."""
+    try:
+        v = fn()
+    except Exception as e:
+        log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
+        note(key, "failed", e)
+        return False
+    rec[key] = v
+    note(key, "ok" if v else "absent")
+    return True
+
+
+def write_health(mode, attempted):
+    """state/source-health.json (published as /_health.json): every source's outcome on this run plus when it last worked and last failed, merged across runs, so a dead feed shows as hours since last_ok_at instead of hiding behind kept-previous data."""
+    p = os.path.join(ROOT, "state", "source-health.json")
+    try:
+        prev = json.load(open(p)).get("sources") or {}
+    except Exception:
+        prev = {}
+    now = now_iso()
+    for src, c in RUN.items():
+        old = prev.get(src) if isinstance(prev.get(src), dict) else {}
+        s = {k: old[k] for k in ("last_ok_at", "last_fail_at", "last_error") if k in old}
+        s["last_run"] = {"ok": c["ok"], "absent": c["absent"], "failed": c["failed"], "at": now, "mode": mode}
+        if c["ok"]:
+            s["last_ok_at"] = now
+        if c["failed"]:
+            s["last_fail_at"], s["last_error"] = now, c["err"]
+        prev[src] = s
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    json.dump({"at": now, "mode": mode, "attempted": attempted, "sources": prev}, open(p, "w"), indent=1)
+
+
 def daily_due(ts):
     if not ts:
         return True
@@ -1099,11 +1142,8 @@ def fetch_extras(site, rec, h, log):
         stamp = rec.setdefault("_fetched", {})
         if key in DAILY and not want and not daily_due(stamp.get(key)):
             continue
-        try:
-            rec[key] = fn()
+        if run_source(rec, key, fn, log):
             stamp[key] = now_iso()
-        except Exception as e:
-            log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
 
 
 def collect(site, inv):
@@ -1117,25 +1157,18 @@ def collect(site, inv):
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
     for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
-        try:
-            rec[key] = fn()
-        except Exception as e:
-            log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
+        run_source(rec, key, fn, log)
     if not (rec.get("nwps") or {}).get("forecast"):
-        try:
-            rec["nwm"] = fetch_nwm(site)
-        except Exception as e:
-            log.append("nwm FAILED (%s)" % str(e)[:60])
+        run_source(rec, "nwm", lambda: fetch_nwm(site), log)
     sp = os.path.join(LEGACY, "stats", site + ".json")
+    note("stats", "ok" if os.path.exists(sp) else "absent")  # input file, not a fetch: absent here means "is this normal" shows "-" (2026-10-25: 28 gauges)
     if os.path.exists(sp):
         rec["stats"] = json.load(open(sp))["d"]
         rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
-    try:
-        rec["record"] = record_summary(fetch_daily(site, h), rec.get("stats"))
-    except Exception as e:
-        log.append("record FAILED (%s), kept previous" % str(e)[:60])
+    run_source(rec, "record", lambda: record_summary(fetch_daily(site, h), rec.get("stats")), log)
     fetch_extras(site, rec, h, log)
     land = fetch_land(site)
+    note("land", "ok" if land else "absent")
     if land:
         rec["land"] = land
     rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
@@ -1264,6 +1297,7 @@ def fast(inv, sites):
         new = fast_usgs(sites, h)
     except Exception as e:  # USGS unavailable or rate-limited: still refresh the weather sources
         print("FAIL usgs bulk", str(e)[:100])
+        note("usgs", "failed", e)
         new = {}
     for s in sites:
         path = os.path.join(CACHE, s + ".json")
@@ -1285,16 +1319,11 @@ def fast(inv, sites):
                 log.append("filled %d readings" % filled)
         except Exception as e:
             log.append("fill FAILED (%s), kept the thinned tail" % str(e)[:60])
+        note("usgs", "ok" if s in new else "absent")
         for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
-            try:
-                rec[key] = fn()
-            except Exception as e:
-                log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
+            run_source(rec, key, fn, log)
         if not (rec.get("nwps") or {}).get("forecast"):
-            try:
-                rec["nwm"] = fetch_nwm(s)
-            except Exception as e:
-                log.append("nwm FAILED (%s)" % str(e)[:60])
+            run_source(rec, "nwm", lambda: fetch_nwm(s), log)
         rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
         rec["fetched_at"] = now_iso()
         json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
@@ -1309,6 +1338,7 @@ def fast(inv, sites):
         print("ok fast related flows")
     except Exception as e:
         print("FAIL related flows", str(e)[:100])
+    write_health("fast", len(sites))
     fetch_states(sites)  # statewide alerts + drought for each state hub
 
 
@@ -1410,29 +1440,23 @@ def main():
             print("ok nws", s, "hourly", len(rec["nws"].get("hourly") or []))
         return
     sites = [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites()
-    health = {s: {"ok": 0, "absent": 0, "failed": 0} for s in ALL_SOURCES}  # per-source outcome across this full run, for the source-health gate
     for s in sites:
         try:
             rec, log = collect(s, inv)
         except Exception as e:
             print("FAIL", s, str(e)[:100], "(cache kept)")
+            note("usgs", "failed", e)  # the critical series (a 429 here is the key quota): the gauge is not collected this run
             continue
+        note("usgs", "ok")
         tmp = os.path.join(CACHE, s + ".json.tmp")
         json.dump(rec, open(tmp, "w"), separators=(",", ":"))
         os.replace(tmp, os.path.join(CACHE, s + ".json"))
-        failed = {ln.split()[0] for ln in log if "FAILED" in ln}  # a source that errored this run (even if stale "kept previous" data remains in rec)
-        for src in ALL_SOURCES:
-            health[src]["failed" if src in failed else ("ok" if rec.get(src) else "absent")] += 1
         n = rec
         print("ok %s rows %d tz %s | nwps %s fc %s | nwm %s | nws periods %d alerts %s obs %s | rain %s | related %d | land %s %s" % (
             s, len(n["usgs"]["rows"]), n.get("tz"), (n.get("nwps") or {}).get("lid"), bool((n.get("nwps") or {}).get("forecast")), bool((n.get("nwm") or {}).get("points")),
             len((n.get("nws") or {}).get("periods") or []), len((n.get("nws") or {}).get("alerts") or []) if (n.get("nws") or {}).get("alerts") is not None else None, bool((n.get("nws") or {}).get("obs")),
             bool(n.get("rain")), len((n.get("related") or {}).get("items") or []), len((n.get("land") or {}).get("rows") or []) if n.get("land") else 0, "; ".join(log)))
-    if not any(a.startswith("--keys=") for a in sys.argv) and not any(not a.startswith("--") for a in sys.argv[1:]):  # record source health only on a full run over every live gauge (a partial new-gauge collect must not overwrite it)
-        os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
-        nh = max((c["ok"] + c["absent"] + c["failed"] for c in health.values()), default=0)  # gauges that actually collected (a 429/500 on the critical USGS call skips the gauge before health)
-        json.dump({"at": now_iso(), "gauges": nh, "attempted": len(sites), "sources": health},
-                  open(os.path.join(ROOT, "state", "source-health.json"), "w"), indent=1)
+    write_health("partial" if any(not a.startswith("--") for a in sys.argv[1:]) else "full", len(sites))
     fetch_states(sites)  # statewide alerts + drought for each state hub
 
 

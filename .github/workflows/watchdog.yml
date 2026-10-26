@@ -1,24 +1,37 @@
 name: watchdog
 
-# Hourly check of the LIVE site. It records health to the logs and the /status page; it never fails the run (continue-on-error), so it never emails the owner.
-# Checks: the live build is older than 3 hours, readings are stale, or the page count dropped below the floor (tools/watchdog.py),
-# and whether any gauge page disagrees with USGS (flow, stage, time) or NWS (flood stages): tools/truth_live.py.
+# Hourly site doctor (owner 2026-10-25: no alarms, no emails). tools/watchdog.py reads the live site, prints one health report and
+# heals what it can: a site not rebuilt for 60 min gets a refresh dispatched here (unless one is already queued or running); stale edge
+# readings are refreshed by requesting a page. It never fails the run. Problems it cannot heal are read at session start.
 on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: write   # to dispatch refresh.yml when the site stopped rebuilding
+
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python tools/watchdog.py
-        continue-on-error: true  # log health, never fail the run (no owner email); read it on /status
-      - name: Truth against USGS and NWS (every gauge page)
+      - id: doctor
+        run: python tools/watchdog.py
+      - name: Heal - dispatch a refresh when the site stopped rebuilding
+        if: steps.doctor.outputs.heal == 'refresh'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          busy=$(gh run list --workflow=refresh.yml --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length' -L 10)
+          if [ "$busy" = "0" ]; then gh workflow run refresh.yml -f mode=fast && echo "refresh dispatched"; else echo "a refresh is already queued or running ($busy)"; fi
+      - name: Live numbers against USGS and NWS (log only)
         continue-on-error: true
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_live.py

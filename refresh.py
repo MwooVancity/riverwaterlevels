@@ -1,4 +1,4 @@
-"""One-command refresh: collect -> build -> check -> publish -> deploy -> livecheck. Stops at the first failing step; live site stays on the last good release.
+"""One-command refresh: collect -> build -> check -> gates 1-2 -> publish -> deploy -> gate 3. Stops at the first failing step; live site stays on the last good release.
 Usage: python -I refresh.py        Log: runs/refresh.log. A lock file stops two runs at once.
 """
 import os, sys, subprocess, datetime
@@ -15,7 +15,7 @@ log = open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8")
 PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 FAST = ["--fast"] if "--fast" in sys.argv else []  # fast = bulk USGS latest + NWS/NWPS/rain only (every 30 min); no flag = everything (every 6 h)
 STEPS = [PY + ["collect.py"] + FAST, PY + ["build.py"], PY + ["check.py"], PY + ["publish.py"],
-         ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"], PY + ["livecheck.py"]]
+         ["npx.cmd" if os.name == "nt" else "npx", "wrangler", "deploy"]]
 # Always run, they block a deploy: every gauge page's contracts (truth_tests.py); the built pages against a fresh USGS and NWS fetch (a USGS or NWS outage only warns).
 sys.path.insert(0, ROOT)
 from gates import ALWAYS, SOFT  # the one list of gates (gates.py); `python -I gate.py` runs the same list by hand

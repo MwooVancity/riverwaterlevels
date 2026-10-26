@@ -6,12 +6,15 @@ Rules per gauge page:
  - USGS has a newer reading: the page may be behind by at most 3 hours (the browser refreshes the numbers on load, so a short lag is normal)
  - flood stages shown on the page (Action, Minor, Moderate, Major) equal the NWS forecast point's categories within 0.05 ft
  - the NWS forecast point named on the page exists and answers"""
-import json, re, sys, urllib.request, datetime
+import json, os, re, sys, urllib.request, datetime
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib.common import usgs_headers
 
 SITE = "https://riverwaterlevels.com"
 USGS = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065&limit=1000&f=json"
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
+HU = dict(usgs_headers(), **H)  # with the key: anonymous calls from shared CI addresses get rate-limited and the check silently skips
 MAX_LAG_H = 3
 STALE_FAIL_H = 12  # a lag up to here is a warning (USGS lag or a single slow gauge, not a wrong number); beyond it the refresh is genuinely broken and the run should go red
 
@@ -34,7 +37,7 @@ def get(u, t=60):
     for i, wait in enumerate((0, 5, 20, 45)):  # a rate limit (429) or a hiccup is retried before anything is recorded as skipped
         time.sleep(wait)
         try:
-            return urllib.request.urlopen(urllib.request.Request(u, headers=H), timeout=t).read().decode("utf-8", "replace")
+            return urllib.request.urlopen(urllib.request.Request(u, headers=HU if "waterdata.usgs.gov" in u else H), timeout=t).read().decode("utf-8", "replace")
         except Exception as e:
             if i == 3 or getattr(e, "code", 0) not in (0, 429, 500, 502, 503, 504):
                 raise
@@ -67,7 +70,8 @@ def main():
         sid = re.search(r"USGS gauge (\d+)", h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)
         stage = re.search(r'data-live="stage">([\d.\-]+)<', h)
-        t = re.search(r'class="hero hero2" data-t="([^"]+)"', h)
+        # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
+        t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
         if not (sid and flow and t):
             bad.append("%s: cannot read gauge id, flow or time from the page" % url)
             continue

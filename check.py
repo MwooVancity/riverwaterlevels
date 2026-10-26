@@ -119,6 +119,17 @@ def check_html(h, rel):
                 continue  # a tidal reach has no 6 h direction; hero.py prints the day's range instead
             if need not in head:
                 bad.append("first screen missing %s" % need.split('"')[1])
+        # the edge swaps in a newer reading; everything the build derived from the old one (class word, trend, summary) must be marked dv so it gets its own "as of" time
+        if 'class="tile norm' in head and not re.search(r'class="tile norm[^"]*\bdv\b', head):
+            bad.append("first screen: the is-this-normal tile is not marked dv (would show an old class under a swapped reading with no time)")
+        if '<p class="answer"' in head and not re.search(r'class="a2 dv\b', head):
+            bad.append("first screen: the summary class is not marked dv")
+    # a tile's caption must say something its value does not (2026-10-25: "5p to 6p" / "5p to 6p: no thunder ...")
+    for mm in re.finditer(r'<div class="tile [^"]*">(?:(?!</div>).)*?<b>(.*?)</b>((?:(?!</div>).)*)</div>', body, re.S):
+        val = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", mm.group(1))).strip()
+        cap = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", mm.group(2)))
+        if len(val) >= 3 and re.search(r"[A-Za-z0-9]", val) and val in cap:
+            bad.append("tile caption repeats its own value %r" % val)
     if kind_of(rel) == "gauge":
         gz = len(gzip.compress(h.encode("utf-8"), 6))  # what the phone downloads (Cloudflare compresses HTML); the plan's old 150 KB bar was for the raw file
         if gz > MAX_GZ:
@@ -164,7 +175,7 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
-    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
+    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json", "/_health.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     graph = {}
     for u, links in links_of.items():
         rel = rel_of[u]
@@ -238,7 +249,7 @@ def check_dir(d):
 
 def selftest():
     good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
-            '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm"></div><div class="tile trend"></div></div>'
+            '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
     assert check_html(good, rel) == [], check_html(good, rel)
@@ -246,7 +257,7 @@ def selftest():
               "banned undefined": good.replace("<p>x</p>", "<p>undefined</p>"), "no unit": good.replace("<small>cfs</small>", "<small></small>"), "no zone": good.replace("CDT", ""),
               "two h1": good.replace("<h1>X</h1>", "<h1>X</h1><h1>Y</h1>"),
               "jargon heading": good.replace("<h2>H</h2>", "<h2>Percentile for the date</h2>"),
-              "jargon tile": good.replace('<div class="tile norm"></div>', '<div class="tile norm"><i class="ic"></i><span>Compared</span><b>23rd percentile</b></div>'),
+              "jargon tile": good.replace('<div class="tile norm dv"></div>', '<div class="tile norm dv"><i class="ic"></i><span>Compared</span><b>23rd percentile</b></div>'),
               "empty widget": good.replace("<p>x</p>", '<div class="bars"></div>'),
               "image without size": good.replace("<p>x</p>", '<img src="/a.png" alt="a">'),
               "image without alt": good.replace("<p>x</p>", '<img src="/a.png" width="5" height="5">'),
@@ -259,7 +270,14 @@ def selftest():
               "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name
-    print("selftest OK: good fixture passes, %d broken fixtures all fail" % len(broken))
+    # planted bugs from the 2026-10-25 incidents: each must fail with ITS message, not by accident
+    aimed = {"tile caption repeats its own value": good.replace('<div class="tile trend"></div>', '<div class="tile calm"><span>Calm daylight hours today</span><b>5p to 6p</b><small>5p to 6p: no thunder</small></div><div class="tile trend"></div>'),
+             "is-this-normal tile is not marked dv": good.replace("tile norm dv", "tile norm"),
+             "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
+    for want, h in aimed.items():
+        got = check_html(h, rel)
+        assert any(want in g for g in got), "selftest: %r did not fire (got %s)" % (want, got)
+    print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 
 SECRET = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|cloudflare_api_token)[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{20,}")

@@ -33,8 +33,8 @@ def main():
         _, sm = get(SITE + "/sitemap.xml")
         urls = json.loads(get(SITE + "/gauges.json")[1])
     except Exception as e:
-        print("index live: site did not answer (%s); skipped" % str(e)[:80])
-        return 0
+        print("index live: site did not answer (%s): nothing was verified" % str(e)[:80])
+        return 1  # an unreachable site is not a pass
     locs = re.findall(r"<loc>([^<]+)</loc>", sm)
     if "<sitemapindex" in sm:  # the sitemap is an index: its <loc>s are child sitemaps, so union the page URLs from each child (past 10k URLs, else every allowed page false-fails as "missing from sitemap")
         pages_ = []

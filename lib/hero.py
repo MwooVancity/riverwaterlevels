@@ -146,7 +146,7 @@ def hero(G, pages=None):
     bcls = "" if p is None else "b-la" if p != 101 and p < 25 else "b-lp" if p == 101 or p > 75 else "b-lb"
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
     tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small>%s</small>%s' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if sg and qual_text(sg[-1][2]) else "") or next_impact(G) or "Level relative to the gauge\'s zero", "" if sg else ""))
+                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small class="dv">%s</small>%s' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if sg and qual_text(sg[-1][2]) else "") or next_impact(G) or "Level relative to the gauge\'s zero", "" if sg else ""))
     if p is None:
         word, plain = "–", ""
     else:
@@ -167,7 +167,7 @@ def hero(G, pages=None):
         d6 = c["sg6"]
         word, ico = ("Rising", "up") if d6 > 0.1 else ("Falling", "down") if d6 < -0.1 else ("Steady", "steady")
         dir_chip = "%s: gage height %+.2f ft in 6 h" % (word, d6)
-        tiles += ui.tile("trend " + word.lower(), ico, "Gage height, last 6 h", '%s%.2f <small>ft</small> <small class="word">%s</small>' % ("+" if d6 > 0 else "", d6, word),
+        tiles += ui.tile("trend dv " + word.lower(), ico, "Gage height, last 6 h", '%s%.2f <small>ft</small> <small class="word">%s</small>' % ("+" if d6 > 0 else "", d6, word),
                          '<small id="ccap">Flow readings here swing between %s and %s cfs within 24 h and do not move with the gage height (correlation %.2f), so the flow is not a reliable direction and the gage height is used.</small>' % (fmtc(lo_), fmtc(hi_), rg_))
     else:
         if chg is None:
@@ -192,19 +192,19 @@ def hero(G, pages=None):
             uz = round(use)
             dir_chip = ("Steady: no change in %s" % span) if word == "Steady" and abs(use) < 0.05 else "%s: %s%.1f%% flow in %s" % (("%s, leveling off" % ("Falling" if use < 0 else "Rising")) if word == "Leveling off" else word, "+" if use > 0 else "-" if use < 0 else "", abs(use), span)
             word_note = word_note or {"Leveling off": "<small>It moved over %s but has changed by less than 0.5%% in the last hour.</small>" % span, "Unsteady": "<small>The last hour points the other way from the last %s.</small>" % span}.get(word, "")
-            tiles += ui.tile("trend " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%% <small class="word">%s</small>' % ("+" if use > 0 else "-" if use < 0 else "", abs(use), word),
+            tiles += ui.tile("trend dv " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%% <small class="word">%s</small>' % ("+" if use > 0 else "-" if use < 0 else "", abs(use), word),
                              '<small>%s%s</small>' % (parts, (" &middot; gage %+.2f ft/h" % gr) if (gr := gage_rate(G)) is not None else "") + (word_note if word == "Unclear" else "")
                              + (('<small>Last 20%% rise: %s.</small>' % (("%.0f days ago" % lbr if lbr >= 1.5 else "%.0f hours ago" % (lbr * 24)) if lbr is not None and lbr >= 0 else "none in the last 7 days")) if (lbr := last_big_rise(G)) != -1 else "")
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % G["ldate"].strftime("%b %d").replace(" 0", " "), norm_word,
-                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>%s last year: %s cfs (USGS daily mean).</small>' % (ly[1], fmtc(ly[0]))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide " + bcls).strip())
+                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>%s last year: %s cfs (USGS daily mean).</small>' % (ly[1], fmtc(ly[0]))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         if v24_:
             dir_chip = "Tidal reach: %s to %s cfs over 24 h" % (fmtc(min(v24_)), fmtc(max(v24_)))
-    tiles = pre.replace("@@DIR@@", "<small>%s</small>" % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
+    tiles = pre.replace("@@DIR@@", '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
         fcw = c["fc"]
@@ -228,7 +228,7 @@ def hero(G, pages=None):
         if fcw.get("offset"):
             _parts.append("forecast out of step with the gauge reading (details under River forecast)")
         if _parts:
-            sub += '<small>%s</small>' % " &middot; ".join(_parts)
+            sub += '<small class="dv">%s</small>' % " &middot; ".join(_parts)
         strip += ui.tile("fcst", "crest", ("NWS forecast" if above and not G["osc"] else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high")) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
     elif nwl and G["has_forecast"]:
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
@@ -238,7 +238,7 @@ def hero(G, pages=None):
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>No NWS river forecast point is linked to this gauge in our data. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"] and c["alerts"].get("age_h") is not None and c["alerts"]["age_h"] > 3:  # a fresh answer is said by the answer line and the alerts block; only an old or missing answer gets a tile
         al = c["alerts"]
-        strip += ui.tile("alrt off stale", "bell", "NWS alerts", "No alerts", '<small>%s</small>' % ("No alerts in the last answer from the NWS, as of %s. The alert service has not answered since; check weather.gov." % esc(al["asof"])))
+        strip += ui.tile("alrt off stale", "bell", "NWS alerts", "No alerts", '<small>%s</small>' % ("Last NWS answer %s. The alert service has not answered since; check weather.gov." % esc(al["asof"])))
     elif c["alerts"] is None:
         strip += ui.tile("alrt unknown", "bell", "NWS alerts", "Unknown", '<small>We have no answer from the National Weather Service alert service for this location. Check weather.gov.</small>')
     if c["wt"]:
@@ -276,8 +276,9 @@ def hero(G, pages=None):
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     norm_txt = ("%s for %s" % (norm_word, G["ldate"].strftime("%b %d").replace(" 0", " "))) if p is not None else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
-    answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 %s">%s</span><span class="a1">%s</span>%s</p>' % (
-        ('<span class="a1">%s</span>' % esc(lead)) if lead else "", band_cls, esc(norm_txt), esc(dir_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+    # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
+    answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls, esc(norm_txt), esc(dir_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
         strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
     if c["air"]:

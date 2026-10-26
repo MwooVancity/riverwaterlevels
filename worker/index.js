@@ -35,8 +35,8 @@ export default {
       refreshIfOld(L, env, ctx);
       const site = L && L.u && L.u[url.pathname];
       const g = site && L.g[site], m = site && L.m[site];
-      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0]))) return res;
-      return rewrite(res, g, m);
+      if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0]))) return tag(res, site ? "static" : "static-unknown", L);
+      return tag(rewrite(res, g, m), "swapped", L);
     } catch (e) {
       return env.ASSETS.fetch(req);
     }
@@ -56,6 +56,13 @@ function refreshIfOld(L, env, ctx) {
   })().catch(() => {}));
 }
 
+// x-rwl-edge says what the edge did with this page (swapped / static / static-unknown) and how old its stored readings are, so the live gate can see it
+function tag(res, what, L) {
+  const o = new Response(res.body, res);
+  o.headers.set("x-rwl-edge", what + (L && L.t ? "; live-age-s=" + Math.round((Date.now() - Date.parse(L.t)) / 1000) : "; live-age-s=none"));
+  return o;
+}
+
 function local(iso, tz) {
   return new Date(iso).toLocaleString("en-US", { timeZone: tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).replace(/[  ]/g, " "); // Intl uses narrow no-break spaces; the build uses plain ones
 }
@@ -68,8 +75,12 @@ function age(iso) {
 function rewrite(res, g, m) {
   const [fv, ft] = g.f, tz = m[1], mins = (Date.now() - Date.parse(ft)) / 60000;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
+  const asof = " (as of the " + local(m[0], tz) + " reading)";
   const out = new HTMLRewriter()
     .on('span[data-live="flow"]', text(Math.round(fv).toLocaleString("en-US"))) // same rounding as fmtc() in lib/common.py
+    .on('span[data-live="lead"]', text(Math.round(fv).toLocaleString("en-US") + " cfs"))
+    // dv = text the build derived from its own reading (class word, trend, flood distance, forecast vs now): not recomputed here, so it carries its own time
+    .on(".dv", { element(e) { e.append('<small class="asof">' + asof + "</small>", { html: true }); } })
     .on('span[data-live="obs"]', text(local(ft, tz)))
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(age(ft)); } })
     .on("span.ab", { element(e) { e.setAttribute("class", "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale")); } })
