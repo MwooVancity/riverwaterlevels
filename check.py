@@ -8,7 +8,7 @@ MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL
 
-BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d"]  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
+BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 480, "home": 200, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
 FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
@@ -81,7 +81,7 @@ def check_html(h, rel):
     if "<main" not in h:
         return bad + ["no <main>"]
     body = h.split("<main", 1)[1].split("</main>")[0]
-    text = re.sub(r"<[^>]+>", " ", body)
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", body))  # code samples (the embed snippet) are meant to show markup
     for pat in BANNED:
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
@@ -297,6 +297,7 @@ def selftest():
              "ok:tidal range containing the value": good.replace('<div class="tile trend"></div>', '<div class="tile flowx"><span>Flow</span><b>11,400 cfs</b><small>Tidal reach: 11,400 to 15,000 cfs over 24 h</small></div><div class="tile trend"></div>'),
              "no unit on Gage height": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>2.53 <small>m</small></b></div>'),
              "ok:gage height not measured": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>Not measured</b><small>USGS reports no gage height at this gauge</small></div>'),
+             "&lt;/?[a-zA-Z]+": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p>For more information click &lt;a href=&quot;x.php&quot;&gt;here&lt;/a&gt;.</p>'),
              "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
     obs = {"nwps": {"lid": "MEMT1", "obs_stage": {"t": "2026-10-26T10:00:00Z", "v": 1.6}}}
     import datetime

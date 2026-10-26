@@ -2,7 +2,7 @@
 Each source is fetched independently; a failed source keeps its previous cached value (and old fetched_at), it never blanks the record.
 Usage: python -I collect.py [site ...]   (default: wave 0)
 """
-import os, sys, json, math, re, datetime, urllib.parse, urllib.request, urllib.error
+import os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 
@@ -10,6 +10,7 @@ CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
+NWPS_H = {"User-Agent": NWS_H["User-Agent"], "Accept": "application/json"}  # 2026-10-26: geo+json made reaches/{id}/streamflow?series= return only the reach summary (no medium range on any gauge)
 
 
 _last = [0.0]
@@ -98,13 +99,13 @@ def fetch_nwps(site, lat, lon):
     import urllib.error, math
     cw = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nws-crosswalk.json"))).get(site)
     try:
-        det = thr_json(NWPS + "gauges/%s" % site, NWS_H)
+        det = thr_json(NWPS + "gauges/%s" % site, NWPS_H)
     except urllib.error.HTTPError as e:
         if e.code not in (400, 404):
             raise
         det = None
         if cw:  # NWPS has the point but no usgsId on it: accept the crosswalk entry only when it sits within 1 km of this gauge
-            det = thr_json(NWPS + "gauges/%s" % cw, NWS_H)
+            det = thr_json(NWPS + "gauges/%s" % cw, NWPS_H)
             la1, lo1, la2, lo2 = map(math.radians, (lat, lon, det.get("latitude") or 0, det.get("longitude") or 0))
             km = 6371 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
             if km > 1.0:
@@ -122,7 +123,7 @@ def fetch_nwps(site, lat, lon):
                     cats[k] = v["stage"]
             fc = None
             try:
-                j = thr_json(NWPS + "gauges/%s/stageflow/forecast" % x["lid"], NWS_H)
+                j = thr_json(NWPS + "gauges/%s/stageflow/forecast" % x["lid"], NWPS_H)
                 pts = [{"t": p.get("validTime"), "primary": p.get("primary"), "secondary": p.get("secondary")} for p in (j.get("data") or []) if isinstance(p.get("primary"), (int, float)) and p["primary"] > -990]
                 if pts:
                     fc = {"issued": j.get("issuedTime"), "primary_units": j.get("primaryUnits"), "secondary_units": j.get("secondaryUnits"), "points": pts[:400]}
@@ -130,7 +131,7 @@ def fetch_nwps(site, lat, lon):
                 pass
             rflow = {}
             try:
-                rf = thr_json(NWPS + "gauges/%s/riverflow" % x["lid"], NWS_H)
+                rf = thr_json(NWPS + "gauges/%s/riverflow" % x["lid"], NWPS_H)
                 # NWPS lists upstream farthest first and downstream nearest first: keep the six nearest of each
                 allp = {k: [{"LID": i.get("LID"), "Name": i.get("Name")} for i in (rf.get(k) or []) if isinstance(i, dict)] for k in ("upstream", "downstream")}
                 rflow = {"upstream": allp["upstream"][-6:], "downstream": allp["downstream"][:6], "upstream_n": len(allp["upstream"]), "downstream_n": len(allp["downstream"])}
@@ -138,7 +139,7 @@ def fetch_nwps(site, lat, lon):
                 pass
             obs_stage = None
             try:
-                ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWS_H)
+                ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWPS_H)
                 col = "primary" if (ob.get("primaryUnits") or "").lower() == "ft" else "secondary" if (ob.get("secondaryUnits") or "").lower() == "ft" else None  # the height column is found by its units, not its position
                 pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
                 if pts:
@@ -147,7 +148,7 @@ def fetch_nwps(site, lat, lon):
                 pass
             fl = det.get("flood") or {}
             hist = [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("crests") or {}).get("historic") or []) if isinstance(c.get("stage"), (int, float))][:10]
-            imp = [{"stage": i.get("stage"), "statement": i.get("statement")} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
+            imp = [{"stage": i.get("stage"), "statement": re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip()} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
             return {"fetched_at": now_iso(), "lid": x["lid"], "name": det.get("name"), "reach_id": det.get("reachId"), "categories": cats, "forecast": fc,
                     "riverflow": rflow, "obs_stage": obs_stage, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
                     "wfo": det.get("wfo"), "rfc": det.get("rfc"), "reliability": det.get("forecastReliability"), "fim": bool((det.get("inundation") or {}).get("enabled")), "lro": fl.get("lro")}
@@ -694,12 +695,12 @@ def fetch_nwm(site):
     comid = d["features"][0]["properties"].get("comid")
     if not comid:
         return {"fetched_at": now_iso(), "comid": None}
-    j = thr_json(NWPS + "reaches/%s/streamflow?series=short_range" % comid, NWS_H)
+    j = thr_json(NWPS + "reaches/%s/streamflow?series=short_range" % comid, NWPS_H)
     s = (j.get("shortRange") or {}).get("series") or {}
     pts = [{"t": p.get("validTime"), "flow": p.get("flow")} for p in (s.get("data") or []) if isinstance(p.get("flow"), (int, float)) and p["flow"] >= 0]
     out = {"fetched_at": now_iso(), "comid": comid, "reference_time": s.get("referenceTime"), "points": pts[:60]}
     try:
-        m = thr_json(NWPS + "reaches/%s/streamflow?series=medium_range" % comid, NWS_H)
+        m = thr_json(NWPS + "reaches/%s/streamflow?series=medium_range" % comid, NWPS_H)
         mm = (m.get("mediumRange") or {}).get("mean") or {}
         mp = [{"t": p.get("validTime"), "flow": p.get("flow")} for p in (mm.get("data") or []) if isinstance(p.get("flow"), (int, float)) and p["flow"] >= 0]
         if mp:

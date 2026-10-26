@@ -472,7 +472,7 @@ def next_impact(G):
     if not ahead:
         return ""
     i = ahead[0]
-    txt = i["statement"].strip()
+    txt = re.sub(r"<[^>]+>", "", html.unescape(i["statement"])).strip()  # NWS text can carry escaped link markup (Clear Creek)
     end = txt.find(". ")
     if 20 <= end < 160:
         txt = txt[:end + 1]

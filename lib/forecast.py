@@ -133,7 +133,7 @@ def b_impacts(G):
         by.setdefault(i["stage"], [])
         if i["statement"] not in by[i["stage"]]:
             by[i["stage"]].append(i["statement"])
-    rows = "".join(tr(["%.1f %s" % (s_, esc(unit)), "<br>".join(esc(re.sub(r"<[^>]+>", "", x)) for x in by[s_])], right=(0,)) for s_ in sorted(by))
+    rows = "".join(tr(["%.1f %s" % (s_, esc(unit)), "<br>".join(esc(re.sub(r"<[^>]+>", "", html.unescape(x))) for x in by[s_])], right=(0,)) for s_ in sorted(by))
     pn = nws_point_note(G)
     gap_ = datum_gap(G)
     cur_ = gap_[0] if gap_ else (G["sg"][-1][1] if G["sg"] else None)  # the reading on the NWS scale
