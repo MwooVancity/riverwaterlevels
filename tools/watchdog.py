@@ -48,7 +48,13 @@ def main():
         (bad if missing else ok).append("%d of %d live gauges on the site%s" % (len(live & on), len(live), (" (missing: %s)" % " ".join(missing[:12])) if missing else ""))
     try:
         h = get("/_health.json")
+        try:  # a source switched off in data/sources.json is a documented gap, not a broken feed
+            off = {r.get("id") for r in json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"] if r.get("status") == "off"}
+        except Exception:
+            off = set()
         for src, v in sorted((h.get("sources") or {}).items()):
+            if src in off or not v.get("last_run"):
+                continue  # judge only sources a run actually attempted (2026-10-26: daily sources not yet attempted were reported "never worked")
             last = v.get("last_ok_at")
             limit = DEAD_H.get(src, DEAD_DAILY_H)
             lr = v.get("last_run") or {}
