@@ -13,6 +13,8 @@
   "kv_namespaces": [
     { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }
   ],
+  // free plan: 5 cron triggers per ACCOUNT. In use 2026-10-25: asmrregistry x2, asmrregistry-cron x1, this one = 4 of 5.
+  // Adding a cron anywhere else past 5 makes the next `wrangler deploy` fail. Backup if the cron stops: refreshIfOld() in worker/index.js.
   "triggers": { "crons": ["*/2 * * * *"] },
   "routes": [
     { "pattern": "riverwaterlevels.com", "custom_domain": true }

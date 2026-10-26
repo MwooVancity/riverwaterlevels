@@ -1,5 +1,6 @@
 // Edge live layer (plan 2026-10-25: freshness stops depending on builds).
-// Every 2 minutes the cron pulls the newest USGS flow and gage height for every live gauge in a few bulk calls and stores one KV value.
+// A */2 cron pulls the newest USGS flow and gage height for every live gauge in a few bulk calls and stores one KV value. Backup: when
+// a gauge page or /live.json is requested and the stored readings are over 2 minutes old, the same refresh runs after the response.
 // Every gauge page is served through HTMLRewriter: when the stored reading is newer than the one the page was built with, the
 // flow, gage height, observed time and age are swapped in and a note says the charts below are as of the build. Any error, a missing
 // or older reading, or a non-gauge path serves the static file untouched: never older than the build, never broken.
@@ -19,6 +20,7 @@ export default {
       if (url.pathname === "/live.json") {
         const v = await env.LIVE.get("live", { cacheTtl: 60 });
         const j = v ? JSON.parse(v) : {};
+        refreshIfOld(j, env, ctx);
         return new Response(JSON.stringify({ t: j.t || null, g: j.g || {} }), {
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" },
         });
@@ -30,6 +32,7 @@ export default {
       const res = await env.ASSETS.fetch(new Request(req, { headers: h }));
       if (!res.ok || !(res.headers.get("content-type") || "").includes("text/html")) return res;
       const L = await env.LIVE.get("live", { type: "json", cacheTtl: 60 });
+      refreshIfOld(L, env, ctx);
       const site = L && L.u && L.u[url.pathname];
       const g = site && L.g[site], m = site && L.m[site];
       if (!g || !g.f || !m || !(Date.parse(g.f[1]) > Date.parse(m[0]))) return res;
@@ -39,6 +42,19 @@ export default {
     }
   },
 };
+
+const MAX_AGE = 120000; // refresh when the stored readings are older than 2 minutes
+
+function refreshIfOld(L, env, ctx) {
+  if (L && L.t && Date.now() - Date.parse(L.t) < MAX_AGE) return;
+  ctx.waitUntil((async () => {
+    // one refresh per Cloudflare location per ~2 min: a cache entry is the lock (free, no KV write)
+    const lock = new Request("https://riverwaterlevels.com/__live_refresh_lock");
+    if (await caches.default.match(lock)) return;
+    await caches.default.put(lock, new Response("1", { headers: { "cache-control": "max-age=110" } }));
+    await refresh(env);
+  })().catch(() => {}));
+}
 
 function local(iso, tz) {
   return new Date(iso).toLocaleString("en-US", { timeZone: tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).replace(/[  ]/g, " "); // Intl uses narrow no-break spaces; the build uses plain ones
@@ -72,6 +88,7 @@ function rewrite(res, g, m) {
 async function refresh(env) {
   const sites = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json(); // [[site, url, built iso, tz]]
   const prev = (await env.LIVE.get("live", { type: "json" })) || {};
+  if (prev.t && Date.now() - Date.parse(prev.t) < MAX_AGE - 20000) return; // another location just refreshed: keeps KV writes under the free 1,000/day
   const g = {}, cutoff = Date.now() - 8 * 86400000; // the service returns decades-old values for dead sensors
   for (const [s] of sites) if (prev.g && prev.g[s]) g[s] = prev.g[s]; // a failed chunk keeps the previous reading
   let got = 0;
