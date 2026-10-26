@@ -44,7 +44,7 @@ def ctx(site, row, rec, now):
         _pn["name"] = re.sub(r"\s*\(IN MLLW\)", "", _pn["name"], flags=re.I)  # a datum note in the NWS point name is not part of the place
     out = {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": row["place"], "st": row["state"],
-            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "basis": basis, "basis_mean": method.startswith("trailing")}
+            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     if flow_jitter(out):
         out["chg"] = None  # flow that does not follow the gage height gives no honest 24 h percent
     return out
@@ -78,6 +78,16 @@ def flow_jitter(G):
         return None
     r_ = statistics.correlation(a_, b_)
     return (min(a_), max(a_), r_) if r_ < 0.5 else None
+
+
+def nws_stage(G, max_h=24):
+    """(time, value) of the NWS-observed stage at this gauge's forecast point when under max_h hours old, else None."""
+    o = (G["rec"].get("nwps") or {}).get("obs_stage")
+    try:
+        t, v = parse_t(o["t"]), float(o["v"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return (t, v) if (G["now"] - t).total_seconds() <= max_h * 3600 and v > -999 else None
 
 
 def datum_gap(G):
@@ -137,7 +147,7 @@ def hero(G, pages=None):
     if p is not None and ndam >= 1:
         cap += " Upstream dams may have changed flows during this record."
     if p is not None and G["osc"]:
-        cap += " This gauge is tidal: the comparison uses the daily mean."
+        cap += (" This gauge is tidal" if G["tidal"] else " Flow at this gauge rises and falls within the day") + ": the comparison uses the daily mean."
     if p is not None and TAILWATER.search(G["row"].get("raw_name") or ""):
         cap += " This gauge is below a dam, so flow follows releases, and the record may include years before the dam."
     d24 = G["lt"] - datetime.timedelta(hours=24)
@@ -145,8 +155,17 @@ def hero(G, pages=None):
     strip = ""
     bcls = "" if p is None else "b-la" if p != 101 and p < 25 else "b-lp" if p == 101 or p > 75 else "b-lb"
     tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
-    tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                     (ui.spark([x[1] for x in sg if x[0] >= d24]) if sg else "") + '<small class="dv">%s</small>%s' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if sg and qual_text(sg[-1][2]) else "") or next_impact(G) or "Level relative to the gauge\'s zero", "" if sg else ""))
+    if sg:
+        tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
+                         ui.spark([x[1] for x in sg if x[0] >= d24]) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or next_impact(G) or "Level relative to the gauge\'s zero"))
+    else:  # Memphis 2026-10-26: USGS publishes flow only; the NWS forecast point at the same place observes the stage
+        o, n_ = nws_stage(G), G["rec"].get("nwps") or {}
+        if o:
+            tiles += ui.tile("stage", "stage", "Gage height", '%.2f <small>%s</small>' % (o[1], esc(n_.get("stage_units") or "ft")),
+                             '<small>NWS observed at %s, %s; USGS reports no gage height here</small>' % (esc(n_.get("lid") or ""), esc(tzl(o[0], G["zone"]))))
+        else:
+            tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
+                ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(n_["lid"])) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
     if p is None:
         word, plain = "–", ""
     else:
@@ -203,7 +222,7 @@ def hero(G, pages=None):
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         if v24_:
-            dir_chip = "Tidal reach: %s to %s cfs over 24 h" % (fmtc(min(v24_)), fmtc(max(v24_)))
+            dir_chip = "%s: %s to %s cfs over 24 h" % ("Tidal reach" if G["tidal"] else "Rose and fell", fmtc(min(v24_)), fmtc(max(v24_)))
     tiles = pre.replace("@@DIR@@", '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
@@ -216,7 +235,7 @@ def hero(G, pages=None):
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
         _parts = []
         if G["osc"]:
-            _parts.append("Tidal reach: the NWS forecast is a net level; compare it with the day's range on the flow tile")
+            _parts.append("%s: the NWS forecast is a net level; compare it with the day's range on the flow tile" % ("Tidal reach" if G["tidal"] else "Flow rises and falls within the day"))
         elif unit == "ft" and fcw["cur"] is not None and not fcw["datum"] and abs(fcw["v"] - fcw["cur"]) >= 0.05 and not above:
             _parts.append("%.1f ft above now" % abs(fcw["v"] - fcw["cur"]))
         if above and not G["osc"]:
@@ -313,7 +332,7 @@ def hero(G, pages=None):
     strip_html = (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not measured at this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     # Lakebrief comparison 2026-10-21: one line a forum post or local paper can paste, built only from fields already on the page
     cite = '<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
-        esc(river_at(G["river"], G["place"])), esc(G["st"]), ("%.2f ft" % G["sg"][-1][1]) if G["sg"] else "not measured", (fmtc(G["lv"]) + " cfs") if G["lv"] is not None else "not reporting", G["site"], esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
+        esc(river_at(G["river"], G["place"])), esc(G["st"]), ('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) if G["sg"] else "not measured", ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html + cite
 
 

@@ -212,9 +212,7 @@ def b_about(G):
 
 
 def b_nwm_medium(G):
-    if (G["rec"].get("nwps") or {}).get("forecast"):
-        return None
-    n = G["rec"].get("nwm") or {}
+    n = G["rec"].get("nwm") or {}  # shown beside the NWS forecast too: it reaches days 4 to 10, past the official horizon
     pts = n.get("medium") or []
     if len(pts) < 4:
         return None

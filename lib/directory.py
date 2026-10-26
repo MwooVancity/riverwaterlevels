@@ -37,7 +37,7 @@ def dir_lv(G):
 
 
 def latest_text(G):
-    return "%s cfs%s" % (fmt(dir_lv(G)), " (24 h mean, tidal)" if dir_lv(G) is not G["lv"] else "")
+    return "%s cfs%s" % (fmt(dir_lv(G)), (" (24 h mean, tidal)" if G.get("tidal") else " (24 h mean)") if dir_lv(G) is not G["lv"] else "")
 
 
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;

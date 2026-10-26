@@ -630,8 +630,14 @@ def fetch_floodfreq(site):
     """USGS StreamStats gage statistics: annual exceedance probability (AEP) peak flows with their published confidence intervals.
     Not shown (regulated=True or conflict=True) when the station is regulated or when USGS publishes more than one preferred set that disagree by over 10% at the 1% flow."""
     j = thr_json("https://streamstats.usgs.gov/gagestatsservices/stations/" + site, None, 60, gap=1.0)
-    groups = {}
+    groups, dur = {}, {}
     for s in j.get("statistics") or []:
+        md = re.match(r"^([\d.]+) Percent Duration$", (s.get("regressionType") or {}).get("name") or "")
+        if s.get("statisticGroupTypeID") == 5 and md and s.get("value") is not None and (s.get("unitType") or {}).get("abbreviation") == "ft^3/s":
+            p = float(md.group(1))  # flow-duration: the flow equalled or exceeded on this share of days
+            if p not in dur or (s.get("isPreferred") and not dur[p]["pref"]):
+                dur[p] = {"p": p, "q": s["value"], "pref": bool(s.get("isPreferred")), "range": " ".join(re.findall(r"\d{1,2}/\d{1,2}/\d{4}", s.get("comments") or "")[:2])}
+            continue
         if s.get("statisticGroupTypeID") != 2:
             continue
         m = re.match(r"^(?:Alternate )?([\d.]+)-percent AEP flood$", (s.get("regressionType") or {}).get("name") or "")
@@ -644,8 +650,9 @@ def fetch_floodfreq(site):
         if row["aep"] not in g or (row["pref"] and not g[row["aep"]]["pref"]):
             g[row["aep"]] = row
     groups = {k: v for k, v in groups.items() if v}
+    durs = sorted(dur.values(), key=lambda r: r["p"])
     if not groups:
-        return None
+        return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "rows": [], "dur": durs} if durs else None
     best = max(groups.values(), key=lambda g: (any(r["pref"] for r in g.values()), max(re.findall(r"\d{4}", next(iter(g.values()))["range"]) or ["0"]), len(g)))
     one = [g[1.0]["q"] for g in groups.values() if 1.0 in g and any(r["pref"] for r in g.values())]
     conflict = len(one) > 1 and max(one) > 1.1 * min(one)
@@ -654,7 +661,7 @@ def fetch_floodfreq(site):
     cit = first["cit"]
     return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "conflict": conflict, "range": ("%s to %s" % (yrs[0], yrs[1])) if len(yrs) >= 2 else None, "years": first["years"],
             "citation": cit.get("title"), "url": cit.get("citationURL"),
-            "rows": sorted([{k: v for k, v in r.items() if k in ("aep", "q", "lo", "hi")} for r in best.values()], key=lambda r: -r["aep"])}
+            "rows": sorted([{k: v for k, v in r.items() if k in ("aep", "q", "lo", "hi")} for r in best.values()], key=lambda r: -r["aep"]), "dur": durs}
 
 
 def fetch_fieldmeas(site, h):
@@ -1125,6 +1132,15 @@ def daily_due(ts):
     return age > 36 or (age > 12 and 9 <= datetime.datetime.now(datetime.timezone.utc).hour < 12)
 
 
+def nwm_due(rec):
+    """Every gauge gets the model's days 1 to 10 (2026-10-26: it was fetched only where NWS issues no forecast, hiding days 4 to 10).
+    The model reruns every 6 h; fetch at most every 3 h."""
+    try:
+        return (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(rec["nwm"]["fetched_at"])).total_seconds() > 3 * 3600
+    except (KeyError, TypeError, ValueError):
+        return True
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -1158,7 +1174,7 @@ def collect(site, inv):
     log = []
     for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
         run_source(rec, key, fn, log)
-    if not (rec.get("nwps") or {}).get("forecast"):
+    if nwm_due(rec):
         run_source(rec, "nwm", lambda: fetch_nwm(site), log)
     sp = os.path.join(LEGACY, "stats", site + ".json")
     note("stats", "ok" if os.path.exists(sp) else "absent")  # input file, not a fetch: absent here means "is this normal" shows "-" (2026-10-25: 28 gauges)
@@ -1289,7 +1305,7 @@ def fast(inv, sites):
         note("usgs", "ok" if s in new else "absent")
         for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
             run_source(rec, key, fn, log)
-        if not (rec.get("nwps") or {}).get("forecast"):
+        if nwm_due(rec):
             run_source(rec, "nwm", lambda: fetch_nwm(s), log)
         rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
         rec["fetched_at"] = now_iso()

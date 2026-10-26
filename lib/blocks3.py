@@ -1,7 +1,7 @@
 """Blocks for the second wave of government sources (NWS forecast point facts, FEMA declarations, NCEI storm events, dams, Reclamation releases, ACIS rain, StreamCat, FEMA flood zones).
 Same registry rules as render.py and blocks2.py. Each block is gated by its source row in data/sources.json.
 """
-import datetime
+import collections, datetime, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
 
 ZONE_NAMES = {"A": "Special flood hazard area, no base flood elevation", "AE": "Special flood hazard area with base flood elevation", "AH": "Shallow flooding (ponding)", "AO": "Shallow flooding (sheet flow)",
@@ -432,7 +432,11 @@ def b_recreation(G):
     r = G["rec"].get("ridb")
     if not r or not r.get("sites"):
         return None
-    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if x.get("url") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3])), esc("" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(2,)) for x in r["sites"])
+    ph = collections.Counter((x.get("phone") or "").strip() for x in r["sites"])
+    central = next((p for p, k in ph.items() if p and k >= 3), None)  # one booking line repeated on every row (Truckee: 8 rows) is said once below
+    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if x.get("url") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3])), esc("" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") or (x.get("phone") or "").strip() == central else x["phone"])], right=(2,)) for x in r["sites"])
+    if central:
+        rows += tr(["All sites above without a phone listed", "", "", "", esc(central)], right=(2,))
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency", table(["Site", "Type", "Distance", "Water activities listed", "Phone"], rows, right=(2,)),
                  "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")
 
@@ -516,17 +520,32 @@ def b_stage_years(G):
 
 def b_floodfreq(G):
     f = G["rec"].get("floodfreq")
-    if not f or not f.get("rows") or f.get("regulated") or f.get("conflict"):
-        return None
+    if not f or not f.get("rows") or f.get("conflict"):
+        return None  # regulated gauges show with USGS's own caveat (2026-10-26: hiding them withheld published statistics)
     has_ci = any(r.get("lo") is not None and r.get("hi") is not None for r in f["rows"])
     rows = "".join(tr(["%s%%" % ("%g" % r["aep"]), "%s years" % "{:,g}".format(round(100 / r["aep"], 1)), "%s cfs" % fmtc(r["q"])]
                       + ([("%s to %s cfs" % (fmtc(r["lo"]), fmtc(r["hi"]))) if r.get("lo") is not None and r.get("hi") is not None else "–"] if has_ci else []), right=(2, 3)) for r in f["rows"] if r["aep"] <= 50)
     if not rows:
         return None
+    _url = re.match(r"https?://\S+?(?=https?://|$)", f.get("url") or "")  # StreamStats sends "null" or the same URL twice run together
     rec = ("record %s%s" % (esc(f["range"]), (", %s years" % fmt(f["years"])) if f.get("years") else "")) if f.get("range") else "record years not stated"
     return block("flood_frequency", "Flood frequency of peak flows", "hist", table(["Chance in any year", "Average spacing", "Peak flow"] + (["Confidence interval, as published"] if has_ci else []), rows, right=(2, 3)),
-                 "Source: USGS StreamStats gage statistics (peak-flow statistics, annual exceedance probability), %s. %s. Long-run statistics, not a forecast or a schedule. Fetched %s." % (
-                     rec, esc(f.get("citation") or "citation not stated") + ((" " + esc(f["url"])) if f.get("url") else ""), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
+                 "Source: USGS StreamStats gage statistics (peak-flow statistics, annual exceedance probability), %s. %s. Long-run statistics, not a forecast or a schedule.%s Fetched %s." % (
+                     rec, esc((f.get("citation") or "citation not stated").rstrip(". ")) + ((" " + esc(_url.group(0))) if _url else ""),
+                     " USGS marks this gauge as regulated (dams or diversions upstream change its flow)." if f.get("regulated") else "", esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
+
+
+def b_flowdur(G):
+    f = G["rec"].get("floodfreq") or {}
+    want = (5, 10, 25, 50, 75, 90, 95)
+    d = [r for r in f.get("dur") or [] if r["p"] in want]
+    if len(d) < 4:
+        return None
+    rows = "".join(tr(["%g%% of days" % r["p"], "%s cfs" % fmtc(r["q"])], right=(1,)) for r in d)
+    rng = next((r["range"] for r in d if r.get("range")), "")
+    return block("flow_duration", "How often each flow is reached", "hist", table(["Flow at or above this on", "Flow"], rows, right=(1,)),
+                 "Source: USGS StreamStats gage statistics (flow-duration statistics)%s. The flow equalled or exceeded on that share of days over the period.%s Fetched %s." % (
+                     (", " + esc(rng.replace(" ", " to "))) if rng else "", " USGS marks this gauge as regulated." if f.get("regulated") else "", esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
 
 SEASONS = {"JFM": "January to March", "FMA": "February to April", "MAM": "March to May", "AMJ": "April to June", "MJJ": "May to July", "JJA": "June to August", "JAS": "July to September", "ASO": "August to October",

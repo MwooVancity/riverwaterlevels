@@ -145,10 +145,12 @@ function rewrite(res, g, m) {
     // dv = text the build derived from its own reading (class word, trend, flood distance, forecast vs now): not recomputed here, so it carries its own time
     .on(".dv", { element(e) { e.append(asofHtml, { html: true }); } })
     .on('span[data-live="obs"]', text(nowAt))
+    .on("span[data-cf]", text(flow))
+    .on("span[data-co]", text(nowAt))
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
     .on(".hero", { element(e) { e.after(note, { html: true }); } });
-  if (stage) out.on('span[data-live="stage"]', text(stage));
+  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage));
   const r = out.transform(res);
   const o = new Response(r.body, r);
   o.headers.delete("etag");

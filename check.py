@@ -115,7 +115,7 @@ def check_html(h, rel):
         first_blk = body.find('<section class="card blk"')
         head = body[:first_blk] if first_blk > 0 else body
         for need in ('class="tile flow', 'class="tile stage', 'class="tile norm', 'class="tile trend'):
-            if need == 'class="tile trend' and "Tidal reach:" in head:
+            if need == 'class="tile trend' and ("Tidal reach:" in head or "Rose and fell:" in head):
                 continue  # a tidal reach has no 6 h direction; hero.py prints the day's range instead
             if need not in head:
                 bad.append("first screen missing %s" % need.split('"')[1])
@@ -136,11 +136,28 @@ def check_html(h, rel):
             bad.append("page weight %d KB compressed (limit %d KB)" % (gz // 1000, MAX_GZ // 1000))
         for lab, unit in (("Latest flow", "cfs"), ("Gage height", "ft")):
             for mm in re.finditer(r"<span>%s</span><b>(.*?)<small>(?:<abbr[^>]*>)?([^<]*)" % lab, body, re.S):
-                if unit not in mm.group(2) and not (lab == "Gage height" and re.sub(r"<[^>]+>", "", mm.group(1)).strip() in ("–", "")):
+                if unit not in mm.group(2) and re.search(r"\d", re.sub(r"<[^>]+>", "", mm.group(1))):  # a number needs its unit; "Not measured" has no number
                     bad.append("no unit on %s: %r" % (lab, mm.group(2)))
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
         if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}", re.sub(r"<[^>]+>", "", sub.group(1))):
             bad.append("observed time without gauge-local zone label")
+    return bad
+
+
+def claims_vs_cache(h, rec, now=None):
+    """A page that says a value is missing while our own cache holds it fresh has hidden data (Memphis: 'no gage height' while NWS MEMT1 observed it)."""
+    import datetime
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    bad = []
+    o = (rec.get("nwps") or {}).get("obs_stage") or {}
+    try:
+        fresh = (now - datetime.datetime.fromisoformat(o["t"].replace("Z", "+00:00"))).total_seconds() < 24 * 3600 and float(o["v"]) > -999
+    except (KeyError, TypeError, ValueError, AttributeError):
+        fresh = False
+    if fresh and re.search(r"<span>Gage height</span><b>Not measured", h):
+        bad.append("gage height shown as not measured while NWS %s observed it at %s" % ((rec.get("nwps") or {}).get("lid"), o["t"]))
+    if (rec.get("tides") or {}).get("rows") and "tide predictions (no NOAA station" in h:
+        bad.append("gaps line says no tide station while the cache holds NOAA tide predictions")
     return bad
 
 
@@ -155,6 +172,10 @@ def check_dir(d):
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
                 results[rel] = check_html(h, rel)
+                sid = re.search(r"USGS gauge (\d{8,15})\b", h)
+                cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
+                if cp and os.path.exists(cp):
+                    results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
                 t = re.search(r"<title>(.*?)</title>", h)
                 titles[t.group(1) if t else ""].append(rel)
                 u = urlof(rel)
@@ -274,7 +295,15 @@ def selftest():
     aimed = {"tile caption repeats its own value": good.replace('<div class="tile trend"></div>', '<div class="tile calm"><span>Calm daylight hours today</span><b>5p to 6p</b><small>5p to 6p: no thunder</small></div><div class="tile trend"></div>'),
              "is-this-normal tile is not marked dv": good.replace("tile norm dv", "tile norm"),
              "ok:tidal range containing the value": good.replace('<div class="tile trend"></div>', '<div class="tile flowx"><span>Flow</span><b>11,400 cfs</b><small>Tidal reach: 11,400 to 15,000 cfs over 24 h</small></div><div class="tile trend"></div>'),
+             "no unit on Gage height": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>2.53 <small>m</small></b></div>'),
+             "ok:gage height not measured": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>Not measured</b><small>USGS reports no gage height at this gauge</small></div>'),
              "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
+    obs = {"nwps": {"lid": "MEMT1", "obs_stage": {"t": "2026-10-26T10:00:00Z", "v": 1.6}}}
+    import datetime
+    at = datetime.datetime(2026, 10, 26, 12, tzinfo=datetime.timezone.utc)
+    assert claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at), "selftest: hidden NWS stage did not fire"
+    assert not claims_vs_cache('<span>Gage height</span><b>1.60 <small>ft</small></b>', obs, at), "selftest: filled NWS stage wrongly failed"
+    assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
     for want, h in aimed.items():
         got = check_html(h, rel)
         if want.startswith("ok:"):  # a near-miss that must NOT fire (2026-10-26 CI: a tidal range holding the reading)
