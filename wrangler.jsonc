@@ -1,21 +1,17 @@
 {
   "name": "riverwaterlevels",
   "compatibility_date": "2026-10-01",
-  // edge live layer: gauge pages and /live.json run through worker/index.js; every other file is served straight from dist/
+  // edge live layer, fetch-on-open: gauge pages and /live/<site>.json run through worker/index.js; every other file is served straight
+  // from dist/. No cron and no KV (owner 2026-10-26: nothing pulled on a timer, nothing stored). Free plan limits are per ACCOUNT and
+  // shared with asmrregistry: 5 cron triggers, 100,000 worker requests/day, 10 ms CPU per request.
   "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
-    "run_worker_first": ["/river/*", "/live.json"]
+    "run_worker_first": ["/river/*", "/live/*"]
   },
-  "kv_namespaces": [
-    { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }
-  ],
-  // free plan: 5 cron triggers per ACCOUNT. In use 2026-10-25: asmrregistry x2, asmrregistry-cron x1, this one = 4 of 5.
-  // Adding a cron anywhere else past 5 makes the next `wrangler deploy` fail. Backup if the cron stops: refreshIfOld() in worker/index.js.
-  "triggers": { "crons": ["*/2 * * * *"] },
   "routes": [
     { "pattern": "riverwaterlevels.com", "custom_domain": true }
   ]
