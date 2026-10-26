@@ -164,7 +164,7 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
-    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
+    static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     graph = {}
     for u, links in links_of.items():
         rel = rel_of[u]

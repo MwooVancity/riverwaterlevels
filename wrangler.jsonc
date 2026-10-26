@@ -1,11 +1,19 @@
 {
   "name": "riverwaterlevels",
   "compatibility_date": "2026-10-01",
+  // edge live layer: gauge pages and /live.json run through worker/index.js; every other file is served straight from dist/
+  "main": "worker/index.js",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "404-page",
-    "html_handling": "auto-trailing-slash"
+    "html_handling": "auto-trailing-slash",
+    "run_worker_first": ["/river/*", "/live.json"]
   },
+  "kv_namespaces": [
+    { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }
+  ],
+  "triggers": { "crons": ["*/2 * * * *"] },
   "routes": [
     { "pattern": "riverwaterlevels.com", "custom_domain": true }
   ]
