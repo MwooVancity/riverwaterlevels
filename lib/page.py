@@ -313,16 +313,14 @@ def build_tab(tab, G, pages):
     shown = [b for b in flat if isinstance(b, dict)]
     river, place, st = G["river"], G["place"], G["st"]
     rp = river_at(river, place)
-    # SEO review 2026-10-21: the query is "<river> water level"; the one templated competitor that ranks carries the reading in its title
-    reading = ", ".join(x for x in (("water level %.2f ft" % G["sg"][-1][1]) if G["sg"] else "", ("flow %s cfs" % fmtc(G["lv"])) if G["lv"] is not None else "") if x) or "water level and flow"
-    title = mk_title("%s, %s: %s" % (rp, st, reading)) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
-    if tab == "dashboard":  # dynamic meta description: lead with the live reading + comparison so the SERP snippet / AI citation carries the number, not boilerplate
-        cls = band_word(G["p"]) if G.get("p") is not None else ""
-        norm = (", %s for %s" % (cls.lower(), G["ldate"].strftime("%b %d").replace(" 0", " "))) if cls and cls != "–" else ""
-        desc = "%s, %s: %s%s." % (rp, st, reading, norm)
-        tail = " Live USGS flow, gage height and how it compares with past years."
-        if len(desc) + len(tail) <= 198:  # check.py caps the meta description at 200 chars; keep the valuable reading lead, add the tail only when it fits
-            desc += tail
+    # Title and meta description carry NO reading (2026-10-26): Google shows them from its last crawl, days or weeks old, and the edge
+    # cannot update them, so a number there becomes a stale number in search results under our name (snoflo's snippets showed weeks-old
+    # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
+    title = mk_title("%s, %s: live water level and flow (USGS %s)" % (rp, st, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    if tab == "dashboard":
+        desc = "Live USGS flow and gage height for %s, %s, refreshed when you open the page, with how today compares with past years, NWS forecast and flood stages." % (rp, st)
+        if len(desc) > 200:  # check.py caps the meta description at 200 chars
+            desc = "Live USGS flow and gage height for %s, %s, with how today compares with past years." % (rp, st)
     else:
         desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
