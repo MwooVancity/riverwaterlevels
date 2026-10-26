@@ -12,7 +12,7 @@ PY = [sys.executable.replace("pythonw.exe", "python.exe"), "-I"]
 NPX = "npx.cmd" if os.name == "nt" else "npx"
 
 GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
-          ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry"])]
+          ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"])]  # dist/ does not exist yet in CI at gate time (2026-10-26: this gate blocked every deploy)
 GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATE_3 = [("live pages vs USGS/NWS", PY + ["tools/truth_live.py"])]  # after the deploy
 
