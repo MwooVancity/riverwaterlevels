@@ -53,10 +53,13 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M="${{ github.event.inputs.mode }}";
           elif [ "${{ github.event.schedule }}" = "20 3,9,15,21 * * *" ]; then M="full"; else M="fast"; fi
           if [ ! -d cache ] || [ -z "$(ls -A cache 2>/dev/null)" ]; then M="full"; fi
-          # a live gauge with no cache would be SKIPPED by fast mode and never deploy -> force full so it is collected (we never refuse a river for a missing cache)
-          if [ "$(python tools/ci_uncached.py 2>/dev/null)" != "0" ]; then M="full"; fi
           echo "mode=$M" >> "$GITHUB_OUTPUT"
           echo "mode: $M"
+      - name: Collect live gauges that have no cache yet (only those, so a new wave is not a forced full run that trips the USGS rate limit)
+        continue-on-error: true
+        run: |
+          U="$(python tools/ci_uncached.py --list 2>/dev/null)"
+          if [ -n "$U" ]; then echo "collecting new gauges: $U"; python collect.py $U || true; fi
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
         run: |

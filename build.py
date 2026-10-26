@@ -40,10 +40,11 @@ def main():
     sites = [a for a in sys.argv[1:] if not a.startswith("--")] or cached
     import csv
     live = sorted(r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live")
-    missing = [s for s in live if s not in cached]
-    if missing and sites == cached:  # sweep 2026-10-21: a lost CI cache rebuilt the site from whatever collect.py had finished
-        sys.exit("ABORT: %d live gauge(s) have no cache, the site would shrink: %s. Run collect.py for them first." % (len(missing), " ".join(missing[:10])))
+    missing = [s for s in live if s not in cached] if sites == cached else []
     report = {"built_at": iso(now), "gauges": [], "failed": [], "pages": 0}
+    for s in missing:  # a live gauge with no cache yet (USGS 429, lost CI cache) fails ALONE: publish carries its previous page over, the other gauges still ship (owner 2026-10-25: never refuse rivers; was a whole-site ABORT that froze the site)
+        report["failed"].append({"site": s, "reason": "no cache yet (collect.py has not stored it)", "url": (rows.get(s) or {}).get("dashboard_url")})
+        print("NO CACHE", s, "(skipped; previous page, if any, stays live)")
     Gs = {}
     for s in sites:
         try:

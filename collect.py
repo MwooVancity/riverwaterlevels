@@ -1401,7 +1401,7 @@ def main():
             s, len(n["usgs"]["rows"]), n.get("tz"), (n.get("nwps") or {}).get("lid"), bool((n.get("nwps") or {}).get("forecast")), bool((n.get("nwm") or {}).get("points")),
             len((n.get("nws") or {}).get("periods") or []), len((n.get("nws") or {}).get("alerts") or []) if (n.get("nws") or {}).get("alerts") is not None else None, bool((n.get("nws") or {}).get("obs")),
             bool(n.get("rain")), len((n.get("related") or {}).get("items") or []), len((n.get("land") or {}).get("rows") or []) if n.get("land") else 0, "; ".join(log)))
-    if not any(a.startswith("--keys=") for a in sys.argv):  # record source health only on a full, unfiltered run (every source was attempted)
+    if not any(a.startswith("--keys=") for a in sys.argv) and not any(not a.startswith("--") for a in sys.argv[1:]):  # record source health only on a full run over every live gauge (a partial new-gauge collect must not overwrite it)
         os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
         nh = max((c["ok"] + c["absent"] + c["failed"] for c in health.values()), default=0)  # gauges that actually collected (a 429/500 on the critical USGS call skips the gauge before health)
         json.dump({"at": now_iso(), "gauges": nh, "attempted": len(sites), "sources": health},
