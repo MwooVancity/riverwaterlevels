@@ -31,8 +31,13 @@ def shell(title, desc, url, body, extra_main_class="", ld=""):
                 esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
 
+def dir_lv(G):
+    """The flow a list row shows: on a tidal reach the latest reading is a moment in the tide cycle (Freeport swings 1,090 to 12,500 cfs in a day), so lists show the 24 h mean the comparison uses; the gauge page shows the day's range."""
+    return G["basis"] if G.get("osc") and G.get("basis_mean") else G["lv"]
+
+
 def latest_text(G):
-    return "%s cfs" % fmt(G["lv"])
+    return "%s cfs%s" % (fmt(dir_lv(G)), " (24 h mean, tidal)" if dir_lv(G) is not G["lv"] else "")
 
 
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;
@@ -85,7 +90,7 @@ def all_gauges_table(built, Gs):
         wqf = "1" if any(series(G["rec"], c) for c in LABELS) else "0"
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
-            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % G["lv"], fmt(G["lv"]), pv, ptxt,
+            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmt(dir_lv(G)), pv, ptxt,
             "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%"), G["lt"].isoformat(), esc(G["obs"])))
     heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h change", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
@@ -99,7 +104,7 @@ def item_line(g, Gs):
         return "%d gauges on this site" % len(g)
     G = Gs[g[0]["site"]]
     p = G["p"]
-    return "%s cfs%s" % (fmt(G["lv"]), "" if p is None else ", %s" % band_word(p).lower())
+    return "%s cfs%s" % (fmt(dir_lv(G)), "" if p is None else ", %s" % band_word(p).lower())
 
 
 def home(built, Gs):
@@ -110,7 +115,7 @@ def home(built, Gs):
         if G["p"] is not None:
             pos = 1 if G["p"] == -1 else 99 if G["p"] == 101 else max(1, min(99, G["p"]))
             pv = '<div class="bar"><u></u><i style="left:%.0f%%"></i></div>' % pos
-        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small></b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmt(G["lv"]), pv, esc(r["place"]), r["state"])
+        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small></b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmt(dir_lv(G)), pv, esc(r["place"]), r["state"])
     by_state = collections.defaultdict(lambda: collections.defaultdict(list))
     for r in built:
         by_state[r["state"]][(r["hub_slug"], r["river"])].append(r)
@@ -172,7 +177,7 @@ def state_page(st, rows, Gs, sd=None):
             ch = "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%")
             fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
             trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
-                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmt(G["lv"]), band_word(G["p"]), ch, fcst, esc(G["obs"]))
+                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmt(dir_lv(G)), band_word(G["p"]), ch, fcst, esc(G["obs"]))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
@@ -190,7 +195,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         ch = ("%s %s" % ("&#9650;" if chg > 1 else "&#9660;" if chg < -1 else "&#9644;", ("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmt(G["lv"]), pv, ch, fmt(float(r["drainage_sqmi"] or 0)), fcst, esc(G["obs"]))
+            r["water_url"], esc(r["place"]), r["site"], fmt(dir_lv(G)), pv, ch, fmt(float(r["drainage_sqmi"] or 0)), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (

@@ -293,7 +293,7 @@ def hero(G, pages=None):
     if ch:
         runs_, n_ = ch
         strip += ui.tile("calm", "sun", "Calm daylight hours today", (esc(runs_[0]) if runs_ else "No calm hour") + (' <small>+%d more</small>' % (len(runs_) - 1) if len(runs_) > 1 else ""),
-                         '<small>%s</small>' % esc(("; ".join(runs_) + ": " if runs_ else "No daylight hour today: ") + "no thunder, wind under 15 mph, no rain in the NWS hourly grid (%d daylight hours checked)" % n_))
+                         '<small>%s</small>' % esc((lambda s: s[:1].upper() + s[1:])(("; ".join(runs_) + ": " if len(runs_) > 1 else "" if runs_ else "No daylight hour today: ") + "no thunder, wind under 15 mph, no rain in the NWS hourly grid (%d daylight hours checked)" % n_)))
     gone = []
     if not c["wt"] and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
         gone.append("water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river)")
