@@ -128,7 +128,7 @@ def check_html(h, rel):
     for mm in re.finditer(r'<div class="tile [^"]*">(?:(?!</div>).)*?<b>(.*?)</b>((?:(?!</div>).)*)</div>', body, re.S):
         val = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", mm.group(1))).strip()
         cap = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", mm.group(2)))
-        if len(val) >= 3 and re.search(r"[A-Za-z0-9]", val) and val in cap:
+        if len(val) >= 3 and re.search(r"[A-Za-z0-9]", val) and cap.strip().startswith(val):  # a caption that OPENS with the value repeats it; a range that happens to contain it ("Tidal reach: 11,400 to 15,000 cfs") does not
             bad.append("tile caption repeats its own value %r" % val)
     if kind_of(rel) == "gauge":
         gz = len(gzip.compress(h.encode("utf-8"), 6))  # what the phone downloads (Cloudflare compresses HTML); the plan's old 150 KB bar was for the raw file
@@ -273,9 +273,13 @@ def selftest():
     # planted bugs from the 2026-10-25 incidents: each must fail with ITS message, not by accident
     aimed = {"tile caption repeats its own value": good.replace('<div class="tile trend"></div>', '<div class="tile calm"><span>Calm daylight hours today</span><b>5p to 6p</b><small>5p to 6p: no thunder</small></div><div class="tile trend"></div>'),
              "is-this-normal tile is not marked dv": good.replace("tile norm dv", "tile norm"),
+             "ok:tidal range containing the value": good.replace('<div class="tile trend"></div>', '<div class="tile flowx"><span>Flow</span><b>11,400 cfs</b><small>Tidal reach: 11,400 to 15,000 cfs over 24 h</small></div><div class="tile trend"></div>'),
              "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
     for want, h in aimed.items():
         got = check_html(h, rel)
+        if want.startswith("ok:"):  # a near-miss that must NOT fire (2026-10-26 CI: a tidal range holding the reading)
+            assert not got, "selftest: %r wrongly failed: %s" % (want, got)
+            continue
         assert any(want in g for g in got), "selftest: %r did not fire (got %s)" % (want, got)
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
