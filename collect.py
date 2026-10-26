@@ -44,13 +44,16 @@ def haversine(a, b, c, d):
 
 
 def fetch_usgs(site, h):
+    """All parameters in one request, following the API's next links (2026-10-25: was one request per parameter code, 12 per gauge, most empty, which used up the hourly key quota)."""
     rows, trunc, wrong = [], [], None
-    for code in CODES.split(","):
-        d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&time=P8D&limit=4000&f=json" % (site, code), h, 120)
-        fs = d.get("features", [])
-        if len(fs) >= 4000:
-            trunc.append(code)
-        for f in fs:
+    url, pages = BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&time=P8D&limit=10000&f=json" % (site, CODES), 0
+    while url:
+        d = http_json(url, h, 120)
+        pages += 1
+        url = next((l.get("href") for l in d.get("links", []) if l.get("rel") == "next"), None) if pages < 10 else None
+        if url is None and pages >= 10:
+            trunc.append("page cap")
+        for f in d.get("features", []):
             p = f["properties"]
             if p.get("value") in (None, ""):
                 continue
@@ -74,16 +77,20 @@ def fetch_related(site, inv, h):
             sid = str(f["properties"].get("identifier", "")).replace("USGS-", "")
             if sid in inv and sid != site and sid not in [x["site"] for x in out]:
                 out.append({"site": sid, "relation": rel})
-    res = []
-    for x in out[:12]:
+    res, out = [], out[:12]
+    got = {}
+    if out:  # one bulk call for every neighbour (was one call each, up to 12 per gauge)
         try:
-            fs = http_json(BASE + "latest-continuous/items?monitoring_location_id=USGS-%s&parameter_code=00060&f=json" % x["site"], h).get("features", [])
-            if fs:
-                p = fs[0]["properties"]
-                x["flow"], x["time"] = float(p["value"]), p["time"]
-                res.append(x)
+            for f in http_json(BASE + "latest-continuous/items?monitoring_location_id=%s&parameter_code=00060&limit=100&f=json" % ",".join("USGS-" + x["site"] for x in out), h).get("features", []):
+                p = f["properties"]
+                if p.get("value") not in (None, ""):
+                    got[str(p.get("monitoring_location_id", ""))[5:]] = (float(p["value"]), p["time"])
         except Exception:
             pass
+    for x in out:
+        if x["site"] in got:
+            x["flow"], x["time"] = got[x["site"]]
+            res.append(x)
     return {"fetched_at": now_iso(), "items": res}
 
 
@@ -1059,6 +1066,22 @@ def default_sites():
     return sorted(r["site"] for r in csv.DictReader(open(os.path.join(os.path.dirname(CACHE), "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live")
 
 
+# Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
+# computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
+DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains", "record", "year", "fieldmeas", "floodfreq", "acis",
+         "ridb", "streamcat", "nid", "fema_zone", "rise", "stocking", "access", "rating", "atlas14", "multiyear"}
+
+
+def daily_due(ts):
+    if not ts:
+        return True
+    try:
+        age = (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))).total_seconds() / 3600
+    except ValueError:
+        return True
+    return age > 36 or (age > 12 and 9 <= datetime.datetime.now(datetime.timezone.utc).hour < 12)
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -1073,8 +1096,12 @@ def fetch_extras(site, rec, h, log):
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
+        stamp = rec.setdefault("_fetched", {})
+        if key in DAILY and not want and not daily_due(stamp.get(key)):
+            continue
         try:
             rec[key] = fn()
+            stamp[key] = now_iso()
         except Exception as e:
             log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
 
@@ -1189,7 +1216,7 @@ def fast_related(recs, h):
 
 def fast_usgs(sites, h):
     """One bulk latest-continuous call: newest reading per gauge and parameter, as rows in the same shape as fetch_usgs. Readings older than the 8-day window are ignored (the service returns decades-old values for dead sensors)."""
-    d = thr_json(BASE + "latest-continuous/items?monitoring_location_id=%s&parameter_code=%s&limit=1000&f=json" % (",".join("USGS-" + s for s in sites), CODES), h, 120, gap=1.0)
+    d = thr_json(BASE + "latest-continuous/items?monitoring_location_id=%s&parameter_code=%s&limit=10000&f=json" % (",".join("USGS-" + s for s in sites), CODES), h, 120, gap=1.0)  # ponytail: one call, fine to ~2,000 gauges; page or chunk the id list past that (URL length)
     cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
     out = {}
     for f in d.get("features", []):
@@ -1219,15 +1246,15 @@ def fast_fill(rec, site, h):
         return 0
     have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
     added = 0
-    for code in ("00060", "00065"):
-        d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&time=PT6H&limit=4000&f=json" % (site, code), h, 120)
-        for f in d.get("features", []):
-            p = f["properties"]
-            if p.get("value") in (None, "") or (code, p["time"]) in have:
-                continue
-            rec["usgs"]["rows"].append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
-            have.add((code, p["time"]))
-            added += 1
+    d = http_json(BASE + "continuous/items?monitoring_location_id=USGS-%s&parameter_code=00060,00065&time=PT6H&limit=4000&f=json" % site, h, 120)  # both codes in one call
+    for f in d.get("features", []):
+        p = f["properties"]
+        code = p.get("parameter_code")
+        if p.get("value") in (None, "") or (code, p["time"]) in have:
+            continue
+        rec["usgs"]["rows"].append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
+        have.add((code, p["time"]))
+        added += 1
     return added
 
 
