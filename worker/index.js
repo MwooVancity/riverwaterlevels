@@ -150,7 +150,7 @@ function rewrite(res, g, m) {
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
     .on(".hero", { element(e) { e.after(note, { html: true }); } });
-  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage));
+  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)));
   const r = out.transform(res);
   const o = new Response(r.body, r);
   o.headers.delete("etag");

@@ -70,12 +70,13 @@ def main():
         sid = re.search(r"USGS gauge (\d+)", h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)
         stage = re.search(r'data-live="stage">([\d.\-]+)<', h)
+        stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
         if not (sid and flow and t):
             bad.append("%s: cannot read gauge id, flow or time from the page" % url)
             continue
-        pages[sid.group(1)] = {"url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None,
+        pages[sid.group(1)] = {"url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
                                "t": datetime.datetime.fromisoformat(t.group(1)), "lid": (re.search(r"forecast point ([A-Z0-9]{5})", h) or [None, None])[1] if "forecast point" in h else None,
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)}}
     ids = sorted(pages)
@@ -103,7 +104,9 @@ def main():
             if abs(uv - pg["flow"]) > max(1.0, 0.01 * abs(uv)):
                 bad.append("%s: flow %s on the page, %s at USGS for the same time %s" % (pg["url"], pg["flow"], uv, ut.isoformat()))
             s_ = latest.get((sid, "00065"))
-            if s_ and s_[0] == pg["t"] and pg["stage"] is not None:
+            if pg.get("stage_t") and pg["stage"] is not None:  # the tile states its own older reading time: USGS latest is a later reading, not a contradiction
+                skipped.append("%s: stage is labelled with its own reading time (older than the flow)" % pg["url"])
+            elif s_ and s_[0] == pg["t"] and pg["stage"] is not None:
                 if abs(s_[1] - pg["stage"]) > 0.02:
                     bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
             elif pg["stage"] is not None:  # stage shown on the page but USGS has no stage at the page's timestamp: record as skipped, not silently ignored
