@@ -49,5 +49,7 @@ finally:
 if code == 0 and soft_failed:
     print("refresh DEPLOYED, but a live gate failed afterwards: %s (see runs/refresh.log)" % "; ".join(soft_failed))
     sys.exit(2)
+if code:  # CI cannot see runs/refresh.log: print the failing step's tail so the cause is in the run log
+    print(open(os.path.join(ROOT, "runs", "refresh.log"), encoding="utf-8").read()[-4000:])
 print("refresh", "OK" if code == 0 else "FAILED (see runs/refresh.log)")
 sys.exit(code)
