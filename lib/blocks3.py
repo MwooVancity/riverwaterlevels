@@ -4,8 +4,6 @@ Same registry rules as render.py and blocks2.py. Each block is gated by its sour
 import collections, datetime, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
 
-ZONE_NAMES = {"A": "Special flood hazard area, no base flood elevation", "AE": "Special flood hazard area with base flood elevation", "AH": "Shallow flooding (ponding)", "AO": "Shallow flooding (sheet flow)",
-              "X": "Outside the special flood hazard area", "VE": "Coastal high hazard area", "D": "Possible but undetermined flood hazard"}
 
 
 def b_nws_point(G, pages=None):
@@ -39,10 +37,6 @@ def b_nws_point(G, pages=None):
             rows += tr([lab, "; ".join(nm_link(x) for x in nm_list)])
     return block("nws_forecast_point", "National Weather Service forecast point", "official", table(["Item", "Value"], rows),
                  "Source: National Weather Service National Water Prediction Service, forecast point %s, fetched %s." % (esc(n["lid"]), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
-
-
-def _usd(v):
-    return "$%s" % fmt(v) if v else "$0"
 
 
 def sustained_pct(G, days):

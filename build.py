@@ -18,17 +18,6 @@ def write(root, url, html):
     open(path, "w", encoding="utf-8").write(html)
 
 
-def live_urls(path):
-    """The page list of the release that is live now: the local copy when there is one, else the deployed list (a fresh CI checkout has no dist/)."""
-    try:
-        if os.path.exists(path):
-            return json.load(open(path))["urls"]
-        import urllib.request
-        return json.load(urllib.request.urlopen(urllib.request.Request(SITE_URL + "/_urls.json", headers={"User-Agent": "Mozilla/5.0 (build)"}), timeout=30))["urls"]
-    except Exception:
-        return []
-
-
 def main():
     rows, hubs = load_effective()
     now = datetime.datetime.fromisoformat(os.environ["BUILD_NOW"]) if os.environ.get("BUILD_NOW") else datetime.datetime.now(datetime.timezone.utc)

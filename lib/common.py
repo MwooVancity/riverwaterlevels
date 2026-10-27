@@ -17,7 +17,6 @@ PCT = [5, 10, 20, 25, 50, 75, 80, 90, 95]
 esc = html.escape
 
 # wave 0 slice: gauges chosen to exercise every case (full sensors, no sensors, multi-gauge river, snowmelt, small creek)
-SLICE = ["06893000", "01646500", "06192500", "03011800", "01555000"]
 
 
 def usgs_headers():
@@ -49,11 +48,6 @@ def http_open(url, headers=None, timeout=40, tries=3):
 def http_json(url, headers=None, timeout=90):
     req = urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels-build"})
     return json.loads(urllib.request.urlopen(req, timeout=timeout).read())
-
-
-def load_pages():
-    rows = list(csv.DictReader(open(os.path.join(DATA, "pages-all.csv"), encoding="utf-8")))
-    return {r["site"]: r for r in rows}
 
 
 def load_cache(site):

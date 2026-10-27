@@ -480,10 +480,8 @@ def fetch_access(lat, lon, radius_m=25000):
     return {"fetched_at": now_iso(), "count": len(rows), "rows": rows[:10]}
 
 
-WQP_CHARS = ["Escherichia coli", "Fecal Coliform", "Enterococcus", "Nitrate", "Turbidity", "Dissolved oxygen", "pH", "Specific conductance", "Lead", "Chlorophyll a"]
 
 
-RISE_MAP = {"09380000": {"name": "Glen Canyon Dam (Lake Powell)", "loc": 393, "items": (("Total release", 4315, "cfs"), ("Powerplant release", 507, "cfs"), ("Spillway release", 4391, "cfs"), ("Bypass release", 4392, "cfs"), ("Lake Powell elevation", 508, "ft"))}}
 
 
 def fetch_floodfreq(site):

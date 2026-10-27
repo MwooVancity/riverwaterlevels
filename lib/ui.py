@@ -26,10 +26,6 @@ def icon(name):
     return ICONS.get(name, "")
 
 
-def dial_legend():
-    return '<p class="dleg"><span><i class="la"></i>Below normal</span><span><i class="lb"></i>Normal range</span><span><i class="lp"></i>Above normal</span></p>'
-
-
 def dial(p):
     """Semicircle scale: below 25th amber, 25th to 75th blue, above 75th purple (the same colours as the map dots). p is a percentile 0 to 100, -1 below the 5th, 101 above the 95th, None unknown."""
     cx, cy, r = 100, 96, 78

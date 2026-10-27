@@ -36,10 +36,6 @@ def dir_lv(G):
     return G["basis"] if G.get("osc") and G.get("basis_mean") else G["lv"]
 
 
-def latest_text(G):
-    return "%s cfs%s" % (fmt(dir_lv(G)), (" (24 h mean, tidal)" if G.get("tidal") else " (24 h mean)") if dir_lv(G) is not G["lv"] else "")
-
-
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;
 function hv(a,c,d,e){var p=Math.PI/180,x=Math.sin((d-a)*p/2),y=Math.sin((e-c)*p/2);return 7926*Math.asin(Math.sqrt(x*x+Math.cos(a*p)*Math.cos(d*p)*y*y))}
 b.addEventListener('click',function(){b.disabled=true;navigator.geolocation.getCurrentPosition(function(pos){fetch('/gauges.json').then(function(r){return r.json()}).then(function(g){var la=pos.coords.latitude,lo=pos.coords.longitude;

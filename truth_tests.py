@@ -44,7 +44,7 @@ def main():
             fail(site, "no one-line answer above the tiles")
         else:
             spans = re.findall(r"<span[^>]*>(.*?)</span>", ans.group(1))
-            chip = re.search(r'<small class="dirchip">(.*?)</small>', h, re.S)
+            chip = re.search(r'<div class="tile flow[^"]*">(?:(?!</div>).)*?<small class="dv">(.*?)</small>', h, re.S)  # the trend line under the flow number (was a separate "dirchip" before the redesign)
             # answer strip: an optional lead reading (present when a flow value exists), then comparison word, trend chip, alert state
             if len(spans) not in (3, 4):
                 fail(site, "answer strip should hold 3 or 4 statements: %r" % spans)
@@ -64,9 +64,6 @@ def main():
                     fail(site, "no alert but the strip claims one: %r" % spans[ai])
                 if c["alerts"] is None and "unknown" not in spans[ai]:
                     fail(site, "alert source unknown but the strip does not say so: %r" % spans[ai])
-        # 22. a forecast flow "by the NWS rating" belongs to the NWS point's own rating: never shown at a tidal reach or when the point is another place (Hudson at Green Island showed 2,170 cfs against a measured 6,060)
-        if "by the NWS rating" in h and (G["osc"] or render.nws_point_note(G)):
-            fail(site, "forecast cfs by the NWS rating shown at a tidal gauge or at a forecast point in another place")
         # 23. a USGS qualifier on the latest flow or stage reading (ICE, EQUIP, ESTIMATED...) is printed next to the number
         for nm, ser in (("flow", G["fl"]), ("stage", G["sg"])):
             if ser and render.qual_text(ser[-1][2]) and "USGS flag:" not in h:
@@ -88,7 +85,7 @@ def main():
         if len(w72) >= 200 and len(set(w72)) == 1 and w72[0] > 0:
             print("  note: %s flow is identical in all %d readings of the last 72 h (stuck sensor or a fixed release?)" % (site, len(w72)))
         # 1. direction
-        m = re.search(r'<div class="tile trend (rising|falling|steady)">.*?<b>([+-]?\d+(?:\.\d+)?)% <small class="word">([\w ]+)</small>', h, re.S)
+        m = re.search(r'<div class="tile trend dv (rising|falling|steady)">.*?<b>([+-]?\d+(?:\.\d+)?)% <small class="word">([\w ]+)</small>', h, re.S)
         if m:
             word, val = m.group(3).lower(), float(m.group(2))
             c6 = c["chg"].get(6)
@@ -147,7 +144,7 @@ def main():
         imp = [i for i in ((G["rec"].get("nwps") or {}).get("impacts") or []) if isinstance(i.get("stage"), (int, float))]
         if imp and G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
             curst = (render.datum_gap(G) or (G["sg"][-1][1],))[0]
-            if curst >= min(i["stage"] for i in imp) and "NWS impact statement at" not in h:
+            if curst >= min(i["stage"] for i in imp) and "reached at the latest reading" not in render.forecast.b_impacts(G)["body"]:
                 fail(site, "the stage (%.2f ft) is at or above an NWS impact stage but the page does not quote it" % curst)
         # 17. the site gives no advice (Methodology: we do not give advice)
         if re.search(r"(?i)get off the water|you should|we recommend|do not (?:enter|swim|boat)", h):

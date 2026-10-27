@@ -53,15 +53,6 @@ def ctx(site, row, rec, now):
 TAILWATER = re.compile(r"\b(below|bl|blw|downstream of)\b.*\b(dam|lake|lk|reservoir|res|powerplant|power plant)\b|\btailwater\b", re.I)
 
 
-def _swing_note(G):
-    """Flow that varies by a factor of 1.5 or more inside 24 h (hydropower or release cycles): a change over a few hours depends on the hour of the day."""
-    t0 = G["lt"] - datetime.timedelta(hours=24)
-    v = [x[1] for x in G["fl"] if x[0] >= t0 and x[1] > 0]
-    if len(v) >= 20 and max(v) / min(v) >= 1.5:
-        return '<small>Flow varied between %s and %s cfs in the last 24 h, so a change over a few hours depends on the time of day.</small>' % (fmtc(min(v)), fmtc(max(v)))
-    return ""
-
-
 def flow_jitter(G):
     """Flow that swings more than 1.8x inside 24 h while it does not move with the gage height (correlation under 0.5 over the aligned readings): lock-and-dam, tide or backwater effects, so the flow is not a reliable direction.
     Gauges where flow and stage rise and fall together (dam releases, floods) are never flagged. Returns (low, high, correlation) or None."""
@@ -104,18 +95,6 @@ def datum_gap(G):
     if abs((u[0] - t).total_seconds()) > 1800:
         return None
     return (v, u[1], t) if abs(v - u[1]) > 0.3 else None
-
-
-def dam_count(G):
-    """Dams the EPA counts upstream, or None when StreamCat has no value for this gauge (silence must not read as no dams)."""
-    sc = ((G["rec"].get("streamcat") or {}).get("vals") or {}).get("damdensws")
-    area = G["row"].get("drainage_sqmi") or ((G["rec"].get("meta") or {}).get("loc") or {}).get("drainage_area")
-    return None if sc is None or not area else upstream_dams(G)
-
-
-def dams_txt(n):
-    """A modelled count (dam density x drainage area): thousands separator, and no false precision above 100."""
-    return "{:,}".format(int(round(n, -1)) if n >= 100 else n)
 
 
 def upstream_dams(G):
@@ -512,15 +491,6 @@ def moon_phase(d):
     age = ((datetime.datetime(d.year, d.month, d.day, 12, tzinfo=datetime.timezone.utc).timestamp() / 86400 + 2440587.5) - 2451550.1) % 29.530588853
     names = ["New moon", "Waxing crescent", "First quarter", "Waxing gibbous", "Full moon", "Waning gibbous", "Last quarter", "Waning crescent"]
     return names[int((age / 29.530588853) * 8 + 0.5) % 8], 50 * (1 - math.cos(2 * math.pi * age / 29.530588853))
-
-
-def b_sun(G):
-    st = sun_times(G["lat"], G["lon"], G["ldate"])
-    if not st:
-        return None
-    z = G["zone"]
-    rows = tr(["Sunrise", esc(tzl(st[0], z, date=False))], right=(1,)) + tr(["Sunset", esc(tzl(st[1], z, date=False))], right=(1,))
-    return block("sun", "Sun", "calc", table(["Event", "Time (gauge-local)"], rows, right=(1,)), "Source: computed from the gauge location and date %s. No external data." % G["ldate"].isoformat(), "usgs")
 
 
 def nws_point_note(G):

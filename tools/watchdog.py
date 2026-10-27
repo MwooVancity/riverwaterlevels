@@ -73,6 +73,11 @@ def main():
         lj = json.load(rr)
         la = hours_since(lj["t"]) * 3600 if lj.get("t") else None
         (bad if la is None or la > EDGE_MAX_S else ok).append("edge stored copy last updated %s ago" % ("never" if la is None else "%d s" % la))
+        bt = rr.headers.get("x-rwl-build-trigger")  # "<iso> <status>": the Worker cron asked GitHub for a build
+        if bt:
+            (ok if bt.endswith(" 204") else bad).append("last build trigger from Cloudflare: %s (204 = GitHub accepted)" % bt)
+        else:
+            ok.append("Cloudflare has not needed to trigger a build yet (GitHub's own schedule ran in time)")
         if rr.headers.get("x-rwl-usgs-remaining"):
             ok.append("USGS key budget left this hour: %s of 1,000" % rr.headers.get("x-rwl-usgs-remaining"))
         import re

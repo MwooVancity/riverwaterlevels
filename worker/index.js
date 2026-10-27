@@ -27,6 +27,8 @@ export default {
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" },
         });
         if (L && L.rem != null) o.headers.set("x-rwl-usgs-remaining", String(L.rem)); // our key's hourly budget after the last poll (watchdog reads it)
+        const d = await env.LIVE.get("dispatch", { cacheTtl: 300 });
+        if (d) o.headers.set("x-rwl-build-trigger", d); // the last time the cron asked GitHub for a build, and GitHub's answer
         return secure(o, url);
       }
       if (!url.pathname.startsWith("/river/")) return env.ASSETS.fetch(req);
@@ -58,11 +60,12 @@ async function build(env, now) {
   if (!env.GH_DISPATCH_TOKEN || now.getUTCMinutes() >= 3) return;
   const s = await (await env.ASSETS.fetch("https://riverwaterlevels.com/status.json")).json();
   if (now - Date.parse(s.built_at) < 40 * 60000) return;
-  await fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/refresh.yml/dispatches", {
+  const r = await fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/refresh.yml/dispatches", {
     method: "POST",
     headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
     body: JSON.stringify({ ref: "main" }),
   });
+  await env.LIVE.put("dispatch", now.toISOString() + " " + r.status); // 204 = GitHub accepted; one write an hour at most
 }
 
 async function sites(env) {
