@@ -161,10 +161,28 @@ def claims_vs_cache(h, rec, now=None):
     return bad
 
 
+DUP_MAX = 0.80  # owner rule: no two pages over 80% the same text (Google scaled-content policy); 2026-10-27 worst pair 68%
+
+
+def shingles(h):
+    """5-word shingles of the visible <main> text with every number masked, so two pages differ only by what they SAY, not their readings."""
+    b = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
+    t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", b))).lower()
+    w = re.sub(r"\d[\d,.:]*", "#", t).split()
+    return {hash(" ".join(w[i:i + 5])) for i in range(len(w) - 4)}
+
+
+def near_dupes(sh):
+    """Pairs of gauge pages sharing more than DUP_MAX of their text. ponytail: all pairs, fine to ~3,000 pages (4.5M set ops); past that compare within a state or use MinHash."""
+    ks = sorted(sh)
+    return [(a, b, len(sh[a] & sh[b]) / len(sh[a] | sh[b])) for i, a in enumerate(ks) for b in ks[i + 1:] if sh[a] and sh[b] and len(sh[a] & sh[b]) / len(sh[a] | sh[b]) > DUP_MAX]
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     results, titles, links_of, n_links, rel_of, noindex_of, vis_of = {}, collections.defaultdict(list), {}, {}, {}, {}, {}
+    gauge_sh = {}
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith(".html") and f != "404.html":
@@ -183,9 +201,13 @@ def check_dir(d):
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
+                if kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h):
+                    gauge_sh[u] = shingles(h)
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
+    for a, b, j in near_dupes(gauge_sh):
+        site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
         if len(rels) > 1:
             site_bad.append("duplicate title %r on %d pages" % (t[:50], len(rels)))
@@ -269,6 +291,10 @@ def check_dir(d):
 
 
 def selftest():
+    wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
+    a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
+    assert near_dupes({"/x/": shingles(a), "/y/": shingles(a.replace("flow 120", "flow 9,400"))}), "selftest: near-duplicate pages (same words, other readings) did not fire"
+    assert not near_dupes({"/x/": shingles(a), "/y/": shingles("<main>" + " ".join(wd(i, "z") for i in range(300)) + "</main>")}), "selftest: distinct pages wrongly flagged"
     good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
