@@ -82,6 +82,8 @@ def check_html(h, rel):
         return bad + ["no <main>"]
     body = h.split("<main", 1)[1].split("</main>")[0]
     text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", body))  # code samples (the embed snippet) are meant to show markup
+    for mm in re.finditer(r"fetch\(\s*['\"](https?:)?//[^'\"]*waterdata\.usgs\.gov", h):  # USGS is the one keyed, metered API: readings come from our stored copy (NWS alerts are keyless and stay direct)
+        bad.append("page script calls USGS directly (%r): live readings must come from our stored copy" % h[mm.start():mm.start() + 60])
     for pat in BANNED:
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
@@ -184,6 +186,25 @@ def cloak_risks(js):
     return ["edge worker reads the visitor's identity (%s): Google and phones could get different pages" % m.group(0) for m in re.finditer(pat, js)]
 
 
+TIMER_ONLY = ("poll", "build")  # worker functions run by the cron, never by a visitor's request
+
+
+def visitor_calls(js):
+    """Outside calls the Worker could make while serving a visitor: every fetch( that is not env.ASSETS.fetch must sit inside a timer-only function."""
+    spans = []
+    for name in TIMER_ONLY:
+        m = re.search(r"async function %s\(" % name, js)
+        if m:
+            i, depth = js.index("{", m.end()), 0
+            for j in range(i, len(js)):
+                depth += {"{": 1, "}": -1}.get(js[j], 0)
+                if depth == 0:
+                    spans.append((m.start(), j))
+                    break
+    return ["edge worker calls an outside service outside its timer (line %d): visitors would spend API calls" % (js.count("\n", 0, m.start()) + 1)
+            for m in re.finditer(r"(?<![\w.])(?<!async )fetch\(", js) if not any(a <= m.start() <= b for a, b in spans)]
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -212,7 +233,8 @@ def check_dir(d):
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
-    site_bad += cloak_risks(open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read())
+    wjs = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
+    site_bad += cloak_risks(wjs) + visitor_calls(wjs)
     for a, b, j in near_dupes(gauge_sh):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
@@ -298,6 +320,9 @@ def check_dir(d):
 
 
 def selftest():
+    w_ok = "async function poll(env) { await fetch(USGS); }\nasync function build(env) { await fetch(GH); }\nasync function serve(req, env) { return env.ASSETS.fetch(req); }"
+    assert not visitor_calls(w_ok), "selftest: timer-only outside calls wrongly flagged: %s" % visitor_calls(w_ok)
+    assert visitor_calls(w_ok + "\nasync function page(req) { return fetch('https://api.waterdata.usgs.gov/x'); }"), "selftest: worker calling USGS on a page view did not fire"
     assert cloak_risks('const ua = req.headers.get("User-Agent");'), "selftest: worker reading the user agent did not fire"
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
@@ -328,7 +353,10 @@ def selftest():
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name
     # planted bugs from the 2026-10-25 incidents: each must fail with ITS message, not by accident
-    aimed = {"tile caption repeats its own value": good.replace('<div class="tile trend"></div>', '<div class="tile calm"><span>Calm daylight hours today</span><b>5p to 6p</b><small>5p to 6p: no thunder</small></div><div class="tile trend"></div>'),
+    aimed = {"page script calls USGS directly": good.replace("</main>", "<script>fetch('https://api.waterdata.usgs.gov/ogcapi/v1/x')</script></main>"),
+             "ok:page script fetching our own copy": good.replace("</main>", "<script>fetch('/live/01449000.json')</script></main>"),
+             "ok:page script asking NWS for alerts (keyless)": good.replace("</main>", "<script>fetch('https://api.weather.gov/alerts/active?point=1,2')</script></main>"),
+             "tile caption repeats its own value": good.replace('<div class="tile trend"></div>', '<div class="tile calm"><span>Calm daylight hours today</span><b>5p to 6p</b><small>5p to 6p: no thunder</small></div><div class="tile trend"></div>'),
              "is-this-normal tile is not marked dv": good.replace("tile norm dv", "tile norm"),
              "ok:tidal range containing the value": good.replace('<div class="tile trend"></div>', '<div class="tile flowx"><span>Flow</span><b>11,400 cfs</b><small>Tidal reach: 11,400 to 15,000 cfs over 24 h</small></div><div class="tile trend"></div>'),
              "no unit on Gage height": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>2.53 <small>m</small></b></div>'),
