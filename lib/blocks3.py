@@ -45,17 +45,6 @@ def _usd(v):
     return "$%s" % fmt(v) if v else "$0"
 
 
-def b_dams(G):
-    d = G["rec"].get("nid")
-    if not d or not d.get("dams"):
-        return None
-    rows = "".join(tr([esc(x["name"] or ""), esc(x["river"] or "–"), ("%s ft" % fmt(x["height_ft"])) if x.get("height_ft") else "–", ("%s acre-ft" % fmt(x["storage_af"])) if x.get("storage_af") else "–",
-                       str(x["year"]) if x.get("year") else "–", esc(x["hazard"] or "–"), "%.1f mi" % x["mi"]], right=(2, 3, 6)) for x in d["dams"])
-    return block("dams_nearby", "Dams within %d miles" % d["miles"], "map", table(["Dam", "Stream", "Height", "Storage", "Completed", "Hazard potential", "Distance"], rows, right=(2, 3, 6)),
-                 "Source: U.S. Army Corps of Engineers National Inventory of Dams, %d dams within %d miles of the gauge (nearest %d shown), fetched %s. Hazard potential describes the consequence of failure, not the condition of the dam." % (
-                     d["count"], d["miles"], len(d["dams"]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "nid")
-
-
 def sustained_pct(G, days):
     """Average percentile of the last N daily mean flows vs USGS daily statistics for those dates: 'has flow sat low/normal/high over the week/month', for irrigators and anglers."""
     rec = G["rec"]
@@ -110,31 +99,6 @@ def b_access(G):
                  "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
 
 
-def b_watersamples(G):
-    """Most recent discrete lab sample per measure near the gauge (Water Quality Portal): bacteria, nutrients, metals the live sensors do not carry. Each row shows the sample date; these are not continuous readings."""
-    w = G["rec"].get("wqp")
-    if not w or not w.get("rows"):
-        return None
-    rows = "".join(tr([esc(x["char"]), esc(("%s %s" % (x["value"], x["unit"])).strip() if x["unit"] and x["unit"].lower() != "none" else str(x["value"])), fdate(x["date"]), esc(x["station"] or "–")]) for x in w["rows"])
-    return block("water_samples", "Recent lab water samples nearby", "agency",
-                 table(["Measured", "Latest value", "Sampled", "Station"], rows),
-                 "Source: Water Quality Portal (EPA, USGS and state agencies) discrete stream samples within about 14 miles of the gauge, the most recent value for each measure over the last 3 years, fetched %s. These are laboratory samples taken on the dates shown, not continuous readings; a past sample does not describe today's water." % esc(tzl(parse_t(w["fetched_at"]), G["zone"])), "wqp")
-
-
-def b_uv(G):
-    """Peak UV index today at the gauge (EPA hourly), with the official EPA category. Sun-exposure data for anyone on the water."""
-    u = G["rec"].get("uv")
-    if not u or u.get("peak") is None:
-        return None
-    import re
-    m = re.search(r"(\d{1,2}) ?(AM|PM)", u.get("peak_t", "") or "")
-    hr = ("%d %s" % (int(m.group(1)) % 12 or 12, m.group(2))) if m else esc(u.get("peak_t", ""))
-    cat = next((c for lim, c in ((2, "low"), (5, "moderate"), (7, "high"), (10, "very high"), (99, "extreme")) if u["peak"] <= lim), "")
-    return block("uv_index", "Peak UV index today", "epa",
-                 '<p class="aq">UV %d, %s, at %s</p>' % (u["peak"], esc(cat), hr),
-                 "Source: U.S. EPA Envirofacts hourly UV index at the gauge location, today, fetched %s. Category from the EPA UV Index scale (0 to 2 low, 3 to 5 moderate, 6 to 7 high, 8 to 10 very high, 11 or more extreme)." % esc(tzl(parse_t(u["fetched_at"]), G["zone"])), "uv")
-
-
 def b_stocking(G):
     """Recent hatchery stocking near the gauge (species, date, count, water), from the state's public stocking layer. Hidden where the state has no adapter or no recent record."""
     s = G["rec"].get("stocking")
@@ -146,23 +110,6 @@ def b_stocking(G):
                  table(["Date", "Species", "Number", "Water", "Distance"], rows, right=(2, 4)),
                  "Source: %s, hatchery stocking records within about %d miles of the gauge, most recent first, fetched %s. Credit: %s. Stocking is a release event, not a measure of fish now present in the river." % (
                      esc(s["source"]), s.get("miles", 35), esc(tzl(parse_t(s["fetched_at"]), G["zone"])), esc(s["credit"])), "stocking")
-
-
-def b_rise(G):
-    r = G["rec"].get("rise")
-    if not r or not r.get("series"):
-        return None
-    dates = sorted({x[0] for s in r["series"].values() for x in s["rows"]}, reverse=True)[:10]
-    labs = list(r["series"])
-    rows = ""
-    for dt in dates:
-        cells = [fdate(dt)]
-        for lab in labs:
-            v = next((x[1] for x in r["series"][lab]["rows"] if x[0] == dt), None)
-            cells.append("–" if v is None else "%s %s" % (fmt(v), r["series"][lab]["unit"]))
-        rows += tr(cells, right=tuple(range(1, len(labs) + 1)))
-    return block("dam_releases", "%s daily operations" % esc(r["dam"]), "agency", table(["Date"] + labs, rows, right=tuple(range(1, len(labs) + 1))),
-                 "Source: U.S. Bureau of Reclamation RISE, daily values for %s (date is the UTC day of the record), fetched %s." % (esc(r["dam"]), esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usbr")
 
 
 def acis_name(n):
@@ -198,15 +145,6 @@ def b_streamcat(G):
     ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
     return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,
                  "Source: U.S. EPA StreamCat ), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
-
-
-def b_fema_zone(G):
-    z = G["rec"].get("fema_zone")
-    if not z or not z.get("zones"):
-        return None
-    rows = "".join(tr([esc(a), esc(ZONE_NAMES.get(a, "Zone as published")), esc(b or "–"), "Yes" if c == "T" else "No" if c == "F" else "–"]) for a, b, c in z["zones"])
-    return block("flood_zones", "FEMA flood hazard zones within %d m" % z["meters"], "map", table(["Zone", "Meaning", "Subtype", "Special flood hazard area"], rows),
-                 "Source: FEMA National Flood Hazard Layer data as republished by Esri (USA Flood Hazard, reduced set, generalised polygons), zones intersecting a %d m circle around the gauge, fetched %s. Not a flood determination; the FIRM is the official designation." % (z["meters"], esc(tzl(parse_t(z["fetched_at"]), G["zone"]))), "fema_nfhl")
 
 
 def _year_svg(rows, stats, W, Hh, fs, nx, cls, xfmt="%b %Y", period="12 months"):

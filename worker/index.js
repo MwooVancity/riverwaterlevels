@@ -14,6 +14,7 @@ const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits 
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(poll(env));
+    ctx.waitUntil(build(env, new Date(event.scheduledTime)));
   },
 
   async fetch(req, env, ctx) {
@@ -49,6 +50,21 @@ export default {
 };
 
 let SITES = null; // url -> [site, built reading time, time zone], from the built live-sites.json; kept for the life of this isolate
+
+// The hourly build (2026-10-26 review: GitHub's own schedule ran 7 of 52 refreshes in a day; this cron runs on time). Once an hour, at the
+// first tick of the hour, when the deployed build is over 40 min old, ask GitHub to start refresh.yml. GitHub's one-run-at-a-time group
+// queues it behind a running build. GH_DISPATCH_TOKEN can only start workflows on this repo; without it nothing happens.
+async function build(env, now) {
+  if (!env.GH_DISPATCH_TOKEN || now.getUTCMinutes() >= 3) return;
+  const s = await (await env.ASSETS.fetch("https://riverwaterlevels.com/status.json")).json();
+  if (now - Date.parse(s.built_at) < 40 * 60000) return;
+  const full = [3, 9, 15, 21].includes(now.getUTCHours()); // the slow sources' lane, as the old schedule ran it
+  await fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/refresh.yml/dispatches", {
+    method: "POST",
+    headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
+    body: JSON.stringify({ ref: "main", inputs: { mode: full ? "full" : "fast" } }),
+  });
+}
 
 async function sites(env) {
   if (!SITES) {

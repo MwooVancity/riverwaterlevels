@@ -71,7 +71,8 @@ def fetch_related(site, inv, h):
     for nav, rel in (("UM", "upstream"), ("DM", "downstream")):
         try:
             d = http_json("https://api.water.usgs.gov/nldi/linked-data/nwissite/USGS-%s/navigation/%s/nwissite?f=json&distance=150" % (site, nav))
-        except Exception:
+        except Exception as e:
+            note("related.nldi", "failed", e)
             continue
         for f in d.get("features", []):
             sid = str(f["properties"].get("identifier", "")).replace("USGS-", "")
@@ -85,8 +86,8 @@ def fetch_related(site, inv, h):
                 p = f["properties"]
                 if p.get("value") not in (None, ""):
                     got[str(p.get("monitoring_location_id", ""))[5:]] = (float(p["value"]), p["time"])
-        except Exception:
-            pass
+        except Exception as e:
+            note("related.latest", "failed", e)
     for x in out:
         if x["site"] in got:
             x["flow"], x["time"] = got[x["site"]]
@@ -127,16 +128,16 @@ def fetch_nwps(site, lat, lon):
                 pts = [{"t": p.get("validTime"), "primary": p.get("primary"), "secondary": p.get("secondary")} for p in (j.get("data") or []) if isinstance(p.get("primary"), (int, float)) and p["primary"] > -990]
                 if pts:
                     fc = {"issued": j.get("issuedTime"), "primary_units": j.get("primaryUnits"), "secondary_units": j.get("secondaryUnits"), "points": pts[:400]}
-            except Exception:
-                pass
+            except Exception as e:
+                note("nwps.forecast", "failed", e)
             rflow = {}
             try:
                 rf = thr_json(NWPS + "gauges/%s/riverflow" % x["lid"], NWPS_H)
                 # NWPS lists upstream farthest first and downstream nearest first: keep the six nearest of each
                 allp = {k: [{"LID": i.get("LID"), "Name": i.get("Name")} for i in (rf.get(k) or []) if isinstance(i, dict)] for k in ("upstream", "downstream")}
                 rflow = {"upstream": allp["upstream"][-6:], "downstream": allp["downstream"][:6], "upstream_n": len(allp["upstream"]), "downstream_n": len(allp["downstream"])}
-            except Exception:
-                pass
+            except Exception as e:
+                note("nwps.reach_flow", "failed", e)
             obs_stage = None
             try:
                 ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWPS_H)
@@ -144,8 +145,8 @@ def fetch_nwps(site, lat, lon):
                 pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
                 if pts:
                     obs_stage = {"t": pts[-1]["validTime"], "v": pts[-1][col]}
-            except Exception:
-                pass
+            except Exception as e:
+                note("nwps.obs_stage", "failed", e)
             fl = det.get("flood") or {}
             hist = [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("crests") or {}).get("historic") or []) if isinstance(c.get("stage"), (int, float))][:10]
             imp = [{"stage": i.get("stage"), "statement": re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip()} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
@@ -344,23 +345,6 @@ def fetch_rating(site):
     return {"fetched_at": now_iso(), "n": len(pts), "pts": thin}
 
 
-def fetch_atlas14(lat, lon):
-    """NOAA Atlas 14 point precipitation frequency depth (inches, partial duration series)."""
-    import urllib.request
-    req = urllib.request.Request("https://hdsc.nws.noaa.gov/cgi-bin/new/fe_text_mean.csv?lat=%.4f&lon=%.4f&type=pf&data=depth&units=english&series=pds" % (lat, lon), headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"})
-    txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")
-    ari, rows = None, {}
-    for l in txt.split("\n"):
-        l = l.strip()
-        if l.lower().startswith("by duration for ari"):
-            ari = [int(float(x)) for x in l.split(":", 1)[1].split(",") if x.strip()]
-        elif ari and l.split(":", 1)[0] in ("60-min", "6-hr", "24-hr", "2-day", "7-day"):
-            vals = [float(x) for x in l.split(":", 1)[1].split(",") if x.strip()]
-            if len(vals) == len(ari):
-                rows[l.split(":", 1)[0]] = vals
-    return {"fetched_at": now_iso(), "ari": ari, "rows": rows} if (ari and rows) else None
-
-
 def get_text(url, headers=None, timeout=90):
     import urllib.request
     return urllib.request.urlopen(urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels.com"}), timeout=timeout).read().decode("utf-8", "ignore")
@@ -374,42 +358,6 @@ def county_codes(rec):
     if len(ugc) != 6 or ugc[:2] not in STATE_FIPS:
         return None
     return STATE_FIPS[ugc[:2]], ugc[3:]
-
-
-def _money(v):
-    v = str(v or "").strip().upper()
-    if not v:
-        return 0.0
-    mult = {"K": 1e3, "M": 1e6, "B": 1e9}.get(v[-1], 1)
-    try:
-        return float(v[:-1] if v[-1] in "KMB" else v) * mult
-    except ValueError:
-        return 0.0
-
-
-def ncei_year(year):
-    """County-level Flood and Flash Flood rows of one Storm Events year file (NOAA NCEI bulk csv.gz), cached compactly under cache/_ncei/."""
-    import gzip, io, csv, urllib.request
-    path = os.path.join(CACHE, "_ncei", "%d.json" % year)
-    if os.path.exists(path) and (datetime.datetime.now().timestamp() - os.path.getmtime(path)) < 20 * 86400:
-        return json.load(open(path))
-    base = "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
-    names = re.findall(r"StormEvents_details-ftp_v1\.0_d%d_c\d+\.csv\.gz" % year, get_text(base, timeout=60))
-    if not names:
-        return []
-    raw = urllib.request.urlopen(urllib.request.Request(base + max(names), headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"}), timeout=300).read()
-    rows = []
-    for r in csv.DictReader(io.TextIOWrapper(gzip.GzipFile(fileobj=io.BytesIO(raw)), encoding="utf-8", errors="replace")):
-        if r.get("EVENT_TYPE") in ("Flood", "Flash Flood") and r.get("CZ_TYPE") == "C":
-            try:
-                d = datetime.datetime.strptime(r["BEGIN_DATE_TIME"], "%d-%b-%y %H:%M:%S").date().isoformat()
-            except ValueError:
-                d = "%s-%s" % (r.get("BEGIN_YEARMONTH", "")[:4], r.get("BEGIN_YEARMONTH", "")[4:6])
-            rows.append([r["STATE_FIPS"], r["CZ_FIPS"], d, r["EVENT_TYPE"], int(r.get("DEATHS_DIRECT") or 0) + int(r.get("DEATHS_INDIRECT") or 0),
-                         int(r.get("INJURIES_DIRECT") or 0) + int(r.get("INJURIES_INDIRECT") or 0), _money(r.get("DAMAGE_PROPERTY")) + _money(r.get("DAMAGE_CROPS")), r.get("FLOOD_CAUSE") or "", (r.get("CZ_NAME") or "").replace(" (C)", ""), r.get("BEGIN_LOCATION") or ""])
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    json.dump(rows, open(path, "w"), separators=(",", ":"))
-    return rows
 
 
 def fetch_acis(rec):
@@ -450,22 +398,6 @@ def fetch_streamcat(site, rec):
         return None
     vals = {k: row.get(k) for k in names.split(",") if isinstance(row.get(k), (int, float))}
     return {"fetched_at": now_iso(), "comid": comid, "vals": vals} if vals else None
-
-
-def fetch_nid(lat, lon, miles=15):
-    """USACE National Inventory of Dams: dams within `miles` of the gauge, nearest first (decoded text fields)."""
-    q = urllib.parse.urlencode({"where": "1=1", "geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "distance": str(miles), "units": "esriSRUnit_StatuteMile",
-                                "outFields": "NIDID,NAME,RIVER_OR_STREAM,NID_HEIGHT,NID_STORAGE,YEAR_COMPLETED,HAZARD_POTENTIAL,DATA_UPDATED", "returnGeometry": "true", "outSR": "4326", "resultRecordCount": "200", "f": "json"})
-    j = json.loads(get_text("https://geospatial.sec.usace.army.mil/dls/rest/services/NID/National_Inventory_of_Dams_Public_Service/FeatureServer/0/query?" + q))
-    dams = []
-    for f in j.get("features", []):
-        a, g = f.get("attributes") or {}, f.get("geometry") or {}
-        if g.get("x") is None:
-            continue
-        dams.append({"id": a.get("NIDID"), "name": a.get("NAME"), "river": a.get("RIVER_OR_STREAM"), "height_ft": a.get("NID_HEIGHT"), "storage_af": a.get("NID_STORAGE"), "year": a.get("YEAR_COMPLETED"),
-                     "hazard": a.get("HAZARD_POTENTIAL"), "mi": round(hav_km(lat, lon, g["y"], g["x"]) * 0.621371, 1)})
-    dams.sort(key=lambda d: d["mi"])
-    return {"fetched_at": now_iso(), "miles": miles, "count": len(dams), "dams": dams[:15]}
 
 
 STOCK_SOURCES = [
@@ -511,24 +443,6 @@ def fetch_stocking(lat, lon, miles=35):
     return None
 
 
-def fetch_uv(lat, lon):
-    """EPA Envirofacts UV index (sun exposure for anyone on the water: swimmers, paddlers, anglers).
-    OFF (source 'uv' off in data/sources.json, 2026-10-25): the hourly service never supported LATITUDE/LONGITUDE and now 404s;
-    the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so re-wiring needs a keyless lat/lon->ZIP step. Until then UV is a documented gap, not a silent failure."""
-    return None
-    j = json.loads(get_text("https://data.epa.gov/efservice/getEnvirofactsUVHOURLY/LATITUDE/%.2f/LONGITUDE/%.2f/JSON" % (lat, lon)))
-    rows = []
-    for r in (j if isinstance(j, list) else []):
-        try:
-            rows.append({"t": r.get("DATE_TIME") or "", "uv": int(r.get("UV_VALUE"))})
-        except (TypeError, ValueError):
-            continue
-    if not rows:
-        return None
-    peak = max(rows, key=lambda r: r["uv"])
-    return {"fetched_at": now_iso(), "peak": peak["uv"], "peak_t": peak["t"], "rows": rows}
-
-
 def fetch_access(lat, lon, radius_m=25000):
     """Boat ramps, canoe/kayak and whitewater put-ins and marinas near the gauge, from OpenStreetMap (Overpass). Where paddlers, anglers and boaters get on the water. ODbL, attributed."""
     parts = []
@@ -569,62 +483,7 @@ def fetch_access(lat, lon, radius_m=25000):
 WQP_CHARS = ["Escherichia coli", "Fecal Coliform", "Enterococcus", "Nitrate", "Turbidity", "Dissolved oxygen", "pH", "Specific conductance", "Lead", "Chlorophyll a"]
 
 
-def fetch_wqp(lat, lon, deg=0.2):
-    """Water Quality Portal (EPA/USGS/states) discrete lab samples near the gauge: the most recent value per measure over 3 years (bacteria, nutrients, metals the live sensors do not carry). For anglers, swimmers, researchers."""
-    import csv, io
-    lo = (datetime.date.today() - datetime.timedelta(days=1095)).strftime("%m-%d-%Y")
-    q = [("bBox", "%.4f,%.4f,%.4f,%.4f" % (lon - deg, lat - deg, lon + deg, lat + deg)), ("startDateLo", lo), ("mimeType", "csv"), ("zip", "no"), ("dataProfile", "resultPhysChem"), ("siteType", "Stream")]
-    for c in WQP_CHARS:
-        q.append(("characteristicName", c))
-    try:
-        r = urllib.request.urlopen(urllib.request.Request("https://www.waterqualitydata.us/data/Result/search?" + urllib.parse.urlencode(q), headers={"User-Agent": "riverwaterlevels.com water samples"}), timeout=90)
-        rows = list(csv.DictReader(io.StringIO(r.read().decode("utf-8", "replace"))))
-    except Exception:
-        return None
-    latest = {}
-    for x in rows:
-        c, dt, v = x.get("CharacteristicName"), x.get("ActivityStartDate"), x.get("ResultMeasureValue")
-        if not c or not dt or v in (None, ""):
-            continue
-        if c not in latest or dt > latest[c]["date"]:
-            latest[c] = {"char": c, "value": v, "unit": (x.get("ResultMeasure/MeasureUnitCode") or "").strip(), "date": dt, "station": x.get("MonitoringLocationName"), "org": x.get("OrganizationFormalName")}
-    if not latest:
-        return None
-    order = {c: i for i, c in enumerate(WQP_CHARS)}
-    return {"fetched_at": now_iso(), "count": len(rows), "rows": sorted(latest.values(), key=lambda r: order.get(r["char"], 99))}
-
-
-def fetch_fema_zone(lat, lon):
-    """FEMA flood hazard zones within 500 m of the gauge (Esri Living Atlas copy of the FIRM data; generalised, not parcel level)."""
-    q = urllib.parse.urlencode({"geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "distance": "500", "units": "esriSRUnit_Meter",
-                                "outFields": "FLD_ZONE,ZONE_SUBTY,SFHA_TF", "returnGeometry": "false", "f": "json"})
-    j = json.loads(get_text("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Flood_Hazard_Reduced_Set_gdb/FeatureServer/0/query?" + q))
-    zones = sorted({(a.get("FLD_ZONE") or "", a.get("ZONE_SUBTY") or "", a.get("SFHA_TF") or "") for a in (f.get("attributes") or {} for f in j.get("features", []))})
-    return {"fetched_at": now_iso(), "meters": 500, "zones": [list(z) for z in zones]}
-
-
 RISE_MAP = {"09380000": {"name": "Glen Canyon Dam (Lake Powell)", "loc": 393, "items": (("Total release", 4315, "cfs"), ("Powerplant release", 507, "cfs"), ("Spillway release", 4391, "cfs"), ("Bypass release", 4392, "cfs"), ("Lake Powell elevation", 508, "ft"))}}
-
-
-def fetch_rise(site):
-    """Bureau of Reclamation RISE daily dam operations for gauges mapped to a dam (the API ignores location filters, so item ids are mapped by hand)."""
-    m = RISE_MAP.get(site)
-    if not m:
-        return None
-    after = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
-    series = {}
-    for label, item, unit in m["items"]:
-        q = "itemId=%d&dateTime%%5Bafter%%5D=%s&order%%5BdateTime%%5D=desc&itemsPerPage=20" % (item, after)
-        j = json.loads(get_text("https://data.usbr.gov/rise/api/result?" + q))
-        data = j.get("data") if isinstance(j, dict) else j
-        rows = []
-        for x in data or []:
-            a = (x.get("attributes") or x) if isinstance(x, dict) else {}
-            if a.get("result") is not None:
-                rows.append([str(a.get("dateTime"))[:10], a.get("result")])
-        if rows:
-            series[label] = {"unit": unit, "rows": rows}
-    return {"fetched_at": now_iso(), "dam": m["name"], "series": series} if series else None
 
 
 def fetch_floodfreq(site):
@@ -705,8 +564,8 @@ def fetch_nwm(site):
         mp = [{"t": p.get("validTime"), "flow": p.get("flow")} for p in (mm.get("data") or []) if isinstance(p.get("flow"), (int, float)) and p["flow"] >= 0]
         if mp:
             out["medium"], out["medium_reference_time"] = mp[:120], mm.get("referenceTime") or (m.get("mediumRange") or {}).get("referenceTime")
-    except Exception:
-        pass
+    except Exception as e:
+        note("nwm.medium", "failed", e)
     return out
 
 
@@ -745,13 +604,13 @@ def nws_static(lat, lon, prev):
     try:
         if pt.get("radarStation"):
             out["radar_ll"] = thr_json("https://api.weather.gov/radar/stations/%s" % pt["radarStation"], NWS_H).get("geometry", {}).get("coordinates")
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.radar", "failed", e)
     try:
         st = thr_json(pt["observationStations"], NWS_H)["features"][0]
         out["station"] = {"id": st["id"], "name": (st.get("properties") or {}).get("name"), "ll": (st.get("geometry") or {}).get("coordinates")}
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.station", "failed", e)
     return out
 
 
@@ -763,25 +622,25 @@ def fetch_nws(lat, lon, prev=None):
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
         out["periods"] = [{k: p.get(k) for k in ("name", "startTime", "endTime", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.forecast", "failed", e)
     try:
         hf = thr_json(pt["forecastHourly"], NWS_H)["properties"]
         out["hourly_updated"] = hf.get("updateTime") or hf.get("generatedAt")
         out["hourly"] = [{k: p.get(k) for k in ("startTime", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in hf.get("periods", [])[:36]]
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.hourly", "failed", e)
     try:
         gp = thr_json(pt["forecastGridData"], NWS_H)["properties"]
         out["grid"] = grid_hours(gp)
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.grid", "failed", e)
     try:
         a = thr_json("https://api.weather.gov/alerts/active?point=%.4f,%.4f" % (lat, lon), NWS_H)
         out["alerts"] = [dict({k: (x["properties"].get(k)) for k in ("event", "severity", "areaDesc", "headline", "ends", "expires", "senderName")},
                               states=sorted({u[:2] for u in ((x["properties"].get("geocode") or {}).get("UGC") or [])})) for x in a.get("features", [])]
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.alerts", "failed", e)
     try:
         st = S["station"]
         o = thr_json(st["id"] + "/observations?limit=8", NWS_H)
@@ -792,8 +651,8 @@ def fetch_nws(lat, lon, prev=None):
             old = next((y for y in obs if (y.get("barometricPressure") or {}).get("value") is not None and (parse_t(x["timestamp"]) - parse_t(y["timestamp"])).total_seconds() >= 2.5 * 3600), None)
             out["obs"] = {"name": st.get("name"), "ll": st.get("ll"), "station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
                           "pressure_pa": v("barometricPressure"), "pressure_prev_pa": (old.get("barometricPressure") or {}).get("value") if old else None, "visibility_m": v("visibility")}
-    except Exception:
-        pass
+    except Exception as e:
+        note("nws.obs", "failed", e)
     return out
 
 
@@ -1076,7 +935,7 @@ def default_sites():
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
 DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains", "record", "year", "fieldmeas", "floodfreq", "acis",
-         "ridb", "streamcat", "nid", "fema_zone", "rise", "stocking", "access", "rating", "atlas14", "multiyear"}
+         "ridb", "streamcat", "stocking", "access", "rating", "multiyear"}
 
 
 RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()
@@ -1151,8 +1010,8 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("nid", lambda: fetch_nid(lat, lon)), ("fema_zone", lambda: fetch_fema_zone(lat, lon)), ("rise", lambda: fetch_rise(site)), ("stocking", lambda: fetch_stocking(lat, lon)), ("uv", lambda: fetch_uv(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
-                    ("rating", lambda: fetch_rating(site)), ("atlas14", lambda: fetch_atlas14(lat, lon)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
+                    ("rating", lambda: fetch_rating(site)),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
@@ -1391,37 +1250,6 @@ def main():
     os.makedirs(CACHE, exist_ok=True)
     if "--fast" in sys.argv:  # freshest-possible refresh: one bulk USGS latest call for every gauge, then NWS, NWPS forecast and rain; the slow history is left as cached
         fast(inv, [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites())
-        return
-    if "--extras-only" in sys.argv:  # new-source blocks plus NWPS and NWS; skips the critical USGS series so it cannot trip that rate limit
-        h = usgs_headers()
-        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
-            path = os.path.join(CACHE, s + ".json")
-            rec, log = json.load(open(path)), []
-            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws")))):
-                if any(a.startswith("--keys=") for a in sys.argv):
-                    continue
-                try:
-                    rec[key] = fn()
-                except Exception as e:
-                    log.append("%s FAILED (%s)" % (key, str(e)[:60]))
-            fetch_extras(s, rec, h, log)
-            json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
-            os.replace(path + ".tmp", path)
-            print("ok extras", s, "peaks", len((rec.get("peaks") or {}).get("rows") or []), "wtemp", bool(rec.get("wtemp")), "snotel", len((rec.get("snotel") or {}).get("stations") or []), "cpc", bool(rec.get("cpc")),
-                  "multiyear", bool(rec.get("multiyear")), "crests", len((rec.get("nwps") or {}).get("crests") or []), "impacts", len((rec.get("nwps") or {}).get("impacts") or []), "grid", len(((rec.get("nws") or {}).get("grid") or {}).get("hours") or []), "; ".join(log))
-        return
-    if "--nws-only" in sys.argv:  # refresh only the NWS block (no USGS calls) when USGS rate-limits
-        for s in [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites():
-            path = os.path.join(CACHE, s + ".json")
-            rec = json.load(open(path))
-            try:
-                rec["nws"] = fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))
-            except Exception as e:
-                print("FAIL nws", s, str(e)[:80])
-                continue
-            json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
-            os.replace(path + ".tmp", path)
-            print("ok nws", s, "hourly", len(rec["nws"].get("hourly") or []))
         return
     sites = [a for a in sys.argv[1:] if not a.startswith("--")] or default_sites()
     for s in sites:

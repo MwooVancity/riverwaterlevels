@@ -263,19 +263,6 @@ def b_qpf(G):
                  "Source: National Weather Service gridpoint quantitative precipitation forecast at the gauge location, updated %s. A forecast, not a measurement." % upd, "nws", amber=(age is not None and age > 12))
 
 
-def b_atlas14(G):
-    a = G["rec"].get("atlas14")
-    if not a or not a.get("rows"):
-        return None
-    want = [2, 10, 25, 100]
-    ix = [a["ari"].index(w) for w in want if w in a["ari"]]
-    if not ix:
-        return None
-    rows = "".join(tr([esc(d)] + ["%.2f in" % v[i] for i in ix], right=tuple(range(1, len(ix) + 1))) for d, v in a["rows"].items())
-    return block("rainfall_frequency", "Rainfall frequency at the gauge location", "hist", table(["Duration"] + ["%d-year" % a["ari"][i] for i in ix], rows, right=tuple(range(1, len(ix) + 1))),
-                 "Source: NOAA Atlas 14 point precipitation frequency estimates (partial duration series, depth in inches) for the gauge location, fetched %s. A %d-year value is the depth expected once every %d years on average." % (esc(tzl(parse_t(a["fetched_at"]), G["zone"])), want[0], want[0]), "hdsc")
-
-
 def b_drought(G):
     d = G["rec"].get("usdm")
     if not d or not d.get("rows"):
