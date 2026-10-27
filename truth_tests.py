@@ -1,5 +1,5 @@
 """Truth gates: the contradictions and silences a reader should never meet. Each one comes from a defect a fresh-eyes reviewer found (docs/research/FRESH-REVIEW-6.md).
-Usage: python -I truth_tests.py     (run by gate.py after a build; needs dist_next)
+Usage: python -I truth_tests.py     (run by gates.py after a build; needs dist_next)
  1. Direction: the trend tile's word agrees with the sign of its headline and with the last 6 h of flow, on every gauge.
  2. Bands: for every comparison band (very low .. very high) the word, the sentence ("Lower than" below the middle, "Higher than" above) and the numbers agree.
  3. Silence: a gauge with no NWS river forecast says so; with an active alert there is a banner and no empty-alert tile; without one the tile says so.

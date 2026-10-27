@@ -29,7 +29,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           busy=$(gh run list --workflow=refresh.yml --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length' -L 10)
-          if [ "$busy" = "0" ]; then gh workflow run refresh.yml -f mode=fast && echo "refresh dispatched"; else echo "a refresh is already queued or running ($busy)"; fi
+          if [ "$busy" = "0" ]; then gh workflow run refresh.yml && echo "refresh dispatched"; else echo "a refresh is already queued or running ($busy)"; fi
       - name: Live numbers against USGS and NWS (log only)
         continue-on-error: true
         env:

@@ -1,19 +1,14 @@
 name: refresh
 
-# Rebuilds and deploys the site without the owner's computer.
-# Every 30 minutes: fast refresh (newest USGS readings, NWS, NWPS, rain). Every 6 hours: full refresh (all slow sources).
+# Rebuilds and deploys the site without the owner's computer. Started hourly by the Worker cron (worker/index.js build()) once
+# GH_DISPATCH_TOKEN is set; the schedule below is the backup. One run collects every source on its own timer (collect.py).
 on:
   push:
     branches: [main]  # every push runs the gates and, only if they pass, deploys (repo audit 2026-10-20: a push never ran a gate before)
     paths-ignore: ["**.md", "docs/**"]  # a docs push must not cancel the pending data run (sweep 2026-10-21)
   schedule:
-    - cron: "5,35 * * * *"
-    - cron: "20 3,9,15,21 * * *"
+    - cron: "35 * * * *"
   workflow_dispatch:
-    inputs:
-      mode:
-        description: "fast or full"
-        default: "fast"
 
 # one run at a time: two runs would overwrite each other's data
 concurrency:
@@ -47,23 +42,9 @@ jobs:
           key: rwl-data-${{ github.run_id }}
           restore-keys: |
             rwl-data-
-      - name: Decide fast or full
-        id: mode
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then M="${{ github.event.inputs.mode }}";
-          elif [ "${{ github.event.schedule }}" = "20 3,9,15,21 * * *" ]; then M="full"; else M="fast"; fi
-          if [ ! -d cache ] || [ -z "$(ls -A cache 2>/dev/null)" ]; then M="full"; fi
-          echo "mode=$M" >> "$GITHUB_OUTPUT"
-          echo "mode: $M"
-      - name: Collect live gauges that have no cache yet (only those, so a new wave is not a forced full run that trips the USGS rate limit)
-        continue-on-error: true
-        run: |
-          U="$(python tools/ci_uncached.py --list 2>/dev/null)"
-          if [ -n "$U" ]; then echo "collecting new gauges: $U"; python collect.py $U || true; fi
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
-        run: |
-          if [ "${{ steps.mode.outputs.mode }}" = "fast" ]; then python refresh.py --fast; else python refresh.py; fi
+        run: python refresh.py
       - name: Show the log when it fails
         if: failure()
         run: tail -n 120 runs/refresh.log || true

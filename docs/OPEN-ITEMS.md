@@ -26,7 +26,7 @@ Run `python -I tools/open_items.py` at session start. A line leaves this file on
 - [ ] Alerts backend (email or push when flow crosses a reader's range).
 
 ## F. Prompts and tools (printed by `tools/open_items.py --brief`)
-- Deploy: push to main or `gh workflow run refresh.yml -f mode=fast`; then `python -I tools/index_live.py` and read one live page body.
+- Deploy: push to main or `gh workflow run refresh.yml`; then `python -I tools/index_live.py` and read one live page body.
 - Indexing and incidents: docs/RUNBOOK.md. Corrections: docs/CORRECTIONS.md.
 
 ## DONE log (date, item, proof)

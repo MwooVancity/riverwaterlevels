@@ -58,11 +58,10 @@ async function build(env, now) {
   if (!env.GH_DISPATCH_TOKEN || now.getUTCMinutes() >= 3) return;
   const s = await (await env.ASSETS.fetch("https://riverwaterlevels.com/status.json")).json();
   if (now - Date.parse(s.built_at) < 40 * 60000) return;
-  const full = [3, 9, 15, 21].includes(now.getUTCHours()); // the slow sources' lane, as the old schedule ran it
   await fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/refresh.yml/dispatches", {
     method: "POST",
     headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
-    body: JSON.stringify({ ref: "main", inputs: { mode: full ? "full" : "fast" } }),
+    body: JSON.stringify({ ref: "main" }),
   });
 }
 
