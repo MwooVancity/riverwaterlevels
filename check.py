@@ -178,6 +178,12 @@ def near_dupes(sh):
     return [(a, b, len(sh[a] & sh[b]) / len(sh[a] | sh[b])) for i, a in enumerate(ks) for b in ks[i + 1:] if sh[a] and sh[b] and len(sh[a] & sh[b]) / len(sh[a] | sh[b]) > DUP_MAX]
 
 
+def cloak_risks(js):
+    """Google's cloaking rule: crawlers and people must get the same page. The edge Worker therefore never reads the visitor's identity."""
+    pat = r"""(?i)\b(?:req|request)\.(?:cf\b|headers\.get\(\s*["'](?:user-agent|sec-ch-ua[\w-]*|cf-ipcountry|cf-connecting-ip|x-forwarded-for|cf-bot[\w-]*)["'])"""
+    return ["edge worker reads the visitor's identity (%s): Google and phones could get different pages" % m.group(0) for m in re.finditer(pat, js)]
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -206,6 +212,7 @@ def check_dir(d):
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
+    site_bad += cloak_risks(open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read())
     for a, b, j in near_dupes(gauge_sh):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
@@ -291,6 +298,9 @@ def check_dir(d):
 
 
 def selftest():
+    assert cloak_risks('const ua = req.headers.get("User-Agent");'), "selftest: worker reading the user agent did not fire"
+    assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
+    assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
     wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
     a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
     assert near_dupes({"/x/": shingles(a), "/y/": shingles(a.replace("flow 120", "flow 9,400"))}), "selftest: near-duplicate pages (same words, other readings) did not fire"
