@@ -6,7 +6,7 @@
 // Pages: HTMLRewriter swaps in the stored reading when it is newer than the build's; text the build derived from its own reading is
 // stamped with that reading's time. Any error, a missing, older or flagged reading, or a non-gauge path serves the static page untouched.
 
-const LATEST = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items";
+const LATEST = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items";
 const UA = "riverwaterlevels.com (https://riverwaterlevels.com/about/)";
 const CHUNK = 300; // ids per call; ponytail: past ~1,500 gauges switch to one national query filtered in code (Phase 0: 1 call, 804 KB / 10 min)
 const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits late is not missed (the merge drops repeats)

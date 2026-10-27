@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
-BASE = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
+BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
 NWPS_H = {"User-Agent": NWS_H["User-Agent"], "Accept": "application/json"}  # 2026-10-26: geo+json made reaches/{id}/streamflow?series= return only the reach summary (no medium range on any gauge)
@@ -324,7 +324,8 @@ def fetch_meta(site, h):
 def fetch_rating(site):
     """USGS expanded shifted rating table (gage height to flow), thinned to at most 90 points."""
     import urllib.request
-    req = urllib.request.Request("https://waterdata.usgs.gov/nwisweb/get_ratings?site_no=%s&file_type=exsa" % site, headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"})
+    # NWISWeb get_ratings retires winter 2026-27; the USGS STAC file is the same file (byte-identical, checked 2026-10-27)
+    req = urllib.request.Request("https://api.waterdata.usgs.gov/stac-files/ratings/USGS.%s.exsa.rdb" % site, headers={"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)"})
     txt = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")
     rows = [l.split("\t") for l in txt.split("\n") if l.strip() and not l.startswith("#")]
     if len(rows) < 3 or "INDEP" not in rows[0] or "DEP" not in rows[0]:

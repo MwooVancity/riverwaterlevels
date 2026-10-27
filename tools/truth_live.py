@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers
 
 SITE = "https://riverwaterlevels.com"
-USGS = "https://api.waterdata.usgs.gov/ogcapi/v0/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065&limit=1000&f=json"
+USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065&limit=1000&f=json"
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 HU = dict(usgs_headers(), **H)  # with the key: anonymous calls from shared CI addresses get rate-limited and the check silently skips

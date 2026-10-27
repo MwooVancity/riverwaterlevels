@@ -24,14 +24,12 @@ def gauges():
     rows = {}
     for i in range(0, len(sites), 100):
         chunk = sites[i:i + 100]
-        txt = get("https://waterservices.usgs.gov/nwis/site/?format=rdb&siteOutput=expanded&sites=" + ",".join(chunk)).decode("utf-8", "replace")
-        lines = [l for l in txt.splitlines() if l and not l.startswith("#")]
-        if len(lines) < 3:
-            continue
-        head = lines[0].split("\t")
-        for l in lines[2:]:
-            v = dict(zip(head, l.split("\t")))
-            rows[v["site_no"]] = (v.get("dec_lat_va"), v.get("dec_long_va"), v.get("huc_cd"), v.get("station_nm"))
+        # USGS Water Data API (waterservices.usgs.gov retires 2027-02-22)
+        d = json.loads(get("https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items?id=%s&properties=monitoring_location_number,monitoring_location_name,hydrologic_unit_code&limit=500&f=json"
+                           % ",".join("USGS-" + s for s in chunk)))
+        for f in d.get("features", []):
+            p, (lon, lat) = f["properties"], f["geometry"]["coordinates"][:2]
+            rows[p["monitoring_location_number"]] = (lat, lon, p.get("hydrologic_unit_code"), p.get("monitoring_location_name"))
         print("gauges", min(i + 100, len(sites)), "/", len(sites), end="\r")
     with open(os.path.join(OUT, "gauge-geo.csv"), "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
