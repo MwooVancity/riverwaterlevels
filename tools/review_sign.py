@@ -1,0 +1,20 @@
+"""Hater review, step 2: record the reviewer's verdict for a gauge page (or `_template` for a code change), tied to the code it was made on.
+Usage: python -I tools/review_sign.py <site|_template> PASS|FAIL "worst defects first, or 'none'" [--by NAME]
+Writes state/reviews/<id>.json. The gate (check.py) refuses a build when a live gauge has no PASS, or when the page code changed since
+the last PASS of `_template` (a sample of pages reviewed on the new code). A FAIL blocks until the defects are fixed and the page re-reviewed."""
+import datetime, json, os, sys
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from lib.common import template_hash
+
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+if len(args) < 3 or args[1] not in ("PASS", "FAIL"):
+    sys.exit(__doc__)
+rid, verdict, notes = args[0], args[1], args[2]
+if rid != "_template" and not os.path.isdir(os.path.join(ROOT, ".cache", "review", rid)):
+    sys.exit("no screenshots for %s: run node tools/hater_shots.mjs %s and LOOK at them first" % (rid, rid))
+by = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--by=")), "reviewer")
+os.makedirs(os.path.join(ROOT, "state", "reviews"), exist_ok=True)
+rec = {"id": rid, "verdict": verdict, "notes": notes, "by": by, "at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "template": template_hash()}
+json.dump(rec, open(os.path.join(ROOT, "state", "reviews", rid + ".json"), "w", encoding="utf-8"), indent=1)
+print("signed", rid, verdict, "on code", rec["template"])

@@ -1,0 +1,8 @@
+{
+ "id": "09085000",
+ "verdict": "PASS",
+ "notes": "Notes only: 'A year earlier, on Oct 25: 573 cfs' names no year and a different day than the Oct 26 verdict (phone-01) | water temp card '49 \u00b0F' vs table '49.5 \u00b0F (9.7 \u00b0C)' rounding (phone-02/03) | AQI headline 'at Rifle Ozone' and PM monitor 'Yellow Brick Building' have no distance (phone-04) | Last 12 h and Last 24 h both '-25 cfs, from 692 cfs, height -0.04 ft' (phone-06/07; text.txt 271/274), coincidence or a lookup bug | NWS impact text repeated with ' / ' ('River reaches top of bank... / River is at top of bank...') (phone-05/06) | nearest other gauges 112+ mi away, distance labelled (phone-13)",
+ "by": "hater-full2",
+ "at": "2026-10-27T08:07:41+00:00",
+ "template": "f7dee213eda2"
+}

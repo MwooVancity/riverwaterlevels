@@ -1,0 +1,8 @@
+{
+ "id": "06719505",
+ "verdict": "PASS",
+ "notes": "No reader-misleading defect seen in 13 phone slices + desktop. Notes: phone-03 'hours with thunderstorms are not listed' reads as if a THUNDER % row were hidden although the row is shown; recreation 'Mestaa'ehehe Mountain Fire Lookout' typed Campground is agency data; past 7 days 10th pct on a band edge uses USGS words; offline radar, camera and map images not loaded",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:47:38+00:00",
+ "template": "12fab7e9a47e"
+}

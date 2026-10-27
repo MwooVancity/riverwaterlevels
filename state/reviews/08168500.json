@@ -1,0 +1,8 @@
+{
+ "id": "08168500",
+ "verdict": "PASS",
+ "notes": "Notes only: '63 years in the USGS daily statistics for Oct 26' (phone-01) vs '43rd lowest of the 99 years' (phone-09); About row blames approval gaps, but a 36-year gap looks like USGS starting stats after Canyon Dam regulation - check the reason text | headline leads 'Rising, leveling off: +5.5% flow in 24 h' while 1 h and 6 h are +0.0% (phone-01) | NWS alerts said twice (phone-02 card, phone-06 block); 0.00 in rain said three times (phone-02, phone-04, phone-07) | NWS impact text typo 'floodng' is agency wording (phone-05) | rain station dashes for unpublished days (phone-07) | nearest-gauge list jumps to 225-622 mi, labelled (phone-11)",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:59:38+00:00",
+ "template": "7fd0d53d903b"
+}

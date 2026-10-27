@@ -25,7 +25,10 @@ def b_rain(G):
     rows = "".join(tr(["%s, to %s" % (lab, esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else lab, "%.2f in" % v[k]], right=(1,)) for k, lab in labs if k in v)
     from lib import ui
     vmax = max(0.5, max(v[k] for k, _ in labs if k in v))
-    wid = ui.bars([(lab, v[k], "%.2f in" % v[k]) for k, lab in labs if k in v], vmax)
+    wid = ui.bars([(lab + ((" <small>to %s</small>" % esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else ""), v[k], "%.2f in" % v[k]) for k, lab in labs if k in v], vmax)
+    ks = [k for k, _ in labs if k in v]
+    if any(v[b] < v[a] - 0.005 for a, b in zip(ks, ks[1:])):  # full review: "24 h 0.03 in" above "2 days 0.00 in"
+        wid += '<p class="src">The longer windows end earlier than the last-24-h estimate, so they do not include the most recent rain.</p>' 
     rcards = [card(lab, "%.2f <small>in</small>" % v[k], ("to %s" % esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else "") for k, lab in labs if k in v]
     return block("rain_totals", "Recent rain at the gauge location", "official", wid,
                  "Source: NWS River Forecast Center multisensor precipitation estimate, about 2.5-mile grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=(age is not None and age > 6))
@@ -50,7 +53,7 @@ def b_cpc(G):
         for k, lab in (("temp", "Temperature"), ("precip", "Precipitation")):
             if c.get(k):
                 rows += tr([name, span, lab, esc(c[k]["category"] or "–"), "%d%%" % c[k]["prob"]], right=(4,))
-                ocards.append(card("%s &middot; %s" % (name, lab), esc(c[k]["category"] or "–"), "%s &middot; probability %d%%" % (span, c[k]["prob"])))
+                ocards.append(card("%s &middot; %s" % (name, lab), (esc(c[k]["category"] or "–") if (c[k].get("prob") or 0) > 34 else "Near equal chances"), "%s &middot; probability %d%%" % (span, c[k]["prob"])))
         src_bits.append("%s for %s" % (name, span))
     if not rows:
         return None
@@ -119,7 +122,7 @@ def b_weather(G, n_periods=14):
         pop = p.get("pop")
         cards += ('<div class="fc"><div>%s</div><b>%s&deg;%s</b><div>%s</div><div class="legend">Wind %s</div><div class="legend">%s</div></div>' % (
             esc(p.get("name") or ""), esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), _wind(p),
-            ("%s%% rain" % pop) if pop is not None else ""))
+            ("%s%% chance of rain or snow" % pop) if pop is not None else ""))
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
     return block("weather_forecast", "Weather forecast", "official", '<div class="fcs">%s</div>' % cards, "Source: National Weather Service point forecast, updated %s." % upd, "nws", amber=(age is not None and age > 12))
 
@@ -155,7 +158,7 @@ def b_heatmap(G):
     head = "<th></th>"
     for h in hrs:
         d = parse_t(h["t"]).astimezone(zone)
-        head += "<th>%s</th>" % ("%s 12a" % d.strftime("%a") if d.hour == 0 else "%d%s" % (d.hour % 12 or 12, "a" if d.hour < 12 else "p"))
+        head += "<th>%s</th>" % ("%s 12a" % d.strftime("%a") if d.hour == 0 else ("%s %d%s" % (d.strftime("%a"), d.hour % 12 or 12, "a" if d.hour < 12 else "p")) if h is hrs[0] else "%d%s" % (d.hour % 12 or 12, "a" if d.hour < 12 else "p"))
     mph = lambda k: (lambda v: None if v is None else v * 0.621371)(k)
     spec = (("Temp &deg;F", lambda h: None if h.get("temp_c") is None else h["temp_c"] * 9 / 5 + 32, lambda v: (v - 20) / 90, "%.0f"),
             ("Wind mph", lambda h: mph(h.get("wind_kmh")), lambda v: v / 30, "%.0f"),
@@ -165,11 +168,14 @@ def b_heatmap(G):
             ("Thunder %", lambda h: h.get("thunder"), lambda v: v / 100, "%.0f"),
             ("Humidity %", lambda h: h.get("rh"), lambda v: v / 100, "%.0f"),
             ("Heat index &deg;F", lambda h: None if h.get("heat_c") is None else h["heat_c"] * 9 / 5 + 32, lambda v: (v - 20) / 90, "%.0f"),
-            ("Visibility mi", lambda h: None if h.get("vis_m") is None else h["vis_m"] / 1609.344, lambda v: v / 10, "%.0f"),
-            ("Rain in/h", lambda h: None if h.get("qpf_mm") is None else h["qpf_mm"] / 25.4, lambda v: v / 0.1, "%.2f"),
-            ("Rain chance %", lambda h: pop.get(parse_t(h["t"])), lambda v: v / 100, "%.0f"))
+            ("Visibility mi", lambda h: None if not h.get("vis_m") else h["vis_m"] / 1609.344, lambda v: v / 10, "%.1f"),  # fog under a mile is not "0" (full review)
+            ("Rain/snow in/h", lambda h: None if h.get("qpf_mm") is None else h["qpf_mm"] / 25.4, lambda v: v / 0.1, "%.2f"),
+            ("Rain/snow %", lambda h: pop.get(parse_t(h["t"])), lambda v: v / 100, "%.0f"))
     rows = ""
     for lab, get, sc, f in spec:
+        vals = [get(h) for h in hrs]
+        if sum(v is None for v in vals) > len(vals) / 2 or (lab == "Visibility mi" and all(not v for v in vals)):
+            continue  # a row of dashes (or a grid that reports 0 mi visibility every hour) says nothing (hater 2026-10-27)
         cells = ""
         for h in hrs:
             v = get(h)
@@ -178,8 +184,12 @@ def b_heatmap(G):
             elif sc is None:
                 cells += "<td>%s</td>" % compass(v)
             else:
-                cells += '<td style="background:%s">%s</td>' % (tint(sc(v)), (f % v) if not (lab == "Rain in/h" and v < 0.005) else "0")
+                cells += '<td style="background:%s">%s</td>' % (tint(sc(v)), (f % v) if not (lab == "Rain/snow in/h" and v < 0.01) else ("0" if v < 0.001 else "&lt;0.01"))
         rows += "<tr><th>%s</th>%s</tr>" % (lab, cells)
     upd = esc(tzl(parse_t(g["updated"]), zone)) if g.get("updated") else "time not stated"
-    return block("hourly_heatmap", "Hourly forecast, next 24 hours", "official", storm_line(G) + '<div class="scroll"><table class="hm"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (head, rows),
-                 "Source: National Weather Service gridpoint forecast, updated %s; rain chance from the NWS hourly point forecast. Hours are gauge-local. Darker cells mean a higher value in that row." % upd, "nws", amber=(age is not None and age > 12))
+    hp = [v for v in (pop.get(parse_t(h["t"]).replace(minute=0, second=0, microsecond=0)) for h in hrs) if v is not None]
+    per = [p for p in n.get("periods") or [] if p.get("pop") is not None and parse_t(p["startTime"]) <= parse_t(hrs[-1]["t"]) - datetime.timedelta(hours=6) and parse_t(p.get("endTime") or p["startTime"]) > max(G["now"], parse_t(hrs[0]["t"])) + datetime.timedelta(hours=6)]  # full review: "Tonight" from a 17 h old forecast
+    big = max(per, key=lambda p: p["pop"]) if per else None
+    popnote = ('<p class="src">The NWS gives %s a %d%% chance of rain or snow for the whole period; the highest single hour below is %d%%. A period chance counts rain or snow at any time in it, so it runs higher than any one hour.</p>' % (esc(big["name"]), big["pop"], max(hp))) if big and hp and big["pop"] > max(hp) + 15 else ""  # hater r5: "Tonight 93%" over hourly cells that peak at 69
+    return block("hourly_heatmap", "Hourly forecast, next 24 hours", "official", storm_line(G) + popnote +'<div class="scroll"><table class="hm"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (head, rows),
+                 "Source: National Weather Service gridpoint forecast, updated %s; chance of rain or snow from the NWS hourly point forecast. Amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Hours are gauge-local. Darker cells mean a higher value in that row." % upd, "nws", amber=(age is not None and age > 12))

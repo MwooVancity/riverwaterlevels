@@ -1,0 +1,8 @@
+{
+ "id": "06038500",
+ "verdict": "PASS",
+ "notes": "NOTES: Upstream and downstream gauges block (phone-12) shows only downstream Ennis though USGS 06037500 Madison nr West Yellowstone (Hebgen inflow, 322 cfs) and nearer downstream 06038800 Kirby Ranch / 06040000 nr Cameron are in the cached feed | NWM block titled 'next 13 hours' lists 2 rows (phone-05) | water temp 51 F card vs 50.5 F table is rounding | 'Days above 75th percentile 0 of 27' vs 'Past 28 days' labelled windows | H1 'below Hebgen Lake Near Grayling' mixed case | map alt text overlap and stale ages are offline artifacts",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:19:18+00:00",
+ "template": "128cf370e25b"
+}

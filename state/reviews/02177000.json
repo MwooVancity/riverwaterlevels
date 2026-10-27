@@ -1,0 +1,8 @@
+{
+ "id": "02177000",
+ "verdict": "PASS",
+ "notes": "Notes only: breadcrumb 'SC' and USGS county Oconee SC vs H1 'Clayton, GA' and Drought Monitor 'Rabun County' (border river; USGS name) | 'Steady: no change in 6 h' stated 3 times on first screen | phone-01 'Next NWS impact at 4.5 ft' does not say the impact (rafting shut-down) until phone-05 | NWS impact text jargon 'crest at burg1' (quoted NWS) | Air conditions table repeats Air temperature card (54 F, calm) | 87 vs 88 years in two labelled windows",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:25:27+00:00",
+ "template": "3b8e3c45a980"
+}

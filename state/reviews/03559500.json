@@ -1,0 +1,8 @@
+{
+ "id": "03559500",
+ "verdict": "PASS",
+ "notes": "Notes: 'Lower than at least 95% of the 9 years' claims 95% precision from 9 years (say 'lower than all 9 years'); verdict uses one trough reading on a peaking river, caveated on the card; flow-duration table is 1903 to 1970 while daily stats are 2017 on (both labelled); 'Lowest single reading 218 cfs Oct 22, 103 h earlier' while the latest is also 218; recreation names wrap in a narrow column (phone-08); empty-ish map alt overlap is offline",
+ "by": "hater-full",
+ "at": "2026-10-27T06:55:24+00:00",
+ "template": "dfaf767af80e"
+}

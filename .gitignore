@@ -13,6 +13,7 @@ node_modules/
 data/demand.csv
 data/inventory-ranked.csv
 docs/research/
-state/
+state/*
+!state/reviews/
 data/geo/*.geojson
 .dev.vars

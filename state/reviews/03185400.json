@@ -1,0 +1,8 @@
+{
+ "id": "03185400",
+ "verdict": "PASS",
+ "notes": "Notes only: Recent rain block (phone-04) shows Last 2 days and Last 3 days but no Last 24 h row, and the first screen has no Rain card, while the not-available line names only the 6 h radar estimate | cold-water table marks Oct (typical 62 F) 'Dangerous' while today's sensor is 59 F (card correctly says below 60 F); labelled typical | water temp 59 F card vs 58.6 F table (rounding) | other gauges: Shenandoah 200 mi listed above New River at Radford 63 mi | 45 vs 46 years in labelled windows | first-row cold-water category text dense",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:25:28+00:00",
+ "template": "3b8e3c45a980"
+}

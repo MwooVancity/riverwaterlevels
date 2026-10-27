@@ -1,0 +1,8 @@
+{
+ "id": "10346000",
+ "verdict": "PASS",
+ "notes": "Notes: phone-03 'RAIN CHANCE %' / '0% rain' labels are NWS precipitation chance (harmless here, clear/sunny, but fix template) | phone-01 'A year earlier, on Oct 25, 2025: 458 cfs' vs 'for Oct 26' off by one | phone-01 'Next NWS impact at 8.5 ft' but phone-05 that statement reads 'No flooding from Boca to Mogul' | phone-04 no last-24-h rain row while the gap line names 'radar rain estimate for the last 6 h' | phone-05 NWS typos quoted verbatim ('leve', 'histoic maxiumum') | phone-13/14 other gauges 104-476 mi away while NWS lists Truckee near Truckee/Mogul/Reno points (site lacks those gauges) | phone-07/08 Nevada City stations 53-54 mi, other side of the crest (distance labelled) | phone-09 '117 years' vs '118 years' (labelled) | phone-14 map alt overlap (offline)",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:56:50+00:00",
+ "template": "19751c526a9f"
+}

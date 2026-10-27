@@ -1,0 +1,8 @@
+{
+ "id": "06893000",
+ "verdict": "PASS",
+ "notes": "Notes only: phone-07 Raytown 2.7 SSE shows 'OCT 20 3.08 in' while 4 nearer stations and 'Last 3 days 0.00 in' show zero (likely multi-day accumulation, unflagged) | phone-01 'A year earlier, on Oct 25' inside an Oct 26 card | phone-01 'Next NWS impact at 32.0 ft' while Action 29.0 ft shown below | phone-09 flow-duration heading 'period not published by USGS' reads as jargon | phone-03 AQ monitors 'Troost'/'Rocky Creek' with no distance",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:52:19+00:00",
+ "template": "cf8da0e6a3e6"
+}

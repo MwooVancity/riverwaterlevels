@@ -1,0 +1,8 @@
+{
+ "id": "01463500",
+ "verdict": "PASS",
+ "notes": "Notes: 'Upstream gauge now 498 cfs Lehigh River' on the first screen (phone-02) is a tributary the card itself says is not a stand-in; 'Oct 1 to 26 ... 115 years' vs '113 years in the USGS daily statistics' are labelled datasets; phone-03..15 and desktop-01 not viewed (image load limit), judged from text.txt",
+ "by": "hater-full",
+ "at": "2026-10-27T07:28:02+00:00",
+ "template": "dfaf767af80e"
+}

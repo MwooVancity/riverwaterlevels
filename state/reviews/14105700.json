@@ -1,0 +1,8 @@
+{
+ "id": "14105700",
+ "verdict": "PASS",
+ "notes": "Notes only: gage height 75.14 ft says only 'Level relative to the gauge's zero' (phone-01); gauge zero is 0.00 ft NGVD29 so this is a sea-level elevation, add 'not water depth' as on other pages | flow and height move opposite ways ('-3,500 cfs ... height +0.00 ft', '+1,900 cfs ... height -0.03 ft', phone-05) with no line saying flow here is dam-driven/velocity-based | air card 'NWS forecast for the gauge, 6:00 AM PDT: 44\u00b0F (the station sits elsewhere)' has no date and odd wording (phone-02) | '1535 dams' lacks comma | 148 vs 149 years, labelled",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:07:43+00:00",
+ "template": "133cac292ed4"
+}

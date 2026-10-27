@@ -1,0 +1,8 @@
+{
+ "id": "14103000",
+ "verdict": "PASS",
+ "notes": "Notes only: Public land table lists Deschutes River State Recreation Area and Heritage Landing as managed by 'City' (phone-09), likely PAD-US manager-type label, both are Oregon state park units, verify | hourly table first column '5A' has no day label until 'WED 12A' (phone-02) | 'A year earlier, on Oct 25, 2025' under an Oct 26 heading (phone-01) | 123 years (daily stats) vs 124 years (Oct 1-25 rank), labelled datasets | NWS forecast 2.9 ft = 4,470 cfs vs USGS 2.84 ft = 4,260 cfs, two ratings, labelled",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:07:43+00:00",
+ "template": "133cac292ed4"
+}

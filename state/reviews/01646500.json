@@ -1,0 +1,8 @@
+{
+ "id": "01646500",
+ "verdict": "PASS",
+ "notes": "Notes: up/down block labels Shenandoah at Millville plain 'Upstream' (it is a tributary; the top card says 'Tributary upstream now'), no mainstem Potomac upstream gauge listed | nearby list says 'North Fork Shenandoah River at Strasburg, VA' while that page's H1 says 'near Strasburg' | 'A year earlier, on Oct 25, 2025' vs Oct 26 header (date named) | 7d/28d percentiles 70/61 identical to 01634000, recomputed from each cache: genuine | collapsed flood/daily/watershed sections unseen",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:32:19+00:00",
+ "template": "025c96fed3cb"
+}

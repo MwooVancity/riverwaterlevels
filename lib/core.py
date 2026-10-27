@@ -23,6 +23,7 @@ TAGS = {"agency": "Agency data", "live": "Live gauge", "official": "Official NWS
 PADMAN = {"USFS": "US Forest Service", "NPS": "National Park Service", "BLM": "Bureau of Land Management", "FWS": "US Fish and Wildlife Service", "SDNR": "State natural resources agency",
           "SFW": "State fish and wildlife agency", "SPR": "State parks", "SLB": "State land board", "LOC": "Local government", "CITY": "City", "CNTY": "County", "NGO": "Nonprofit", "PVT": "Private",
           "TRIB": "Tribal", "REG": "Regional or county agency", "UNK": "Unknown manager", "UNKL": "Unknown manager", "JNT": "Joint management", "DOD": "Department of Defense", "USACE": "Army Corps of Engineers"}
+PADMAN = {**json.load(open(os.path.join(DATA, "padus_managers.json"), encoding="utf-8")), **PADMAN}  # full PAD-US Mang_Name domain (Fee_Manager service, read 2026-10-27); hand names win (hater r4: "RWD")
 
 
 ACCESS = {"OA": "Open access", "RA": "Restricted access", "XA": "Closed", "UK": "Access unknown"}
@@ -47,8 +48,8 @@ class CriticalFail(Exception):
 
 def tzl(dt, zone, date=True):
     d = dt.astimezone(zone)
-    s = d.strftime("%b %d, %I:%M %p %Z") if date else d.strftime("%I:%M %p %Z")
-    s = s.replace(" 0", " ", 1).lstrip("0").replace("  ", " ")
+    s = "%d:%s %s" % (d.hour % 12 or 12, d.strftime("%M %p"), d.strftime("%Z"))
+    s = ("%s %d, %s" % (d.strftime("%b"), d.day, s) if date else s).strip()
     return s.replace(" ", "\u00a0").replace(",\u00a0", ", ")  # a long date wraps after the comma, never inside the time
 
 
@@ -266,7 +267,7 @@ def human_span(days):
     if days < 45:
         return "%d day%s" % (days, "" if days == 1 else "s")
     if days < 730:
-        return "%d months" % round(days / 30.4)
+        return "%d month%s" % (round(days / 30.4), "" if round(days / 30.4) == 1 else "s")
     return "%d years" % round(days / 365.25)
 
 
@@ -330,7 +331,7 @@ def b_quality(G):
     rows = ""
     has_turb = False
     for code, lab in LABELS.items():
-        s = series(G["rec"], code)
+        s = series(G["rec"], code) if code != "00045" else None  # precipitation is shown in the rain tile, not as water quality (full review)
         if s:
             if code == "63680":
                 has_turb = True

@@ -1,0 +1,8 @@
+{
+ "id": "08158000",
+ "verdict": "PASS",
+ "notes": "Notes only: headline 'Rising: +224.9% flow in 6 h' is the daily dam-release cycle (caveat 'Flow here rises and falls within the day' sits below it, phone-01) | NWS alerts said twice (phone-02 'No alerts' card and phone-06 'Weather alerts' block) and 0.00 in rain said three times (phone-02, phone-04, phone-07/08) | flow-duration table '1900 to 2015' 50% = 1,060 cfs vs Oct 26 median ~400 cfs, labelled different datasets (phone-09/10) | 'Public land ... Bolm District Park ... PUBLIC ACCESS Closed' reads like the park is shut today (phone-10) | forecast cards skip the Oct 30 11 PM 15.1 ft peak though the highest card shows it (phone-06/07) | nearest-gauge list jumps to 517+ mi, distance labelled (phone-11)",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:58:40+00:00",
+ "template": "7fd0d53d903b"
+}

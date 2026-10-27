@@ -1,0 +1,8 @@
+{
+ "id": "01449000",
+ "verdict": "PASS",
+ "notes": "Numbers agree across header, rate cards, flood stages, forecast and record (498 cfs, 2.83 ft, next impact 9.0 ft = 6.2 ft higher). Notes: phone-06 nine near-identical forecast cards '2.8 ft 480 cfs' could collapse to one line; phone-02 water temp from 'Lehigh R Bl Francis E Walter Res Nr White Haven Pa, 19 mi away' is a dam tailwater and uses the raw USGS abbreviated name; phone-02 'air observation (no NWS station report in the last 12 h)' while forecast/AQI present; phone-01 'A year earlier, on Oct 24' on an Oct 26 page; phone-06/07 station names raw ('Lehighton 1Ssw') and wrap mid-name; rain repeated in 4 blocks; breadcrumb 'AT LEHIGHTON'; offline radar/map artifacts.",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:42:30+00:00",
+ "template": "891c3c7e47c8"
+}

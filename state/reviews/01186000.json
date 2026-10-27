@@ -1,0 +1,8 @@
+{
+ "id": "01186000",
+ "verdict": "PASS",
+ "notes": "Notes: year-earlier comparison uses Oct 25 for an Oct 26 page (labelled); water-temp month cards mark 130 days '(few)' but 156 not, threshold unstated; 'AQI 44, Good (OZONE)' caps inconsistent with 'PM2.5'; phone-11 is an empty footer strip",
+ "by": "hater-full",
+ "at": "2026-10-27T07:28:01+00:00",
+ "template": "dfaf767af80e"
+}

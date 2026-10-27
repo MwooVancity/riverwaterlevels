@@ -1,0 +1,8 @@
+{
+ "id": "03011800",
+ "verdict": "PASS",
+ "notes": "Notes: H1 says 'Kinzua Creek at Guffey' while USGS site name is 'Kinzua Creek near Guffey, PA' and NWS GUFP1 'above Guffey' | water temperature nearby is a dam tailwater on a different river (labelled) | NWM starts +111% off the gauge (labelled) | headline 'Much below normal' (24 h) vs 'Past 7 days: 21st percentile, below normal' are labelled different windows | slices not seen: phone-09..12, desktop-01 (judged from text.txt)",
+ "by": "hater-full",
+ "at": "2026-10-27T07:25:51+00:00",
+ "template": "dfaf767af80e"
+}

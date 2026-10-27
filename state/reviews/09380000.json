@@ -1,0 +1,8 @@
+{
+ "id": "09380000",
+ "verdict": "PASS",
+ "notes": "Notes only: '1158 dams upstream' lacks thousands separator (phone-01) | typical Oct water 54F and cold-water band 'Very Dangerous' while USGS sensor reads 61F now (phone-01/10): labelled typical vs live | river-forecast sentence 'so the forecast itself starts off the reading' is awkward (phone-06) | month-to-date '106 years' vs daily stats '105 years': labelled windows | first screen strong: flow, level, normal band, hydropeaking swing explained, NWS forecast 7.1-8.1 ft daily swing",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:18:30+00:00",
+ "template": "128cf370e25b"
+}

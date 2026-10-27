@@ -1,0 +1,8 @@
+{
+ "id": "03081000",
+ "verdict": "PASS",
+ "notes": "Notes: 'HIGHEST DAILY MEAN, 7 DAYS TO OCT 25' 2,190 cfs exceeds 'HIGHEST SINGLE READING, 7 DAYS' 2,170 cfs (different 7-day windows, 1%) | impact block says margins 'use the NWS reading' but 4.4 ft = 7.0 - 2.61 USGS reading | 'Past 7 days: 75th percentile, in the normal range' on band edge | NWS typo 'vicintiy' quoted | slices not seen: phone-01..03, 13, 14, desktop-01 (judged from text.txt)",
+ "by": "hater-full",
+ "at": "2026-10-27T07:25:51+00:00",
+ "template": "dfaf767af80e"
+}

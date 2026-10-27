@@ -1,0 +1,8 @@
+{
+ "id": "07010000",
+ "verdict": "PASS",
+ "notes": "Notes only: phone-01 gage card 'Next NWS impact at 32.0 ft (26.6 ft above)' while phone-04 shows 'Minor 30.0 ft' - first screen never says flood stage is 30 ft | phone-02 water temp from 'Lock And Dam 26 at Alton,Il, 18 mi away' is above the Missouri confluence and raw USGS casing 'Alton,Il' | phone-01 'A year earlier, on Oct 25' inside an Oct 26 card | phone-09 'period not published by USGS' heading",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:52:19+00:00",
+ "template": "cf8da0e6a3e6"
+}

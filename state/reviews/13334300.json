@@ -1,0 +1,8 @@
+{
+ "id": "13334300",
+ "verdict": "PASS",
+ "notes": "Notes only: weather forecast leads with 'Tonight 43F' (Monday night) on a page whose hourly grid starts Tue 5A, with no age badge (phone-03) | upstream/downstream shows only the Salmon tributary, no Snake mainstem gauge (site lacks it, phone-10) | 68 vs 69 years labelled | 7-day 8th pct vs Oct 26 17th pct are labelled windows | far gauges labelled with distance | 'A year earlier, on Oct 25, 2025' dated",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:56:48+00:00",
+ "template": "19751c526a9f"
+}

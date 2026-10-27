@@ -1,0 +1,8 @@
+{
+ "id": "06041000",
+ "verdict": "PASS",
+ "notes": "NOTES: 'UPSTREAM GAUGE NOW 641 cfs' card and upstream block use Hebgen (above two dams, ~50 mi) though nearer main-stem USGS 06040000 nr Cameron (983 cfs) and 06040050 are in the cached feed; no downstream gauge shown though 06041500 (1,320 cfs) is cached | NWS upstream list renders '; Madison River near West Yellowstone' on its own line after a block link (phone-12), and link text 'Hebgen Dam near West Yellowstone' (HBDM8) lands on a page whose forecast point is GRYM8 | neighbour time 9:45 PM newer than this page's 8:00 PM (offline artifact) | NWM 'next 14 hours' 2 rows, flagged -22% vs gauge",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:19:20+00:00",
+ "template": "128cf370e25b"
+}

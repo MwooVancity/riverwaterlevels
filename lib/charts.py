@@ -68,7 +68,7 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
         md = " ".join("%.1f,%.1f" % (X(at(d)), Y(m)) for d, a, c, m in bp)
         band = ['<polygon points="%s %s" fill="var(--soft)"/>' % (up, dn), '<polyline points="%s" fill="none" stroke="var(--mut)" stroke-dasharray="4 4"/>' % md]
     step = max(1, len(pts) // 220)
-    thin = pts[::step] + [pts[-1]]
+    thin = [pts[i] for i in sorted(set(range(0, len(pts), step)) | {len(pts) - 1, max(range(len(pts)), key=lambda i: pts[i][1]), min(range(len(pts)), key=lambda i: pts[i][1])})]  # the peak card's reading is on the line
     gap_s = max(10800, 4 * (steps_med(pts) or 900))
     segs, cur = [], [thin[0]]
     for a_, b_ in zip(thin, thin[1:]):
@@ -78,22 +78,29 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
         cur.append(b_)
     segs.append(cur)
     line = "".join('<polyline points="%s" fill="none" stroke="var(--accent)" stroke-width="2.4"/>' % " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v, _ in sg_) for sg_ in segs if len(sg_) > 1)
-    grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, (tf(tv, ticks) + " cfs") if tv == ticks[-1] else tf(tv, ticks)) for tv in ticks)
-    xl = ""
-    mids, d0 = [], t0.astimezone(zone).date() + datetime.timedelta(days=1)
-    while datetime.datetime.combine(d0, datetime.time(0), zone) < t1:
-        mids.append(datetime.datetime.combine(d0, datetime.time(0), zone))
-        d0 += datetime.timedelta(days=1)
-    for m in mids[::max(1, -(-len(mids) // nx))]:  # one label per local midnight (every second one on a phone)
-        x_ = X(m)
-        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (x_, Hh - 8, fs, "start" if x_ < L + 16 else "end" if x_ > W - 30 else "middle", m.strftime("%b %d").replace(" 0", " "))
+    grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks) + '<text x="%d" y="10" font-size="%d" fill="var(--mut)">cfs</text>' % (L + 4, fs)  # the unit once, top-left: "12,000 cfs" on the top tick overflowed the margin and showed ",000 cfs" (hater 2026-10-27)
+    xl = day_axis(t0, t1, zone, X, nx, fs, Hh, L, W)
     return ('<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs over the last 7 days with the 25th to 75th percentile band">%s%s%s%s'
            '<circle cx="%.1f" cy="%.1f" r="5" fill="var(--accent)"/></svg>' % (cls, W, Hh, "".join(band), grid, xl, line, X(lt), Y(G["lv"])))
 
 
+
+def day_axis(t0, t1, zone, X, nx, fs, Hh, L, W):
+    """Date labels at local midnight, the same on every time chart (hater r5: flow and gage charts put "Oct 24" in different places)."""
+    mids, d0 = [], t0.astimezone(zone).date() + datetime.timedelta(days=1)
+    while datetime.datetime.combine(d0, datetime.time(0), zone) < t1:
+        mids.append(datetime.datetime.combine(d0, datetime.time(0), zone))
+        d0 += datetime.timedelta(days=1)
+    xl = ""
+    for m in mids[::max(1, -(-len(mids) // nx))]:  # one label per local midnight (every second one on a phone)
+        x_ = X(m)
+        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (x_, Hh - 8, fs, "start" if x_ < L + 16 else "end" if x_ > W - 30 else "middle", m.strftime("%b %d").replace(" 0", " "))
+    return xl
+
+
 def b_flow_chart(G):
     svg = _chart_svg(G, 760, 250, 11, 7, "cw") + _chart_svg(G, 340, 250, 12, 4, "cn")
-    return block("flow_chart", "Last 7 days", "live", svg, "Source: USGS Water Data API (continuous values), observed to %s. Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median. Flow in cfs." % esc(G["obs"]), "usgs")
+    return block("flow_chart", "Last 7 days", "live", svg + LEG, "Source: USGS Water Data API (continuous values), observed to %s. Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median. Flow in cfs." % esc(G["obs"]), "usgs")
 
 
 def b_daily(G):
@@ -120,23 +127,27 @@ def b_daily(G):
                  "Source: USGS Water Data API (daily values where USGS has published them; otherwise the mean of continuous readings on that gauge-local date, shown only with at least 80% of expected readings).", "usgs")
 
 
+LEG = '<p class="src leg">Shaded: the normal range for each date (25th to 75th percentile of past years) &middot; dashed line: the median.</p>'  # hater 2026-10-27: band and dashed line had no visible label on a phone
+
+
 def b_record(G):
     r = G["rec"].get("record")
     if not r:
         return None
     pk = r["peak"]
-    cards = [card("Peak, last 7 days", "%s <small>cfs</small>" % fmtc(pk["value"]), fdate(pk["date"]))]
+    end = fdate(r["as_of"]) if r.get("as_of") else "the last published day"
+    cards = [card("Highest daily mean, 7 days to %s" % end, "%s <small>cfs</small>" % fmtc(pk["value"]), "%s (USGS daily means lag a day or two)" % fdate(pk["date"]))]
     if r.get("prior"):
-        cards.append(card("Last this high", "%s <small>cfs</small>" % fmtc(r["prior"]["value"]), "%s (%s before this peak)" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))))
+        cards.append(card("Last daily mean at or above %s cfs" % fmtc(pk["value"]), "%s <small>cfs</small>" % fmtc(r["prior"]["value"]), "%s, %s before that 7-day high" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))))
     else:
-        cards.append(card("Last this high", "No earlier day", "Record begins %d" % r["first_year"]))
+        cards.append(card("Last daily mean at or above %s cfs" % fmtc(pk["value"]), "No earlier day", "Record begins %d" % r["first_year"]))
     if r.get("last_p90"):
-        cards.append(card("Last day above the 90th percentile", fdate(r["last_p90"]["date"]), "%s earlier" % human_span(r["last_p90"]["days_before"])))
+        cards.append(card("Before these 7 days, last day above the 90th percentile", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
     if r.get("above_p75"):
         cards.append(card("Days above the 75th percentile", "%d of %d" % (r["above_p75"]["n"], r["above_p75"]["of"]), "last %d days" % r["above_p75"]["of"]))
     if r.get("month"):
         m = r["month"]
-        cards.append(card("%s 1 to %d, mean flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), "rank %d highest of %d years" % (m["rank"], m["years"])))
+        cards.append(card("%s 1 to %d, mean flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), (("%s highest of the %d years with USGS daily values for these dates" % (ordinal(m["rank"]), m["years"])) if m["rank"] <= m["years"] / 2 else ("%s lowest of the %d years with USGS daily values for these dates" % (ordinal(m["years"] - m["rank"] + 1), m["years"])))))
     return block("record_comparison", "Compared with this gauge’s record", "hist", rail(cards, "Compared with this gauge’s record"),
                  "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
                      r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"])), "usgs")
@@ -215,14 +226,14 @@ def b_wtemp(G):
     w = G["rec"].get("wtemp")
     if not w or not w.get("months"):
         return None
-    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, fmt(n), " (few)" if n < 150 else "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
+    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%d days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, round(n), "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
     mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}
     def under(lo, hi):
-        ms = [MONTHS[m - 1][:3] for m in sorted(mf) if lo <= mf[m] < hi]
+        ms = [("<b>%s (this month)</b>" if m == G["ldate"].month else "%s") % MONTHS[m - 1][:3] for m in sorted(mf) if lo <= round(mf[m]) < hi]  # the row for today is marked; banded on the rounded value shown (full review)
         return ", ".join(ms) if ms else "none"
     # Lakebrief comparison 2026-10-21: the thresholds a swimmer or paddler reads against this table, quoted from the guide, no verdict of ours
-    guide = table(["Typical water temperature", "National Center for Cold Water Safety category (quoted)", "Months in that band here"], tr(["50 to 60&deg;F", "&ldquo;Very Dangerous / Immediately Life-threatening&rdquo;", under(50, 60)]) + tr(["60 to 70&deg;F", "&ldquo;Dangerous&rdquo;", under(60, 70)]) + tr(["Under 50&deg;F", "the guide's maximum cold-shock range starts at 50&deg;F", under(-100, 50)]) + tr(["70&deg;F and above", "the guide advises caution and thermal protection below 70&deg;F", under(70, 200)]))
-    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs">%s</div>' % cards + "<h3>Cold-water guidance against these months</h3>" + guide,
+    guide = table(["Typical water temperature", "National Center for Cold Water Safety category (quoted)", "Months in that band here"], tr(["Under 50&deg;F", "colder than the guide's coldest band (50 to 60&deg;F, &ldquo;Very Dangerous / Immediately Life-threatening&rdquo;); NWS: cold-water shock and loss of swimming ability within minutes of immersion", under(-100, 50)]) + tr(["50 to 60&deg;F", "&ldquo;Very Dangerous / Immediately Life-threatening&rdquo;", under(50, 60)]) + tr(["60 to 70&deg;F", "&ldquo;Dangerous&rdquo;", under(60, 70)]) + tr(["70&deg;F and above", "above the guide's caution line: it says to treat any water below 70&deg;F with caution", under(70, 200)]))
+    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs mgrid">%s</div>' % cards + "<h3>Cold-water guidance against these months</h3>" + guide,
                  "Source: USGS daily mean water temperature (Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values). Categories quoted from the <a href=\"https://www.coldwatersafety.org/water-temperature-safety-guide\" rel=\"noopener\">National Center for Cold Water Safety water temperature safety guide</a>; a monthly mean says nothing about a given day." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
 
 
@@ -237,6 +248,9 @@ def b_snotel(G):
         pct = ("%.0f%%" % (x["swe_in"] / med * 100)) if med else "–"
         rows += tr([esc(x["name"]), "%d mi" % round(x["km"] * 0.621371), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
     from lib import ui
-    sb = ui.bars([(esc(x["name"]), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median (%.1f in, median %.1f in)" % (x["swe_in"] / x["median_in"] * 100, x["swe_in"], x["median_in"])) if x.get("median_in") else "%.1f in, no median" % x["swe_in"]) for x in st], 150, mark=100)
-    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", sb + table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2)),
+    zero = [x for x in st if not x.get("median_in")]
+    st_b = [x for x in st if x.get("median_in")]  # full review: a zero or missing median drew an empty bar and a median tick
+    sb = "".join('<p class="src">%s: %.1f in of snow water now; %s.</p>' % (esc(x["name"]), x["swe_in"], "median for this date 0.0 in" if x.get("median_in") == 0 else "no median published") for x in zero)
+    sb = (ui.bars([(esc(x["name"]), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median (%.1f in, median %.1f in)" % (x["swe_in"] / x["median_in"] * 100, x["swe_in"], x["median_in"])) if x.get("median_in") else ("%.1f in; median 0.0 in" % x["swe_in"] if x.get("median_in") == 0 else "%.1f in, no median" % x["swe_in"])) for x in st_b], 150, mark=100) if st_b else "") + sb
+    return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", sb + more("Each station: distance, elevation and date", table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2))),
                  "Source: USDA Natural Resources Conservation Service SNOTEL stations within 37 miles of the gauge (AWDB web service), fetched %s. Provisional data; stations may not drain to this gauge." % esc(tzl(parse_t(s["fetched_at"]), G["zone"])), "nrcs")

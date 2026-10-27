@@ -1,0 +1,8 @@
+{
+ "id": "12355500",
+ "verdict": "PASS",
+ "notes": "Notes only: water temp 40 F card vs 40.5 F table (rounding, phone-01/02) | 'A year earlier, on Oct 25, 2025' on an Oct 26 page (dated, phone-01) | year counts 86 (daily stats) vs 103 (month-to-date) explained in About table | nearest other gauges 213-325 mi, labelled with distance (phone-12/13) | flow-duration window 1910 to 2015 labelled | station rain dashes are feed gaps",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:56:47+00:00",
+ "template": "19751c526a9f"
+}

@@ -21,10 +21,8 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
     X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
     grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks)
-    xl = ""
-    for k in range(nx):
-        tt = t0 + (t1 - t0) * k / (nx - 1)
-        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (X(tt), Hh - 8, fs, "start" if k == 0 else "end" if k == nx - 1 else "middle", tt.astimezone(zone).strftime("%b %d").replace(" 0", " "))
+    from lib.charts import day_axis
+    xl = day_axis(t0, t1, zone, X, nx, fs, Hh, L, W) + '<text x="%d" y="10" font-size="%d" fill="var(--mut)">ft</text>' % (L + 4, fs)  # the unit, as on the flow chart (hater r5: axis had no unit)
     lines = ""
     for name, v in hl:
         lines += '<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="%s" stroke-dasharray="6 4"/><text x="%d" y="%.1f" font-size="%d" fill="%s" text-anchor="end">%s %s</text>' % (L, W - 14, Y(v), Y(v), AMBER, W - 16, Y(v) - 4, fs, AMBER, esc(name), fmt(v))
@@ -69,7 +67,7 @@ def b_stage_chart(G):
         age = hours_old(f.get("issued"), now) if f.get("issued") else None
         if age is None or age <= 72:
             issued = f.get("issued")
-            fc = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1]
+            fc = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1 and t_ >= now]
     cats = (n.get("categories") or {}) if nws else {}
     vals = [v for _, v in obs] + [v for _, v in fc]
     lo, hi = min(vals), max(vals)
@@ -93,15 +91,15 @@ def b_stage_chart(G):
             rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the latest gage height" % d) if d > 0 else ("latest gage height is %.1f ft above it" % -d)], right=(1,))
     if fc:
         hi = max(fc, key=lambda x: x[1])
-        rows += tr(["Forecast high", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
+        rows += tr(["Forecast high" + (" (below the latest reading)" if hi[1] < cur - 0.05 else ""), "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     if gap and f and f.get("points"):
         fs_ = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1]
         if fs_:
             hi = max(fs_, key=lambda x: x[1])
             rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
-    lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, "Latest, %s:" % tzl(G["sg"][-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
-    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
+    lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, ("NWS reading, %s:" % tzl(gap[2], G["zone"], date=False)) if gap else "Latest, %s:" % tzl(G["sg"][-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
+    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: USGS readings%s%s.</p>' % (" &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
     src = "Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)
@@ -121,7 +119,7 @@ def _at(series, t, tol):
 
 
 def _arrow(pct):
-    return "&#9650;" if pct > 1 else "&#9660;" if pct < -1 else "&rarr;"
+    return "&#9650;" if pct >= 2 else "&#9660;" if pct <= -2 else "&rarr;"  # same cut-off as the headline word (hater r4: "Steady" beside "▼ -1.9%")
 
 
 def b_rate(G):
@@ -153,10 +151,13 @@ def b_rate(G):
     ext = tr(["Highest reading", "%s cfs" % fmtc(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmtc(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
     from lib.render import flow_jitter
     note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the Height change column.</p>' if flow_jitter(G) else ""
-    cards += [card("Highest, 7 days", "%s <small>cfs</small>" % fmtc(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest, 7 days", "%s <small>cfs</small>" % fmtc(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
+    f6, s6 = _at(fl, t1 - datetime.timedelta(hours=6), tol), (_at(sg, sg[-1][0] - datetime.timedelta(hours=6), tol) if sg else None)
+    if not note and f6 and s6 and f6[1] and abs(fl[-1][1] / f6[1] - 1) >= 0.1 and abs(sg[-1][1] - s6[1]) >= 0.1 and (fl[-1][1] > f6[1]) != (sg[-1][1] > s6[1]):
+        note = '<p class="src">Over the last 6 h the flow went %s (%+.0f%%) while the gage height went %s (%+.2f ft). Both are USGS readings as published; at a gauge near a dam or in a pool the level does not always follow the flow.</p>' % ("down" if fl[-1][1] < f6[1] else "up", 100 * (fl[-1][1] / f6[1] - 1), "up" if sg[-1][1] > s6[1] else "down", sg[-1][1] - s6[1])  # full review: Hudson -36% flow, +0.27 ft
+    cards += [card("Highest single reading since %s" % esc(tzl(week[0][0], G["zone"])), "%s <small>cfs</small>" % fmtc(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest single reading since %s" % esc(tzl(week[0][0], G["zone"])), "%s <small>cfs</small>" % fmtc(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
     body = note + rail(cards, "Change over the last hours") + more("Full table", table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,)))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
-                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is within 1%%." % esc(tzl(t1, G["zone"])), "usgs")
+                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is under 2%%, the same cut-off as the headline." % esc(tzl(t1, G["zone"])), "usgs")
 
 
 def _xy_svg(pts, cur, W, Hh, fs, cls, label):
@@ -196,11 +197,11 @@ def b_about(G):
     items = [("USGS site name", loc.get("monitoring_location_name")), ("Site type", loc.get("site_type")), ("Agency", loc.get("agency_name")),
              ("County and state", ", ".join(x for x in (loc.get("county_name"), loc.get("state_name")) if x)),
              ("Drainage area", ("%s sq mi" % fmt(loc["drainage_area"])) if loc.get("drainage_area") else None),
-             ("Altitude", ("%s ft (%s)" % (fmt(loc["altitude"]), loc.get("vertical_datum") or "datum not stated")) if loc.get("altitude") is not None else None),
+             ("Altitude of the gauge's zero point", ("%s ft (%s)" % (fmt(loc["altitude"]), loc.get("vertical_datum") or "datum not stated")) if loc.get("altitude") is not None else None),
              ("Hydrologic unit code", loc.get("hydrologic_unit_code")), ("Coordinates", "%.4f, %.4f" % (G["lat"], G["lon"]))]
     for key, lab in (("flow_daily", "Daily mean flow record"), ("flow_inst", "Instantaneous flow record"), ("stage_inst", "Instantaneous gage height record")):
         if ts.get(key):
-            items.append((lab, "%s to %s" % (fdate(ts[key][0]), fdate(ts[key][1]))))
+            items.append((lab, "%s to %s%s" % (fdate(ts[key][0]), fdate(ts[key][1]), " (later days on this page are daily means computed from the continuous readings; USGS daily statistics count only years with an approved value for each date, so their year counts are lower than this span)" if key == "flow_daily" else "")))
     pk = [x for x in ((G["rec"].get("peaks") or {}).get("rows") or []) if x[1] is not None]
     if pk:
         items.append(("Annual peaks on file", "%d, %s to %s" % (len(pk), pk[0][0][:4], pk[-1][0][:4])))
@@ -224,9 +225,10 @@ def b_nwm_medium(G):
         return None
     dt = (parse_t(fut[1]["t"]) - parse_t(fut[0]["t"])).total_seconds() or 3600
     stride = max(1, round(43200 / dt))
-    rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmtc(p["flow"])], right=(1,)) for p in fut[::stride][:20])
+    rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmtc(sig3(p["flow"]))], right=(1,)) for p in fut[::stride][:20])
     ref = esc(tzl(parse_t(n["medium_reference_time"]), G["zone"])) if n.get("medium_reference_time") else "time not stated"
-    return block("nwm_medium_range", "Model guidance, days 1 to 10", "model", table(["Time (gauge-local)", "Modeled flow (ensemble mean)"], rows, right=(1,)),
+    span_d = (parse_t(fut[::stride][:20][-1]["t"]) - G["lt"]).total_seconds() / 86400
+    return block("nwm_medium_range", "NOAA National Water Model, next %s (ensemble mean)" % (("%d days" % round(span_d)) if span_d >= 1.5 else "day"), "model", model_gap(G, fut[0]["flow"]) + table(["Time (gauge-local)", "Modeled flow (ensemble mean)"], rows, right=(1,)),
                  "Source: NOAA National Water Model medium-range ensemble mean, reach %s, run %s. Model guidance, not an official forecast and not a measurement; error is larger on small basins." % (esc(str(n.get("comid"))), ref), "nwm", amber=(age is not None and age > 12))
 
 

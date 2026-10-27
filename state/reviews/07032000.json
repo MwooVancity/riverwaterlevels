@@ -1,0 +1,8 @@
+{
+ "id": "07032000",
+ "verdict": "PASS",
+ "notes": "Notes only: '33098 dams upstream' lacks thousands separator (phone-01) | gage height -1.54 ft from NWS MEMT1 clearly labelled with 'below zero means under the reference level, not a dry river' and 29.5 ft below action 28.0 ft (math checks) | impact statements 23-28 ft with distance above reading check out | 'Days above 75th pct 27 of 30' vs 'Past 28 days' windows labelled | AirNow monitor names in caps (MARION, RIVERVIEW) as published | flow-duration table titled 'years not stated' (honest, but weak)",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:18:30+00:00",
+ "template": "128cf370e25b"
+}

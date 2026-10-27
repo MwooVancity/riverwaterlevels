@@ -1,0 +1,8 @@
+{
+ "id": "04062011",
+ "verdict": "PASS",
+ "notes": "Notes: 'Last daily mean this high 527 cfs' next to 'Highest daily mean 525' reads as a contradiction (relabel as 'before that, last day at or above 525 cfs'); empty first group leaves a blank gap at top of 'Other gauges on this site' (phone-09); nearest other gauges 168-554 mi (labelled); phone weather forecast shows 2 of 6 periods with no scroll cue (phone-03)",
+ "by": "hater-full",
+ "at": "2026-10-27T06:54:47+00:00",
+ "template": "dfaf767af80e"
+}

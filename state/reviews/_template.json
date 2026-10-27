@@ -1,0 +1,8 @@
+{
+ "id": "_template",
+ "verdict": "PASS",
+ "notes": "Six-page hater_sample (11447650 09380000 07032000 06701900 06214500 06041000) on 128cf370e25b: no FAIL; notes only - thousands separators missing on dam/day counts, NWM 'next 13/14 hours' title over 2 rows, NWS-datum forecast beside USGS reading, stray '; ' line break after linked forecast point, build-time 'today' vs tide 'rest of today'",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:23:21+00:00",
+ "template": "128cf370e25b"
+}

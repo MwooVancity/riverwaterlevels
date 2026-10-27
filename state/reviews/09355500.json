@@ -1,0 +1,8 @@
+{
+ "id": "09355500",
+ "verdict": "PASS",
+ "notes": "Notes only: header '429 cfs \u00b7 Normal range' uses the 24 h mean 636 cfs while flow fell 61% in 24 h; latest 429 cfs sits under the all-days 75% exceedance (480 cfs), so the verdict can lag a dam-release drop (phone-01) | air temperature shown twice: KDRO card '39 \u00b0F wind calm' and 'Air conditions' table (phone-02/11) | AQI monitors 'Navajo Lake' and 'Ute 3' have no distance (phone-03) | 'Last day above the 90th percentile Sep 3, 2019' means before this week; label does not say so (phone-09) | 'Last 24 h 0.00 in' next to Navajo Dam station 'Oct 26 0.68 in'; the observation-day note explains it (phone-04/07)",
+ "by": "hater-full2",
+ "at": "2026-10-27T08:07:41+00:00",
+ "template": "f7dee213eda2"
+}

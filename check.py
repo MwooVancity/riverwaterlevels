@@ -3,12 +3,13 @@ Per page: canonical, banned strings, doubled words, source line per block, units
 Site: unique titles, every internal link resolves, sitemap equals page set, tab/hub/state reciprocity, link budgets, no orphans, depth from home.
 Exit 1 if anything fails.
 """
-import os, re, sys, json, collections, gzip, hashlib
+import os, re, sys, json, collections, gzip, hashlib, html
 MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL
 
-BANNED = [r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
+BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
+          r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 480, "home": 200, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
 FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
@@ -205,6 +206,126 @@ def visitor_calls(js):
             for m in re.finditer(r"(?<![\w.])(?<!async )fetch\(", js) if not any(a <= m.start() <= b for a, b in spans)]
 
 
+def review_gaps(live_sites, reviews, code):
+    """Owner 2026-10-27: no page is live unless a hater looked at it. reviews = {id: record from state/reviews}; code = template_hash()."""
+    bad = []
+    t = reviews.get("_template")
+    if not t or t.get("verdict") != "PASS" or t.get("template") != code:
+        bad.append("page code changed since the last signed hater review (code %s, last PASS %s): screenshot a sample, review it, sign _template" % (code, (t or {}).get("template") if (t or {}).get("verdict") == "PASS" else "none"))
+    for s_ in sorted(live_sites):
+        r = reviews.get(s_)
+        if not r or r.get("verdict") != "PASS":
+            bad.append("gauge %s is live without a signed hater PASS (%s)" % (s_, "FAIL: " + r["notes"][:80] if r else "never reviewed"))
+    return bad
+
+
+def load_reviews():
+    d = os.path.join(ROOT, "state", "reviews")
+    return {f[:-5]: json.load(open(os.path.join(d, f), encoding="utf-8")) for f in (os.listdir(d) if os.path.isdir(d) else []) if f.endswith(".json")}
+
+
+def rank_checks(h, url):
+    """A gauge page must answer the search it ranks for: title and H1 name the river and place, the title says 'water level', the first
+    screen (before the first data block) says nothing three times, and the page links at least 3 other gauge pages (nearby, up and down)."""
+    bad = []
+    if 'class="hero' not in h:
+        return bad
+    title = re.sub(r"\s+", " ", (re.search(r"<title>(.*?)</title>", h, re.S) or [None, ""])[1])
+    h1 = re.sub(r"<[^>]+>", "", (re.search(r"<h1[^>]*>(.*?)</h1>", h, re.S) or [None, ""])[1]).strip()
+    words = [w for w in re.findall(r"[A-Za-z]{4,}", h1) if w.lower() not in ("river", "creek", "fork", "below", "above", "near")]
+    if len(words) < 1 or len(h1.split()) < 3:  # "Rio Grande at Albuquerque, NM" has no word 'river' and is fine
+        bad.append("H1 %r does not name the river and place" % h1)
+    miss = [w for w in words if w.lower() not in title.lower()]
+    if miss or "water level" not in title.lower():
+        bad.append("title %r does not match the search (missing %s)" % (title[:80], ", ".join(miss + ([] if "water level" in title.lower() else ["water level"]))))
+    main = h.split("<main", 1)[1] if "<main" in h else h
+    first = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", main.split('class="card blk"', 1)[0]))).lower()
+    w = re.findall(r"[a-z0-9:.%]+", first)
+    grams = {}
+    for i in range(len(w) - 5):
+        g = " ".join(w[i:i + 6])
+        grams[g] = grams.get(g, 0) + 1
+    name = " ".join(re.findall(r"[a-z0-9:.%]+", h1.lower()))  # the page's own name in breadcrumb, H1 and cite is anatomy, not clutter
+    rep = [(g, n) for g, n in grams.items() if n >= 3 and not re.fullmatch(r"[\d\s:.%]+", g) and g not in name]
+    if rep:
+        g, n = max(rep, key=lambda x: x[1])
+        bad.append("first screen says %r %d times (clutter on the screen that decides the click)" % (g, n))
+    others = {u for u in re.findall(r'href="(/river/[^"#?]+/)"', h) if u != url}
+    if len(others) < 3:
+        bad.append("links only %d other gauge pages (at least 3: nearby, upstream, downstream)" % len(others))
+    return bad
+
+
+def css_truncation(css):
+    """Reader text is never cut off with an ellipsis or a line clamp (hater 2026-10-27: 'No sensor at this ga...' hid where 48 F came from)."""
+    return ["site.css cuts reader text off (%s)" % m.group(0) for m in re.finditer(r"text-overflow\s*:\s*ellipsis|line-clamp\s*:", css)]
+
+
+def hater_rules(h):
+    """Defects the first hater round found on every page that a machine can see in the built HTML."""
+    bad = []
+    t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))
+    if re.search(r"Thunderstorms: none", t):
+        row = re.search(r"Thunder %((?:\s+[\d\u2013-]+)+)", t)
+        if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
+            bad.append("says 'Thunderstorms: none' while the hourly table shows a thunder chance above 0")
+    m = re.search(r"\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)
+    if m:
+        bad.append("ungrammatical %r" % m.group(0))
+    imp = re.search(r'id="flood_impacts".*?</section>', h, re.S)
+    if imp and len(re.findall(r">Next(?: impact at|:) ", imp.group(0))) > 1:
+        bad.append("more than one flood-impact card labelled 'Next:'")
+    m = re.search(r"\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2} last year\b", t)
+    if m:
+        bad.append("%r reads as the wrong day on a page about today" % m.group(0))
+    if re.search(r"<text[^>]*>,\d", h):
+        bad.append("a chart axis label is cut off on the left (starts with a comma)")
+    from lib.common import band_word, PCT_PHRASE
+    for m in re.finditer(r"\b(\d{1,3})(?:st|nd|rd|th) percentile, ([a-z ]+?)(?:[.,;)]|$)", t):
+        want = PCT_PHRASE[band_word(int(m.group(1)))]
+        if m.group(2).strip() != want:
+            bad.append("%r: the USGS band for that percentile is %r (same words as the headline)" % (m.group(0)[:60], want))
+    if re.search(r"\bat not stated\b", t):
+        bad.append("placeholder text 'at not stated' shown to readers")
+    # hater round 4
+    m = re.search(r"\b0\d:\d\d [AP]M\b", t)
+    if m:
+        bad.append("hour with a leading zero %r" % m.group(0))
+    m = re.search(r"(?:&#9650;|&#9660;|\u25b2|\u25bc) ?[+-]?[01]\.\d%", t)
+    if m:
+        bad.append("up/down arrow on a change under 2%% %r (the headline calls that steady)" % m.group(0))
+    if re.search(r"the guide's label for", t):
+        bad.append("a cold-water row quotes another band's label")
+    heads = re.findall(r"<h2[^>]*>(.*?)</h2>", h, re.S)
+    dup = {x for x in heads if heads.count(x) > 1}
+    if dup:
+        bad.append("two blocks share the title %r" % sorted(dup)[0][:60])
+    if re.search(r"(?i)\bMONITOR\b[^.]{0,20}\bnot stated\b|<td>not stated</td>", h):
+        bad.append("an air-quality monitor shown as 'not stated'")
+    a_, b_ = re.search(r"Next NWS impact at ([\d.]+)", t), re.search(r"Next impact at ([\d.]+)", t)
+    if a_ and b_ and a_.group(1) != b_.group(1):
+        bad.append("gage tile says next impact %s ft, the impacts block says %s ft" % (a_.group(1), b_.group(1)))
+    m = re.search(r"thunder chance of up to (\d+)%", t)
+    row = re.search(r"Thunder %((?:\s+[\d–-]+)+)", t)
+    if m and row and str(max([int(x) for x in row.group(1).split() if x.isdigit()] or [0])) != m.group(1):
+        bad.append("thunder 'up to %s%%' does not match the hourly Thunder %% row" % m.group(1))
+    hm = re.search(r'<table class="hm">.*?</table>', h, re.S)
+    for lab in re.findall(r"<tr><th>([^<]*)</th>", hm.group(0) if hm else ""):
+        if len(html.unescape(lab)) > 14:
+            bad.append("hourly table label %r is too wide for the phone's first column" % lab)  # final review: "Rain or snow (water) in/h" overlapped its first value
+    # hater round 5
+    for m in re.finditer(r'<svg[^>]*aria-label="(Gage height|Flow)[^"]*"[^>]*>(.*?)</svg>', h, re.S):
+        if not re.search(r">(ft|cfs)</text>", m.group(2)):
+            bad.append("a %s chart with no unit on its axis" % m.group(1).lower())
+    if re.search(r"(?i)\bsame as above\b|for most of these sites", t):
+        bad.append("a row points at another row ('same as above') instead of printing its value")
+    for m in re.finditer(r'<section[^>]*id="([a-z_]+)"[^>]*>(.*?)</section>', h, re.S):
+        body = re.sub(r'<p class="src[^"]*".*?</p>|<h2.*?</h2>|<header.*?</header>|<footer.*?</footer>', "", m.group(2), flags=re.S)
+        if not re.search(r"<(table|svg|img|iframe|video|canvas)\b", body) and len(re.sub(r"<[^>]+>|\s+", "", body)) < 15:
+            bad.append("block %r has a heading and source but no data" % m.group(1))
+    return bad
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -216,7 +337,7 @@ def check_dir(d):
                 p = os.path.join(root, f)
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
-                results[rel] = check_html(h, rel)
+                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
                 sid = re.search(r"USGS gauge (\d{8,15})\b", h)
                 cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
                 if cp and os.path.exists(cp):
@@ -234,7 +355,11 @@ def check_dir(d):
     site_bad = []
     urls = rel_of
     wjs = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
-    site_bad += cloak_risks(wjs) + visitor_calls(wjs)
+    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
+    from lib.common import template_hash
+    import csv as _csv
+    live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
+    site_bad += review_gaps(live_now, load_reviews(), template_hash())
     for a, b, j in near_dupes(gauge_sh):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
@@ -320,6 +445,48 @@ def check_dir(d):
 
 
 def selftest():
+    assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
+    assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
+    assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
+    assert hater_rules('<section id="flood_impacts"><b>Next: 9.0 ft</b><b>Next: 9.5 ft</b></section>'), "selftest: two 'Next:' cards did not fire"
+    assert hater_rules("<small>Oct 24 last year: 264 cfs</small>"), "selftest: 'Oct 24 last year' did not fire"
+    assert not hater_rules("<small>A year earlier, on Oct 24: 264 cfs</small>"), "selftest: the clear wording wrongly flagged"
+    assert hater_rules('<svg><text x="40">,000 cfs</text></svg>'), "selftest: clipped axis label did not fire"
+    assert hater_rules("<p>AQI 25 at not stated</p>"), "selftest: 'at not stated' did not fire"
+    assert hater_rules("<p>the hourly grid gives a thunder chance of up to 15%.</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: thunder peak mismatch did not fire"
+    assert not hater_rules("<p>the hourly grid gives a thunder chance of up to 9%.</p><tr><th>Thunder %</th><td>0</td><td>9</td></tr>"), "selftest: matching thunder peak wrongly flagged"
+    assert hater_rules('<table class="hm"><tbody><tr><th>Rain or snow (water) in/h</th><td>0</td></tr></tbody></table>'), "selftest: long hourly label did not fire"
+    assert hater_rules("<p>Past 7 days: 15th percentile, in the lower half of normal.</p>"), "selftest: percentile words off the USGS bands did not fire"
+    assert not hater_rules("<p>Past 7 days: 15th percentile, below normal.</p>"), "selftest: correct band words wrongly flagged"
+    assert hater_rules("<td>Nov 2, 05:00 AM MST</td>"), "selftest: leading-zero hour did not fire"
+    assert not hater_rules("<td>Nov 2, 5:00 AM MST</td><td>10:00 AM</td>"), "selftest: plain hours wrongly flagged"
+    assert hater_rules("<b>&#9660; -1.9%</b>"), "selftest: arrow on a change under 2% did not fire"
+    assert not hater_rules("<b>&#9660; -2.4%</b><b>&rarr; -1.9%</b>"), "selftest: correct arrows wrongly flagged"
+    assert hater_rules("<td>(the guide's label for 50 to 60F)</td>"), "selftest: borrowed cold-water label did not fire"
+    assert hater_rules("<h2>Model guidance</h2><h2>Model guidance</h2>"), "selftest: two blocks with one title did not fire"
+    assert hater_rules("<tr><td>Ozone</td><td>28</td><td>not stated</td></tr>"), "selftest: unnamed AQI monitor did not fire"
+    assert hater_rules('<svg aria-label="Gage height in feet"><text>7.5</text></svg>'), "selftest: chart with no unit did not fire"
+    assert not hater_rules('<svg aria-label="Gage height in feet"><text>7.5</text><text x="1">ft</text></svg>'), "selftest: chart with its unit wrongly flagged"
+    assert hater_rules("<td>same as above</td>"), "selftest: 'same as above' did not fire"
+    assert hater_rules("<small>Next NWS impact at 10.0 ft</small><b>Next impact at 7.0 ft</b>"), "selftest: tile/block impact mismatch did not fire"
+    assert not hater_rules("<small>Next NWS impact at 7.0 ft</small><b>Next impact at 7.0 ft</b>"), "selftest: matching impacts wrongly flagged"
+    assert hater_rules('<section id="recreation_sites"><h2>Recreation</h2><p class="src">Source: RIDB</p></section>'), "selftest: empty block did not fire"
+    pg = lambda title, h1, first, links: ('<title>%s</title><main><h1>%s</h1><div class="hero">%s</div><section class="card blk" id="x"></section>%s</main>'
+                                          % (title, h1, first, "".join('<a href="/river/r/p%d/">x</a>' % i for i in range(links))))
+    good_pg = pg("Lehigh River, Lehighton: live water level and flow", "Lehigh River at Lehighton, PA", "498 cfs normal range", 4)
+    assert not rank_checks(good_pg, "/river/lehigh-river/lehighton/"), "selftest: a page that answers the search wrongly failed: %s" % rank_checks(good_pg, "/river/lehigh-river/lehighton/")
+    assert any("title" in x for x in rank_checks(pg("Gauge 01449000 data", "Lehigh River at Lehighton, PA", "x", 4), "/u/")), "selftest: a title missing the river and 'water level' did not fire"
+    assert any("first screen says" in x for x in rank_checks(pg("Lehigh River, Lehighton: water level", "Lehigh River at Lehighton, PA", " ".join(["(as of the oct 26, 9:30 pm edt reading)"] * 3), 4), "/u/")), "selftest: a phrase stamped 3 times on the first screen did not fire"
+    assert any("other gauge pages" in x for x in rank_checks(pg("Lehigh River, Lehighton: water level", "Lehigh River at Lehighton, PA", "x", 1), "/u/")), "selftest: a page linking 1 other gauge did not fire"
+    assert css_truncation(".tile small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"), "selftest: caption ellipsis did not fire"
+    assert not rank_checks(pg("Madison River, Below Hebgen Lake Near Grayling: water level", "Madison River below Hebgen Lake Near Grayling, MT", "Home / MT / Madison River / Below Hebgen Lake Near Grayling USGS gauge 06038500 observed Oct 26. Cite: Madison River below Hebgen Lake Near Grayling, MT: water level 1.5 ft", 4), "/u/"), "selftest: the page's own name repeated in breadcrumb, H1 and cite wrongly flagged"
+    assert not rank_checks(pg("Rio Grande, Albuquerque: water level", "Rio Grande at Albuquerque, NM", "x", 4), "/u/"), "selftest: a river named without the word river wrongly flagged"
+    assert not css_truncation(".tile small{display:block}"), "selftest: plain caption CSS wrongly flagged"
+    ok_rev = {"_template": {"verdict": "PASS", "template": "abc"}, "01": {"verdict": "PASS", "notes": ""}}
+    assert not review_gaps({"01"}, ok_rev, "abc"), "selftest: reviewed page on reviewed code wrongly blocked"
+    assert any("without a signed hater PASS" in x for x in review_gaps({"01", "02"}, ok_rev, "abc")), "selftest: unreviewed live gauge did not block"
+    assert any("code changed" in x for x in review_gaps({"01"}, ok_rev, "xyz")), "selftest: changed page code without a new review did not block"
+    assert any("FAIL" in x for x in review_gaps({"01"}, dict(ok_rev, **{"01": {"verdict": "FAIL", "notes": "tidal on a dam river"}}), "abc")), "selftest: a FAIL verdict did not block"
     w_ok = "async function poll(env) { await fetch(USGS); }\nasync function build(env) { await fetch(GH); }\nasync function serve(req, env) { return env.ASSETS.fetch(req); }"
     assert not visitor_calls(w_ok), "selftest: timer-only outside calls wrongly flagged: %s" % visitor_calls(w_ok)
     assert visitor_calls(w_ok + "\nasync function page(req) { return fetch('https://api.waterdata.usgs.gov/x'); }"), "selftest: worker calling USGS on a page view did not fire"
@@ -395,6 +562,7 @@ def secret_scan(d):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")  # review notes quote page symbols (a Windows console is cp1252)
     if "--selftest" in sys.argv:
         return selftest()
     d = next((a for a in sys.argv[1:] if not a.startswith("--")), os.path.join(ROOT, "dist_next"))

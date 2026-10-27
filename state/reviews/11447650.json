@@ -1,0 +1,8 @@
+{
+ "id": "11447650",
+ "verdict": "PASS",
+ "notes": "Notes only: first screen answers flow/level/normal/time with USGS source; FORECAST HIGH 102.5 ft (NWS datum) sits beside USGS 105.09 ft, explained in small text as about 106.2 ft on USGS scale (phone-01) - consider leading with the USGS-scale figure | 'Tides at Clarksburg, rest of today' lists Oct 27 rows while 'Sunset today was 6:15 PM' implies today=Oct 26 (phone-02/03, likely snapshot timing) | 'Below normal' (24h mean 7,190 lower than 89% of years) while the 1948-2015 duration table puts 95% of days at or above 7,640 cfs (phone-08): different datasets, labelled | nearest out-of-state gauges 291-553 mi, labelled",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:18:29+00:00",
+ "template": "128cf370e25b"
+}

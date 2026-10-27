@@ -1,0 +1,8 @@
+{
+ "id": "06192500",
+ "verdict": "PASS",
+ "notes": "NOTES: 'Normal range' (24 h mean 1,620 = 26th pct, phone-01) while 7-day chart line sits at/below the shaded 25th-75th band most of the week (phone-04) and 'Past 7 days: 23rd percentile, below normal' - band edge, labelled windows | NWS impact text lowercases proper nouns 'mill creek, cinnebar basin ... yellowstone park road' (phone-05) | Air conditions table repeats Air temperature card 37 F ESE 10 mph (phone-10 vs phone-02) | no upstream/downstream block though Corwin Springs (USGS) is upstream; nearest 'Other gauge' is Madison below Ennis (other basin) | NWS table link on its own line leaves 'Yellowstone River at Billings;' dangling (phone-12)",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:19:19+00:00",
+ "template": "128cf370e25b"
+}

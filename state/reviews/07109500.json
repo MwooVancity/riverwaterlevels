@@ -1,0 +1,8 @@
+{
+ "id": "07109500",
+ "verdict": "PASS",
+ "notes": "Notes only: H1 'Arkansas River at Avondale' vs USGS name 'ARKANSAS RIVER NEAR AVONDALE, CO.' and NWS 'Arkansas River near Avondale' (phone-01, phone-11/13); USGS name shown all caps with trailing period | NWS forecast cfs (3.0 ft = 403 cfs, phone-06/07) uses NWS rating, not matching USGS readings at similar stage, block is labelled NWS | 'AQI 27, Good (OZONE)' caps (phone-03) | nearby list includes NM gauges 207-252 mi, labelled | windows 7d 24th pct below normal vs 24 h normal range both labelled",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:47:57+00:00",
+ "template": "12fab7e9a47e"
+}

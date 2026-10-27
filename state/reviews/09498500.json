@@ -1,0 +1,8 @@
+{
+ "id": "09498500",
+ "verdict": "PASS",
+ "notes": "Notes: phone-04 flow chart says 'Shaded: the normal range' but at this scale (normal ~200-700 cfs on a 10,000 axis) no shading is visible; phone-06 river forecast tiles pair 11 PM/12 AM readings an hour apart (7.8/7.8, 6.9/6.9) and read as repeats; 'Annual peaks on file 98, 1916 to 2022' (USGS lag); first NWS impact (42 ft) sits above Major 36 ft, NWS data; 'AQI 37, Good (OZONE)' caps",
+ "by": "hater-full2",
+ "at": "2026-10-27T08:14:05+00:00",
+ "template": "ca011505d9d2"
+}

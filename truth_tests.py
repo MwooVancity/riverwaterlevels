@@ -93,13 +93,15 @@ def main():
                 pass  # direction words that say the last hour differs from the last 6 h; nothing to contradict
             elif word == "rising" and val < 0 or word == "falling" and val > 0:
                 fail(site, "trend word %s contradicts headline %+d%%" % (word, val))
-            if c6 is not None and word in ("rising", "falling", "steady") and (word == "rising" and c6 <= 1 or word == "falling" and c6 >= -1 or word == "steady" and abs(c6) > 1):
+            if c6 is not None and word in ("rising", "falling", "steady") and (word == "rising" and c6 < 2 or word == "falling" and c6 > -2 or word == "steady" and abs(c6) >= 2 and abs(c6) * G["lv"] / 100 >= 5 and not (abs(c6) < 5 and c["chg"].get(3) is not None and (abs(c["chg"][3]) < 0.5 or (c["chg"][3] > 0) != (c6 > 0)))):  # a small 6 h change the last 3 h do not carry is steady (full review 2026-10-27)
                 fail(site, "trend word %s disagrees with the last 6 h (%+.1f%%)" % (word, c6))
         # 6. storms: the lightning line says thunderstorms exactly when the NWS hourly forecast for the next 24 h does
         sl = render.storm_line(G)
         if sl and " h old" not in sl:  # a stale hourly forecast prints its age instead of hours, and that is the honest line
             hr24 = [q for q in ((G["rec"].get("nws") or {}).get("hourly") or []) if render.parse_t(q["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]
-            if any("thunder" in (q.get("shortForecast") or "").lower() for q in hr24) != ("Thunderstorms in the forecast" in sl):
+            per24 = [q for q in ((G["rec"].get("nws") or {}).get("periods") or []) if render.parse_t(q["startTime"]) < G["now"] + datetime.timedelta(hours=24) and render.parse_t(q.get("endTime") or q["startTime"]) > G["now"]]
+            said = any("thunder" in (q.get("shortForecast") or "").lower() for q in hr24) or any(re.search(r"(?i)t-?storm|thunder", (q.get("shortForecast") or "") + " " + (q.get("detailedForecast") or "")) for q in per24)
+            if said != ("Thunderstorms in the forecast" in sl):  # hourly or day/night wording (full review: "Slight Chance T-storms" tonight)
                 fail(site, "storm line disagrees with the hourly forecast: %s" % sl[:90])
         # 7. units: forecast stage and flow are told apart by their units, never by column position
         fcd = (G["rec"].get("nwps") or {}).get("forecast") or {}
@@ -203,7 +205,8 @@ def main():
             if word != w:
                 fail("band %s" % p, "word %r, expected %r" % (word, w))
             lower = p == -1 or p < 50
-            if lower and not sent.startswith("Lower than") or (not lower) and not sent.startswith("Higher than"):
+            s_ = re.sub(r"^The 24 h average, [\d,]+ cfs, is ", "", sent).lower()  # the tile names the 24 h average when that is what it judged
+            if lower and not s_.startswith("lower than") or (not lower) and not s_.startswith("higher than"):
                 fail("band %s" % p, "sentence points the wrong way: %r" % sent)
             k = re.search(r"than (\d+)%", sent)
             if k and not (50 <= int(k.group(1)) <= 100) and "95% or more" not in sent:

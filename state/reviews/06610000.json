@@ -1,0 +1,8 @@
+{
+ "id": "06610000",
+ "verdict": "PASS",
+ "notes": "Notes only: breadcrumb 'HOME / NE / AT OMAHA' lacks the river crumb other pages have (phone-01); garbled public-land name 'Kerry, Bob Plaza And Pedestrian Bridge' (phone-11); AQ monitor names 'NCORE' / '701 Florence Bld' are agency jargon with no distance (phone-03); cold-water 'Under 50F: colder than the guide's coldest band' wording (phone-10); alerts and air temp each shown twice; nearest other site gauge 164 mi",
+ "by": "hater-full2",
+ "at": "2026-10-27T07:52:37+00:00",
+ "template": "cf8da0e6a3e6"
+}

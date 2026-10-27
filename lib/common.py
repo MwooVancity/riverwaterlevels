@@ -19,6 +19,17 @@ esc = html.escape
 # wave 0 slice: gauges chosen to exercise every case (full sensors, no sensors, multi-gauge river, snowmelt, small creek)
 
 
+def template_hash():
+    """Fingerprint of the code that decides what a page shows (hater review: a change here needs a fresh signed review). Line endings are
+    normalised so a Windows checkout and CI agree."""
+    import glob, hashlib
+    files = sorted(glob.glob(os.path.join(ROOT, "lib", "*.py")) + glob.glob(os.path.join(ROOT, "templates", "*")) + [os.path.join(ROOT, f) for f in ("build.py", "collect.py", "worker/index.js")])
+    h = hashlib.sha256()
+    for f in files:
+        h.update(os.path.relpath(f, ROOT).replace("\\", "/").encode() + b"\0" + open(f, "rb").read().replace(b"\r\n", b"\n"))
+    return h.hexdigest()[:12]
+
+
 def usgs_headers():
     h = {"User-Agent": "riverwaterlevels-build"}
     if os.environ.get("USGS_API_KEY"):
@@ -71,7 +82,9 @@ def fmt(v):
 
 def fmtc(v):
     """Whole cfs with a thousands comma (style sheet 6); fmt keeps decimals for sensor values."""
-    return "–" if v is None else "{:,.0f}".format(v)
+    if v is None:
+        return "–"
+    return "{:,.0f}".format(float("%.3g" % v) if abs(v) >= 1000 else v)  # hater 2026-10-27: computed means printed as "280,917 cfs"
 
 
 def interp_pct(stats_row, v):
@@ -106,6 +119,14 @@ def river_at(river, place):
 
 
 ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997828618122077" crossorigin="anonymous"></script>'  # AdSense site loader (owner 2026-10-23); head of indexable pages only, never the embed panel or 404
+
+
+PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Normal range": "in the normal range", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}
+
+
+def sig3(v):
+    """A model guess shown to 3 significant figures (hater 2026-10-27: '280,917 cfs' is false precision)."""
+    return float("%.3g" % v) if v else v
 
 
 def band_word(p):

@@ -1,0 +1,8 @@
+{
+ "id": "07068000",
+ "verdict": "PASS",
+ "notes": "Notes only: phone-07 'LAST DAILY MEAN THIS HIGH 1,200 cfs' next to a 7-day high of 1,190 reads as a contradiction on a flat river (means 'at least this high') | phone-01 'A year earlier, on Oct 25' on an Oct 26 page | phone-01 'Upstream dams may have changed flows' on the free-flowing Current River (plural even if NID count is 1) | phone-08 'How often each flow is reached (USGS, years not stated)' and today's 1,180 cfs not placed in the table | rain 24 h and air temp/wind repeated (phone-02 vs phone-02/03 and phone-08) | phone-10 upstream forecast points Van Buren/Akers/Montauk named but not linked | river forecast shows no issued time",
+ "by": "hater-full2",
+ "at": "2026-10-27T08:00:07+00:00",
+ "template": "7fd0d53d903b"
+}

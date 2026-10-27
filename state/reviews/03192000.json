@@ -1,0 +1,8 @@
+{
+ "id": "03192000",
+ "verdict": "PASS",
+ "notes": "Notes: 'A year earlier, on Oct 24: 701 cfs' (Oct 24 not Oct 25/26) | About table 'Instantaneous gage height record Jun 22, 2026 to Oct 25, 2026' while latest reading is Oct 26, 10:00 PM | gage tile 'Next NWS impact at 20.0 ft' while Action is 18.0 ft (labelled) | percentile from single reading here vs 24 h mean on other pages (labelled; hydropeaking note is good) | slice not seen: phone-02",
+ "by": "hater-full",
+ "at": "2026-10-27T07:25:52+00:00",
+ "template": "dfaf767af80e"
+}

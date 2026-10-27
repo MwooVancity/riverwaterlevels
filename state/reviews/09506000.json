@@ -1,0 +1,8 @@
+{
+ "id": "09506000",
+ "verdict": "PASS",
+ "notes": "Notes only: phone-07 'Next 72 hours 0.03 in' then 'Next 7 days 3.03 in' looks like a typo to a reader (3 in all on days 4-7; matches NWS rise to 12.3 ft and 6-10 day 'Above 70%', so likely real) | phone-04 7-day flow chart caption 'Shaded: the normal range' but the band (~100-230 cfs) is invisible on a 15,000 cfs axis | phone-01 'A year earlier, on Oct 25' under an Oct 26 heading | phone-10 RIDB raw caps '(928) 567-4121 DURNING OFFICE HOURS 0800-430 M-F' | phone-09 three SNOTEL rows all 0.0 in, 0.0 median (October, padding-ish) | hourly table and chip row cut at right edge (scroll affordance)",
+ "by": "hater-full2",
+ "at": "2026-10-27T08:07:26+00:00",
+ "template": "f7dee213eda2"
+}

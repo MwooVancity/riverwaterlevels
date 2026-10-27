@@ -1,0 +1,8 @@
+{
+ "id": "06701900",
+ "verdict": "PASS",
+ "notes": "Notes only: NOAA National Water Model block shows 614 cfs vs gauge 105 cfs (+485%) with a caveat; title says 'next 13 hours' but only 2 rows (7 AM, 10 AM) shown (phone-06) | H1 'Brush Creek Near Trumbull' capital 'Near' (phone-01) | water temp is from a gauge 12 mi away above Strontia Springs Reservoir, air temp from Wilkerson Pass 21 mi away: both labelled with distance | RFC 24 h rain 0.67 in vs stations 0.23-0.44 in: labelled different sources and windows | step change Oct 22 57->105 cfs visible on chart, no release explanation (data not available)",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:18:30+00:00",
+ "template": "128cf370e25b"
+}

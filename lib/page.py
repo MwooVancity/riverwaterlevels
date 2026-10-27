@@ -29,9 +29,9 @@ def b_related(G, pages):
             pr = pages.get(x["site"])
             if x["relation"] == rel and pr and pr.get("_built"):
                 nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmtc(x["flow"]),
-                              "sub": x["relation"].capitalize() + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + ((" &middot; lag about %d h" % x["lag_h"]) if x.get("lag_h") else ""), "cur": False})
+                              "sub": x["relation"].capitalize() + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])), "cur": False})
     return block("related_gauges", "Upstream and downstream gauges", "live", ui.strip(nodes),
-                 "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed. Observed lag is the shift, up to 72 h, that best matches hourly flow at the two gauges over the last 8 days (r = correlation, shown only at 0.85 or higher); it is empirical, not a travel time.", "usgs")
+                 "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed.", "usgs")
 
 
 def b_land(G):
@@ -40,11 +40,17 @@ def b_land(G):
         return None
     seen_l, uniq = set(), []
     for t in land["rows"]:
-        if tuple(t) not in seen_l:
-            seen_l.add(tuple(t))
-            uniq.append(t)
-    rows = "".join(tr([esc(u), esc(PADMAN.get(m, m or "n/a")), esc(ACCESS.get(a, a or "n/a"))]) for u, m, a in uniq[:12])
-    return block("public_land", "Public land at this gauge", "map", table(["Unit", "Managed by", "Public access"], rows),
+        u = re.sub(r"\s*\bUnknown\b\s*", " ", t[0] or "").strip() or "Unnamed unit"
+        if re.match(r"(?i)private land owner", u) or (t[1] or "").upper() == "PVT":
+            continue  # a private owner is not public land (hater 2026-10-27: "Private Land Owner 1", "Isles Unknown")
+        if u.lower() not in seen_l:
+            seen_l.add(u.lower())
+            uniq.append((u, t[1], t[2]))
+    if not uniq:
+        return None
+    known = any(PADMAN.get(m, m) not in ("Unknown manager", "Unknown", None, "") for _, m, _ in uniq[:12])
+    rows = "".join(tr([esc(u)] + ([esc(PADMAN.get(m, m or "n/a"))] if known else []) + [esc(ACCESS.get(a, a or "n/a"))]) for u, m, a in uniq[:12])
+    return block("public_land", "Public land at this gauge", "map", table(["Unit"] + (["Managed by"] if known else []) + ["Public access"], rows),
                  "Source: USGS Protected Areas Database (PAD-US), within about half a mile of the gauge, downloaded %s. Mapped land is not proof of legal access." % fdate(land["downloaded"]), "padus")
 
 
@@ -85,13 +91,13 @@ def b_nearby(G, pages):
         far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: fill to five with the nearest anywhere, distance shown
     if not out and not same and not far:
         return None
-    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc(river_at(p["river"], p["place"]) + ", " + p["state"]), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in grp)
+    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in grp)
     lis = li(out[:5])
     if same:
-        lis += '</ul><p class="src">Other rivers in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
+        lis += '</ul><p class="src">More gauges in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
     if far:
         lis += '</ul><p class="src">Nearest gauges elsewhere on this site</p><ul class="nbr">' + li(far)
-    return block("nearby_gauges", "Other gauges nearby" if out else "Other gauges on this site", "live", '<ul class="nbr">%s</ul>' % lis,
+    return block("nearby_gauges", "Other gauges nearby" if out else "Other gauges on this site", "live", ('<ul class="nbr">%s</ul>' % lis).replace('<ul class="nbr"></ul>', ""),
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 
 
@@ -115,7 +121,7 @@ def tab_blocks(tab, G, pages):
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
                 "SEC:What the water is like now", b3.b_camera(G), b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
-                "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
+                "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
                 "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_cpc(G)]) + [
                 "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G), b3.b_stocking(G), b_snotel(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
@@ -128,7 +134,7 @@ def tab_blocks(tab, G, pages):
 def embed_page(G, pages):
     """The hero (alert banner, one-line answer, tiles) alone, for an iframe on a club, outfitter or county page; links back to the full page (Lakebrief comparison 2026-10-21: their one link-earning device)."""
     row = G["row"]
-    rp, st = river_at(G["river"], G["place"]), G["st"]
+    rp, st = river_at(G["river"], G["place"]), G.get("st_shown") or G["st"]
     full = SITE_URL + row["dashboard_url"]
     h = hero(G, pages)
     h = h.split('<div class="cstrip"')[0]  # tiles only, no strip, no cite
@@ -186,8 +192,8 @@ function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2
 var ag=q('age');if(ag)ag.textContent=age(new Date(snap));
 function edge(){return fetch('/live/'+ID.slice(5)+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var g=j&&j.g&&j.g[ID.slice(5)];if(!g||!g.f||g.f[2]||!j.t||Date.now()-Date.parse(j.t)>1800000)throw 0;return [{v:g.f[0],t:new Date(g.f[1])},g.h?{v:g.h[0],t:new Date(g.h[1])}:null]})}
 function apply(a){var F=a[0],S=a[1];
-if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';if(F.t.getTime()>snap)[].slice.call(document.querySelectorAll('.dv')).forEach(function(e){if(!e.querySelector('.asof')){var s=document.createElement('small');s.className='asof';s.textContent=' (as of the '+lt(new Date(snap))+' reading)';e.appendChild(s)}});var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent='Flow and gage height at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';hero.parentNode.insertBefore(bn,hero.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
-function fail(){var a=q('age'),hh=document.querySelector('.hero2'),old=hh&&(Date.now()-new Date(hh.getAttribute('data-t')))>3600000;if(a&&old&&!document.getElementById('lf')){var s=document.createElement('span');s.id='lf';s.className='lf';s.textContent=' \u00b7 live check did not answer; showing the page as built';a.parentNode.parentNode.appendChild(s)}}
+if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent='Flow and gage height at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';var an=document.querySelector('p.answer')||hero;an.parentNode.insertBefore(bn,an.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
+function fail(){var a=q('age'),hh=document.querySelector('.hero2'),old=hh&&(Date.now()-new Date(hh.getAttribute('data-t')))>3600000;if(a&&old&&!document.getElementById('lf')){var s=document.createElement('span');s.id='lf';s.className='lf';s.textContent=' \u00b7 the newest reading could not be loaded just now';a.parentNode.parentNode.appendChild(s)}}
 function run(){edge().then(apply).catch(fail)}
 run();document.addEventListener('visibilitychange',function(){if(!document.hidden)run()});setInterval(function(){if(!document.hidden)run()},300000)})();</script>"""
 
@@ -310,7 +316,7 @@ def build_tab(tab, G, pages):
     blocks = merge_charts(blocks)
     flat = [x for b in blocks for x in (b if isinstance(b, list) else [b])]
     shown = [b for b in flat if isinstance(b, dict)]
-    river, place, st = G["river"], G["place"], G["st"]
+    river, place, st = G["river"], G["place"], G.get("st_shown") or G["st"]
     rp = river_at(river, place)
     # Title and meta description carry NO reading (2026-10-26): Google shows them from its last crawl, days or weeks old, and the edge
     # cannot update them, so a number there becomes a stale number in search results under our name (snoflo's snippets showed weeks-old
@@ -331,10 +337,11 @@ def build_tab(tab, G, pages):
         tabs_html += '<a href="%s"%s>%s</a> ' % (row[t + "_url"], cur, TABS[t]["label"])
     tabbar = "" if len(avail) == 1 else '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in avail)
     hub_part = "" if row.get("_single") else '<a href="%s">%s</a> / ' % (row["hub_url"], esc(river))
-    crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (st.lower(), esc(st), hub_part, esc(place))
+    last = place if hub_part else river_at(river, place)  # full review: "HOME / NE / AT OMAHA" had no river
+    crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (G["st"].lower(), esc(G["st"]), hub_part, esc(last))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), "fresh" if G["age_min"] <= 90 else "ageing" if G["age_min"] <= 360 else "stale", iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
-    ld_items = [("Home", "/"), (st, "/rivers/%s/" % st.lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(place, None)]
+    ld_items = [("Home", "/"), (G["st"], "/rivers/%s/" % G["st"].lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
     fl7 = [x[0] for x in G["fl"]]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % json.dumps({
         "@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL, "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}},
@@ -395,7 +402,7 @@ def build_tab(tab, G, pages):
     if T["hero"] and side:
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
-            '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
+            '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
                 esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}

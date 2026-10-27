@@ -1,0 +1,8 @@
+{
+ "id": "06214500",
+ "verdict": "PASS",
+ "notes": "NOTES: 'Normal range' (24 h mean 3,200 = 25th pct, phone-01) while 7-day flow line sits under the shaded normal band all week (phone-04) and 'Past 7 days: 22nd percentile, below normal' (phone-08) - band edge, labelled windows | Livingston (upstream, same river) appears only under 'More gauges in MT', no upstream/downstream block | NWM 14 h starts 2,970 vs ensemble 2,920 (both labelled, both flagged vs gauge) | Air conditions table repeats Air temperature card | NWS table 'Yellowstone River near Livingston;' link on its own line (phone-12)",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:19:19+00:00",
+ "template": "128cf370e25b"
+}

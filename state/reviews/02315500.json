@@ -1,0 +1,8 @@
+{
+ "id": "02315500",
+ "verdict": "PASS",
+ "notes": "Notes: no upstream/downstream gauge block although the page already reads 'Suwannee River at Suwannee Springs Fla, 12 mi away' for water temperature and NWS lists Benton, Fargo and Suwannee Springs; nearest listed gauge is 'Chattahoochee River at Atlanta, GA ... 264 mi away' (labelled distance, but useless for this reader; add live flow from the same-river USGS gauges) | NWS forecast-point rows repeat '(in NAVD88)' jargon 8 times | air-quality headline 'Good (OZONE)' in caps vs 'Ozone' card, three monitors (White Springs Plant, Lake City, Valdosta) with no distances | 'A year earlier, on Oct 25, 2025' vs Oct 26 header | Aug 31, 2024 last-90th-percentile day verified against cached daily series | collapsed flood/daily/watershed sections unseen",
+ "by": "hater-full2",
+ "at": "2026-10-27T12:33:32+00:00",
+ "template": "025c96fed3cb"
+}

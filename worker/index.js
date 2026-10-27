@@ -153,7 +153,6 @@ function rewrite(res, g, m) {
   const [fv, ft] = g.f, tz = m[2], built = m[1], mins = (Date.now() - Date.parse(ft)) / 60000;
   const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.round(fv).toLocaleString("en-US"), ageTxt = age(ft);
   const ab = "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale");
-  const asofHtml = '<small class="asof"> (as of the ' + builtAt + " reading)</small>";
   const note = '<p id="lbn" class="src lf2">Flow and gage height at the top updated ' + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
   const stage = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(built) ? Number(g.h[0]).toFixed(2) : null;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
@@ -161,13 +160,12 @@ function rewrite(res, g, m) {
     .on('span[data-live="flow"]', text(flow)) // same rounding as fmtc() in lib/common.py
     .on('span[data-live="lead"]', text(flow + " cfs"))
     // dv = text the build derived from its own reading (class word, trend, flood distance, forecast vs now): not recomputed here, so it carries its own time
-    .on(".dv", { element(e) { e.append(asofHtml, { html: true }); } })
     .on('span[data-live="obs"]', text(nowAt))
     .on("span[data-cf]", text(flow))
     .on("span[data-co]", text(nowAt))
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
-    .on(".hero", { element(e) { e.after(note, { html: true }); } });
+    .on("p.answer", { element(e) { e.after(note, { html: true }); } }); // said once, right under the answer it qualifies (was 5 stamps)
   if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)));
   const r = out.transform(res);
   const o = new Response(r.body, r);

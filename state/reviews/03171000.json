@@ -1,0 +1,8 @@
+{
+ "id": "03171000",
+ "verdict": "PASS",
+ "notes": "Notes: gage tile 'Next NWS impact at 12.5 ft' while the stage bar shows Action 12.0 ft (impact vs stage, labelled) | public land 'Bisset Park, Unknown manager' vs NWS 'Bissett Park' | monthly water temperature from 31-87 days per month (marked few) | 12 h -33.3% vs 24 h -25.1% with 'Last 20% rise: 14 hours ago' consistent | slices not seen: phone-02..14, desktop-01 (judged from text.txt)",
+ "by": "hater-full",
+ "at": "2026-10-27T07:25:52+00:00",
+ "template": "dfaf767af80e"
+}

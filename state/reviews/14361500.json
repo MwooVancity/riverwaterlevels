@@ -1,0 +1,8 @@
+{
+ "id": "14361500",
+ "verdict": "PASS",
+ "notes": "Notes only: hourly 'VISIBILITY MI 0 0 0 0 0 0' for 13 h (phone-03) is sub-mile fog rounded by %.0f to 0; show one decimal or '<0.5' under 1 mi | 'Forecast high 1.0 ft' is below the latest 1.06 ft (phone-01), labelled 'about level' | 87 vs 88 years, labelled | 'A year earlier, on Oct 25, 2025' under an Oct 26 heading",
+ "by": "hater-full2",
+ "at": "2026-10-27T13:07:43+00:00",
+ "template": "133cac292ed4"
+}
