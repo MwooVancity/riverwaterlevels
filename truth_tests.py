@@ -51,7 +51,7 @@ def main():
             else:
                 lead = len(spans) == 4
                 ni, ti, ai = (1, 2, 3) if lead else (0, 1, 2)
-                if chip and spans[ti] != chip.group(1):
+                if chip and not spans[ti].startswith(chip.group(1)):  # the answer may add the NWS forecast after the trend, never say a different trend
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
                 if nw and G["p"] is not None and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
