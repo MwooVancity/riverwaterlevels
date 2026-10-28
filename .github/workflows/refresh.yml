@@ -42,6 +42,8 @@ jobs:
           key: rwl-data-${{ github.run_id }}
           restore-keys: |
             rwl-data-
+      - name: Keep the committed review signatures (the restored cache holds older ones; 2026-10-27 a fresh _template PASS was overwritten)
+        run: git checkout -- state/reviews
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
         run: python refresh.py
