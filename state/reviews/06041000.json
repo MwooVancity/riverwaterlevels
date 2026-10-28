@@ -1,8 +1,8 @@
 {
  "id": "06041000",
  "verdict": "PASS",
- "notes": "NOTES: 'UPSTREAM GAUGE NOW 641 cfs' card and upstream block use Hebgen (above two dams, ~50 mi) though nearer main-stem USGS 06040000 nr Cameron (983 cfs) and 06040050 are in the cached feed; no downstream gauge shown though 06041500 (1,320 cfs) is cached | NWS upstream list renders '; Madison River near West Yellowstone' on its own line after a block link (phone-12), and link text 'Hebgen Dam near West Yellowstone' (HBDM8) lands on a page whose forecast point is GRYM8 | neighbour time 9:45 PM newer than this page's 8:00 PM (offline artifact) | NWM 'next 14 hours' 2 rows, flagged -22% vs gauge",
- "by": "hater-full2",
- "at": "2026-10-27T13:19:20+00:00",
- "template": "128cf370e25b"
+ "notes": "notes only: air card 'wind calm, gusts 0 mph' (phone-02, phone-10) beside hourly forecast 14 mph gusts 25 at 6P (phone-03), different datasets but 'gusts 0 mph' reads as a non-value; 'Below normal' from 24 h mean 1,300 while latest 1,410 sits at the 25th-percentile edge on the chart (phone-01/04); 'Typical water temperature by month' gives day counts but no years (phone-09); 'LAST DAILY MEAN AT OR ABOVE 1,390 CFS / 1,420' label hard to parse (phone-08); cold-water warning repeated in card and table (phone-02, phone-09); AQI 'Bozeman EBAM' no distance (phone-03)",
+ "by": "hater-D",
+ "at": "2026-10-28T01:02:19+00:00",
+ "template": "7feab811c082"
 }

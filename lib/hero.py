@@ -178,7 +178,7 @@ def hero(G, pages=None):
     chg = G["chg"]
     ndam = upstream_dams(G)
     if p is not None and ndam >= 1:
-        cap += (" A dam upstream may have changed flows during this record." if ndam == 1 else " %d dams upstream may have changed flows during this record." % ndam)
+        cap += (" A dam upstream may have changed flows during this record." if ndam == 1 else " %s dams upstream may have changed flows during this record." % format(ndam, ","))
     if p is not None and G["osc"]:
         cap += (" This gauge is tidal" if G["tidal"] else " Flow at this gauge rises and falls within the day") + ": the comparison uses the daily mean."
     if p is not None and TAILWATER.search(G["row"].get("raw_name") or ""):
@@ -366,11 +366,7 @@ def hero(G, pages=None):
     elif st_:
         sh, _, sz = tzl(st_[1], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
         strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], G["ldate"], -6.0)) else "", moon_phase(G["ldate"])[0].lower(), moon_phase(G["ldate"])[1]))
-    ch = calm_hours(G)
-    if ch:
-        runs_, n_ = ch
-        strip += ui.tile("calm", "sun", "Calm daylight hours today", (esc(runs_[0]) if runs_ else "No calm hour") + (' <small>+%d more</small>' % (len(runs_) - 1) if len(runs_) > 1 else ""),
-                         '<small>%s</small>' % esc((lambda s: s[:1].upper() + s[1:])(("; ".join(runs_) + ": " if len(runs_) > 1 else "" if runs_ else "No daylight hour today: ") + "no thunder, wind under 15 mph, no rain in the NWS hourly grid (%d daylight hours checked)" % n_)))
+    # "Calm daylight hours" tile deleted 2026-10-27: "calm" was our own threshold, not a source's; it failed 3 of 6 hater pages (gusts ignored, an hour past sunset). The hourly table shows wind, gusts and thunder per hour.
     gone = []
     if not c["wt"] and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
         gone.append("live water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river%s)" % ("; monthly history is shown below" if (G["rec"].get("wtemp") or {}).get("months") else ""))
@@ -382,7 +378,7 @@ def hero(G, pages=None):
         gone.append("air observation (no NWS station report in the last 12 h)")
     if not ((G["rec"].get("airnow") or {}).get("rows")):
         gone.append("air quality (no EPA AirNow monitor reports for this location)")
-    if not ((G["rec"].get("nws") or {}).get("hourly")):
+    if not ((G["rec"].get("nws") or {}).get("hourly")) and not (((G["rec"].get("nws") or {}).get("grid") or {}).get("hours")):  # the hourly table also draws from the grid (hater 2026-10-27, Freeport: "not available" above a full table)
         gone.append("hourly weather (no NWS hourly forecast for this location)")
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
@@ -392,41 +388,6 @@ def hero(G, pages=None):
     cite ='<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
         esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), (('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) + ((" (gage height at %s)" % esc(tzl(G["sg"][-1][0], G["zone"]))) if G["sg"][-1][0] != G["lt"] else "")) if G["sg"] else (("%.2f ft (NWS %s)" % (nws_stage(G)[1], esc((G["rec"].get("nwps") or {}).get("lid") or ""))) if nws_stage(G) else "not measured"), ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html + cite
-
-
-def calm_hours(G):
-    """Daylight hours today with no thunder, wind under 15 mph and no rain in the NWS hourly grid, as runs like '7a to 11a'; None when the grid or the sun times are missing."""
-    hrs = ((G["rec"].get("nws") or {}).get("grid") or {}).get("hours") or []
-    st_ = sun_times(G["lat"], G["lon"], G["ldate"])
-    if not hrs or not st_:
-        return None
-    zone = G["zone"]
-    ok = []
-    for h in hrs:
-        try:
-            t = parse_t(h["t"]).astimezone(zone)
-        except (TypeError, ValueError):
-            continue
-        if t.date() != G["ldate"] or t < st_[0].astimezone(zone) or t > st_[1].astimezone(zone):
-            continue
-        calm = (h.get("thunder") or 0) < 30 and (h.get("wind_kmh") or 0) < 24.1 and (h.get("qpf_mm") or 0) < 0.3
-        ok.append((t, calm))
-    if not ok:
-        return None
-    runs, cur = [], None
-    for t, calm in ok:
-        if calm and cur is None:
-            cur = [t, t]
-        elif calm:
-            cur[1] = t
-        elif cur:
-            runs.append(cur); cur = None
-    if cur:
-        runs.append(cur)
-    def hh(t):
-        return "%d%s" % (t.hour % 12 or 12, "a" if t.hour < 12 else "p")
-    sunset = st_[1].astimezone(zone)
-    return [("%s to %s" % (hh(a), hh(min(b + datetime.timedelta(hours=1), sunset)))) if a != b else hh(a) for a, b in runs], len(ok)
 
 
 def last_year_flow(G):

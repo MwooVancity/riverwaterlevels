@@ -23,7 +23,7 @@ live,,13317000,Salmon River,White Bird,ID,67.3,100,49,40,"nri,nri-fish,fame",,,h
 live,,03185400,New River,Thurmond,WV,66.7,100,61,40,"nri,nri-paddle,nri-fish,fame",,,human,/river/new-river-wv/thurmond/
 live,,09506000,Verde River,Camp Verde,AZ,57.2,100,61,40,"wsr-fish,wsr,fame",,,high,/river/verde-river/camp-verde/
 live,,14105700,Columbia River,The Dalles,OR,39.6,10,67,40,,,,high,/river/columbia-river-or/the-dalles/
-live,,11447650,Sacramento River,Freeport,CA,12.8,10,88,0,,tiny-basin,,human,/river/sacramento-river/freeport/
+queue,,11447650,Sacramento River,Freeport,CA,12.8,10,88,0,,tiny-basin,,human,/river/sacramento-river/freeport/
 queue,1,10344500,Little Truckee River,Below Boca Dam Near Truckee,CA,93.9,100,80,90,"tail,fame",,,high,/river/little-truckee-river/below-boca-dam-near-truckee/
 queue,1,10351600,Truckee River,Below Derby Dam Near Wadsworth,NV,93.8,100,75,90,"tail,fame",,33990,high,/river/truckee-river-nv/below-derby-dam-near-wadsworth/
 queue,1,11290000,Tuolumne River,Modesto,CA,90.4,100,87,70,fame,,,auto2,/river/tuolumne-river/modesto/

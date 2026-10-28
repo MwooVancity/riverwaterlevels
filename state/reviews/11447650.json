@@ -1,8 +1,8 @@
 {
  "id": "11447650",
- "verdict": "PASS",
- "notes": "Notes only: first screen answers flow/level/normal/time with USGS source; FORECAST HIGH 102.5 ft (NWS datum) sits beside USGS 105.09 ft, explained in small text as about 106.2 ft on USGS scale (phone-01) - consider leading with the USGS-scale figure | 'Tides at Clarksburg, rest of today' lists Oct 27 rows while 'Sunset today was 6:15 PM' implies today=Oct 26 (phone-02/03, likely snapshot timing) | 'Below normal' (24h mean 7,190 lower than 89% of years) while the 1948-2015 duration table puts 95% of days at or above 7,640 cfs (phone-08): different datasets, labelled | nearest out-of-state gauges 291-553 mi, labelled",
- "by": "hater-full2",
- "at": "2026-10-27T13:18:29+00:00",
- "template": "128cf370e25b"
+ "verdict": "FAIL",
+ "notes": "Label misstates the number: phone-01/desktop-01 card 'FORECAST HIGH (NWS STAGE) 102.5 FT' while its own text says 'the level here rises and falls within the day around this forecast' and the River forecast (phone-05/06) is a flat 102.5 ft for every point to Nov 1; it is a tidally averaged level, not a high, and the 7-day gage chart (phone-05) already peaks near 105.3 ft USGS (about 103.3 NWS), above this 'high' | Unexplained contradiction: phone-05 forecast tile 'OCT 27, 6:00 PM PDT 102.5 ft 7,780 cfs' vs 'LATEST FLOW 2,420 CFS' at 4:15 PM (phone-01); forecast cfs are daily/tidally filtered means but the tiles do not say so, so a reader sees flow tripling in under 2 h | Note: same station named 'KSAC (Sacramento Executive Airport)' (phone-02) and 'Sacramento Airport Asos' (phone-06), 'Asos' is jargon | Note: '-' rain days at nearby stations (phone-06/07) are feed gaps",
+ "by": "hater-E",
+ "at": "2026-10-28T01:04:38+00:00",
+ "template": "df9fe352ff20"
 }

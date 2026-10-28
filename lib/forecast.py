@@ -52,7 +52,8 @@ def b_river_forecast(G):
     pts_ = fc_points(fc)
     if pts_:
         near = min(pts_, key=lambda x: abs((x[0] - G["lt"]).total_seconds()))
-        if abs((near[0] - G["lt"]).total_seconds()) <= 5400 and near[2] and G["lv"] and abs(near[2] - G["lv"]) > 0.25 * max(near[2], G["lv"]):
+        # not across zero points (gap) and not in a tidal reach, where one reading against a daily forecast says nothing (hater 2026-10-27, Freeport)
+        if not gap and not G["osc"] and abs((near[0] - G["lt"]).total_seconds()) <= 5400 and near[2] and G["lv"] and abs(near[2] - G["lv"]) > 0.25 * max(near[2], G["lv"]):
             lead = '<p class="src">At %s the NWS forecast flow is %s cfs; the USGS measured %s cfs at %s. %s</p>' % (esc(tzl(near[0], G["zone"], date=False)), fmtc(near[2]), fmtc(G["lv"]), esc(tzl(G["lt"], G["zone"], date=False)), ("The NWS forecast level for that time is %.1f ft against %.2f ft at the gauge, so the forecast itself starts off the reading." % (near[1], G["sg"][-1][1])) if (near[1] is not None and G["sg"] and abs(near[1] - G["sg"][-1][1]) > 0.2) else "The levels agree; the NWS converts level to flow with its own rating, which differs from the USGS rating here.")
     from lib.blocks3 import _fc_offset
     _o = _fc_offset(G, fut, "ft" if any(x[1] is not None for x in fut) else "cfs", gap)
@@ -75,11 +76,12 @@ def b_river_forecast(G):
     _cv = (gap[0] if gap else (G["sg"][-1][1] if G["sg"] else None)) if sel[top_i][1] is not None else G["lv"]
     _below = _hv is not None and _cv is not None and _hv < _cv - (0.05 if sel[top_i][1] is not None else 0.02 * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
     lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead
+    _flat = len({sel[i][1] if sel[i][1] is not None else sel[i][2] for i in pick}) == 1  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
     for i in pick:
         t_, s_, f_ = sel[i]
         main = ("%.1f <small>ft</small>" % s_) if s_ is not None else (("%s <small>cfs</small>" % fmtc(f_)) if f_ is not None else "–")
         subf = ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else ""
-        fcards.append(card(("Highest forecast%s &middot; " % (" (below the latest reading)" if _below else "") if i == top_i else "") + esc(tzl(t_, G["zone"])), main, subf, "crest" if i == top_i else ""))
+        fcards.append(card(("Highest forecast%s &middot; " % (" (below the latest reading)" if _below else "") if i == top_i and not _flat else "") + esc(tzl(t_, G["zone"])), main, subf, "crest" if i == top_i and not _flat else ""))
     if len(pick) > 2 and len({(sel[i][1], sel[i][2]) for i in pick}) == 1:  # full review: nine identical "1.9 ft, 154 cfs" cards
         t_, s_, f_ = sel[pick[0]]
         fcards = [card("Every forecast point to %s" % esc(tzl(sel[-1][0], G["zone"])), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]

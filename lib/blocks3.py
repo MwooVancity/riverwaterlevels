@@ -34,7 +34,7 @@ def b_nws_point(G, pages=None):
                 nm_list = nm_list[::-1]
             if total > len(nm_list):
                 lab = "%s (nearest %d of %d)" % (lab, len(nm_list), total)
-            rows += tr([lab, "; ".join(nm_link(x) for x in nm_list)])
+            rows += tr([lab, "<br>".join(nm_link(x) for x in nm_list)])  # one point per line (hater 2026-10-27: a "; " wrapped to the start of a phone line after a link)
     return block("nws_forecast_point", "National Weather Service forecast point", "official", table(["Item", "Value"], rows),
                  "Source: National Weather Service National Water Prediction Service, forecast point %s, fetched %s." % (esc(n["lid"]), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
 

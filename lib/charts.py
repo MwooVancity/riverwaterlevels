@@ -144,7 +144,7 @@ def b_record(G):
     if r.get("last_p90"):
         cards.append(card("Before these 7 days, last day above the 90th percentile", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
     if r.get("above_p75"):
-        cards.append(card("Days above the 75th percentile", "%d of %d" % (r["above_p75"]["n"], r["above_p75"]["of"]), "last %d days" % r["above_p75"]["of"]))
+        cards.append(card("Days above the 75th percentile", "%s of %s" % (format(r["above_p75"]["n"], ","), format(r["above_p75"]["of"], ",")), "last %s days" % format(r["above_p75"]["of"], ",")))
     if r.get("month"):
         m = r["month"]
         cards.append(card("%s 1 to %d, mean flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), (("%s highest of the %d years with USGS daily values for these dates" % (ordinal(m["rank"]), m["years"])) if m["rank"] <= m["years"] / 2 else ("%s lowest of the %d years with USGS daily values for these dates" % (ordinal(m["years"] - m["rank"] + 1), m["years"])))))
@@ -226,7 +226,7 @@ def b_wtemp(G):
     w = G["rec"].get("wtemp")
     if not w or not w.get("months"):
         return None
-    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%d days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, round(n), "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
+    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, format(round(n), ",")) for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
     mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}
     def under(lo, hi):
         ms = [("<b>%s (this month)</b>" if m == G["ldate"].month else "%s") % MONTHS[m - 1][:3] for m in sorted(mf) if lo <= round(mf[m]) < hi]  # the row for today is marked; banded on the rounded value shown (full review)

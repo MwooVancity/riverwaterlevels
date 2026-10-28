@@ -1,8 +1,8 @@
 {
  "id": "06701900",
  "verdict": "PASS",
- "notes": "Notes only: NOAA National Water Model block shows 614 cfs vs gauge 105 cfs (+485%) with a caveat; title says 'next 13 hours' but only 2 rows (7 AM, 10 AM) shown (phone-06) | H1 'Brush Creek Near Trumbull' capital 'Near' (phone-01) | water temp is from a gauge 12 mi away above Strontia Springs Reservoir, air temp from Wilkerson Pass 21 mi away: both labelled with distance | RFC 24 h rain 0.67 in vs stations 0.23-0.44 in: labelled different sources and windows | step change Oct 22 57->105 cfs visible on chart, no release explanation (data not available)",
- "by": "hater-full2",
- "at": "2026-10-27T13:18:30+00:00",
- "template": "128cf370e25b"
+ "notes": "notes only: NWM table climbs 183 to 612 cfs while gauge 105 cfs steady, caveated (+74% start) but alarming next to 'Steady' headline (phone-06); 'Water temperature nearby 50 F' is from South Platte Abv Strontia Spgs Reservoir, above a dam, while this gauge is a tailwater (phone-02); 'LAST DAILY MEAN AT OR ABOVE 107 CFS / 140' label hard to parse (phone-08); SNOTEL % of median has no date unless expanded (phone-09); 12 campground cards, several 'not listed' (phone-10/11); AQI monitor 'Adams-Birch' no distance (phone-04); H1 'Near' capitalised",
+ "by": "hater-D",
+ "at": "2026-10-28T01:02:18+00:00",
+ "template": "7feab811c082"
 }

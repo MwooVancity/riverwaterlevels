@@ -82,7 +82,7 @@ def check_html(h, rel):
     if "<main" not in h:
         return bad + ["no <main>"]
     body = h.split("<main", 1)[1].split("</main>")[0]
-    text = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", body))  # code samples (the embed snippet) are meant to show markup
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", body)))  # code samples (the embed snippet) are meant to show markup; a line or cell break is a break, not a space ("Truckee<br>Truckee River")
     for mm in re.finditer(r"fetch\(\s*['\"](https?:)?//[^'\"]*waterdata\.usgs\.gov", h):  # USGS is the one keyed, metered API: readings come from our stored copy (NWS alerts are keyless and stay direct)
         bad.append("page script calls USGS directly (%r): live readings must come from our stored copy" % h[mm.start():mm.start() + 60])
     for pat in BANNED:
@@ -319,6 +319,15 @@ def hater_rules(h):
             bad.append("a %s chart with no unit on its axis" % m.group(1).lower())
     if re.search(r"(?i)\bsame as above\b|for most of these sites", t):
         bad.append("a row points at another row ('same as above') instead of printing its value")
+    # hater round 6 (2026-10-27)
+    m = re.search(r"\b\d{4,} (dams|days|stations|gauges|readings)\b", t)
+    if m:
+        bad.append("count without a thousands comma %r" % m.group(0))
+    if "different zero points" in t and "starts off the reading" in t:
+        bad.append("compares an NWS forecast level with the USGS reading although the page says they use different zero points")
+    gaps = re.search(r'<p class="gaps">(.*?)</p>', h, re.S)
+    if gaps and "hourly weather" in gaps.group(1) and re.search(r'id="hourly_(forecast|heatmap)"', h):
+        bad.append("'Not available: hourly weather' on a page that shows the hourly forecast block")
     for m in re.finditer(r'<section[^>]*id="([a-z_]+)"[^>]*>(.*?)</section>', h, re.S):
         body = re.sub(r'<p class="src[^"]*".*?</p>|<h2.*?</h2>|<header.*?</header>|<footer.*?</footer>', "", m.group(2), flags=re.S)
         if not re.search(r"<(table|svg|img|iframe|video|canvas)\b", body) and len(re.sub(r"<[^>]+>|\s+", "", body)) < 15:
@@ -472,6 +481,10 @@ def selftest():
     assert hater_rules("<small>Next NWS impact at 10.0 ft</small><b>Next impact at 7.0 ft</b>"), "selftest: tile/block impact mismatch did not fire"
     assert not hater_rules("<small>Next NWS impact at 7.0 ft</small><b>Next impact at 7.0 ft</b>"), "selftest: matching impacts wrongly flagged"
     assert hater_rules('<section id="recreation_sites"><h2>Recreation</h2><p class="src">Source: RIDB</p></section>'), "selftest: empty block did not fire"
+    assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
+    assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert not hater_rules("<small>1,535 dams upstream since 2025</small>"), "selftest: comma'd count wrongly flagged"
+    assert hater_rules('<p class="gaps">Not available for this gauge: hourly weather (no NWS hourly forecast).</p><section class="card blk" id="hourly_heatmap"><table><tr><td>1</td></tr></table></section>'), "selftest: 'not available' over a shown hourly block did not fire"
     pg = lambda title, h1, first, links: ('<title>%s</title><main><h1>%s</h1><div class="hero">%s</div><section class="card blk" id="x"></section>%s</main>'
                                           % (title, h1, first, "".join('<a href="/river/r/p%d/">x</a>' % i for i in range(links))))
     good_pg = pg("Lehigh River, Lehighton: live water level and flow", "Lehigh River at Lehighton, PA", "498 cfs normal range", 4)

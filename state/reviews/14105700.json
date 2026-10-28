@@ -1,8 +1,8 @@
 {
  "id": "14105700",
  "verdict": "PASS",
- "notes": "Notes only: gage height 75.14 ft says only 'Level relative to the gauge's zero' (phone-01); gauge zero is 0.00 ft NGVD29 so this is a sea-level elevation, add 'not water depth' as on other pages | flow and height move opposite ways ('-3,500 cfs ... height +0.00 ft', '+1,900 cfs ... height -0.03 ft', phone-05) with no line saying flow here is dam-driven/velocity-based | air card 'NWS forecast for the gauge, 6:00 AM PDT: 44\u00b0F (the station sits elsewhere)' has no date and odd wording (phone-02) | '1535 dams' lacks comma | 148 vs 149 years, labelled",
- "by": "hater-full2",
- "at": "2026-10-27T13:07:43+00:00",
- "template": "133cac292ed4"
+ "notes": "notes only: A year earlier, on Oct 25, 2025 under Is this normal for Oct 26 (1 day off, phone-01) | Upstream and downstream gauges shows no downstream gauge, only Deschutes tributary (phone-09) | 75.14 ft gage height on a 0.00 ft NGVD29 datum is water-surface elevation, not explained (phone-01/11) | single 129,000 cfs spike Oct 23 shown without provisional caveat (phone-04/05) | 148 vs 149 years explained in About",
+ "by": "hater-C",
+ "at": "2026-10-28T01:02:16+00:00",
+ "template": "7feab811c082"
 }
