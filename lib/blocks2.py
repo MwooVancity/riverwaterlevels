@@ -17,6 +17,7 @@ def cleared(src_id):
 def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, label):
     """Time series (observed solid, forecast dashed) with dashed horizontal threshold lines; the y axis is the caller's round axis."""
     L, B = (56, 30) if W > 500 else (46, 28)
+    L = axis_l(L, fs, ticks)
     span = (t1 - t0).total_seconds() or 1
     X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
@@ -52,8 +53,9 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
 
 def b_stage_chart(G):
     sg, who = G["sg"], "USGS"
-    if len(sg) < 8:  # no USGS gage height: the NWS observed stage at the forecast point (Memphis)
-        sg, who = [(parse_t(t), v, {}) for t, v in ((G["rec"].get("nwps") or {}).get("obs_series") or [])], "NWS"
+    ser_ = (G["rec"].get("nwps") or {}).get("obs_series") or []
+    if len(sg) < 8 and ser_ and (hours_old(ser_[-1][0], G["now"]) or 1e9) <= 24:  # no USGS gage height: the NWS observed stage at the forecast point (Memphis), only while fresh
+        sg, who = [(parse_t(t), v, {}) for t, v in ser_], "NWS"
     if len(sg) < 8 or (sg[-1][2].get("unit_of_measure") or "ft") != "ft":
         return None
     zone, now = G["zone"], G["now"]

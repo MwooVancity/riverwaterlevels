@@ -292,7 +292,7 @@ def conditions(G, pages=None):
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
-            if x.get("relation") == "upstream" and pr and pr.get("_built") and x.get("flow") is not None and x.get("time") and hours_old(x["time"], G["now"]) <= 24:
+            if x.get("relation") == "upstream" and pr and pr.get("_built") and x.get("flow") is not None and x.get("time") and (hours_old(x["time"], G["now"]) or 1e9) <= 24:
                 out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h"), "time": tzl(parse_t(x["time"]), zone) if x.get("time") else ""}
                 break
     if len(fl) >= 8 and not G.get("osc"):

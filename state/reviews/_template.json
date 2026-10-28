@@ -1,8 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "3 of 3 sample pages PASS with no F1-F8. Template notes: the 'A year earlier, on <date>' row uses the latest daily-mean date, not the page date (1 to 2 days off); SNOTEL distances are only inside a toggle; horizontally scrolling tables and the chip row look clipped at 390 px",
- "by": "hater-w4f",
- "at": "2026-10-28T14:02:13+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "Template sample 14105700, 01426500, 01570500 all PASS full review; template notes: right-edge clip on scrolling chip row and hourly table (scroll affordance only); 'A year earlier' date offset from the 'Is this normal' date; Upstream/downstream heading shown when only one direction exists",
+ "by": "hater-w5a",
+ "at": "2026-10-28T23:27:23+00:00",
+ "template": "2f430ae302a7",
+ "level": "full"
 }

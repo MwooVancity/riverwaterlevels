@@ -21,7 +21,7 @@ def get(u):
         except Exception:
             pass
         time.sleep(3 * (a + 1))
-    return ""
+    return None  # failed, as opposed to "" (USGS answered: no statistics)
 
 
 def parse(t):
@@ -49,12 +49,16 @@ def main():
     want = [a for a in sys.argv[1:] if not a.startswith("--")] or [r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"]
     todo = [s for s in want if not os.path.exists(os.path.join(OUT, s + ".json"))]
     os.makedirs(OUT, exist_ok=True)
-    got = {}
+    got, failed = {}, []
     for i in range(0, len(todo), 20):
-        got.update(parse(get(URL % ",".join(todo[i:i + 20]))))
+        t = get(URL % ",".join(todo[i:i + 20]))
+        if t is None:
+            failed += todo[i:i + 20]
+        else:
+            got.update(parse(t))
     for s, d in got.items():
         json.dump({"d": d}, open(os.path.join(OUT, s + ".json"), "w"), separators=(",", ":"))
-    print("stats: %d needed, %d downloaded, none published for: %s" % (len(todo), len(got), " ".join(s for s in todo if s not in got) or "none"))
+    print("stats: %d needed, %d downloaded, none published for: %s; download failed for: %s" % (len(todo), len(got), " ".join(s for s in todo if s not in got and s not in failed) or "none", " ".join(failed) or "none"))
 
 
 if __name__ == "__main__":

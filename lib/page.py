@@ -13,7 +13,7 @@ def b_related(G, pages):
     items = (G["rec"].get("related") or {}).get("items") or []
     rows = ""
     rel_ = lambda x, pr: "Tributary upstream" if x["relation"] == "upstream" and pr["river"].split()[0].lower() != G["river"].split()[0].lower() else x["relation"].capitalize()  # same rule as the hero tile
-    old_ = lambda x: hours_old(x["time"], G["now"]) > 24
+    old_ = lambda x: (lambda h: h is None or h > 24)(hours_old(x["time"], G["now"]))
     away = lambda pr: (" &middot; %d mi away" % round(miles_between(G["lat"], G["lon"], pr["_ll"][0], pr["_ll"][1]))) if pr.get("_ll") else ""  # hater w4: chain gauges with no distance
     for x in items:
         pr = pages.get(x["site"])

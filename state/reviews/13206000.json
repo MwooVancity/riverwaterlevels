@@ -1,8 +1,9 @@
 {
  "id": "13206000",
  "verdict": "FAIL",
- "notes": "F1/F8 phone-01+phone-05/06+desktop-01: 'Next NWS impact at 4200.0 ft (4196.8 ft above the latest reading)' and impact cards 'AT 4900.0 FT ... 4896.8 ft above', 'AT 8900.0 FT ... 8896.8 ft above' while action stage is '9.7 ft' and minor '10.1 ft': BIGI1 impact thresholds are not on the ft stage scale (likely cfs), so every impact margin is wrong | F8 phone-14: 'Upstream forecast points (nearest 6 of 10)' lists only 2 places, each three times ('Boise River below Diversion Dam / New York Canal Diversion at Boise' x3) | NOTE phone-07/08: rain table '-' on some station-days (feed gap unproven) | NOTE phone-10: 'Typical water temperature by month' with no source shown on the card while phone-02 says 'This gauge has no temperature sensor' (say which samples)",
- "by": "hater-w4k",
- "at": "2026-10-28T14:11:08+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "F8 phone-13/14: 'Upstream forecast points (nearest 6 of 10)' lists only 2 places, each 3 times ('Boise River below Diversion Dam / New York Canal Diversion at Boise' x3); the NWS feed repeats BSEI1/BDDI1, page must dedupe by LID and count distinct points | F8 phone-05: 'Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading' while every impact below is a FLOW (4,200 to 8,900 cfs) and the margins are cfs; say impacts are NWS flow thresholds compared with the latest USGS flow | NOTES: flow thresholds otherwise compare as flow everywhere (hero 'Next NWS impact at 4,200 cfs (3,960 cfs above the latest flow)', impact cards); ft categories 9.7/10.1/12.9 ft are NWS stage categories, consistent with crests (11.93 ft at 9,590 cfs); margins 3,960/4,660 vs 4,200-235=3,965 are rounding; flow-impact line sits in the GAGE HEIGHT card (phone-01); 'Typical water temperature by month' (phone-10) has no period shown (data 1997-2002) beside 'This gauge has no temperature sensor' (phone-02); rain table '-' days (phone-07/08) are feed gaps",
+ "by": "hater-w5b",
+ "at": "2026-10-28T23:26:10+00:00",
+ "template": "2f430ae302a7",
+ "level": "full"
 }

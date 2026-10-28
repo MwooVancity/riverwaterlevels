@@ -5,6 +5,11 @@ from lib.core import *
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
+def axis_l(L, fs, ticks):
+    """Left margin wide enough for the widest tick label (hater w3: "400,000" clipped)."""
+    return max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))
+
+
 def tf(v, ticks=None):
     """Axis tick label: zero is 0, not 0.00. With the tick list, use the fewest decimals that show every tick exactly (12.5 is never printed as 12)."""
     if abs(v) < 1e-9:
@@ -54,7 +59,7 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
         for d, a, c, m in bp:
             vals += [a, c]
     vmin, vmax, ticks = nice_ticks(min(vals), max(vals))
-    L = max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))
+    L = axis_l(L, fs, ticks)
     span = (t1 - t0).total_seconds() or 1
     X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
@@ -158,7 +163,7 @@ def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls):
     L, B = (56, 30) if W > 500 else (46, 28)
     vals = [v for y in years for v in ser[y] if v is not None]
     vmin, vmax, ticks = nice_ticks(min(vals), max(vals))
-    L = max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))
+    L = axis_l(L, fs, ticks)
     X = lambda i: L + i / (span - 1) * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
     grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (

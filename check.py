@@ -332,6 +332,19 @@ def hater_rules(h):
         body = re.sub(r'<p class="src[^"]*".*?</p>|<h2.*?</h2>|<header.*?</header>|<footer.*?</footer>', "", m.group(2), flags=re.S)
         if not re.search(r"<(table|svg|img|iframe|video|canvas)\b", body) and len(re.sub(r"<[^>]+>|\s+", "", body)) < 15:
             bad.append("block %r has a heading and source but no data" % m.group(1))
+    # hater wave 4 (2026-10-28): each FAIL type once, as a rule
+    for m in re.finditer(r'<section[^>]*id="([a-z_]+)"[^>]*>(.*?)</section>', h, re.S):
+        if "t-live" in m.group(2) and re.search(r"older than 24 h\)|(day|days|month|months|years) before this page was built", m.group(2)):
+            bad.append("block %r is badged live but shows a reading older than a day" % m.group(1))
+        if m.group(1) == "river_forecast" and m.group(2).count('class="rc') > 12:
+            bad.append("river forecast shows more than 12 cards")
+        if m.group(1) == "air_obs" and "NWS station " not in m.group(2):
+            bad.append("weather-station block does not name its station")
+    m = re.search(r"Next NWS impact at [\d.,]+ ft \(([\d.,]+) ft above", t)
+    if m and float(m.group(1).replace(",", "")) > 100:
+        bad.append("next NWS impact %s ft above the reading: the thresholds are not stages (published as flow?)" % m.group(1))
+    if "live water temperature (no USGS temperature sensor" in t and re.search(r"<td>Water temperature</td>", h):
+        bad.append("says there is no water temperature sensor while the sensor table shows one")
     return bad
 
 
@@ -461,6 +474,13 @@ def selftest():
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
     assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
     assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
+    assert hater_rules('<section id="camera"><span class="tag t-live">Live gauge</span>taken Aug 22 (2 months before this page was built)</section>'), "selftest: old camera under a live badge did not fire"
+    assert not hater_rules('<section id="camera"><span class="tag t-agency">Agency data</span>taken Aug 22 (2 months before this page was built)</section>'), "selftest: old camera without a live badge wrongly flagged"
+    assert hater_rules('<section id="river_forecast">' + '<div class="rc">x</div>' * 13 + '</section>'), "selftest: 13 forecast cards did not fire"
+    assert hater_rules('<section id="air_obs"><table><tr><td>Air temperature</td><td>41 F</td></tr></table></section>'), "selftest: unnamed weather station did not fire"
+    assert hater_rules("<p>Next NWS impact at 4200.0 ft (4196.8 ft above the latest reading)</p>"), "selftest: cfs impact printed as ft did not fire"
+    assert not hater_rules("<p>Next NWS impact at 12.0 ft (3.2 ft above the latest reading)</p>"), "selftest: a normal next impact wrongly flagged"
+    assert hater_rules('<p class="gaps">Not available for this gauge: live water temperature (no USGS temperature sensor at this gauge).</p><table><tr><td>Water temperature</td><td>60 F</td></tr></table>'), "selftest: 'no sensor' beside a sensor row did not fire"
     assert not hater_rules("<p>The newest reading is from Oct 26, 1.1 days ago.</p>"), "selftest: '1.1 days ago' wrongly flagged"
     assert hater_rules('<section id="flood_impacts"><b>Next: 9.0 ft</b><b>Next: 9.5 ft</b></section>'), "selftest: two 'Next:' cards did not fire"
     assert hater_rules("<small>Oct 24 last year: 264 cfs</small>"), "selftest: 'Oct 24 last year' did not fire"

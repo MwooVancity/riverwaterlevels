@@ -145,7 +145,8 @@ def fetch_nwps(site, lat, lon):
                 pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
                 if pts:
                     obs_stage = {"t": pts[-1]["validTime"], "v": pts[-1][col]}
-                    obs_series = [[p["validTime"], p[col]] for p in pts[-7 * 24 * 4:]]
+                    t7 = datetime.datetime.fromisoformat(pts[-1]["validTime"].replace("Z", "+00:00")) - datetime.timedelta(days=7)
+                    obs_series = [[p["validTime"], p[col]] for p in pts if datetime.datetime.fromisoformat(p["validTime"].replace("Z", "+00:00")) >= t7]
             except Exception as e:
                 note("nwps.obs_stage", "failed", e)
             fl = det.get("flood") or {}
@@ -874,6 +875,7 @@ AQ_SITES = {}
 def aq_sites():
     """AQS site id -> (lat, lon) from the AirNow monitoring-site file (public, keyless, about 4 MB), loaded once per run."""
     if not AQ_SITES:
+        AQ_SITES[""] = None  # tried: a failed download is not retried for every gauge
         for l in get_text("https://files.airnowtech.org/airnow/today/Monitoring_Site_Locations_V2.dat").splitlines()[1:]:
             c = l.split("|")
             try:
@@ -896,7 +898,7 @@ def fetch_airnow(lat, lon):
              "date": x.get("dateObserved"), "hour": x.get("hourObserved"), "tz": x.get("localTimeZone"), "id": x.get("siteID")} for x in j if isinstance(x, dict) and x.get("nowcastAQI") is not None]
     try:
         for r in rows:
-            p = aq_sites().get(r["id"] or "")
+            p = aq_sites().get(r["id"] or "") if r["id"] else None
             r["mi"] = round(haversine(lat, lon, p[0], p[1])) if p else None
             r["county"] = p[2] if p else None
     except Exception as e:

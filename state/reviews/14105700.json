@@ -1,8 +1,9 @@
 {
  "id": "14105700",
  "verdict": "PASS",
- "notes": "No F1-F8 defect. Notes: rate-of-rise, highest/lowest and record cards reconcile (83,700 from 90,600 = -7.6%, Oct 23 to Oct 26 = 86 h); SNOTEL stations (phone-07/08) show name only, distance sits behind the 'Each station: distance, elevation and date' toggle; 'A year earlier, on Oct 25, 2025' (phone-01) is not exactly a year before Oct 26; 'LIVE GAUGE' badge next to a 34 h old reading (phone-02) is an offline artifact; the hourly table and chip row cut off at the right edge are horizontal scrollers (phone-02/03)",
- "by": "hater-w4f",
- "at": "2026-10-28T14:02:12+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "No F1-F8. Notes: rate tiles, hour counts, cold-water bands all reconcile (83,700 from 90,600 = -7.6%, 129,000 86 h earlier); 'Hourly forecas' chip and hourly table clipped at the right edge are horizontal-scroll rows (phone-02/03); 'Upstream and downstream gauges' holds only one upstream tributary (phone-08); SNOTEL station distances only inside the expander (phone-07); 'A year earlier, on Oct 25, 2025' is one day off the Oct 26 comparison date but labelled; LIVE GAUGE badge and 'What the water is like now' over 1.8-day-old data are offline artifacts",
+ "by": "hater-w5a",
+ "at": "2026-10-28T23:27:22+00:00",
+ "template": "2f430ae302a7",
+ "level": "full"
 }

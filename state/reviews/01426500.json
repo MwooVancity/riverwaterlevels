@@ -1,8 +1,9 @@
 {
  "id": "01426500",
  "verdict": "PASS",
- "notes": "No F1-F8 defect. Notes: stage distances check (2.67 to 9.0/11.0/13.0/16.8/19.1/20.3 ft); NWS upstream and downstream forecast points are in river order; 'A year earlier, on Oct 26, 2025' (phone-01) is 2 days off Oct 28; 'Sep 4 ... 2 months before' (phone-09) is really 7 weeks; '-' daily rain at Delhi/Schenevus/Hobart (phone-07/08) = station did not report; the camera image from Aug 22 is dated (phone-09)",
- "by": "hater-w4f",
- "at": "2026-10-28T14:02:12+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "No F1-F8. Notes: stage gaps (9.0/11.0/13.0/15.0/16.8/19.1/20.3 minus 2.67) all correct; rate tiles reconcile; NWS forecast 2.5 ft = 370 cfs vs USGS 2.67 ft = 466 cfs are two labelled ratings; 'A year earlier, on Oct 26, 2025' is two days off Oct 28 but labelled; camera image is from Aug 22 (labelled); '-' in daily rain for stations that did not report; 'Sep 4 ... 2 months before' is about 7 weeks; State Game Land 299 as 'Public land at this gauge' is a mapped-layer name",
+ "by": "hater-w5a",
+ "at": "2026-10-28T23:27:22+00:00",
+ "template": "2f430ae302a7",
+ "level": "full"
 }

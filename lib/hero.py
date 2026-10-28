@@ -481,6 +481,14 @@ def storm_line(G):
 
 
 
+def impact_flow(G):
+    """True when the NWS impact thresholds are flows, not stages: a point can publish ft categories beside cfs impacts (Boise 13206000: minor 10.1 ft, impacts from 4,200)."""
+    n = G["rec"].get("nwps") or {}
+    cats = [v for v in (n.get("categories") or {}).values() if isinstance(v, (int, float)) and v > 0]
+    imp = [i["stage"] for i in n.get("impacts") or [] if isinstance(i.get("stage"), (int, float))]
+    return bool(cats and imp and min(imp) > 10 * max(cats))
+
+
 def impact_list(G):
     """{stage: [statement, ...]} of NWS impact statements, cleaned once for every place that shows them: a rain scenario ("2 TO 3 INCH IN 24 HOUR ... WILL CAUSE THE RIVER TO RISE TO 4.7 FEET") is not a stage impact and is left out; all-capitals text is set in sentence case; the point code reads as its name."""
     n = G["rec"].get("nwps") or {}
@@ -512,6 +520,9 @@ def next_impact(G):
     unit = (n.get("stage_units") or "ft").lower()
     _ref = ("the NWS reading of %.2f %s, on a different zero point from USGS" % (cur, unit)) if gap else "the latest reading"  # full review: Suwannee distances from 53.51 beside a 54.34 headline
     by = impact_list(G)  # the same list the impacts block shows (full review: tile 10.0 ft, block 7.0 ft)
+    if impact_flow(G):  # thresholds published as flow: compared with the flow reading, never with the gage height
+        up_ = [s_ for s_ in sorted(by) if G["lv"] is not None and s_ > G["lv"]]
+        return ("Next NWS impact at %s cfs (%s cfs above the latest flow)" % (fmtc(up_[0]), fmtc(up_[0] - G["lv"]))) if up_ else ""
     ahead = [s_ for s_ in sorted(by) if s_ > cur]
     if not ahead:
         cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and v > cur}

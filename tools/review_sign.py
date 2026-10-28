@@ -15,8 +15,11 @@ if rid != "_template" and not os.path.isdir(os.path.join(ROOT, ".cache", "review
     sys.exit("no screenshots for %s: run node tools/hater_shots.mjs %s and LOOK at them first" % (rid, rid))
 by = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--by=")), "reviewer")
 os.makedirs(os.path.join(ROOT, "state", "reviews"), exist_ok=True)
-rec = {"id": rid, "verdict": verdict, "notes": notes, "by": by, "at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "template": template_hash()}
+rec = {"id": rid, "verdict": verdict, "notes": notes, "by": by, "at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "template": template_hash(), "level": next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--level=")), "full")}  # first = first screen + full text (owner 2026-10-28), full = every screenshot
 json.dump(rec, open(os.path.join(ROOT, "state", "reviews", rid + ".json"), "w", encoding="utf-8"), indent=1)
+open(os.path.join(ROOT, "state", "reviews", "_log.jsonl"), "a", encoding="utf-8").write(json.dumps(rec) + "\n")  # history: what haters found, for new gate rules
+import shutil
+shutil.rmtree(os.path.join(ROOT, ".cache", "review", rid), ignore_errors=True)  # signed: the screenshots are spent (about 5 MB a gauge); the verdict and findings live in _log.jsonl
 print("signed", rid, verdict, "on code", rec["template"])
 if verdict == "FAIL" and rid != "_template":
     # a failed page leaves the site now, not at the next deploy (flood site 2026-10-27: pages stayed live after a hater FAIL); release.py brings it back
