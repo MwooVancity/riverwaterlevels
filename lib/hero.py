@@ -277,7 +277,7 @@ def hero(G, pages=None):
                              '<small>%s%s</small>' % (parts, (" &middot; gage %+.2f ft/h" % gr) if (gr := gage_rate(G)) is not None else "") + (word_note if word == "Unclear" else "")
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % G["ldate"].strftime("%b %d").replace(" 0", " "), norm_word,
-                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean).</small>' % (ly[1], fmtc(ly[0]))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
+                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith("%s %d," % (G["ldate"].strftime("%b"), G["ldate"].day)) else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
@@ -585,4 +585,4 @@ def nws_point_note(G):
         return ""
     if all(w in nm for w in pl):  # every word of the gauge's place is in the NWS name
         return ""
-    return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading." % (n.get("lid") or "", n.get("name"))
+    return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("lid") or "", n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")

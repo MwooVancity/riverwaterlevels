@@ -203,7 +203,7 @@ def b_about(G):
              ("Drainage area", ("%s sq mi" % fmt(loc["drainage_area"])) if loc.get("drainage_area") else None),
              ("Altitude of the gauge's zero point", ("%s ft (%s)" % (fmt(loc["altitude"]), loc.get("vertical_datum") or "datum not stated")) if loc.get("altitude") is not None else None),
              ("Hydrologic unit code", loc.get("hydrologic_unit_code")), ("Coordinates", "%.4f, %.4f" % (G["lat"], G["lon"]))]
-    for key, lab in (("flow_daily", "Daily mean flow record"), ("flow_inst", "Instantaneous flow record"), ("stage_inst", "Instantaneous gage height record")):
+    for key, lab in (("flow_daily", "Daily mean flow record (USGS catalog)"), ("flow_inst", "Instantaneous flow record (USGS catalog; newer readings above)"), ("stage_inst", "Instantaneous gage height record (USGS catalog)")):
         if ts.get(key):
             items.append((lab, "%s to %s%s" % (fdate(ts[key][0]), fdate(ts[key][1]), " (later days on this page are daily means computed from the continuous readings; USGS daily statistics count only years with an approved value for each date, so their year counts are lower than this span)" if key == "flow_daily" else "")))
     pk = [x for x in ((G["rec"].get("peaks") or {}).get("rows") or []) if x[1] is not None]

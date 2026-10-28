@@ -1,0 +1,55 @@
+name: preview
+
+# Builds gauges that are not live yet into an unlinked Cloudflare preview version, so reviewers screenshot a URL
+# instead of the owner's laptop collecting and building (owner 2026-10-28: "why are we downloading shit at all").
+# Start: gh workflow run preview.yml -f sites="06192500 12340500"   Then: the run log prints "Version Preview URL".
+# The public site is untouched: `wrangler versions upload` never promotes; refresh.yml stays the only deploy.
+on:
+  workflow_dispatch:
+    inputs:
+      sites:
+        description: "USGS site numbers to preview, space separated"
+        required: true
+
+concurrency:
+  group: refresh  # shares the data cache with refresh.yml: one at a time
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+      AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      SITES: ${{ inputs.sites }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Restore the last data cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cache
+            state
+          key: rwl-preview-${{ github.run_id }}
+          restore-keys: |
+            rwl-data-
+      - name: Mark the preview gauges live in this checkout only (never committed)
+        run: |
+          for s in $SITES; do sed -i -E "s/^queue(,[^,]*,$s,)/live\1/" data/waves.csv; done
+      - name: Collect and build
+        run: |
+          python -I tools/fetch_stats.py $SITES
+          python -I collect.py $SITES
+          python -I build.py
+      - name: Upload a preview version (not promoted)
+        run: npm ci --silent && npx wrangler versions upload --assets dist_next --message "preview $SITES"

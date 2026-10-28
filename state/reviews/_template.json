@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "Template sample 14105700, 01426500, 01570500 all PASS full review; template notes: right-edge clip on scrolling chip row and hourly table (scroll affordance only); 'A year earlier' date offset from the 'Is this normal' date; Upstream/downstream heading shown when only one direction exists",
- "by": "hater-w5a",
- "at": "2026-10-28T23:27:23+00:00",
- "template": "2f430ae302a7",
+ "notes": "Template sample 14105700/01426500/01570500 all PASS on F1-F8; template NOTES: 'LIVE GAUGE' badge kept on a stale 'Gauge not reporting' card; SNOTEL distance only inside the collapsed list; NWS point codes on the first screen",
+ "by": "hater-w6a",
+ "at": "2026-10-28T23:34:24+00:00",
+ "template": "f19d37a1214a",
  "level": "full"
 }

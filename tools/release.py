@@ -35,6 +35,7 @@ with open(wp, "w", newline="", encoding="utf-8") as f:
     w.writeheader()
     w.writerows(rows)
 
+subprocess.call(PY + [os.path.join(ROOT, "tools", "fetch_stats.py")] + sorted(sites), cwd=ROOT)  # wave 3: "is this normal" blank because new gauges had no stats file
 rc = subprocess.call(PY + [os.path.join(ROOT, "collect.py")] + sorted(sites), cwd=ROOT)
 if rc:
     sys.exit("collect failed (%d); nothing built" % rc)

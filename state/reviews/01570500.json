@@ -1,9 +1,9 @@
 {
  "id": "01570500",
  "verdict": "PASS",
- "notes": "No F1-F8. Notes: stage gaps to 11/13/15/17/19/20 ft correct; rate tiles reconcile (-400 from 11,500 = -3.5%); lowest single reading 11,100 '68 h earlier' ties the current 11,100 (earliest tie shown); NWS forecast 3.7 ft = 11,500 cfs vs USGS 3.67 ft = 11,100 cfs are two labelled ratings; upstream gauge labelled only 'Penns Creek' (phone-11); 7-day vs 28-day vs 30-day windows labelled; NWS 13 ft and 15 ft impact texts nearly identical (NWS wording)",
- "by": "hater-w5a",
- "at": "2026-10-28T23:27:22+00:00",
- "template": "2f430ae302a7",
+ "notes": "NOTES only: NWS impact text at 13 and 15 ft is almost the same ('The recreation area on/of City Island is evacuated', phone-05), which is the NWS source wording; daily rain '-' for Oct 27 at Harrisburg Int'l Airport is a feed that did not publish (phone-08); first screen 'NWS point HARP1' is a code (named in full lower down); numbers checked: rate cards add up to 11,100, highest and lowest readings and hour counts match, the 7 forecast values shown as tiles (no more than 12), temperature bands agree, upstream and downstream gauges have distances",
+ "by": "hater-w6a",
+ "at": "2026-10-28T23:34:24+00:00",
+ "template": "f19d37a1214a",
  "level": "full"
 }

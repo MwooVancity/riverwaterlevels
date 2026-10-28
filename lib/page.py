@@ -34,7 +34,8 @@ def b_related(G, pages):
                 nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmtc(x["flow"]),
                               "sub": rel_(x, pr) + away(pr) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
     stale = any(old_(x) for x in items if pages.get(x["site"]) and pages[x["site"]].get("_built"))
-    return block("related_gauges", "Upstream and downstream gauges", "agency" if stale else "live", ui.strip(nodes),
+    dirs_ = {x["relation"] for x in items if pages.get(x["site"]) and pages[x["site"]].get("_built")}
+    return block("related_gauges", "Upstream and downstream gauges" if len(dirs_) == 2 else ("Upstream gauge" if "upstream" in dirs_ else "Downstream gauge") + ("s" if sum(1 for x in items if x["relation"] in dirs_ and pages.get(x["site"]) and pages[x["site"]].get("_built")) > 1 else ""), "agency" if stale else "live", ui.strip(nodes),
                  "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed.", "usgs")
 
 

@@ -1,9 +1,9 @@
 {
  "id": "01426500",
  "verdict": "PASS",
- "notes": "No F1-F8. Notes: stage gaps (9.0/11.0/13.0/15.0/16.8/19.1/20.3 minus 2.67) all correct; rate tiles reconcile; NWS forecast 2.5 ft = 370 cfs vs USGS 2.67 ft = 466 cfs are two labelled ratings; 'A year earlier, on Oct 26, 2025' is two days off Oct 28 but labelled; camera image is from Aug 22 (labelled); '-' in daily rain for stations that did not report; 'Sep 4 ... 2 months before' is about 7 weeks; State Game Land 299 as 'Public land at this gauge' is a mapped-layer name",
- "by": "hater-w5a",
- "at": "2026-10-28T23:27:22+00:00",
- "template": "2f430ae302a7",
+ "notes": "NOTES only: camera 'newest image' dated Aug 22 (honestly dated, phone-09); air-quality monitors 71 and 76 mi away, distance shown (phone-03); daily rain '-' for Oct 26/27 at Delhi, Schenevus and Hobart is a feed that did not publish (phone-07/08); 'State Game Land 299' is a PA unit listed 'at this gauge' on a NY page (phone-11, plausible at the state line); first screen names point by code 'HLEN6' (named in full lower down); numbers checked: rate cards add up to 466, forecast 2.5 ft is 0.2 ft below 2.67, stage distances add up, temperature bands agree",
+ "by": "hater-w6a",
+ "at": "2026-10-28T23:34:23+00:00",
+ "template": "f19d37a1214a",
  "level": "full"
 }

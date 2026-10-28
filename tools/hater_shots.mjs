@@ -11,8 +11,10 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace
 const DIST = path.join(ROOT, 'dist_next');
 const OUT = path.join(ROOT, '.cache', 'review');
 const LIVE = process.argv.includes('--live'); // review the deployed site itself (no local build needed)
-const BASE = LIVE ? 'https://riverwaterlevels.com' : 'http://localhost:8123';
-const live = LIVE ? await (await fetch(BASE + '/live-sites.json')).json() : JSON.parse(fs.readFileSync(path.join(DIST, 'live-sites.json'), 'utf8')); // [[site, url, built, tz]]
+const BASE_ARG = (process.argv.find((a) => a.startsWith('--base=')) || '').slice(7).replace(/\/$/, ''); // a preview version URL from preview.yml: no local collect or build
+const REMOTE = LIVE || !!BASE_ARG;
+const BASE = BASE_ARG || (LIVE ? 'https://riverwaterlevels.com' : 'http://localhost:8123');
+const live = REMOTE ? await (await fetch(BASE + '/live-sites.json')).json() : JSON.parse(fs.readFileSync(path.join(DIST, 'live-sites.json'), 'utf8')); // [[site, url, built, tz]]
 const want = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const pages = live.filter(([s]) => !want.length || want.includes(s));
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.ico': 'image/x-icon' };
@@ -32,9 +34,9 @@ for (const [site, url] of pages) {
   for (const f of fs.readdirSync(dir)) fs.unlinkSync(path.join(dir, f));
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const p = await phone.newPage();
-  if (!LIVE) await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort()); // a local build: no outside calls while shooting
+  if (!REMOTE) await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort()); // a local build: no outside calls while shooting
   await p.goto(BASE + url + '?tabs=off', { waitUntil: 'load' });
-  await p.waitForTimeout(LIVE ? 2500 : 300); // live: let the page's own refresh land, as a visitor sees it
+  await p.waitForTimeout(REMOTE ? 2500 : 300); // live: let the page's own refresh land, as a visitor sees it
   // scroll like a visitor so lazy images (radar loop, map) load; a shot of an unloaded image is a false "blank box" (hater 2026-10-27)
   await p.evaluate(async () => { for (let y = 0; y < document.documentElement.scrollHeight; y += 600) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); } window.scrollTo(0, 0); });
   await p.waitForLoadState('networkidle').catch(() => {});
@@ -47,7 +49,7 @@ for (const [site, url] of pages) {
   await phone.close();
   const desk = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const d = await desk.newPage();
-  if (!LIVE) await d.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+  if (!REMOTE) await d.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
   await d.goto(BASE + url, { waitUntil: 'load' });
   await d.screenshot({ path: path.join(dir, 'desktop-01.png') });
   await desk.close();

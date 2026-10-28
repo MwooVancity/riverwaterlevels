@@ -767,7 +767,7 @@ queue,30,01558000,Little Juniata River,Spruce Creek,PA,74.0,70,67,70,"nri,fame",
 queue,30,05423500,South Branch Rock River,Waupun,WI,74.0,70,66,70,fame,,,high,/river/south-branch-rock-river/waupun/
 queue,30,13333000,Grande Ronde River,Troy,OR,73.9,100,26,40,"wsr-rec,wsr-fish,wsr",,6833,high,/river/grande-ronde-river/troy/
 queue,30,07195500,Illinois River,Watts,OK,73.9,70,66,70,fame,,6273,high,/river/illinois-river-ok/watts/
-queue,30,13206000,Boise River,Glenwood Bridge Near Boise,ID,73.9,70,85,70,fame,,,high,/river/boise-river/glenwood-bridge-near-boise/
+live,30,13206000,Boise River,Glenwood Bridge Near Boise,ID,73.9,70,85,70,fame,,,high,/river/boise-river/glenwood-bridge-near-boise/
 queue,30,03410210,South Fork Cumberland River,Leatherwood Ford,TN,73.9,85,52,70,"nri,nri-paddle,fame",,,high,/river/south-fork-cumberland-river-tn/leatherwood-ford/
 queue,30,02142000,Lower Little River,All Healing Springs,NC,73.9,70,67,70,fame,,,auto2,/river/lower-little-river/all-healing-springs/
 queue,30,09507480,Fossil Creek,Strawberry,AZ,73.9,90,57,70,"wsr-fish,wsr",,,high,/river/fossil-creek/strawberry/

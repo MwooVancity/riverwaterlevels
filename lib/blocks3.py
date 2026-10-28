@@ -27,9 +27,10 @@ def b_nws_point(G, pages=None):
             nm = esc(re.sub(r"\s*\(IN MLLW\)", "", x.get("Name") or x.get("LID") or "", flags=re.I))
             p = on_site.get((x.get("LID") or "").upper())
             return '<a href="%s">%s</a>' % (p["water_url"], nm) if p else nm
-        nm_list = [x for x in (rfl.get(key) or []) if isinstance(x, dict)]
+        raw_ = [x for x in (rfl.get(key) or []) if isinstance(x, dict)]
+        nm_list = [x for i, x in enumerate(raw_) if (x.get("LID") or x.get("Name")) not in [(y.get("LID") or y.get("Name")) for y in raw_[:i]]]  # hater w5, Boise: two points listed three times each
         if nm_list:
-            total = rfl.get(key + "_n") or len(nm_list)
+            total = (rfl.get(key + "_n") or len(nm_list)) if len(nm_list) == len(raw_) else len(nm_list)
             if key == "upstream":  # stored farthest first: list nearest first
                 nm_list = nm_list[::-1]
             if total > len(nm_list):
