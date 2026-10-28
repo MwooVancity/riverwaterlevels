@@ -323,7 +323,7 @@ def hater_rules(h):
     m = re.search(r"\b\d{4,} (dams|days|stations|gauges|readings)\b", t)
     if m:
         bad.append("count without a thousands comma %r" % m.group(0))
-    if "different zero points" in t and "starts off the reading" in t:
+    if re.search(r"(?<!where the )NWS and USGS read this gauge on different zero points", t) and "starts off the reading" in t:  # the stated gap, not the general "where the ... differ" note (CI 2026-10-27: Hudson at Green Island, no gap)
         bad.append("compares an NWS forecast level with the USGS reading although the page says they use different zero points")
     gaps = re.search(r'<p class="gaps">(.*?)</p>', h, re.S)
     if gaps and "hourly weather" in gaps.group(1) and re.search(r'id="hourly_(forecast|heatmap)"', h):
@@ -482,6 +482,7 @@ def selftest():
     assert not hater_rules("<small>Next NWS impact at 7.0 ft</small><b>Next impact at 7.0 ft</b>"), "selftest: matching impacts wrongly flagged"
     assert hater_rules('<section id="recreation_sites"><h2>Recreation</h2><p class="src">Source: RIDB</p></section>'), "selftest: empty block did not fire"
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
+    assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
     assert not hater_rules("<small>1,535 dams upstream since 2025</small>"), "selftest: comma'd count wrongly flagged"
     assert hater_rules('<p class="gaps">Not available for this gauge: hourly weather (no NWS hourly forecast).</p><section class="card blk" id="hourly_heatmap"><table><tr><td>1</td></tr></table></section>'), "selftest: 'not available' over a shown hourly block did not fire"
