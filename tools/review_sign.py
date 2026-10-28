@@ -18,3 +18,12 @@ os.makedirs(os.path.join(ROOT, "state", "reviews"), exist_ok=True)
 rec = {"id": rid, "verdict": verdict, "notes": notes, "by": by, "at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "template": template_hash()}
 json.dump(rec, open(os.path.join(ROOT, "state", "reviews", rid + ".json"), "w", encoding="utf-8"), indent=1)
 print("signed", rid, verdict, "on code", rec["template"])
+if verdict == "FAIL" and rid != "_template":
+    # a failed page leaves the site now, not at the next deploy (flood site 2026-10-27: pages stayed live after a hater FAIL); release.py brings it back
+    p = os.path.join(ROOT, "data", "waves.csv")
+    s = open(p, encoding="utf-8", newline="").read()
+    lines = s.splitlines(keepends=True)
+    out = [("queue" + l[4:]) if l.startswith("live,") and l.split(",")[2] == rid else l for l in lines]
+    if out != lines:
+        open(p, "w", encoding="utf-8", newline="").write("".join(out))
+        print("pulled", rid, "off the site (waves.csv live -> queue); bring it back with tools/release.py after a PASS")

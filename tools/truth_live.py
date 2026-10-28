@@ -78,7 +78,9 @@ def main():
             continue
         pages[sid.group(1)] = {"url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
                                "t": datetime.datetime.fromisoformat(t.group(1)), "lid": (re.search(r"forecast point ([A-Z0-9]{5})", h) or [None, None])[1] if "forecast point" in h else None,
-                               "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)}}
+                               "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)},
+                               # derived NWS sentences: "NWS action stage X ft (D ft above the latest reading)", "Next NWS impact at X ft (D ft above the NWS reading of R ft, ...)"
+                               "derived": set(re.findall(r"(?:NWS (action|minor|moderate|major) stage|Next NWS impact at) ([\d.\-]+) ft \(([\d.]+) ft (above|below) (?:the latest reading|the NWS reading of ([\d.\-]+) ft)", h))}
     ids = sorted(pages)
     latest = {}
     failed_ids = set()
@@ -118,9 +120,10 @@ def main():
                 bad.append("%s: page is %.1f h behind USGS (page %s, USGS %s)" % (pg["url"], lag, pg["t"].isoformat(), ut.isoformat()))
             elif lag > MAX_LAG_H:
                 stale.append("%s: page is %.1f h behind USGS (USGS reads %s; the page shows this age)" % (pg["url"], lag, ut.isoformat()))
-        if pg["lid"] and pg["cats"]:
+        if pg["lid"] and (pg["cats"] or pg["derived"]):
             try:
-                cats = (json.loads(get(NWPS % pg["lid"])).get("flood") or {}).get("categories") or {}
+                nj = json.loads(get(NWPS % pg["lid"]))
+                cats = (nj.get("flood") or {}).get("categories") or {}
             except Exception as e:
                 if LOCAL:  # an NWS outage must not freeze fresh USGS data: the flood stages stay unchecked and the skip is recorded
                     skipped.append(pg["lid"])
@@ -131,6 +134,23 @@ def main():
                 nv = (cats.get(k) or {}).get("stage")
                 if not isinstance(nv, (int, float)) or abs(nv - v) > 0.05:
                     bad.append("%s: %s flood stage %.1f ft on the page, %s at NWS %s" % (pg["url"], k, v, nv, pg["lid"]))
+            # derived sentences against the source, not against our own math (flood site 2026-10-27: gates checked numbers against each other, not the truth)
+            imp = [i.get("stage") for i in ((nj.get("flood") or {}).get("impacts") or []) if isinstance(i.get("stage"), (int, float))]
+            obs = (nj.get("status") or {}).get("observed") or {}
+            s_ = latest.get((sid, "00065"))
+            for cat, x, d, way, nref in pg["derived"]:
+                x, d = float(x), float(d)
+                src = [(cats.get(cat) or {}).get("stage")] if cat else imp
+                if not any(isinstance(v, (int, float)) and abs(v - x) <= 0.05 for v in src):
+                    bad.append("%s: '%s %.1f ft' on the page, NWS %s publishes %s" % (pg["url"], "NWS %s stage" % cat if cat else "next NWS impact at", x, pg["lid"], src[:6]))
+                nt = obs.get("validTime") and datetime.datetime.fromisoformat(obs["validTime"].replace("Z", "+00:00"))
+                same_t = s_ and nt and s_[0] == nt and isinstance(obs.get("primary"), (int, float)) and obs["primary"] > -900
+                if not nref and same_t and abs(obs["primary"] - s_[1]) > 0.3:  # measured from the USGS reading, but NWS reads the river on another zero point
+                    bad.append("%s: distance to NWS %.1f ft is measured from the USGS reading %.2f ft, but NWS reads %.2f ft at the same time (different zero point)" % (pg["url"], x, s_[1], obs["primary"]))
+                if LOCAL:  # arithmetic on the numbers as built (live pages get a newer reading swapped in at the edge, the sentence keeps its build-time reading)
+                    ref = float(nref) if nref else pg["stage"]
+                    if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
+                        bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     record("mismatch" if bad else ("skipped" if skipped else "ok"), len(pages), bad, skipped)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches%s" % (len(pages), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
