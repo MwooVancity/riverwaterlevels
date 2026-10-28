@@ -15,8 +15,6 @@ GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("pa
           ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"])]  # dist/ does not exist yet in CI at gate time
 GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]
-# for refresh.py: it builds and checks itself between collect and publish, so it adds only the rest
-ALWAYS = [c for _, c in GATE_1 if "--selftest" in c or "--dry-run" in c] + [c for _, c in GATE_2]
 
 
 def run(cmd):

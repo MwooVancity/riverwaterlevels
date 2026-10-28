@@ -26,10 +26,11 @@ def main():
     render.PREVIEW = preview
     ix = indexing.load(ROOT)
     render.INDEX_CFG = ix
-    sites = [a for a in sys.argv[1:] if not a.startswith("--")] or cached
     import csv
     live = sorted(r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live")
-    missing = [s for s in live if s not in cached] if sites == cached else []
+    # only live gauges are built: a cached gauge sent back to the queue must leave the site (2026-10-27: 22 pulled-back pages stayed live on old data)
+    sites = [a for a in sys.argv[1:] if not a.startswith("--")] or [s for s in cached if s in set(live)]
+    missing = [s for s in live if s not in cached] if not [a for a in sys.argv[1:] if not a.startswith("--")] else []
     report = {"built_at": iso(now), "gauges": [], "failed": [], "pages": 0}
     for s in missing:  # a live gauge with no cache yet (USGS 429, lost CI cache) fails ALONE: publish carries its previous page over, the other gauges still ship (owner 2026-10-25: never refuse rivers; was a whole-site ABORT that froze the site)
         report["failed"].append({"site": s, "reason": "no cache yet (collect.py has not stored it)", "url": (rows.get(s) or {}).get("dashboard_url")})

@@ -13,11 +13,10 @@ from lib.source_list import UNIVERSAL
 
 SITE = "https://riverwaterlevels.com"
 UA = {"User-Agent": "Mozilla/5.0 (rwl-doctor)"}
-REBUILD_MIN = 60      # the 30-min refresh missed twice: ask for one
+REBUILD_MIN = 60      # the hourly refresh missed once: ask for one
 EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
-# a source that has not worked for this long is reported dead: 3 h for the 30-min lane, 30 h for once-a-day sources
-DEAD_H = {"usgs": 3, "nws": 3, "rain": 3, "wpc": 3, "nwps": 3}
-DEAD_DAILY_H = 30
+# a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
+HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
 
 
 def get(path, raw=False):
@@ -56,10 +55,10 @@ def main():
             if src in off or not v.get("last_run"):
                 continue  # judge only sources a run actually attempted (2026-10-26: daily sources not yet attempted were reported "never worked")
             last = v.get("last_ok_at")
-            limit = DEAD_H.get(src, DEAD_DAILY_H)
+            limit = 3 if src in HOURLY else 30
             lr = v.get("last_run") or {}
             n = lr.get("ok", 0) + lr.get("absent", 0) + lr.get("failed", 0)
-            if (src in UNIVERSAL or src in DEAD_H) and (not last or hours_since(last) > limit):
+            if (src in UNIVERSAL or src in HOURLY) and (not last or hours_since(last) > limit):
                 bad.append("source %s has not worked for %s (last error: %s)" % (src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:
                 bad.append("source %s failed on %d of %d gauges in its last run (%s)" % (src, lr["failed"], n, v.get("last_error") or ""))

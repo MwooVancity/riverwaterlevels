@@ -5,10 +5,10 @@ import os, sys, subprocess, datetime, shutil, time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-from gates import PY, NPX, ALWAYS  # the one list of gates (gates.py)
+from gates import PY, NPX, GATES  # the one list of gates (gates.py)
 
 os.makedirs(os.path.join(ROOT, "runs"), exist_ok=True)
-STEPS = [PY + ["collect.py"], PY + ["build.py"], PY + ["check.py"]] + ALWAYS + [PY + ["publish.py"], [NPX, "wrangler", "deploy"]]
+STEPS = [PY + ["collect.py"]] + [c for _, g in GATES for _, c in g] + [PY + ["publish.py"], [NPX, "wrangler", "deploy"]]
 code = 0
 with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as log:
     log.write("\n=== %s ===\n" % datetime.datetime.now().isoformat(timespec="seconds"))

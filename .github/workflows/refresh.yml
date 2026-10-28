@@ -45,9 +45,6 @@ jobs:
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
         run: python refresh.py
-      - name: Show the log when it fails
-        if: failure()
-        run: tail -n 120 runs/refresh.log || true
       - name: Save the data cache
         if: always()
         uses: actions/cache/save@v4

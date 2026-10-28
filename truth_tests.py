@@ -141,8 +141,8 @@ def main():
                 fail(site, "forecast high %s is on the tile but not in the forecast table" % want_)
         # 15. "Flow about 24 h earlier" in the tile equals the "Flow then" of the 24 h row in the rate table (it is a measured average, not a back-computed number)
         m_then = re.search(r"Flow 24 h earlier: ([\d,]+) cfs", h)
-        rb2 = render.b2.b_rate(G)
-        t_then = re.search(r"<td[^>]*>24 h</td><td[^>]*>([\d,]+) cfs", rb2["body"]) if rb2 else None
+        rb = rb if m and "Change, last 6 h" in h else render.b2.b_rate(G)
+        t_then = re.search(r"<td[^>]*>24 h</td><td[^>]*>([\d,]+) cfs", rb["body"]) if rb else None
         if m_then and t_then and m_then.group(1) != t_then.group(1):
             fail(site, "tile says %s cfs 24 h earlier but the rate table says %s cfs" % (m_then.group(1), t_then.group(1)))
         # 16. when the gauge reads at or above the lowest NWS impact stage (same datum), the page quotes the NWS impact for that level

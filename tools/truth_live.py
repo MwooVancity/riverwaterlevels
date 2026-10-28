@@ -25,7 +25,6 @@ LOCAL = sys.argv[sys.argv.index("--dir") + 1] if "--dir" in sys.argv else None
 def page(path):
     """A site path (/river/x/y/ or /gauges.json) from the live site, or from the local build with --dir."""
     if LOCAL:
-        import os
         root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOCAL)
         p = os.path.join(root, path.strip("/")) if path.endswith(".json") else os.path.join(root, path.strip("/"), "index.html")
         return open(p, encoding="utf-8").read()
@@ -47,7 +46,6 @@ def record(status, compared, bad, skipped):
     """With --dir: write _truth.json into the build so the live site says when its numbers were last checked against USGS and NWS (read by tools/watchdog.py). A skipped check is recorded as skipped, never as ok."""
     if not LOCAL:
         return
-    import os
     now = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
     last_ok = now if status == "ok" else None
     if last_ok is None:

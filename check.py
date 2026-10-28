@@ -1,4 +1,4 @@
-"""Build-integrity checks (not index gates). Usage: python -I check.py [dir]   |   python -I check.py --selftest
+"""Gate 1 page and site checks. Usage: python -I check.py [dir]   |   python -I check.py --selftest
 Per page: canonical, banned strings, doubled words, source line per block, units, gauge-local time, one h1, weight.
 Site: unique titles, every internal link resolves, sitemap equals page set, tab/hub/state reciprocity, link budgets, no orphans, depth from home.
 Exit 1 if anything fails.
@@ -17,7 +17,7 @@ FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  #
 
 def kind_of(rel):
     parts = rel.replace("\\", "/").split("/")
-    if rel in ("index.html",):
+    if rel == "index.html":
         return "home"
     if parts[0] == "rivers":
         return "state"
@@ -178,7 +178,7 @@ def shingles(h):
 def near_dupes(sh):
     """Pairs of gauge pages sharing more than DUP_MAX of their text. ponytail: all pairs, fine to ~3,000 pages (4.5M set ops); past that compare within a state or use MinHash."""
     ks = sorted(sh)
-    return [(a, b, len(sh[a] & sh[b]) / len(sh[a] | sh[b])) for i, a in enumerate(ks) for b in ks[i + 1:] if sh[a] and sh[b] and len(sh[a] & sh[b]) / len(sh[a] | sh[b]) > DUP_MAX]
+    return [(a, b, j) for i, a in enumerate(ks) for b in ks[i + 1:] if sh[a] and sh[b] and (j := len(sh[a] & sh[b]) / len(sh[a] | sh[b])) > DUP_MAX]
 
 
 def cloak_risks(js):
@@ -359,6 +359,8 @@ def check_dir(d):
     from lib.common import template_hash
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
+    lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
+    live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
     site_bad += review_gaps(live_now, load_reviews(), template_hash())
     for a, b, j in near_dupes(gauge_sh):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
@@ -413,7 +415,6 @@ def check_dir(d):
         hdr = open(hp, encoding="utf-8").read() if os.path.exists(hp) else ""
         open_mode = not re.search(r"https://riverwaterlevels\.com/\*\s*\n\s*X-Robots-Tag: noindex", hdr)
         want = {u for u in urls if not noindex_of.get(u)} if open_mode else set(urls)
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         from lib import indexing
         cfg = indexing.load(ROOT)
         if bool(cfg["open"]) != open_mode:
@@ -515,8 +516,8 @@ def selftest():
               "double full stop": good.replace("<p>x</p>", "<p>That is the 82nd percentile..</p>"),
               "heading skip": good.replace("<p>x</p>", "<h4>Deep</h4>"),
               "claims a page that does not exist": good.replace("<p>x</p>", "<p>The Forecast page has the river forecast.</p>"),
-              "page weight": good.replace("<p>x</p>", "<p>" + hashlib.sha256(b"a").hexdigest() * 0 + "".join(hashlib.sha256(str(i).encode()).hexdigest() for i in range(2600)) + "</p>"),
-              "sentence twice": good.replace("<p>x</p>", "<p>" + "The same long sentence about the river repeated on the page. " * 1 + "</p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
+              "page weight": good.replace("<p>x</p>", "<p>" + "".join(hashlib.sha256(str(i).encode()).hexdigest() for i in range(2600)) + "</p>"),
+              "sentence twice": good.replace("<p>x</p>", "<p>The same long sentence about the river repeated on the page. </p><p>" + "The same long sentence about the river repeated on the page. " + "</p>")}
     for name, h in broken.items():
         assert check_html(h, rel), "selftest: broken fixture passed: " + name
     # planted bugs from the 2026-10-25 incidents: each must fail with ITS message, not by accident
