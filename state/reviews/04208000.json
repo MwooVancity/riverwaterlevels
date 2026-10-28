@@ -1,0 +1,8 @@
+{
+ "id": "04208000",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: forecast tile label 'EVERY FORECAST POINT TO NOV 1' (phone-06) reads oddly for one repeated value; first-screen 'FORECAST HIGH' card (phone-01) does not repeat that the Oct 27 forecast is older than 24 h; nearest other gauges 153+ mi away (phone-11, labelled with distance); cold-water row says 50-60F is the guide's coldest band (phone-09/10), worth checking against the NCCWS chart; hourly table and chip row scroll off the right edge (phone-02/03)",
+ "by": "hater-w4h",
+ "at": "2026-10-28T14:07:05+00:00",
+ "template": "48b8f39d2a8d"
+}

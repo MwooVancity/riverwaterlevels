@@ -1,8 +1,8 @@
 {
  "id": "07032000",
  "verdict": "PASS",
- "notes": "notes only: River forecast lists 36 cards (-1.7 to -5.4 ft) over two phone screens before 'All 73 forecast points' (phone-06/07), dense; 'LAST DAILY MEAN AT OR ABOVE 366,000 CFS / 386,000' label is hard to parse (phone-09); 'What the water is like now' heads hourly weather/AQI/radar, not water (phone-02); AQI 'at MARION' has no distance/state (phone-03); 'How often each flow is reached (USGS, years not stated)' (phone-10); 'A year earlier, on Oct 25, 2025' is not Oct 26/27 (phone-01); hourly/weather forecast show no issue time",
- "by": "hater-D",
- "at": "2026-10-28T01:02:18+00:00",
- "template": "7feab811c082"
+ "notes": "No F1-F8 defect. Notes: NWS MEMT1 stage used because USGS has no gage height, stated plainly (phone-01); flow-duration table titled 'years not stated' (phone-09); 10 forecast tiles plus a forecast chart and 72-value table (phone-04/06); air temp 59 F station vs hourly 57 F forecast are two labelled datasets; map alt text overlap is offline artifact (phone-11).",
+ "by": "hater-w4a",
+ "at": "2026-10-28T13:44:41+00:00",
+ "template": "e771d3d66379"
 }

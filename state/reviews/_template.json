@@ -1,8 +1,8 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "Sample 06214500 14105700 07032000 06701900 06041000 PASS (hater-C, hater-D) on output byte-identical to this code (forecast.py fix changed only Freeport, diffed at the same BUILD_NOW). 11447650 Freeport FAIL x3 on tidal forecast labels: off the site until tidal forecasts get their own layout. Calm-hours tile deleted.",
- "by": "hater-C+D",
- "at": "2026-10-28T01:05:25+00:00",
- "template": "df9fe352ff20"
+ "notes": "3 of 3 sample pages PASS with no F1-F8. Template notes: the 'A year earlier, on <date>' row uses the latest daily-mean date, not the page date (1 to 2 days off); SNOTEL distances are only inside a toggle; horizontally scrolling tables and the chip row look clipped at 390 px",
+ "by": "hater-w4f",
+ "at": "2026-10-28T14:02:13+00:00",
+ "template": "48b8f39d2a8d"
 }

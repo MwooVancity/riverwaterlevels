@@ -1,0 +1,8 @@
+{
+ "id": "06752260",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect found in 13 phone slices + desktop + text. NOTES: phone-01 headline Rising, leveling off: +36.4% flow in 6 h beside 24 h -87.3% and Normal range judged on the 24 h mean 65 cfs while latest is 28 cfs (labelled, but a reader sees rising on a river that just fell 87%) | phone-09 SNOTEL rows Hourglass Lake / Bear Lake / Willow Park show no distance until the collapsed Each station: distance, elevation and date | phone-07 rain stations named Fcl and Fcl 1.5 N read as codes (1 mi, distance given) | phone-06 NOAA National Water Model, next 13 hours shows 5 rows 8 AM-8 PM, model 129 cfs vs gauge 28 (labelled) | phone-01 A year earlier, on Oct 26, 2025 | phone-08/09 51 vs 52 years (two labelled datasets)",
+ "by": "hater-w4i",
+ "at": "2026-10-28T14:10:08+00:00",
+ "template": "48b8f39d2a8d"
+}

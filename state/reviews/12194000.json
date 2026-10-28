@@ -1,0 +1,8 @@
+{
+ "id": "12194000",
+ "verdict": "PASS",
+ "notes": "No F1-F8. Notes: 'Annual peaks on file: 107, 1815 to 2024' includes USGS historic peaks, could say 'historic' (phone-14); SNOTEL distances only in expander (phone-10); 'Past 7 days: 20th percentile, below normal' vs headline 'Much below normal' are labelled windows (phone-09/01); Ozone headline monitor Abbotsford Airport is in Canada, 43 mi, distance given (phone-03); last hourly visibility '-' (text.txt)",
+ "by": "hater-w4g",
+ "at": "2026-10-28T14:07:02+00:00",
+ "template": "48b8f39d2a8d"
+}

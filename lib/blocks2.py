@@ -51,7 +51,9 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
 
 
 def b_stage_chart(G):
-    sg = G["sg"]
+    sg, who = G["sg"], "USGS"
+    if len(sg) < 8:  # no USGS gage height: the NWS observed stage at the forecast point (Memphis)
+        sg, who = [(parse_t(t), v, {}) for t, v in ((G["rec"].get("nwps") or {}).get("obs_series") or [])], "NWS"
     if len(sg) < 8 or (sg[-1][2].get("unit_of_measure") or "ft") != "ft":
         return None
     zone, now = G["zone"], G["now"]
@@ -81,7 +83,7 @@ def b_stage_chart(G):
     cur = obs[-1][1]
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest USGS gage height", "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
     if gap:
         cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
         rows += tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))
@@ -98,16 +100,16 @@ def b_stage_chart(G):
             hi = max(fs_, key=lambda x: x[1])
             rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
-    lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, ("NWS reading, %s:" % tzl(gap[2], G["zone"], date=False)) if gap else "Latest, %s:" % tzl(G["sg"][-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
-    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: USGS readings%s%s.</p>' % (" &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
-    src = "Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))
+    lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, ("NWS reading, %s:" % tzl(gap[2], G["zone"], date=False)) if gap else "Latest, %s:" % tzl(sg[-1][0], G["zone"], date=False).replace(" ", " ")) if cats else ""
+    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: %s readings%s%s.</p>' % (who, " &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
+    src = ("Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))) if who == "USGS" else ("Source: National Weather Service observed stage at forecast point %s (USGS measures no gage height here), observed to %s." % (esc(n.get("lid") or ""), esc(tzl(t1, zone))))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)
         what = what[:1].upper() + what[1:]
         src += " %s from National Weather Service forecast point %s%s.%s" % (
             what, esc(n.get("lid") or ""), (", forecast issued %s" % esc(tzl(parse_t(issued), zone))) if issued else "",
             " Dashed horizontal lines are drawn only where they fall inside the axis; all stages are in the table." if cats else "")
-    out = block("stage_chart", "Gage height and flood stages" if cats else "Gage height", "live", body, src, "usgs")
+    out = block("stage_chart", "Gage height and flood stages" if cats else "Gage height", "live", body, src, "usgs" if who == "USGS" else "nwps")
     if cats or fc:
         out["also"] = ["nwps"]
     return out

@@ -12,12 +12,15 @@ from lib.forecast import *
 def b_related(G, pages):
     items = (G["rec"].get("related") or {}).get("items") or []
     rows = ""
+    rel_ = lambda x, pr: "Tributary upstream" if x["relation"] == "upstream" and pr["river"].split()[0].lower() != G["river"].split()[0].lower() else x["relation"].capitalize()  # same rule as the hero tile
+    old_ = lambda x: hours_old(x["time"], G["now"]) > 24
+    away = lambda pr: (" &middot; %d mi away" % round(miles_between(G["lat"], G["lon"], pr["_ll"][0], pr["_ll"][1]))) if pr.get("_ll") else ""  # hater w4: chain gauges with no distance
     for x in items:
         pr = pages.get(x["site"])
         if not pr or not pr.get("_built"):
             continue
         lag = ("about %d h (r %.2f)" % (x["lag_h"], x["lag_r"])) if x.get("lag_h") else "–"
-        rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), x["relation"].capitalize(), "%s cfs" % fmtc(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
+        rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), rel_(x, pr), "%s cfs" % fmtc(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
     if not rows:
         return None
     from lib import ui
@@ -29,8 +32,9 @@ def b_related(G, pages):
             pr = pages.get(x["site"])
             if x["relation"] == rel and pr and pr.get("_built"):
                 nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmtc(x["flow"]),
-                              "sub": x["relation"].capitalize() + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])), "cur": False})
-    return block("related_gauges", "Upstream and downstream gauges", "live", ui.strip(nodes),
+                              "sub": rel_(x, pr) + away(pr) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
+    stale = any(old_(x) for x in items if pages.get(x["site"]) and pages[x["site"]].get("_built"))
+    return block("related_gauges", "Upstream and downstream gauges", "agency" if stale else "live", ui.strip(nodes),
                  "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed.", "usgs")
 
 
@@ -118,12 +122,14 @@ def b_official_links(G):
 
 def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
+        cam = b3.b_camera(G)
+        cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
         has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
-                "SEC:What the water is like now", b3.b_camera(G), b_quality(G), b3.b_tides(G), b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
+                "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G), "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
                 "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_cpc(G)]) + [
-                "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G), b3.b_stocking(G), b_snotel(G),
+                "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G), b3.b_stocking(G), b_snotel(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G),
                 "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b_land(G),

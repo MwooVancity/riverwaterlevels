@@ -269,7 +269,7 @@ def hater_rules(h):
         row = re.search(r"Thunder %((?:\s+[\d\u2013-]+)+)", t)
         if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
             bad.append("says 'Thunderstorms: none' while the hourly table shows a thunder chance above 0")
-    m = re.search(r"\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)
+    m = re.search(r"(?<![\d.,])\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)  # not the tail of "1.1 days ago"
     if m:
         bad.append("ungrammatical %r" % m.group(0))
     imp = re.search(r'id="flood_impacts".*?</section>', h, re.S)
@@ -351,6 +351,9 @@ def check_dir(d):
                 cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
                 if cp and os.path.exists(cp):
                     results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
+                stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
+                if stp and "no published statistics for this date" in h and os.path.exists(stp) and len(json.load(open(stp)).get("d") or {}) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
+                    results[rel].append("says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics")
                 t = re.search(r"<title>(.*?)</title>", h)
                 titles[t.group(1) if t else ""].append(rel)
                 u = urlof(rel)
@@ -458,6 +461,7 @@ def selftest():
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
     assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
     assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
+    assert not hater_rules("<p>The newest reading is from Oct 26, 1.1 days ago.</p>"), "selftest: '1.1 days ago' wrongly flagged"
     assert hater_rules('<section id="flood_impacts"><b>Next: 9.0 ft</b><b>Next: 9.5 ft</b></section>'), "selftest: two 'Next:' cards did not fire"
     assert hater_rules("<small>Oct 24 last year: 264 cfs</small>"), "selftest: 'Oct 24 last year' did not fire"
     assert not hater_rules("<small>A year earlier, on Oct 24: 264 cfs</small>"), "selftest: the clear wording wrongly flagged"

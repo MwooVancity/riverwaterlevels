@@ -1,0 +1,8 @@
+{
+ "id": "06043500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect seen on 15 phone slices + desktop; all stage gaps, rate tiles and highs/lows check out. Notes: SNOTEL 'Lone Mountain' distance only inside collapsed 'Each station: distance, elevation and date' (phone-10); headline 'Normal range' (24 h) vs 'Past 7 days: 24th percentile, below normal' (phone-08, labelled windows); 'A year earlier, on Oct 26, 2025' 2 days off (phone-01); 'Garnet Mountain Fire Lookout' typed 'Campground' (phone-11, agency data); NWS impact text typos 'smalller' (phone-05, NWS wording); daily rain dashes for Oct 27 / Shower Falls Oct 24-27 (phone-06/07, feed gaps); About 'Instantaneous flow record ... to Oct 27, 2026' while page shows Oct 28 (phone-15).",
+ "by": "hater-w4d",
+ "at": "2026-10-28T13:54:08+00:00",
+ "template": "b6782600d8a2"
+}

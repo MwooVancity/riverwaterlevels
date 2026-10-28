@@ -1,0 +1,8 @@
+{
+ "id": "01426500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: stage distances check (2.67 to 9.0/11.0/13.0/16.8/19.1/20.3 ft); NWS upstream and downstream forecast points are in river order; 'A year earlier, on Oct 26, 2025' (phone-01) is 2 days off Oct 28; 'Sep 4 ... 2 months before' (phone-09) is really 7 weeks; '-' daily rain at Delhi/Schenevus/Hobart (phone-07/08) = station did not report; the camera image from Aug 22 is dated (phone-09)",
+ "by": "hater-w4f",
+ "at": "2026-10-28T14:02:12+00:00",
+ "template": "48b8f39d2a8d"
+}

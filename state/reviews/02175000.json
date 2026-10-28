@@ -1,0 +1,8 @@
+{
+ "id": "02175000",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: 'A year earlier, on Oct 26, 2025' on an Oct 28 page (phone-01, dated so not wrong); 'More gauges in SC on this site: Chattooga River near Clayton, GA' (phone-10) reads as a mismatch even if USGS files it in SC; forecast tile 'EVERY FORECAST POINT TO NOV 1' (phone-06) reads oddly; nearby rain stations show '-' days the station did not report (phone-07); other gauges 208+ mi away (labelled)",
+ "by": "hater-w4h",
+ "at": "2026-10-28T14:07:05+00:00",
+ "template": "48b8f39d2a8d"
+}

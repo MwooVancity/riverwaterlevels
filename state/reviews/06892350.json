@@ -1,0 +1,8 @@
+{
+ "id": "06892350",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect found in 14 phone slices + desktop + text. NOTES: phone-03 Thunderstorms in the forecast: 9:00 AM CDT; 6:00 AM CDT (gauge-local time) lists two times out of order with no day (6 AM is Thursday) | phone-06/07 river forecast as 9 tiles + All 16 forecast values (chart exists in phone-05 gage chart, so not F7) | phone-01 A year earlier, on Oct 26, 2025 | phone-08 camera image taken Oct 27, 6:00 PM labelled newest image (13 h, under 24 h) | phone-03 hourly table cut at right edge (scroll container) | phone-13 gauge records end Oct 27",
+ "by": "hater-w4i",
+ "at": "2026-10-28T14:10:08+00:00",
+ "template": "48b8f39d2a8d"
+}

@@ -1,0 +1,8 @@
+{
+ "id": "01570500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: rate-of-rise, highest/lowest (14,300 at 168 h, 11,100 at 68 h) and 7-day record cards (Sep 25 to Oct 20 = 25 days) reconcile; the 8 forecast tiles are within the limit of 12; the forecast flows 11,500/10,200 cfs fit 11,100 at 3.67 ft; 'A year earlier, on Oct 26, 2025' (phone-01) is 2 days off Oct 28; the hourly table cuts off at the right edge (scroller, phone-03)",
+ "by": "hater-w4f",
+ "at": "2026-10-28T14:02:12+00:00",
+ "template": "48b8f39d2a8d"
+}

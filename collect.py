@@ -138,20 +138,21 @@ def fetch_nwps(site, lat, lon):
                 rflow = {"upstream": allp["upstream"][-6:], "downstream": allp["downstream"][:6], "upstream_n": len(allp["upstream"]), "downstream_n": len(allp["downstream"])}
             except Exception as e:
                 note("nwps.reach_flow", "failed", e)
-            obs_stage = None
+            obs_stage, obs_series = None, []
             try:
                 ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWPS_H)
                 col = "primary" if (ob.get("primaryUnits") or "").lower() == "ft" else "secondary" if (ob.get("secondaryUnits") or "").lower() == "ft" else None  # the height column is found by its units, not its position
                 pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
                 if pts:
                     obs_stage = {"t": pts[-1]["validTime"], "v": pts[-1][col]}
+                    obs_series = [[p["validTime"], p[col]] for p in pts[-7 * 24 * 4:]]
             except Exception as e:
                 note("nwps.obs_stage", "failed", e)
             fl = det.get("flood") or {}
             hist = [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("crests") or {}).get("historic") or []) if isinstance(c.get("stage"), (int, float))][:10]
             imp = [{"stage": i.get("stage"), "statement": re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip()} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
             return {"fetched_at": now_iso(), "lid": x["lid"], "name": det.get("name"), "reach_id": det.get("reachId"), "categories": cats, "forecast": fc,
-                    "riverflow": rflow, "obs_stage": obs_stage, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
+                    "riverflow": rflow, "obs_stage": obs_stage, "obs_series": obs_series, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
                     "wfo": det.get("wfo"), "rfc": det.get("rfc"), "reliability": det.get("forecastReliability"), "fim": bool((det.get("inundation") or {}).get("enabled")), "lro": fl.get("lro")}
     return {"fetched_at": now_iso(), "lid": None}
 
@@ -867,6 +868,22 @@ def secret(name):
     return ""
 
 
+AQ_SITES = {}
+
+
+def aq_sites():
+    """AQS site id -> (lat, lon) from the AirNow monitoring-site file (public, keyless, about 4 MB), loaded once per run."""
+    if not AQ_SITES:
+        for l in get_text("https://files.airnowtech.org/airnow/today/Monitoring_Site_Locations_V2.dat").splitlines()[1:]:
+            c = l.split("|")
+            try:
+                for k in c[:3]:  # AirNow returns either the 9-digit AQS id or the 12-digit full id
+                    AQ_SITES[k] = (float(c[11]), float(c[12]), "%s County, %s" % (c[21].strip().title(), c[19].strip()))
+            except (IndexError, ValueError):
+                pass
+    return AQ_SITES
+
+
 def fetch_airnow(lat, lon):
     """EPA AirNow current observation nearest the gauge (service /aq/observation/current/ziplatlong/, the 2026-10-01 replacement): NowCast AQI per pollutant with its category and reporting agency. Needs AIRNOW_API_KEY."""
     k = secret("AIRNOW_API_KEY")
@@ -876,7 +893,14 @@ def fetch_airnow(lat, lon):
     if not isinstance(j, list):
         return None
     rows = [{"pollutant": x.get("parameterName"), "aqi": x.get("nowcastAQI"), "category": x.get("aqiCategoryName"), "area": x.get("reportingAreaName"), "site": x.get("siteName"), "agency": x.get("reportingAgency"),
-             "date": x.get("dateObserved"), "hour": x.get("hourObserved"), "tz": x.get("localTimeZone")} for x in j if isinstance(x, dict) and x.get("nowcastAQI") is not None]
+             "date": x.get("dateObserved"), "hour": x.get("hourObserved"), "tz": x.get("localTimeZone"), "id": x.get("siteID")} for x in j if isinstance(x, dict) and x.get("nowcastAQI") is not None]
+    try:
+        for r in rows:
+            p = aq_sites().get(r["id"] or "")
+            r["mi"] = round(haversine(lat, lon, p[0], p[1])) if p else None
+            r["county"] = p[2] if p else None
+    except Exception as e:
+        note("airnow.sites", "failed", e)
     return {"fetched_at": now_iso(), "rows": rows} if rows else None
 
 

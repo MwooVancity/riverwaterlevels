@@ -1,0 +1,8 @@
+{
+ "id": "08172000",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defects. NOTES: phone-01/06 same -2.6% 6h change called 'Steady' in header but shown with down arrow in Rate tile while 12h -1.3% gets an arrow (inconsistent trend symbol) | phone-09 'Jan 26, 2024 ... 3 years before that 7-day high' is 2 y 9 mo | phone-02/03 hourly table is 24 columns of numbers with no chart (table, not tiles) and jump-chip 'Hourly forecas' clipped at scroll edge | phone-10 Public land lists 'Zelder Mill Park And Pavillion' and 'Zedler Mill Park' (source duplicate/misspelling, no distances) | phone-11 far gauges Trinity 220 mi, White River AR 548 mi add nothing for this river | phone-04 radar shown by code KEWX (offline image)",
+ "by": "hater-w4l",
+ "at": "2026-10-28T14:11:33+00:00",
+ "template": "48b8f39d2a8d"
+}

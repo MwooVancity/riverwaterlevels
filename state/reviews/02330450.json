@@ -1,0 +1,8 @@
+{
+ "id": "02330450",
+ "verdict": "PASS",
+ "notes": "No F1-F8 found. Notes: phone-07/08 rain table '-' on some station-days (feed gap unproven); phone-07 NWM 'starts at 46 cfs while the gauge measured 38 cfs (+21%)' is labelled model guidance; map alt text overlap is offline artifact",
+ "by": "hater-w4k",
+ "at": "2026-10-28T14:11:44+00:00",
+ "template": "48b8f39d2a8d"
+}

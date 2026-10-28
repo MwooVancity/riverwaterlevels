@@ -1,0 +1,8 @@
+{
+ "id": "12340500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect seen on 15 phone slices + desktop. Notes: SNOTEL cards (phone-11 'Stuart Mountain', 'North Fork Jocko') show distance only inside the collapsed 'Each station: distance, elevation and date'; 'A year earlier, on Oct 26, 2025' is 2 days off the date compared (phone-01); NWS impact text at 7.5 ft and 8.0 ft identical (phone-05, NWS's own wording); daily rain 'Missoula 2.9 E' dashes Oct 25-27 (phone-07, feed gap); NWS forecast 2.8 ft = 1,720 cfs vs USGS 2.89 ft = 1,830 cfs (two ratings, labelled); About table 'Instantaneous flow record ... to Oct 27, 2026' while page shows Oct 28 reading (phone-14).",
+ "by": "hater-w4d",
+ "at": "2026-10-28T13:51:52+00:00",
+ "template": "b6782600d8a2"
+}

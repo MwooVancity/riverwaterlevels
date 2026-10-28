@@ -54,6 +54,7 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
         for d, a, c, m in bp:
             vals += [a, c]
     vmin, vmax, ticks = nice_ticks(min(vals), max(vals))
+    L = max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))
     span = (t1 - t0).total_seconds() or 1
     X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
@@ -100,7 +101,7 @@ def day_axis(t0, t1, zone, X, nx, fs, Hh, L, W):
 
 def b_flow_chart(G):
     svg = _chart_svg(G, 760, 250, 11, 7, "cw") + _chart_svg(G, 340, 250, 12, 4, "cn")
-    return block("flow_chart", "Last 7 days", "live", svg + LEG, "Source: USGS Water Data API (continuous values), observed to %s. Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median. Flow in cfs." % esc(G["obs"]), "usgs")
+    return block("flow_chart", "Last 7 days", "live", svg + (LEG if G["rec"].get("stats") else ""), "Source: USGS Water Data API (continuous values), observed to %s.%s Flow in cfs." % (esc(G["obs"]), " Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median." if G["rec"].get("stats") else ""), "usgs")
 
 
 def b_daily(G):
@@ -138,9 +139,9 @@ def b_record(G):
     end = fdate(r["as_of"]) if r.get("as_of") else "the last published day"
     cards = [card("Highest daily mean, 7 days to %s" % end, "%s <small>cfs</small>" % fmtc(pk["value"]), "%s (USGS daily means lag a day or two)" % fdate(pk["date"]))]
     if r.get("prior"):
-        cards.append(card("Last daily mean at or above %s cfs" % fmtc(pk["value"]), "%s <small>cfs</small>" % fmtc(r["prior"]["value"]), "%s, %s before that 7-day high" % (fdate(r["prior"]["date"]), human_span(r["prior"]["days_before"]))))
+        cards.append(card("Last day as high as this week's %s cfs" % fmtc(pk["value"]), esc(fdate(r["prior"]["date"])), "daily mean %s cfs, %s before" % (fmtc(r["prior"]["value"]), human_span(r["prior"]["days_before"]))))
     else:
-        cards.append(card("Last daily mean at or above %s cfs" % fmtc(pk["value"]), "No earlier day", "Record begins %d" % r["first_year"]))
+        cards.append(card("Last day as high as this week's %s cfs" % fmtc(pk["value"]), "None on record", "record begins %d" % r["first_year"]))
     if r.get("last_p90"):
         cards.append(card("Before these 7 days, last day above the 90th percentile", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
     if r.get("above_p75"):
@@ -157,6 +158,7 @@ def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls):
     L, B = (56, 30) if W > 500 else (46, 28)
     vals = [v for y in years for v in ser[y] if v is not None]
     vmin, vmax, ticks = nice_ticks(min(vals), max(vals))
+    L = max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))
     X = lambda i: L + i / (span - 1) * (W - L - 14)
     Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
     grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (

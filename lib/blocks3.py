@@ -215,7 +215,7 @@ def b_month_chart(G):
     if (datetime.date.fromisoformat(last[-1][0]) - datetime.date.fromisoformat(last[0][0])).days < 20:
         return None
     svg = _year_svg(last, G["stats"], 760, 250, 11, 5, "cw", "%b %d", "30 days") + _year_svg(last, G["stats"], 340, 250, 12, 3, "cn", "%b %d", "30 days")
-    return block("month_chart", "Last 30 days", "hist", svg + LEG,
+    return block("month_chart", "Last 30 days", "hist", svg + (LEG if G["rec"].get("stats") else ""),
                  "Source: USGS daily mean flows (Water Data API), %s to %s. Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median. Gaps are days without a published value; recent days are provisional. Flow in cfs." % (esc(fdate(last[0][0])), esc(fdate(last[-1][0]))), "usgs")
 
 
@@ -292,7 +292,7 @@ def conditions(G, pages=None):
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
-            if x.get("relation") == "upstream" and pr and pr.get("_built") and x.get("flow") is not None:
+            if x.get("relation") == "upstream" and pr and pr.get("_built") and x.get("flow") is not None and x.get("time") and hours_old(x["time"], G["now"]) <= 24:
                 out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h"), "time": tzl(parse_t(x["time"]), zone) if x.get("time") else ""}
                 break
     if len(fl) >= 8 and not G.get("osc"):
@@ -346,20 +346,33 @@ def b_camera(G):
     c = G["rec"].get("cameras")
     if not c or not c.get("cams"):
         return None
-    body = ""
+    body, fresh = "", False
     for x in c["cams"]:
         try:
-            taken = tzl(parse_t(x["taken"]), G["zone"]) if x.get("taken") else "time not stated"
-        except (TypeError, ValueError):
+            h = hours_old(x["taken"], G["now"])
+            taken = tzl(parse_t(x["taken"]), G["zone"]) + (" (%s before this page was built)" % human_span(int(h // 24)) if h > 24 else "")
+            fresh = fresh or h <= 3
+        except (KeyError, TypeError, ValueError):
             taken = "time not stated"
         body += '<figure class="cam"><a href="%s" rel="noopener"><img src="%s" alt="USGS camera: %s" width="720" height="405" loading="lazy" style="max-width:100%%;height:auto"></a><figcaption>%s &middot; taken %s%s</figcaption></figure>' % (
             esc(x["page"]), esc(x["small"]), esc(x["name"]), esc(x["name"]), esc(taken), (' &middot; <a href="%s" rel="noopener">timelapse video</a>' % esc(x["timelapse"])) if x.get("timelapse") else "")
-    return block("camera", "Camera at the gauge", "live", body,
+    return block("camera", "Camera at the gauge" if fresh else "Camera at the gauge, newest image", "live" if fresh else "agency", body,
                  "Source: U.S. Geological Survey HIVIS camera (NIMS API), newest image at build time; the image file is served by USGS. Fetched %s." % esc(tzl(parse_t(c["fetched_at"]), G["zone"])), "hivis")
 
 
 def _aq_site(s):
     return "not stated" if not s or s.strip().upper() in ("NEW", "N/A") else s
+
+
+def _aq_where(r):
+    s = _aq_site(r.get("site"))
+    if r.get("county") and not re.search("[a-z]", s):  # an all-capitals site code is no place name
+        s = "monitor in " + r["county"]
+    if "id" not in r:  # cache from before the distance was fetched
+        return s
+    if not r["id"]:
+        return s + " (AirNow reporting area; no single monitor named)"
+    return s + ((", %d mi from the gauge" % r["mi"]) if r.get("mi") is not None else ", distance not published")
 
 
 def _aq_time(r):
@@ -385,9 +398,9 @@ def b_air_quality(G):
     if not a["rows"]:
         return None
     a = dict(a, rows=[dict(r, site=r.get("site") if _aq_site(r.get("site")) != "not stated" else r.get("area")) for r in a["rows"]])  # hater r4: "MONITOR not stated" while AirNow names the reporting area
-    rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(_aq_site(r.get("site"))), esc(_aq_time(r))], right=(1,)) for r in a["rows"])
+    rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(_aq_where(r)), esc(_aq_time(r))], right=(1,)) for r in a["rows"])
     worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
-    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s, %s (%s)%s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), (", at " + esc(_aq_site(worst.get("site")))) if _aq_site(worst.get("site")) != "not stated" else "") + table(["Pollutant", "Air quality index (NowCast)", "Category", "Monitor", "Observed"], rows, right=(1,)),
+    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s, %s (%s)%s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), (", at " + esc(_aq_where(worst))) if _aq_site(worst.get("site")) != "not stated" else "") + table(["Pollutant", "Air quality index (NowCast)", "Category", "Monitor", "Observed"], rows, right=(1,)),
                  "Source: EPA AirNow, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
 
 

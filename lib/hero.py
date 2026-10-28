@@ -125,6 +125,17 @@ def usgs_place(row, rec):
     return place, st
 
 
+SENT_END = re.compile(r"(?<!\b[A-Z])(?<!\bSt)(?<!\bMt)(?<!\bFt)(?<!\bRd)(?<!\bCo)(?<!\bNo)(?<!\bHwy)(?<!\bAve)\.\s(?=[A-Z0-9])")
+
+
+def sent_ends(txt):
+    """Positions of the full stops that end a sentence; "S. Main St. Bridge" ends none."""
+    return [m.start() for m in SENT_END.finditer(txt)]
+
+
+assert sent_ends("Water spreads across S. Main St. Bridge. Then more.") == [39]
+
+
 def nws_stage(G, max_h=24):
     """(time, value) of the NWS-observed stage at this gauge's forecast point when under max_h hours old, else None."""
     o = (G["rec"].get("nwps") or {}).get("obs_stage")
@@ -314,7 +325,7 @@ def hero(G, pages=None):
     elif c["alerts"] is None:
         strip += ui.tile("alrt unknown", "bell", "NWS alerts", "Unknown", '<small>We have no answer from the National Weather Service alert service for this location. Check weather.gov.</small>')
     if c["wt"]:
-        wf = c["wt"]["f"]
+        wf = round(c["wt"]["f"])  # the tile prints %.0f: the warning judges that same number
         cold = ('<small class="cold">Below 50&deg;F: cold-water shock and loss of swimming ability within minutes of immersion (<a href="https://www.weather.gov/safety/coldwater" rel="noopener">NWS cold water safety</a>)</small>' if wf < 50 else
                 '<small class="cold">Below 60&deg;F: cold-water shock risk on immersion (<a href="https://www.weather.gov/safety/coldwater" rel="noopener">NWS cold water safety</a>)</small>' if wf < 60 else "")
         strip += ui.tile("wtemp", "thermo", "Water temperature", '%.0f<small>&deg;F</small>' % wf, cold + '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
@@ -326,7 +337,7 @@ def hero(G, pages=None):
         strip += ui.tile("wtemp near", "thermo", "Water temperature nearby", '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
     if c["up"]:
         up = c["up"]
-        strip += ui.tile("upst", "up", "Upstream gauge now" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream now", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
+        strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
     ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
     al_ = c["alerts"]
     if al_ is None:
@@ -368,7 +379,7 @@ def hero(G, pages=None):
         strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], G["ldate"], -6.0)) else "", moon_phase(G["ldate"])[0].lower(), moon_phase(G["ldate"])[1]))
     # "Calm daylight hours" tile deleted 2026-10-27: "calm" was our own threshold, not a source's; it failed 3 of 6 hater pages (gusts ignored, an hour past sunset). The hourly table shows wind, gusts and thunder per hour.
     gone = []
-    if not c["wt"] and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
+    if not c["wt"] and not series(G["rec"], "00010") and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
         gone.append("live water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river%s)" % ("; monthly history is shown below" if (G["rec"].get("wtemp") or {}).get("months") else ""))
     if b_quality(G) is None:
         gone.append("clarity (no USGS turbidity or water-quality sensor at this gauge)")
@@ -507,7 +518,7 @@ def next_impact(G):
         return ("NWS %s stage %.1f %s (%.1f %s above %s)" % (min(cats, key=cats.get), min(cats.values()), esc(unit), min(cats.values()) - cur, esc(unit), _ref)) if cats else ""  # full review: Moody showed no distance to its action stage
     i = {"stage": ahead[0]}
     txt = " / ".join(by[ahead[0]])
-    end = txt.find(". ")
+    end = next(iter(sent_ends(txt)), -1)
     if 20 <= end < 160:
         txt = txt[:end + 1]
     elif len(txt) > 160:

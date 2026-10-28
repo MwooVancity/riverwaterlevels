@@ -1,0 +1,8 @@
+{
+ "id": "13206000",
+ "verdict": "FAIL",
+ "notes": "F1/F8 phone-01+phone-05/06+desktop-01: 'Next NWS impact at 4200.0 ft (4196.8 ft above the latest reading)' and impact cards 'AT 4900.0 FT ... 4896.8 ft above', 'AT 8900.0 FT ... 8896.8 ft above' while action stage is '9.7 ft' and minor '10.1 ft': BIGI1 impact thresholds are not on the ft stage scale (likely cfs), so every impact margin is wrong | F8 phone-14: 'Upstream forecast points (nearest 6 of 10)' lists only 2 places, each three times ('Boise River below Diversion Dam / New York Canal Diversion at Boise' x3) | NOTE phone-07/08: rain table '-' on some station-days (feed gap unproven) | NOTE phone-10: 'Typical water temperature by month' with no source shown on the card while phone-02 says 'This gauge has no temperature sensor' (say which samples)",
+ "by": "hater-w4k",
+ "at": "2026-10-28T14:11:08+00:00",
+ "template": "48b8f39d2a8d"
+}

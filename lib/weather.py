@@ -89,8 +89,9 @@ def b_air(G):
         rows.append(("Visibility", "%.0f mi" % (o["visibility_m"] / 1609.34)))
     if not rows:
         return None
-    body = table(["Measure", "Value"], "".join(tr([esc(a), esc(b)], right=(1,)) for a, b in rows), right=(1,))
-    return block("air_obs", "Air conditions", "obs", body, "Source: National Weather Service station %s, observed %s." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
+    mi = (", %d mi from the gauge" % round(miles_between(G["lat"], G["lon"], o["ll"][1], o["ll"][0]))) if o.get("ll") else ""
+    body = '<p class="src">NWS station %s%s%s, observed %s.</p>' % (esc(o["station"]), (" (%s)" % esc(o["name"])) if o.get("name") else "", mi, esc(tzl(parse_t(o["timestamp"]), G["zone"]))) + table(["Measure", "Value"], "".join(tr([esc(a), esc(b)], right=(1,)) for a, b in rows), right=(1,))
+    return block("air_obs", "Air conditions at weather station %s" % esc(o["station"]), "obs", body, "Source: National Weather Service station %s, observed %s." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
 
 
 def b_radar(G):

@@ -1,0 +1,8 @@
+{
+ "id": "08169000",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect found in 14 phone slices + desktop + text. NOTES: phone-01 Forecast high 3.6 ft comes from the NWS forecast that phone-06 flags OLDER THAN 24 H (issued Oct 27, 8:22 AM) but the top tile has no age flag | phone-06 tile label EVERY FORECAST POINT TO NOV 1 with one value (3.6 ft, 140 cfs) reads oddly, say flat at 3.6 ft | phone-01 A year earlier, on Oct 26, 2025 (not Oct 28) | phone-02/03 hourly table and anchor chips cut at right edge (scroll container) | phone-07/08 rain stations show - on unreported days | phone-11 KBAZ visibility 2 mi vs hourly forecast 7.0 mi (two labelled datasets) | phone-14 gauge records end Oct 27 while latest reading is Oct 28",
+ "by": "hater-w4i",
+ "at": "2026-10-28T14:10:07+00:00",
+ "template": "48b8f39d2a8d"
+}

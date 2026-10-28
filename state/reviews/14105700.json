@@ -1,8 +1,8 @@
 {
  "id": "14105700",
  "verdict": "PASS",
- "notes": "notes only: A year earlier, on Oct 25, 2025 under Is this normal for Oct 26 (1 day off, phone-01) | Upstream and downstream gauges shows no downstream gauge, only Deschutes tributary (phone-09) | 75.14 ft gage height on a 0.00 ft NGVD29 datum is water-surface elevation, not explained (phone-01/11) | single 129,000 cfs spike Oct 23 shown without provisional caveat (phone-04/05) | 148 vs 149 years explained in About",
- "by": "hater-C",
- "at": "2026-10-28T01:02:16+00:00",
- "template": "7feab811c082"
+ "notes": "No F1-F8 defect. Notes: rate-of-rise, highest/lowest and record cards reconcile (83,700 from 90,600 = -7.6%, Oct 23 to Oct 26 = 86 h); SNOTEL stations (phone-07/08) show name only, distance sits behind the 'Each station: distance, elevation and date' toggle; 'A year earlier, on Oct 25, 2025' (phone-01) is not exactly a year before Oct 26; 'LIVE GAUGE' badge next to a 34 h old reading (phone-02) is an offline artifact; the hourly table and chip row cut off at the right edge are horizontal scrollers (phone-02/03)",
+ "by": "hater-w4f",
+ "at": "2026-10-28T14:02:12+00:00",
+ "template": "48b8f39d2a8d"
 }

@@ -1,0 +1,8 @@
+{
+ "id": "12484500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect seen on 13 phone slices + desktop; stage gaps, rate tiles, highs/lows and forecast tiles check out (gage chart carries the NWS forecast curve). Notes: SNOTEL 'Trough', 'Grouse Camp', 'Upper Wheeler' distance only inside collapsed 'Each station: distance, elevation and date' (phone-09); headline 'Normal range' (24 h) vs 'Past 28 days: 20th percentile, below normal' (phone-08, labelled windows); 'A year earlier, on Oct 26, 2025' 2 days off (phone-01); daily rain dashes Oct 24-27 at Trough, Cle Elum, Sasse Ridge (phone-07, feed gaps); About 'USGS site name YAKIMA RIVER AT UMTANUM, WA' in raw caps (phone-12); 'Instantaneous flow record ... to Oct 27, 2026' while page shows Oct 28 (phone-12).",
+ "by": "hater-w4d",
+ "at": "2026-10-28T13:55:06+00:00",
+ "template": "b6782600d8a2"
+}

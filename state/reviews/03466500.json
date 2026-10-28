@@ -1,0 +1,8 @@
+{
+ "id": "03466500",
+ "verdict": "PASS",
+ "notes": "Notes only: About table 'Instantaneous flow record Apr 1, 2012 to Oct 27, 2026' while page shows Oct 28 9:15 reading (USGS inventory lag, phone-12) | 'A year earlier, on Oct 26, 2025' is 2 days off the year-ago date (labelled, phone-01) | Baileyton 1.0 NW Oct 27 '-' feed not published (phone-07) | 54 vs 55 years and 1903-2015 duration window are labelled datasets (phone-01/08) | NWM 9 AM 618 cfs vs observed 594 cfs, labelled model guidance (phone-05) | station names wrap 'Greeneville 10.1 / S' (phone-06)",
+ "by": "hater-w4b",
+ "at": "2026-10-28T13:43:26+00:00",
+ "template": "e771d3d66379"
+}

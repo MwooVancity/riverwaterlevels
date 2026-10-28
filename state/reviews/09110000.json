@@ -1,0 +1,8 @@
+{
+ "id": "09110000",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: Hourly forecast chip clipped at row edge (phone-02, scrollable chip row); radar labelled by code only 'Radar loop, station KGJX' (phone-04, offline image alt); '-' days at Gunnison 3Sw / Gunnison 0.2 NW (phone-07, station did not report); SNOTEL bars for 250% and 350% look the same length (phone-10); flow-duration window 1910 to 2015 vs record to 2026 (labelled); 'A year earlier, on Oct 26, 2025' is 2 days off from Oct 28 (labelled)",
+ "by": "hater-w4j",
+ "at": "2026-10-28T14:09:51+00:00",
+ "template": "48b8f39d2a8d"
+}

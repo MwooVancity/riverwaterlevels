@@ -70,6 +70,8 @@ def b_river_forecast(G):
             _d[sel[i][0].astimezone(G["zone"]).date()].append(i)
     if len(sel) > 10 and any(max(sel[i][1] for i in ix) - min(sel[i][1] for i in ix) >= 0.5 for ix in _d.values()):  # a daily swing: each day's high and low card (hater r7: the cards kept only the lows)
         pick = sorted({f_(ix, key=lambda i: sel[i][1]) for ix in _d.values() for f_ in (max, min)} | {top_i})
+    if len(pick) > 10:
+        pick = sorted({round(k * (len(sel) - 1) / 9) for k in range(10)} | {top_i})
     pick.sort(key=lambda i: i != top_i)  # the highest forecast point is the first card
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
@@ -86,7 +88,7 @@ def b_river_forecast(G):
         t_, s_, f_ = sel[pick[0]]
         fcards = [card("Every forecast point to %s" % esc(tzl(sel[-1][0], G["zone"])), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
     ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
-    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more("All %d forecast points" % len(sel), ftable),
+    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more("All %d forecast values" % len(sel), ftable),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=(age is not None and age > 24))
 
 
@@ -170,7 +172,7 @@ def b_impacts(G):
         txt = " / ".join(by[s_])
         short, cut = txt, False
         if len(txt) > 260:  # cut only at the end of a sentence and say so; never mid-sentence
-            k = txt.rfind(". ", 0, 260)
+            k = max([e for e in sent_ends(txt) if e < 260], default=-1)
             if k > 60 and txt[k - 1] != ".":
                 short, cut = txt[:k + 1], True
         margin = "" if cur_ is None else ("reached at the %s" % _ref if s_ <= cur_ else "%.1f %s above the %s" % (s_ - cur_, esc(unit), _ref))

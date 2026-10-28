@@ -1,0 +1,8 @@
+{
+ "id": "14319500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: 'NWS FORECAST 1.9 ft ... 0.1 ft below the latest reading' vs latest 2.09 ft (phone-01/02, desktop) is a 0.19 ft gap, a rounding-level mismatch; camera 'taken Oct 23 ... (4 days before this page was built)' (phone-09) is stale for a live page; 7-day 5th percentile vs today 23rd percentile are labelled windows; 36-value forecast shown as 10 tiles, with the dashed forecast curve in the gage height chart (phone-04, 06-07)",
+ "by": "hater-w4h",
+ "at": "2026-10-28T14:07:05+00:00",
+ "template": "48b8f39d2a8d"
+}

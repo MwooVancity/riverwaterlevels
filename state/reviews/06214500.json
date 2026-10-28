@@ -1,8 +1,8 @@
 {
  "id": "06214500",
  "verdict": "PASS",
- "notes": "notes only: year-earlier line says A year earlier, on Oct 25, 2025 under Is this normal for Oct 27 (2 days off, date shown; phone-01) | NWM 15 h (falls to 3,000 cfs) and NWM 2-day ensemble (rises to 3,520 cfs, older than 12 h) disagree with no line saying which to trust (phone-06) | Typical water temperature by month: 221 days etc has no label for what the day count is (phone-09) | air temp, water temp, rain repeated card+table (phone-02/10) | RFC unexpanded on first screen",
- "by": "hater-C",
- "at": "2026-10-28T01:02:16+00:00",
- "template": "7feab811c082"
+ "notes": "No F1-F8 defect. Notes: 'A year earlier, on Oct 25, 2025' compares to Oct 25 not Oct 27 (phone-01); hourly table and chip row scroll off the right edge by design (phone-02/03); 0.05 in RFC 24 h rain vs 0.00 in station days are two labelled datasets (phone-03/06); 97 vs 101 years are labelled different statistics (phone-01/08); map alt text overlap is an offline artifact (phone-11).",
+ "by": "hater-w4a",
+ "at": "2026-10-28T13:44:40+00:00",
+ "template": "e771d3d66379"
 }

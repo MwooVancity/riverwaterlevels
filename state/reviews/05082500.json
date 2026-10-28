@@ -1,0 +1,8 @@
+{
+ "id": "05082500",
+ "verdict": "PASS",
+ "notes": "No F1-F8 defect. Notes: Hourly forecast chip clipped (phone-02, scrollable row); radar 'station KMVX' code only (phone-04, offline alt); 'Not available: air quality (no EPA AirNow monitor reports for this location)' could not be checked; nearest other gauges 297-559 mi away (phone-11, labelled with distance); Grand Forks Intl Airport Oct 27 '-' (phone-07, not reported)",
+ "by": "hater-w4j",
+ "at": "2026-10-28T14:09:51+00:00",
+ "template": "48b8f39d2a8d"
+}

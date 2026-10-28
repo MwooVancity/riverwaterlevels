@@ -1,0 +1,8 @@
+{
+ "id": "06461500",
+ "verdict": "PASS",
+ "notes": "No F1-F8. Notes: 'DAYS ABOVE THE 75TH PERCENTILE 0 of 27 / last 27 days' has no end date while the page says 'Much above normal' today; daily window ends Oct 26, so name it (phone-08); NWM 'next 13 hours' drops to 212 cfs while gauge rises, labelled as direction-only model guidance (phone-06); LAST 12 H and LAST 24 H both '+105 cfs, from 895 cfs', checked against cache: correct (phone-05); NWS typo 'intrest's' quoted as issued (phone-04)",
+ "by": "hater-w4g",
+ "at": "2026-10-28T14:07:03+00:00",
+ "template": "48b8f39d2a8d"
+}
