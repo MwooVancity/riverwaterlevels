@@ -1,0 +1,48 @@
+name: dryrun
+
+# A practice run before anything reaches the live site (owner 2026-10-29: "stop fucking up so much"): every gate of the real
+# deploy, run on the cloud's own last data, on any branch except main. It never collects, saves the cache, publishes or deploys.
+# Use: push the change to branch "check", read this run's log for "refresh OK", then push the same commit to main.
+on:
+  push:
+    branches-ignore: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: dryrun
+  cancel-in-progress: true
+
+jobs:
+  dryrun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+      AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Restore the cloud's last data (read only)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cache
+            state
+          key: rwl-dry-${{ github.run_id }}
+          restore-keys: |
+            rwl-data-
+      - name: Keep the committed review signatures
+        run: git checkout -- state/reviews && git clean -fdq state/reviews
+      - name: Install the pinned wrangler
+        run: npm ci --silent
+      - name: Every gate, no deploy
+        continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
+        run: python refresh.py --dry
