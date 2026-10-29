@@ -69,5 +69,42 @@ subprocess.call(PY + [os.path.join(ROOT, "tools", "sync_legacy.py")], cwd=ROOT) 
 rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
 if rc:
     sys.exit("build failed (%d)" % rc)
+
+
+def page_check(picks_):
+    """{site: first message} for each new gauge whose built page fails check.py's page checks (the same functions the site gate runs per page)."""
+    os.chdir(ROOT)
+    ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
+    exec(compile(open("check.py", encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
+    out = {}
+    for r in picks_:
+        u = r.get("url")
+        f = os.path.join(ROOT, "dist_next", u.strip("/").replace("/", os.sep), "index.html") if u else ""
+        if not f or not os.path.exists(f):
+            out[r["site"]] = "no built page at %s" % u
+            continue
+        h = open(f, encoding="utf-8").read().replace("\u00a0", " ")  # as check_dir reads it (times use no-break spaces)
+        bad = ck["check_html"](h, os.path.relpath(f, os.path.join(ROOT, "dist_next"))) + ck["rank_checks"](h, u) + ck["hater_rules"](h)
+        if bad:
+            out[r["site"]] = bad[0]
+    return out
+
+
+failed = page_check(picks)  # robustness (owner 2026-10-29): one bad page must never block the day's release; it goes back to the queue with its reason and the rest ship
+if failed:
+    rows = list(csv.DictReader(open(wp, encoding="utf-8")))
+    for r in rows:
+        if r["site"] in failed:
+            r["status"], r["gate"] = "queue", ("page-check: %s" % failed[r["site"]]).replace("\n", " ")[:300]
+    with open(wp, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    for s_, m_ in sorted(failed.items()):
+        print("not released (page check): %s  %s" % (s_, m_))
+    picks = [r for r in picks if r["site"] not in failed]
+    rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
+    if rc:
+        sys.exit("rebuild failed (%d)" % rc)
 urls = [r["url"] for r in picks if r.get("url")]
 print("\nbuilt: %d new page(s). Now: push (deploys), python -I tools/open_wave.py %d --apply, push again." % (len(urls), len(urls)))

@@ -76,7 +76,7 @@ def flow_jitter(G):
 DIR_WORD = {"up": ("Rising", "up"), "down": ("Falling", "down"), "steady": ("Steady", "steady")}  # flow_dir() as the trend tile's word and icon
 
 
-OSC_WORDS = {"cap": ("This gauge is tidal", "Flow at this gauge rises and falls within the day"), "chip": ("Tidal reach", "Rose and fell"), "fc": ("Tidal reach", "Flow rises and falls within the day")}
+OSC_WORDS = {"cap": ("This gauge is tidal", "Flow at this gauge swings through the day"), "chip": ("Tidal reach", "Rose and fell"), "fc": ("Tidal reach", "Daily swings")}  # "rises and falls within the day:" is spelled out once, in daily_swing, with its numbers; the first screen must not repeat it (practice run 2026-10-29, Greendale: 3 times)
 
 
 def osc_word(G, use):

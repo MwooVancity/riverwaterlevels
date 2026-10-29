@@ -14,7 +14,13 @@ _PC_LEGACY = r"C:\Users\mwoo7\Desktop\calcscrape\docs\research\prototypes\data"
 LEGACY = os.environ.get("RWL_LEGACY") or (_PC_LEGACY if os.path.isdir(_PC_LEGACY) else os.path.join(ROOT, "legacy"))
 ENV_FILE = r"C:\Users\mwoo7\Desktop\calcscrape\.env"  # key is read here (or from the USGS_API_KEY environment variable), server side only, never copied or logged
 PCT = [5, 10, 20, 25, 50, 75, 80, 90, 95]
-esc = html.escape
+DOUBLE_PREP = re.compile(r"\b(at|near|above|below|of) \1\b", re.I)
+
+
+def esc(s, quote=True):
+    """html.escape for every shown string, and a government name that doubles its preposition ('Frio River at at Leakey', NWS point FILT2) reads once: one place, so no block can print 'at at'."""
+    return DOUBLE_PREP.sub(r"\1", html.escape(s, quote))
+
 
 # wave 0 slice: gauges chosen to exercise every case (full sensors, no sensors, multi-gauge river, snowmelt, small creek)
 

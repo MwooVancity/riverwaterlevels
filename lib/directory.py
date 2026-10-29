@@ -40,8 +40,26 @@ g.forEach(function(x){x.d=hv(la,lo,x[2],x[3])});g.sort(function(a,c){return a.d-
 g.slice(0,8).forEach(function(x,i){var a=document.createElement('a');a.href=x[1];a.textContent=x[0]+' ('+Math.round(x.d)+' mi)';o.appendChild(a);if(i<7)o.appendChild(document.createTextNode(' \\u00b7 '))});o.hidden=false;b.disabled=false}).catch(function(){b.disabled=false})},function(){b.disabled=false;b.textContent='Location not available'})})})();</script>"""
 
 
-def conus_map(built, Gs, cap=120):
-    """USGS Topo image of the lower 48 with a link dot per gauge (the largest `cap` by drainage area), coloured by percentile bucket."""
+FEATURED = 40  # home links every state page plus this many gauges; the per-gauge lists live on the state pages and search (gauges.json) covers all (link budget 200, owner 2026-10-29)
+
+
+def featured(built, n=FEATURED):
+    """The n highest-scored built gauges (data/waves.csv score; largest drainage breaks ties and covers unscored rows)."""
+    sc = {}
+    try:
+        with open(os.path.join(DATA, "waves.csv"), encoding="utf-8", newline="") as f:
+            for w in csv.DictReader(f):
+                try:
+                    sc[w["site"]] = float(w.get("score") or 0)
+                except ValueError:
+                    pass
+    except OSError:
+        pass
+    return sorted(built, key=lambda r: (-sc.get(r["site"], 0), -float(r["drainage_sqmi"] or 0)))[:n]
+
+
+def conus_map(built, Gs, cap=FEATURED):
+    """USGS Topo image of the lower 48 with a link dot per featured gauge (the `cap` highest scored), coloured by percentile bucket."""
     R = 6378137.0
     mx = lambda lon: R * math.radians(lon)
     my = lambda lat: R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
@@ -50,7 +68,7 @@ def conus_map(built, Gs, cap=120):
     h = round(1000 * (y1 - y0) / (x1 - x0))
     src = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export?bbox=%.0f,%.0f,%.0f,%.0f&bboxSR=3857&imageSR=3857&size=1000,%d&format=jpg&f=image" % (x0, y0, x1, y1, h)
     dots, shown = "", 0
-    for r in sorted(built, key=lambda r: -float(r["drainage_sqmi"] or 0))[:cap]:
+    for r in featured(built, cap):
         G = Gs[r["site"]]
         if not (lon0 <= G["lon"] <= lon1 and lat0 <= G["lat"] <= lat1):
             continue
@@ -62,8 +80,8 @@ def conus_map(built, Gs, cap=120):
     if not shown:
         return ""
     key = '<div class="keyrow">Gauge color, flow compared with past years on this date: <b class="d-lo"></b>below normal (including very low) <b class="d-mid"></b>normal range <b class="d-hi"></b>above normal (including very high) <b class="d-na"></b>no comparison available. %d gauges shown.</div>' % shown
-    return ('<div class="card" style="margin-top:14px"><h2>Gauges on this site</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy" decoding="async">%s</div>%s'
-            '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % (src, h, dots, key))
+    return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy" decoding="async">%s</div>%s'
+            '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
 
 ALLTAB_JS = """<script>(function(){var t=document.getElementById('alltab');if(!t)return;var hs=t.querySelectorAll('th[data-k]');hs.forEach(function(h,c){h.style.cursor='pointer';h.tabIndex=0;function go(){var d=h.getAttribute('data-d')==='1'?-1:1,b=t.tBodies[0],r=[].slice.call(b.rows),i=parseInt(h.getAttribute('data-i'));hs.forEach(function(x){x.removeAttribute('data-d');x.removeAttribute('aria-sort')});h.setAttribute('data-d',d===1?'1':'0');h.setAttribute('aria-sort',d===1?'ascending':'descending');r.sort(function(x,y){var a=x.cells[i].getAttribute('data-v'),z=y.cells[i].getAttribute('data-v');if(h.getAttribute('data-k')==='n'){a=a===''?-1e18:parseFloat(a);z=z===''?-1e18:parseFloat(z);if(a===-1e18)return 1;if(z===-1e18)return -1;return (a-z)*d}return a.localeCompare(z)*d});r.forEach(function(x){b.appendChild(x)})}h.addEventListener('click',go);h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})})})();</script>"""
@@ -118,7 +136,7 @@ def item_line(g, Gs):
 
 def home(built, Gs):
     cards = ""
-    for r in sorted(built, key=lambda r: -float(r["drainage_sqmi"] or 0))[:12]:
+    for r in sorted(featured(built), key=lambda r: -float(r["drainage_sqmi"] or 0))[:12]:
         G = Gs[r["site"]]
         pv = ""
         if G["p"] is not None:
