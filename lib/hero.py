@@ -283,6 +283,8 @@ def hero(G, pages=None):
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % G["ldate"].strftime("%b %d").replace(" 0", " "), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith("%s %d," % (G["ldate"].strftime("%b"), G["ldate"].day)) else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
+    if nwl and (G["rec"].get("nwps") or {}).get("name"):
+        nwl = "%s (%s)" % (nwl, G["rec"]["nwps"]["name"])  # w10 review: "NWS point TDAO3" by code only
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
@@ -298,14 +300,17 @@ def hero(G, pages=None):
         _pn = nws_point_note(G)
         sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else ((", " + esc((G["rec"].get("nwps") or {}).get("name"))) if (G["rec"].get("nwps") or {}).get("name") else ""))  # reviewers: the first screen named the point by code only
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
-        _parts = []
+        _parts = ["issued %s" % esc(fcw["issued"])] if fcw.get("issued") else []
+        _fs = flood_status(G)
+        if _fs:
+            _parts.append(_fs)
         if G["osc"]:
             _parts.append("%s: the level here rises and falls within the day around this forecast" % ("Tidal reach" if G["tidal"] else "Flow rises and falls within the day"))
         elif unit == "ft" and fcw["cur"] is not None and not fcw["datum"] and not above:
             _d = float("%.1f" % fcw["v"]) - float("%.2f" % fcw["cur"])
             _parts.append(("%.1f ft above now" % _d) if _d >= 0.05 else "about level with the latest reading")
         if above and not G["osc"]:
-            _parts.append("%s below the latest reading" % (("%.1f ft" % (fcw["cur"] - fcw["v"])) if unit == "ft" else ("%s cfs" % fmtc(fcw["cur"] - fcw["v"]))))
+            _parts.append("%s below the latest reading" % (("%.1f ft" % (fcw["cur"] - fcw["v"])) if unit == "ft" else ("%s cfs" % fmtd(fcw["cur"] - fcw["v"]))))
         if fcw.get("swing"):
             _parts.append("swings daily between %s and %s until %s" % (("%.1f ft" % fcw["swing"][0]) if unit == "ft" else ("%s cfs" % fmtc(fcw["swing"][0])), ("%.1f ft" % fcw["v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["v"])), esc(fcw["swing"][1])))
         if fcw["falls"]:
@@ -527,7 +532,7 @@ def next_impact(G):
     by = impact_list(G)  # the same list the impacts block shows (full review: tile 10.0 ft, block 7.0 ft)
     if impact_flow(G):  # thresholds published as flow: compared with the flow reading, never with the gage height
         up_ = [s_ for s_ in sorted(by) if G["lv"] is not None and s_ > G["lv"]]
-        return ("Next NWS impact at %s cfs (%s cfs above the latest flow)" % (fmtc(up_[0]), fmtc(up_[0] - G["lv"]))) if up_ else ""
+        return ("Next NWS impact at %s cfs (%s cfs above the latest flow)" % (fmtc(up_[0]), fmtd(up_[0] - G["lv"]))) if up_ else ""
     ahead = [s_ for s_ in sorted(by) if s_ > cur]
     if not ahead:
         cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and v > cur}
@@ -575,6 +580,20 @@ def moon_phase(d):
     age = ((datetime.datetime(d.year, d.month, d.day, 12, tzinfo=datetime.timezone.utc).timestamp() / 86400 + 2440587.5) - 2451550.1) % 29.530588853
     names = ["New moon", "Waxing crescent", "First quarter", "Waxing gibbous", "Full moon", "Waning gibbous", "Last quarter", "Waning crescent"]
     return names[int((age / 29.530588853) * 8 + 0.5) % 8], 50 * (1 - math.cos(2 * math.pi * age / 29.530588853))
+
+
+FLOOD_CAT = {"no_flooding": "no flooding", "action": "action stage", "minor": "minor flooding", "moderate": "moderate flooding", "major": "major flooding"}
+
+
+def flood_status(G):
+    """The NWS flood category for the latest observation and the forecast, from the gauge record; only when the observation is under 6 h old and both are named categories."""
+    st = (G["rec"].get("nwps") or {}).get("status") or {}
+    o, f = st.get("observed") or {}, st.get("forecast") or {}
+    if o.get("cat") not in FLOOD_CAT or not o.get("t") or hours_old(o["t"], G["now"]) > 6:
+        return ""
+    if o["cat"] == "no_flooding" and f.get("cat") == "no_flooding":
+        return "NWS: no flooding now or forecast"
+    return "NWS: %s now%s" % (FLOOD_CAT[o["cat"]], ("; %s forecast" % FLOOD_CAT[f["cat"]]) if f.get("cat") in FLOOD_CAT else "")
 
 
 def nws_point_note(G):

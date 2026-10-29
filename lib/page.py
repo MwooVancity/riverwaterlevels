@@ -128,7 +128,7 @@ def tab_blocks(tab, G, pages):
         has_al = bool(live_alerts(G))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G), "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
-                "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
+                "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G), b_low_water(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
                 "SEC:Forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_cpc(G)]) + [
                 "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G), b3.b_stocking(G), b_snotel(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),

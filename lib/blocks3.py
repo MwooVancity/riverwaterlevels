@@ -145,7 +145,7 @@ def b_acis(G):
     a = dict(a, stations=[x for x in a["stations"] if not ((acis_name(x["name"]), round(x["km"], 1)) in _seen or _seen.add((acis_name(x["name"]), round(x["km"], 1))))])  # full review: one station twice, 0.00 vs trace
     _nm = collections.Counter(acis_name(x["name"]) for x in a["stations"])
     rows = "".join(tr([esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % (x["km"] * 0.621371))) if _nm[acis_name(x["name"])] > 1 else "")), "%.0f mi" % (x["km"] * 0.621371)] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
-    return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", ('<p class="src">Each date is one station observation day, which often ends in the morning, so it does not line up with the last-24-h rain total above.</p>' if ((G["rec"].get("rain") or {}).get("inches") or {}).get("last_24h") is not None else "") + table(heads, rows, right=tuple(range(1, 9))),
+    return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", ('<p class="src">Each date is one station observation day, which often ends in the morning, so it does not line up with the rain totals for the gauge location above.</p>' if (G["rec"].get("rain") or {}).get("inches") else "") + table(heads, rows, right=tuple(range(1, 9))),
                  "Source: NOAA Regional Climate Centers ACIS, daily precipitation at the nearest county weather stations, fetched %s. Each value is a 24-hour total for the station's observation day; trace means less than 0.01 in. Where ACIS lists two reports for one station, the first is shown." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "acis")
 
 

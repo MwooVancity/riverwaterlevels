@@ -1,8 +1,9 @@
 {
  "id": "02336000",
  "verdict": "PASS",
- "notes": "Numbers agree; the dam-release spike (2,030 cfs Oct 26 4:30 PM, -39.1% in 6 h) is shown honestly. Notes: no mention that sudden rises here are dam releases (USACE Buford release schedule); 'rest of the statement in the full list below' on short impact cards. Slices not seen: phone-02, 03, 06 to 14, desktop-01 (image limit); judged from text.txt",
- "by": "hater-full",
- "at": "2026-10-27T06:54:45+00:00",
- "template": "dfaf767af80e"
+ "notes": "No F1-F8 defect; Low-water block clean (curly quotes, 1,000-1,500 cfs commas) | NOTE worst: River forecast new merge/identical card did NOT work: all 18 NWS values are 3.0 ft 1,110 cfs (table: Oct 29 2:00 AM to Nov 2 8:00 AM) yet phone-08 shows two cards 'OCT 29, 2:00 AM EDT 3.0 ft 1,110 cfs' and 'FROM OCT 29, 2:00 PM EDT TO NOV 2, 8:00 AM EST 3.0 ft 1,110 cfs'; the 8:00 AM value is skipped (lib/forecast.py samples pick to 10 of 18, top card never merges, then len(pick)>2 guard misses the all-identical case) | NOTE: first-screen tile says 'FORECAST HIGH 3.0 FT Oct 29, 2:00 AM' when every value is 3.0 (phone-01) | NOTE: Chattooga River near Clayton, GA listed under 'Nearest gauges elsewhere' right after 'More gauges in GA' (phone-12)",
+ "by": "hater-w12",
+ "at": "2026-10-29T01:17:40+00:00",
+ "template": "96f1bb5185c8",
+ "level": "full"
 }

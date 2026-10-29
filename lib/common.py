@@ -89,6 +89,26 @@ def fmtc(v):
     return "{:,.0f}".format(float("%.3g" % v) if abs(v) >= 1000 else v)  # hater 2026-10-27: computed means printed as "280,917 cfs"
 
 
+MOJI = re.compile("Ã[\u0080-\u00bf]|â€|â‚¬|Â[\u0080-\u00bf]")
+
+
+def demoji(s):
+    """Undo UTF-8 text decoded as Windows-1252, as often as it was done (w11 review: NWS low-water text)."""
+    for _ in range(3):
+        if not isinstance(s, str) or not MOJI.search(s):
+            break
+        try:
+            s = bytes(b for ch in s for b in (ch.encode("cp1252") if ch not in "\x81\x8d\x8f\x90\x9d" and ord(ch) > 127 else bytes([ord(ch)]) if ord(ch) < 256 else ch.encode("utf-8"))).decode("utf-8")
+        except (UnicodeError, ValueError):
+            break
+    return s
+
+
+def fmtd(v):
+    """A difference in cfs, exact to the whole cfs (w10 review: 4,200 - 235 printed as 3,960)."""
+    return "–" if v is None else "%.2f" % v if 0 < abs(v) < 1 else "{:,.0f}".format(v)
+
+
 def interp_pct(stats_row, v):
     """Percentile of v within a published daily-percentile row [years, p5, p10, p20, p25, p50, p75, p80, p90, p95]."""
     pts = [(p, stats_row[i + 1]) for i, p in enumerate(PCT) if stats_row[i + 1] is not None]

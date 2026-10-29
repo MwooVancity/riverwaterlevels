@@ -158,10 +158,14 @@ def fetch_nwps(site, lat, lon, prev=None):
                 note("nwps.obs_stage", "failed", e)
             fl = det.get("flood") or {}
             hist = [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("crests") or {}).get("historic") or []) if isinstance(c.get("stage"), (int, float))][:10]
-            imp = [{"stage": i.get("stage"), "statement": re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip()} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
+            imp = [{"stage": i.get("stage"), "statement": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip())} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
             return {"fetched_at": now_iso(), "lid": x["lid"], "name": det.get("name"), "reach_id": det.get("reachId"), "categories": cats, "forecast": fc,
                     "riverflow": rflow, "obs_stage": obs_stage, "obs_series": obs_series, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
-                    "wfo": det.get("wfo"), "rfc": det.get("rfc"), "reliability": det.get("forecastReliability"), "fim": bool((det.get("inundation") or {}).get("enabled")), "lro": fl.get("lro")}
+                    "wfo": det.get("wfo"), "rfc": det.get("rfc"), "reliability": det.get("forecastReliability"), "fim": bool((det.get("inundation") or {}).get("enabled")), "lro": fl.get("lro"),
+                    "low_impacts": [{"value": str(i.get("value") or "").strip(), "impact": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(str(i.get("impact") or "")))).strip())} for i in (det.get("impactsLowWaters") or []) if isinstance(i, dict) and i.get("impact")],
+                    "hydronotes": [{"text": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(str(h_.get("statement") or "")))).strip()), "from": h_.get("effective"), "to": h_.get("expiration")} for h_ in (det.get("hydronotes") or []) if isinstance(h_, dict) and h_.get("statement")],
+                    "low_hist": [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("lowWaters") or {}).get("historic") or []) if isinstance(c, dict) and isinstance(c.get("stage"), (int, float))][:10],
+                    "status": {k: {"cat": ((det.get("status") or {}).get(k) or {}).get("floodCategory"), "t": ((det.get("status") or {}).get(k) or {}).get("validTime")} for k in ("observed", "forecast")}}
     return {"fetched_at": now_iso(), "lid": None}
 
 

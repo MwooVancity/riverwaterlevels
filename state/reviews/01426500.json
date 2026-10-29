@@ -1,9 +1,9 @@
 {
  "id": "01426500",
  "verdict": "PASS",
- "notes": "No F1-F8. NOTES: hero 'NWS FORECAST 2.5 FT' omits the forecast issue time Oct 27, 10:37 AM (only in River forecast block, phone-07); NWS 2.5 ft = 370 cfs vs USGS 2.67 ft = 466 cfs are two labelled ratings; visibility '-' in last 2 hourly columns is a feed gap (text.txt); camera image Aug 22 labelled '2 months before this page was built' (phone-09); 0 of 30 vs past 28 days are labelled windows; 63 stat years vs 114 daily-value years labelled; all flood-impact gaps (8.3/10.3/12.3/14.1/16.4/17.6 ft) check against 2.67 ft; offline map/radar artifacts",
- "by": "hater-w10a",
- "at": "2026-10-29T00:56:25+00:00",
- "template": "5c4cb84ca87b",
+ "notes": "No F1-F8 defect | NOTE worst: all 10 NWS forecast values are 2.6 ft 408 cfs but phone-06 shows two cards 'OCT 29, 2:00 AM EDT' and 'FROM OCT 29, 8:00 AM EDT TO OCT 31, 8:00 AM EDT', not the promised single 'Every forecast value' card (top card excluded from merge, then len(pick)>2 guard fails) | NOTE: gage chart legend 'Forecast high 2.6 ft' (phone-04) while first-screen tile correctly says 'NWS FORECAST ... 0.1 ft below the latest reading' | NOTE: camera block 'taken Aug 22 ... (2 months before this page was built)' (phone-09) adds nothing for today | NOTE: air quality monitors 71-76 mi away (phone-03), labelled",
+ "by": "hater-w12",
+ "at": "2026-10-29T01:17:41+00:00",
+ "template": "96f1bb5185c8",
  "level": "full"
 }

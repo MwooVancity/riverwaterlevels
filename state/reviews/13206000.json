@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "No F1-F8. NOTES (worst first): 'Recent rain at the gauge location' Last 2 days/Last 3 days to Oct 28, 6:00 AM: 0.00 in (phone-04, NWS RFC estimate) while Boise 5.3 NW (1 mi) recorded 0.06 in Oct 26 and three stations 2-3 mi away 0.06-0.14 in Oct 27 (phone-07/08): two labelled datasets, but the 'does not line up' caveat shown on 01426500 is missing here and the Last 24 h row is absent; impact gaps round 5s down ('3,960 cfs above' for 4,200-235=3,965, also 4,660/6,260/6,760/8,260/8,660, phone-01/05/06); 'Highest forecast' Nov 1, 5:00 AM 3.3 ft at 235 cfs while later 3.3 ft points show 236-237 cfs (NWS stage published at 0.1 ft, tie; phone-07); hero water temp in raw USGS abbreviations 'Freestone Cr at Freestone Cr Trailhead Nr Boise Id' (phone-02); Oct typical temp from 8 days, marked '(few)' (phone-10); SNOTEL distances inside toggle (phone-11); 44/47 years labelled datasets",
- "by": "hater-w10a",
- "at": "2026-10-29T00:56:25+00:00",
- "template": "5c4cb84ca87b",
+ "notes": "No F1-F8 defect | NOTE worst: River forecast 11 cards, neighbours that print identically not merged: 'OCT 29 3.2 ft 234 cfs' and 'OCT 30 3.2 ft 234 cfs'; 'NOV 3/NOV 4 3.3 ft 236 cfs'; 'NOV 5/6/7 3.3 ft 237 cfs' (phone-07; merge compares raw not displayed values) | NOTE: 'HIGHEST FORECAST NOV 1, 5:00 AM 3.3 ft 235 cfs' while later cards show 3.3 ft 237 cfs (tie on stage, phone-07) | NOTE: Recent rain at gauge 'Last 3 days to Oct 28 6:00 AM 0.00 in' (phone-04) vs stations 1-4 mi away 0.06-0.14 in on Oct 27 (phone-08); caveat covers timing, not 0.00 vs 0.14 | NOTE: Typical water temperature by month is 1997-2002 data with Oct '8 days (few)' (phone-10); period only in the source note | NOTE: breadcrumb has no river level (phone-01)",
+ "by": "hater-w12",
+ "at": "2026-10-29T01:17:40+00:00",
+ "template": "96f1bb5185c8",
  "level": "full"
 }

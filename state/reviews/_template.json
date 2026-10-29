@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "3/3 template sample PASS in full mode (14105700, 01426500, 13206000), no F1-F8. Template NOTES: impact gaps round 5s down (3,965 shown 3,960); RFC recent-rain block lacks the 'does not line up' caveat when the 24 h row is missing; SNOTEL distance behind a toggle; hero NWS forecast card lacks issue time and can show only the point code (TDAO3); raw USGS abbreviations in nearby-sensor names; '(few)' temp marker now renders",
- "by": "hater-w10a",
- "at": "2026-10-29T00:56:29+00:00",
- "template": "5c4cb84ca87b",
+ "notes": "Three FULL reviews PASS (02336000, 13206000, 01426500); Low-water block, NWS notes, issued time, exact cfs distances OK; open NOTE: forecast-card merge/all-identical card broken on 2 of 3 pages",
+ "by": "hater-w12",
+ "at": "2026-10-29T01:17:41+00:00",
+ "template": "96f1bb5185c8",
  "level": "full"
 }

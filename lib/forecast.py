@@ -43,8 +43,15 @@ def b_river_forecast(G):
         ext = {f_(ix, key=val) for ix in days_.values() for f_ in (max, min)}  # each day's high and low (hater r6: the list kept only the lows of a daily swing)
         keep = sorted(set(range(24)) | set(range(24, len(fut), step)) | {top, len(fut) - 1} | ext)
         thin = " After the first day the table shows about every %d hours; each day's highest and lowest forecast values and the last point are always included." % step
+    runs = []  # consecutive points with the same printed values become one row "from - to" (Atlanta: 18 rows of 3.0 ft, 1,110 cfs)
     for t_, s_, f_ in [fut[i] for i in keep]:
-        rows += tr([esc(tzl(t_, G["zone"])), ("%.1f ft" % s_) if s_ is not None else "–", ("%s cfs" % fmtc(f_)) if f_ is not None else "–"], right=(1, 2))
+        v_ = (("%.1f ft" % s_) if s_ is not None else "–", ("%s cfs" % fmtc(f_)) if f_ is not None else "–")
+        if runs and runs[-1][2] == v_:
+            runs[-1][1] = t_
+        else:
+            runs.append([t_, t_, v_])
+    for a_, b_, v_ in runs:
+        rows += tr([esc(tzl(a_, G["zone"])) + ((" to " + esc(tzl(b_, G["zone"]))) if b_ != a_ else "")] + list(v_), right=(1, 2))
     if gap:
         rows += tr(["NWS and USGS read this gauge on different zero points", "NWS %.2f ft at %s" % (gap[0], esc(tzl(gap[2], G["zone"], date=False))), "USGS %.2f ft at that time" % gap[1]], right=(1, 2))
     issued = esc(tzl(parse_t(fc["issued"]), G["zone"])) if fc.get("issued") else "time not stated"
@@ -71,20 +78,28 @@ def b_river_forecast(G):
     if len(sel) > 10 and any(max(sel[i][1] for i in ix) - min(sel[i][1] for i in ix) >= 0.5 for ix in _d.values()):  # a daily swing: each day's high and low card (hater r7: the cards kept only the lows)
         pick = sorted({f_(ix, key=lambda i: sel[i][1]) for ix in list(_d.values())[:5] for f_ in (max, min)} | {top_i})  # at most 11 cards; the table holds every value
     pick.sort(key=lambda i: i != top_i)  # the highest forecast point is the first card
+    _m = []
+    for i in pick:
+        if _m and i != top_i and _m[-1][0] != top_i and (sel[i][1], sel[i][2]) == (sel[_m[-1][0]][1], sel[_m[-1][0]][2]):
+            _m[-1][1] = i
+        else:
+            _m.append([i, i])
+    span_ = {a_: b_ for a_, b_ in _m if b_ != a_}
+    pick = [a_ for a_, b_ in _m]
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
     _cv = (gap[0] if gap else (G["sg"][-1][1] if G["sg"] else None)) if sel[top_i][1] is not None else G["lv"]
     _below = _hv is not None and _cv is not None and _hv < _cv - (0.05 if sel[top_i][1] is not None else 0.02 * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
-    lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead
+    lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead + hydronotes_html(G)
     _flat = len({sel[i][1] if sel[i][1] is not None else sel[i][2] for i in pick}) == 1  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
     for i in pick:
         t_, s_, f_ = sel[i]
         main = ("%.1f <small>ft</small>" % s_) if s_ is not None else (("%s <small>cfs</small>" % fmtc(f_)) if f_ is not None else "–")
         subf = ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else ""
-        fcards.append(card(("Highest forecast%s &middot; " % (" (below the latest reading)" if _below else "") if i == top_i and not _flat else "") + esc(tzl(t_, G["zone"])), main, subf, "crest" if i == top_i and not _flat else ""))
+        fcards.append(card(("Highest forecast%s &middot; " % (" (below the latest reading)" if _below else "") if i == top_i and not _flat else "") + (("From %s to %s" % (esc(tzl(t_, G["zone"])), esc(tzl(sel[span_[i]][0], G["zone"])))) if i in span_ else esc(tzl(t_, G["zone"]))), main, subf, "crest" if i == top_i and not _flat else ""))
     if len(pick) > 2 and len({(sel[i][1], sel[i][2]) for i in pick}) == 1:  # full review: nine identical "1.9 ft, 154 cfs" cards
         t_, s_, f_ = sel[pick[0]]
-        fcards = [card("Every forecast point to %s" % esc(tzl(sel[-1][0], G["zone"])), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
+        fcards = [card("Every forecast value, %s to %s" % (esc(tzl(sel[0][0], G["zone"])), esc(tzl(sel[-1][0], G["zone"]))), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
     ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
     return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more("All %d forecast values" % len(sel), ftable),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=age)
@@ -145,6 +160,54 @@ def b_crests(G):
                  "Source: National Weather Service forecast point %s (%s), historic crests as published by the NWS; the NWS may have recorded them on an older gauge datum. The USGS annual peaks above are a separate record and can differ in date, flow and datum." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
 
 
+def hydronotes_html(G):
+    md = G["now"].strftime("%m%d")
+    on = [h_["text"] for h_ in (G["rec"].get("nwps") or {}).get("hydronotes") or [] if not (h_.get("from") and h_.get("to")) or (h_["from"] <= md <= h_["to"] if h_["from"] <= h_["to"] else (md >= h_["from"] or md <= h_["to"]))]
+    return "".join('<p class="src">NWS note for this point: \u201c%s\u201d</p>' % esc(demoji(t)) for t in on)
+
+
+def _low_range(v):
+    m = re.match(r"^\s*([\d,.]+)\s*(?:-|to)\s*([\d,.]+)\s*(k?cfs|ft)\b", v or "", re.I)
+    if not m:
+        return None
+    k = 1000 if m.group(3).lower() == "kcfs" else 1
+    try:
+        return float(m.group(1).replace(",", "")) * k, float(m.group(2).replace(",", "")) * k, "ft" if m.group(3).lower() == "ft" else "cfs"
+    except ValueError:
+        return None
+
+
+def _commas(v):
+    return re.sub(r"\b\d{4,}\b", lambda m: "{:,}".format(int(m.group(0))), v or "")  # "1000-1500 cfs" beside "1,030 cfs" (w11 note)
+
+
+def low_now(G):
+    """The NWS low-water impact whose range holds the latest reading, or None."""
+    for i in (G["rec"].get("nwps") or {}).get("low_impacts") or []:
+        r = _low_range(i["value"])
+        cur = (G["lv"] if r and r[2] == "cfs" else (G["sg"][-1][1] if G["sg"] else None)) if r else None
+        if r and cur is not None and r[0] <= cur <= r[1]:
+            return i
+    return None
+
+
+def b_low_water(G):
+    n = G["rec"].get("nwps") or {}
+    li, lh = n.get("low_impacts") or [], n.get("low_hist") or []
+    if not li and not lh:
+        return None
+    hit = low_now(G)
+    out = ""
+    if li:
+        rows = "".join(tr([esc(_commas(i["value"])) + (" <b>(latest reading is in this range)</b>" if i is hit else ""), esc(demoji(i["impact"]))]) for i in li)
+        out += ('<p class="src">The latest reading, %s, is in the NWS range %s.</p>' % (("%s cfs" % fmtc(G["lv"])) if (_low_range(hit["value"]) or (0, 0, ""))[2] == "cfs" else ("%.2f ft" % G["sg"][-1][1]), esc(_commas(hit["value"])))) if hit else ""
+        out += table(["Level", "National Weather Service low-water statement"], rows)
+    if lh:
+        out += table(["Record low date", "Stage", "Flow"], "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc((n.get("stage_units") or "ft").lower())), ("%s cfs" % fmtc(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"], right=(1, 2)) for c in lh), right=(1, 2))
+    return block("low_water", "Low-water levels, as listed by NWS", "official", out,
+                 "Source: National Weather Service forecast point %s (%s), low-water impacts and historic low stages. Statements are quoted from the NWS." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
+
+
 def b_impacts(G):
     n = G["rec"].get("nwps") or {}
     im = n.get("impacts") or []
@@ -158,6 +221,7 @@ def b_impacts(G):
     if flow_:
         unit = "cfs"
     fv = lambda v: ("%s cfs" % fmtc(v)) if flow_ else "%.1f %s" % (v, esc(unit))
+    by = {k_: [demoji(x) for x in v_] for k_, v_ in by.items()}
     rows = "".join(tr([fv(s_), "<br>".join(esc(x) for x in by[s_])], right=(0,)) for s_ in sorted(by))
     pn = nws_point_note(G)
     gap_ = datum_gap(G)
@@ -177,7 +241,7 @@ def b_impacts(G):
             k = max([e for e in sent_ends(txt) if e < 260], default=-1)
             if k > 60 and txt[k - 1] != ".":
                 short, cut = txt[:k + 1], True
-        margin = "" if cur_ is None else ("reached at the %s" % _ref if s_ <= cur_ else "%s above the %s" % (fv(s_ - cur_), _ref))
+        margin = "" if cur_ is None else ("reached at the %s" % _ref if s_ <= cur_ else "%s above the %s" % ((("%s cfs" % fmtd(s_ - cur_)) if flow_ else fv(s_ - cur_)), _ref))
         if cut:
             margin = (margin + "; " if margin else "") + "rest of the statement in the full list below"
         reached = s_ <= (cur_ if cur_ is not None else -1e9)

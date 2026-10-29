@@ -6,7 +6,7 @@ Exit 1 if anything fails.
 import os, re, sys, json, collections, gzip, hashlib, html
 MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from lib.common import ROOT, SITE_URL
+from lib.common import ROOT, SITE_URL, MOJI, demoji
 
 BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
@@ -272,6 +272,8 @@ def hater_rules(h):
     m = re.search(r"(?<![\d.,])\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)  # not the tail of "1.1 days ago"
     if m:
         bad.append("ungrammatical %r" % m.group(0))
+    if MOJI.search(t):
+        bad.append("garbled characters %r: agency text decoded twice" % MOJI.search(t).group(0))
     imp = re.search(r'id="flood_impacts".*?</section>', h, re.S)
     if imp and len(re.findall(r">Next(?: impact at|:) ", imp.group(0))) > 1:
         bad.append("more than one flood-impact card labelled 'Next:'")
@@ -515,6 +517,8 @@ def selftest():
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
     assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert hater_rules("<td>considered \u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201clow for paddlers</td>"), "selftest: garbled characters did not fire"
+    assert demoji("considered \u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201clow") == "considered \u201clow", "selftest: demoji did not repair triple-encoded text"
     assert not hater_rules("<small>1,535 dams upstream since 2025</small>"), "selftest: comma'd count wrongly flagged"
     assert hater_rules('<p class="gaps">Not available for this gauge: hourly weather (no NWS hourly forecast).</p><section class="card blk" id="hourly_heatmap"><table><tr><td>1</td></tr></table></section>'), "selftest: 'not available' over a shown hourly block did not fire"
     pg = lambda title, h1, first, links: ('<title>%s</title><main><h1>%s</h1><div class="hero">%s</div><section class="card blk" id="x"></section>%s</main>'
