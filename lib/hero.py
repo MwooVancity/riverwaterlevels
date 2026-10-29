@@ -281,16 +281,21 @@ def hero(G, pages=None):
             c1 = c["chg"].get(1)
             word, ico = DIR_WORD[flow_dir(round(use, 1), G["lv"] * use / (100 + use) if G["lv"] and use > -100 else None)]  # the printed % decides (Suwannee: -1.96 printed -2.0% was "Steady")  # cfs change = now - earlier, earlier = now / (1 + pct/100) (Fort Collins: -30.1% was 6 cfs, not 4)  # one rule, the same as the rate table and the glossary (w18: seven special cases deleted)
             turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
-            other = [(n_, v) for n_, v in (("1 h", c1), ("6 h", c6), ("24 h", chg)) if v is not None and n_ != span]
+            other = [(n_, v) for n_, v in (("1 h", c1), ("6 h", c6), ("24 h", chg), ("7 days", c["chg"].get(168))) if v is not None and n_ != span]
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)
             uz = round(use)
             dir_chip = ("Steady: no change in %s" % span) if word == "Steady" and abs(use) < 0.05 else "%s: %s%.1f%% flow in %s" % (("%s, leveling off" % ("Falling" if use < 0 else "Rising")) if word == "Leveling off" else word, "+" if use > 0 else "-" if use < 0 else "", abs(use), span)
             if word == "Unsteady" and c1 is not None:
                 dir_chip += ", %+.1f%% in the last hour" % c1
             word_note = word_note or {"Leveling off": "<small>It moved over %s but has changed by less than 0.5%% in the last hour.</small>" % span, "Unsteady": "<small>The last hour points the other way from the last %s.</small>" % span}.get(word, "")
-            tiles += ui.tile("trend dv " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%% <small class="word">%s</small>' % ("+" if use > 0 else "-" if use < 0 else "", abs(use), word),
+            if G["offline"]:  # a silent gauge has no trend: no word, no percent (audit run 2, row 2)
+                tiles += ui.tile("trend dv", "steady", "Change, last %s" % span, "Trend unknown", '<small>Gauge not reporting.</small><small id="ccap" hidden></small>')
+            else:
+              tiles += ui.tile("trend dv " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%%' % ("+" if use > 0 else "-" if use < 0 else "", abs(use)),  # the direction word lives on the flow tile (audit run 2, row 6)
                              '<small>%s%s</small>' % (parts, (" &middot; gage %+.2f ft/h" % gr) if (gr := gage_rate(G)) is not None else "") + (word_note if word == "Unclear" else "")
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
+    if G["offline"] and not G["osc"]:
+        dir_chip = "Trend unknown (gauge not reporting)"
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % md(G["ldate"]), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
@@ -383,7 +388,11 @@ def hero(G, pages=None):
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
         ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
-        strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
+        rn_ = c["rain"]
+        if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"
+            strip += ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", '<small>Last estimate %s ago.</small><small class="old">Old value: %.2f in, NWS RFC estimate%s</small>' % (esc(rn_["ago"] or "time not stated"), rn_["in"], ((" to " + esc(rn_["to"])) if rn_["to"] else "")))
+        else:
+            strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % rn_["in"], '<small data-h="%.1f">NWS RFC estimate%s</small>' % (rn_["age_h"], (" to " + esc(rn_["to"])) if rn_["to"] else ""))
     if c["air"]:
         a = c["air"]
         wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
@@ -416,6 +425,8 @@ def hero(G, pages=None):
         gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
+    if ndam >= 1 and p is not None:
+        gone.append("dam releases: not shown (no open federal release feed for these dams is used yet)")
     strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 

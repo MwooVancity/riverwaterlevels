@@ -303,7 +303,7 @@ def conditions(G, pages=None):
                 out["up"] = {"flow": x["flow"], "name": river_at(pr["river"], pr["place"]), "url": pr["water_url"], "lag": x.get("lag_h"), "time": tzl(parse_t(x["time"]), zone) if x.get("time") else ""}
                 break
     if len(fl) >= 8 and not G.get("osc"):
-        for h in (1, 3, 6, 24):
+        for h in (1, 3, 6, 24, 168):
             wc = window_change(fl, lt, h)
             if wc:
                 out["chg"][h] = wc[2]
@@ -344,7 +344,8 @@ def conditions(G, pages=None):
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
         vt = (rn.get("valid_through") or {}).get("last_24h")
-        out["rain"] = {"in": rn["inches"]["last_24h"], "to": tzl(parse_t(vt), zone) if vt else None}
+        rt = vt or rn.get("fetched_at")  # the estimate's own end time, else when we fetched it
+        out["rain"] = {"in": rn["inches"]["last_24h"], "to": tzl(parse_t(vt), zone) if vt else None, "age_h": hours_old(rt, G["now"]) if rt else None, "ago": age_words(parse_t(rt), G["now"]) if rt else None}
     return out
 
 

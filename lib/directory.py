@@ -1,7 +1,7 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
 import os, json, math, datetime, collections
 from lib.common import *
-from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old
+from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -157,11 +157,20 @@ def state_page(st, rows, Gs, sd=None):
     sw = ""
     if sd:
         al = sd.get("alerts") or {}
-        if al.get("events"):
-            sw += '<p class="sub">Active National Weather Service alerts in %s: %d &mdash; %s. Source: National Weather Service (api.weather.gov).</p>' % (
-                esc(name), al.get("n", 0), ", ".join("%d %s" % (c, esc(e)) for e, c in al["events"][:6]))
+        G0 = Gs[rows[0]["site"]]
+        fa = sd.get("fetched_at")
+        age = hours_old(fa, G0["now"]) if fa else None
+        old = age is None or age > stale_after("alerts")
+        chk = "checked %s" % esc(tzl(parse_t(fa), G0["zone"])) if fa else "check time not stated"
+        if "alerts" in sd and old:  # one rule with the gauge page: an old check is "Unknown", never "no alerts right now"
+            sw += '<p class="sub">Unknown: last NWS alert check %s; check weather.gov. %s Source: National Weather Service (api.weather.gov).</p>' % (
+                ("%s ago" % age_words(parse_t(fa), G0["now"])) if fa else "time not stated",
+                ("Alerts then: %d active%s." % (al.get("n", 0), (": " + ", ".join("%d %s" % (c, esc(e)) for e, c in al["events"][:6])) if al.get("events") else "")))
+        elif al.get("events"):
+            sw += '<p class="sub">Active National Weather Service alerts in %s: %d &mdash; %s (%s). Source: National Weather Service (api.weather.gov).</p>' % (
+                esc(name), al.get("n", 0), ", ".join("%d %s" % (c, esc(e)) for e, c in al["events"][:6]), chk)
         elif "alerts" in sd:
-            sw += '<p class="sub">No active National Weather Service alerts in %s right now. Source: National Weather Service (api.weather.gov).</p>' % esc(name)
+            sw += '<p class="sub">No active National Weather Service alerts in %s (%s). Source: National Weather Service (api.weather.gov).</p>' % (esc(name), chk)
         dr = sd.get("drought")
         if dr and dr.get("d0") is not None:
             sw += '<p class="sub">U.S. Drought Monitor, week of %s: %.0f%% of %s is abnormally dry or worse (D0 or above), %.0f%% in moderate drought or worse (D1 or above), %.0f%% in severe drought or worse (D2 or above). Source: U.S. Drought Monitor (National Drought Mitigation Center, USDA, NOAA).</p>' % (

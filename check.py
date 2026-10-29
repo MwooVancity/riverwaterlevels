@@ -415,6 +415,14 @@ def hater_rules(h):
     # honest data age (audit run 1, 2026-10-29)
     if re.search(r'class="tile alrt[^"]*\bstale\b[^"]*">(?:(?!</div>).)*<b>No alerts</b>', h, re.S) or re.search(r'id="alerts".{0,400}?Older than.{0,300}?No active National Weather Service alerts were returned', h, re.S):
         bad.append("says 'No alerts' beside an NWS alert check older than 3 h (say Unknown and how long ago)")
+    m_ = re.search(r"No active National Weather Service alerts in [^<]*", t)
+    if m_ and "checked" not in m_.group(0):  # batch D: a state page says when the alert check ran, and never "right now"
+        bad.append("a state page says 'No active National Weather Service alerts' without the check time")
+    if 'id="gauge_not_reporting"' in h and re.search(r'<small class="dv">(?:Steady|Rising|Falling|Unsteady)|<small class="word">', h):
+        bad.append("a direction word on a gauge that is not reporting (say 'Trend unknown (gauge not reporting)')")
+    rt_ = re.search(r'class="tile rain(?![^"]*stale)[^"]*">.{0,400}?data-h="(\d+(?:\.\d+)?)"', h, re.S)
+    if rt_ and float(rt_.group(1)) > 6:  # STALE_H["rain_totals"]
+        bad.append("a rain tile shows an estimate older than 6 h as current (say 'Unknown: last estimate N ago')")
     tl_ = re.search(r"<title>(.*?)</title>", h, re.S)
     if 'id="gauge_not_reporting"' in h and tl_ and re.search(r"\blive\b", tl_.group(1), re.I):
         bad.append("the title of a not-reporting gauge says 'live'")
@@ -576,6 +584,11 @@ def selftest():
     assert not hater_rules('<title>Pere Marquette River: water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: a not-reporting title without 'live' wrongly flagged"
     assert not hater_rules('<title>Pere Marquette River: live water level</title><p>reading</p>'), "selftest: 'live' in a reporting gauge's title wrongly flagged"
     assert hater_rules('<div class="hero hero2"></div><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: not-reporting banner below the tiles did not fire"
+    assert hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee right now. Source: x</p>"), "selftest: state alert line without a time did not fire"
+    assert not hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee (checked Oct 29, 7:00 AM CDT). Source: x</p>"), "selftest: state alert line with a time wrongly flagged"
+    assert hater_rules('<section id="gauge_not_reporting"></section><div class="tile flow"><small class="dv">Steady: -0.4% flow in 6 h</small></div>'), "selftest: direction word on a not-reporting gauge did not fire"
+    assert hater_rules('<div class="tile rain"><span>Rain, last 24 h</span><b>0.00</b><small data-h="30.0">NWS</small></div>'), "selftest: old rain estimate shown as current did not fire"
+    assert not hater_rules('<div class="tile rain stale"><span>Rain, last 24 h</span><b>Unknown</b><small>x</small></div>'), "selftest: unknown rain tile wrongly flagged"
     assert hater_rules('<table class="hm hlist hsky"><tbody><tr><td>3 PM</td><td class="r">WNW 2</td></tr></tbody></table>'), "selftest: compass letters in the hourly list did not fire"
     assert hater_rules('<section class="card blk" data-f="fc" id="no_river_forecast"><h2>River forecast availability</h2></section>'), "selftest: full-card empty state did not fire"
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"

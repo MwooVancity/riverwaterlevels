@@ -6,7 +6,7 @@ from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, hours_old,
 
 OK_STATUS = ("quoted", "owner-permission")
 CATS = ("action", "minor", "moderate", "major")
-DROUGHT = (("No drought", 1), ("Abnormally dry (D0)", 2), ("Moderate drought (D1)", 3), ("Severe drought (D2)", 4), ("Extreme drought (D3)", 5), ("Exceptional drought (D4)", 6))
+DROUGHT = (("No drought", 1), ("Abnormally dry or worse (D0 to D4)", 2), ("Moderate drought or worse (D1 to D4)", 3), ("Severe drought or worse (D2 to D4)", 4), ("Extreme drought or worse (D3 to D4)", 5), ("Exceptional drought (D4)", 6))
 AMBER = "var(--amber)"
 
 
@@ -282,7 +282,7 @@ def b_drought(G):
     for lab, i in DROUGHT:
         rows += tr([esc(lab), "%.1f%%" % cur[i], ("%.1f%%" % prev[i]) if prev else "–"], right=(1, 2))
     return block("drought_monitor", "Drought Monitor, %s County" % esc(str(d.get("county") or "").replace(" County", "")), "usdm",
-                 '<p class="src">Each row includes the worse categories below it.</p>' + table(["Category", "Share of county area, week of %s" % fdate(cur[0]), "Previous week"], rows, right=(1, 2)),
+                 '<p class="src">Source figures are cumulative: each row counts the county area in that category or any worse one, so the rows are not shares that add to 100%.</p>' + table(["Category", "Share of county area, week of %s" % fdate(cur[0]), "Previous week"], rows, right=(1, 2)),
                  "Source: U.S. Drought Monitor weekly county statistics (National Drought Mitigation Center, USDA, NOAA), map date %s, fetched %s." % (fdate(cur[0]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "usdm")
 
 
