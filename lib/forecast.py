@@ -24,7 +24,7 @@ def b_river_forecast(G):
     if not fc or not fc.get("points"):
         return None
     age = hours_old(fc.get("issued"), G["now"]) if fc.get("issued") else None
-    if age is not None and age > 72:
+    if age is not None and age > HIDE_H["river_forecast"]:
         return None
     rows = ""
     fut = [x for x in fc_points(fc) if x[0] >= G["now"]]  # same window as the forecast tile (hater r4: tile 11 PM, block 10 PM)
@@ -60,7 +60,7 @@ def b_river_forecast(G):
     if pts_:
         near = min(pts_, key=lambda x: abs((x[0] - G["lt"]).total_seconds()))
         # not across zero points (gap) and not in a tidal reach, where one reading against a daily forecast says nothing (hater 2026-10-27, Freeport)
-        if not gap and not G["osc"] and abs((near[0] - G["lt"]).total_seconds()) <= 5400 and near[2] and G["lv"] and abs(near[2] - G["lv"]) > 0.25 * max(near[2], G["lv"]):
+        if not gap and not G["osc"] and abs((near[0] - G["lt"]).total_seconds()) <= FC_NEAR_S and near[2] and G["lv"] and abs(near[2] - G["lv"]) > FC_OFF_REL * max(near[2], G["lv"]):
             lead = '<p class="src">At %s the NWS forecast flow is %s cfs; the USGS measured %s cfs at %s. %s</p>' % (esc(tzl(near[0], G["zone"], date=False)), fmtc(near[2]), fmtc(G["lv"]), esc(tzl(G["lt"], G["zone"], date=False)), ("The NWS forecast level for that time is %.1f ft against %.2f ft at the gauge, so the forecast itself starts off the reading." % (near[1], G["sg"][-1][1])) if (near[1] is not None and G["sg"] and abs(near[1] - G["sg"][-1][1]) > 0.2) else "The levels agree; the NWS converts level to flow with its own rating, which differs from the USGS rating here.")
     from lib.blocks3 import _fc_offset
     _o = _fc_offset(G, fut, "ft" if any(x[1] is not None for x in fut) else "cfs", gap)
@@ -101,7 +101,7 @@ def b_river_forecast(G):
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
     _cv = fc_cur(G, gap) if sel[top_i][1] is not None else G["lv"]
-    _below = _hv is not None and _cv is not None and _hv < _cv - (0.05 if sel[top_i][1] is not None else 0.02 * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
+    _below = _hv is not None and _cv is not None and _hv < _cv - (FC_TOL_FT if sel[top_i][1] is not None else FC_TOL_REL * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
     lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead + hydronotes_html(G)
     _flat = fc_word([x[1] if x[1] is not None else x[2] for x in sel], _cv, "ft" if sel[top_i][1] is not None else "cfs") != "high"  # no "Highest forecast" header unless the forecast rises above the reading  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
     for i in pick:
@@ -125,7 +125,7 @@ def b_nwm(G):
     if len(pts) < 4:
         return None
     age = hours_old(n.get("reference_time"), G["now"]) if n.get("reference_time") else None
-    if age is not None and age > 72:
+    if age is not None and age > HIDE_H["nwm_guidance"]:
         return None
     fut = [p for p in pts if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1)]
     if len(fut) < 4:

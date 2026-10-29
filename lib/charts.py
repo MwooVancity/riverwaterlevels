@@ -261,11 +261,11 @@ def b_snotel(G):
     for x in st:
         med = x.get("median_in")
         pct = ("%.0f%%" % (x["swe_in"] / med * 100)) if med else "–"
-        rows += tr([esc(x["name"]), "%d mi" % round(x["km"] * 0.621371), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
+        rows += tr([esc(x["name"]), "%d mi" % round(km_mi(x["km"])), ("%s ft" % fmt(x["elev_ft"])) if x.get("elev_ft") else "–", "%.1f in" % x["swe_in"], ("%.1f in" % med) if med is not None else "–", pct, fdate(x["date"])], right=(1, 2, 3, 4, 5))
     from lib import ui
     zero = [x for x in st if not x.get("median_in")]
     st_b = [x for x in st if x.get("median_in")]  # full review: a zero or missing median drew an empty bar and a median tick
-    sb = "".join('<p class="src">%s, %d mi: %.1f in of snow water now; %s.</p>' % (esc(x["name"]), round(x["km"] * 0.621371), x["swe_in"], "median for this date 0.0 in" if x.get("median_in") == 0 else "no median published") for x in zero)
-    sb = (ui.bars([("%s, %d mi" % (esc(x["name"]), round(x["km"] * 0.621371)), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median (%.1f in, median %.1f in)" % (x["swe_in"] / x["median_in"] * 100, x["swe_in"], x["median_in"])) if x.get("median_in") else ("%.1f in; median 0.0 in" % x["swe_in"] if x.get("median_in") == 0 else "%.1f in, no median" % x["swe_in"])) for x in st_b], 150, mark=100) if st_b else "") + sb
+    sb = "".join('<p class="src">%s, %d mi: %.1f in of snow water now; %s.</p>' % (esc(x["name"]), round(km_mi(x["km"])), x["swe_in"], "median for this date 0.0 in" if x.get("median_in") == 0 else "no median published") for x in zero)
+    sb = (ui.bars([("%s, %d mi" % (esc(x["name"]), round(km_mi(x["km"]))), (x["swe_in"] / x["median_in"] * 100) if x.get("median_in") else None, ("%.0f%% of median (%.1f in, median %.1f in)" % (x["swe_in"] / x["median_in"] * 100, x["swe_in"], x["median_in"])) if x.get("median_in") else ("%.1f in; median 0.0 in" % x["swe_in"] if x.get("median_in") == 0 else "%.1f in, no median" % x["swe_in"])) for x in st_b], 150, mark=100) if st_b else "") + sb
     return block("snowpack", "Snow water equivalent at nearby SNOTEL stations", "obs", sb + more("Each station: distance, elevation and date", table(["Station", "Distance", "Elevation", "Snow water now", "Median for date", "Of median", "Date"], rows, right=(1, 2, 3, 4, 5), hide=(1, 2))),
                  "Source: USDA Natural Resources Conservation Service SNOTEL stations within 37 miles of the gauge (AWDB web service), fetched %s. Provisional data; stations may not drain to this gauge." % esc(tzl(parse_t(s["fetched_at"]), G["zone"])), "nrcs")

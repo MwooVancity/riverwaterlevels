@@ -104,6 +104,9 @@ def demoji(s):
     return s
 
 
+FC_TOL_FT, FC_TOL_REL = 0.05, 0.02  # a forecast within 0.05 ft (stage) or 2 % (flow) of the reading is level with it
+
+
 def fc_word(vals, cur, unit="ft"):
     """'steady' when every forecast value prints the same, 'high' when the highest is above the latest reading, else 'at or below'.
     The single source for "Forecast high" (w11-w13 reviews: three places chose the word three ways)."""
@@ -112,10 +115,27 @@ def fc_word(vals, cur, unit="ft"):
         return None
     if len({("%.1f" % v) if unit == "ft" else fmtc(v) for v in vals}) == 1:
         return "steady"
-    return "high" if cur is None or max(vals) > cur + (0.05 if unit == "ft" else 0.02 * abs(cur)) else "below"
+    return "high" if cur is None or max(vals) > cur + (FC_TOL_FT if unit == "ft" else FC_TOL_REL * abs(cur)) else "below"
 
 
 FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast (at or below the latest reading)"}
+
+
+FLAT_PCT, FLAT_CFS = 2, 5  # a flow change under 2 % or under 5 cfs is steady (headline word, rate-table and hub arrows)
+FC_NEAR_S, FC_OFF_REL = 5400, 0.25  # a forecast point within 90 min of the reading whose flow is more than 25 % off it is out of step
+NEAR_WTEMP_H = 48  # a nearby gauge's water temperature older than this is not shown
+
+
+def flow_dir(pct, d=None):
+    """'up', 'down' or 'steady' for a flow change in percent (d: the same change in cfs, when known). One cut-off for the headline word and every arrow."""
+    if d is not None and abs(d) < FLAT_CFS:
+        return "steady"
+    return "up" if pct >= FLAT_PCT else "down" if pct <= -FLAT_PCT else "steady"
+
+
+def km_mi(km):
+    """Kilometres to miles: one factor for every distance and wind speed."""
+    return km * 0.621371
 
 
 def r1(x):
@@ -183,3 +203,8 @@ def band_word(p):
     if p <= 75:
         return "Normal range"
     return "Above normal"
+
+
+def band_cls(p):
+    """Colour class of a percentile, one cut for every page: 'la' under the 25th, 'lp' over the 75th, 'lb' between, '' unknown."""
+    return "" if p is None else "la" if p < 25 else "lp" if p > 75 else "lb"

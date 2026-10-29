@@ -79,9 +79,7 @@ TABS = {
 def b_nearby(G, pages):
     """Other gauges on the site close to this one (up to five within 60 miles, nearest first), each with latest flow and the plain-word comparison. Upstream and downstream gauges are in their own strip and are skipped here."""
     skip = {G["site"]} | {x["site"] for x in ((G["rec"].get("related") or {}).get("items") or [])}
-    def dist(p):
-        la1, lo1, la2, lo2 = map(math.radians, (G["lat"], G["lon"], p["_ll"][0], p["_ll"][1]))
-        return 3958.8 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+    dist = lambda p: miles_between(G["lat"], G["lon"], p["_ll"][0], p["_ll"][1])
     usable = lambda s, p: s not in skip and p.get("_built") and p.get("_ll")
     # bounding box before the haversine: 60 mi is under 1 deg lat and ~2 deg lon in CONUS, so only distance-test the handful in the box (was an O(n) trig scan per page = O(n^2) per build)
     box = [(dist(p), p) for s, p in pages.items() if usable(s, p) and abs(p["_ll"][0] - G["lat"]) <= 1.0 and abs(p["_ll"][1] - G["lon"]) <= 2.0]

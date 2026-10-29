@@ -66,18 +66,18 @@ def b_air(G):
     if not o:
         return None
     age = hours_old(o["timestamp"], G["now"])
-    if age is not None and age > 12:
+    if age is not None and age > HIDE_H["air_obs"]:
         return None
     rows = []
     if o.get("temp_c") is not None:
         rows.append(("temp", "Air temperature", "%.0f °F" % (o["temp_c"] * 9 / 5 + 32)))
     if o.get("wind_kmh") is not None:
-        mph = o["wind_kmh"] * 0.621371
+        mph = km_mi(o["wind_kmh"])
         d = o.get("wind_dir")
         comp = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"][int((d % 360) / 22.5 + 0.5) % 16] + " " if d is not None else ""
         rows.append(("wind", "Wind", "Calm" if mph < 1 else "%s%.0f mph" % (comp, mph)))
     if o.get("gust_kmh") is not None:
-        rows.append(("gust", "Gusts", "%.0f mph" % (o["gust_kmh"] * 0.621371)))
+        rows.append(("gust", "Gusts", "%.0f mph" % km_mi(o["gust_kmh"])))
     if o.get("pressure_pa") is not None:
         inhg = o["pressure_pa"] / 3386.389
         tr_txt = ""
@@ -108,7 +108,7 @@ def b_weather(G, n_periods=14):
     if not per:
         return None
     age = hours_old(n.get("forecast_updated"), G["now"]) if n.get("forecast_updated") else None
-    if age is not None and age > 48:
+    if age is not None and age > HIDE_H["weather_forecast"]:
         return None
     cards = ""
     live = []
@@ -132,7 +132,7 @@ def b_hourly(G):
     n = G["rec"].get("nws") or {}
     hr = n.get("hourly") or []
     age = hours_old(n.get("hourly_updated"), G["now"]) if n.get("hourly_updated") else None
-    if not hr or age is None or age > 72:
+    if not hr or age is None or age > HIDE_H["hourly_forecast"]:
         return None
     rows = ""
     for p in [p for p in hr if parse_t(p["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]:
@@ -150,7 +150,7 @@ def b_heatmap(G):
     g = n.get("grid") or {}
     age = hours_old(g.get("updated"), G["now"]) if g.get("updated") else None
     hrs = [h for h in g.get("hours", []) if parse_t(h["t"]) > G["now"] - datetime.timedelta(hours=1)][:24]
-    if len(hrs) < 12 or (age is not None and age > 72):
+    if len(hrs) < 12 or (age is not None and age > HIDE_H["hourly_heatmap"]):
         return None
     pop = {}
     for p in n.get("hourly") or []:
@@ -160,7 +160,7 @@ def b_heatmap(G):
     for h in hrs:
         d = parse_t(h["t"]).astimezone(zone)
         head += "<th>%s</th>" % ("%s 12a" % d.strftime("%a") if d.hour == 0 else ("%s %d%s" % (d.strftime("%a"), d.hour % 12 or 12, "a" if d.hour < 12 else "p")) if h is hrs[0] else "%d%s" % (d.hour % 12 or 12, "a" if d.hour < 12 else "p"))
-    mph = lambda k: (lambda v: None if v is None else v * 0.621371)(k)
+    mph = lambda k: (lambda v: None if v is None else km_mi(v))(k)
     spec = (("Temp &deg;F", lambda h: None if h.get("temp_c") is None else h["temp_c"] * 9 / 5 + 32, lambda v: (v - 20) / 90, "%.0f"),
             ("Wind mph", lambda h: mph(h.get("wind_kmh")), lambda v: v / 30, "%.0f"),
             ("Gust mph", lambda h: mph(h.get("gust_kmh")), lambda v: v / 40, "%.0f"),

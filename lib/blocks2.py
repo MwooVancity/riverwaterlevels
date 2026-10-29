@@ -69,7 +69,7 @@ def b_stage_chart(G):
     gap = datum_gap(G)  # NWS and USGS stages on different zero points: the forecast and the flood stages belong to the NWS scale, so they are never drawn on the USGS axis
     if f and f.get("points") and not gap:
         age = hours_old(f.get("issued"), now) if f.get("issued") else None
-        if age is None or age <= 72:
+        if age is None or age <= HIDE_H["river_forecast"]:
             issued = f.get("issued")
             fc = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1 and t_ >= now]
     cats = (n.get("categories") or {}) if nws else {}
@@ -123,9 +123,7 @@ def _at(series, t, tol):
 
 
 def _arrow(pct, d=None):
-    if d is not None and abs(d) < 5:  # the headline also calls a change under 5 cfs steady (blocks review #10)
-        return "&rarr;"
-    return "&#9650;" if pct >= 2 else "&#9660;" if pct <= -2 else "&rarr;"  # same cut-off as the headline word (hater r4: "Steady" beside "▼ -1.9%")
+    return {"up": "&#9650;", "down": "&#9660;", "steady": "&rarr;"}[flow_dir(pct, d)]  # the headline word's own rule (hater r4: "Steady" beside "▼ -1.9%"; blocks review #10: under 5 cfs)
 
 
 def b_rate(G):
@@ -224,7 +222,7 @@ def b_nwm_medium(G):
     if len(pts) < 4:
         return None
     age = hours_old(n.get("medium_reference_time"), G["now"]) if n.get("medium_reference_time") else None
-    if age is not None and age > 72:
+    if age is not None and age > HIDE_H["nwm_medium_range"]:
         return None
     fut = [p for p in pts if parse_t(p["t"]) >= G["now"] - datetime.timedelta(hours=1)]
     if len(fut) < 4:
@@ -258,7 +256,7 @@ def b_qpf(G):
     age = hours_old(g.get("updated"), G["now"]) if g.get("updated") else None
     start = G["now"].replace(minute=0, second=0, microsecond=0)
     hrs = [h for h in g.get("hours", []) if parse_t(h["t"]) >= start and h.get("qpf_mm") is not None]
-    if len(hrs) < 24 or (age is not None and age > 72):
+    if len(hrs) < 24 or (age is not None and age > HIDE_H["forecast_rain_totals"]):
         return None
     rows = ""
     for h, lab in ((6, "Next 6 hours"), (12, "Next 12 hours"), (24, "Next 24 hours"), (48, "Next 48 hours"), (72, "Next 72 hours"), (168, "Next 7 days")):

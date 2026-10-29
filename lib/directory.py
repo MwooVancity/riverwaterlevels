@@ -58,7 +58,7 @@ def conus_map(built, Gs, cap=120):
         if not (lon0 <= G["lon"] <= lon1 and lat0 <= G["lat"] <= lat1):
             continue
         p = G["p"]
-        cls = "d-na" if p is None else "d-lo" if p < 25 else "d-hi" if p > 75 else "d-mid"
+        cls = {"": "d-na", "la": "d-lo", "lp": "d-hi", "lb": "d-mid"}[band_cls(p)]
         lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", flow compared with past years on this date: %s" % band_word(p).lower()) if p is not None else "")
         dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s" title="%s" aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], esc(lab), esc(lab))
         shown += 1
@@ -188,7 +188,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         G = Gs[r["site"]]
         pv = band_word(G["p"])
         chg = None if G.get("osc") else G["chg"]
-        ch = ("%s %s" % ("&#9650;" if chg >= 2 else "&#9660;" if chg <= -2 else "&#9644;", ("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
+        ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
             r["water_url"], esc(r["place"]), r["site"], fmt(dir_lv(G)), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))

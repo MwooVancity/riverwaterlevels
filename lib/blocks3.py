@@ -144,7 +144,7 @@ def b_acis(G):
     _seen = set()
     a = dict(a, stations=[x for x in a["stations"] if not ((acis_name(x["name"]), round(x["km"], 1)) in _seen or _seen.add((acis_name(x["name"]), round(x["km"], 1))))])  # full review: one station twice, 0.00 vs trace
     _nm = collections.Counter(acis_name(x["name"]) for x in a["stations"])
-    rows = "".join(tr([esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % (x["km"] * 0.621371))) if _nm[acis_name(x["name"])] > 1 else "")), "%.0f mi" % (x["km"] * 0.621371)] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
+    rows = "".join(tr([esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % km_mi(x["km"]))) if _nm[acis_name(x["name"])] > 1 else "")), "%.0f mi" % km_mi(x["km"])] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
     return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", ('<p class="src">Each date is one station observation day, which often ends in the morning, so it does not line up with the rain totals for the gauge location above.</p>' if (G["rec"].get("rain") or {}).get("inches") else "") + table(heads, rows, right=tuple(range(1, 9))),
                  "Source: NOAA Regional Climate Centers ACIS, daily precipitation at the nearest county weather stations, fetched %s. Each value is a 24-hour total for the station's observation day; trace means less than 0.01 in. Where ACIS lists two reports for one station, the first is shown." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "acis")
 
@@ -260,7 +260,7 @@ def _fc_offset(G, pts, unit, gap):
         return None
     t0 = G["lt"]
     near = min(pts, key=lambda x: abs((x[0] - t0).total_seconds()))
-    if abs((near[0] - t0).total_seconds()) > 5400:
+    if abs((near[0] - t0).total_seconds()) > FC_NEAR_S:
         return None
     if unit == "ft":
         if not near[1] or not G["sg"] or (G["sg"][-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
@@ -270,7 +270,7 @@ def _fc_offset(G, pts, unit, gap):
             return None
         return {"t": tzl(near[0], G["zone"], date=False), "f": "%.1f ft" % fv, "c": "%.2f ft" % cur}
     cur, fv = G["lv"], near[2]
-    if not fv or abs(cur - fv) <= 0.25 * max(cur, fv):
+    if not fv or abs(cur - fv) <= FC_OFF_REL * max(cur, fv):
         return None
     return {"t": tzl(near[0], G["zone"], date=False), "f": "%s cfs" % fmtc(fv), "c": "%s cfs" % fmtc(cur)}
 
@@ -285,11 +285,11 @@ def conditions(G, pages=None):
     if wts and (G["now"] - wts[-1][0]).total_seconds() <= 24 * 3600 and (wts[-1][2].get("unit_of_measure") or "").lower().replace(" ", "") in ("degc", "°c"):
         out["wt"] = {"f": wts[-1][1] * 9 / 5 + 32, "t": tzl(wts[-1][0], zone)}
     ob = (rec.get("nws") or {}).get("obs")
-    if ob and ok("nws") and ob.get("temp_c") is not None and hours_old(ob.get("timestamp"), G["now"]) is not None and hours_old(ob.get("timestamp"), G["now"]) <= 12:
+    if ob and ok("nws") and ob.get("temp_c") is not None and hours_old(ob.get("timestamp"), G["now"]) is not None and hours_old(ob.get("timestamp"), G["now"]) <= HIDE_H["air_obs"]:
         wk = ob.get("wind_kmh")
         dirs = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
         wd = dirs[int((ob["wind_dir"] % 360) / 22.5 + 0.5) % 16] if ob.get("wind_dir") is not None else ""
-        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone), "iso": ob["timestamp"]}
+        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": km_mi(wk) if wk is not None else None, "gust": km_mi(ob["gust_kmh"]) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone), "iso": ob["timestamp"]}
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
@@ -315,7 +315,7 @@ def conditions(G, pages=None):
         flow = [(t_, f_) for t_, _, f_ in pts if f_ is not None]
         gap = datum_gap(G)
         fut, unit = (stage, "ft") if stage else (flow, "cfs")
-        if fut and (age is None or age <= 72):
+        if fut and (age is None or age <= HIDE_H["river_forecast"]):
             hi = max(fut, key=lambda x: x[1])
             near = [i for i, (_, v_) in enumerate(fut) if v_ >= hi[1] - (0.05 if unit == "ft" else 0.01 * abs(hi[1]))]
             lo_f = min(v_ for _, v_ in fut)
@@ -397,7 +397,7 @@ def b_air_quality(G):
             d = datetime.datetime.strptime("%s %s" % (r.get("date"), r.get("hour")), "%Y-%m-%d %H:%M").replace(tzinfo=G["zone"])
         except (TypeError, ValueError):
             return True
-        return (G["now"] - d).total_seconds() <= 12 * 3600
+        return (G["now"] - d).total_seconds() <= HIDE_H["air_quality"] * 3600
     a = dict(a, rows=[r for r in a["rows"] if _fresh(r) and isinstance(r.get("aqi"), (int, float))])  # full review: "Air quality now" from a reading 26 h old
     if not a["rows"]:
         return None
@@ -467,7 +467,7 @@ def b_wpc(G):
     if not w:
         return None
     age = hours_old(w.get("fetched_at"), G["now"]) if w.get("fetched_at") else None
-    if age is None or age > 6:
+    if age is None or age > HIDE_H["wpc_outlooks"]:
         return None
     zone = G["zone"]
     body = ""
