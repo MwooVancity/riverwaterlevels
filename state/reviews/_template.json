@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "3/3 gauges PASS full (Salmon, Memphis, Boise): half-up stage gaps, forecast count line, centred chart dates verified; cold-water/monthly-temp/old-outlook changes not visible (no temp sensor; collapsed sections).",
- "by": "hater-w16",
- "at": "2026-10-29T02:09:24+00:00",
- "template": "b0f8e9d09c50",
- "level": "full"
+ "notes": "meta description wording only; 08330000 first-mode PASS",
+ "by": "hater-w17",
+ "at": "2026-10-29T02:20:30+00:00",
+ "template": "851f24993c3b",
+ "level": "first"
 }

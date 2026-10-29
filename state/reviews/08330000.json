@@ -1,8 +1,9 @@
 {
  "id": "08330000",
  "verdict": "PASS",
- "notes": "Notes only: About says 'Daily mean flow record Oct 1, 1965' (phone-12) while 'How often each flow is reached, 1942 to 2015' (phone-09) and cache holds ~22,300 days from 1965; if USGS daily record starts 1942 the 62/53-year ranks omit 1942-64 (unverified) | hourly box says thunderstorm hours 'are not listed' yet THUNDER % row shows 1% each hour (phone-02/03) | legend 'Action 8.0 ft' and 'Minor 8.0 ft' identical, yellow swatch has no bar segment (phone-04) | 'Past 7 days: 55th percentile, in the normal range' beside 'Much above normal' (method explained, phone-09) | '0.1 ft above now' for 5.1 vs 4.95 rounding | nearby list runs to AZ/CO 252-299 mi, labelled",
- "by": "hater-full2",
- "at": "2026-10-27T12:47:57+00:00",
- "template": "12fab7e9a47e"
+ "notes": "No F1-F8. Meta description OK: no number, 'records since 1965' matches USGS daily record Oct 1 1965. First screen answers 'rio grande water level albuquerque today': 4.95 ft, 2,270 cfs, much above normal (95%+ of 53 yrs), steady, observed time, next NWS impact 8.0 ft (3.1 ft above). Flood-stage gaps 3.1/5.1/7.6 ft and h-earlier ages check out. NOTES: 47 h age and 'could not be loaded' are offline artifacts; 7/28-day percentile 'normal range' vs today 'much above normal' are labelled windows; phone-01 bottom line cut by slice edge only.",
+ "by": "hater-w17",
+ "at": "2026-10-29T02:20:30+00:00",
+ "template": "851f24993c3b",
+ "level": "first"
 }
