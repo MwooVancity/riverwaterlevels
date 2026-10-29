@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "batch H release blockers: home links 40 featured + all states (154 links), esc collapses doubled prepositions from agency names, dam-release wording once on first screen; builder read the built home page text; practice release 40886991246 had 0 failing pages",
+ "notes": "phase 2 merge: sharded pipeline off (data/pipeline.json sharded=false), collect retries new-design-only, impact_cur/scale_clash line, negative-flow note; no live gauge shows the new lines today (not screenshotted); truth fixtures cover them; shadow run 40941372688 truth contracts 0 failures at 2,000 gauges",
  "by": "builder-machine",
- "at": "2026-10-29T14:29:29+00:00",
- "template": "af97aa188de6",
+ "at": "2026-10-29T19:59:20+00:00",
+ "template": "2c6b1af249e7",
  "level": "machine"
 }
