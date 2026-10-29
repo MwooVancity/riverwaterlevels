@@ -113,7 +113,7 @@ def next_impact_cats(n, v):
     """'<small>29.5 ft below action stage (28.0 ft)</small>' from the NWS flood categories, or ''."""
     cats = {k: x for k, x in (n.get("categories") or {}).items() if x is not None}
     low = min(cats, key=cats.get) if cats else None
-    return '<small>%.1f ft below %s stage (%.1f ft)</small>' % (cats[low] - v, low, cats[low]) if low and v < cats[low] else ""
+    return '<small>%.1f ft below %s stage (%.1f ft)</small>' % (r1(cats[low] - v), low, cats[low]) if low and v < cats[low] else ""
 
 
 
@@ -541,7 +541,7 @@ def next_impact(G):
     ahead = [s_ for s_ in sorted(by) if s_ > cur]
     if not ahead:
         cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and v > cur}
-        return ("NWS %s stage %.1f %s (%.1f %s above %s)" % (min(cats, key=cats.get), min(cats.values()), esc(unit), min(cats.values()) - cur, esc(unit), _ref)) if cats else ""  # full review: Moody showed no distance to its action stage
+        return ("NWS %s stage %.1f %s (%.1f %s above %s)" % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), _ref)) if cats else ""  # full review: Moody showed no distance to its action stage
     i = {"stage": ahead[0]}
     txt = " / ".join(by[ahead[0]])
     end = next(iter(sent_ends(txt)), -1)
@@ -551,8 +551,8 @@ def next_impact(G):
         cut = txt.rfind(" ", 0, 157)
         txt = txt[:cut if cut > 40 else 157] + "\u2026"
     cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and cur < v < i["stage"]}
-    pre = ("NWS %s stage %.1f %s (%.1f %s above %s); " % (min(cats, key=cats.get), min(cats.values()), esc(unit), min(cats.values()) - cur, esc(unit), "the NWS reading" if gap else "the latest reading")) if cats else ""  # full review: Salt River showed the 42 ft impact, not Action 24 / Minor 30
-    base = pre + "Next NWS impact at %.1f %s (%.1f %s above %s)" % (i["stage"], esc(unit), i["stage"] - cur, esc(unit), _ref)
+    pre = ("NWS %s stage %.1f %s (%.1f %s above %s); " % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), "the NWS reading" if gap else "the latest reading")) if cats else ""  # full review: Salt River showed the 42 ft impact, not Action 24 / Minor 30
+    base = pre + "Next NWS impact at %.1f %s (%.1f %s above %s)" % (i["stage"], esc(unit), r1(i["stage"] - cur), esc(unit), _ref)
     gr = gage_rate(G)  # time-to-flood: pure arithmetic from the rate of rise already on the page, labelled "at the current rate", no verdict
     fpk = max((s_ for _, s_, _ in fc_points(n.get("forecast") or {}) if s_ is not None), default=None) if (n.get("forecast") or {}).get("points") else None
     if gr and gr > 0 and not daily_swing(G) and not G.get("osc") and (fpk is None or fpk >= i["stage"]):  # full review: "12 h away" beside an NWS forecast that falls (Hudson)

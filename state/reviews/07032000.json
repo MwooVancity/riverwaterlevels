@@ -1,9 +1,9 @@
 {
  "id": "07032000",
  "verdict": "PASS",
- "notes": "No F1-F8. Notes: forecast cards line says '9 of the 25 levels' while the link says 'All 70 forecast values, in 25 rows' (levels vs rows wording, phone-06/07) | 'How often each flow is reached (USGS, years not stated)' (phone-09) | recent rain windows end at different times (24 h to 5:00 PM, 2/3 days to 7:00 AM), labelled (phone-03/04) | 'Before these 7 days, last day above the 90th percentile Oct 1' not checkable against Oct 20 366,000 cfs on the page (phone-09). New forecast helper verified: NWS stage -1.75 used in tile, cards, legend; header 'AT OR BELOW THE LATEST READING' agrees with 'already above every forecast point'.",
- "by": "hater-w15",
- "at": "2026-10-29T01:42:43+00:00",
- "template": "092eaa9e4e5c",
+ "notes": "No FAIL-list defect. Below-zero stage handled (29.8 ft below action 28.0; impacts 24.8..29.8 ft above -1.75 all correct); 168 h/35 h, 20 days, 25 of 30 and 80th pct consistent with chart. NOTES: forecast line 'The cards show 9 of the 25 rows of this forecast, to Nov 25, 6:00 AM CST' while cards stop Nov 2 phone-06; flow-duration table '(USGS, years not stated)' median 394,000 cfs sits beside a daily median ~230,000 (two labelled datasets) phone-09/10; 73 vs 74 years explained; '33,098 dams upstream' unexplained scale; collapsed Long-range flood outlook (Nov to Jan) not visible in shots.",
+ "by": "hater-w16",
+ "at": "2026-10-29T02:09:20+00:00",
+ "template": "b0f8e9d09c50",
  "level": "full"
 }

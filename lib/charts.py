@@ -100,7 +100,9 @@ def day_axis(t0, t1, zone, X, nx, fs, Hh, L, W):
     xl = ""
     for m in mids[::max(1, -(-len(mids) // nx))]:  # one label per local midnight (every second one on a phone)
         x_ = X(m)
-        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (x_, Hh - 8, fs, "start" if x_ < L + 16 else "end" if x_ > W - 30 else "middle", m.strftime("%b %d").replace(" 0", " "))
+        if x_ - 2.4 * fs < L - 4 or x_ + 2.4 * fs > W - 4:  # "Oct 22" is about 4.8 font sizes wide
+            continue
+        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="middle">%s</text>' % (x_, Hh - 8, fs, m.strftime("%b %d").replace(" 0", " "))
     return xl
 
 
@@ -242,10 +244,11 @@ def b_wtemp(G):
     mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}
     def under(lo, hi):
         ms = [("<b>%s (this month)</b>" if m == G["ldate"].month else "%s") % MONTHS[m - 1][:3] for m in sorted(mf) if lo <= round(mf[m]) < hi]  # the row for today is marked; banded on the rounded value shown (full review)
-        return ", ".join(ms) if ms else "none"
+        return ", ".join(ms) if ms else ("none of the months with data" + ("" if len(mf) == 12 else " (no data for %s)" % ", ".join(MONTHS[m - 1][:3] for m in range(1, 13) if m not in mf)))
     # Lakebrief comparison 2026-10-21: the thresholds a swimmer or paddler reads against this table, quoted from the guide, no verdict of ours
     guide = table(["Typical water temperature", "National Center for Cold Water Safety category (quoted)", "Months in that band here"], tr(["Under 50&deg;F", "colder than the guide's coldest band (50 to 60&deg;F, &ldquo;Very Dangerous / Immediately Life-threatening&rdquo;); NWS: cold-water shock and loss of swimming ability within minutes of immersion", under(-100, 50)]) + tr(["50 to 60&deg;F", "&ldquo;Very Dangerous / Immediately Life-threatening&rdquo;", under(50, 60)]) + tr(["60 to 70&deg;F", "&ldquo;Dangerous&rdquo;", under(60, 70)]) + tr(["70&deg;F and above", "above the guide's caution line: it says to treat any water below 70&deg;F with caution", under(70, 200)]))
-    return block("water_temp_months", "Typical water temperature by month", "hist", '<div class="fcs mgrid">%s</div>' % cards + "<h3>Cold-water guidance against these months</h3>" + guide,
+    _who = '<p class="src">Measured by this gauge\u2019s own water temperature sensor, %s to %s%s.</p>' % (esc(w.get("first_year") or "?"), esc(w.get("last_year") or "?"), (" (%s years with data; it no longer reports)" % esc(w["years"])) if w.get("years") and str(w.get("last_year")) < str(G["ldate"].year - 1) else "")
+    return block("water_temp_months", "Typical water temperature by month", "hist", _who + '<div class="fcs mgrid">%s</div>' % cards + "<h3>Cold-water guidance against these months</h3>" + guide,
                  "Source: USGS daily mean water temperature (Water Data API), %s to %s, mean of all published daily values in each calendar month (days counted under each month; (few) means fewer than 150 daily values). Categories quoted from the <a href=\"https://www.coldwatersafety.org/water-temperature-safety-guide\" rel=\"noopener\">National Center for Cold Water Safety water temperature safety guide</a>; a monthly mean says nothing about a given day." % (esc(w["first_year"]), esc(w["last_year"])), "usgs")
 
 

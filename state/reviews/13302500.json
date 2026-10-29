@@ -1,9 +1,9 @@
 {
  "id": "13302500",
  "verdict": "PASS",
- "notes": "No F1-F8. Notes: cold-water table says 'Under 50 F ... none' while October is missing from the monthly table and the nearby live reading is 46 F; scoped to 'these months' (May-Sep) so not false, but a reader in October is misled (phone-09/10) | 'Typical water temperature by month' names no station or years although the card says 'This gauge has no temperature sensor' (phone-09 vs phone-02) | forecast cards show nine identical '2.4 ft' tiles that differ only in cfs, and the line calls them '9 of the 14 levels' (phone-05/06) | '4.5 ft above' for 7.0 - 2.45 = 4.55 and '5.0 ft' for 5.05 (rounding, phone-01) | hourly VISIBILITY '-' for 3P-6P, feed did not publish (phone-02) | RFC 3-day 0.20 in vs station daily 0.72 in, windows differ, labelled (phone-03/06) | Shoup water-temp gauge 28 mi with no up/downstream word (phone-02).",
- "by": "hater-w15",
- "at": "2026-10-29T01:42:44+00:00",
- "template": "092eaa9e4e5c",
+ "notes": "No FAIL-list defect. Stage gaps round correctly (7.0-2.45=4.6, 7.5=5.1, 8.0=5.6, 9.5=7.1); rate tiles, hour counts (77 h, 154 h) and percentiles (64% vs 37th/32nd) agree. NOTES: forecast count line 'The cards show 9 of the 14 rows of this forecast, to Nov 6, 5:00 AM MST' while last card is Nov 5 (reads as if cards run to Nov 6) phone-05; all 9 cards print 2.4 ft while cfs falls 1,230 to 1,160 (rounding) phone-05/06; hourly table VISIBILITY ends in 5 '-' cells (NWS did not publish) text.txt; 'a year earlier, on Oct 26, 2025' explained inline; 110 vs 112 years explained in About table; collapsed Flood record (long-range outlook age) not visible in shots.",
+ "by": "hater-w16",
+ "at": "2026-10-29T02:09:20+00:00",
+ "template": "b0f8e9d09c50",
  "level": "full"
 }

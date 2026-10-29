@@ -97,7 +97,7 @@ def b_river_forecast(G):
     pick = _k
     span_ = {a_: b_ for a_, b_ in _ends.values() if b_ != a_ and a_ in pick}
     if len(pick) < len(_ends):
-        lead += '<p class="src">The cards show %d of the %d levels in this forecast, to %s; the table below lists every value.</p>' % (len(pick), len(_ends), esc(tzl(sel[-1][0], G["zone"])))
+        lead += '<p class="src">The cards show %d of the %d rows of this forecast, to %s; the table below lists every row.</p>' % (len(pick), len(_ends), esc(tzl(sel[-1][0], G["zone"])))
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
     _cv = fc_cur(G, gap) if sel[top_i][1] is not None else G["lv"]
@@ -253,7 +253,7 @@ def b_impacts(G):
             k = max([e for e in sent_ends(txt) if e < 260], default=-1)
             if k > 60 and txt[k - 1] != ".":
                 short, cut = txt[:k + 1], True
-        margin = "" if cur_ is None else ("reached at the %s" % _ref if s_ <= cur_ else "%s above the %s" % ((("%s cfs" % fmtd(s_ - cur_)) if flow_ else fv(s_ - cur_)), _ref))
+        margin = "" if cur_ is None else ("reached at the %s" % _ref if s_ <= cur_ else "%s above the %s" % ((("%s cfs" % fmtd(s_ - cur_)) if flow_ else fv(r1(s_ - cur_))), _ref))
         if cut:
             margin = (margin + "; " if margin else "") + "rest of the statement in the full list below"
         reached = s_ <= (cur_ if cur_ is not None else -1e9)

@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "Full review of 07032000, 02336000, 13302500: forecast reference stage helper consistent across tile, cards, legend and stage chart (NWS stage at Memphis); count line and singular row OK; no F1-F8.",
- "by": "hater-w15",
- "at": "2026-10-29T01:42:44+00:00",
- "template": "092eaa9e4e5c",
+ "notes": "3/3 gauges PASS full (Salmon, Memphis, Boise): half-up stage gaps, forecast count line, centred chart dates verified; cold-water/monthly-temp/old-outlook changes not visible (no temp sensor; collapsed sections).",
+ "by": "hater-w16",
+ "at": "2026-10-29T02:09:24+00:00",
+ "template": "b0f8e9d09c50",
  "level": "full"
 }

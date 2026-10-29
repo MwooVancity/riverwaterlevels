@@ -92,7 +92,7 @@ def b_stage_chart(G):
     for k in CATS:
         if k in cats:
             d = cats[k] - cur
-            rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the %s" % (d, "NWS reading" if gap else "latest gage height")) if d > 0 else ("the %s is %.1f ft above it" % ("NWS reading" if gap else "latest gage height", -d))], right=(1,))
+            rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the %s" % (r1(d), "NWS reading" if gap else "latest gage height")) if d > 0 else ("the %s is %.1f ft above it" % ("NWS reading" if gap else "latest gage height", -d))], right=(1,))
     if fc:
         hi = max(fc, key=lambda x: x[1])
         rows += tr([FC_LABEL[fc_word([x[1] for x in fc], cur)], "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))

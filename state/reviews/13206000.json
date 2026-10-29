@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "Full review, 15 phone + desktop + text: no F1-F8. Forecast cards verified against cache/13206000.json (40 NWS points, 38 ahead): 5 runs, times/DST and rounding exact. Forecast high 3.3 ft correct (above latest 3.24, not flat). Notes: HIGHEST FORECAST label on the Nov 1 run (235 cfs) while later runs print 3.3 ft with 236/237 cfs, reader may read later cards as higher; 'All 38 forecast values' expands to 5 run rows, not 38 values; water temp from a different river 6 mi away (labelled).",
- "by": "hater-w13",
- "at": "2026-10-29T01:26:39+00:00",
- "template": "d86267a3957d",
+ "notes": "No FAIL-list defect. cfs-based impacts correct (4,200-232=3,968 ... 8,900-232=8,668); 166 h/168 h, 7 days, 11 months consistent; forecast high 3.3 ft is 0.1 ft above 3.24. NOTES: first-screen 'FORECAST HIGH 3.3 FT Nov 1, 5:00 AM MST' while the card tagged 'HIGHEST FORECAST' is Nov 5 to Nov 7 (equal at 0.1 ft, rounding) phone-01/phone-07; lowest reading 189 cfs is the first point of the window (edge dip on chart) phone-04/06; water temp 6 mi away on a different river, labelled; no temperature sensor so monthly temp / cold-water blocks not exercised here.",
+ "by": "hater-w16",
+ "at": "2026-10-29T02:09:21+00:00",
+ "template": "b0f8e9d09c50",
  "level": "full"
 }

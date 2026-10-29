@@ -50,7 +50,7 @@ def stale(o):
         if kind == "leaf" and isinstance(v, str) and ISO.match(v):
             try:
                 return (datetime.datetime.fromisoformat(v.replace("Z", "+00:00")) - datetime.timedelta(hours=26)).isoformat()
-            except ValueError:
+            except (ValueError, OverflowError):  # CI 2026-10-29: a year-1 date in NWS data crashed the gate itself
                 return v
         return v
     return walk(o, f)

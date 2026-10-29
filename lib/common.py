@@ -118,6 +118,11 @@ def fc_word(vals, cur, unit="ft"):
 FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast (at or below the latest reading)"}
 
 
+def r1(x):
+    """A difference of two stages rounded half up to 0.1 before printing with %.1f."""
+    return math.floor(x * 10 + 0.5 + 1e-9) / 10
+
+
 def fmtd(v):
     """A difference in cfs, exact to the whole cfs (w10 review: 4,200 - 235 printed as 3,960)."""
     return "–" if v is None else "%.2f" % v if 0 < abs(v) < 1 else "{:,.0f}".format(v)

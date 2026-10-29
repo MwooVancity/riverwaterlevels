@@ -6,7 +6,7 @@ Exit 1 if anything fails.
 import os, re, sys, json, collections, gzip, hashlib, html
 MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from lib.common import ROOT, SITE_URL, MOJI, demoji
+from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 
 BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
@@ -524,6 +524,7 @@ def selftest():
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
     assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert "%.1f" % r1(7.0 - 2.45) == "4.6", "selftest: stage difference 7.0 - 2.45 did not round half up"
     assert hater_rules('<span>NWS forecast (steady)</span><b>3.0 ft</b><li class="fcl">Forecast high <b>3.0 ft</b></li>'), "selftest: two names for one forecast did not fire"
     assert hater_rules('<section id="river_forecast"><div class="rc"><span class="rt">Oct 29</span><b>3.0 ft</b><small>1,110 cfs</small></div><div class="rc"><span class="rt">From Oct 29 to Nov 2</span><b>3.0 ft</b><small>1,110 cfs</small></div></section>'), "selftest: identical neighbouring forecast cards did not fire"
     assert hater_rules("<td>considered \u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201clow for paddlers</td>"), "selftest: garbled characters did not fire"
