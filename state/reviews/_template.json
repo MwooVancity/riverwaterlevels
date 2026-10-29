@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "audit batch B (point names, forecast label, glossary, cold-water, ramps grouped, typo search, far-gauges label, banner age); builder looked at Memphis phone-02",
+ "notes": "batch C weak signal: cached stylesheet, lazy images, radar on tap, offline service worker (headless offline test passed), manifest; builder looked at Boise phone-01",
  "by": "builder-machine",
- "at": "2026-10-29T05:51:30+00:00",
- "template": "2289df1191f7",
+ "at": "2026-10-29T06:12:12+00:00",
+ "template": "58be171c4627",
  "level": "machine"
 }
