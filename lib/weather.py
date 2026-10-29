@@ -138,7 +138,7 @@ def b_weather(G, n_periods=14):
             esc(d[0].get("name") or ""), temps, tlab, esc(d[0].get("shortForecast") or ""), rain, _wind(d[0])))
     rows = "".join(tr([esc(p.get("name") or ""), "%s%s" % (deg(p), esc(p.get("temperatureUnit") or "F")), _wind(p, False), ("%s%%" % p["pop"]) if p.get("pop") is not None else "&ndash;", esc(p.get("detailedForecast") or p.get("shortForecast") or "")]) for p in live)
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
-    return block("weather_forecast", "Weather forecast", "official", '<div class="fcs" role="region" aria-label="Weather forecast by day" tabindex="0">%s</div>' % cards + more("Every NWS forecast period, in full", table(["Period", "Temp", "Wind", "Rain or snow", "Forecast"], rows)),
+    return block("weather_forecast", "7-day weather %s" % where_(G), "official", '<div class="fcs" role="region" aria-label="Weather forecast by day" tabindex="0">%s</div>' % cards + more("Every NWS forecast period, in full", table(["Period", "Temp", "Wind", "Rain or snow", "Forecast"], rows)),
                  "Source: National Weather Service point forecast, updated %s. Each card is one day: the daytime period and the night after it (high / low, and the chance of rain or snow for each)." % upd, "nws", amber=age)
 
 
@@ -155,8 +155,15 @@ def b_hourly(G):
                     _wind(p, False), "%s%%" % pop if pop is not None else "–", esc(p.get("shortForecast") or "")], right=(1, 3))
     if not rows:
         return None
-    return block("hourly_forecast", "Hourly forecast, next 24 hours", "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance", "Sky"], rows, right=(1, 3)),
+    return block("hourly_forecast", "Hourly weather %s, next 24 hours" % where_(G), "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance", "Sky"], rows, right=(1, 3)),
                  "Source: National Weather Service hourly point forecast, updated %s." % esc(tzl(parse_t(n["hourly_updated"]), G["zone"])), "nws", amber=age)
+
+
+def where_(G):
+    """'at Glenwood Bridge' or 'near Boise' for a weather heading: a place that already starts with at/near/below/above keeps its own word (check: 'at at')."""
+    pl = G["place"]
+    m = re.match(r"(?i)(at|near|nr|below|blw|above|abv)\b\.?\s*", pl)
+    return esc(("%s %s" % ({"nr": "near", "blw": "below", "abv": "above"}.get(m.group(1).lower(), m.group(1).lower()), pl[m.end():])) if m else "at " + pl)
 
 
 def b_heatmap(G):
@@ -268,5 +275,5 @@ def b_heatmap(G):
             cells.append(esc(sky_of(grp) or "") or "&ndash;")
         lrows += tr(cells, right=tuple(range(1, len(cells) - has_s)))
     lst = '<div class="scroll"><table class="hm hlist%s"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (" hsky" if has_s else "", "".join("<th>%s</th>" % h_ for h_ in heads), lrows)  # .hm never stacks into cards on a phone: one line per 3 hours
-    return block("hourly_heatmap", "Hourly forecast, next 24 hours", "official", storm_line(G) + summary + popnote + lst + more("Every hour, every NWS value", grid([[h] for h in hrs], set())),
+    return block("hourly_heatmap", "Hourly weather %s, next 24 hours" % where_(G), "official", storm_line(G) + summary + popnote + lst + more("Every hour, every NWS value", grid([[h] for h in hrs], set())),
                  "Source: National Weather Service gridpoint forecast, updated %s; chance of rain or snow from the NWS hourly point forecast. Amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Hours are gauge-local; each row covers 3 hours (temperature at its first hour; wind, gusts, rain and thunder the highest in the 3 hours; visibility the lowest; sky is the NWS hourly short forecast for the first hour; the arrow points where the wind blows), and every hour is one tap below. Darker cells mean a higher value in that row." % upd, "nws", amber=age)

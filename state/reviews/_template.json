@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "page polish batch: hourly sky word + wind arrows, 7-day strip, one-line empty states, one Source toggle per card; builder looked at Boise phone-05; thunder 0% line dropped",
+ "notes": "weather headings name the place (where_ helper; 'at at' caught by check); polish batch",
  "by": "builder-machine",
- "at": "2026-10-29T04:59:42+00:00",
- "template": "23e7e7698897",
+ "at": "2026-10-29T05:02:49+00:00",
+ "template": "efdf59e1fe6c",
  "level": "machine"
 }
