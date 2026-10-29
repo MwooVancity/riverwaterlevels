@@ -441,7 +441,28 @@ def hater_rules(h):
         bad.append("the title of a not-reporting gauge says 'live'")
     if re.search(r'class="hero hero2".*?id="gauge_not_reporting"', h, re.S):
         bad.append("the not-reporting banner sits below the tiles; it belongs directly under the H1")
+    if tl_ and re.search(r"\blive\b", tl_.group(1), re.I):  # audit run 5 row 4: the title is static; "live" over a reading older than 2 x the USGS stale limit (6 h) is false
+        from lib.core import stale_after
+        ch_ = re.search(r'data-live="age"[^>]*>(\d+) (min|h|d)</span>', h)
+        if ch_ and int(ch_.group(1)) * {"min": 1 / 60, "h": 1, "d": 24}[ch_.group(2)] > stale_after("usgs") * 2:
+            bad.append("the title says 'live' over a reading older than %d h" % (stale_after("usgs") * 2))
+    if 'id="gauge_not_reporting"' in h and 'id="rate_of_change"' in h and "These changes end at the last report" not in h:
+        bad.append("a not-reporting gauge's rate of rise and fall block does not say its windows end at the last report")
+    if 'aria-label="Link to this section"' in h:
+        bad.append("section links are all named 'Link to this section' (name each by its heading)")
+    h2s_ = [re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r'(?s)<span class="tag.*?</span>|<a class="pl".*?</a>', "", x))).strip().lower() for x in re.findall(r"<h2\b[^>]*>(.*?)</h2>", h, re.S)]
+    if any(a_ and a_ == b_ for a_, b_ in zip(h2s_, h2s_[1:])):  # a section heading and the block under it with the same words (audit run 5 row 8: "River forecast" twice)
+        bad.append("two consecutive h2 headings are the same words")
+    if '<div class="tile ' in h and '<span>Rain, last 24 h</span>' not in h and 'id="gauge_not_reporting"' not in h and 'class="gaps"' in h and "Rain, last 24 h (" not in h:
+        bad.append("no 24 h rain tile and the 'Not available' line does not name the 24 h rain total")
     return bad
+
+
+def glossary_gaps(h):
+    """The glossary states exactly the cut-offs band_word uses (audit run 5 row 1)."""
+    from lib.common import band_glossary
+    t_ = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))
+    return [] if band_glossary() in t_ else ["the glossary does not state the band_word cut-offs (lib/common.py BAND_CUTS)"]
 
 
 def check_dir(d):
@@ -456,6 +477,8 @@ def check_dir(d):
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
                 results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
+                if rel.replace("\\", "/") == "glossary/index.html":
+                    results[rel] += glossary_gaps(h)
                 sid = re.search(r"USGS gauge (\d{8,15})\b", h)
                 cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
                 if cp and os.path.exists(cp):
@@ -596,6 +619,22 @@ def selftest():
     assert hater_rules('<title>Pere Marquette River: live water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: 'live' in the title of a not-reporting gauge did not fire"
     assert not hater_rules('<title>Pere Marquette River: water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: a not-reporting title without 'live' wrongly flagged"
     assert not hater_rules('<title>Pere Marquette River: live water level</title><p>reading</p>'), "selftest: 'live' in a reporting gauge's title wrongly flagged"
+    chip_ = '<span class="ab stale"><span data-live="age" data-t="x">%s</span> old</span>'
+    assert hater_rules('<title>Pere Marquette River: live water level</title>' + chip_ % "9 h"), "selftest: 'live' over a 9 h old reading did not fire"
+    assert hater_rules('<title>Pere Marquette River: live water level</title>' + chip_ % "2 d"), "selftest: 'live' over a 2 d old reading did not fire"
+    assert not hater_rules('<title>Pere Marquette River: live water level</title>' + chip_ % "5 h"), "selftest: 'live' over a 5 h old reading wrongly flagged"
+    assert not hater_rules('<title>Pere Marquette River: water level</title>' + chip_ % "9 h"), "selftest: a 9 h old reading without 'live' wrongly flagged"
+    assert hater_rules('<section id="gauge_not_reporting"></section><section id="rate_of_change"><p>x</p></section>'), "selftest: silent gauge rate block without its sentence did not fire"
+    assert not hater_rules('<section id="gauge_not_reporting"><p>The newest reading is old.</p></section><section id="rate_of_change"><p class="lead">These changes end at the last report, 2 days ago; the river may have changed since.</p></section>'), "selftest: silent gauge rate block with its sentence wrongly flagged"
+    assert hater_rules('<a class="pl" href="#x" aria-label="Link to this section">#</a>'), "selftest: unnamed section link did not fire"
+    assert not hater_rules('<a class="pl" href="#x" aria-label="Link to Flow over time">#</a>'), "selftest: named section link wrongly flagged"
+    assert hater_rules('<h2>River forecast</h2><section><h2>River forecast <span class="tag t-official">Official NWS</span><a class="pl" href="#a">#</a></h2></section>'), "selftest: repeated h2 did not fire"
+    assert not hater_rules('<h2>River forecast</h2><section><h2>NWS river forecast for Platte River <span>Official NWS</span></h2></section>'), "selftest: distinct h2 pair wrongly flagged"
+    assert hater_rules('<div class="tile flow"></div><p class="gaps">Not available for this gauge: air quality.</p>'), "selftest: missing 24 h rain tile not named did not fire"
+    assert not hater_rules('<div class="tile flow"></div><p class="gaps">Not available for this gauge: Rain, last 24 h (no estimate) and air quality.</p>'), "selftest: named 24 h rain gap wrongly flagged"
+    from lib.common import band_glossary
+    assert glossary_gaps("<p>Very low and Very high mean below the 5th or above the 95th percentile.</p>"), "selftest: a glossary off the band_word cut-offs did not fire"
+    assert not glossary_gaps("<p>x %s y</p>" % band_glossary()), "selftest: the generated glossary sentence wrongly flagged"
     assert hater_rules('<div class="hero hero2"></div><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: not-reporting banner below the tiles did not fire"
     assert hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee right now. Source: x</p>"), "selftest: state alert line without a time did not fire"
     assert not hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee (checked Oct 29, 7:00 AM CDT). Source: x</p>"), "selftest: state alert line with a time wrongly flagged"

@@ -366,7 +366,7 @@ def build_tab(tab, G, pages):
     # Title and meta description carry NO reading (2026-10-26): Google shows them from its last crawl, days or weeks old, and the edge
     # cannot update them, so a number there becomes a stale number in search results under our name (snoflo's snippets showed weeks-old
     # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
-    live = "" if G["offline"] else "live "  # a gauge not reporting is not live (audit run 1, row 2)
+    live = "" if G["age_min"] > stale_after("usgs") * 2 * 60 else "live "  # a reading over 6 h old is not live (audit run 1 row 2; run 5 row 4: the title is static, the Worker only refreshes the number)
     title = mk_title("%s, %s: %swater level and flow (USGS %s)" % (rp, st, live, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})

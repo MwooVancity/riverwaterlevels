@@ -215,17 +215,27 @@ def sig3(v):
     return float("%.3g" % v) if v else v
 
 
+BAND_CUTS = (10, 25, 75, 90)  # percentile cut-offs of the five classes (USGS WaterWatch): under 10 much below, under 25 below, 25 to 75 normal, up to 90 above, over 90 much above. band_word, band_cls and the glossary all read this.
+
+
+def band_glossary():
+    """The glossary sentence for the five headline words, generated from BAND_CUTS."""
+    a, b, c, d = BAND_CUTS
+    return ("Much below normal means below the %dth percentile, Below normal from the %dth up to the %dth, Normal range from the %dth to the %dth, "
+            "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
+
+
 def band_word(p):
     """Plain-word USGS WaterWatch class of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown). Boundaries follow USGS WaterWatch: <10 much below, 10-24 below, 25-75 normal, 76-90 above, >90 much above."""
     if p is None:
         return "–"
-    if p == 101 or p > 90:
+    if p == 101 or p > BAND_CUTS[3]:
         return "Much above normal"
-    if p == -1 or p < 10:
+    if p == -1 or p < BAND_CUTS[0]:
         return "Much below normal"
-    if p < 25:
+    if p < BAND_CUTS[1]:
         return "Below normal"
-    if p <= 75:
+    if p <= BAND_CUTS[2]:
         return "Normal range"
     return "Above normal"
 

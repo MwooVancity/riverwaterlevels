@@ -113,7 +113,7 @@ def b_river_forecast(G):
         t_, s_, f_ = sel[pick[0]]
         fcards = [card("Every forecast value, %s to %s" % (esc(tzl(sel[0][0], G["zone"])), esc(tzl(sel[-1][0], G["zone"]))), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
     ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
-    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more(("All %d forecast values" % len(sel)) if len(runs) == len(keep) else ("All %d forecast values, in %d row%s (neighbouring equal values grouped)" % (len(sel), len(runs), "" if len(runs) == 1 else "s")), ftable),
+    return block("river_forecast", "NWS river forecast for %s" % n["name"] if n.get("name") else "NWS river forecast", "official", lead + rail(fcards, "River forecast points") + more(("All %d forecast values" % len(sel)) if len(runs) == len(keep) else ("All %d forecast values, in %d row%s (neighbouring equal values grouped)" % (len(sel), len(runs), "" if len(runs) == 1 else "s")), ftable),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=age)
 
 

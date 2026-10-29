@@ -271,7 +271,7 @@ def render_block(b):
     fam = FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now")
     if b.get("empty"):
         return '<section class="card blk emp" data-f="%s" id="%s"><h2>%s</h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["body"], src)
-    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], src, b["body"]))
+    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to %s">#</a></h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], esc(b["heading"]), src, b["body"]))
 
 
 def table(heads, rows, right=(), hide=(), stack=False):

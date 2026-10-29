@@ -129,7 +129,7 @@ def b_daily(G):
         elif full:
             val, note = fmtc(sum(vs) / len(vs)) + " cfs", "Mean of readings, not yet published by USGS"
         else:
-            val, note = "–", "Partial day"
+            val, note = "–", "Partial day (%d of about %d readings)" % (len(vs), round(exp_n))
         rows += tr([d.strftime("%b %d, %Y").replace(" 0", " "), val, note], right=(1,))
     return block("daily_readings", "Daily mean flow", "live", table(["Date (gauge-local)", "Mean flow", "Note"], rows, right=(1,)),
                  "Source: USGS Water Data API (daily values where USGS has published them; otherwise the mean of continuous readings on that gauge-local date, shown only with at least 80% of expected readings).", "usgs")

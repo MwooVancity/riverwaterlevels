@@ -160,6 +160,9 @@ def b_rate(G):
     if not note and f6 and s6 and f6[1] and abs(fl[-1][1] / f6[1] - 1) >= 0.1 and abs(sg[-1][1] - s6[1]) >= 0.1 and (fl[-1][1] > f6[1]) != (sg[-1][1] > s6[1]):
         note = '<p class="src">Over the last 6 h the flow went %s (%+.0f%%) while the gage height went %s (%+.2f ft). Both are USGS readings as published; at a gauge near a dam or in a pool the level does not always follow the flow.</p>' % ("down" if fl[-1][1] < f6[1] else "up", 100 * (fl[-1][1] / f6[1] - 1), "up" if sg[-1][1] > s6[1] else "down", sg[-1][1] - s6[1])  # full review: Hudson -36% flow, +0.27 ft
     cards += [card("Highest single reading since %s" % esc(tzl(week[0][0], G["zone"])), "%s <small>cfs</small>" % fmtc(hi[1]), "%s, %s" % (esc(tzl(hi[0], G["zone"])), ago(hi[0]))), card("Lowest single reading since %s" % esc(tzl(week[0][0], G["zone"])), "%s <small>cfs</small>" % fmtc(lo[1]), "%s, %s" % (esc(tzl(lo[0], G["zone"])), ago(lo[0])))]
+    from lib.core import age_words
+    if G["offline"]:  # flow not reporting for over 24 h: the windows count back from the last report, not from now
+        note = '<p class="lead">These changes end at the last report, %s ago; the river may have changed since.</p>' % age_words(G["lt"], G["now"]) + note
     body = note + rail(cards, "Change over the last hours") + more("Full table", table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,)))
     return block("rate_of_change", "Rate of rise and fall", "live", body,
                  "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is under 2%%, the same cut-off as the headline." % esc(tzl(t1, G["zone"])), "usgs")
@@ -266,7 +269,8 @@ def b_qpf(G):
     if not rows:
         return None
     upd = esc(tzl(parse_t(g["updated"]), G["zone"])) if g.get("updated") else "time not stated"
-    return block("forecast_rain_totals", "Forecast rain totals", "official", table(["Window", "Forecast rain"], rows, right=(1,)),
+    from lib.weather import aged
+    return block("forecast_rain_totals", aged("forecast_rain_totals", "Forecast rain totals", g.get("updated"), age, G), "official", table(["Window", "Forecast rain"], rows, right=(1,)),
                  "Source: National Weather Service gridpoint quantitative precipitation forecast at the gauge location, updated %s. A forecast, not a measurement." % upd, "nws", amber=age)
 
 

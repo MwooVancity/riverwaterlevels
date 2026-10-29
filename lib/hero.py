@@ -423,7 +423,10 @@ def hero(G, pages=None):
     if b_quality(G) is None:
         gone.append("clarity (no USGS turbidity or water-quality sensor at this gauge)")
     if not c["rain"]:
-        gone.append("NWS radar rain estimate for the last 6 h (rain measured at nearby stations is shown below where reported)")
+        rn0 = G["rec"].get("rain") or {}
+        inch0 = rn0.get("inches") or {}
+        why = "no NWS River Forecast Center estimate for this location" if not inch0 else ("the NWS estimate has no 24-hour total for this location" if inch0.get("last_24h") is None else "the estimate is not cleared for display")
+        gone.append("Rain, last 24 h (%s) and the NWS radar rain estimate for the last 6 h (rain measured at nearby stations is shown below where reported)" % why)
     if not c["air"]:
         gone.append(("air observation (last NWS station report %s ago, older than %d h)" % (c["old"]["air"], HIDE_H["air_obs"])) if c["old"].get("air") else "air observation (no NWS station report in the last %d h)" % HIDE_H["air_obs"])
     if not ((G["rec"].get("airnow") or {}).get("rows")):
