@@ -144,18 +144,18 @@ def b_record(G):
         return None
     pk = r["peak"]
     end = fdate(r["as_of"]) if r.get("as_of") else "the last published day"
-    cards = [card("Highest daily mean, 7 days to %s" % end, "%s <small>cfs</small>" % fmtc(pk["value"]), "%s (USGS daily means lag a day or two)" % fdate(pk["date"]))]
+    cards = [card("Highest daily average, 7 days to %s" % end, "%s <small>cfs</small>" % fmtc(pk["value"]), "%s (USGS daily averages lag a day or two)" % fdate(pk["date"]))]
     if r.get("prior"):
-        cards.append(card("Last day as high as this week's %s cfs" % fmtc(pk["value"]), esc(fdate(r["prior"]["date"])), "daily mean %s cfs, %s before" % (fmtc(r["prior"]["value"]), human_span(r["prior"]["days_before"]))))
+        cards.append(card("Last day as high as this week's %s cfs (daily average)" % fmtc(pk["value"]), esc(fdate(r["prior"]["date"])), "daily average %s cfs, %s before" % (fmtc(r["prior"]["value"]), human_span(r["prior"]["days_before"]))))
     else:
-        cards.append(card("Last day as high as this week's %s cfs" % fmtc(pk["value"]), "None on record", "record begins %d" % r["first_year"]))
+        cards.append(card("Last day as high as this week's %s cfs (daily average)" % fmtc(pk["value"]), "None on record", "record begins %d" % r["first_year"]))
     if r.get("last_p90"):
-        cards.append(card("Before these 7 days, last day above the 90th percentile", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
+        cards.append(card("Before these 7 days, last day flow was this high or higher (top 10% of days, above the 90th percentile)", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
     if r.get("above_p75"):
         cards.append(card("Days above the 75th percentile", "%s of %s" % (format(r["above_p75"]["n"], ","), format(r["above_p75"]["of"], ",")), "last %s days" % format(r["above_p75"]["of"], ",")))
     if r.get("month"):
         m = r["month"]
-        cards.append(card("%s 1 to %d, mean flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), (("%s highest of the %d years with USGS daily values for these dates" % (ordinal(m["rank"]), m["years"])) if m["rank"] <= m["years"] / 2 else ("%s lowest of the %d years with USGS daily values for these dates" % (ordinal(m["years"] - m["rank"] + 1), m["years"])))))
+        cards.append(card("%s 1 to %d, average daily flow" % (m["month"][:3], m["dom"]), "%s <small>cfs</small>" % fmtc(m["mean"]), (("%s highest of the %d years with USGS daily values for these dates" % (ordinal(m["rank"]), m["years"])) if m["rank"] <= m["years"] / 2 else ("%s lowest of the %d years with USGS daily values for these dates" % (ordinal(m["years"] - m["rank"] + 1), m["years"])))))
     return block("record_comparison", "Compared with this gauge’s record", "hist", rail(cards, "Compared with this gauge’s record"),
                  "Source: USGS daily mean flows (Water Data API), %d to %d (%s days), data through %s. Percentiles are USGS daily statistics. Recent days are provisional." % (
                      r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"])), "usgs")

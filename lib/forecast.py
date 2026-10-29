@@ -14,7 +14,7 @@ def b_flood_stages(G):
     o = nws_stage(G)
     if o:
         rows += tr(["Latest NWS reading, %s" % esc(tzl(o[0], G["zone"])), "%.2f ft (%.1f ft below %s)" % (o[1], cats[min(cats, key=cats.get)] - o[1], min(cats, key=cats.get))], right=(1,)) if o[1] < min(cats.values()) else tr(["Latest NWS reading, %s" % esc(tzl(o[0], G["zone"])), "%.2f ft" % o[1]], right=(1,))
-    return block("flood_stages", "Flood stages", "official", table(["Category", "Gage height (ft)"], rows, right=(1,)),
+    return block("flood_stages", "Flood stages", "official", FLOOD_LEVELS + table(["Category", "Gage height (ft)"], rows, right=(1,)),
                  "Source: National Weather Service forecast point %s (%s), fetched %s. Compare with the gage height above; thresholds belong to that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or ""), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
 
 
@@ -217,7 +217,7 @@ def b_low_water(G):
         out += table(["Level", "National Weather Service low-water statement"], rows)
     if lh:
         out += table(["Record low date", "Stage", "Flow"], "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc((n.get("stage_units") or "ft").lower())), ("%s cfs" % fmtc(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"], right=(1, 2)) for c in lh), right=(1, 2))
-    return block("low_water", "Low-water levels, as listed by NWS", "official", out,
+    return block("low_water", "Low-water levels", "official", out,
                  "Source: National Weather Service forecast point %s (%s), low-water impacts and historic low stages. Statements are quoted from the NWS." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
 
 
@@ -262,5 +262,5 @@ def b_impacts(G):
         said_next = said_next or nxt_
         icards.append(card(("Next impact at " if nxt_ else "At ") + fv(s_), esc(short), margin))
     itable = table(["Flow" if flow_ else "Stage", "National Weather Service impact statement"], rows, right=(0,))
-    return block("flood_impacts", "Flood impacts by stage, as issued by NWS", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + _lead + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
+    return block("flood_impacts", "Flood impacts by stage", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + _lead + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
                  "Source: National Weather Service forecast point %s (%s). Statements are quoted from the NWS and describe that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")

@@ -115,7 +115,7 @@ def b_official_links(G):
     links.append(("NWS active alerts for this location", "https://alerts.weather.gov/search?point=%.4f,%.4f" % (G["lat"], G["lon"])))
     links.append(("This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
     links.append(("Put this gauge's live panel on your own site (free embed, links back here)", "/embed" + G["row"]["dashboard_url"]))
-    body = '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)
+    body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)
     return block("official_links", "Official pages for this gauge", "agency", body, "Source: links to the agencies that publish the data on this page (USGS, NOAA National Weather Service); they open in a new tab.", "usgs")
 
 
@@ -145,7 +145,7 @@ def embed_page(G, pages):
     rp, st = river_at(G["river"], G["place"]), G.get("st_shown") or G["st"]
     full = SITE_URL + row["dashboard_url"]
     h = hero(G, pages)
-    h = h.split('<div class="cstrip"')[0]  # tiles only, no strip, no cite
+    h = h.split('<p class="src gloss"')[0]  # tiles only: no unit line, no strip
     title = "%s, %s: water level and flow (embed)" % (rp, st)
     desc = "Embeddable panel: current flow and gage height at USGS gauge %s, %s, %s, from riverwaterlevels.com." % (G["site"], rp, st)
     body = '<h1>%s, %s</h1><p class="sub">USGS gauge %s &middot; observed %s</p>%s<p class="src"><a href="%s" target="_top" rel="noopener">Live page with forecast, history and flood record on riverwaterlevels.com</a></p>' % (esc(rp), esc(st), G["site"], esc(G["obs"]), h, full)

@@ -278,6 +278,10 @@ def hater_rules(h):
     """Defects the first hater round found on every page that a machine can see in the built HTML."""
     bad = []
     t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))
+    if re.search(r'(?:NWS|National Weather Service)\s*<span class="tag t-official">', h):  # newcomer review: "...as issued by NWS  OFFICIAL NWS" says it twice
+        bad.append("a block heading ends in NWS right before its 'Official NWS' tag")
+    if re.search(r"[A-Za-z] \)", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", h)))):  # "StreamCat )" and "thinned for display)": a stray bracket in a source line
+        bad.append("a space before a closing bracket in reader text")
     if re.search(r"Thunderstorms: none", t):
         row = re.search(r"Thunder %((?:\s+[\d\u2013-]+)+)", t)
         if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
@@ -526,6 +530,10 @@ def selftest():
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
     assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
     assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
+    assert hater_rules('<h2>Flood impacts by stage, as issued by NWS <span class="tag t-official">Official NWS</span></h2>'), "selftest: NWS twice in a row in a heading did not fire"
+    assert not hater_rules('<h2>Flood impacts by stage <span class="tag t-official">Official NWS</span></h2>'), "selftest: a clean official heading wrongly flagged"
+    assert hater_rules('<p class="src">Source: U.S. EPA StreamCat ), watershed-wide metrics</p>'), "selftest: a stray ' )' in a source line did not fire"
+    assert not hater_rules("<p>Source: U.S. EPA StreamCat, watershed-wide metrics (2019)</p><script>f( a )</script>"), "selftest: a clean source line wrongly flagged"
     assert hater_rules('<section id="camera"><span class="tag t-live">Live gauge</span>taken Aug 22 (2 months before this page was built)</section>'), "selftest: old camera under a live badge did not fire"
     assert not hater_rules('<section id="camera"><span class="tag t-agency">Agency data</span>taken Aug 22 (2 months before this page was built)</section>'), "selftest: old camera without a live badge wrongly flagged"
     assert hater_rules('<section id="river_forecast">' + '<div class="rc">x</div>' * 13 + '</section>'), "selftest: 13 forecast cards did not fire"

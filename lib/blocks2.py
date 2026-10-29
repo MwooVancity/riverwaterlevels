@@ -104,7 +104,7 @@ def b_stage_chart(G):
             rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
     lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, ("NWS reading, %s:" % tzl(gap[2], G["zone"], date=False)) if gap else "Latest, %s:" % tzl(sg[-1][0], G["zone"], date=False).replace(" ", " "), fc_label=FC_LABEL[fc_word([x[1] for x in fc], cur)] if fc else "Forecast high") if cats else ""
-    body = ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: %s readings%s%s.</p>' % (who, " &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
+    body = (FLOOD_LEVELS if cats else "") + ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: %s readings%s%s.</p>' % (who, " &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
     src = ("Source: USGS Water Data API (continuous gage height), observed to %s." % esc(tzl(t1, zone))) if who == "USGS" else ("Source: National Weather Service observed stage at forecast point %s (USGS measures no gage height here), observed to %s." % (esc(n.get("lid") or ""), esc(tzl(t1, zone))))
     if cats or fc:
         what = " and ".join(x for x in (("Flood stages" if cats else ""), ("the forecast (dashed curve)" if fc else "")) if x)
@@ -189,7 +189,7 @@ def b_rating(G):
     svg = _xy_svg(pts, cur, 760, 280, 11, "cw", lbl) + _xy_svg(pts, cur, 340, 280, 12, "cn", lbl)
     legend = '<p class="legend">Line: current USGS rating, gage height (ft, horizontal) to flow (cfs, vertical). <b style="color:%s">&#9679;</b> latest reading, %.2f ft and %s cfs.</p>' % (AMBER, cur[0], fmtc(cur[1]))
     return block("stage_flow_rating", "Gage height to flow rating", "hist", svg + legend,
-                 "Source: USGS rating table for the gauge, thinned for display), fetched %s. Ratings are provisional and change with the channel." % (esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usgs")
+                 "Source: USGS rating table for the gauge, thinned for display, fetched %s. Ratings are provisional and change with the channel." % (esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "usgs")
 
 
 def b_about(G):
@@ -281,9 +281,20 @@ def b_drought(G):
     rows = ""
     for lab, i in DROUGHT:
         rows += tr([esc(lab), "%.1f%%" % cur[i], ("%.1f%%" % prev[i]) if prev else "–"], right=(1, 2))
-    return block("drought_monitor", "Drought Monitor, %s County" % esc(str(d.get("county") or "").replace(" County", "")), "official",
-                 table(["Category", "Share of county area, week of %s" % fdate(cur[0]), "Previous week"], rows, right=(1, 2)),
+    return block("drought_monitor", "Drought Monitor, %s County" % esc(str(d.get("county") or "").replace(" County", "")), "usdm",
+                 '<p class="src">Each row includes the worse categories below it.</p>' + table(["Category", "Share of county area, week of %s" % fdate(cur[0]), "Previous week"], rows, right=(1, 2)),
                  "Source: U.S. Drought Monitor weekly county statistics (National Drought Mitigation Center, USDA, NOAA), map date %s, fetched %s." % (fdate(cur[0]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "usdm")
+
+
+def _uniq_units(units):
+    """The same water body, state, status, category and cycle listed twice is one row."""
+    seen, out = set(), []
+    for u in units:
+        k = tuple(str(u.get(x) or "") for x in ("name", "state", "status", "category", "impaired", "tmdl", "cycle")) if u.get("name") else (u.get("id"),)
+        if k not in seen:
+            seen.add(k)
+            out.append(u)
+    return out
 
 
 def b_attains(G):
@@ -291,8 +302,8 @@ def b_attains(G):
     if not a or not a.get("units"):
         return None
     rows = "".join(tr([esc(u.get("name") or u["id"]), esc(u.get("status") or "–"), esc(u.get("category") or "–"), esc(u.get("impaired") or "–"), esc(u.get("tmdl") or "–"), esc(u.get("cycle") or "–"),
-                       ('<a href="%s" rel="noopener">EPA report</a>' % esc(u["link"])) if str(u.get("link") or "").startswith("https://") else "–"]) for u in a["units"])
-    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", "<p>This is the state's Clean Water Act designated-use assessment (a multi-year regulatory status), not a current swim, bacteria or recreation advisory.</p>" + table(["Assessment unit", "Overall status", "Category", "Impaired", "Has a cleanup plan (TMDL)", "Assessment cycle", "Report"], rows),
+                       ('<a href="%s" rel="noopener">EPA report</a>' % esc(u["link"])) if str(u.get("link") or "").startswith("https://") else "–"]) for u in _uniq_units(a["units"]))
+    return block("water_quality_assessment", "State water quality assessments near the gauge", "agency", "<p>&lsquo;Not supporting&rsquo; means the state rates this water below its goals for some use; it is not a swim advisory. This is the state's Clean Water Act designated-use assessment (a multi-year regulatory status), not a current bacteria or recreation advisory.</p>" + table(["Assessment unit", "Overall status", "Category", "Impaired", "Has a cleanup plan (TMDL)", "Assessment cycle", "Report"], rows),
                  "Source: EPA ATTAINS assessment units within about a quarter mile of the gauge, as reported by the state, fetched %s. Values are the state's assessment, quoted." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "epa")
 
 

@@ -17,7 +17,7 @@ LABELS = {"00010": "Water temperature", "00300": "Dissolved oxygen", "63680": "T
 UNITS = {"degC": "°C", "deg C": "°C", "mg/l": "mg/L", "_FNU": "FNU (turbidity units)", "uS/cm": "µS/cm", "pH Units": "pH units", "ft3/s": "cfs"}
 
 
-TAGS = {"agency": "Agency data", "live": "Live gauge", "last": "Last report", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}
+TAGS = {"agency": "Agency data", "live": "Live gauge", "last": "Last report", "official": "Official NWS", "usdm": "U.S. Drought Monitor","model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}
 
 
 PADMAN = {"USFS": "US Forest Service", "NPS": "National Park Service", "BLM": "Bureau of Land Management", "FWS": "US Fish and Wildlife Service", "SDNR": "State natural resources agency",
@@ -26,7 +26,7 @@ PADMAN = {"USFS": "US Forest Service", "NPS": "National Park Service", "BLM": "B
 PADMAN = {**json.load(open(os.path.join(DATA, "padus_managers.json"), encoding="utf-8")), **PADMAN}  # full PAD-US Mang_Name domain (Fee_Manager service, read 2026-10-27); hand names win (hater r4: "RWD")
 
 
-ACCESS = {"OA": "Open access", "RA": "Restricted access", "XA": "Closed", "UK": "Access unknown"}
+ACCESS = {"OA": "Public land (mapped); river access not confirmed", "RA": "Restricted access", "XA": "Closed", "UK": "Access unknown"}
 
 
 DISCLAIMER = ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them. Not endorsed by USGS, NOAA or the National Weather Service. "
@@ -62,6 +62,9 @@ PREVIEW = False  # build.py --preview: show blocks whose source is not cleared, 
 
 class CriticalFail(Exception):
     pass
+
+
+FLOOD_LEVELS = '<p class="src">NWS flood levels on this gauge\'s scale: Action = NWS starts watching; Minor, Moderate, Major = increasing flooding of land and roads.</p>'  # one line under every flood-stage block
 
 
 def md(d):
@@ -229,7 +232,7 @@ HIDE_H = {"river_forecast": 72, "nwm_guidance": 72, "nwm_medium_range": 72, "for
 
 
 # colour means one thing on every page: now (live gauge, weather station), fc (official forecasts, model guidance), rec (records, computed comparisons), area (agency data, map layers), safe (alerts, impacts, offline gauge)
-FAMILY = {"live": "now", "obs": "now", "official": "fc", "model": "fc", "hist": "rec", "calc": "rec", "agency": "area", "map": "area", "noaa": "fc", "epa": "now"}
+FAMILY = {"live": "now", "obs": "now", "official": "fc", "usdm": "fc", "model": "fc", "hist": "rec", "calc": "rec", "agency": "area", "map": "area", "noaa": "fc", "epa": "now"}
 
 
 FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}

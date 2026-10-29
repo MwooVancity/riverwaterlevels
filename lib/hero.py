@@ -199,6 +199,9 @@ def upstream_dams(G):
         return 0
 
 
+GLOSS = '<p class="src gloss">cfs = cubic feet of water passing the gauge each second. Gage height is the gauge&rsquo;s own scale, not water depth. <a href="/glossary/">Glossary</a></p>'  # newcomer clarity: the two units on the tiles, said once under them
+
+
 def hero(G, pages=None):
     from lib import ui
     c = b3.conditions(G, pages)
@@ -405,12 +408,17 @@ def hero(G, pages=None):
         gone.append("hourly weather (no NWS hourly forecast for this location)")
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
-    strip_html = daily_swing(G) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
+    strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
+    return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
+
+
+def cite_line(G):
+    """The paste-ready citation line with its Copy button; it sits in the Official pages block at the bottom (the first screen is for the water)."""
     # Lakebrief comparison 2026-10-21: one line a forum post or local paper can paste, built only from fields already on the page.
     # Water level comes from the same source as the gage tile (Memphis 2026-10-27: tile showed the NWS stage, cite said "not measured").
     cite ='<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
         esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), (('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) + ((" (gage height at %s)" % esc(tzl(G["sg"][-1][0], G["zone"]))) if G["sg"][-1][0] != G["lt"] else "")) if G["sg"] else (("%.2f ft (NWS %s)" % (nws_stage(G)[1], esc((G["rec"].get("nwps") or {}).get("lid") or ""))) if nws_stage(G) else "not measured"), ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
-    return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html + cite
+    return cite
 
 
 def last_year_flow(G):

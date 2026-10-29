@@ -36,7 +36,7 @@ def b_nws_point(G, pages=None):
             if total > len(nm_list):
                 lab = "%s (nearest %d of %d)" % (lab, len(nm_list), total)
             rows += tr([lab, "<br>".join(nm_link(x) for x in nm_list)])  # one point per line (hater 2026-10-27: a "; " wrapped to the start of a phone line after a link)
-    return block("nws_forecast_point", "National Weather Service forecast point", "official", table(["Item", "Value"], rows),
+    return block("nws_forecast_point", "Forecast point for this gauge", "official", table(["Item", "Value"], rows),
                  "Source: National Weather Service National Water Prediction Service, forecast point %s, fetched %s." % (esc(n["lid"]), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
 
 
@@ -163,7 +163,7 @@ def b_streamcat(G):
     wid = ui.bars([(l, v[k], "%.1f%%" % v[k]) for l, k in pc], 100) if pc else ""
     ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
     return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,
-                 "Source: U.S. EPA StreamCat ), watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
+                 "Source: U.S. EPA StreamCat, watershed-wide metrics; land cover from the 2019 National Land Cover Database. Static values, fetched %s." % (esc(tzl(parse_t(s["fetched_at"]), G["zone"]))), "epa")
 
 
 def _year_svg(rows, stats, W, Hh, fs, nx, cls, xfmt="%b %Y", period="12 months"):
@@ -236,8 +236,8 @@ def b_field_meas(G):
     if not f or not f.get("rows"):
         return None
     rows = "".join(tr([fdate(r["t"][:10]), "%s cfs" % fmtc(r["flow"]), ("%.2f ft" % r["stage"]) if r.get("stage") is not None else "–", esc(r.get("rating") or "–")], right=(1, 2)) for r in f["rows"][:10])
-    return block("field_measurements", "USGS field measurements", "hist", table(["Date", "Measured flow", "Gage height", "Rated"], rows, right=(1, 2)),
-                 "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The rating shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
+    return block("field_measurements", "USGS field measurements", "hist", table(["Date", "Measured flow", "Gage height", "USGS measurement quality"], rows, right=(1, 2)),
+                 "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The measurement quality shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
 
 def window_change(fl, lt, h):
@@ -406,8 +406,8 @@ def b_air_quality(G):
     a = dict(a, rows=[dict(r, site=r.get("site") if _aq_site(r.get("site")) != "not stated" else r.get("area")) for r in a["rows"]])  # hater r4: "MONITOR not stated" while AirNow names the reporting area
     rows = "".join(tr([esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone")), str(r["aqi"]), esc(r["category"] or ""), esc(_aq_where(r)), esc(_aq_time(r))], right=(1,)) for r in a["rows"])
     worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
-    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s, %s (%s)%s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc(worst["pollutant"] or ""), (", at " + esc(_aq_where(worst))) if _aq_site(worst.get("site")) != "not stated" else "") + table(["Pollutant", "Air quality index (NowCast)", "Category", "Monitor", "Observed"], rows, right=(1,)),
-                 "Source: EPA AirNow, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
+    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s of 500 (EPA category: %s), %s%s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc((worst["pollutant"] or "").replace("OZONE", "Ozone")), (", at " + esc(_aq_where(worst))) if _aq_site(worst.get("site")) != "not stated" else "") + table(["Pollutant", "Air quality index (AQI, of 500)", "EPA category", "Monitor", "Observed"], rows, right=(1,)),
+                 "Source: EPA AirNow NowCast AQI, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
 
 
 def _ridb_name(n):
@@ -512,8 +512,8 @@ def b_stage_years(G):
     out = ""
     for k in ("minor", "moderate", "major"):
         if k in cats:
-            out += tr(["%s flood stage" % k.capitalize(), "%.1f ft" % cats[k], "%d of %d" % (sum(1 for r in rows if r[2] >= cats[k]), len(rows))], right=(1, 2))
-    out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Years reaching it"], out, right=(1, 2)),
+            out += tr(["%s flood stage" % k.capitalize(), "%.1f ft" % cats[k], "%d of %d years had a peak at or above it" % (sum(1 for r in rows if r[2] >= cats[k]), len(rows))], right=(1, 2))
+    out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Annual peaks"], out, right=(1, 2)),
                  "Source: USGS annual peak gage heights (%d years with a recorded peak stage, %s to %s; peaks that USGS marks with any qualifier other than estimated are left out) compared with National Weather Service flood stages for forecast point %s. Shown because the USGS and NWS stage readings agree within %.1f ft. Older stages can be on an older gauge datum." % (
                      len(rows), esc(rows[0][0][:4]), esc(rows[-1][0][:4]), esc(n.get("lid") or ""), DATUM_TOL_FT), "usgs")
     out_b["also"] = ["nwps"]
@@ -543,10 +543,10 @@ def b_flowdur(G):
     d = [r for r in f.get("dur") or [] if r["p"] in want]
     if len(d) < 4:
         return None
-    rows = "".join(tr(["%g%% of days" % r["p"], "%s cfs" % fmtc(r["q"])], right=(1,)) for r in d)
+    rows = "".join(tr(["Flow is at least %s cfs" % fmtc(r["q"]), "on %g%% of days" % r["p"]]) for r in d)
     rng = next((r["range"] for r in d if r.get("range")), "")
     yrs = re.findall(r"\d{4}", rng)
-    return block("flow_duration", "How often each flow is reached" + ((", %s to %s" % (yrs[0], yrs[-1])) if len(yrs) >= 2 else " (USGS, years not stated)"), "hist", table(["Flow at or above this on", "Flow"], rows, right=(1,)),
+    return block("flow_duration", "How often the flow reaches each level" + ((", %s to %s" % (yrs[0], yrs[-1])) if len(yrs) >= 2 else " (USGS, years not stated)"), "hist", table(["Flow level", "How often"], rows),
                  "Source: USGS StreamStats gage statistics (flow-duration statistics)%s. The flow equalled or exceeded on that share of days over the period.%s Fetched %s." % (
                      (", " + esc(rng.replace(" ", " to "))) if rng else "", " USGS marks this gauge as regulated." if f.get("regulated") else "", esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
 
