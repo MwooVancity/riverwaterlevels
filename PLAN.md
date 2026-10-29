@@ -85,7 +85,15 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 7. Cloudflare Web Analytics + privacy page line.
 8. Alerts (web push), then favorites and units switch.
 9. Outreach drafts for the owner; owner adds a contact address.
-10. One new dataset per week (low-head dams first).
+10. Government river data not yet on pages (owner 2026-10-29: "tell me all of them"). 21 sources wired, 7 off in data/sources.json, 4 never added. In order, edge case per line:
+    a. Dam releases: USACE CWMS + Reclamation RISE (off: terms never read) + NID to find the dam above each gauge (off: terms unread, some fields restricted). Edge: same-river dam only, travel lag dam to gauge, public NID fields only. Fixes the "dam releases: not added yet" line now on 70 of 74 pages (also wrong on rivers with no dam). Source check running 2026-10-29.
+    b. E. coli / water samples: Water Quality Portal (off: tributary samples matched by box). Fix: match by river channel via NLDI linked WQP sites. Edge: every sample shows its date, old samples never read as today.
+    c. FEMA flood zone (off: host unreachable). Edge: FEMA's own map is the official designation, not the Esri copy.
+    d. EPA UV index (off: point service 404; daily service by ZIP works). Edge: ZIP from lat/lon near state lines.
+    e. TVA release schedules (TVA pages refuse scripted requests): maybe owner permission.
+    f. NPS alerts and closures for gauges in national parks: needs a free NPS key (owner).
+    g. USGS flood inundation map link where one exists for the gauge.
+    Left out (reason): NOAA Atlas 14 rainfall frequency (not today's decision), WaterWatch (retired Feb 2026), Wild and Scenic designation (a label, not conditions), lock status (few navigable gauges), American Whitewater (not government; its ranges are verdicts). NOAA 10-day model: item 3.
 11. Helpfulness audit after every feature batch; Search Console + analytics read weekly into this file.
 12. Owner dashboard at /ops/ (merged prompt 2026-10-29: three lights: healthy, growing, Google noticing; "you need to do" line; built by the hourly job; noindex header; unknown = "unknown").
 13. First-screen answers to real searches: each top Search Console query answered on its page's first screen (e.g. what the current cfs means on this river, from agency ranges where they exist).
