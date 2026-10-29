@@ -30,6 +30,7 @@ def hours_since(iso):
 
 def main():
     ok, bad, heal = [], [], []
+    out_ = os.environ.get("GITHUB_OUTPUT")
     try:
         s = get("/status.json")
     except Exception as e:
@@ -92,6 +93,16 @@ def main():
             bad.append("Googlebot got no flow number on %s" % path)
         else:
             ok.append("Googlebot and a phone get the same page (flow %s, edge %s)" % (flows["googlebot"][0], flows["googlebot"][2]))
+        if not out_ or datetime.datetime.now(datetime.timezone.utc).hour == 12:  # outside links, once a day in CI and at every session start: government pages move (NWS AHPS 2024, USGS legacy 2027-02-22)
+            ext = sorted(set(re.findall(r'href="(https?://(?!riverwaterlevels\.com)[^"]+)"', h)))
+            dead = []
+            for u in ext:
+                try:
+                    http_open(u.replace("&amp;", "&"), UA, 20).close()
+                except Exception as e:  # ponytail: only "gone" counts; 403/429/5xx mean the server answered (bot walls, rate limits), so no false alarm
+                    if getattr(e, "code", None) in (404, 410) or not hasattr(e, "code"):
+                        dead.append("%s (%s)" % (u, getattr(e, "code", None) or str(e)[:40]))
+            (bad if dead else ok).append("outside links on %s: %d checked%s" % (path, len(ext), (", dead: " + "; ".join(dead[:6])) if dead else ", none gone"))
     except Exception as e:
         bad.append("edge check failed (%s)" % str(e)[:80])
     try:
