@@ -3,13 +3,12 @@
 ## Goal
 Be the most useful page for a person deciding about this river today, one page per USGS gauge. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
-## Where we are (2026-10-29)
-- Gauges live: 74 (`data/waves.csv` status=live); queue 7,499, held for names 283, excluded 1,243.
-- Open to Google: `data/index-allow.json` open=true, site pages open, 30 of 74 gauge URLs allowed (owner 2026-10-29: open all).
-- Reviews: `_template` signed on every pushed code change; 11447650 Sacramento at Freeport FAIL, back in queue.
-- Deploy: live site last confirmed built 2026-10-29T01:01Z. Later pushes failed in CI (Node 20 vs wrangler, year-1 date in break gate, water-temperature years as ints); each fixed (3f3d03b, f0ecd72, 098de3f). Dry run on cloud data passed 2026-10-29 (dryrun.yml, "refresh OK"). Live state after 098de3f: not read yet.
-- Search Console week 1: 64 impressions, 0 clicks; 58 from Rio Grande at Albuquerque queries; top query "rio grande water level albuquerque today". No average position recorded yet.
-- In progress: refactor, one helper per reader-facing decision (18 decisions were computed in 2-4 places, 12 disagreed). Part A must leave pages byte-identical; Part B changes listed page by page.
+## Where we are (2026-10-29 07:40 UTC, handoff)
+- Live: 74 gauges, all 74 gauge pages open to Google (read live: sitemap 79 river URLs, no noindex on gauge pages). Live build 07:30 has batches A-E; F (old forecast tile age, hidden tiles named) and G (top minors) passed cloud dry runs and are pushed, deploying in order. Next session: read /status.json built_at > 07:30 and one Lees Ferry page body ("Older than 24 h" on the forecast tile) to confirm F/G live.
+- Helpfulness audit loop: run 5 = 0 BLOCKER, 0 MAJOR (from 1/18 in run 1). Reports in the old session scratchpad (audit-run1..5.md); checklist tools/helpful_audit.md.
+- Process that works: build batches with a cheaper-model agent from a short brief; builder looks at one phone slice and signs `_template --level=machine`; push to branch `check` (dryrun.yml, cloud data, every gate); read "refresh OK"; ONLY THEN push main in a separate step; read the live page.
+- Search Console week 1: 64 impressions, 0 clicks, 58 for Rio Grande at Albuquerque.
+- Owner-only now: a contact address so "Report a wrong number" reaches someone.
 
 ## What works
 - Truth checks against live USGS/NWS, signed review gate (sized to the change), watchdog self-heal, dry run before deploy.
@@ -68,17 +67,18 @@ In order of value to a person at the river:
 - Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: DONE for blockers and majors. Runs: 1 = 1/18, 2 = 1/7, 3 = 0/7, 4 = 0/2, 5 = 0 BLOCKER, 0 MAJOR, 24 MINOR (2026-10-29). Batch G running on the 10 most useful MINOR items (glossary band cut-offs from code, silent-gauge rate note, rain-forecast age, 'live' title at 6 h, a 'Partial day' data bug, rain gap line, 44 px tap targets, anchor link names, report-a-wrong-number, ATTAINS). Remaining MINOR (decided: polish, after the feature work): Memphis empty columns and far-gauge padding, chart aria values, maskable icon, '168 h' wording, ramps sort. Re-run the audit after every feature batch.
 
 ## Next steps (in order)
-1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
-2. Open all 74 gauge pages: `python -I tools/open_wave.py 74 --apply` in the same push; sitemap + IndexNow; `python -I tools/index_live.py` 0 mismatches. Done when index_live shows 74 allowed.
-3. Confirm deploy live: `/status.json` built_at after the push, one page body read.
-4. Drop per-gauge review as a deploy requirement (`check.py` `review_gaps`: live gauges need no signature; `_template` still does; a FAIL still pulls a gauge) and take `data/index-allow.json` out of `template_hash`. Done when selftest proves both.
-4b. Release 50 gauges: `python -I tools/release.py 50`, machine gates + dry run, open them same day. Done when 124 live and index_live shows them allowed.
-5. Link outreach list (5 rivers with most impressions first) with drafted emails for the owner. Done when the owner has the drafts.
-6. PageSpeed on top 5 pages. Done when all pass or fixes are pushed.
-7. Datasets for information gain, one per batch: dam releases / diversions first (Albuquerque), then stocking reports, then advisories.
-8. Week-2 Search Console read (with position): re-cut release order and first-screen answers from queries.
-9. Clutter checks: source credit once, chart key once, a sentence repeated 3+ times. Status unknown; done when check.py rules with fixtures exist.
-10. Scale before ~150 gauges: shard collect by state with per-source TTLs. Done when a 150-gauge run finishes inside the hour.
+Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable (batch C).
+1. Confirm F and G live (see Where we are).
+2. Release 25 gauges: `python -I tools/release.py 25` (check the printed names), dry run, push, `python -I tools/open_wave.py 25 --apply`, push; check the hourly cloud run stays under the hour before the next 25.
+3. Alerts (owner approved): web push, item 10 of the helpful-site gaps; needs a VAPID key pair as Worker secrets and KV for subscriptions (watch the shared 1,000 KV writes/day).
+4. Favorite rivers (browser storage) and the units switch.
+5. Low-head dams near each gauge (National Inventory of Dams; source row in data/sources.json, WebSearch evidence) and state life-jacket rules.
+6. Link outreach drafts for the owner (5 rivers with most impressions first).
+7. PageSpeed on the top 5 pages.
+8. Dam releases / diversions data (Albuquerque first), then stocking reports, then advisories.
+9. Week-2 Search Console read (with average position).
+10. Re-run the helpfulness audit after every feature batch (cheaper model, text pass).
+11. Scale before ~150 gauges: shard collect by state with per-source TTLs.
 
 ## Owner only
 - Send the link-outreach emails (drafts provided).
