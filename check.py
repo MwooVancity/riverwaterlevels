@@ -311,9 +311,10 @@ def hater_rules(h):
         if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
             bad.append("says 'Thunderstorms: none' while the hourly table shows a thunder chance above 0")
     rt_ = re.sub(r"(?i)(href|src|title|aria-label|data-[a-z-]+|id)=\"[^\"]*\"", "", re.sub(r'(?is)<head>.*?</head>|<(script|style|svg)\b.*?</\1>|<details class="srcd">.*?</details>|<p class="src">.*?</p>', " ", h))
-    m = re.search(r"\b[A-Z]{4}\d\b", re.sub(r"<[^>]+>", " ", rt_))
+    tt_ = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", rt_))
+    m = re.search(r"\b[A-Z]{4}\d\b", tt_)
     if m:  # audit run 1, row 9: "NWS point MEMT1" on the first screen; the point's code belongs in Source text and link titles, reader text uses its name
-        bad.append("an NWS forecast point code (%s) in reader text outside Source" % m.group(0))
+        bad.append("an NWS forecast point code (%s) in reader text outside Source: ...%s..." % (m.group(0), tt_[max(0, m.start() - 70):m.end() + 30]))
     if re.search(r'(?s)id="gauge_not_reporting".{0,300}Older than', h):  # row 8: the banner says the real age ("2 d old"), not a limit
         bad.append("the not-reporting banner says 'Older than N h' instead of the real age")
     if any(sec.count("(unnamed)") > 1 for sec in re.findall(r"(?s)<section.*?</section>", h)):  # row 12: seven "(unnamed)" rows read as padding
