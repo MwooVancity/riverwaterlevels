@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "batch C weak signal: cached stylesheet, lazy images, radar on tap, offline service worker (headless offline test passed), manifest; builder looked at Boise phone-01",
+ "notes": "audit batch D (state alert age, trend unknown when not reporting, stale rain tile, cold-water wording, 7-day change, larger small text, dam gap line, drought labels cumulative, search dedupe); builder looked at Memphis phone-01",
  "by": "builder-machine",
- "at": "2026-10-29T06:12:12+00:00",
- "template": "58be171c4627",
+ "at": "2026-10-29T06:25:14+00:00",
+ "template": "00fad2441376",
  "level": "machine"
 }
