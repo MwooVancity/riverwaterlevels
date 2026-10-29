@@ -312,7 +312,7 @@ def hater_rules(h):
             bad.append("says 'Thunderstorms: none' while the hourly table shows a thunder chance above 0")
     rt_ = re.sub(r"(?i)(href|src|title|aria-label|data-[a-z-]+|id)=\"[^\"]*\"", "", re.sub(r'(?is)<head>.*?</head>|<(script|style|svg)\b.*?</\1>|<details class="srcd">.*?</details>|<p class="src">.*?</p>', " ", h))
     tt_ = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", rt_))
-    m = re.search(r"\b[A-Z]{4}\d\b", tt_)
+    m = re.search(r"(?<!station )\b[A-Z]{4}\d\b(?! \()", tt_)  # a weather station ID printed with its name ("station WGRM8 (WEST GLACIER)") is labelled, not a bare point code
     if m:  # audit run 1, row 9: "NWS point MEMT1" on the first screen; the point's code belongs in Source text and link titles, reader text uses its name
         bad.append("an NWS forecast point code (%s) in reader text outside Source: ...%s..." % (m.group(0), tt_[max(0, m.start() - 70):m.end() + 30]))
     if re.search(r'(?s)id="gauge_not_reporting".{0,300}Older than', h):  # row 8: the banner says the real age ("2 d old"), not a limit
@@ -700,6 +700,7 @@ def selftest():
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
     assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert not any("forecast point code" in x for x in hater_rules("<p>Weather station WGRM8 (WEST GLACIER), 6 mi away</p>")), "selftest: a named weather station ID wrongly flagged as an NWS point code"
     assert hater_rules("<b>Steady: -3.4% flow in 6 h</b><div>Last 6 h ▼ -3.4% -40 cfs</div>"), "selftest: 'Steady' beside a -3.4%, -40 cfs change did not fire"
     assert not hater_rules("<b>Falling: -3.4% flow in 6 h</b><div>Last 6 h ▼ -3.4% -40 cfs</div>"), "selftest: a correct direction word wrongly flagged"
     assert "%.1f" % r1(7.0 - 2.45) == "4.6", "selftest: stage difference 7.0 - 2.45 did not round half up"

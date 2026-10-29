@@ -44,6 +44,27 @@ subprocess.call(PY + [os.path.join(ROOT, "tools", "fetch_stats.py")] + sorted(si
 rc = subprocess.call(PY + [os.path.join(ROOT, "collect.py")] + sorted(sites), cwd=ROOT)
 if rc:
     sys.exit("collect failed (%d); nothing built" % rc)
+import json
+dead = set()
+for s_ in sorted(sites):  # practice run 2026-10-29: Arkansas at Parkdale and Snake at Hells Canyon returned no USGS rows; they go back to the queue with a gate so tomorrow picks others
+    try:
+        c_ = json.load(open(os.path.join(ROOT, "cache", s_ + ".json"), encoding="utf-8"))
+        ok_ = isinstance(c_, dict) and bool((c_.get("usgs") or {}).get("rows") if isinstance(c_.get("usgs"), dict) else c_.get("usgs"))
+    except (OSError, ValueError):
+        ok_ = False
+    if not ok_:
+        dead.add(s_)
+if dead:
+    rows = list(csv.DictReader(open(wp, encoding="utf-8")))
+    for r in rows:
+        if r["site"] in dead:
+            r["status"], r["gate"] = "queue", "no-usgs-rows"
+    with open(wp, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    print("not released (no USGS readings): %s" % ", ".join(sorted(dead)))
+    picks = [r for r in picks if r["site"] not in dead]
 subprocess.call(PY + [os.path.join(ROOT, "tools", "sync_legacy.py")], cwd=ROOT)  # CI builds from the repo: the new gauges' daily stats and land files must be committed with the wave (push legacy/ too)
 rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
 if rc:
