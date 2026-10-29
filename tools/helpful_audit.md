@@ -1,5 +1,7 @@
 # Master helpfulness audit (owner 2026-10-29: "I want literally everything. Down to the UI")
 
+Judge as the person, never as Google: a change that helps ranking but not the person is rejected; a change that helps the person needs no ranking reason.
+
 Use: every build batch checks the categories it touches; a periodic audit runs ALL categories on 3 contrasting pages (a big dammed river, a mountain/snow river, a small river with no NWS forecast) plus the home page, one state page and one river hub. Text pass first (cheap), then screenshots only for categories that need eyes (marked [eyes]).
 
 ## The reader (judge everything as these people, on a phone, at or near the river, 30 seconds)
@@ -13,7 +15,7 @@ Table: category | page(s) | exact text or element (quote, image file for [eyes])
 1. Does the first screen answer, without scrolling: how high/how much water now, is that normal for today, rising or falling, how old the reading is, is anything dangerous (alerts, flood), what is coming (forecast)?
 2. Is the page's one job obvious within 3 seconds (which river, which place, which gauge)?
 3. Does anything on the first screen not serve the reader at the water (citations, codes, developer links, drainage area)?
-4. Would the searcher for "<river> <place> water level today" stop searching after this screen?
+4. After this screen, does the person still need another site or app (USGS, NWS, a weather app, a fishing report) to decide about today? Name what sent them away.
 
 ## B. Truth and consistency
 5. Every number matches its source and every other place it appears (same value, same rounding, same unit, same time).
@@ -103,10 +105,10 @@ Table: category | page(s) | exact text or element (quote, image file for [eyes])
 65. Favorites / recent rivers; alerts on a reader's level; add to home screen; shareable card that shows the river and current flow.
 66. Units switch (cfs/m3/s, ft/m, °F/°C) remembered.
 
-## O. Search and sharing (as helpfulness, never gaming)
-67. Title, H1 and description say what the page answers in the searcher's words, with no stale numbers.
-68. Structured data true to the page; social preview image and text correct.
-69. No near-duplicate pages; every page has its own data and context.
+## O. Recognising and sharing the page
+67. The page name (tab title, heading, link preview) tells a person at a glance which river, which place and that it is today's water, in their words, with no stale numbers.
+68. A link sent to a friend shows the river and a true preview, so the friend knows what they are opening.
+69. Every page is about its own river: nothing reads as a copy of another page with the name swapped.
 
 ## P. Privacy, legal, ethics
 70. No tracking beyond what is disclosed; consent where required; no personal data stored without need (alerts: minimal).
