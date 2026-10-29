@@ -323,6 +323,9 @@ def merge_charts(blocks):
     return out
 
 
+WINDOW_KEY = "Windows used: today's date in past years (Normal range), the last 7 and 28 days, this month, and all days on record (how often each flow is reached)."
+
+
 def build_tab(tab, G, pages):
     T = TABS[tab]
     row = G["row"]
@@ -350,14 +353,15 @@ def build_tab(tab, G, pages):
     # Title and meta description carry NO reading (2026-10-26): Google shows them from its last crawl, days or weeks old, and the edge
     # cannot update them, so a number there becomes a stale number in search results under our name (snoflo's snippets showed weeks-old
     # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
-    title = mk_title("%s, %s: live water level and flow (USGS %s)" % (rp, st, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    live = "" if G["offline"] else "live "  # a gauge not reporting is not live (audit run 1, row 2)
+    title = mk_title("%s, %s: %swater level and flow (USGS %s)" % (rp, st, live, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
         # GSC week 1: "rio grande water level albuquerque today" is the top query; no number here (a cached snippet would go stale)
-        desc = "%s, %s: today's flow and water level, live from USGS gauge %s%s%s." % (rp, st, G["site"], (", vs records since %s" % _yrs) if _yrs else "", ", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
+        desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s%s%s." % (rp, st, live, G["site"], (", vs records since %s" % _yrs) if _yrs else "", ", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
         if len(desc) > 155:  # SEO review: Google cuts descriptions near 155 characters
-            desc = "%s, %s: today's flow and water level, live from USGS gauge %s." % (rp, st, G["site"])
+            desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s." % (rp, st, live, G["site"])
     else:
         desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
@@ -381,6 +385,7 @@ def build_tab(tab, G, pages):
         "mainEntity": {"@type": "Dataset", "name": "USGS gauge %s, %s, %s: flow and gage height" % (G["site"], rp, st), "description": "7-day flow and gage height readings and daily mean flow by year at USGS gauge %s, provisional data subject to revision." % G["site"],
                        "url": url, "license": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits", "creator": {"@type": "Organization", "name": "U.S. Geological Survey", "url": "https://www.usgs.gov/"},
                        "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}}))
+    off_html = "".join(render_block(b) for b in shown if b["id"] == "gauge_not_reporting")  # the not-reporting banner sits right under the H1, above the tiles
     ids = {b["id"] for b in shown}
     jl = [(i, t) for i, t in JUMP if i in ids]
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
@@ -403,10 +408,12 @@ def build_tab(tab, G, pages):
             body += gtag('<details class="fold"><summary><b>%s</b><span>%d section%s: %s</span></summary>%s</details>' % (esc(fold[0]), len(fold[2]), "" if len(fold[2]) == 1 else "s", " &middot; ".join(esc(x) for x in fold[2]), fold[1]), "history" if fold[0].startswith("Flood record") else "data")
         fold = None
     for b in blocks:
+        if isinstance(b, dict) and b["id"] == "gauge_not_reporting":
+            continue
         if isinstance(b, str) and b.startswith("SEC:"):
             flush()
             grp[0] = "weather" if b[4:].startswith("Forecast") else "history" if b[4:].startswith("How today") else "now" if b[4:].startswith(("What the water", "Level, flow")) else grp[0]
-            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0])
+            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0]) + (gtag('<p class="src wkey">%s</p>' % WINDOW_KEY, grp[0]) if b[4:].startswith("How today") else "")
             continue
         if isinstance(b, str) and b.startswith("FOLD:"):
             flush()
@@ -434,8 +441,8 @@ def build_tab(tab, G, pages):
     if T["hero"] and side:
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
-            '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+            '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
+                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

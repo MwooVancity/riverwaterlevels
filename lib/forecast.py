@@ -144,6 +144,8 @@ def b_alerts(G):
     age = hours_old(n.get("fetched_at"), G["now"]) if n.get("fetched_at") else None
     if al is None:
         body = '<p>Alerts could not be loaded at the last fetch.</p>'
+    elif not al and age is not None and age > stale_after("alerts"):
+        body = '<p>Unknown: last NWS alert check %s ago; check weather.gov. This is not a statement that conditions are safe.</p>' % age_words(parse_t(n["fetched_at"]), G["now"])
     elif not al:
         body = '<p>No active National Weather Service alerts were returned for this location. This is not a statement that conditions are safe.</p>'
     else:
@@ -152,7 +154,7 @@ def b_alerts(G):
             ends = esc(tzl(parse_t(a["ends"] or a["expires"]), zone)) if (a.get("ends") or a.get("expires")) else "not stated"
             items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s%s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), "" if re.search(r"\buntil\b", a.get("headline") or "", re.I) else ("<br>Ends " if a.get("ends") else "<br>NWS message valid until ") + ends)  # the NWS headline usually gives the end time; print it once
         body = items
-    return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=age, empty=(al == []))
+    return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=age, empty=(al == [] and not (age is not None and age > stale_after("alerts"))))
 
 
 def crest_date(t, zone):

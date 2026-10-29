@@ -335,7 +335,7 @@ def conditions(G, pages=None):
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = live_alerts(G) or []
-        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "age_h": hours_old(nws["fetched_at"], G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
+        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "age_h": hours_old(nws["fetched_at"], G["now"]), "ago": age_words(parse_t(nws["fetched_at"]), G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
         vt = (rn.get("valid_through") or {}).get("last_24h")
@@ -543,7 +543,7 @@ def b_flowdur(G):
     d = [r for r in f.get("dur") or [] if r["p"] in want]
     if len(d) < 4:
         return None
-    rows = "".join(tr(["Flow is at least %s cfs" % fmtc(r["q"]), "on %g%% of days" % r["p"]]) for r in d)
+    rows = "".join(tr(["Flow is at least %s cfs" % fmtc(r["q"]), "on %g%% of all days on record" % r["p"]]) for r in d)
     rng = next((r["range"] for r in d if r.get("range")), "")
     yrs = re.findall(r"\d{4}", rng)
     return block("flow_duration", "How often the flow reaches each level" + ((", %s to %s" % (yrs[0], yrs[-1])) if len(yrs) >= 2 else " (USGS, years not stated)"), "hist", table(["Flow level", "How often"], rows),
@@ -565,10 +565,27 @@ def _chance(v):
         return esc(s)
 
 
+def lro_ended(G):
+    """The produced date (text) of a long-range flood outlook whose three-month period ended before today at the gauge; None when there is none, when it is current, or when its period cannot be worked out (then it stays shown)."""
+    lro = (G["rec"].get("nwps") or {}).get("lro")
+    if not isinstance(lro, dict) or not any(lro.get(k) is not None for k in ("minorCS", "moderateCS", "majorCS")):
+        return None
+    try:
+        pt = datetime.date.fromisoformat(str(lro["producedTime"])[:10])
+        s0 = list(SEASONS).index(str(lro.get("interval") or "").upper()) + 1  # SEASONS is in order of start month
+    except (KeyError, ValueError):
+        return None
+    for y0 in (pt.year - 1, pt.year, pt.year + 1):  # the first occurrence of the period that had not ended when the outlook was produced
+        end = datetime.date(y0 + (s0 + 2) // 12, (s0 + 2) % 12 + 1, 1) - datetime.timedelta(days=1)  # last day of its third month
+        if end >= pt:
+            break
+    return fdate(pt.isoformat()) if end < G["now"].astimezone(G["zone"]).date() else None
+
+
 def b_flood_outlook(G):
     n = G["rec"].get("nwps") or {}
     lro = n.get("lro")
-    if not lro or not any(lro.get(k) is not None for k in ("minorCS", "moderateCS", "majorCS")):
+    if not lro or not any(lro.get(k) is not None for k in ("minorCS", "moderateCS", "majorCS")) or lro_ended(G):
         return None
     period = SEASONS.get(str(lro.get("interval") or "").upper())
     rows = "".join(tr([lab, _chance(lro[k])], right=(1,)) for k, lab in (("minorCS", "Minor flooding"), ("moderateCS", "Moderate flooding"), ("majorCS", "Major flooding")) if lro.get(k) is not None)

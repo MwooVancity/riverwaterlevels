@@ -52,7 +52,7 @@ def main():
             else:
                 lead = len(spans) == 4
                 ni, ti, ai = (1, 2, 3) if lead else (0, 1, 2)
-                if chip and not spans[ti].startswith(chip.group(1)):  # the answer may add the NWS forecast after the trend, never say a different trend
+                if chip and not spans[ti].startswith(chip.group(1)) and not spans[ti].startswith(render.strip_dir_word(chip.group(1))):  # the answer may add the NWS forecast after the trend, never say a different trend
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
                 if nw and G["p"] is not None and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
@@ -164,7 +164,7 @@ def main():
         G4 = copy.deepcopy(G)
         G4["rec"].setdefault("nws", {}).update({"alerts": [], "fetched_at": (G["now"] - datetime.timedelta(hours=20)).isoformat()})
         h4 = render.hero(G4, None)
-        if "has not answered since" not in h4 or "No alerts active here" in h4:
+        if "Last NWS alert check" not in h4 or "No alerts active here" in h4 or "<b>No alerts</b>" in h4:
             fail(site, "alert answer is 20 h old but the page says no alerts as if current")
         # 3. silence
         if not G["has_forecast"] and 'class="tile fcst none"' not in h:

@@ -115,7 +115,8 @@ def check_html(h, rel):
             bad.append("missing %s" % tag)  # trust pages are where the terms are explained
     if kind_of(rel) == "gauge" and not rel.replace("\\", "/").endswith("/forecast/index.html"):
         # Line 0, first-screen contract: the stat tiles come before the first data block
-        first_blk = body.find('<section class="card blk"')
+        fb_ = re.search(r'<section class="card blk"(?![^>]*id="gauge_not_reporting")', body)  # the not-reporting banner is the one block allowed above the tiles
+        first_blk = fb_.start() if fb_ else -1
         head = body[:first_blk] if first_blk > 0 else body
         for need in ('class="tile flow', 'class="tile stage', 'class="tile norm', 'class="tile trend'):
             if need == 'class="tile trend' and ("Tidal reach:" in head or "Rose and fell:" in head):
@@ -386,6 +387,14 @@ def hater_rules(h):
         bad.append("hourly list prints wind as compass letters ('WNW 2' wraps on a phone); use the wind arrow")
     if re.search(r'<section class="card blk" [^>]*id="no_river_forecast"', h):
         bad.append("'no river forecast issued' drawn as a full card; a valid-empty state is one grey line (block(..., empty=True))")
+    # honest data age (audit run 1, 2026-10-29)
+    if re.search(r'class="tile alrt[^"]*\bstale\b[^"]*">(?:(?!</div>).)*<b>No alerts</b>', h, re.S) or re.search(r'id="alerts".{0,400}?Older than.{0,300}?No active National Weather Service alerts were returned', h, re.S):
+        bad.append("says 'No alerts' beside an NWS alert check older than 3 h (say Unknown and how long ago)")
+    tl_ = re.search(r"<title>(.*?)</title>", h, re.S)
+    if 'id="gauge_not_reporting"' in h and tl_ and re.search(r"\blive\b", tl_.group(1), re.I):
+        bad.append("the title of a not-reporting gauge says 'live'")
+    if re.search(r'class="hero hero2".*?id="gauge_not_reporting"', h, re.S):
+        bad.append("the not-reporting banner sits below the tiles; it belongs directly under the H1")
     return bad
 
 
@@ -530,6 +539,14 @@ def check_dir(d):
 def selftest():
     from lib.core import wind_arrow
     assert "rotate(180deg)" in wind_arrow(0) and "from N" in wind_arrow(0) and "rotate(90deg)" in wind_arrow(270), "selftest: wind arrow does not point where the wind blows to"
+    stale_t = '<div class="tile alrt %s stale"><i class="ic"></i><span>NWS alerts</span><b>%s</b><small>Last NWS answer Oct 26.</small></div>'
+    assert hater_rules(stale_t % ("off", "No alerts")), "selftest: 'No alerts' beside a stale alert check did not fire"
+    assert not hater_rules(stale_t % ("unknown", "Unknown")), "selftest: 'Unknown' beside a stale alert check wrongly flagged"
+    assert hater_rules('<section id="alerts"><h2>Weather alerts <span class="tag amber">Older than 3 h</span></h2><p>No active National Weather Service alerts were returned for this location.</p></section>'), "selftest: 'No active alerts' in a stale alerts block did not fire"
+    assert hater_rules('<title>Pere Marquette River: live water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: 'live' in the title of a not-reporting gauge did not fire"
+    assert not hater_rules('<title>Pere Marquette River: water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: a not-reporting title without 'live' wrongly flagged"
+    assert not hater_rules('<title>Pere Marquette River: live water level</title><p>reading</p>'), "selftest: 'live' in a reporting gauge's title wrongly flagged"
+    assert hater_rules('<div class="hero hero2"></div><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: not-reporting banner below the tiles did not fire"
     assert hater_rules('<table class="hm hlist hsky"><tbody><tr><td>3 PM</td><td class="r">WNW 2</td></tr></tbody></table>'), "selftest: compass letters in the hourly list did not fire"
     assert hater_rules('<section class="card blk" data-f="fc" id="no_river_forecast"><h2>River forecast availability</h2></section>'), "selftest: full-card empty state did not fire"
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"

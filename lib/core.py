@@ -90,6 +90,20 @@ def age_text(dt, now):
     return "%d min" % m if m < 180 else ("%d h" % round_half_up(m / 60) if m < 2880 else "%d d" % round_half_up(m / 1440))
 
 
+AGE_UNIT = {"min": "minute", "h": "hour", "d": "day"}
+
+
+def age_words(dt, now):
+    """The same age as age_text, in words ("2 days", "7 hours"), for sentences."""
+    n, u = age_text(dt, now).split()
+    return "%s %s%s" % (n, AGE_UNIT[u], "" if n == "1" else "s")
+
+
+def flow_is_old(age_min):
+    """A flow reading older than 8 x the USGS stale limit (24 h): "not reporting" banner, no "live" in the title, an age marker on list rows. One rule for all three."""
+    return age_min > stale_after("usgs") * 8 * 60
+
+
 def hours_old(iso_s, now):
     try:
         return (now - parse_t(iso_s)).total_seconds() / 3600

@@ -46,7 +46,7 @@ def ctx(site, row, rec, now):
         _pn["name"] = re.sub(r"\s*\(IN MLLW\)", "", _pn["name"], flags=re.I)  # a datum note in the NWS point name is not part of the place
     out = {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
-            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": age_min > 24 * 60, "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
+            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     if flow_jitter(out):
         out["chg"] = None  # flow that does not follow the gage height gives no honest 24 h percent
     return out
@@ -202,6 +202,11 @@ def upstream_dams(G):
 GLOSS = '<p class="src gloss">cfs = cubic feet of water passing the gauge each second. Gage height is the gauge&rsquo;s own scale, not water depth. <a href="/glossary/">Glossary</a></p>'  # newcomer clarity: the two units on the tiles, said once under them
 
 
+def strip_dir_word(chip):
+    """The trend chip without its leading direction word: the answer strip says the change, the flow tile and the change card say the word."""
+    return re.sub(r"^(?:Steady|Rising|Falling|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
+
+
 def hero(G, pages=None):
     from lib import ui
     c = b3.conditions(G, pages)
@@ -336,7 +341,7 @@ def hero(G, pages=None):
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"] and c["alerts"].get("age_h") is not None and c["alerts"]["age_h"] > stale_after("alerts"):  # a fresh answer is said by the answer line and the alerts block; only an old or missing answer gets a tile
         al = c["alerts"]
-        strip += ui.tile("alrt off stale", "bell", "NWS alerts", "No alerts", '<small>%s</small>' % ("Last NWS answer %s. The alert service has not answered since; check weather.gov." % esc(al["asof"])))
+        strip += ui.tile("alrt unknown stale", "bell", "NWS alerts", "Unknown", '<small>Last NWS alert check %s ago (%s); check weather.gov.</small>' % (al["ago"], esc(al["asof"])))
     elif c["alerts"] is None:
         strip += ui.tile("alrt unknown", "bell", "NWS alerts", "Unknown", '<small>We have no answer from the National Weather Service alert service for this location. Check weather.gov.</small>')
     if c["wt"]:
@@ -349,7 +354,8 @@ def hero(G, pages=None):
         _nm = re.sub(r", (\w\w)$", lambda m: ", " + m.group(1).upper(), nw["name"].title())
         _nm = re.sub(r" (At|Below|Above|Near|Of|On|In)\b", lambda m: " " + m.group(1).lower(), _nm)
         _same = nw["name"].split()[0].lower() == G["river"].split()[0].lower()
-        strip += ui.tile("wtemp near", "thermo", "Water temperature nearby", '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
+        _lab = "Water temperature nearby" if _same else "Water temperature, %s (not this river), %.0f mi" % (esc(re.split(r"\s(?:at|near|nr|below|above|bl|ab)\s", _nm, 1, re.I)[0]), nw["mi"])  # a creek's temperature must not read as this river's
+        strip += ui.tile("wtemp near", "thermo", _lab, '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
@@ -360,7 +366,7 @@ def hero(G, pages=None):
     elif al_["n"]:
         a_txt, a_cls = "%d active NWS alert%s" % (al_["n"], "" if al_["n"] == 1 else "s"), "ay"
     elif al_.get("age_h") is not None and al_["age_h"] > stale_after("alerts"):
-        a_txt, a_cls = "NWS alert check is old", "ax"
+        a_txt, a_cls = "NWS alert check is %s old" % al_["ago"], "ax"
     else:
         a_txt, a_cls = "No active NWS alerts", "an"
     fc_ = c.get("fc") or {}
@@ -369,13 +375,15 @@ def hero(G, pages=None):
         big_rise = (fc_["v"] - fc_["cur"] >= 1.0) if fu_ == "ft" else (fc_["cur"] > 0 and fc_["v"] >= 1.25 * fc_["cur"])
         if big_rise:
             dir_chip = (dir_chip or "Direction unclear") + "; NWS forecast rises to %s by %s" % (("%.1f ft" % fc_["v"]) if fu_ == "ft" else ("%s cfs" % fmtc(fc_["v"])), fc_["t"])
+    shown_ = not (G["fl"] and qual_text(G["fl"][-1][2]))  # the flow tile prints dir_chip unless a USGS qualifier takes its place
+    strip_chip = strip_dir_word(dir_chip) if shown_ else dir_chip  # "Steady" is said by the flow tile and the change card, not a third time
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
-        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(dir_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
         strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % c["rain"]["in"], '<small>NWS RFC estimate%s</small>' % ((" to " + esc(c["rain"]["to"])) if c["rain"]["to"] else ""))
     if c["air"]:
@@ -406,6 +414,8 @@ def hero(G, pages=None):
         gone.append("air quality (no EPA AirNow monitor reports for this location)")
     if not ((G["rec"].get("nws") or {}).get("hourly")) and not (((G["rec"].get("nws") or {}).get("grid") or {}).get("hours")):  # the hourly table also draws from the grid (hater 2026-10-27, Freeport: "not available" above a full table)
         gone.append("hourly weather (no NWS hourly forecast for this location)")
+    if b3.lro_ended(G):
+        gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")

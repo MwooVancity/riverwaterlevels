@@ -300,3 +300,5 @@ table.hlist td{white-space:nowrap}
 table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last-child{white-space:normal;text-align:left;min-width:60px;font-size:.8rem;line-height:1.3;padding-left:6px}table.hlist.hsky th:last-child{text-align:left}
 .fcs:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}.fc b small{font-size:.8rem;font-weight:400;color:var(--mut)}
 @media(max-width:760px){.fcs .fc{flex-basis:42%}}
+.oldm{color:var(--mut);font-size:.8em;font-weight:400;white-space:nowrap}.src.wkey{border-top:0;padding-top:0;margin:0 0 10px}
+.pop b .oldm{font:400 .8rem system-ui,sans-serif}

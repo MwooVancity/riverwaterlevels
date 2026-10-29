@@ -1,7 +1,7 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
 import os, json, math, datetime, collections
 from lib.common import *
-from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H
+from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old
 from lib.render import robots_meta, CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -67,6 +67,11 @@ def conus_map(built, Gs, cap=120):
 ALLTAB_JS = """<script>(function(){var t=document.getElementById('alltab');if(!t)return;var hs=t.querySelectorAll('th[data-k]');hs.forEach(function(h,c){h.style.cursor='pointer';h.tabIndex=0;function go(){var d=h.getAttribute('data-d')==='1'?-1:1,b=t.tBodies[0],r=[].slice.call(b.rows),i=parseInt(h.getAttribute('data-i'));hs.forEach(function(x){x.removeAttribute('data-d');x.removeAttribute('aria-sort')});h.setAttribute('data-d',d===1?'1':'0');h.setAttribute('aria-sort',d===1?'ascending':'descending');r.sort(function(x,y){var a=x.cells[i].getAttribute('data-v'),z=y.cells[i].getAttribute('data-v');if(h.getAttribute('data-k')==='n'){a=a===''?-1e18:parseFloat(a);z=z===''?-1e18:parseFloat(z);if(a===-1e18)return 1;if(z===-1e18)return -1;return (a-z)*d}return a.localeCompare(z)*d});r.forEach(function(x){b.appendChild(x)})}h.addEventListener('click',go);h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})})})();</script>"""
 
 
+def old_mark(G):
+    """' 2 d old' beside a list-row flow older than the not-reporting limit (home, state and hub lists); empty for a current reading."""
+    return (' <span class="oldm">%s old</span>' % age_text(G["lt"], G["now"])) if flow_is_old(G["age_min"]) else ""
+
+
 def all_gauges_table(built, Gs):
     """Every built gauge in one table: flow, percentile, 24 h change and observed time, sortable in the browser."""
     rows = ""
@@ -81,7 +86,7 @@ def all_gauges_table(built, Gs):
         wqf = "1" if any(series(G["rec"], c) for c in LABELS if c != "00045") else "0"
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
-            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmtc(dir_lv(G)), pv, ptxt,
+            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmtc(dir_lv(G)) + old_mark(G), pv, ptxt,
             "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%"), G["lt"].isoformat(), esc(G["obs"])))
     heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h change", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
@@ -95,7 +100,7 @@ def item_line(g, Gs):
         return "%d gauges on this site" % len(g)
     G = Gs[g[0]["site"]]
     p = G["p"]
-    return "%s cfs%s" % (fmtc(dir_lv(G)), "" if p is None else ", %s" % band_word(p).lower())
+    return "%s cfs%s%s" % (fmtc(dir_lv(G)), old_mark(G), "" if p is None else ", %s" % band_word(p).lower())
 
 
 def home(built, Gs):
@@ -106,7 +111,7 @@ def home(built, Gs):
         if G["p"] is not None:
             pos = 1 if G["p"] == -1 else 99 if G["p"] == 101 else max(1, min(99, G["p"]))
             pv = '<div class="bar"><u></u><i style="left:%.0f%%"></i></div>' % pos
-        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small></b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmtc(dir_lv(G)), pv, esc(r["place"]), r["state"])
+        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small>%s</b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmtc(dir_lv(G)), old_mark(G), pv, esc(r["place"]), r["state"])
     by_state = collections.defaultdict(lambda: collections.defaultdict(list))
     for r in built:
         by_state[r["state"]][(r["hub_slug"], r["river"])].append(r)
@@ -167,8 +172,8 @@ def state_page(st, rows, Gs, sd=None):
             chg = G["chg"]
             ch = "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%")
             fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
-            trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
-                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), band_word(G["p"]), ch, fcst, esc(G["obs"]))
+            trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
+                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), old_mark(G), band_word(G["p"]), ch, fcst, esc(G["obs"]))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
@@ -185,8 +190,8 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         chg = None if G.get("osc") else G["chg"]
         ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
-        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
+        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
+            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), old_mark(G), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
