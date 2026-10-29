@@ -7,6 +7,11 @@ on:
   push:
     branches-ignore: [main]
   workflow_dispatch:
+    inputs:
+      release:
+        description: "true = also practise the daily release (20 gauges), commits nothing"
+        required: false
+        default: "false"
 
 concurrency:
   group: dryrun
@@ -43,6 +48,10 @@ jobs:
         run: git checkout -- state/reviews && git clean -fdq state/reviews
       - name: Install the pinned wrangler
         run: npm ci --silent
+      - name: Practice daily release (on demand)
+        if: github.event_name == 'workflow_dispatch' && inputs.release == 'true'
+        continue-on-error: true
+        run: python -I tools/release.py 20 && python -I tools/open_wave.py 20 --apply
       - name: Every gate, no deploy
         continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
         run: python refresh.py --dry

@@ -15,6 +15,10 @@ concurrency:
   group: refresh
   cancel-in-progress: false
 
+permissions:
+  contents: write  # the daily release commits data/waves.csv and data/index-allow.json
+  actions: read
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -25,6 +29,7 @@ jobs:
       AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,9 +51,32 @@ jobs:
         run: git checkout -- state/reviews && git clean -fdq state/reviews
       - name: Install the pinned wrangler
         run: npm ci --silent
+      - name: Daily release (owner cap 20 gauges/day; first run in the 11:00 UTC hour)
+        id: rel
+        continue-on-error: true
+        run: |
+          today=$(date -u +%F); last=$(cat state/last-release.txt 2>/dev/null || true)
+          m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
+          echo "last refresh took ${m} min; last release ${last:-never}"
+          if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
+          if [ "$(date -u +%H)" = "11" ] && [ "$today" != "$last" ]; then
+            python -I tools/release.py 20 && python -I tools/open_wave.py 20 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
+          fi
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
-        run: python refresh.py
+        run: python refresh.py 2>&1 | tee refresh-out.log
+      - name: Keep the day's new gauges only if the refresh passed
+        if: steps.rel.outputs.released == '1'
+        continue-on-error: true
+        run: |
+          if grep -q "refresh OK" refresh-out.log; then
+            git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+            git add data/waves.csv data/index-allow.json
+            git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
+            git pull --rebase -q origin main && git push origin HEAD:main && date -u +%F > state/last-release.txt && echo "release committed"
+          else
+            echo "release DROPPED: the refresh did not pass; nothing committed"
+          fi
       - name: Save the data cache
         if: always()
         uses: actions/cache/save@v4
