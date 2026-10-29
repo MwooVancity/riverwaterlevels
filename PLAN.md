@@ -23,7 +23,7 @@ The one requirement: the page a person at this river wants, for every river peop
 1. Question: per-gauge screenshot review (~80k tokens each, 25 gauges = ~2M) caps coverage. Machine gates already check every page against live USGS/NWS; the shared template is reviewed once. DECISION: new gauges ship on machine gates (check.py, truth_live, break gate, cloud dry run); a light review only for a gauge with a data shape no reviewed page has. Replaces the 2026-10-27 "every gauge needs a signed PASS" rule.
 2. Delete: gates/checks with no real catch in 10 runs; duplicate logic (refactor done 2026-10-29); docs beyond CLAUDE.md + PLAN.md (done); per-gauge review signatures as a deploy requirement.
 3. Simplify: one decision = one function; one deploy path (refresh.yml) with one practice path (dryrun.yml).
-4. Accelerate: release waves of 25-50 gauges every day the cloud run stays under the hour (owner rule stands: never ~1,000 at once); open each wave to Google the same day; IndexNow on every wave.
+4. Accelerate: 10 gauges a day by the daily-release workflow while the hourly run stays under 45 min (owner rule stands: never ~1,000 at once); each day's gauges open to Google the same day.
 5. Automate last: the hourly run releases and opens the next wave by itself when every gate passed for 24 h; Search Console and PageSpeed numbers read by script weekly into this file.
 Ranking work in parallel: link outreach drafts (owner sends), first-screen answers for each top query, phone speed.
 
@@ -69,7 +69,7 @@ In order of value to a person at the river:
 ## Next steps (in order)
 Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable (batch C).
 1. Confirm F and G live (see Where we are).
-2. Release 25 gauges: `python -I tools/release.py 25` (check the printed names), dry run, push, `python -I tools/open_wave.py 25 --apply`, push; check the hourly cloud run stays under the hour before the next 25.
+2. Growth is automatic (owner 2026-10-29): `.github/workflows/daily-release.yml` adds the next 10 gauges from picks.csv every day at 11:10 UTC in the cloud (collect, build, open to Google, every gate via `refresh.py --dry`); only if all pass it commits data/waves.csv + data/index-allow.json, saves the cache and starts refresh.yml. Brake: skips the day when the last refresh took over 45 min. Manual test: `gh workflow run daily-release.yml -f dry=true`. Status: first practice run pending. Check weekly: live count rises by 10/day, refresh time stays under 45 min; when it nears 45, do step 11 (shard collect) before growth resumes.
 3. Alerts (owner approved): web push, item 10 of the helpful-site gaps; needs a VAPID key pair as Worker secrets and KV for subscriptions (watch the shared 1,000 KV writes/day).
 4. Favorite rivers (browser storage) and the units switch.
 5. Low-head dams near each gauge (National Inventory of Dams; source row in data/sources.json, WebSearch evidence) and state life-jacket rules.
