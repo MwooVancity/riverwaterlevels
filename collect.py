@@ -809,7 +809,7 @@ def _parse_issued(s):
     return None
 
 
-def fetch_rain(lat, lon):
+def fetch_rain(lat, lon, again=NEXT):
     g = urllib.parse.quote(json.dumps({"x": lon, "y": lat, "spatialReference": {"wkid": 4326}}))
     j = retry_json("https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json" % g, NWS_H)
     by, issued, lid = {}, {}, {}
@@ -829,6 +829,9 @@ def fetch_rain(lat, lon):
     want = {"nws_precip_last24hours_conus": "last_24h", "nws_precip_last2days_conus": "last_2d", "nws_precip_last3days_conus": "last_3d"}
     vals = {lab: by[k] for k, lab in want.items() if k in by}
     if not vals:
+        if again:  # 20 shards at once: the map service sometimes answers an empty result list; one more try after 2 s (new design only)
+            _time.sleep(2)
+            return fetch_rain(lat, lon, False)
         raise RuntimeError("no rain values")
     return {"fetched_at": now_iso(), "inches": vals, "valid_through": {lab: issued.get(lid[k] - 1) for k, lab in want.items() if k in by}}
 

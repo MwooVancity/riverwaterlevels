@@ -153,7 +153,7 @@ def main():
         imp = [i for i in ((G["rec"].get("nwps") or {}).get("impacts") or []) if isinstance(i.get("stage"), (int, float))]
         if imp and G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
             curst = (render.datum_gap(G) or (G["sg"][-1][1],))[0]
-            if curst >= min(i["stage"] for i in imp) and "reached at the latest reading" not in render.forecast.b_impacts(G)["body"]:
+            if curst >= min(i["stage"] for i in imp) and "reached at the latest reading" not in render._forecast.b_impacts(G)["body"]:
                 fail(site, "the stage (%.2f ft) is at or above an NWS impact stage but the page does not quote it" % curst)
         # 17. the site gives no advice (Methodology: we do not give advice)
         if re.search(r"(?i)get off the water|you should|we recommend|do not (?:enter|swim|boat)", h):
