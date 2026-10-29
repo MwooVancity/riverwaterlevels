@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "newcomer clarity batch (units line, plain labels, freshness in headings, daily-average labels, drought note, flow-duration wording, cite moved); direction word follows the printed %; builder looked at Memphis phone-01",
+ "notes": "audit batch A (honest data age, not-reporting banner at top, window key, outlook hidden when ended); builder looked at Scottville phone-01",
  "by": "builder-machine",
- "at": "2026-10-29T05:17:54+00:00",
- "template": "5996165e1ac5",
+ "at": "2026-10-29T05:39:34+00:00",
+ "template": "40382df2aff2",
  "level": "machine"
 }
