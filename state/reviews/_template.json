@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "audit batch A (honest data age, not-reporting banner at top, window key, outlook hidden when ended); builder looked at Scottville phone-01",
+ "notes": "audit batch B (point names, forecast label, glossary, cold-water, ramps grouped, typo search, far-gauges label, banner age); builder looked at Memphis phone-02",
  "by": "builder-machine",
- "at": "2026-10-29T05:39:34+00:00",
- "template": "40382df2aff2",
+ "at": "2026-10-29T05:51:30+00:00",
+ "template": "2289df1191f7",
  "level": "machine"
 }
