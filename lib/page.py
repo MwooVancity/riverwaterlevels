@@ -127,7 +127,7 @@ def tab_blocks(tab, G, pages):
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G),
-                "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
+                "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:River forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), "AD",
                 "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b3.b_stocking(G),
                 "SEC:Rain and longer outlook", b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_cpc(G),
@@ -270,7 +270,7 @@ function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x)e.tex
 fetch('https://api.weather.gov/alerts/active?point=@LAT@,@LON@',{headers:{Accept:'application/geo+json'}}).then(function(r){return r.json()}).then(function(j){if(!j||!j.features)return;
 var al=j.features.map(function(f){return f.properties}).filter(function(p){return IG.indexOf(p.event)<0}),src=b.querySelector('.srcd')||b.querySelector('.src'),sp=b.querySelector('.src');if(!src||!sp)return;
 Array.prototype.slice.call(b.children).forEach(function(c){if(c.tagName!=='H2'&&c!==src)b.removeChild(c)});
-if(!al.length){b.insertBefore(el('p','','No active National Weather Service alerts were returned for this location. This is not a statement that conditions are safe.'),src)}
+b.classList.toggle('emp',!al.length);if(!al.length){b.insertBefore(el('p','','No active National Weather Service alerts were returned for this location. This is not a statement that conditions are safe.'),src)}
 al.forEach(function(p){var d=el('div','alert'),e=p.ends||p.expires;d.appendChild(el('b','',p.event||''));d.appendChild(document.createTextNode(' \\u00b7 '+(p.severity||'severity not stated')+' \\u00b7 '+(as(p.areaDesc||'')+ast(p))));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode(p.headline||''));d.appendChild(document.createElement('br'));d.appendChild(document.createTextNode('Ends '+(e?lt(new Date(e)):'not stated')));b.insertBefore(d,src)});
 var bn=document.querySelector('a.abanner'),hr=document.querySelector('.hero');if(al.length){if(!bn&&hr){bn=el('a','abanner');bn.href='#alerts';hr.parentNode.insertBefore(bn,hr)}if(bn){bn.textContent='';bn.appendChild(el('b','',al.length+' active National Weather Service alert'+(al.length===1?'':'s')));bn.appendChild(el('span','',al.map(function(p){return p.event}).join('; ')));bn.appendChild(el('em','','Details'))}}else if(bn){bn.parentNode.removeChild(bn)}
 var t=document.querySelector('.tile.alrt');if(t){var tv=t.querySelector('b'),ts=t.querySelector('small');t.className='tile alrt '+(al.length?'on':'off');if(tv)tv.textContent=al.length||'No alerts';if(ts)ts.textContent=al.length?al.map(function(p){return p.event}).join('; '):'No alerts active here. Checked live '+lt(new Date())+'.'}

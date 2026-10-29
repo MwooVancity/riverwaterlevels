@@ -639,7 +639,7 @@ def fetch_nws(lat, lon, prev=None):
     try:
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
-        out["periods"] = [{k: p.get(k) for k in ("name", "startTime", "endTime", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
+        out["periods"] = [{k: p.get(k) for k in ("name", "startTime", "endTime", "temperature", "temperatureUnit", "shortForecast", "detailedForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
     except Exception as e:
         note("nws.forecast", "failed", e)
     try:

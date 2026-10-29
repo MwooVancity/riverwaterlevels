@@ -249,7 +249,7 @@ def b_noforecast(G):
     else:
         msg = "No National Weather Service river forecast point is linked to this USGS gauge."
     return block("no_river_forecast", "River forecast availability", "official", "<p>%s</p>" % msg,
-                 "Source: National Weather Service National Water Prediction Service lookup for USGS gauge %s, checked %s." % (G["site"], esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
+                 "Source: National Weather Service National Water Prediction Service lookup for USGS gauge %s, checked %s." % (G["site"], esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps", empty=True)
 
 
 def b_qpf(G):

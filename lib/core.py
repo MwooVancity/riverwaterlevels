@@ -204,10 +204,11 @@ def credit_line(b):
     return "".join(" Credit: %s." % esc(c.rstrip(".")) for c in out)
 
 
-def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
+def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False, empty=False):
+    """empty=True: a valid-empty state (one sentence such as "no river forecast issued"), drawn as one grey line, not a card."""
     if not isinstance(amber, bool):  # an age in hours: old by the one table
         amber = amber is not None and amber > stale_after(bid)
-    return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber}
+    return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber, "empty": empty}
 
 
 STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24,  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
@@ -236,7 +237,11 @@ FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}
 
 def render_block(b):
     amber = (' <span class="tag amber">Older than %s</span>' % "%d h" % stale_after(b["id"])) if b.get("amber") else ""
-    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<details class="srcd"><summary>Where this comes from</summary><p class="src">%s%s</p></details></section>' % (FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now"), b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"], credit_line(b)))
+    src = '<details class="srcd"><summary>Source</summary><p class="src">%s%s</p></details>' % (b["source"], credit_line(b))  # one small toggle in the heading row; opens under the heading
+    fam = FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now")
+    if b.get("empty"):
+        return '<section class="card blk emp" data-f="%s" id="%s"><h2>%s</h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["body"], src)
+    return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], src, b["body"]))
 
 
 def table(heads, rows, right=(), hide=(), stack=False):
@@ -349,6 +354,11 @@ MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", 
 
 def compass(d):
     return COMP[int((d % 360) / 22.5 + 0.5) % 16]
+
+
+def wind_arrow(d):
+    """NWS gives the direction the wind comes FROM; the arrow points where it blows TO. The compass letters stay for screen readers and on hover."""
+    return '<span class="wa" role="img" aria-label="from %s" title="Wind from %s" style="transform:rotate(%ddeg)">&#8593;</span>' % (compass(d), compass(d), round(d + 180) % 360)
 
 
 def tint(frac):

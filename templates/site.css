@@ -293,3 +293,10 @@ pre.card{white-space:pre-wrap;word-break:break-all;font-size:.85rem}
 .tag.amber,.blk>h2 .tag.amber{color:var(--amber)}
 table.hlist{width:100%;font-size:.9rem}table.hlist td,table.hlist th{text-align:right;padding:8px 6px}table.hlist td:first-child,table.hlist th:first-child{text-align:left;font-weight:600;white-space:nowrap}
 table.hlist td{white-space:nowrap}
+/* page polish 2026-10-29: Source toggle in the heading row (opens under the heading), valid-empty states as one grey line, wind arrows, Sky column, 7-day strip */
+.blk{position:relative}.blk>h2{padding-right:64px}.blk>.srcd{margin:0}.blk>.srcd>summary{position:absolute;top:13px;right:12px;min-height:34px;line-height:34px;padding:0 6px}.blk>.srcd[open]{margin:0 0 10px}
+.blk.emp{background:none;border:0;padding:4px 64px 4px 0;margin:6px 0;color:var(--mut);font-size:.9rem;line-height:1.45}.blk.emp>h2,.blk.emp>p{display:inline;font:600 .9rem/1.45 system-ui,sans-serif;margin:0;padding:0;color:var(--mut)}.blk.emp>p{font-weight:400}.blk.emp>h2::after{content:": "}.blk.emp>.srcd>summary{top:0}.blk.emp>.srcd[open]{margin:6px 0 0}
+.wa{display:inline-block;font-weight:700;color:var(--accent);line-height:1}
+table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last-child{white-space:normal;text-align:left;min-width:60px;font-size:.8rem;line-height:1.3;padding-left:6px}table.hlist.hsky th:last-child{text-align:left}
+.fcs:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}.fc b small{font-size:.8rem;font-weight:400;color:var(--mut)}
+@media(max-width:760px){.fcs .fc{flex-basis:42%}}

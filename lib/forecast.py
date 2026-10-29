@@ -152,7 +152,7 @@ def b_alerts(G):
             ends = esc(tzl(parse_t(a["ends"] or a["expires"]), zone)) if (a.get("ends") or a.get("expires")) else "not stated"
             items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s%s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), "" if re.search(r"\buntil\b", a.get("headline") or "", re.I) else ("<br>Ends " if a.get("ends") else "<br>NWS message valid until ") + ends)  # the NWS headline usually gives the end time; print it once
         body = items
-    return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=age)
+    return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=age, empty=(al == []))
 
 
 def crest_date(t, zone):

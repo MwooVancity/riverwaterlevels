@@ -376,6 +376,12 @@ def hater_rules(h):
         bad.append("next NWS impact %s ft above the reading: the thresholds are not stages (published as flow?)" % m.group(1))
     if "live water temperature (no USGS temperature sensor" in t and re.search(r"<td>Water temperature</td>", h):
         bad.append("says there is no water temperature sensor while the sensor table shows one")
+    # page polish 2026-10-29
+    hl = re.search(r'<table class="hm hlist[^"]*">.*?</table>', h, re.S)
+    if hl and re.search(r"<td[^>]*>(?:N|NNE|NE|ENE|E|ESE|SE|SSE|S|SSW|SW|WSW|W|WNW|NW|NNW) \d", hl.group(0)):
+        bad.append("hourly list prints wind as compass letters ('WNW 2' wraps on a phone); use the wind arrow")
+    if re.search(r'<section class="card blk" [^>]*id="no_river_forecast"', h):
+        bad.append("'no river forecast issued' drawn as a full card; a valid-empty state is one grey line (block(..., empty=True))")
     return bad
 
 
@@ -513,6 +519,10 @@ def check_dir(d):
 
 
 def selftest():
+    from lib.core import wind_arrow
+    assert "rotate(180deg)" in wind_arrow(0) and "from N" in wind_arrow(0) and "rotate(90deg)" in wind_arrow(270), "selftest: wind arrow does not point where the wind blows to"
+    assert hater_rules('<table class="hm hlist hsky"><tbody><tr><td>3 PM</td><td class="r">WNW 2</td></tr></tbody></table>'), "selftest: compass letters in the hourly list did not fire"
+    assert hater_rules('<section class="card blk" data-f="fc" id="no_river_forecast"><h2>River forecast availability</h2></section>'), "selftest: full-card empty state did not fire"
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
     assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
     assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
