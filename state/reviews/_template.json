@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "audit batch F (old forecast tile aged + stale badge, hidden tiles named in gaps line, alt text, name casing, glossary, tide date) + tile words never break mid-word; builder looked at Lees Ferry phone-02",
+ "notes": "batch G top minors (glossary cut-offs from code, silent-gauge rate note, rain forecast age, live title at 6 h, partial-day note with counts, rain gap line, 44 px tap targets, anchor names, report-a-wrong-number, ATTAINS); builder looked at Memphis phone-02",
  "by": "builder-machine",
- "at": "2026-10-29T07:08:30+00:00",
- "template": "f1051904b9f4",
+ "at": "2026-10-29T07:29:49+00:00",
+ "template": "cc8bcf91a55d",
  "level": "machine"
 }
