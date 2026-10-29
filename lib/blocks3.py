@@ -362,7 +362,7 @@ def b_camera(G):
             ages.append(h)
         except (KeyError, TypeError, ValueError):
             taken = "time not stated"
-        body += '<figure class="cam"><a href="%s" rel="noopener"><img src="%s" alt="USGS camera: %s" width="720" height="405" loading="lazy" style="max-width:100%%;height:auto"></a><figcaption>%s &middot; taken %s%s</figcaption></figure>' % (
+        body += '<figure class="cam"><a href="%s" rel="noopener"><img src="%s" alt="USGS camera: %s" width="720" height="405" loading="lazy" decoding="async" style="max-width:100%%;height:auto"></a><figcaption>%s &middot; taken %s%s</figcaption></figure>' % (
             esc(x["page"]), esc(x["small"]), esc(x["name"]), esc(x["name"]), esc(taken), (' &middot; <a href="%s" rel="noopener">timelapse video</a>' % esc(x["timelapse"])) if x.get("timelapse") else "")
     fresh = len(ages) == len(c["cams"]) and all(h <= stale_after("camera") for h in ages)
     return block("camera", "Camera at the gauge" if fresh else "Camera at the gauge, newest image", "live" if fresh else "agency", body,

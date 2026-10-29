@@ -160,6 +160,13 @@ def main():
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
+    for name in ("sw.js", "icon-192.png", "icon-512.png"):
+        shutil.copy(os.path.join(ROOT, "templates", name), os.path.join(nxt, name))
+    for name, text in render.ASSETS.items():  # the stylesheets, each named by a hash of its content
+        open(os.path.join(nxt, name), "w", encoding="utf-8").write(text)
+    json.dump({"name": "River Water Levels", "short_name": "Rivers", "start_url": "/", "scope": "/", "display": "standalone", "theme_color": "#1d5fa8", "background_color": "#ffffff",
+               "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"}, {"src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}]},
+              open(os.path.join(nxt, "manifest.webmanifest"), "w"), indent=1)
     json.dump({"urls": urls}, open(os.path.join(nxt, "_urls.json"), "w"))
     report["pages"] = len(urls)
     nfiles = sum(len(fs) for _, _, fs in os.walk(nxt))  # the real deploy count: pages + per-gauge embed/data.json + sitemaps + infra, not just len(urls)

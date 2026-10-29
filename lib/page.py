@@ -65,7 +65,7 @@ def b_map(G):
     cx, cy = R * math.radians(lon), R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
     bbox = "%.0f,%.0f,%.0f,%.0f" % (cx - half, cy - half * 0.5625, cx + half, cy + half * 0.5625)
     src = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export?bbox=%s&bboxSR=3857&imageSR=3857&size=640,360&format=png&f=image" % bbox
-    return block("gauge_map", "Gauge location", "map", '<div class="mapimg"><img src="%s" alt="USGS topographic map centered on %s, about 10 miles across" width="640" height="360" loading="lazy"><i aria-hidden="true"></i></div>' % (src, esc(G["place"])),
+    return block("gauge_map", "Gauge location", "map", '<div class="mapimg"><img src="%s" alt="USGS topographic map centered on %s, about 10 miles across" width="640" height="360" loading="lazy" decoding="async"><i aria-hidden="true"></i></div>' % (src, esc(G["place"])),
                  "Source: Map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Map about 10 miles across, centered on the gauge at %.4f, %.4f." % (lat, lon), "natmap")
 
 
@@ -296,6 +296,8 @@ def robots_meta(path):
     return indexing.robots_meta(path, INDEX_CFG) if INDEX_CFG is not None else ""
 
 
+# the radar loop is a ~1 MB animated image: it loads when the reader taps the button (the button is a plain link to the loop when scripts are off)
+RADAR_JS = """<script>(function(){var b=document.querySelector('[data-radar]'),i=document.querySelector('[data-radar-img]');if(!b||!i)return;b.addEventListener('click',function(){i.src=b.getAttribute('data-radar');i.hidden=false;b.hidden=true})})();</script>"""
 HEAD_EXTRA = '<link rel="icon" href="/favicon.svg" type="image/svg+xml"><meta name="theme-color" content="#1d5fa8">'
 
 
@@ -451,8 +453,8 @@ def build_tab(tab, G, pages):
     if T["hero"] and side:
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
-            '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+            '<link rel="canonical" href="%s">%s%s</head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
+                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

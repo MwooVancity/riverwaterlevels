@@ -98,7 +98,8 @@ def b_radar(G):
     st = (G["rec"].get("nws") or {}).get("radar")
     if not st:
         return None
-    return block("radar", "Radar", "official", '<img src="https://radar.weather.gov/ridge/standard/%s_loop.gif" alt="Radar loop, station %s" width="600" height="550" loading="lazy" style="max-width:100%%;height:auto">' % (esc(st), esc(st)),
+    gif = "https://radar.weather.gov/ridge/standard/%s_loop.gif" % esc(st)
+    return block("radar", "Radar", "official", '<button type="button" class="pill" data-radar="%s">Show radar loop</button><noscript><a href="%s">Open the radar loop</a></noscript><img data-radar-img hidden alt="Radar loop, station %s" width="600" height="550" loading="lazy" decoding="async" style="max-width:100%%;height:auto">' % (gif, gif, esc(st)),
                  "Source: National Weather Service radar, station %s. The loop is served live by the NWS and shows its own frame times." % esc(st), "rfc")
 
 

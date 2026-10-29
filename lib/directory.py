@@ -2,7 +2,7 @@
 import os, json, math, datetime, collections
 from lib.common import *
 from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old
-from lib.render import robots_meta, CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
+from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
                "GA": "Georgia", "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
@@ -21,6 +21,7 @@ EXTRA_CSS = """
 button.pill{font:inherit;cursor:pointer}.pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}.prose{max-width:720px}.gmap{position:relative;line-height:0}.gmap img{width:100%;height:auto;border-radius:8px;display:block}.dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--navy)}.d-lo{background:#d9822b}.d-mid{background:var(--accent)}.d-hi{background:#6b3fa0}.d-na{background:#9aa5b1}.keyrow{font-size:.82rem;color:var(--mut);margin-top:8px;line-height:1.6}.keyrow b{display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 4px 0 12px;vertical-align:-1px}.prose h2{margin-top:26px}.prose p,.prose li{color:var(--ink)}
 @media(max-width:760px){.cols{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
 """
+DIR_LINK = css_asset("dir", EXTRA_CSS)
 SEARCH_JS = """<script>(function(){var i=document.getElementById('q'),act={},nm=document.getElementById('nomatch'),g0=null,fm=window.RWS?RWS.fm:function(q,h){return h.indexOf(q.toLowerCase().trim())>=0};function nr(v){if(!window.RWS||!window.fetch)return;g0=g0||fetch('/gauges.json').then(function(r){return r.json()}).catch(function(){return[]});g0.then(function(j){if(!nm||nm.hidden||i.value!==v||!j.length)return;nm.textContent='No rivers match that search. Nearest names: ';RWS.near(v,j,5).forEach(function(g,k){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];if(k)nm.appendChild(document.createTextNode(' \\u00b7 '));nm.appendChild(a)})})}
 function ap(){var v=i?i.value:'';document.querySelectorAll('[data-s]').forEach(function(e){var ok=fm(v,e.getAttribute('data-s'));for(var k in act){if(act[k]&&e.getAttribute('data-'+k)!=='1')ok=false}e.style.display=ok?'':'none'});document.querySelectorAll('section.st').forEach(function(s){s.style.display=s.querySelector('[data-s]:not([style*="none"])')?'':'none'});var any=!!document.querySelector('[data-s]:not([style*="none"])');if(nm){nm.hidden=any;if(!any&&v.trim())nr(v)}var gc=document.getElementById('gcount'),tb=document.querySelectorAll('#alltab tbody tr');if(gc&&tb.length){var n=0;tb.forEach(function(x){if(x.style.display!=='none')n++});gc.textContent=n+(n===1?' gauge':' gauges')}}
 if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-f');act[k]=!act[k];b.classList.toggle('on',act[k]);ap()})})})();</script>"""
@@ -28,8 +29,8 @@ if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEac
 
 def shell(title, desc, url, body, extra_main_class="", ld=""):
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
-            '<link rel="canonical" href="%s">%s<style>%s%s</style></head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
-                esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
+            '<link rel="canonical" href="%s">%s%s%s</head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
+                esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS_LINK, DIR_LINK, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
 
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;
@@ -61,7 +62,7 @@ def conus_map(built, Gs, cap=120):
     if not shown:
         return ""
     key = '<div class="keyrow">Gauge color, flow compared with past years on this date: <b class="d-lo"></b>below normal (including very low) <b class="d-mid"></b>normal range <b class="d-hi"></b>above normal (including very high) <b class="d-na"></b>no comparison available. %d gauges shown.</div>' % shown
-    return ('<div class="card" style="margin-top:14px"><h2>Gauges on this site</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy">%s</div>%s'
+    return ('<div class="card" style="margin-top:14px"><h2>Gauges on this site</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy" decoding="async">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % (src, h, dots, key))
 
 
@@ -351,8 +352,8 @@ def robots():
 
 def not_found():
     body = '<h1>Page not found</h1><p class="sub">That page is not on %s. Try the <a href="/">home page</a> or search for a river.</p>' % esc(BRAND)
-    return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found | %s</title><meta name="robots" content="noindex">%s<style>%s%s</style></head><body>%s<main>%s</main>%s</body></html>' % (
-        esc(BRAND), HEAD_EXTRA, CSS, EXTRA_CSS, nav(), body, footer()))
+    return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found | %s</title><meta name="robots" content="noindex">%s%s%s</head><body>%s<main>%s</main>%s</body></html>' % (
+        esc(BRAND), HEAD_EXTRA + PWA_HEAD, CSS_LINK, DIR_LINK, nav(), body, footer()))
 
 
 FAVICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1d5fa8"/><path d="M5 20c4-5 7-5 11 0s7 5 11 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M5 12c4-5 7-5 11 0s7 5 11 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".6"/></svg>'

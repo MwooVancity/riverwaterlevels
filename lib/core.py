@@ -9,6 +9,19 @@ SOURCES_READ_ON = _SJ["read_on"]  # the date the terms were read for every sourc
 
 
 CSS = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+ASSETS = {}  # file name -> text: build.py writes each to the site root
+
+
+def css_asset(prefix, text):
+    """The stylesheet is one cacheable file named by a hash of its content (a change makes a new name, so the long cache never serves old CSS)."""
+    name = "%s.%s.css" % (prefix, hashlib.sha256(text.encode("utf-8")).hexdigest()[:10])
+    ASSETS[name] = text
+    return '<link rel="stylesheet" href="/%s">' % name
+
+
+CSS_LINK = css_asset("site", CSS)
+PWA_HEAD = ('<link rel="manifest" href="/manifest.webmanifest"><link rel="apple-touch-icon" href="/icon-192.png">'
+            "<script>if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){})})</script>")
 
 
 LABELS = {"00010": "Water temperature", "00300": "Dissolved oxygen", "63680": "Turbidity", "00400": "pH", "00095": "Dissolved salts (specific conductance)", "99133": "Nitrate plus nitrite", "00045": "Rain at the gauge (precipitation)", "00055": "Water velocity", "72255": "Water velocity", "00480": "Salinity"}

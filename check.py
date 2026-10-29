@@ -62,6 +62,9 @@ def ui_checks(body, plain=True):
             bad.append("image without width and height (layout shift): %s" % im[:60])
         if not re.search(r'\salt="[^"]+"', im):
             bad.append("image without alt text: %s" % im[:60])
+    for im in re.findall(r"<img\b[^>]*>", body)[1:]:  # below the first screen: download when scrolled to, not up front (weak signal)
+        if 'loading="lazy"' not in im or 'decoding="async"' not in im:
+            bad.append("image after the first without loading=lazy and decoding=async: %s" % im[:60])
     seen = collections.Counter(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", p)).strip() for p in re.findall(r"<p>(.*?)</p>", body, re.S))
     for s, n in seen.items():
         if n > 1 and len(s) >= 60:
@@ -79,6 +82,14 @@ def check_html(h, rel):
         bad.append("canonical %s != %s" % (m.group(1), SITE_URL + url))
     if len(h.encode()) > MAX_BYTES:
         bad.append("page weight %d bytes over budget" % len(h.encode()))
+    if not rel.replace("\\", "/").startswith("embed/"):  # an embed is a self-contained iframe page; every other page shares one cacheable stylesheet
+        if not re.search(r'<link rel="stylesheet" href="/(site|dir)\.[0-9a-f]{10}\.css">', h):
+            bad.append("page does not link the cacheable stylesheet (inline CSS is re-sent with every page)")
+        if '<link rel="manifest" href="/manifest.webmanifest">' not in h:
+            bad.append("page does not link the web app manifest (add to home screen)")
+        for st in re.findall(r"<style[^>]*>(.*?)</style>", h, re.S):
+            if len(st.encode()) > 2048:
+                bad.append("inline <style> of %d bytes (limit 2048): it belongs in the shared stylesheet" % len(st.encode()))
     if "<main" not in h:
         return bad + ["no <main>"]
     body = h.split("<main", 1)[1].split("</main>")[0]
@@ -217,6 +228,12 @@ def edge_drift(js):
     if not m or (int(m.group(1)), int(m.group(2))) != want:
         bad.append("worker/index.js AGE_CHIP_MIN is not STALE_H chip_fresh/chip_ageing in minutes %s: the edge would colour the age chip differently from the page" % (want,))
     return bad
+
+
+def sw_drift(js):
+    """templates/sw.js cannot import Python: its saved-page age must be AGE_FN (lib/page.py) character for character, like the worker's."""
+    from lib.render import AGE_FN
+    return [] if AGE_FN in js else ["sw.js age() differs from AGE_FN in lib/page.py: the offline line and the page would print different ages"]
 
 
 def review_gaps(live_sites, reviews, code):
@@ -438,6 +455,9 @@ def check_dir(d):
     site_bad = []
     urls = rel_of
     wjs = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
+    site_bad += ["%s missing from the build" % f for f in ("sw.js", "manifest.webmanifest", "icon-192.png", "icon-512.png") if not os.path.exists(os.path.join(d, f))]
+    if os.path.exists(os.path.join(d, "sw.js")):
+        site_bad += sw_drift(open(os.path.join(d, "sw.js"), encoding="utf-8").read())
     site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
     from lib.common import template_hash
     import csv as _csv
@@ -458,6 +478,7 @@ def check_dir(d):
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
     static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json", "/_health.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
+    static |= {"/" + f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))}  # the stylesheets carry a content hash in their name: the file must exist
     graph = {}
     for u, links in links_of.items():
         rel = rel_of[u]
@@ -644,7 +665,7 @@ def selftest():
     a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
     assert near_dupes({"/x/": shingles(a), "/y/": shingles(a.replace("flow 120", "flow 9,400"))}), "selftest: near-duplicate pages (same words, other readings) did not fire"
     assert not near_dupes({"/x/": shingles(a), "/y/": shingles("<main>" + " ".join(wd(i, "z") for i in range(300)) + "</main>")}), "selftest: distinct pages wrongly flagged"
-    good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
+    good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
@@ -675,6 +696,12 @@ def selftest():
              "ok:tidal range containing the value": good.replace('<div class="tile trend"></div>', '<div class="tile flowx"><span>Flow</span><b>11,400 cfs</b><small>Tidal reach: 11,400 to 15,000 cfs over 24 h</small></div><div class="tile trend"></div>'),
              "no unit on Gage height": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>2.53 <small>m</small></b></div>'),
              "ok:gage height not measured": good.replace('<div class="tile stage"></div>', '<div class="tile stage"><span>Gage height</span><b>Not measured</b><small>USGS reports no gage height at this gauge</small></div>'),
+             "does not link the cacheable stylesheet": good.replace('<link rel="stylesheet" href="/site.0123456789.css">', "<style>.a{color:red}</style>"),
+             "does not link the web app manifest": good.replace('<link rel="manifest" href="/manifest.webmanifest">', ""),
+             "inline <style> of": good.replace("<p>x</p>", "<style>" + "a" * 2100 + "</style><p>x</p>"),
+             "ok:small inline style": good.replace("<p>x</p>", "<style>.a{color:red}</style><p>x</p>"),
+             "image after the first without loading=lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" decoding="async">'),
+             "ok:first image eager, the rest lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" loading="lazy" decoding="async">'),
              "&lt;/?[a-zA-Z]+": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p>For more information click &lt;a href=&quot;x.php&quot;&gt;here&lt;/a&gt;.</p>'),
              "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
     obs = {"nwps": {"lid": "MEMT1", "obs_stage": {"t": "2026-10-26T10:00:00Z", "v": 1.6}}}
@@ -683,6 +710,11 @@ def selftest():
     assert claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at), "selftest: hidden NWS stage did not fire"
     assert not claims_vs_cache('<span>Gage height</span><b>1.60 <small>ft</small></b>', obs, at), "selftest: filled NWS stage wrongly failed"
     assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
+    emb = good.replace('<link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest">', "<style>" + "a" * 5000 + "</style>")
+    assert not any("stylesheet" in x or "manifest" in x or "inline <style>" in x for x in check_html(emb, os.path.join("embed", "river", "a", "b", "index.html"))), "selftest: an embed page was wrongly held to the shared-stylesheet rules"
+    sw_real = open(os.path.join(ROOT, "templates", "sw.js"), encoding="utf-8").read()
+    assert not sw_drift(sw_real), "selftest: %s" % sw_drift(sw_real)
+    assert sw_drift(sw_real.replace("m<2880", "m<2881")), "selftest: an sw.js age that drifted from AGE_FN did not fire"
     for want, h in aimed.items():
         got = check_html(h, rel)
         if want.startswith("ok:"):  # a near-miss that must NOT fire (2026-10-26 CI: a tidal range holding the reading)
