@@ -1,51 +1,66 @@
 # PLAN: riverwaterlevels.com
 
 ## Goal
-Be the single most useful page for "<river> <place> water level", one page per USGS gauge. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
+Be the #1 and genuinely most useful page for "<river> <place> water level / flow / today", one page per USGS gauge. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
-## Where we are (2026-10-28)
+## Where we are (2026-10-29)
 - Gauges live: 74 (`data/waves.csv` status=live); queue 7,499, held for names 283, excluded 1,243.
-- Open to Google: `data/index-allow.json` open=true, 30 gauge URLs on the allow list plus site pages.
-- Reviews: 77 signatures in `state/reviews/`: 75 PASS, 1 FAIL (11447650 Sacramento at Freeport, back in queue); `_template` PASS 2026-10-29T02:20Z, level first, template 851f24993c3b.
-- Deploy: live site last confirmed built 2026-10-29T01:01Z, before batches 1-4. Deploys had failed (Node 20 vs wrangler 4.155 needing Node 22, fixed 3f3d03b; a year-1 date crashed the break gate, fixed f0ecd72). Deploy of 3f3d03b..ee232f5: status unknown (not read live).
-- Search Console week 1 (owner report this session): 64 impressions, 0 clicks; 58 from Rio Grande at Albuquerque queries; top query "rio grande water level albuquerque today".
-- Publisher contact: empty in `data/publisher.json` (owner waiver for wave 0).
+- Open to Google: `data/index-allow.json` open=true, site pages open, 30 of 74 gauge URLs allowed (owner 2026-10-29: open all).
+- Reviews: `_template` signed on every pushed code change; 11447650 Sacramento at Freeport FAIL, back in queue.
+- Deploy: live site last confirmed built 2026-10-29T01:01Z. Later pushes failed in CI (Node 20 vs wrangler, year-1 date in break gate, water-temperature years as ints); each fixed (3f3d03b, f0ecd72, 098de3f). Dry run on cloud data passed 2026-10-29 (dryrun.yml, "refresh OK"). Live state after 098de3f: not read yet.
+- Search Console week 1: 64 impressions, 0 clicks; 58 from Rio Grande at Albuquerque queries; top query "rio grande water level albuquerque today". No average position recorded yet.
+- In progress: refactor, one helper per reader-facing decision (18 decisions were computed in 2-4 places, 12 disagreed). Part A must leave pages byte-identical; Part B changes listed page by page.
 
 ## What works
-- Truth checks against live USGS/NWS (`truth_live.py`), signed hater review gate, watchdog self-heal.
+- Truth checks against live USGS/NWS, signed review gate (sized to the change), watchdog self-heal, dry run before deploy.
 - One live-readings path (*/3 Worker cron, KV copy); visitors spend 0 USGS calls.
-- USGS calls moved off retiring services (3d97e6c); collect errors recorded in source health (e1128f3).
 
 ## What does not (yet)
-- Deploys broke silently twice this week; live state after the fixes is unproven.
-- 0 clicks: the meta description now says "today's flow and water level, live from USGS gauge" (ee232f5); effect unknown.
-- Only 30 of 74 live gauges are on the index allow list.
+- Local laptop data differs from the cloud cache: local gates passed three changes the cloud failed. Fix: every change goes through dryrun.yml (branch `check`) before main.
+- 0 clicks; probably page 2 behind USGS/NOAA (position not yet seen).
+
+## Ranking: what is missing for #1 (2026-10-29)
+1. Trust and links (biggest gap): new domain, almost no links. Use the free embed panel: list fishing clubs, outfitters, paddling clubs, county and town pages per live river; Claude drafts each email, the owner sends. No spam, no paid links.
+2. Position data: tick "Average position" in Search Console; work first on pages near page 1.
+3. Time and clicks: first screen must end the search (level, flow, normal or not, when measured, what is coming).
+4. Phone speed: run PageSpeed on the top 5 pages; fix anything failing Core Web Vitals.
+5. Coverage: every new gauge adds its own river-and-town searches; release steadily.
+
+## Helpfulness and information gain (what no other result shows)
+- Already: USGS + NWS forecast + record history + low-water paddling ranges + "normal for the date" in plain words.
+- Add next, each a government dataset found by WebSearch with its source row in `data/sources.json`:
+  - Why the level is what it is: dam releases and irrigation diversions (Bureau of Reclamation, USACE, irrigation districts; e.g. Albuquerque autumn low flow).
+  - Activity facts: state fish stocking reports, swim/E. coli advisories, boating closures, access points.
+  - One line each: what changed since yesterday, what is coming in the next 24 h.
+- Answer each Search Console query on the first screen (e.g. "flow rate": what 2,270 cfs means on this river).
+- Delete repeated text: new information also means less repetition.
 
 ## Next steps (in order)
-1. Confirm the deploy is live: refresh.yml green, `/status.json` built_at after ee232f5, `tools/index_live.py` 0 mismatches. Done when read live.
-2. Release the next 25 gauges: `python -I tools/release.py 25`, FIRST-mode review each. Done when 99 live with PASS signatures.
-3. Open released gauges to Google: `tools/open_wave.py N --apply`. Done when index_live shows them allowed, 0 mismatches.
-4. Week-2 Search Console read: re-cut the release order from queries. Done when picks.csv reflects GSC queries.
-5. Clutter: print each source credit once, chart key once; checks for a sentence repeated 3+ times and a dash in a hero tile (2026-10-26 plan item 3). Status unknown; done when check.py rules with fixtures exist.
-6. Missing fixtures: irregular sampling for the 24 h mean, unit allowlist per field, NWS/USGS datum, ice/canal/estuary gauges. Done when `check.py --selftest` lists them.
-7. CSP report-only to enforce after a live run shows no console errors. Done when the header is enforcing.
-8. Scale before ~150 gauges: shard the collect run by state with per-source TTLs; before 5,000 per-gauge build; before 16,000 Workers Paid file cap. Done when a 150-gauge run finishes inside the hour.
+1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
+2. Open all 74 gauge pages: `python -I tools/open_wave.py 74 --apply` in the same push; sitemap + IndexNow; `python -I tools/index_live.py` 0 mismatches. Done when index_live shows 74 allowed.
+3. Confirm deploy live: `/status.json` built_at after the push, one page body read.
+4. Release the next 25 gauges: `python -I tools/release.py 25`, FIRST-mode review each, open them. Done when 99 live with PASS.
+5. Link outreach list (5 rivers with most impressions first) with drafted emails for the owner. Done when the owner has the drafts.
+6. PageSpeed on top 5 pages. Done when all pass or fixes are pushed.
+7. Datasets for information gain, one per batch: dam releases / diversions first (Albuquerque), then stocking reports, then advisories.
+8. Week-2 Search Console read (with position): re-cut release order and first-screen answers from queries.
+9. Clutter checks: source credit once, chart key once, a sentence repeated 3+ times. Status unknown; done when check.py rules with fixtures exist.
+10. Scale before ~150 gauges: shard collect by state with per-source TTLs. Done when a 150-gauge run finishes inside the hour.
 
 ## Owner only
-- Search Console verification (and watch week 2, 30 days).
+- Send the link-outreach emails (drafts provided).
+- Search Console: tick Average position; request indexing for top pages if wanted.
 - Domain auto-renew (expires 2027-10-16).
-- GitHub dispatch token (fine-grained, Actions write, this repo) as Worker secret `GH_DISPATCH_TOKEN` for the self-heal build trigger.
-- Check Cloudflare KV writes and cron count (account shared, 5 crons); Workers Paid ($5/mo) before ~1,500 gauges.
-- Publisher name and contact email; consent banner and AdSense decision; outside uptime monitor on /status.json and /_truth.json.
+- GitHub dispatch token (fine-grained, Actions write, this repo) as Worker secret `GH_DISPATCH_TOKEN`.
+- Cloudflare KV writes and cron count (account shared, 5 crons); Workers Paid ($5/mo) before ~1,500 gauges.
+- Publisher name and contact email; consent banner and AdSense decision; outside uptime monitor.
 - Source-permission visits: USACE CWMS, TVA, Recreation.gov, NID.
 
 ## Open decisions
 - Regulated gauges: dam name, upstream outflow, schedule link (RISE/CWMS/NID terms unclear).
-- Access points and bacteria advisories held (terms / no national feed). Alerts backend (email/push on a reader's range).
+- Access points and bacteria advisories (terms / no national feed). Alerts backend (email/push on a reader's range).
 
 ## Done recently
-- 2026-10-28 batch 1-2: one staleness table, NWS low-water levels, NWS notes, flood status on forecast tile, exact cfs gaps (4e8c788, 20a0130).
-- 2026-10-28 forecast wording from one rule; forecast compared with one stage everywhere (56c00a6, a021144).
-- 2026-10-28 batch 4: half-up stage gaps, sensor years, break gate survives year-1 dates (f0ecd72); CI on Node 22 (3f3d03b).
+- 2026-10-29 dry run before deploy (dryrun.yml, 3035d71); water-temperature crash fix (098de3f); docs trimmed to CLAUDE.md + PLAN.md (c52b171).
+- 2026-10-28 batches 1-4: staleness table, NWS low-water levels, notes, flood status, forecast wording from one rule (4e8c788, 20a0130, 56c00a6, a021144, f0ecd72).
 - 2026-10-28 meta description "today's flow and water level" (ee232f5).
-- 2026-10-27 Wave 3: 21 gauges live after hater review (23e8f36); Boise live (0e324a4).
