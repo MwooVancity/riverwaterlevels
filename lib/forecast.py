@@ -240,11 +240,14 @@ def b_impacts(G):
     rows = "".join(tr([fv(s_), "<br>".join(esc(x) for x in by[s_])], right=(0,)) for s_ in sorted(by))
     pn = nws_point_note(G)
     gap_ = datum_gap(G)
-    cur_ = fc_cur(G, gap_)  # the reading on the NWS scale (Memphis: no USGS stage, the NWS observes it; hater r8)
+    cur_ = impact_cur(G, gap_)  # the reading on the NWS scale (Memphis: no USGS stage, the NWS observes it; hater r8)
     if flow_:
         gap_, cur_ = None, G["lv"]
     _ref = ("NWS reading of %.2f %s" % (gap_[0], esc(unit))) if gap_ else "latest reading"
-    _lead = ('<p class="src">The NWS reads this gauge on a different zero point from USGS: %.2f %s at %s, when USGS read %.2f %s. The levels and distances below are on the NWS scale.</p>' % (gap_[0], esc(unit), esc(tzl(gap_[2], G["zone"], date=False)), gap_[1], esc(unit))) if gap_ else ""  # full review: Suwannee 54.34 vs 53.51 unexplained
+    _clash = scale_clash(G)
+    if _clash is not None:
+        gap_ = None
+    _lead = ('<p class="src">The NWS stage reading here, %.2f %s, is on a different scale from the impact levels it publishes for this point, so no distance to them is given.</p>' % (_clash, esc(unit))) if _clash is not None else ('<p class="src">The NWS reads this gauge on a different zero point from USGS: %.2f %s at %s, when USGS read %.2f %s. The levels and distances below are on the NWS scale.</p>' % (gap_[0], esc(unit), esc(tzl(gap_[2], G["zone"], date=False)), gap_[1], esc(unit))) if gap_ else ""  # full review: Suwannee 54.34 vs 53.51 unexplained
     ss = sorted(by)
     below_ = [x for x in ss if cur_ is not None and x <= cur_]
     start = ss.index(below_[-1]) if below_ else 0
@@ -260,7 +263,7 @@ def b_impacts(G):
         if cut:
             margin = (margin + "; " if margin else "") + "rest of the statement in the full list below"
         reached = s_ <= (cur_ if cur_ is not None else -1e9)
-        nxt_ = not reached and not said_next  # "Next" only on the first level above the reading (hater 2026-10-27: "NEXT:" on every card)
+        nxt_ = cur_ is not None and not reached and not said_next  # "Next" only on the first level above the reading (hater 2026-10-27: "NEXT:" on every card)
         said_next = said_next or nxt_
         icards.append(card(("Next impact at " if nxt_ else "At ") + fv(s_), esc(short), margin))
     itable = table(["Flow" if flow_ else "Stage", "National Weather Service impact statement"], rows, right=(0,))

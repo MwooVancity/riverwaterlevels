@@ -90,18 +90,32 @@ def page_check(picks_):
     return out
 
 
+def truth_check(picks_):
+    """{site: message} for each new gauge that breaks a truth contract (truth_tests.py, per-gauge contracts only): the same rules the gate runs, so the gate never meets a failure the release could have sent back."""
+    import truth_tests
+    truth_tests.bad.clear()
+    truth_tests.main(only={r["site"] for r in picks_})
+    out = {}
+    for b_ in truth_tests.bad:
+        site_, _, msg_ = b_.partition(": ")
+        out.setdefault(site_, "truth: " + msg_)
+    return out
+
+
 failed = page_check(picks)  # robustness (owner 2026-10-29): one bad page must never block the day's release; it goes back to the queue with its reason and the rest ship
+for s_, m_ in truth_check([r for r in picks if r["site"] not in failed]).items():
+    failed[s_] = m_
 if failed:
     rows = list(csv.DictReader(open(wp, encoding="utf-8")))
     for r in rows:
         if r["site"] in failed:
-            r["status"], r["gate"] = "queue", ("page-check: %s" % failed[r["site"]]).replace("\n", " ")[:300]
+            r["status"], r["gate"] = "queue", (failed[r["site"]] if failed[r["site"]].startswith("truth: ") else "page-check: " + failed[r["site"]]).replace("\n", " ")[:300]
     with open(wp, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()
         w.writerows(rows)
     for s_, m_ in sorted(failed.items()):
-        print("not released (page check): %s  %s" % (s_, m_))
+        print("not released (%s): %s  %s" % ("truth contract" if m_.startswith("truth: ") else "page check", s_, m_))
     picks = [r for r in picks if r["site"] not in failed]
     rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
     if rc:

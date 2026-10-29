@@ -21,7 +21,8 @@ def fail(where, msg):
     bad.append("%s: %s" % (where, msg))
 
 
-def main():
+def main(only=None):
+    """only: a set of sites (tools/release.py judges the day's new gauges one by one); then only the per-gauge contracts run and failures land in `bad` as 'site: message'."""
     rows, _ = load_effective()
     now = datetime.datetime.now(datetime.timezone.utc)
     n = 0
@@ -30,6 +31,8 @@ def main():
         if not f.endswith(".json") or f.startswith("_") or f[:-5] not in rows:
             continue
         site = f[:-5]
+        if only is not None and site not in only:
+            continue
         try:
             G = render.ctx(site, rows[site], json.load(open(os.path.join(ROOT, "cache", f))), now)
         except render.CriticalFail:
@@ -76,8 +79,8 @@ def main():
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):
             fail(site, "flow series holds a sentinel or impossible value (%s)" % [v for v in vals if v <= -900 or v >= 1e7][:2])
-        if G["lv"] < 0 and not G["osc"]:
-            fail(site, "latest flow is negative (%s cfs) at a gauge that is not tidal or oscillating" % G["lv"])
+        if G["lv"] < 0 and not G["osc"] and render.NEG_FLOW_NOTE not in h:
+            fail(site, "latest flow is negative (%s cfs) at a gauge that is not tidal or oscillating and the page does not say it is moving upstream" % G["lv"])
         if G["sg"] and any(x[1] <= -900 for x in G["sg"]):
             fail(site, "gage height series holds a sentinel value")
         if c.get("wt") and not -2 <= (c["wt"]["f"] - 32) / 1.8 <= 42:
@@ -150,10 +153,10 @@ def main():
         if m_then and t_then and m_then.group(1) != t_then.group(1):
             fail(site, "tile says %s cfs 24 h earlier but the rate table says %s cfs" % (m_then.group(1), t_then.group(1)))
         # 16. when the gauge reads at or above the lowest NWS impact stage (same datum), the page quotes the NWS impact for that level
-        imp = [i for i in ((G["rec"].get("nwps") or {}).get("impacts") or []) if isinstance(i.get("stage"), (int, float))]
-        if imp and G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
-            curst = (render.datum_gap(G) or (G["sg"][-1][1],))[0]
-            if curst >= min(i["stage"] for i in imp) and "reached at the latest reading" not in render._forecast.b_impacts(G)["body"]:
+        by_ = render.impact_list(G)  # the page's own list: rain scenarios and "No known impacts" are not impact stages, so they are not owed a quote
+        if by_ and not render.impact_flow(G) and G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
+            curst = render.impact_cur(G, render.datum_gap(G))  # the same reading and scale the impacts block uses; None when the NWS reading is on another scale than its impacts
+            if curst is not None and curst >= min(by_) and "reached at the" not in render._forecast.b_impacts(G)["body"]:
                 fail(site, "the stage (%.2f ft) is at or above an NWS impact stage but the page does not quote it" % curst)
         # 17. the site gives no advice (Methodology: we do not give advice)
         if re.search(r"(?i)get off the water|you should|we recommend|do not (?:enter|swim|boat)", h):
@@ -183,7 +186,7 @@ def main():
             fail(site, "no NWS flood stages and the stage block does not say so")
         if c["wt"] and c["wt"]["f"] < -40:
             fail(site, "impossible water temperature %.0f F shown" % c["wt"]["f"])
-        if c["fc"] and c["fc"]["cur"] is not None and c["fc"]["cur"] > c["fc"]["v"] + 0.1 and "below the latest reading" not in h and not G["osc"]:  # a tidal reach prints the tidal note instead
+        if c["fc"] and c["fc"]["cur"] is not None and render.fc_cmp(c["fc"]["v"], c["fc"]["cur"], c["fc"]["unit"]) == "below" and "below the latest reading" not in h and not G["osc"]:  # a tidal reach prints the tidal note instead
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:
@@ -191,6 +194,8 @@ def main():
                 fail(site, "active alert: banner missing or empty-alert tile still shown")
             if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No active NWS alerts" not in h:  # an old answer says so instead (contract 18); a fresh none is the answer pill
                 fail(site, "no alert: the answer pill does not say so")
+    if only is not None:
+        return 1 if bad else 0
     if n < 5:
         fail("setup", "only %d gauges rendered" % n)
 
@@ -276,4 +281,5 @@ def main():
     return 1 if bad else 0
 
 
-sys.exit(main())
+if __name__ == "__main__":
+    sys.exit(main())

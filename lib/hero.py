@@ -310,7 +310,7 @@ def hero(G, pages=None):
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         if v24_:
             dir_chip = "%s: %s to %s cfs over 24 h%s" % (osc_word(G, "chip"), fmtc(min(v24_)), fmtc(max(v24_)), " (below zero: the tide pushes water upstream)" if min(v24_) < 0 else "")
-    tiles = pre.replace("@@DIR@@", '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(tile_dir_word(dir_chip) if dir_chip else "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
+    tiles = pre.replace("@@DIR@@", ('<small class="neg">%s</small>' % NEG_FLOW_NOTE if G["lv"] is not None and G["lv"] < 0 and not G["osc"] else "") + '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(tile_dir_word(dir_chip) if dir_chip else "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
         fcw = c["fc"]
@@ -549,7 +549,7 @@ def impact_list(G):
             continue
         t = re.sub(r"<[^>]+>", "", html.unescape(i.get("statement") or "")).strip()
         t = re.sub(r"\s*\+\s*$", "", re.sub(r"(?i)\s*for more information,?\s*(please\s*)?click here\.?", "", t)).strip()  # full review: dead link text and a stray "+"
-        if len(t) < 30 or re.search(r"(?i)\binch(es)?\b[^.]{0,40}\b\d+\s*hours?\b", t):
+        if len(t) < 30 or re.match(r"(?i)no known impacts", t) or re.search(r"(?i)\binch(es)?\b[^.]{0,40}\b\d+\s*hours?\b", t):
             continue
         if sum(ch.isupper() for ch in t) > 0.6 * max(1, sum(ch.isalpha() for ch in t)):
             t = re.sub(r"(^|[.!?]\s+)([a-z])", lambda m: m.group(1) + m.group(2).upper(), t.lower())
@@ -561,11 +561,27 @@ def impact_list(G):
     return by
 
 
+NEG_FLOW_NOTE = "Negative flow: water moving upstream at this gauge (backwater), as USGS reports it"  # USGS publishes negative discharge where the flow reverses; shown as reported, with this one line (truth_tests accepts a negative flow only beside it)
+
+
+def scale_clash(G):
+    """The NWS stage reading when it sits more than 100 ft above every impact and flood stage the same NWS point publishes: the point reads elevation, its impacts are gage heights (Minnesota at Lac qui Parle dam tail: 922.65 ft beside a top impact of 41.45 ft), so the reading cannot be measured against them. None otherwise."""
+    n = G["rec"].get("nwps") or {}
+    tops = [v for v in list((n.get("categories") or {}).values()) + [i.get("stage") for i in n.get("impacts") or []] if isinstance(v, (int, float))]
+    cur = fc_cur(G, datum_gap(G))
+    return cur if cur is not None and tops and cur - max(tops) > 100 else None
+
+
+def impact_cur(G, gap):
+    """The reading impacts are measured against: fc_cur, or None when the NWS reading is on another scale than its own impacts (scale_clash). The impacts block, the gage tile's next-impact line and the truth test all call this."""
+    return None if scale_clash(G) is not None else fc_cur(G, gap)
+
+
 def next_impact(G):
     """The next NWS impact statement above the latest reading, short, for the gage tile: the first thing a wader or boater wants to know about the level."""
     n = G["rec"].get("nwps") or {}
     gap = datum_gap(G)
-    cur = fc_cur(G, gap)
+    cur = impact_cur(G, gap)
     if cur is None:
         return ""
     unit = (n.get("stage_units") or "ft").lower()
