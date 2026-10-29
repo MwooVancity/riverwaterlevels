@@ -49,6 +49,19 @@ Ranking work in parallel: link outreach drafts (owner sends), first-screen answe
 - Answer each Search Console query on the first screen (e.g. "flow rate": what 2,270 cfs means on this river).
 - Delete repeated text: new information also means less repetition.
 
+## Helpful-site gaps beyond data (owner 2026-10-29: "what else did you miss")
+In order of value to a person at the river:
+1. Works offline / weak signal: service worker keeps the last page and reading with its age; radar and big images load on tap.
+2. Favorite rivers: star a gauge; home page shows your rivers first with current flow (browser storage, no account).
+3. Safety data, never a verdict: low-head dams near the gauge (National Inventory of Dams), state life-jacket and boating rules.
+4. Units switch: cfs/m3/s, ft/m, F/C.
+5. Hourly conditions word + icon (NWS shortForecast), wind arrows, 7-day strip, empty states as one line, one source link per card.
+6. Share card: Open Graph image of the current-flow card; add to home screen (web app manifest).
+7. Plain-language "what this number means" taps; accessibility pass (contrast, text size, tap targets, labels).
+8. About page a person reads (who, why, how numbers are checked, corrections, contact); "checked against USGS at <time>" on each page.
+9. Search past ~150 gauges (known bug), confirm "near me" on a phone.
+10. Alerts by email/push when a river crosses a reader's level (needs a backend; open decision).
+
 ## Next steps (in order)
 1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
 2. Open all 74 gauge pages: `python -I tools/open_wave.py 74 --apply` in the same push; sitemap + IndexNow; `python -I tools/index_live.py` 0 mismatches. Done when index_live shows 74 allowed.
