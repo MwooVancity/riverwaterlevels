@@ -56,6 +56,8 @@ A person at or near this river today, on a phone, with 30 seconds: about to fish
 - Non-visual changes (robots/index tags, tools, CI, docs, type fixes covered by a check) are signed `--level=machine` by the builder, never screenshot-reviewed.
 - New gauges ship on machine gates (check.py, truth_live, break gate, cloud dry run), not a per-gauge review (owner 2026-10-29, first-principles pass in PLAN.md); light review only for a data shape no reviewed page has.
 
+- Helpfulness has one master checklist: `tools/helpful_audit.md` (categories A-Q, reader to UI). Every build batch checks the categories it touches; a full audit runs all categories on 3 contrasting pages + home, state and hub pages, text pass first, screenshots only for [eyes] items.
+
 ## Review (signed-review gate)
 - Enforced in `check.py` `review_gaps`: every live gauge needs a signed PASS in `state/reviews/<site>.json`; any change to page code (`lib/`, `templates/`, `build.py`, `collect.py`, `worker/index.js`: `template_hash()`) needs a fresh `_template` PASS before deploy. Signatures append to `state/reviews/_log.jsonl`.
 - Size the review to the change (global CLAUDE.md "Size every review to the change"); say the level and cost in one line first:
