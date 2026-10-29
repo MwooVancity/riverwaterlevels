@@ -54,9 +54,10 @@ def clean(raw):
 def main():
     rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8")))
     ov = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "name-overrides.csv"), encoding="utf-8"))}
+    LIVE_NOW = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     fixed, left = [], 0
     for r in rows:
-        if r["name_confidence"] != "low" or r["site"] in WAVE0 or r["site"] in ov:
+        if r["name_confidence"] != "low" or r["site"] in WAVE0 or r["site"] in ov or r["site"] in LIVE_NOW:
             continue
         river, place, bad, had_place = clean(r["raw_name"])
         raw = r["raw_name"]

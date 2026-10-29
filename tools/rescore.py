@@ -176,9 +176,13 @@ def main():
             if i >= 2:
                 pen += 10
             x["score"] = round(max(0.0, x["raw"] - pen), 1)
-    live = set(WAVE0)
+    try:
+        now_ = {r["site"]: r["status"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8"))}
+    except OSError:
+        now_ = {}
+    live = {s for s, st in now_.items() if st == "live"} if now_ else set(WAVE0)
     for x in out:
-        x["status"] = "live" if x["site"] in live else ("excluded" if x["gate"] else "held-names" if x["name"] == "low" else "queue")
+        x["status"] = "live" if x["site"] in live else "queue" if now_.get(x["site"]) == "queue" and not x["gate"] else ("excluded" if x["gate"] else "held-names" if x["name"] == "low" else "queue")
     queue = sorted([x for x in out if x["status"] == "queue"], key=lambda x: -x["score"])
     day, pending = 1, list(queue)
     while pending:

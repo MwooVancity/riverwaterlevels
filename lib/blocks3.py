@@ -332,7 +332,7 @@ def conditions(G, pages=None):
                          "cur": (gap[0] if gap else (G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None)) if unit == "ft" else G["lv"]}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
-        al = [x for x in nws["alerts"] if (x.get("event") or "") not in IGNORED_ALERTS]
+        al = live_alerts(G) or []
         out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "age_h": hours_old(nws["fetched_at"], G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
@@ -436,7 +436,7 @@ def b_recreation(G):
     r = dict(r, sites=[dict(x, phone=_phone(x.get("phone")), type=("Day-use area" if x.get("type") == "Campground" and re.search(r"(?i)picnic|day use|pavilion|shelter", x["name"]) else x.get("type"))) for x in r["sites"]])
     if not r["sites"]:
         return None  # hater r5: Memphis showed a heading with no rows after the hotel left
-    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if x.get("url") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3]) or "not listed"), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(2,)) for x in r["sites"])
+    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if str(x.get("url") or "").startswith("https://") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3]) or "not listed"), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(2,)) for x in r["sites"])
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency", table(["Site", "Type", "Distance", "Activities listed", "Phone"], rows, right=(2,)),
                  "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Distances are straight-line from the gauge.%s Fetched %s." % ("", esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "ridb")  # was a table row that phones showed as a fake site card (hater 2026-10-27)
 

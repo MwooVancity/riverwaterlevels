@@ -91,6 +91,8 @@ def daily_swing(G):
 def model_gap(G, first):
     """A note when the model's first hour is more than 20% away from the measured flow: read its shape, not its numbers."""
     lv = G.get("lv")
+    if G.get("age_min", 0) > 180:  # an old reading is not "the gauge measured"
+        return ""
     if not lv or first is None or lv <= 0 or abs(first - lv) / lv <= 0.05:  # hater r4: an 8% gap at Billings had no note
         return ""
     return '<p class="src">The model starts at %s cfs while the gauge measured %s cfs (%+.0f%%): read the model for the direction it shows, not its numbers.</p>' % (fmtc(first), fmtc(lv), 100 * (first - lv) / lv)
@@ -159,7 +161,7 @@ def datum_gap(G):
     except (KeyError, TypeError, ValueError):
         return None
     u = min(sg, key=lambda x: abs((x[0] - t).total_seconds()))
-    if abs((u[0] - t).total_seconds()) > 1800:
+    if abs((u[0] - t).total_seconds()) > 600:
         return None
     return (v, u[1], t) if abs(v - u[1]) > 0.3 else None
 
@@ -353,7 +355,7 @@ def hero(G, pages=None):
     band_cls = "" if p is None else "la" if p != 101 and p < 25 else "lp" if p == 101 or p > 75 else "lb"
     fc_ = c.get("fc") or {}
     if fc_.get("cur") is not None and fc_.get("v") is not None and fc_.get("t"):
-        fu_ = "ft" if fc_["v"] < 100 and fc_["cur"] < 100 else "cfs"
+        fu_ = "cfs" if (fc_.get("unit") or "ft") == "cfs" else "ft"
         big_rise = (fc_["v"] - fc_["cur"] >= 1.0) if fu_ == "ft" else (fc_["cur"] > 0 and fc_["v"] >= 1.25 * fc_["cur"])
         if big_rise:
             dir_chip = (dir_chip or "Direction unclear") + "; NWS forecast rises to %s by %s" % (("%.1f ft" % fc_["v"]) if fu_ == "ft" else ("%s cfs" % fmtc(fc_["v"])), fc_["t"])
@@ -371,14 +373,15 @@ def hero(G, pages=None):
         wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
         # a station name that opens with a sensor code ("070W10895RWS1RP1 at Canyon Creek Rd") keeps only the place
         strip += ui.tile("air", "wind", "Air temperature", '<span data-wx="temp0">%.0f</span><small>&deg;F</small>' % a["f"], ('<small data-wx="wind0">%s</small>' % wtxt if wtxt else "") + '<small>Weather station %s%s%s, <span data-wx="t">%s</span></small>' % (esc(a["st"]), (" (" + esc(re.sub(r"^\S*\d\S*\s+(at|near)\s+", "", a["name"])) + ")") if a.get("name") else "", (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])) + point_temp_note(G, a["f"]).replace("<small>", '<small data-wx="note">', 1) + ('<span hidden data-wxst="%s" data-t="%s"></span>' % (esc(a["st"]), esc(a["iso"])) if a.get("iso") else ""))  # inside the tile (hater r6: the note floated loose)
-    st_ = sun_times(G["lat"], G["lon"], G["ldate"])
-    nx_ = sun_times(G["lat"], G["lon"], G["ldate"] + datetime.timedelta(days=1)) if st_ and G["now"] > st_[1] else None
+    td_ = G["now"].astimezone(G["zone"]).date()  # today at the gauge (a gauge offline for days must not show an old sunset as today's)
+    st_ = sun_times(G["lat"], G["lon"], td_)
+    nx_ = sun_times(G["lat"], G["lon"], td_ + datetime.timedelta(days=1)) if st_ and G["now"] > st_[1] else None
     if nx_:  # after sunset the next thing a reader plans around is sunrise (hater 2026-10-27: "Sunset today" shown at night)
         rh, _, rz = tzl(nx_[0], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
         strip += ui.tile("sun", "sun", "Sunrise tomorrow", '%s <small>%s</small>' % (esc(rh), esc(rz)), '<small>Sunset today was %s &middot; computed from location and date</small>' % esc(tzl(st_[1], G["zone"], date=False)))
     elif st_:
         sh, _, sz = tzl(st_[1], G["zone"], date=False).replace("\u00a0", " ").rpartition(" ")
-        strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], G["ldate"], -6.0)) else "", moon_phase(G["ldate"])[0].lower(), moon_phase(G["ldate"])[1]))
+        strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], td_, -6.0)) else "", moon_phase(td_)[0].lower(), moon_phase(td_)[1]))
     # "Calm daylight hours" tile deleted 2026-10-27: "calm" was our own threshold, not a source's; it failed 3 of 6 hater pages (gusts ignored, an hour past sunset). The hourly table shows wind, gusts and thunder per hour.
     gone = []
     if not c["wt"] and not series(G["rec"], "00010") and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600):
@@ -414,7 +417,7 @@ def last_year_flow(G):
     except ValueError:
         return None
     idx = span - 1 - off
-    row = ser.get(str(G["ldate"].year - 1))
+    row = ser.get(str((datetime.date.fromisoformat(as_of) if off < 0 else G["ldate"]).year - 1))
     if row is None:
         return None
     if off < 0 and len(row):  # the daily window ends at as_of (USGS daily means lag a day or two): use its last day and name the date

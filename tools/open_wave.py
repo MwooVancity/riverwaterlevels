@@ -26,10 +26,11 @@ def main():
     pub = load(os.path.join(ROOT, "data", "publisher.json"), {})
     if "--apply" in sys.argv and "@" not in str(pub.get("email") or "") and not pub.get("waived"):
         sys.exit("refused: data/publisher.json has no contact email and no owner waiver. A page may not be indexed without a named publisher and a corrections contact unless the owner waives it in writing there (docs/RUNBOOK.md, precondition 6).")
-    live = set(load(os.path.join(ROOT, "dist", "_urls.json"), {"urls": []})["urls"])
+    D = max((os.path.join(ROOT, x) for x in ("dist", "dist_next") if os.path.exists(os.path.join(ROOT, x, "_urls.json"))), key=lambda p: os.path.getmtime(os.path.join(p, "_urls.json")), default=os.path.join(ROOT, "dist"))
+    live = set(load(os.path.join(D, "_urls.json"), {"urls": []})["urls"])
     have = set(cfg["allow"])
     pick = []
-    blocks = load(os.path.join(ROOT, "dist", "_blocks.json"), {})
+    blocks = load(os.path.join(D, "_blocks.json"), {})
     years = {r["site"]: int(r["years_record"] or 0) for r in csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8"))}
     skipped = {"gate": 0, "few blocks": 0, "short record": 0}
     for row in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")):

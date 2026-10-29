@@ -1,9 +1,9 @@
 {
  "id": "01426500",
  "verdict": "PASS",
- "notes": "No F1-F8. NOTES: hero 'NWS FORECAST 2.5 FT' does not show the forecast was issued Oct 27, 10:37 AM (shown only in River forecast block, phone-07); NWS 2.5 ft = 370 cfs vs USGS 2.67 ft = 466 cfs are two labelled ratings; visibility '\u2013' for the last 2 hourly columns is a feed gap (text.txt l.94); camera image Aug 22 is old but labelled '2 months before this page was built' (phone-09); 0 of 30 vs past 28 days are labelled windows; offline map/radar artifacts",
- "by": "hater-w9a",
- "at": "2026-10-29T00:22:02+00:00",
- "template": "de367e70cf4d",
+ "notes": "No F1-F8. NOTES: hero 'NWS FORECAST 2.5 FT' omits the forecast issue time Oct 27, 10:37 AM (only in River forecast block, phone-07); NWS 2.5 ft = 370 cfs vs USGS 2.67 ft = 466 cfs are two labelled ratings; visibility '-' in last 2 hourly columns is a feed gap (text.txt); camera image Aug 22 labelled '2 months before this page was built' (phone-09); 0 of 30 vs past 28 days are labelled windows; 63 stat years vs 114 daily-value years labelled; all flood-impact gaps (8.3/10.3/12.3/14.1/16.4/17.6 ft) check against 2.67 ft; offline map/radar artifacts",
+ "by": "hater-w10a",
+ "at": "2026-10-29T00:56:25+00:00",
+ "template": "5c4cb84ca87b",
  "level": "full"
 }

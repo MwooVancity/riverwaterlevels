@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "No F1-F8. NOTES (worst first): 'Recent rain at the gauge location' Last 2 days/Last 3 days to Oct 28 6:00 AM: 0.00 in (phone-04) while 5 stations 1-4 mi away recorded 0.06-0.14 in on Oct 27 and 0.06 in Oct 26 (phone-07/08), two labelled datasets but the 'does not line up' caveat shown on other pages is missing here and the Last 24 h row is absent: verify the RFC 48/72 h source is not zero-filled; water temp source in raw USGS abbreviations 'Freestone Cr at Freestone Cr Trailhead Nr Boise Id' (phone-02); SNOTEL distance only inside toggle (phone-11); 'Highest forecast' 3.3 ft at 235 cfs while later 3.3 ft points reach 237 cfs (phone-07); NY Canal Diversion listed as an upstream river forecast point (phone-13)",
- "by": "hater-w9a",
- "at": "2026-10-29T00:22:02+00:00",
- "template": "de367e70cf4d",
+ "notes": "No F1-F8. NOTES (worst first): 'Recent rain at the gauge location' Last 2 days/Last 3 days to Oct 28, 6:00 AM: 0.00 in (phone-04, NWS RFC estimate) while Boise 5.3 NW (1 mi) recorded 0.06 in Oct 26 and three stations 2-3 mi away 0.06-0.14 in Oct 27 (phone-07/08): two labelled datasets, but the 'does not line up' caveat shown on 01426500 is missing here and the Last 24 h row is absent; impact gaps round 5s down ('3,960 cfs above' for 4,200-235=3,965, also 4,660/6,260/6,760/8,260/8,660, phone-01/05/06); 'Highest forecast' Nov 1, 5:00 AM 3.3 ft at 235 cfs while later 3.3 ft points show 236-237 cfs (NWS stage published at 0.1 ft, tie; phone-07); hero water temp in raw USGS abbreviations 'Freestone Cr at Freestone Cr Trailhead Nr Boise Id' (phone-02); Oct typical temp from 8 days, marked '(few)' (phone-10); SNOTEL distances inside toggle (phone-11); 44/47 years labelled datasets",
+ "by": "hater-w10a",
+ "at": "2026-10-29T00:56:25+00:00",
+ "template": "5c4cb84ca87b",
  "level": "full"
 }

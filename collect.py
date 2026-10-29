@@ -29,7 +29,8 @@ def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 502, 503, 504) or i == tries - 1:
                 raise
-            time.sleep(min(60, float(e.headers.get("Retry-After") or 3 * 2 ** i)))
+            ra = e.headers.get("Retry-After") or ""
+            time.sleep(min(60, float(ra) if ra.replace(".", "", 1).isdigit() else 3 * 2 ** i))
     raise RuntimeError("unreachable")
 
 
@@ -66,7 +67,7 @@ def fetch_usgs(site, h):
     return {"fetched_at": now_iso(), "rows": rows, "truncated": trunc}
 
 
-def fetch_related(site, inv, h):
+def fetch_related(site, inv, h, prev=None):
     out = []
     for nav, rel in (("UM", "upstream"), ("DM", "downstream")):
         try:
@@ -78,7 +79,8 @@ def fetch_related(site, inv, h):
             sid = str(f["properties"].get("identifier", "")).replace("USGS-", "")
             if sid in inv and sid != site and sid not in [x["site"] for x in out]:
                 out.append({"site": sid, "relation": rel})
-    res, out = [], out[:12]
+    res, out = [], [x for x in out if x["relation"] == "upstream"][:6] + [x for x in out if x["relation"] == "downstream"][:6]
+    lag0 = {x["site"]: x for x in ((prev or {}).get("items") or []) if x.get("lag_h")}
     got = {}
     if out:  # one bulk call for every neighbour (was one call each, up to 12 per gauge)
         try:
@@ -91,11 +93,13 @@ def fetch_related(site, inv, h):
     for x in out:
         if x["site"] in got:
             x["flow"], x["time"] = got[x["site"]]
+            if x["site"] in lag0:  # related_lag refreshes these on its own timer
+                x["lag_h"], x["lag_r"] = lag0[x["site"]]["lag_h"], lag0[x["site"]].get("lag_r")
             res.append(x)
     return {"fetched_at": now_iso(), "items": res}
 
 
-def fetch_nwps(site, lat, lon):
+def fetch_nwps(site, lat, lon, prev=None):
     """NWPS answers /gauges/<USGS id> directly; the returned usgsId must equal the gauge, so a coordinate match is never used."""
     import urllib.error, math
     cw = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nws-crosswalk.json"))).get(site)
@@ -122,15 +126,17 @@ def fetch_nwps(site, lat, lon):
             for k, v in ((det.get("flood") or {}).get("categories") or {}).items():
                 if isinstance(v, dict) and isinstance(v.get("stage"), (int, float)) and v["stage"] > -990:
                     cats[k] = v["stage"]
-            fc = None
+            p0 = prev if isinstance(prev, dict) and prev.get("lid") == x["lid"] else {}  # a failed sub-request keeps the previous value
+            fc = p0.get("forecast")
             try:
                 j = thr_json(NWPS + "gauges/%s/stageflow/forecast" % x["lid"], NWPS_H)
+                fc = None
                 pts = [{"t": p.get("validTime"), "primary": p.get("primary"), "secondary": p.get("secondary")} for p in (j.get("data") or []) if isinstance(p.get("primary"), (int, float)) and p["primary"] > -990]
                 if pts:
                     fc = {"issued": j.get("issuedTime"), "primary_units": j.get("primaryUnits"), "secondary_units": j.get("secondaryUnits"), "points": pts[:400]}
             except Exception as e:
                 note("nwps.forecast", "failed", e)
-            rflow = {}
+            rflow = p0.get("riverflow") or {}
             try:
                 rf = thr_json(NWPS + "gauges/%s/riverflow" % x["lid"], NWPS_H)
                 # NWPS lists upstream farthest first and downstream nearest first: keep the six nearest of each
@@ -138,9 +144,10 @@ def fetch_nwps(site, lat, lon):
                 rflow = {"upstream": allp["upstream"][-6:], "downstream": allp["downstream"][:6], "upstream_n": len(allp["upstream"]), "downstream_n": len(allp["downstream"])}
             except Exception as e:
                 note("nwps.reach_flow", "failed", e)
-            obs_stage, obs_series = None, []
+            obs_stage, obs_series = p0.get("obs_stage"), p0.get("obs_series") or []
             try:
                 ob = thr_json(NWPS + "gauges/%s/stageflow/observed" % x["lid"], NWPS_H)
+                obs_stage, obs_series = None, []
                 col = "primary" if (ob.get("primaryUnits") or "").lower() == "ft" else "secondary" if (ob.get("secondaryUnits") or "").lower() == "ft" else None  # the height column is found by its units, not its position
                 pts = [p for p in (ob.get("data") or []) if col and isinstance(p.get(col), (int, float)) and p[col] > -900]
                 if pts:
@@ -463,11 +470,9 @@ def fetch_access(lat, lon, radius_m=25000):
                 import time
                 time.sleep(8)
                 continue
-            return None
-        except Exception:
-            return None
+            raise
     if els is None:
-        return None
+        raise RuntimeError("Overpass gave no answer")
     rows = []
     for e in els:
         t = e.get("tags", {})
@@ -600,12 +605,12 @@ def nws_static(lat, lon, prev):
     """The /points lookup, the radar station position and the nearest observation station do not change: fetched once a week and kept in nws["static"] (sweep 2026-10-21: 3 of the 8 NWS calls per gauge per 30-min run were these)."""
     old = (prev.get("static") or {}) if isinstance(prev, dict) else {}
     try:
-        if old.get("points") and (datetime.datetime.now(datetime.timezone.utc) - parse_t(old["fetched_at"])).total_seconds() < 7 * 86400:
+        if old.get("points") and old.get("station") and (datetime.datetime.now(datetime.timezone.utc) - parse_t(old["fetched_at"])).total_seconds() < 7 * 86400:
             return old
     except (TypeError, ValueError, KeyError):
         pass
     pt = thr_json("https://api.weather.gov/points/%.4f,%.4f" % (lat, lon), NWS_H).get("properties", {})
-    out = {"fetched_at": now_iso(), "points": {k: pt.get(k) for k in ("timeZone", "county", "radarStation", "forecast", "forecastHourly", "forecastGridData", "observationStations")}, "radar_ll": None, "station": None}
+    out = {"fetched_at": now_iso(), "points": {k: pt.get(k) for k in ("timeZone", "county", "radarStation", "forecast", "forecastHourly", "forecastGridData", "observationStations")}, "radar_ll": old.get("radar_ll"), "station": old.get("station")}
     try:
         if pt.get("radarStation"):
             out["radar_ll"] = thr_json("https://api.weather.gov/radar/stations/%s" % pt["radarStation"], NWS_H).get("geometry", {}).get("coordinates")
@@ -623,6 +628,10 @@ def fetch_nws(lat, lon, prev=None):
     S = nws_static(lat, lon, prev)
     pt = S["points"]
     out = {"fetched_at": now_iso(), "static": S, "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": S["radar_ll"], "periods": [], "alerts": None, "obs": None}
+    p0 = prev if isinstance(prev, dict) else {}
+    for k in ("periods", "forecast_updated", "hourly", "hourly_updated", "grid", "obs"):  # alerts are not carried: an old alert must never read as active
+        if p0.get(k) is not None:
+            out[k] = p0[k]
     try:
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
@@ -827,7 +836,8 @@ def fetch_near_wtemp(site, lat, lon, river, h):
     if series_has(site, "00010", h):
         return None
     d = thr_json(BASE + "latest-continuous/items?parameter_code=00010&bbox=%.3f,%.3f,%.3f,%.3f&limit=400&f=json" % (lon - 0.6, lat - 0.6, lon + 0.6, lat + 0.6), h, 120)
-    word = (river or "").split()[0].lower() if river else ""
+    _skip = {"e", "w", "n", "s", "ne", "nw", "se", "sw", "east", "west", "north", "south", "fk", "fork", "little", "lt", "br", "branch", "middle", "m", "nf", "sf", "mf", "the", "lower", "upper"}
+    word = next((w for w in re.findall(r"[a-z]+", (river or "").lower()) if w not in _skip and len(w) > 2), "")  # "E FK CARSON R" matches on carson, never on "e"
     cands = []
     for f in d.get("features", []):
         q, g = f["properties"], (f.get("geometry") or {}).get("coordinates") or []
@@ -841,7 +851,7 @@ def fetch_near_wtemp(site, lat, lon, river, h):
     for mi, sid, v, t, unit in sorted(cands)[:8]:
         m = thr_json(BASE + "monitoring-locations/items?id=%s&f=json" % sid, h, 60)
         name = ((m.get("features") or [{}])[0].get("properties") or {}).get("monitoring_location_name") or ""
-        if word and word in name.lower():
+        if word and re.search(r"\b%s\b" % re.escape(word), name.lower()) and (unit or "").lower() in ("degc", "deg c", "°c", "c", "degf", "deg f", "°f", "f"):
             c = v if (unit or "").lower() in ("degc", "deg c", "°c", "c") else (v - 32) * 5 / 9
             return {"fetched_at": now_iso(), "site": sid.replace("USGS-", ""), "name": name, "c": round(c, 1), "f": round(c * 9 / 5 + 32, 1), "t": t, "mi": round(mi, 1)}
     return None
@@ -852,7 +862,7 @@ def series_has(site, code, h):
         d = thr_json(BASE + "latest-continuous/items?monitoring_location_id=USGS-%s&parameter_code=%s&f=json" % (site, code), h, 60)
         return bool(d.get("features"))
     except Exception:
-        return True  # unknown: do not fetch a neighbour on a guess
+        raise  # unknown: the caller fails and keeps its previous value (never a guess)
 
 
 def secret(name):
@@ -1054,7 +1064,7 @@ def fetch_extras(site, rec, h, log):
         stamp = rec.setdefault("_fetched", {})
         if not want and not (daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 6)):
             continue
-        if run_source(rec, key, fn, log):
+        if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
             stamp[key] = now_iso()
 
 
@@ -1068,7 +1078,7 @@ def collect(site, inv):
     rec["river_name"] = g.get("name")
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
-    for key, fn in (("related", lambda: fetch_related(site, inv, h)), ("nwps", lambda: fetch_nwps(site, lat, lon)), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
+    for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
         run_source(rec, key, fn, log)
     if nwm_due(rec):
         run_source(rec, "nwm", lambda: fetch_nwm(site, rec.get("nwm")), log)
@@ -1167,7 +1177,11 @@ def fast_usgs(sites, h):
     for i in range(0, len(sites), 300):
         url, pages = BASE + "continuous/items?monitoring_location_id=%s&parameter_code=%s&time=PT3H&limit=10000&skipGeometry=true&f=json" % (",".join("USGS-" + s for s in sites[i:i + 300]), CODES), 0
         while url and pages < 20:
-            d = thr_json(url, h, 120, gap=1.0)
+            try:
+                d = thr_json(url, h, 120, gap=1.0)
+            except Exception as e:  # this chunk's gauges get no new rows this run; the others keep theirs
+                note("usgs.chunk", "failed", e)
+                break
             pages += 1
             for f in d.get("features", []):
                 p = f["properties"]
@@ -1175,6 +1189,8 @@ def fast_usgs(sites, h):
                     continue
                 out.setdefault(str(p.get("monitoring_location_id", ""))[5:], []).append({k: p.get(k) for k in ("parameter_code", "time", "value", "unit_of_measure", "qualifier", "approval_status") if k in p})
             url = next((l.get("href") for l in d.get("links", []) if l.get("rel") == "next"), None)
+        if url:
+            note("usgs.chunk", "failed", "20-page cap reached: later rows of this chunk wait for the next run")
     return out
 
 
@@ -1187,53 +1203,57 @@ def fast(inv, sites):
         note("usgs", "failed", e)
         new = {}
     for s in sites:
-        path = os.path.join(CACHE, s + ".json")
-        if not os.path.exists(path):  # a new live gauge: its first run is a full collect
-            try:
-                rec, log = collect(s, inv)
-            except Exception as e:
-                print("FAIL new gauge", s, str(e)[:100], "(retried next run)")
-                note("usgs", "failed", e)
+        try:  # collect review #3: one gauge's bad cache or locked file is that gauge's failure, never the whole run's
+            path = os.path.join(CACHE, s + ".json")
+            if not os.path.exists(path):  # a new live gauge: its first run is a full collect
+                try:
+                    rec, log = collect(s, inv)
+                except Exception as e:
+                    print("FAIL new gauge", s, str(e)[:100], "(retried next run)")
+                    note("usgs", "failed", e)
+                    continue
+                note("usgs", "ok")
+                json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
+                os.replace(path + ".tmp", path)
+                print("ok new gauge", s, "; ".join(log))
                 continue
-            note("usgs", "ok")
+            rec, log = json.load(open(path)), []
+            have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
+            add = [r for r in new.get(s, []) if (r["parameter_code"], r["time"]) not in have]
+            cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
+            rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] + add if str(r["time"]) >= cutoff]
+            if add:
+                rec["usgs"]["fetched_at"] = now_iso()
+            note("usgs", "ok" if s in new else "absent")
+            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
+                run_source(rec, key, fn, log)
+            if nwm_due(rec):
+                run_source(rec, "nwm", lambda: fetch_nwm(s, rec.get("nwm")), log)
+            stamp = rec.setdefault("_fetched", {})
+            if daily_due(stamp.get("usgs_full")):  # once a day the whole 8-day series again: USGS revises provisional readings
+                try:
+                    rec["usgs"], stamp["usgs_full"] = fetch_usgs(s, h), now_iso()
+                except Exception as e:
+                    log.append("usgs_full FAILED (%s), kept previous" % str(e)[:60])
+                    note("usgs_full", "failed", e)
+            if daily_due(stamp.get("related_list")) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
+                stamp["related_list"] = now_iso()
+            sp = os.path.join(LEGACY, "stats", s + ".json")
+            if os.path.exists(sp):
+                rec["stats"] = json.load(open(sp))["d"]
+                rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
+            fetch_extras(s, rec, h, log)
+            land = fetch_land(s)
+            if land:
+                rec["land"] = land
+            rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
+            rec["fetched_at"] = now_iso()
             json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
-            print("ok new gauge", s, "; ".join(log))
-            continue
-        rec, log = json.load(open(path)), []
-        have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
-        add = [r for r in new.get(s, []) if (r["parameter_code"], r["time"]) not in have]
-        cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
-        rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] + add if str(r["time"]) >= cutoff]
-        if add:
-            rec["usgs"]["fetched_at"] = now_iso()
-        note("usgs", "ok" if s in new else "absent")
-        for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"])), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
-            run_source(rec, key, fn, log)
-        if nwm_due(rec):
-            run_source(rec, "nwm", lambda: fetch_nwm(s, rec.get("nwm")), log)
-        stamp = rec.setdefault("_fetched", {})
-        if daily_due(stamp.get("usgs_full")):  # once a day the whole 8-day series again: USGS revises provisional readings
-            try:
-                rec["usgs"], stamp["usgs_full"] = fetch_usgs(s, h), now_iso()
-            except Exception as e:
-                log.append("usgs_full FAILED (%s), kept previous" % str(e)[:60])
-                note("usgs_full", "failed", e)
-        if daily_due(stamp.get("related_list")) and run_source(rec, "related", lambda: fetch_related(s, inv, h), log):
-            stamp["related_list"] = now_iso()
-        sp = os.path.join(LEGACY, "stats", s + ".json")
-        if os.path.exists(sp):
-            rec["stats"] = json.load(open(sp))["d"]
-            rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
-        fetch_extras(s, rec, h, log)
-        land = fetch_land(s)
-        if land:
-            rec["land"] = land
-        rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
-        rec["fetched_at"] = now_iso()
-        json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
-        os.replace(path + ".tmp", path)
-        print("ok", s, "new usgs rows", len(add), "; ".join(log))
+            print("ok", s, "new usgs rows", len(add), "; ".join(log))
+        except Exception as e:
+            print("FAIL gauge", s, type(e).__name__, str(e)[:100], "(its previous cache stays)")
+            note("gauge", "failed", e)
     recs = {s: json.load(open(os.path.join(CACHE, s + ".json"))) for s in sites if os.path.exists(os.path.join(CACHE, s + ".json"))}
     try:
         fast_related(recs, h)

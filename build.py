@@ -18,6 +18,18 @@ def write(root, url, html):
     open(path, "w", encoding="utf-8").write(html)
 
 
+def prev_page(url):
+    """The live copy of a gauge page (dist/ when present, else the live site); None when there is none."""
+    p = os.path.join(ROOT, "dist", url.strip("/"), "index.html")
+    if os.path.isfile(p):
+        return open(p, encoding="utf-8").read()
+    try:
+        import urllib.request
+        return urllib.request.urlopen(urllib.request.Request(SITE_URL + url, headers={"User-Agent": "riverwaterlevels.com build"}), timeout=30).read().decode("utf-8")
+    except Exception:
+        return None
+
+
 def main():
     rows, hubs = load_effective()
     now = datetime.datetime.fromisoformat(os.environ["BUILD_NOW"]) if os.environ.get("BUILD_NOW") else datetime.datetime.now(datetime.timezone.utc)
@@ -39,9 +51,9 @@ def main():
     for s in sites:
         try:
             Gs[s] = render.ctx(s, rows[s], load_cache(s), now)
-        except render.CriticalFail as e:
-            report["failed"].append({"site": s, "reason": str(e), "url": rows[s]["dashboard_url"]})
-            print("CRITICAL", s, e, "(skipped; previous pages stay live)")
+        except Exception as e:  # pipeline review #5: any error in one gauge's data skips that gauge, never the build
+            report["failed"].append({"site": s, "reason": "%s: %s" % (type(e).__name__, str(e)[:100]), "url": rows[s]["dashboard_url"]})
+            print("CRITICAL", s, type(e).__name__, str(e)[:100], "(skipped; previous pages stay live)")
     related.close(Gs, iso)  # upstream/downstream pairs are listed on both pages
     built = [rows[s] for s in Gs]
     inv_size = {k: len(v) for k, v in hubs.items()}
@@ -76,6 +88,11 @@ def main():
         except Exception as e:  # one gauge's page must never stop the other 9,000: it is reported as failed and its previous page stays live
             report["failed"].append({"site": s, "reason": "page build raised %s: %s" % (type(e).__name__, str(e)[:100]), "url": rows[s]["dashboard_url"]})
             print("PAGE BUILD CRASH", s, type(e).__name__, str(e)[:100], "(skipped; previous page stays live)")
+            old = prev_page(rows[s]["dashboard_url"])  # pipeline review #1: the hubs link this gauge, so its previous page is carried into this build (no broken link, no frozen site)
+            if old:
+                write(nxt, rows[s]["dashboard_url"], old)
+                urls.append(rows[s]["dashboard_url"])
+                hashes[rows[s]["dashboard_url"]] = hashlib.sha256(old.encode()).hexdigest()[:16]
             continue
         emit(meta["url"], page)
         write(nxt, "/embed" + meta["url"], render.embed_page(G, rows))
@@ -120,6 +137,7 @@ def main():
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
     redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
+    redirects += sorted({"%s %s 301" % (r["hub_url"], r["dashboard_url"]) for r in built if r.get("_single") and r.get("hub_url") and r["hub_url"] != r["dashboard_url"]})
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
     lm = json.load(open(lm_path)) if os.path.exists(lm_path) else {}

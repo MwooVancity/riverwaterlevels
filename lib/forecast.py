@@ -105,15 +105,13 @@ def b_nwm(G):
         return None
     rows = "".join(tr([esc(tzl(parse_t(p["t"]), G["zone"])), "%s cfs" % fmtc(sig3(p["flow"]))], right=(1,)) for p in fut[::3][:8])
     ref = esc(tzl(parse_t(n["reference_time"]), G["zone"])) if n.get("reference_time") else "time not stated"
-    return block("nwm_guidance", "NOAA National Water Model, next %d hours" % round((parse_t(fut[::3][:8][-1]["t"]) - G["lt"]).total_seconds() / 3600), "model", model_gap(G, fut[0]["flow"]) + table(["Time (gauge-local)", "Modeled flow"], rows, right=(1,)),
+    return block("nwm_guidance", "NOAA National Water Model, next %d hours" % round((parse_t(fut[::3][:8][-1]["t"]) - G["now"]).total_seconds() / 3600), "model", model_gap(G, fut[0]["flow"]) + table(["Time (gauge-local)", "Modeled flow"], rows, right=(1,)),
                  "Source: NOAA National Water Model, reach %s, run %s. Model guidance, not an official forecast and not a measurement." % (esc(str(n["comid"])) if isinstance(n.get("comid"), (int, str)) and str(n.get("comid")).strip() else "id not stated", ref), "nwm", amber=age)
 
 
 def b_alerts(G):
     n = G["rec"].get("nws") or {}
-    al = n.get("alerts")
-    if al:
-        al = [a for a in al if (a.get("event") or "") not in IGNORED_ALERTS]  # NWS system test messages are not alerts
+    al = live_alerts(G)  # test messages and ended alerts left out
     zone = G["zone"]
     when = esc(tzl(parse_t(n["fetched_at"]), zone)) if n.get("fetched_at") else "time not stated"
     age = hours_old(n.get("fetched_at"), G["now"]) if n.get("fetched_at") else None
@@ -125,7 +123,7 @@ def b_alerts(G):
         items = ""
         for a in al:
             ends = esc(tzl(parse_t(a["ends"] or a["expires"]), zone)) if (a.get("ends") or a.get("expires")) else "not stated"
-            items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s%s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), "" if re.search(r"\buntil\b", a.get("headline") or "", re.I) else "<br>Ends " + ends)  # the NWS headline usually gives the end time; print it once
+            items += '<div class="alert sev-%s"><b>%s</b> &middot; %s &middot; %s<br>%s%s</div>' % ((a.get("severity") or "unknown").lower(), esc(a.get("event") or ""), esc(a.get("severity") or "severity not stated"), esc(area_short(a.get("areaDesc") or "", 6, (((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name")) + ((" (" + ", ".join(a["states"]) + ")") if a.get("states") else "")), esc(a.get("headline") or ""), "" if re.search(r"\buntil\b", a.get("headline") or "", re.I) else ("<br>Ends " if a.get("ends") else "<br>NWS message valid until ") + ends)  # the NWS headline usually gives the end time; print it once
         body = items
     return block("alerts", "Weather alerts", "official", body, "Source: National Weather Service alerts for the gauge location, fetched %s." % when, "nws", amber=age)
 

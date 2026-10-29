@@ -463,7 +463,11 @@ def check_dir(d):
             if v in urls and v not in depth:
                 depth[v] = depth[u] + 1
                 queue.append(v)
-    orphans = [u for u in urls if u not in depth]
+    try:  # pipeline review #2: a gauge whose build failed keeps its previous page (publish.py); it is reachable again once its data recovers
+        kept = set(json.load(open(os.path.join(d, "status.json"), encoding="utf-8")).get("failed_urls") or [])
+    except (OSError, ValueError):
+        kept = set()
+    orphans = [u for u in urls if u not in depth and u not in kept]
     if orphans:
         site_bad.append("%d pages not reachable from home, e.g. %s" % (len(orphans), orphans[:3]))
     deep = [u for u, k in depth.items() if k > 4]
@@ -592,7 +596,7 @@ SECRET = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|clo
 
 def secret_scan(d):
     """No key, token or secret in any built text file, and none of this machine's own key values."""
-    bad, own = [], [v for k_, v in os.environ.items() if k_ in ("USGS_API_KEY", "CLOUDFLARE_API_TOKEN") and len(v) >= 12]
+    bad, own = [], [v for k_, v in os.environ.items() if k_ in ("USGS_API_KEY", "CLOUDFLARE_API_TOKEN", "AIRNOW_API_KEY", "RIDB_API_KEY") and len(v) >= 12]
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith((".png", ".gz", ".ico")):
@@ -631,13 +635,17 @@ def main():
         return selftest()
     d = next((a for a in sys.argv[1:] if not a.startswith("--")), os.path.join(ROOT, "dist_next"))
     res, site_bad, maxd = check_dir(d)
-    fails = {k: v for k, v in res.items() if v}
+    try:  # pages already carried (gate 1 or truth_live) are the live ones
+        done = {r.replace("/", os.sep) for r in json.load(open(os.path.join(d, "_carried.json")))}
+    except (OSError, ValueError):
+        done = set()
+    fails = {k: v for k, v in res.items() if v and k not in done}
     if "--carry" in sys.argv and fails and not site_bad and len(fails) <= CARRY_MAX and all(kind_of(k) == "gauge" for k in fails):
         if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
-            json.dump(sorted(r.replace("\\", "/") for r in carried), open(os.path.join(d, "_carried.json"), "w"))
+            json.dump(sorted({r.replace("\\", "/") for r in carried | done}), open(os.path.join(d, "_carried.json"), "w"))
             res, site_bad, maxd = check_dir(d)
-            fails = {k: v for k, v in res.items() if v and k not in carried}  # a carried page is the live one: it passed the checks of its own release
+            fails = {k: v for k, v in res.items() if v and k not in carried and k not in done}  # a carried page is the live one: it passed the checks of its own release
     for k, v in fails.items():
         print("FAIL", k)
         for x in v[:8]:

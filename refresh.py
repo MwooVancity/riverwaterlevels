@@ -19,6 +19,8 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
             code = p.returncode
             log.write("STOPPED at %s\n" % " ".join(s[1:3]))
             break
+w = subprocess.run(PY + ["tools/watchdog.py"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
+print((w.stdout + w.stderr)[-3000:])  # the doctor's report in every run log; never changes the run's outcome
 for d in os.listdir(os.path.join(ROOT, "runs")):  # keep 14 days of per-run folders
     p = os.path.join(ROOT, "runs", d)
     if os.path.isdir(p) and time.time() - os.path.getmtime(p) > 14 * 86400:

@@ -110,7 +110,7 @@ def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
     lid = n.get("lid")
-    links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://waterdata.usgs.gov/nwis/wateralert")]
+    links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
     if lid:
         links.append(("NWS river page for forecast point %s" % lid, "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
@@ -125,7 +125,7 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
-        has_al = any((x.get("event") or "") not in IGNORED_ALERTS for x in ((G["rec"].get("nws") or {}).get("alerts") or []))
+        has_al = bool(live_alerts(G))
         return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G), "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G, 6), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b_impacts(G)] + ([] if has_al else [b_alerts(G)]) + ["AD", b2.b_rate(G)] + ([
@@ -193,13 +193,13 @@ def sources_block(blocks, G):
 
 LIVE_JS = """<script>(function(){var ID="USGS-@SITE@",Z="@TZ@",hero=document.querySelector('.hero');if(!hero||!window.fetch)return;var snap=Date.parse(hero.getAttribute('data-t')),n=0;
 function q(k){return document.querySelector('[data-live="'+k+'"]')}
-function f(v){var a=Math.abs(v);return a>=100?Math.round(v).toLocaleString('en-US'):a>=10?v.toFixed(0):a<1?v.toFixed(2):v.toFixed(1)}
+function f(v){var a=Math.abs(v);return a>=1000?Number(v.toPrecision(3)).toLocaleString('en-US'):a<1&&v!==0?v.toFixed(2):Math.round(v).toLocaleString('en-US')}
 function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
 function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}
-var ag=q('age');if(ag)ag.textContent=age(new Date(snap));
-function edge(){return fetch('/live/'+ID.slice(5)+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var g=j&&j.g&&j.g[ID.slice(5)];if(!g||!g.f||g.f[2]||!j.t||Date.now()-Date.parse(j.t)>1800000)throw 0;return [{v:g.f[0],t:new Date(g.f[1])},g.h?{v:g.h[0],t:new Date(g.h[1])}:null]})}
+var ag=q('age'),ag0=ag&&Date.parse(ag.getAttribute('data-t'));if(ag)ag.textContent=age(new Date(ag0||snap));
+function edge(){return fetch('/live/'+ID.slice(5)+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var g=j&&j.g&&j.g[ID.slice(5)];if(!g||!g.f||g.f[2]||!(g.f[0]>-999)||!j.t||Date.now()-Date.parse(j.t)>1800000)throw 0;return [{v:g.f[0],t:new Date(g.f[1])},g.h&&!g.h[2]&&g.h[0]>-999?{v:g.h[0],t:new Date(g.h[1])}:null]})}
 function apply(a){var F=a[0],S=a[1];
-if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(Date.now()-F.t.getTime()<10800000)[].slice.call(document.querySelectorAll('.tag.t-last')).forEach(function(e){e.className='tag t-live';e.textContent='Live gauge'});if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent='Flow and gage height at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';var an=document.querySelector('p.answer')||hero;an.parentNode.insertBefore(bn,an.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
+if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var mn=(Date.now()-F.t)/60000;[].slice.call(document.querySelectorAll('span.ab')).forEach(function(e){e.className='ab '+(mn<=90?'fresh':mn<=360?'ageing':'stale')});var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(Date.now()-F.t.getTime()<10800000)[].slice.call(document.querySelectorAll('.tag.t-last')).forEach(function(e){e.className='tag t-live';e.textContent='Live gauge'});if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent=(S&&st&&S.t.getTime()>=snap?'Flow and gage height':'Flow')+' at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';var an=document.querySelector('p.answer')||hero;an.parentNode.insertBefore(bn,an.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
 function fail(){var a=q('age'),hh=document.querySelector('.hero2'),old=hh&&(Date.now()-new Date(hh.getAttribute('data-t')))>3600000;if(a&&old&&!document.getElementById('lf')){var s=document.createElement('span');s.id='lf';s.className='lf';s.textContent=' \u00b7 the newest reading could not be loaded just now';a.parentNode.parentNode.appendChild(s)}}
 function run(){edge().then(apply).catch(fail)}
 run();document.addEventListener('visibilitychange',function(){if(!document.hidden)run()});setInterval(function(){if(!document.hidden)run()},300000)})();</script>"""
@@ -344,9 +344,11 @@ def build_tab(tab, G, pages):
     # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
     title = mk_title("%s, %s: live water level and flow (USGS %s)" % (rp, st, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard":
-        desc = "Live USGS flow and gage height for %s, %s, refreshed when you open the page, with how today compares with past years, NWS forecast and flood stages." % (rp, st)
-        if len(desc) > 200:  # check.py caps the meta description at 200 chars
-            desc = "Live USGS flow and gage height for %s, %s, with how today compares with past years." % (rp, st)
+        _np = (G["rec"].get("nwps") or {})
+        _yrs = (G["rec"].get("record") or {}).get("first_year")
+        desc = "%s, %s: USGS gauge %s flow and water level%s%s." % (rp, st, G["site"], (", vs records since %s" % _yrs) if _yrs else "", ", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
+        if len(desc) > 155:  # SEO review: Google cuts descriptions near 155 characters
+            desc = "%s, %s: USGS gauge %s flow and water level." % (rp, st, G["site"])
     else:
         desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
@@ -364,12 +366,12 @@ def build_tab(tab, G, pages):
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), "fresh" if G["age_min"] <= 90 else "ageing" if G["age_min"] <= 360 else "stale", iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
     ld_items = [("Home", "/"), (G["st"], "/rivers/%s/" % G["st"].lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
     fl7 = [x[0] for x in G["fl"]]
-    ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % json.dumps({
+    ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % (lambda j: j.replace("</", "<\\/"))(json.dumps({
         "@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL, "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}},
         "about": {"@type": "Place", "name": "%s, %s" % (rp, st), "geo": {"@type": "GeoCoordinates", "latitude": round(G["lat"], 4), "longitude": round(G["lon"], 4)}},
         "mainEntity": {"@type": "Dataset", "name": "USGS gauge %s, %s, %s: flow and gage height" % (G["site"], rp, st), "description": "7-day flow and gage height readings and daily mean flow by year at USGS gauge %s, provisional data subject to revision." % G["site"],
                        "url": url, "license": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits", "creator": {"@type": "Organization", "name": "U.S. Geological Survey", "url": "https://www.usgs.gov/"},
-                       "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}})
+                       "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}}))
     ids = {b["id"] for b in shown}
     jl = [(i, t) for i, t in JUMP if i in ids]
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""

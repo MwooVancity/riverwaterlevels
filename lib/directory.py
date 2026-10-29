@@ -83,7 +83,7 @@ def all_gauges_table(built, Gs):
         chg = G["chg"]
         large = "1" if float(r["drainage_sqmi"] or 0) >= 1000 else "0"
         fcf = "1" if ((G["rec"].get("nwps") or {}).get("forecast")) else "0"
-        wqf = "1" if any(series(G["rec"], c) for c in LABELS) else "0"
+        wqf = "1" if any(series(G["rec"], c) for c in LABELS if c != "00045") else "0"
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
             esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmt(dir_lv(G)), pv, ptxt,
@@ -187,11 +187,11 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
     for r in rows:
         G = Gs[r["site"]]
         pv = band_word(G["p"])
-        chg = G["chg"]
+        chg = None if G.get("osc") else G["chg"]
         ch = ("%s %s" % ("&#9650;" if chg >= 2 else "&#9660;" if chg <= -2 else "&#9644;", ("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmt(dir_lv(G)), pv, ch, fmt(float(r["drainage_sqmi"] or 0)), fcst, esc(G["obs"]))
+            r["water_url"], esc(r["place"]), r["site"], fmt(dir_lv(G)), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (

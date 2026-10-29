@@ -13,5 +13,5 @@ https://www.riverwaterlevels.com/*
   Referrer-Policy: strict-origin-when-cross-origin
   Strict-Transport-Security: max-age=31536000
   X-Frame-Options: DENY
-  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()
+  Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=()
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://usgs-nims-images.s3.amazonaws.com https://radar.weather.gov https://basemap.nationalmap.gov https://*.usgs.gov https://*.weather.gov https://*.noaa.gov; connect-src 'self' https://api.waterdata.usgs.gov https://api.weather.gov https://api.water.noaa.gov; frame-ancestors 'none'; base-uri 'self'; form-action 'self'

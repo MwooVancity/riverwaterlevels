@@ -106,7 +106,8 @@ async function poll(env) {
         if (!k || isNaN(v) || isNaN(t) || t < cutoff) continue;
         const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
         g[s] = g[s] || {};
-        if (!g[s][k] || Date.parse(g[s][k][1]) < t) { g[s][k] = q ? [v, p.time, q] : [v, p.time]; changed++; } // never steps back
+        const o = g[s][k], ot = o ? Date.parse(o[1]) : -Infinity;
+        if (ot < t || (ot === t && (o[0] !== v || (o[2] || "") !== q))) { g[s][k] = q ? [v, p.time, q] : [v, p.time]; changed++; } // never steps back; a same-time correction (value or flag) replaces
       }
       next = ((j.links || []).find((l) => l.rel === "next") || {}).href;
     }
@@ -122,7 +123,7 @@ const SECURITY = {
   "referrer-policy": "strict-origin-when-cross-origin",
   "strict-transport-security": "max-age=31536000",
   "x-frame-options": "DENY",
-  "permissions-policy": "geolocation=(), camera=(), microphone=(), payment=(), usb=()",
+  "permissions-policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
 };
 
 function secure(res, url) {
@@ -151,10 +152,11 @@ function age(iso) {
 function rewrite(res, g, m) {
   // every string is computed HERE, before streaming starts: a throw inside a handler mid-stream would cut the page off (HTMLRewriter docs)
   const [fv, ft] = g.f, tz = m[2], built = m[1], mins = (Date.now() - Date.parse(ft)) / 60000;
-  const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.round(fv).toLocaleString("en-US"), ageTxt = age(ft);
+  const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.abs(fv) >= 1000 ? Number(fv.toPrecision(3)).toLocaleString("en-US") : Math.abs(fv) < 1 && fv !== 0 ? fv.toFixed(2) : Math.round(fv).toLocaleString("en-US"), ageTxt = age(ft);
   const ab = "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale");
-  const note = '<p id="lbn" class="src lf2">Flow and gage height at the top updated ' + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
-  const stage = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(built) ? Number(g.h[0]).toFixed(2) : null;
+  const stage0 = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(built);
+  const note = '<p id="lbn" class="src lf2">' + (stage0 ? "Flow and gage height" : "Flow") + " at the top updated " + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
+  const stage = stage0 ? Number(g.h[0]).toFixed(2) : null;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
   const out = new HTMLRewriter()
     .on('span[data-live="flow"]', text(flow)) // same rounding as fmtc() in lib/common.py

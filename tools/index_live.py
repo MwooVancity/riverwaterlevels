@@ -48,7 +48,11 @@ def main():
     gauges = sorted({g[1] for g in urls if len(g) > 1 and GAUGE.match(g[1])})
     if cfg.get("open"):
         for u in sorted(allow):
-            h, b = get(SITE + u)
+            try:
+                h, b = get(SITE + u)
+            except Exception as e:
+                bad.append("%s is allowed but does not load (%s): pulled back? remove it from data/index-allow.json" % (u, str(e)[:40]))
+                continue
             if noindex(h, b):
                 bad.append("%s is allowed but still sends noindex" % u)
             if u not in listed:

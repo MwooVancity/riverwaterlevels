@@ -75,6 +75,7 @@ def page_faults(G, rows):
     n0 = len(render.BLOCK_ERRORS)
     try:
         h, meta = render.build_tab("dashboard", G, rows)
+        h = h.replace(" ", " ")  # as check.py reads built pages
     except Exception as e:
         return {"PAGE CRASH %s: %s" % (type(e).__name__, str(e)[:80])}, {}
     rel = meta["url"].strip("/") + "/index.html"
@@ -113,6 +114,9 @@ def main():
     n = 0
     for s in sites:
         base, bsecs = page_faults(Gs[s], rows)
+        for f_ in base:
+            if not f_.startswith("BLOCK CRASH"):
+                found[("(unbroken page)", "none", f_)].add(s)
         for key in sorted(k for k in recs[s] if not k.startswith("_") and k not in ("lat", "lon", "river_name")):
             for mname, mf in MUT.items():
                 rec = copy.deepcopy(recs[s])

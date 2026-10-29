@@ -54,11 +54,11 @@ def b_cpc(G):
             if c.get(k):
                 rows += tr([name, span, lab, esc(c[k]["category"] or "–"), "%d%%" % c[k]["prob"]], right=(4,))
                 ocards.append(card("%s &middot; %s" % (name, lab), (esc(c[k]["category"] or "–") if (c[k].get("prob") or 0) > 34 else "Near equal chances"), "%s &middot; probability %d%%" % (span, c[k]["prob"])))
-        src_bits.append("%s for %s" % (name, span))
+        src_bits.append("%s for %s, issued %s" % (name, span, iss.strftime("%b %d").replace(" 0", " ")))
     if not rows:
         return None
     return block("cpc_outlook", "Temperature and precipitation outlooks", "official", rail(ocards, "Temperature and precipitation outlooks"),
-                 "Source: NOAA Climate Prediction Center outlooks at the gauge location (%s), issued %s. A probability is the chance of the leaning category (above, near or below normal) for the whole period, not an amount." % ("; ".join(src_bits), iss.strftime("%b %d").replace(" 0", " ")), "cpc")
+                 "Source: NOAA Climate Prediction Center outlooks at the gauge location (%s). A probability is the chance of the leaning category (above, near or below normal) for the whole period, not an amount." % "; ".join(src_bits), "cpc")
 
 
 def b_air(G):

@@ -23,7 +23,7 @@ def template_hash():
     """Fingerprint of the code that decides what a page shows (hater review: a change here needs a fresh signed review). Line endings are
     normalised so a Windows checkout and CI agree."""
     import glob, hashlib
-    files = sorted(glob.glob(os.path.join(ROOT, "lib", "*.py")) + glob.glob(os.path.join(ROOT, "templates", "*")) + [os.path.join(ROOT, f) for f in ("build.py", "collect.py", "worker/index.js")])
+    files = sorted(glob.glob(os.path.join(ROOT, "lib", "*.py")) + glob.glob(os.path.join(ROOT, "templates", "*")) + [os.path.join(ROOT, f) for f in ("build.py", "collect.py", "worker/index.js", "data/name-fixes.csv", "data/name-overrides.csv", "data/index-allow.json", "data/sources.json")])
     h = hashlib.sha256()
     for f in files:
         h.update(os.path.relpath(f, ROOT).replace("\\", "/").encode() + b"\0" + open(f, "rb").read().replace(b"\r\n", b"\n"))
@@ -84,6 +84,8 @@ def fmtc(v):
     """Whole cfs with a thousands comma (style sheet 6); fmt keeps decimals for sensor values."""
     if v is None:
         return "–"
+    if 0 < abs(v) < 1:
+        return "%.2f" % v  # 0.45 cfs is not "0 cfs" (live numbers review: read as a dry creek)
     return "{:,.0f}".format(float("%.3g" % v) if abs(v) >= 1000 else v)  # hater 2026-10-27: computed means printed as "280,917 cfs"
 
 

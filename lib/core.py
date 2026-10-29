@@ -36,6 +36,24 @@ DISCLAIMER = ("Percentile is estimated from USGS published daily percentiles. Re
 IGNORED_ALERTS = {"Test Message", "Administrative Message"}
 
 
+def live_alerts(G):
+    """The NWS alerts still in force at build time: system test messages and alerts past their end (or message expiry) are left out. None when alerts could not be loaded."""
+    al = (G["rec"].get("nws") or {}).get("alerts")
+    if al is None:
+        return None
+    out = []
+    for a in al:
+        if (a.get("event") or "") in IGNORED_ALERTS:
+            continue
+        try:
+            if (a.get("ends") or a.get("expires")) and parse_t(a.get("ends") or a.get("expires")) < G["now"]:
+                continue
+        except (TypeError, ValueError):
+            pass
+        out.append(a)
+    return out
+
+
 ADS = False  # the empty ADVERTISEMENT slots render only when an ad network is live
 
 

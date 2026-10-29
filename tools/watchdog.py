@@ -37,7 +37,7 @@ def main():
         heal.append("refresh")
         s = None
     if s:
-        age = hours_since(s["built_at"]) * 60
+        age = hours_since(s["built_at"]) * 60 if s.get("built_at") else 10 ** 6
         (bad if age > REBUILD_MIN else ok).append("site rebuilt %d min ago" % age)
         if age > REBUILD_MIN:
             heal.append("refresh")
@@ -58,7 +58,7 @@ def main():
             limit = 3 if src in HOURLY else 30
             lr = v.get("last_run") or {}
             n = lr.get("ok", 0) + lr.get("absent", 0) + lr.get("failed", 0)
-            if (src in UNIVERSAL or src in HOURLY) and (not last or hours_since(last) > limit):
+            if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > 50:  # never worked, or a daily source silent for two days
                 bad.append("source %s has not worked for %s (last error: %s)" % (src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:
                 bad.append("source %s failed on %d of %d gauges in its last run (%s)" % (src, lr["failed"], n, v.get("last_error") or ""))
@@ -78,7 +78,8 @@ def main():
         else:
             ok.append("Cloudflare has not needed to trigger a build yet (GitHub's own schedule ran in time)")
         if rr.headers.get("x-rwl-usgs-remaining"):
-            ok.append("USGS key budget left this hour: %s of 1,000" % rr.headers.get("x-rwl-usgs-remaining"))
+            rem_ = int(float(rr.headers.get("x-rwl-usgs-remaining")))
+            (bad if rem_ < 200 else ok).append("USGS key budget left this hour: %d of 1,000" % rem_)
         import re
         flows = {}
         for who, ua in (("phone", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148 Safari/604.1"), ("googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)")):

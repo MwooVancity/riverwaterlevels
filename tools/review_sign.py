@@ -13,7 +13,10 @@ if len(args) < 3 or args[1] not in ("PASS", "FAIL"):
 rid, verdict, notes = args[0], args[1], args[2]
 if rid != "_template" and not os.path.isdir(os.path.join(ROOT, ".cache", "review", rid)):
     sys.exit("no screenshots for %s: run node tools/hater_shots.mjs %s and LOOK at them first" % (rid, rid))
-by = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--by=")), "reviewer")
+by = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--by=")), None) or (sys.argv[sys.argv.index("--by") + 1] if "--by" in sys.argv and sys.argv.index("--by") + 1 < len(sys.argv) else "reviewer")
+_shot = os.path.join(ROOT, ".cache", "review", rid, "_code.txt")
+if rid != "_template" and os.path.exists(_shot) and not open(_shot).read().startswith("remote") and open(_shot).read().strip() != template_hash():
+    sys.exit("refused: the page code changed after %s was shot (shots on code %s, now %s): shoot it again and look again" % (rid, open(_shot).read().strip(), template_hash()))
 os.makedirs(os.path.join(ROOT, "state", "reviews"), exist_ok=True)
 rec = {"id": rid, "verdict": verdict, "notes": notes, "by": by, "at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "template": template_hash(), "level": next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--level=")), "full")}  # first = first screen + full text (owner 2026-10-28), full = every screenshot
 json.dump(rec, open(os.path.join(ROOT, "state", "reviews", rid + ".json"), "w", encoding="utf-8"), indent=1)

@@ -290,3 +290,4 @@ html.tabsjs .gtabs button{border-radius:0}
 .cite{margin:6px 0 0;color:var(--mut);font-size:.8rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cite small{font-size:inherit}.cite .cp{font:inherit;font-size:.75rem;padding:2px 8px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--accent);cursor:pointer}
 pre.card{white-space:pre-wrap;word-break:break-all;font-size:.85rem}
 .fcs.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));overflow:visible}.fcs.mgrid .fc{flex:none}
+.tag.amber,.blk>h2 .tag.amber{color:var(--amber)}

@@ -2,5 +2,7 @@
   "name": "riverwaterlevels-gates",
   "private": true,
   "description": "Test tooling only (browser gates). The site itself has no dependencies.",
-  "devDependencies": {}
+  "devDependencies": {
+    "wrangler": "4.155.0"
+  }
 }

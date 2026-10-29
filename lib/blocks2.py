@@ -92,7 +92,7 @@ def b_stage_chart(G):
     for k in CATS:
         if k in cats:
             d = cats[k] - cur
-            rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the latest gage height" % d) if d > 0 else ("latest gage height is %.1f ft above it" % -d)], right=(1,))
+            rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the %s" % (d, "NWS reading" if gap else "latest gage height")) if d > 0 else ("the %s is %.1f ft above it" % ("NWS reading" if gap else "latest gage height", -d))], right=(1,))
     if fc:
         hi = max(fc, key=lambda x: x[1])
         rows += tr(["Forecast high" + (" (below the latest reading)" if hi[1] < cur - 0.05 else ""), "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
@@ -122,7 +122,9 @@ def _at(series, t, tol):
     return best if abs((best[0] - t).total_seconds()) <= tol else None
 
 
-def _arrow(pct):
+def _arrow(pct, d=None):
+    if d is not None and abs(d) < 5:  # the headline also calls a change under 5 cfs steady (blocks review #10)
+        return "&rarr;"
     return "&#9650;" if pct >= 2 else "&#9660;" if pct <= -2 else "&rarr;"  # same cut-off as the headline word (hater r4: "Steady" beside "▼ -1.9%")
 
 
@@ -145,8 +147,8 @@ def b_rate(G):
         pct = wc[2] if wc else (d / fa[1] * 100 if fa[1] else 0)
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
-        cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmtc(abs(d)), fmtc(fa[1]), (", height %s" % sd) if sa else "")))
-        rows += tr(["%d h" % h, "%s cfs" % fmtc(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct), "+" if d >= 0 else "-", fmtc(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
+        cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct, d), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmtc(abs(d)), fmtc(fa[1]), (", height %s" % sd) if sa else "")))
+        rows += tr(["%d h" % h, "%s cfs" % fmtc(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct, d), "+" if d >= 0 else "-", fmtc(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
     if not rows:
         return None
     week = [x for x in fl if x[0] >= t1 - datetime.timedelta(days=7)]
