@@ -18,14 +18,18 @@ Be the most useful page for a person deciding about this river today, one page p
 - Local laptop data differs from the cloud cache: local gates passed three changes the cloud failed. Fix: every change goes through dryrun.yml (branch `check`) before main.
 - 0 clicks; probably page 2 behind USGS/NOAA (position not yet seen).
 
-## First-principles pass on the whole project (owner 2026-10-29: "elon musk it to #1")
-The one requirement: the page a person at this river wants, for every river people search. Ranking comes from coverage (pages x searches), trust (links) and clicks that end the search. Everything else is questioned.
-1. Question: per-gauge screenshot review (~80k tokens each, 25 gauges = ~2M) caps coverage. Machine gates already check every page against live USGS/NWS; the shared template is reviewed once. DECISION: new gauges ship on machine gates (check.py, truth_live, break gate, cloud dry run); a light review only for a gauge with a data shape no reviewed page has. Replaces the 2026-10-27 "every gauge needs a signed PASS" rule.
-2. Delete: gates/checks with no real catch in 10 runs; duplicate logic (refactor done 2026-10-29); docs beyond CLAUDE.md + PLAN.md (done); per-gauge review signatures as a deploy requirement.
-3. Simplify: one decision = one function; one deploy path (refresh.yml) with one practice path (dryrun.yml).
-4. Accelerate: 10 gauges a day by the daily-release workflow while the hourly run stays under 45 min (owner rule stands: never ~1,000 at once); each day's gauges open to Google the same day.
-5. Automate last: the hourly run releases and opens the next wave by itself when every gate passed for 24 h; Search Console and PageSpeed numbers read by script weekly into this file.
-Ranking work in parallel: link outreach drafts (owner sends), first-screen answers for each top query, phone speed.
+## First-principles plan (owner 2026-10-29: "still isn't Elon Musk level")
+Goal metric: people helped = weekly clicks from search + returning visitors (alerts, favorites). Pages are a means. Today: 74 gauges, 0 clicks/week.
+The one constraint: the hourly collect fetches ~30 sources per gauge one after another; it caps the site near 150 gauges. At 10 gauges/day the ~9,000 named USGS gauges take ~900 days. Remove the constraint, then go fast.
+
+1. Kill the bottleneck (this week). Collect runs as a GitHub matrix: one job per state group in parallel (free plan allows 20 at once), each source on its own timer (readings hourly; forecasts 3-hourly; history, records, watershed, dams weekly), bulk API calls wherever the agency offers them (USGS latest-continuous for many sites per request, NWS by office). Target: a 2,000-gauge refresh in under 30 minutes. Done when a 500-gauge test run finishes inside 30 minutes with every gate green.
+2. Then release 100 gauges/day (daily-release.yml N=100; still small daily waves, never ~1,000 at once) until every named USGS gauge with live flow is on the site: ~90 days instead of ~900. Brake stays: skip a day when refresh > 45 min.
+3. Measure readers from week 1 of scale: Cloudflare Web Analytics (free, no cookies; privacy page updated). Weekly: which pages get visits, which blocks get opened, where readers leave. Blocks nobody opens move down or into folds (river data is never deleted, owner rule).
+4. Make them come back: alerts (approved: web push), favorites, add to home screen (done). Target: 10% of visitors return within 7 days.
+5. Earn trust and links: outreach drafts for the owner (embed panel), "Report a wrong number" with a real contact (owner), corrections log public.
+6. Information no one else has, one dataset per week: low-head dams, dam releases, stocking, advisories. Each must answer a reader question and pass the helpfulness audit.
+Dated targets: 2026-11-05 sharded collect live; 2026-11-12 500 gauges live; 2026-12-31 3,000 gauges, first 100 clicks/week; 2027-02-01 all named gauges live, alerts live.
+What gets deleted to make room: per-gauge screenshot reviews (done), duplicated logic (done), any gate with no real catch in 10 runs, any doc beyond CLAUDE.md + PLAN.md, any local laptop step the cloud can do.
 
 ## Review and gate cost (owner 2026-10-29: "we've blown a million tokens")
 - Spent 2026-10-28/29: about 1 million tokens, most of it on 8 full screenshot reviews (~170k each) that mostly returned notes; the deploy breaks were caught by machines.
@@ -67,18 +71,15 @@ In order of value to a person at the river:
 - Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: DONE for blockers and majors. Runs: 1 = 1/18, 2 = 1/7, 3 = 0/7, 4 = 0/2, 5 = 0 BLOCKER, 0 MAJOR, 24 MINOR (2026-10-29). Batch G running on the 10 most useful MINOR items (glossary band cut-offs from code, silent-gauge rate note, rain-forecast age, 'live' title at 6 h, a 'Partial day' data bug, rain gap line, 44 px tap targets, anchor link names, report-a-wrong-number, ATTAINS). Remaining MINOR (decided: polish, after the feature work): Memphis empty columns and far-gauge padding, chart aria values, maskable icon, '168 h' wording, ramps sort. Re-run the audit after every feature batch.
 
 ## Next steps (in order)
-Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable (batch C).
-1. Confirm F and G live (see Where we are).
-2. Growth is automatic (owner 2026-10-29): `.github/workflows/daily-release.yml` adds the next 10 gauges from picks.csv every day at 11:10 UTC in the cloud (collect, build, open to Google, every gate via `refresh.py --dry`); only if all pass it commits data/waves.csv + data/index-allow.json, saves the cache and starts refresh.yml. Brake: skips the day when the last refresh took over 45 min. Manual test: `gh workflow run daily-release.yml -f dry=true`. Status: first practice run pending. Check weekly: live count rises by 10/day, refresh time stays under 45 min; when it nears 45, do step 11 (shard collect) before growth resumes.
-3. Alerts (owner approved): web push, item 10 of the helpful-site gaps; needs a VAPID key pair as Worker secrets and KV for subscriptions (watch the shared 1,000 KV writes/day).
-4. Favorite rivers (browser storage) and the units switch.
-5. Low-head dams near each gauge (National Inventory of Dams; source row in data/sources.json, WebSearch evidence) and state life-jacket rules.
-6. Link outreach drafts for the owner (5 rivers with most impressions first).
-7. PageSpeed on the top 5 pages.
-8. Dam releases / diversions data (Albuquerque first), then stocking reports, then advisories.
-9. Week-2 Search Console read (with average position).
-10. Re-run the helpfulness audit after every feature batch (cheaper model, text pass).
-11. Scale before ~150 gauges: shard collect by state with per-source TTLs.
+Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release workflow (10/day, practice run pending).
+1. Confirm batches F and G live; read the daily-release practice run (10 real gauges picked, "refresh OK").
+2. Sharded parallel collect (plan item 1). Done when a 500-gauge run is under 30 min, all gates green.
+3. Raise daily-release to 100/day.
+4. Cloudflare Web Analytics + privacy page line.
+5. Alerts (web push), then favorites and units switch.
+6. Outreach drafts for the owner; owner adds a contact address.
+7. One new dataset per week (low-head dams first).
+8. Helpfulness audit after every feature batch; Search Console + analytics read weekly into this file.
 
 ## Owner only
 - Send the link-outreach emails (drafts provided).
