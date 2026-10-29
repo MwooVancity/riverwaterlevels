@@ -1,6 +1,6 @@
 name: daily-release
 
-# Adds the next 10 gauges from docs/research/priority/picks.csv every day, entirely in the cloud (owner 2026-10-29: "auto add 10 rivers a day").
+# Adds the next 20 gauges (owner cap 2026-10-29) from docs/research/priority/picks.csv every day, entirely in the cloud (owner 2026-10-29: "auto add 10 rivers a day").
 # Collect + build the new gauges, open them to Google, run every deploy gate (refresh.py --dry); only if all pass: commit the
 # bookkeeping files, save the data cache and start the normal deploy (refresh.yml). Any failure adds nothing and leaves the site as it was.
 # Brake: skipped while the last successful refresh took over 45 minutes (scale ceiling, PLAN.md).
@@ -61,14 +61,14 @@ jobs:
           m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor')
           echo "last refresh took ${m} min"
           if [ "${m:-0}" -gt 45 ]; then echo "skip=1" >> "$GITHUB_OUTPUT"; echo "SKIPPED: refresh too slow for more gauges"; fi
-      - name: Add 10 gauges, open them, run every gate
+      - name: Add 20 gauges, open them, run every gate
         id: rel
         if: steps.brake.outputs.skip != '1'
         continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
         run: |
           set -o pipefail
-          python -I tools/release.py 10 2>&1 | tee release.log
-          python -I tools/open_wave.py 10 --apply 2>&1 | tail -3
+          python -I tools/release.py 20 2>&1 | tee release.log
+          python -I tools/open_wave.py 20 --apply 2>&1 | tail -3
           python refresh.py --dry 2>&1 | tail -40 | tee gates.log
           grep -q "refresh OK" gates.log && echo "ok=1" >> "$GITHUB_OUTPUT"
       - name: Commit and deploy (only when every gate passed)

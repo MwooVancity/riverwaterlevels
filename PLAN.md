@@ -23,12 +23,12 @@ Goal metric: people helped = weekly clicks from search + returning visitors (ale
 The one constraint: the hourly collect fetches ~30 sources per gauge one after another; it caps the site near 150 gauges. At 10 gauges/day the ~9,000 named USGS gauges take ~900 days. Remove the constraint, then go fast.
 
 1. Kill the bottleneck (this week). Collect runs as a GitHub matrix: one job per state group in parallel (free plan allows 20 at once), each source on its own timer (readings hourly; forecasts 3-hourly; history, records, watershed, dams weekly), bulk API calls wherever the agency offers them (USGS latest-continuous for many sites per request, NWS by office). Target: a 2,000-gauge refresh in under 30 minutes. Done when a 500-gauge test run finishes inside 30 minutes with every gate green.
-2. Then release 100 gauges/day (daily-release.yml N=100; still small daily waves, never ~1,000 at once) until every named USGS gauge with live flow is on the site: ~90 days instead of ~900. Brake stays: skip a day when refresh > 45 min.
+2. Release at the owner's cap of 20 gauges/day (daily-release.yml, owner 2026-10-29), never more; ~9,000 named gauges = ~450 days at the cap. The sharded collect keeps the hourly run fast as the count grows. Brake stays: skip a day when refresh > 45 min.
 3. Measure readers from week 1 of scale: Cloudflare Web Analytics (free, no cookies; privacy page updated). Weekly: which pages get visits, which blocks get opened, where readers leave. Blocks nobody opens move down or into folds (river data is never deleted, owner rule).
 4. Make them come back: alerts (approved: web push), favorites, add to home screen (done). Target: 10% of visitors return within 7 days.
 5. Earn trust and links: outreach drafts for the owner (embed panel), "Report a wrong number" with a real contact (owner), corrections log public.
 6. Information no one else has, one dataset per week: low-head dams, dam releases, stocking, advisories. Each must answer a reader question and pass the helpfulness audit.
-Dated targets: 2026-11-05 sharded collect live; 2026-11-12 500 gauges live; 2026-12-31 3,000 gauges, first 100 clicks/week; 2027-02-01 all named gauges live, alerts live.
+Dated targets: 2026-11-05 sharded collect live; at 20/day: 2026-11-30 ~700 gauges; 2026-12-31 ~1,300 gauges, first 100 clicks/week; alerts live by 2026-12-31.
 What gets deleted to make room: per-gauge screenshot reviews (done), duplicated logic (done), any gate with no real catch in 10 runs, any doc beyond CLAUDE.md + PLAN.md, any local laptop step the cloud can do.
 
 ## Review and gate cost (owner 2026-10-29: "we've blown a million tokens")
@@ -71,10 +71,10 @@ In order of value to a person at the river:
 - Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: DONE for blockers and majors. Runs: 1 = 1/18, 2 = 1/7, 3 = 0/7, 4 = 0/2, 5 = 0 BLOCKER, 0 MAJOR, 24 MINOR (2026-10-29). Batch G running on the 10 most useful MINOR items (glossary band cut-offs from code, silent-gauge rate note, rain-forecast age, 'live' title at 6 h, a 'Partial day' data bug, rain gap line, 44 px tap targets, anchor link names, report-a-wrong-number, ATTAINS). Remaining MINOR (decided: polish, after the feature work): Memphis empty columns and far-gauge padding, chart aria values, maskable icon, '168 h' wording, ramps sort. Re-run the audit after every feature batch.
 
 ## Next steps (in order)
-Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release workflow (10/day, practice run pending).
+Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release workflow (20/day cap, practice run pending).
 1. Confirm batches F and G live; read the daily-release practice run (10 real gauges picked, "refresh OK").
 2. Sharded parallel collect (plan item 1). Done when a 500-gauge run is under 30 min, all gates green.
-3. Raise daily-release to 100/day.
+3. Daily release runs at the 20/day cap; watch refresh time weekly.
 4. Cloudflare Web Analytics + privacy page line.
 5. Alerts (web push), then favorites and units switch.
 6. Outreach drafts for the owner; owner adds a contact address.
