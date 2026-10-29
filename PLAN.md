@@ -73,7 +73,7 @@ In order of value to a person at the river:
 ## Next steps (in order)
 Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release inside refresh.yml (20/day cap; practice release 40892070041: 18 added, 2 skipped for no USGS readings, refresh OK; first real release next 11:00 UTC).
 1. Confirm batches F and G live; read the practice release run (20 real gauges picked, "refresh OK").
-2. Sharded parallel collect (plan item 1). Done when a 500-gauge run is under 30 min, all gates green.
+2. Sharded parallel collect (plan item 1): BUILT, OFF. sharded.yml (plan job, 20 collect shards, one finish job in the refresh group; a failed shard keeps its old files), switch data/pipeline.json {"sharded": false}; flip to true and push main to switch (if the plan job fails, the old single job runs). Shadow: 2,000 gauges steady state ~22 min (13 min slowest shard), WPC failures 8% -> 0%, rain 1-8% (empty answers, not fixed below 1%), truth contracts 0 failures at 2,000 (run 40941372688). Waiting on owner OK to flip. Before ~500 gauges: USGS-keyed history weekly, bulk neighbour temperature, USGS quota brake.
 3. Daily release runs at the 20/day cap; watch refresh time weekly.
 4. Cloudflare Web Analytics + privacy page line.
 5. Alerts (web push), then favorites and units switch.
