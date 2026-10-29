@@ -14,7 +14,12 @@ dry = "--dry" in sys.argv
 PY = [sys.executable, "-I"]
 
 cached = {f[:-5] for f in os.listdir(os.path.join(ROOT, "cache")) if f.endswith(".json")}
-picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if r["site"] not in cached][:n]
+live_ = {r["site"]: r for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8"))}
+picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if r["site"] not in cached and live_.get(r["site"], {}).get("status") == "queue"] if os.path.exists(lst) else []
+seen_ = {r["site"] for r in picks}
+picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and not r.get("gate") and r["site"] not in cached and r["site"] not in seen_),
+                key=lambda r: -float(r.get("score") or 0))  # after the owner's list: the scored queue, best first
+picks = picks[:n]
 if not picks:
     sys.exit("nothing to add: every gauge in %s already has a cache" % lst)
 print("adding %d gauges:" % len(picks))
