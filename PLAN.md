@@ -19,6 +19,11 @@ Be the #1 and genuinely most useful page for "<river> <place> water level / flow
 - Local laptop data differs from the cloud cache: local gates passed three changes the cloud failed. Fix: every change goes through dryrun.yml (branch `check`) before main.
 - 0 clicks; probably page 2 behind USGS/NOAA (position not yet seen).
 
+## Review and gate cost (owner 2026-10-29: "we've blown a million tokens")
+- Spent 2026-10-28/29: about 1 million tokens, most of it on 8 full screenshot reviews (~170k each) that mostly returned notes; the deploy breaks were caught by machines.
+- Rule now (CLAUDE.md "Reviews and gates: first principles"): machine checks + cloud dry run by default; max one full review a day; non-visual changes signed at level machine.
+- To do: take `data/index-allow.json` out of `template_hash` (robots tags only; `tools/index_live.py` checks them), so opening pages to Google never needs a review signature. List gates with no real catch in their last 10 runs and delete them.
+
 ## Ranking: what is missing for #1 (2026-10-29)
 1. Trust and links (biggest gap): new domain, almost no links. Use the free embed panel: list fishing clubs, outfitters, paddling clubs, county and town pages per live river; Claude drafts each email, the owner sends. No spam, no paid links.
 2. Position data: tick "Average position" in Search Console; work first on pages near page 1.

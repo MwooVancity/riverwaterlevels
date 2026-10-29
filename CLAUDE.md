@@ -48,6 +48,13 @@ A person at or near this river today, on a phone, with 30 seconds: about to fish
 5. Commit with explicit paths; a push is a deploy; read the live page.
 6. Update PLAN.md (status and "Done recently") with the proof.
 
+## Reviews and gates: first principles (HARD, owner 2026-10-29: "be like elon musk when it comes to review/gates. we've blown a million tokens")
+- Machines check, agents rarely look. Default for any change = the gate set + the cloud dry run (`dryrun.yml`); a screenshot review is the exception and needs a reason a machine cannot see.
+- Evidence 2026-10-28/29: every deploy-breaking bug was caught by a machine (cloud dry run, truth_tests); reviews mostly returned notes. Notes never start a review round.
+- Budget: at most ONE full review per day and one light review per batch; say the cost (~170k full, ~80k light) before launching. Over budget = batch it for tomorrow.
+- Delete a gate or review step that has not caught a real defect in its last 10 runs; a defect a review finds twice becomes a check the same batch, so reviews shrink over time.
+- Non-visual changes (robots/index tags, tools, CI, docs, type fixes covered by a check) are signed `--level=machine` by the builder, never screenshot-reviewed.
+
 ## Review (signed-review gate)
 - Enforced in `check.py` `review_gaps`: every live gauge needs a signed PASS in `state/reviews/<site>.json`; any change to page code (`lib/`, `templates/`, `build.py`, `collect.py`, `worker/index.js`: `template_hash()`) needs a fresh `_template` PASS before deploy. Signatures append to `state/reviews/_log.jsonl`.
 - Size the review to the change (global CLAUDE.md "Size every review to the change"); say the level and cost in one line first:
