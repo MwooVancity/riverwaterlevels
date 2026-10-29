@@ -20,7 +20,7 @@ Be the most useful page for a person deciding about this river today, one page p
 
 ## First-principles plan (owner 2026-10-29: "still isn't Elon Musk level")
 Goal metric: people helped = weekly clicks from search + returning visitors (alerts, favorites). Pages are a means. Today: 74 gauges, 0 clicks/week.
-The one constraint: the hourly collect fetches ~30 sources per gauge one after another; it caps the site near 150 gauges. At 10 gauges/day the ~9,000 named USGS gauges take ~900 days. Remove the constraint, then go fast.
+The one constraint: the hourly collect fetches ~30 sources per gauge one after another; it caps the site near 150 gauges. At the owner cap of 20 gauges/day the ~9,000 named USGS gauges take ~450 days; the collect must stay fast as the count grows.
 
 1. Kill the bottleneck (this week). Collect runs as a GitHub matrix: one job per state group in parallel (free plan allows 20 at once), each source on its own timer (readings hourly; forecasts 3-hourly; history, records, watershed, dams weekly), bulk API calls wherever the agency offers them (USGS latest-continuous for many sites per request, NWS by office). Target: a 2,000-gauge refresh in under 30 minutes. Done when a 500-gauge test run finishes inside 30 minutes with every gate green.
 2. Release at the owner's cap of 20 gauges/day (daily-release.yml, owner 2026-10-29), never more; ~9,000 named gauges = ~450 days at the cap. The sharded collect keeps the hourly run fast as the count grows. Brake stays: skip a day when refresh > 45 min.
