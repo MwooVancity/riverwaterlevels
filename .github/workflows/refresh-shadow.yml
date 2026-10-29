@@ -1,0 +1,27 @@
+name: refresh-shadow
+
+# Practice run of the sharded refresh shape (sharded.yml with live=false): same plan, shards, merge, build and gates, but its own cache key
+# (rwl-shadow-data-, seeded from rwl-data- on the first run), no release, no publish, no deploy, no commit. Must stay off main until the switch.
+# Starts when a push to check edits .github/shadow2.env (the content is only a run label).
+on:
+  push:
+    branches: [check]
+    paths: [".github/shadow2.env"]
+
+concurrency:
+  group: refresh-shadow
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  shadow:
+    uses: ./.github/workflows/sharded.yml
+    secrets: inherit
+    with:
+      live: false
+      shards: "20"
+      queue: "1926"
+      cache_prefix: rwl-shadow-data-

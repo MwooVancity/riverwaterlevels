@@ -20,7 +20,30 @@ permissions:
   actions: read
 
 jobs:
+  # The switch: data/pipeline.json {"sharded": false} = the single job below, exactly as before; true = sharded.yml (N collect shards, one merge+build+deploy job).
+  # If this tiny job fails, "sharded" is empty and the single job runs: the old path is the fail-safe.
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      sharded: ${{ steps.p.outputs.sharded }}
+      shards: ${{ steps.p.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: python3 -c "import json;d=json.load(open('data/pipeline.json'));print('sharded=' + ('true' if d.get('sharded') is True else 'false'));print('shards=%d' % int(d.get('shards', 20)))" >> "$GITHUB_OUTPUT"
+
+  sharded:
+    needs: plan
+    if: ${{ needs.plan.outputs.sharded == 'true' }}
+    uses: ./.github/workflows/sharded.yml
+    secrets: inherit
+    with:
+      live: true
+      shards: ${{ needs.plan.outputs.shards }}
+
   refresh:
+    needs: plan
+    if: ${{ !cancelled() && needs.plan.outputs.sharded != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 150
     env:

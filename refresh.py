@@ -1,5 +1,5 @@
 """One-command refresh: collect -> build -> check -> gates -> publish -> deploy. Stops at the first failing step; the live site stays on the last good release.
-Usage: python -I refresh.py [--dry]    Log: runs/refresh.log. GitHub's "refresh" concurrency group keeps it to one run at a time.
+Usage: python -I refresh.py [--dry] [--no-collect]    Log: runs/refresh.log. GitHub's "refresh" concurrency group keeps it to one run at a time.
 """
 import os, sys, subprocess, datetime, shutil, time
 
@@ -9,7 +9,8 @@ from gates import PY, NPX, GATES  # the one list of gates (gates.py)
 
 os.makedirs(os.path.join(ROOT, "runs"), exist_ok=True)
 DRY = "--dry" in sys.argv  # dryrun.yml: every gate on the cloud's last data, no collect, no publish, no deploy (2026-10-29: laptop data passed what the cloud failed, 3 times)
-STEPS = ([] if DRY else [PY + ["collect.py"]]) + [c for _, g in GATES for _, c in g] + ([] if DRY else [PY + ["publish.py"], [NPX, "wrangler", "deploy"]])
+NOCOLLECT = DRY or "--no-collect" in sys.argv  # sharded.yml: the shard jobs already collected and merged
+STEPS = ([] if NOCOLLECT else [PY + ["collect.py"]]) + [c for _, g in GATES for _, c in g] + ([] if DRY else [PY + ["publish.py"], [NPX, "wrangler", "deploy"]])
 code = 0
 with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as log:
     log.write("\n=== %s ===\n" % datetime.datetime.now().isoformat(timespec="seconds"))

@@ -75,7 +75,29 @@ def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
             b = min(60, float(ra) if ra.replace(".", "", 1).isdigit() else 3 * 2 ** i)
             _tick("~backoff sleep", b)
             time.sleep(b)
+        except (urllib.error.URLError, OSError):  # timeout, reset, DNS (HTTPError was handled above); retried in the new design only
+            if not NEXT or i == tries - 1:
+                raise
+            b = min(30, 2 * 2 ** i)
+            _tick("~backoff sleep", b)
+            time.sleep(b)
     raise RuntimeError("unreachable")
+
+
+def retry_json(url, headers=None, timeout=60, tries=3):
+    """http_json for the NOAA map services (WPC outlooks, rain identify) that thr_json does not throttle. New design: 3 tries on 429/5xx, timeouts and resets, waits 2 s then 8 s plus up to 1 s of jitter (so 20 shards do not retry in step). Today: one try, as before."""
+    for i in range(tries if NEXT else 1):
+        try:
+            return http_json(url, headers, timeout)
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 500, 502, 503, 504) or i == tries - 1 or not NEXT:
+                raise
+        except (urllib.error.URLError, OSError):
+            if i == tries - 1 or not NEXT:
+                raise
+        b = 2 * 4 ** i + (zlib.crc32(url.encode()) % 100) / 100
+        _tick("~retry sleep", b)
+        _time.sleep(b)
 
 
 def now_iso():
@@ -750,7 +772,7 @@ def esri_point(layer_url, lat, lon, where="1=1", fields="*", dist=None):
     q = {"where": where, "geometry": "%.4f,%.4f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": "4326", "spatialRel": "esriSpatialRelIntersects", "outFields": fields, "returnGeometry": "false", "f": "json"}
     if dist:
         q.update({"distance": str(dist), "units": "esriSRUnit_StatuteMile"})
-    j = http_json(layer_url + "/query?" + urllib.parse.urlencode(q))
+    j = retry_json(layer_url + "/query?" + urllib.parse.urlencode(q))
     if "error" in j:
         raise RuntimeError("esri query error")
     return [f["attributes"] for f in j.get("features", [])]
@@ -789,7 +811,7 @@ def _parse_issued(s):
 
 def fetch_rain(lat, lon):
     g = urllib.parse.quote(json.dumps({"x": lon, "y": lat, "spatialReference": {"wkid": 4326}}))
-    j = http_json("https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json" % g, NWS_H)
+    j = retry_json("https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json" % g, NWS_H)
     by, issued, lid = {}, {}, {}
     for r in j.get("results", []):
         a = r.get("attributes") or {}
