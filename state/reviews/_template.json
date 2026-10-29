@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "machine: removed dead NWS alerts link (alerts.weather.gov no longer resolves); forecast link relabelled to say it carries the alerts; no layout change",
+ "notes": "machine: collect.py logs stats/land on the hourly path (health file only); no page change",
  "by": "reviewer",
- "at": "2026-10-29T21:11:37+00:00",
- "template": "28922685e464",
+ "at": "2026-10-29T22:46:27+00:00",
+ "template": "2970e95ab979",
  "level": "machine"
 }

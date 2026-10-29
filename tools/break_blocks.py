@@ -68,7 +68,39 @@ def nulls(o):
     return walk(o, lambda v, kind: False if kind == "probe-list" else (None if kind == "leaf" and isinstance(v, (int, float)) and not isinstance(v, bool) else v))
 
 
-MUT = {"missing": None, "stale26h": stale, "empty": empty, "dup": dup, "nulls": nulls}
+def flow_rows(f):
+    """Gauge types the sample never had (open item D): change only the USGS flow rows (00060); every other source passes through."""
+    def m(o):
+        if not (isinstance(o, dict) and isinstance(o.get("rows"), list) and o["rows"] and isinstance(o["rows"][0], dict) and "parameter_code" in o["rows"][0]):
+            return o
+        o = copy.deepcopy(o)
+        q = [r for r in o["rows"] if r.get("parameter_code") == "00060"]
+        for i, r in enumerate(q):
+            f(i, r)
+        if f is irregular:
+            o["rows"] = [r for r in o["rows"] if r.get("parameter_code") != "00060" or r.get("_keep")]
+        return o
+    return m
+
+
+def ice(i, r):  # ice-affected: USGS keeps the stage, withholds flow
+    r["value"], r["qualifier"] = None, "ICE"
+
+
+def zero(i, r):  # dry wash or canal at zero: no division by zero in "% change"
+    r["value"] = "0"
+
+
+def tidal(i, r):  # estuary: flow reverses with the tide
+    r["value"] = str(-abs(float(r["value"] or 0))) if i % 2 else r["value"]
+
+
+def irregular(i, r):  # sampling gaps: an hour-long hole every few readings
+    r["_keep"] = i % 7 in (0, 3)
+
+
+MUT = {"missing": None, "stale26h": stale, "empty": empty, "dup": dup, "nulls": nulls,
+       "ice": flow_rows(ice), "zeroflow": flow_rows(zero), "tidal": flow_rows(tidal), "irregular": flow_rows(irregular)}
 
 
 def page_faults(G, rows):

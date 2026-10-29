@@ -1366,11 +1366,13 @@ def fast(inv, sites):
             if daily_due(stamp.get("related_list")) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
                 stamp["related_list"] = now_iso()
             sp = os.path.join(LEGACY, "stats", s + ".json")
+            note("stats", "ok" if os.path.exists(sp) else "absent")  # same input-file note as the full path, so the doctor sees it every run
             if os.path.exists(sp):
                 rec["stats"] = json.load(open(sp))["d"]
                 rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
             fetch_extras(s, rec, h, log)
             land = fetch_land(s)
+            note("land", "ok" if land else "absent")
             if land:
                 rec["land"] = land
             rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")

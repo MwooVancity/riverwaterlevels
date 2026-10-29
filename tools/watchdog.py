@@ -59,6 +59,18 @@ def main():
             limit = 3 if src in HOURLY else 30
             lr = v.get("last_run") or {}
             n = lr.get("ok", 0) + lr.get("absent", 0) + lr.get("failed", 0)
+            # 2026-10-29: 12 false "not working" lines. "nws.forecast"-style keys count only failures (success is counted under "nws"),
+            # so they are judged on the latest run only; "full"-mode sources (flood zone, dam, rainfall frequency) are fetched once per gauge, never on a clock
+            if "." in src and lr.get("at", "")[:13] < (h.get("at") or "")[:13]:
+                continue
+            if lr.get("mode") == "full" and not lr.get("failed"):
+                continue
+            if "." in src and lr.get("failed"):
+                bad.append("%s failed on %d gauge(s) in the latest run (%s)" % (src, lr["failed"], v.get("last_error") or ""))
+                continue
+            if lr.get("ok", 0) == 0 and lr.get("absent", 0) == n and n:
+                bad.append("source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n))
+                continue
             if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > 50:  # never worked, or a daily source silent for two days
                 bad.append("source %s has not worked for %s (last error: %s)" % (src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:

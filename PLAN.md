@@ -76,17 +76,20 @@ In order of value to a person at the river:
 
 ## Next steps (in order)
 Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release inside refresh.yml (20/day cap; practice release 40892070041: 18 added, 2 skipped for no USGS readings, refresh OK; first real release next 11:00 UTC).
-1. Confirm batches F and G live; read the practice release run (20 real gauges picked, "refresh OK").
-2. Sharded parallel collect (plan item 1): BUILT, ON since 2026-10-29 20:45 UTC (owner OK; undo: "sharded": false). sharded.yml (plan job, 20 collect shards, one finish job in the refresh group; a failed shard keeps its old files), switch data/pipeline.json {"sharded": false}; flip to true and push main to switch (if the plan job fails, the old single job runs). Shadow: 2,000 gauges steady state ~22 min (13 min slowest shard), WPC failures 8% -> 0%, rain 1-8% (empty answers, not fixed below 1%), truth contracts 0 failures at 2,000 (run 40941372688). Before ~500 gauges (about 2026-11-19 at 20/day; do by 2026-11-12): USGS-keyed history weekly, bulk neighbour temperature, USGS quota brake.
-3. Daily release runs at the 20/day cap; watch refresh time weekly.
-4. Cloudflare Web Analytics + privacy page line.
-5. Alerts (web push), then favorites and units switch.
-6. Outreach drafts for the owner; owner adds a contact address.
-7. One new dataset per week (low-head dams first).
-8. Helpfulness audit after every feature batch; Search Console + analytics read weekly into this file.
-9. Owner dashboard at /ops/ (merged prompt 2026-10-29: three lights: healthy, growing, Google noticing; "you need to do" line; built by the hourly job; noindex header; unknown = "unknown").
-10. First-screen answers to real searches: each top Search Console query answered on its page's first screen (e.g. what the current cfs means on this river, from agency ranges where they exist).
-11. Share card: link preview image of the current-flow card; "checked against USGS at <time>" line on each page.
+1. Winter: ice gauges by 2026-12-01. When USGS withholds flow for ice (northern rivers, Dec-Mar), lib/hero.py ctx raises CriticalFail "no flow series" and the page freezes at the last pre-ice flow. Build a stage-only mode: gage height tiles plus "USGS withholds flow: ice". Proof: tools/break_blocks.py "ice" variant renders a page (today it is skipped).
+2. State fishing and boating rules: one official link each per state (data/state-rules.json, WebSearch evidence, curl-checked), shown in the gauge's official links.
+3. NOAA 10-day river model: the NWPS API returns an empty mediumRange for every series name (checked 2026-10-29, reach 2048241, Chattahoochee), so the 10-day line is missing on every page; the watchdog reports it. If still empty on 2026-11-29, look at the NWM medium-range bulk files instead.
+4. Edge-case fixtures still missing: unit allowlist per field. Done 2026-10-29: ice, zero flow, tidal reversal and irregular sampling variants in the break gate (0 reader faults, except ice above); NWS/USGS datum in tools/truth_fixtures.py.
+5. Sharded parallel collect (plan item 1): BUILT, ON since 2026-10-29 20:45 UTC (owner OK; undo: "sharded": false). sharded.yml (plan job, 20 collect shards, one finish job in the refresh group; a failed shard keeps its old files), switch data/pipeline.json {"sharded": false}; flip to true and push main to switch (if the plan job fails, the old single job runs). Shadow: 2,000 gauges steady state ~22 min (13 min slowest shard), WPC failures 8% -> 0%, rain 1-8% (empty answers, not fixed below 1%), truth contracts 0 failures at 2,000 (run 40941372688). Before ~500 gauges (about 2026-11-19 at 20/day; do by 2026-11-12): USGS-keyed history weekly, bulk neighbour temperature, USGS quota brake.
+6. Daily release runs at the 20/day cap; watch refresh time weekly.
+7. Cloudflare Web Analytics + privacy page line.
+8. Alerts (web push), then favorites and units switch.
+9. Outreach drafts for the owner; owner adds a contact address.
+10. One new dataset per week (low-head dams first).
+11. Helpfulness audit after every feature batch; Search Console + analytics read weekly into this file.
+12. Owner dashboard at /ops/ (merged prompt 2026-10-29: three lights: healthy, growing, Google noticing; "you need to do" line; built by the hourly job; noindex header; unknown = "unknown").
+13. First-screen answers to real searches: each top Search Console query answered on its page's first screen (e.g. what the current cfs means on this river, from agency ranges where they exist).
+14. Share card: link preview image of the current-flow card; "checked against USGS at <time>" line on each page.
 
 ## Owner only
 - Send the link-outreach emails (drafts provided).
@@ -94,7 +97,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 - Domain auto-renew (expires 2027-10-16).
 - GitHub dispatch token (fine-grained, Actions write, this repo) as Worker secret `GH_DISPATCH_TOKEN`.
 - Cloudflare KV writes and cron count (account shared, 5 crons); Workers Paid ($5/mo) before ~1,500 gauges.
-- Publisher name and contact email; consent banner and AdSense decision; outside uptime monitor.
+- Publisher name and contact email; consent banner and AdSense decision; outside uptime monitor. The security header (CSP) stays report-only while the AdSense script is on pages: enforcing it would block the ads.
 - Source-permission visits: USACE CWMS, TVA, Recreation.gov, NID.
 
 ## Open decisions
@@ -102,6 +105,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 - Access points and bacteria advisories (terms / no national feed).
 
 ## Done recently
+- 2026-10-29 evening: sharded collect ON (first run 40951494012: 20 of 20 shards, refresh OK, live built 21:06, 74 gauges, 0 failed); daily outside-link check in the watchdog found alerts.weather.gov dead (link removed, live read: 0 hits); watchdog health rules fixed (12 false "not working" lines down to real ones); docs/OPEN-ITEMS.md folded into this file.
 - 2026-10-29 dry run before deploy (dryrun.yml, 3035d71); water-temperature crash fix (098de3f); docs trimmed to CLAUDE.md + PLAN.md (c52b171).
 - 2026-10-28 batches 1-4: staleness table, NWS low-water levels, notes, flood status, forecast wording from one rule (4e8c788, 20a0130, 56c00a6, a021144, f0ecd72).
 - 2026-10-28 meta description "today's flow and water level" (ee232f5).
