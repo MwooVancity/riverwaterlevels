@@ -3,7 +3,12 @@ name: collect-shadow
 # Phase 1 of the sharded collect (PLAN.md First-principles item 1). A practice collect beside the live one: it restores the data cache READ-ONLY,
 # collects the gauges in parallel shards, compares each shard's result with the cache it started from, merges the shards' files to prove they
 # do not collide, prints the time. It never saves the cache, never builds, never deploys, never commits. Start it by hand (gh workflow run).
+# GitHub only dispatches a workflow that exists on main, and this one must stay off main until the switch, so on the check branch a push that
+# edits .github/shadow.env starts it (SHARDS, QUEUE, NEXT in that file); workflow_dispatch takes the same three values once it is on main.
 on:
+  push:
+    branches: [check]
+    paths: [".github/shadow.env"]
   workflow_dispatch:
     inputs:
       shards:
@@ -29,12 +34,18 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       idx: ${{ steps.p.outputs.idx }}
+      shards: ${{ steps.p.outputs.shards }}
+      queue: ${{ steps.p.outputs.queue }}
+      next: ${{ steps.p.outputs.next }}
       t0: ${{ steps.p.outputs.t0 }}
     steps:
+      - uses: actions/checkout@v4
       - id: p
         run: |
-          n=${{ inputs.shards }}
-          echo "idx=$(python3 -c "import json;print(json.dumps(list(range($n))))")" >> "$GITHUB_OUTPUT"
+          SHARDS="${{ inputs.shards }}"; QUEUE="${{ inputs.queue }}"; NEXT="${{ inputs.next }}"
+          if [ -z "$SHARDS" ]; then . .github/shadow.env; fi
+          echo "idx=$(python3 -c "import json;print(json.dumps(list(range($SHARDS))))")" >> "$GITHUB_OUTPUT"
+          echo "shards=$SHARDS" >> "$GITHUB_OUTPUT"; echo "queue=$QUEUE" >> "$GITHUB_OUTPUT"; echo "next=$NEXT" >> "$GITHUB_OUTPUT"
           echo "t0=$(date +%s)" >> "$GITHUB_OUTPUT"
 
   shard:
@@ -47,7 +58,7 @@ jobs:
         i: ${{ fromJSON(needs.plan.outputs.idx) }}
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-      COLLECT_NEXT: ${{ inputs.next == 'true' && '1' || '0' }}
+      COLLECT_NEXT: ${{ needs.plan.outputs.next == 'true' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -65,8 +76,8 @@ jobs:
       - name: Collect this shard
         run: |
           cp -r cache "$RUNNER_TEMP/base"; cp state/source-health.json "$RUNNER_TEMP/base-health.json" 2>/dev/null || echo '{}' > "$RUNNER_TEMP/base-health.json"
-          A="--shard=${{ matrix.i }}/${{ inputs.shards }}"
-          if [ "${{ inputs.queue }}" != "0" ]; then A="$A --queue=${{ inputs.queue }} --hourly-only"; fi
+          A="--shard=${{ matrix.i }}/${{ needs.plan.outputs.shards }}"
+          if [ "${{ needs.plan.outputs.queue }}" != "0" ]; then A="$A --queue=${{ needs.plan.outputs.queue }} --hourly-only"; fi
           python -I collect.py $A --print-sites > "$RUNNER_TEMP/sites.txt"
           echo "shard ${{ matrix.i }}: $(wc -l < "$RUNNER_TEMP/sites.txt") gauges, args $A, next=$COLLECT_NEXT"
           python -I collect.py $A | tail -n 40
