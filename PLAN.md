@@ -3,6 +3,10 @@
 ## Goal
 Be the most useful page for a person deciding about this river today, one page per USGS gauge. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
+## Cheap and lazy first (HARD, owner 2026-10-29: "This the cheap lazy way? Don't we have ponytail")
+Before any build or agent: does this need to exist at all? What already in the repo does it? Smallest change that works. A safety net for a failure an existing gate already blocks is not built.
+- Lesson 2026-10-29: a "live verifier with auto-rollback" agent wrote 282 lines (rollback, status page, new gate) for a risk Gate 2 already blocks (built pages are checked against USGS/NWS before deploy). Stopped and reverted. Smallest real gap is the 3-minute live swap: if ever needed, `truth_live.py --live` as a report-only line in the hourly watchdog, nothing more.
+
 ## Where we are (2026-10-29 07:40 UTC, handoff)
 - Live: 74 gauges, all 74 gauge pages open to Google (read live: sitemap 79 river URLs, no noindex on gauge pages). Live build 07:30 has batches A-E; F (old forecast tile age, hidden tiles named) and G (top minors) passed cloud dry runs and are pushed, deploying in order. Next session: read /status.json built_at > 07:30 and one Lees Ferry page body ("Older than 24 h" on the forecast tile) to confirm F/G live.
 - Helpfulness audit loop: run 5 = 0 BLOCKER, 0 MAJOR (from 1/18 in run 1). Reports in the old session scratchpad (audit-run1..5.md); checklist tools/helpful_audit.md.
