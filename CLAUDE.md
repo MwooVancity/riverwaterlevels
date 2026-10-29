@@ -41,6 +41,18 @@ A person at or near this river today, on a phone, with 30 seconds: about to fish
 - Deploy: only `.github/workflows/refresh.yml` (push to main, schedule, or `gh workflow run refresh.yml`). Then `python -I tools/index_live.py` (0 mismatches) and read one live page body. "Live" = read this turn.
 - New data source: row in `data/sources.json` (quoted terms, credit, `read_on`, WebSearch evidence, nothing from memory), fetch in `collect.py` `fetch_extras`, `python -I tools/gen_cache_shape.py`, one `b_*` block with its four states.
 
+## Pre-mortem before building (owner 2026-10-29: "one shot this ... thinking of failures first")
+Write how the change will fail before writing code; each line below is a failure that happened on 2026-10-28/29:
+- Laptop data is not cloud data (int vs str, stale fields): proof comes only from the cloud dry run.
+- One rule lives in several places: grep the repo for it first; change every copy or merge into one helper (truth_tests and check.py included).
+- A new check matching too much: run it on every built page first; more than a few hits = the pattern is wrong.
+- A file the cloud needs exists only locally: `git ls-files` every input (lists, data, stats).
+- Day 2 / day 30 / 1,000 gauges: what runs out, grows or slows.
+- Two workflows on one data cache or one concurrency group: a waiting run gets cancelled; keep one pipeline.
+- Old data shown as now: render with the clock shifted 2 days (fake-age test).
+- Pushing main before reading the dry-run verdict: read "refresh OK", then push in a separate step.
+- Risky pipeline changes (collect, deploy): shadow run beside the old path and compare outputs before switching.
+
 ## Procedure (every change)
 1. Say in one line what will change.
 2. One batch of edits through script files, then one check run.
