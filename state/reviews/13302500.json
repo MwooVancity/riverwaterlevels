@@ -1,9 +1,9 @@
 {
  "id": "13302500",
  "verdict": "PASS",
- "notes": "No F1-F8 found in 14 phone + desktop + text. NOTES: phone-05/06 forecast cards show 9 of 14 runs and silently skip runs (Oct 31 6:00 PM MDT jumps to Nov 1 5:00 PM MST; Nov 2 11:00 AM jumps to Nov 3 11:00 AM) with no 'N of 14 shown' line; phone-01/04 'NWS forecast (steady) 2.4 ft' while the dashed curve falls 2.45 to ~2.37 ft and flow 1,230 to 1,160 cfs (-6%); phone-02 hourly table visibility '\u2013' for the last 4 hours (feed gap); phone-03 flow chart last x label Oct 28 nudged left of its tick (spacing 85 vs 107 px); recent rain 'Last 3 days to Oct 27 ... 0.20 in' vs Salmon 0.2 NNW station days (labelled as not lining up).",
- "by": "hater-w14",
- "at": "2026-10-29T01:36:13+00:00",
- "template": "4a660324d934",
+ "notes": "No F1-F8. Notes: cold-water table says 'Under 50 F ... none' while October is missing from the monthly table and the nearby live reading is 46 F; scoped to 'these months' (May-Sep) so not false, but a reader in October is misled (phone-09/10) | 'Typical water temperature by month' names no station or years although the card says 'This gauge has no temperature sensor' (phone-09 vs phone-02) | forecast cards show nine identical '2.4 ft' tiles that differ only in cfs, and the line calls them '9 of the 14 levels' (phone-05/06) | '4.5 ft above' for 7.0 - 2.45 = 4.55 and '5.0 ft' for 5.05 (rounding, phone-01) | hourly VISIBILITY '-' for 3P-6P, feed did not publish (phone-02) | RFC 3-day 0.20 in vs station daily 0.72 in, windows differ, labelled (phone-03/06) | Shoup water-temp gauge 28 mi with no up/downstream word (phone-02).",
+ "by": "hater-w15",
+ "at": "2026-10-29T01:42:44+00:00",
+ "template": "092eaa9e4e5c",
  "level": "full"
 }

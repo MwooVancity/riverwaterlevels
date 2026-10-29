@@ -277,7 +277,7 @@ def hater_rules(h):
         vals_ = re.findall(r'<div class="rc[^"]*"><span class="rt">[^<]*</span><b>(.*?)</b>(?:<small>(.*?)</small>)?</div>', rf_.group(0))
         if any(a_ == b_ for a_, b_ in zip(vals_, vals_[1:])):
             bad.append("two neighbouring forecast cards print the same values")
-    if "Forecast high" in t and ("NWS forecast (steady)" in t or "at or below the latest reading" in t):
+    if ("Forecast high" in t or "Highest forecast" in t) and ("NWS forecast (steady)" in t or "at or below the latest reading" in t):
         bad.append("the forecast is called 'Forecast high' and also steady or at/below the reading on one page")
     if MOJI.search(t):
         bad.append("garbled characters %r: agency text decoded twice" % MOJI.search(t).group(0))

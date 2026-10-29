@@ -140,6 +140,11 @@ def sent_ends(txt):
 assert sent_ends("Water spreads across S. Main St. Bridge. Then more.") == [39]
 
 
+def fc_cur(G, gap):
+    """The stage a forecast is measured against: tile, cards, stage table and legend all call this (w14: Memphis cards fell back to "none" and said Highest forecast)."""
+    return gap[0] if gap else (G["sg"][-1][1] if G["sg"] else (nws_stage(G) or (None, None))[1])
+
+
 def nws_stage(G, max_h=24):
     """(time, value) of the NWS-observed stage at this gauge's forecast point when under max_h hours old, else None."""
     o = (G["rec"].get("nwps") or {}).get("obs_stage")

@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "3 full reviews (02336000, 07032000, 13302500) PASS on F1-F8; notes: Highest forecast header shows in the at-or-below case (07032000), forecast cards skip runs without an N-of-M line, '1 rows' grammar, edge x-axis labels nudged off ticks.",
- "by": "hater-w14",
- "at": "2026-10-29T01:36:13+00:00",
- "template": "4a660324d934",
+ "notes": "Full review of 07032000, 02336000, 13302500: forecast reference stage helper consistent across tile, cards, legend and stage chart (NWS stage at Memphis); count line and singular row OK; no F1-F8.",
+ "by": "hater-w15",
+ "at": "2026-10-29T01:42:44+00:00",
+ "template": "092eaa9e4e5c",
  "level": "full"
 }

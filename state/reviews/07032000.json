@@ -1,9 +1,9 @@
 {
  "id": "07032000",
  "verdict": "PASS",
- "notes": "No F1-F8 found in 13 phone + desktop + text. NOTES: phone-06 River forecast top card 'HIGHEST FORECAST \u00b7 OCT 29, 1:00 AM CDT -1.9 ft' while tile/legend say 'NWS forecast (at or below the latest reading)' - stated rule says the Highest forecast header appears only in the Forecast high case (true, not a misstatement, but spec not met); phone-06/07 9 cards shown of 25 runs (cards stop Nov 2, forecast runs to Nov 25) with no 'N of 25 shown' line; forecast tile has no NWS flood-status line (Atlanta has one); phone-04 stage chart x labels Oct 22/Oct 31 spacing 74 vs 100 px (first label nudged off its tick).",
- "by": "hater-w14",
- "at": "2026-10-29T01:36:13+00:00",
- "template": "4a660324d934",
+ "notes": "No F1-F8. Notes: forecast cards line says '9 of the 25 levels' while the link says 'All 70 forecast values, in 25 rows' (levels vs rows wording, phone-06/07) | 'How often each flow is reached (USGS, years not stated)' (phone-09) | recent rain windows end at different times (24 h to 5:00 PM, 2/3 days to 7:00 AM), labelled (phone-03/04) | 'Before these 7 days, last day above the 90th percentile Oct 1' not checkable against Oct 20 366,000 cfs on the page (phone-09). New forecast helper verified: NWS stage -1.75 used in tile, cards, legend; header 'AT OR BELOW THE LATEST READING' agrees with 'already above every forecast point'.",
+ "by": "hater-w15",
+ "at": "2026-10-29T01:42:43+00:00",
+ "template": "092eaa9e4e5c",
  "level": "full"
 }

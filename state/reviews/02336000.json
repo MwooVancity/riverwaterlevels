@@ -1,9 +1,9 @@
 {
  "id": "02336000",
  "verdict": "PASS",
- "notes": "No F1-F8 found in 15 phone + desktop + text. NOTES: phone-08 'All 18 forecast values, in 1 rows' (grammar, '1 row'); phone-01 tile 'NWS FORECAST (STEADY) 3.0 ft ... 0.1 ft above now' and forecast card 1,110 cfs vs latest 1,030 cfs (+8%) reads as rising to a reader though the label rule is met; phone-04/05 chart first x label (Oct 22) sits right of its tick (spacing 84 vs 107 px); map alt text overlap offline only.",
- "by": "hater-w14",
- "at": "2026-10-29T01:36:13+00:00",
- "template": "4a660324d934",
+ "notes": "No F1-F8. Notes: 'NWS FORECAST (STEADY)' with '0.1 ft above now' (3.0 vs 2.92, 0.08 ft; consistent with steady, no Highest-forecast header, phone-01) | 'All 18 forecast values, in 1 row' singular OK (phone-08) | 'lower than 90% of the 71 years' = Much below normal sits on the 10th-percentile band edge (phone-01) | live water 59 F in the 'Very Dangerous' band while typical Oct 61 F is 'Dangerous (this month)', two labelled datasets (phone-02/11) | NWS upstream list starts 'at US 41 at Atlanta', place name, order not checkable (phone-13).",
+ "by": "hater-w15",
+ "at": "2026-10-29T01:42:43+00:00",
+ "template": "092eaa9e4e5c",
  "level": "full"
 }

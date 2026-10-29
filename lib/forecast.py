@@ -96,9 +96,11 @@ def b_river_forecast(G):
         _k.append(i)
     pick = _k
     span_ = {a_: b_ for a_, b_ in _ends.values() if b_ != a_ and a_ in pick}
+    if len(pick) < len(_ends):
+        lead += '<p class="src">The cards show %d of the %d levels in this forecast, to %s; the table below lists every value.</p>' % (len(pick), len(_ends), esc(tzl(sel[-1][0], G["zone"])))
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
-    _cv = (gap[0] if gap else (G["sg"][-1][1] if G["sg"] else None)) if sel[top_i][1] is not None else G["lv"]
+    _cv = fc_cur(G, gap) if sel[top_i][1] is not None else G["lv"]
     _below = _hv is not None and _cv is not None and _hv < _cv - (0.05 if sel[top_i][1] is not None else 0.02 * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
     lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead + hydronotes_html(G)
     _flat = fc_word([x[1] if x[1] is not None else x[2] for x in sel], _cv, "ft" if sel[top_i][1] is not None else "cfs") != "high"  # no "Highest forecast" header unless the forecast rises above the reading  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
@@ -111,7 +113,7 @@ def b_river_forecast(G):
         t_, s_, f_ = sel[pick[0]]
         fcards = [card("Every forecast value, %s to %s" % (esc(tzl(sel[0][0], G["zone"])), esc(tzl(sel[-1][0], G["zone"]))), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
     ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
-    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more(("All %d forecast values" % len(sel)) if len(runs) == len(keep) else ("All %d forecast values, in %d rows (neighbouring equal values grouped)" % (len(sel), len(runs))), ftable),
+    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more(("All %d forecast values" % len(sel)) if len(runs) == len(keep) else ("All %d forecast values, in %d row%s (neighbouring equal values grouped)" % (len(sel), len(runs), "" if len(runs) == 1 else "s")), ftable),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=age)
 
 
