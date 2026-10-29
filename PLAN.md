@@ -60,7 +60,7 @@ In order of value to a person at the river:
 7. Plain-language "what this number means" taps; accessibility pass (contrast, text size, tap targets, labels).
 8. About page a person reads (who, why, how numbers are checked, corrections, contact); "checked against USGS at <time>" on each page.
 9. Search past ~150 gauges (known bug), confirm "near me" on a phone.
-10. Alerts by email/push when a river crosses a reader's level (needs a backend; open decision).
+10. Alerts APPROVED by owner 2026-10-29: web push first (no emails stored, no outside account): reader picks a level on a gauge page, the existing */3 Worker cron compares the latest reading and sends a push (VAPID keys as Worker secrets, subscriptions in KV; watch the shared 1,000 KV writes/day). Needs item 6 (installable page) for iPhone. Email later only with an owner-opened email service. Built right after the offline batch.
 
 ## Next steps (in order)
 1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
