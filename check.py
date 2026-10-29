@@ -476,10 +476,11 @@ def check_dir(d):
         if bool(cfg["open"]) != open_mode:
             site_bad.append("data/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
         if open_mode:
-            if want != {u for u in urls if indexing.indexable(u, cfg)}:
-                site_bad.append("pages without a noindex tag differ from data/index-allow.json")
+            ix_ = {u for u in urls if indexing.indexable(u, cfg)}
+            if want != ix_:
+                site_bad.append("pages without a noindex tag differ from data/index-allow.json: no tag but not allowed %s; allowed but tagged %s" % (sorted(want - ix_)[:5], sorted(ix_ - want)[:5]))
         if sm != want:
-            site_bad.append("sitemap differs from the indexable page set: %d only in sitemap, %d only in site" % (len(sm - want), len(want - sm)))
+            site_bad.append("sitemap differs from the indexable page set: only in sitemap %s; only in site %s" % (sorted(sm - want)[:5], sorted(want - sm)[:5]))
     else:
         site_bad.append("no sitemap.xml")
     # reachability and depth from home
