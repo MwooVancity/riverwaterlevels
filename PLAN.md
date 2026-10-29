@@ -65,7 +65,7 @@ In order of value to a person at the river:
 ## Helpfulness audit loop (owner 2026-10-29: "literally everything, down to the UI"; "think of the user not Google")
 - Checklist: `tools/helpful_audit.md` (A purpose/first screen ... Q edge cases, 74 items). Judged as the person at the river, never as Google.
 - Loop until clean: run ALL categories on Memphis 07032000, Boise 13206000, Scottville 04122500 + home, one state page, one river hub (text pass on the cheaper model; screenshots only for [eyes] items) -> every BLOCKER and MAJOR fixed in batches (one batch per category group, each: build, my look at one screenshot, cloud dry run, push, read live) -> re-run the audit on the fixed categories -> MINOR items listed here with a decision.
-- Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: audit run 1 not started (newcomer clarity batch running first, 2026-10-29).
+- Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: run 1 (2026-10-29) = 1 BLOCKER, 18 MAJOR, 19 MINOR. Fix batch A (honest data age: stale alerts never 'No alerts', not-reporting banner at top, ages on list rows, ended flood outlook hidden, window key) running; batch B next (plain words + glossary gaps, cold-water order, unnamed ramps, search typos, far 'other gauges'); batch C (weight: one cacheable CSS file, deep tables on tap). Then run 2.
 
 ## Next steps (in order)
 1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
