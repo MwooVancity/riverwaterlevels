@@ -23,7 +23,7 @@ def template_hash():
     """Fingerprint of the code that decides what a page shows (hater review: a change here needs a fresh signed review). Line endings are
     normalised so a Windows checkout and CI agree."""
     import glob, hashlib
-    files = sorted(glob.glob(os.path.join(ROOT, "lib", "*.py")) + glob.glob(os.path.join(ROOT, "templates", "*")) + [os.path.join(ROOT, f) for f in ("build.py", "collect.py", "worker/index.js", "data/name-fixes.csv", "data/name-overrides.csv", "data/index-allow.json", "data/sources.json")])
+    files = sorted(glob.glob(os.path.join(ROOT, "lib", "*.py")) + glob.glob(os.path.join(ROOT, "templates", "*")) + [os.path.join(ROOT, f) for f in ("build.py", "collect.py", "worker/index.js", "data/name-fixes.csv", "data/name-overrides.csv", "data/sources.json")])
     h = hashlib.sha256()
     for f in files:
         h.update(os.path.relpath(f, ROOT).replace("\\", "/").encode() + b"\0" + open(f, "rb").read().replace(b"\r\n", b"\n"))

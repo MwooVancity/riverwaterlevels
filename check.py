@@ -219,15 +219,16 @@ def edge_drift(js):
 
 
 def review_gaps(live_sites, reviews, code):
-    """Owner 2026-10-27: no page is live unless a hater looked at it. reviews = {id: record from state/reviews}; code = template_hash()."""
+    """The shared page code needs a signed _template review; a gauge whose latest review is FAIL stays off the site. A never-reviewed gauge ships on the
+    machine gates (owner 2026-10-29 first-principles pass: per-gauge review capped coverage; replaces the 2026-10-27 every-gauge rule)."""
     bad = []
     t = reviews.get("_template")
     if not t or t.get("verdict") != "PASS" or t.get("template") != code:
         bad.append("page code changed since the last signed hater review (code %s, last PASS %s): screenshot a sample, review it, sign _template" % (code, (t or {}).get("template") if (t or {}).get("verdict") == "PASS" else "none"))
     for s_ in sorted(live_sites):
         r = reviews.get(s_)
-        if not r or r.get("verdict") != "PASS":
-            bad.append("gauge %s is live without a signed hater PASS (%s)" % (s_, "FAIL: " + r["notes"][:80] if r else "never reviewed"))
+        if r and r.get("verdict") != "PASS":
+            bad.append("gauge %s is live with a FAIL review (FAIL: %s)" % (s_, r["notes"][:80]))
     return bad
 
 
@@ -291,6 +292,13 @@ def hater_rules(h):
             bad.append("two neighbouring forecast cards print the same values")
     if ("Forecast high" in t or "Highest forecast" in t) and ("NWS forecast (steady)" in t or "at or below the latest reading" in t):
         bad.append("the forecast is called 'Forecast high' and also steady or at/below the reading on one page")
+    dw_ = re.search(r"(Steady|Rising|Falling): ([+-]?\d+(?:\.\d+)?)% flow in 6 h", t)
+    rc_ = re.search(r"Last 6 h \S+ [+-]?[\d.]+% ([+-])([\d,]+) cfs", t)
+    if dw_ and rc_:  # w18 FAIL: "Steady" beside a 6 h change of -3.4% and -40 cfs; the word follows flow_dir (2 % and 5 cfs)
+        pct_, cfs_ = float(dw_.group(2)), int(rc_.group(2).replace(",", ""))
+        want_ = "Steady" if abs(pct_) < 2 or cfs_ < 5 else ("Rising" if pct_ > 0 else "Falling")
+        if dw_.group(1) != want_:
+            bad.append("direction word %r beside a 6 h change of %s%% and %s cfs (the rule gives %s)" % (dw_.group(1), dw_.group(2), cfs_, want_))
     if MOJI.search(t):
         bad.append("garbled characters %r: agency text decoded twice" % MOJI.search(t).group(0))
     imp = re.search(r'id="flood_impacts".*?</section>', h, re.S)
@@ -536,6 +544,8 @@ def selftest():
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
     assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert hater_rules("<b>Steady: -3.4% flow in 6 h</b><div>Last 6 h ▼ -3.4% -40 cfs</div>"), "selftest: 'Steady' beside a -3.4%, -40 cfs change did not fire"
+    assert not hater_rules("<b>Falling: -3.4% flow in 6 h</b><div>Last 6 h ▼ -3.4% -40 cfs</div>"), "selftest: a correct direction word wrongly flagged"
     assert "%.1f" % r1(7.0 - 2.45) == "4.6", "selftest: stage difference 7.0 - 2.45 did not round half up"
     assert hater_rules('<span>NWS forecast (steady)</span><b>3.0 ft</b><li class="fcl">Forecast high <b>3.0 ft</b></li>'), "selftest: two names for one forecast did not fire"
     assert hater_rules('<section id="river_forecast"><div class="rc"><span class="rt">Oct 29</span><b>3.0 ft</b><small>1,110 cfs</small></div><div class="rc"><span class="rt">From Oct 29 to Nov 2</span><b>3.0 ft</b><small>1,110 cfs</small></div></section>'), "selftest: identical neighbouring forecast cards did not fire"
@@ -556,7 +566,7 @@ def selftest():
     assert not css_truncation(".tile small{display:block}"), "selftest: plain caption CSS wrongly flagged"
     ok_rev = {"_template": {"verdict": "PASS", "template": "abc"}, "01": {"verdict": "PASS", "notes": ""}}
     assert not review_gaps({"01"}, ok_rev, "abc"), "selftest: reviewed page on reviewed code wrongly blocked"
-    assert any("without a signed hater PASS" in x for x in review_gaps({"01", "02"}, ok_rev, "abc")), "selftest: unreviewed live gauge did not block"
+    assert not review_gaps({"01", "02"}, ok_rev, "abc"), "selftest: a never-reviewed live gauge wrongly blocked (it ships on the machine gates)"
     assert any("code changed" in x for x in review_gaps({"01"}, ok_rev, "xyz")), "selftest: changed page code without a new review did not block"
     assert any("FAIL" in x for x in review_gaps({"01"}, dict(ok_rev, **{"01": {"verdict": "FAIL", "notes": "tidal on a dam river"}}), "abc")), "selftest: a FAIL verdict did not block"
     w_ok = "async function poll(env) { await fetch(USGS); }\nasync function build(env) { await fetch(GH); }\nasync function serve(req, env) { return env.ASSETS.fetch(req); }"

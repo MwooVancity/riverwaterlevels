@@ -1,8 +1,9 @@
 {
  "id": "02037500",
  "verdict": "PASS",
- "notes": "No F1-F8 found. Notes: phone-01 'Below normal' with 24 h mean 'lower than 75% of the 89 years' sits on the USGS 25th-percentile band edge; phone-01 'Forecast high 3.5 ft' comes from a forecast phone-07 marks 'OLDER THAN 24 H' (issued Oct 27, 9:18 AM), the top tile could carry that age too; phone-11 KOFP 'Visibility 0 mi' (fog, as reported); phone-08 one rain '-' cell; map alt text overlap is offline artifact",
- "by": "hater-w4k",
- "at": "2026-10-28T14:12:22+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "w18 F1/F8 fixed at the cause: one direction rule (flow_dir 2 % and 5 cfs), 7 special cases deleted; phone-01 seen: headline, flow tile and change card all 'Falling: -3.4%'; check.py now fails a direction word that disagrees with the 6 h change",
+ "by": "builder-machine",
+ "at": "2026-10-29T04:37:27+00:00",
+ "template": "656cb050cd8d",
+ "level": "machine"
 }

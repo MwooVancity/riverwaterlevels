@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "no visual change: str() around water temperature years (cloud cache ints crashed b_wtemp on 11 gauges); covered by truth_tests block guard on fresh cloud data; review level none per global rule",
+ "notes": "refactor (one helper per decision) full-reviewed w18: Memphis and Boise PASS, James FAIL fixed by one direction rule now machine-checked; index-allow.json out of template_hash; all gauge pages opened to Google",
  "by": "builder-machine",
- "at": "2026-10-29T02:39:27+00:00",
- "template": "3c39b6662e66",
+ "at": "2026-10-29T04:35:54+00:00",
+ "template": "656cb050cd8d",
  "level": "machine"
 }

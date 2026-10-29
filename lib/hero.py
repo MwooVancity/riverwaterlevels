@@ -271,27 +271,7 @@ def hero(G, pages=None):
             c6 = c["chg"].get(6)
             use, span = (c6, "6 h") if c6 is not None else (chg, "24 h")
             c1 = c["chg"].get(1)
-            word, ico = DIR_WORD[flow_dir(use)]
-            c3 = c["chg"].get(3)
-            if word != "Steady" and flow_dir(use, use * G["lv"] / 100) == "steady":
-                word, ico = "Steady", "steady"  # full review: "+2.1% Rising" was +4 cfs
-            elif word != "Steady" and abs(use) < 5 and c3 is not None and (abs(c3) < 0.5 or (c3 > 0) != (use > 0)):
-                word, ico = "Steady", "steady"  # a small 6 h change the last 3 h do not carry is a wobble (full review: "+2.2% Rising" on a flat river)
-            elif word == "Steady" and c3 is not None and abs(c3) >= 3 and abs(c3) * G["lv"] / 100 >= 5:  # 6 h endpoints equal, the last 3 h moved (hater 2026-10-27: "Steady" beside "3 h +4.3%")
-                use, span = c3, "3 h"
-                word, ico = ("Rising", "up") if c3 > 0 else ("Falling", "down")
-            elif word == "Steady" and chg is not None and abs(chg) >= 4:  # a slow, steady move (hater round 3: Memphis "Steady" at -4.8% in 24 h, -27% in 7 days)
-                use, span = chg, "24 h"
-                word, ico = ("Rising", "up") if chg > 0 else ("Falling", "down")
-            if c1 is not None and word != "Steady":
-                if abs(c1) >= 2 and (c1 > 0) != (use > 0):
-                    word, ico = "Unsteady", "steady"  # the last hour points the other way from the last 6 h
-                elif abs(c1) < 0.5 and abs(use) >= 3:
-                    word, ico = "Leveling off", "steady"  # it moved, and has stopped
-            sgd = c.get("sg6")
-            if word in ("Rising", "Falling") and sgd is not None and abs(sgd) >= 0.05 and (sgd > 0) != (use > 0) and abs(use) < 5:
-                word, ico = "Unclear", "steady"  # a small flow change that the gage height contradicts is noise, not a direction
-                word_note = "<small>Flow changed %+.1f%% in %s but the gage height moved %+.2f ft the other way, so the direction is unclear.</small>" % (use, span, sgd)
+            word, ico = DIR_WORD[flow_dir(use, use * G["lv"] / 100 if G["lv"] else None)]  # one rule, the same as the rate table and the glossary (w18: seven special cases deleted)
             turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
             other = [(n_, v) for n_, v in (("1 h", c1), ("6 h", c6), ("24 h", chg)) if v is not None and n_ != span]
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)

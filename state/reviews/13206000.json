@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "No FAIL-list defect. cfs-based impacts correct (4,200-232=3,968 ... 8,900-232=8,668); 166 h/168 h, 7 days, 11 months consistent; forecast high 3.3 ft is 0.1 ft above 3.24. NOTES: first-screen 'FORECAST HIGH 3.3 FT Nov 1, 5:00 AM MST' while the card tagged 'HIGHEST FORECAST' is Nov 5 to Nov 7 (equal at 0.1 ft, rounding) phone-01/phone-07; lowest reading 189 cfs is the first point of the window (edge dip on chart) phone-04/06; water temp 6 mi away on a different river, labelled; no temperature sensor so monthly temp / cold-water blocks not exercised here.",
- "by": "hater-w16",
- "at": "2026-10-29T02:09:21+00:00",
- "template": "b0f8e9d09c50",
+ "notes": "No F1-F8 defect. Notes: new block 'Annual peaks that reached flood stage' sits inside the collapsed 'Flood record and history' panel, so its content is in no screenshot or text.txt and was NOT reviewed (phone-11); 'Oct 21, 8:15 PM MDT, 166 h earlier' is 166.5 h, half-up would print 167 h (phone-06, rounding); first-screen 'Forecast high 3.3 ft Nov 1' vs card 'HIGHEST FORECAST Nov 5 to Nov 7 3.3 ft 237 cfs' (phone-01/07, first time vs highest flow).",
+ "by": "hater-w18",
+ "at": "2026-10-29T04:32:28+00:00",
+ "template": "d6addf206a63",
  "level": "full"
 }
