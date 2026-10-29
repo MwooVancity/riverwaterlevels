@@ -513,6 +513,11 @@ def check_dir(d):
         kept = set(json.load(open(os.path.join(d, "status.json"), encoding="utf-8")).get("failed_urls") or [])
     except (OSError, ValueError):
         kept = set()
+    try:
+        kept |= {"/" + r.replace("\\", "/").rsplit("index.html", 1)[0] for r in json.load(open(os.path.join(d, "_carried.json")))}
+    except (OSError, ValueError):
+        pass
+    kept |= {"/embed" + u for u in list(kept)}  # a kept gauge page keeps its embed panel too
     orphans = [u for u in urls if u not in depth and u not in kept]
     if orphans:
         site_bad.append("%d pages not reachable from home, e.g. %s" % (len(orphans), orphans[:3]))

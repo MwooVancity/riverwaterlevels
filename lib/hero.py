@@ -274,7 +274,7 @@ def hero(G, pages=None):
             c6 = c["chg"].get(6)
             use, span = (c6, "6 h") if c6 is not None else (chg, "24 h")
             c1 = c["chg"].get(1)
-            word, ico = DIR_WORD[flow_dir(use, G["lv"] * use / (100 + use) if G["lv"] and use > -100 else None)]  # cfs change = now - earlier, earlier = now / (1 + pct/100) (Fort Collins: -30.1% was 6 cfs, not 4)  # one rule, the same as the rate table and the glossary (w18: seven special cases deleted)
+            word, ico = DIR_WORD[flow_dir(round(use, 1), G["lv"] * use / (100 + use) if G["lv"] and use > -100 else None)]  # the printed % decides (Suwannee: -1.96 printed -2.0% was "Steady")  # cfs change = now - earlier, earlier = now / (1 + pct/100) (Fort Collins: -30.1% was 6 cfs, not 4)  # one rule, the same as the rate table and the glossary (w18: seven special cases deleted)
             turned = c6 is not None and abs(chg) >= 5 and abs(c6) >= 2 and (chg > 0) != (c6 > 0)
             other = [(n_, v) for n_, v in (("1 h", c1), ("6 h", c6), ("24 h", chg)) if v is not None and n_ != span]
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)

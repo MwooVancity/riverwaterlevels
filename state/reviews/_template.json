@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "weather headings name the place (where_ helper; 'at at' caught by check); polish batch",
+ "notes": "newcomer clarity batch (units line, plain labels, freshness in headings, daily-average labels, drought note, flow-duration wording, cite moved); direction word follows the printed %; builder looked at Memphis phone-01",
  "by": "builder-machine",
- "at": "2026-10-29T05:02:49+00:00",
- "template": "efdf59e1fe6c",
+ "at": "2026-10-29T05:17:54+00:00",
+ "template": "5996165e1ac5",
  "level": "machine"
 }
