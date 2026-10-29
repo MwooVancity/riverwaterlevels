@@ -73,7 +73,7 @@ In order of value to a person at the river:
 ## Next steps (in order)
 Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release inside refresh.yml (20/day cap; practice release 40892070041: 18 added, 2 skipped for no USGS readings, refresh OK; first real release next 11:00 UTC).
 1. Confirm batches F and G live; read the practice release run (20 real gauges picked, "refresh OK").
-2. Sharded parallel collect (plan item 1). Done when a 500-gauge run is under 30 min, all gates green.
+2. Sharded parallel collect (plan item 1). Shadow results 2026-10-29 (branch check, collect-shadow.yml): today 74 gauges = 23.4 min (56% is the 1.5 s NWS/NWPS pause, one request at a time); new design (COLLECT_NEXT: 20 shards, sources per gauge in threads, per-host pause, forecasts/outlooks 3-hourly, NWPS neighbours daily) = 74 gauges 3.9 min, 374 = 8.2 min, 2,000 = 18.8 min, live gauges compare clean. Before switching: retry on NWS/WPC/rain map 5xx, merge job (one cache save, keep old files of a failed shard, same refresh group), one steady-state shadow hour. Before ~500 gauges: USGS-keyed history sources weekly, bulk neighbour temperature, USGS quota brake (<150 of 1,000/h left). Done when the switched refresh runs under 30 min with all gates green.
 3. Daily release runs at the 20/day cap; watch refresh time weekly.
 4. Cloudflare Web Analytics + privacy page line.
 5. Alerts (web push), then favorites and units switch.
