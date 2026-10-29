@@ -14,6 +14,7 @@ NWPS_H = {"User-Agent": NWS_H["User-Agent"], "Accept": "application/json"}  # 20
 
 
 _last = [0.0]
+_last_host = {}
 import time as _time, zlib, copy
 NEXT = os.environ.get("COLLECT_NEXT") == "1"  # shadow design (check branch): per-run memo of shared GETs, staggered 3-hourly NWS forecast, daily retry of gauges NWPS does not know. Off = today's behaviour exactly.
 HOURLY_ONLY = "--hourly-only" in sys.argv  # shadow only: a gauge with no cache gets a seeded record with every slow source marked just-fetched, so the run measures the steady hourly cost
@@ -52,11 +53,12 @@ def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
         _tick("~memo hit", 0)
         return copy.deepcopy(MEMO[url])
     for i in range(tries):
-        wait = gap - (time.time() - _last[0])
+        host = urllib.parse.urlparse(url).netloc if NEXT else ""  # NEXT: one gap per host; today: one gap for all hosts
+        wait = gap - (time.time() - (_last_host.get(host, 0.0) if NEXT else _last[0]))
         if wait > 0:
             _tick("~gap sleep", wait, 0)
             time.sleep(wait)
-        _last[0] = time.time()
+        _last[0] = _last_host[host] = time.time()
         try:
             r = http_json(url, headers, timeout)
             if NEXT and "api.weather.gov" in url:
@@ -743,13 +745,17 @@ def esri_point(layer_url, lat, lon, where="1=1", fields="*", dist=None):
     return [f["attributes"] for f in j.get("features", [])]
 
 
-def fetch_wpc(lat, lon):
+def fetch_wpc(lat, lon, prev=None, site=""):
     """WPC significant river flood outlook and excessive rainfall outlook (days 1 to 3) at the gauge point, and NWS flood or flash flood local storm reports within 50 miles in the last 72 h."""
     def ms(v):
         return datetime.datetime.fromtimestamp(v / 1000, datetime.timezone.utc).isoformat() if isinstance(v, (int, float)) else None
     outlooks = []
+    slow = not NEXT or not isinstance(prev, dict) or prev.get("outlooks") is None or (datetime.datetime.now(datetime.timezone.utc).hour + zlib.crc32(site.encode())) % 3 == 0
     for name, url in (("Significant river flood outlook", MAPS + "outlooks/sig_riv_fld_outlk/MapServer/0"), ("Excessive rainfall outlook, day 1", MAPS + "hazards/wpc_precip_hazards/MapServer/0"),
                       ("Excessive rainfall outlook, day 2", MAPS + "hazards/wpc_precip_hazards/MapServer/1"), ("Excessive rainfall outlook, day 3", MAPS + "hazards/wpc_precip_hazards/MapServer/2")):
+        if not slow:
+            outlooks = prev["outlooks"]
+            break
         for a in esri_point(url, lat, lon):
             outlooks.append({"name": name, "category": a.get("outlook"), "issued": a.get("issue_time"), "start": a.get("start_time"), "end": a.get("end_time")})
     reports = []
@@ -1141,7 +1147,7 @@ def collect(site, inv):
     rec["river_name"] = g.get("name")
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
-    for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"), site)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
+    for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"), site)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon, rec.get("wpc"), site))):
         run_source(rec, key, fn, log)
     if nwm_due(rec):
         run_source(rec, "nwm", lambda: fetch_nwm(site, rec.get("nwm")), log)
@@ -1303,7 +1309,7 @@ def fast(inv, sites):
             if add:
                 rec["usgs"]["fetched_at"] = now_iso()
             note("usgs", "ok" if s in new else "absent")
-            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
+            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"], rec.get("wpc"), s))):
                 run_source(rec, key, fn, log)
             if nwm_due(rec):
                 run_source(rec, "nwm", lambda: fetch_nwm(s, rec.get("nwm")), log)

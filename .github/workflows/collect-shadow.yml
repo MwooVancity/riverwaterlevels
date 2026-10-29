@@ -58,6 +58,8 @@ jobs:
         i: ${{ fromJSON(needs.plan.outputs.idx) }}
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
+      AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
       COLLECT_NEXT: ${{ needs.plan.outputs.next == 'true' && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4

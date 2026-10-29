@@ -6,7 +6,7 @@ Per gauge: (1) every source the base record has, the new record has; (2) newest 
 import sys, os, json, datetime
 
 base, new, sites_file, hb, hn, out = sys.argv[1:7]
-SKIP = {"fetched_at", "_fetched", "site", "tz", "stats_source"}
+SKIP = {"fetched_at", "_fetched", "site", "tz", "stats_source", "alerts"}  # alerts come and go with the weather: absent in one run is not a lost source
 
 
 def keys(rec):
