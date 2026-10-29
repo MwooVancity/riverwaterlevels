@@ -2,7 +2,7 @@
 
 A US river conditions site for people who fish, paddle, swim, wade, boat or live beside a river, built from government data only (USGS, NOAA / NWS, USDA, EPA, NCEI). One page per USGS gauge, river hubs, state pages and trust pages, served by a Cloudflare Worker with static assets. Indexing is opened page by page through `data/index-allow.json`.
 
-Start with `CLAUDE.md` (Line 0, rules, pipeline), then `docs/RUNBOOK.md` (how to ship) and `docs/OPEN-ITEMS.md` (what is still missing).
+Start with `CLAUDE.md` (orders) and `PLAN.md` (strategy and status); `docs/RUNBOOK.md` is what the owner does when something breaks.
 
 ```
 python -I collect.py [site ...]          # the only network code; refreshes cache/ (no sites: the hourly run)
