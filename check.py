@@ -470,6 +470,12 @@ def check_dir(d):
         hp = os.path.join(d, "_headers")
         hdr = open(hp, encoding="utf-8").read() if os.path.exists(hp) else ""
         open_mode = not re.search(r"https://riverwaterlevels\.com/\*\s*\n\s*X-Robots-Tag: noindex", hdr)
+        try:
+            car_ = {"/" + r.replace("\\", "/").rsplit("index.html", 1)[0] for r in json.load(open(os.path.join(d, "_carried.json")))}
+        except (OSError, ValueError):
+            car_ = set()
+        urls = [u for u in urls if u not in car_]
+        sm -= car_
         want = {u for u in urls if not noindex_of.get(u)} if open_mode else set(urls)
         from lib import indexing
         cfg = indexing.load(ROOT)

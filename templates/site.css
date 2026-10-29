@@ -291,3 +291,5 @@ html.tabsjs .gtabs button{border-radius:0}
 pre.card{white-space:pre-wrap;word-break:break-all;font-size:.85rem}
 .fcs.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));overflow:visible}.fcs.mgrid .fc{flex:none}
 .tag.amber,.blk>h2 .tag.amber{color:var(--amber)}
+table.hlist{width:100%;font-size:.9rem}table.hlist td,table.hlist th{text-align:right;padding:8px 6px}table.hlist td:first-child,table.hlist th:first-child{text-align:left;font-weight:600;white-space:nowrap}
+table.hlist td{white-space:nowrap}
