@@ -10,7 +10,7 @@ UNIVERSAL = {"meta", "nws", "rain", "wpc", "cpc", "cpc610", "usdm", "acis"}
 # only where the feature exists: a sensor, a forecast point, a tidal reach, a nearby monitor, a long record
 CONDITIONAL = {"related", "nwps", "nwm", "peaks", "wtemp", "snotel", "attains", "fieldmeas",
                "floodfreq", "tides", "cameras", "airnow", "ridb", "near_wtemp", "streamcat",
-               "stocking", "access", "rating",
+               "stocking", "access", "rating", "wqp", "uv", "dam_rise", "dam_cwms",
                "year", "multiyear", "record", "land"}
 
 ALL_SOURCES = UNIVERSAL | CONDITIONAL

@@ -202,10 +202,13 @@
   {
    "id": "uv",
    "name": "U.S. EPA Envirofacts hourly UV index",
-   "status": "off",
-   "off_reason": "2026-10-25: the hourly UV service we called by LATITUDE/LONGITUDE now returns 404 (verified across gauges); the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so a keyless lat/lon->ZIP step must be wired before UV returns. Documented gap, not a silent failure.",
+   "status": "owner-permission",
+   "read_on": "2026-10-29",
+   "permission": "owner 2026-10-29",
+   "evidence": "owner-permission",
+   "off_reason_was": "2026-10-25: the hourly UV service we called by LATITUDE/LONGITUDE now returns 404 (verified across gauges); the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so a keyless lat/lon->ZIP step must be wired before UV returns. Documented gap, not a silent failure.",
    "terms_url": "https://www.epa.gov/enviro/envirofacts-data-service-api",
-   "summary": "EPA public UV index API, no auth; hourly forecast UV at the point for today, credited to EPA; category from the published EPA UV Index scale.",
+   "summary": "EPA Envirofacts daily UV index by ZIP (data.epa.gov), ZIP from the Census geocoder; no auth. Today's value only, credited to EPA; category from the published EPA UV Index scale.",
    "credit": "UV index: U.S. Environmental Protection Agency",
    "read_on": "2026-10-23",
    "evidence": "search-result",
@@ -258,9 +261,27 @@
   {
    "id": "usbr",
    "name": "U.S. Bureau of Reclamation RISE",
-   "status": "off",
+   "status": "owner-permission",
+   "read_on": "2026-10-29",
+   "permission": "owner 2026-10-29",
+   "evidence": "owner-permission",
    "terms_url": "https://data.usbr.gov/rise-api",
-   "summary": "No terms text could be read (hosts refused the connection from this machine). Off until read.",
+   "credit": "Dam release and lake level: U.S. Bureau of Reclamation (RISE)",
+   "summary": "Daily mean release (cfs) and lake elevation (ft) for hand-matched dams (data/dams.json); no auth.",
+   "blocks": [
+    "dam_releases"
+   ]
+  },
+  {
+   "id": "cwms",
+   "name": "U.S. Army Corps of Engineers CWMS Data API (Northwest Division)",
+   "status": "owner-permission",
+   "read_on": "2026-10-29",
+   "permission": "owner 2026-10-29",
+   "evidence": "owner-permission",
+   "terms_url": "https://cwms-data.usace.army.mil/cwms-data/",
+   "credit": "Dam release: U.S. Army Corps of Engineers (CWMS)",
+   "summary": "Latest outflow (cfs) of hand-matched Northwest dams (data/dams.json); no auth.",
    "blocks": [
     "dam_releases"
    ]
@@ -342,10 +363,13 @@
   {
    "id": "wqp",
    "name": "Water Quality Portal (EPA, USGS, state agencies)",
-   "status": "off",
+   "status": "owner-permission",
+   "read_on": "2026-10-29",
+   "permission": "owner 2026-10-29",
+   "evidence": "owner-permission",
    "terms_url": "https://www.waterqualitydata.us/",
    "credit": "Water samples: Water Quality Portal (EPA, USGS, states)",
-   "summary": "Held off: samples cannot be reliably tied to THIS river (bbox catches tributaries); misleading as a per-gauge block. Re-add only with same-river station matching.",
+   "summary": "E. coli results at stations on this river's own channel (USGS NLDI upstream and downstream navigation, 15 km), last 3 years, last 3 samples; no verdict.",
    "read_on": "2026-10-23",
    "evidence": "search-result",
    "blocks": [

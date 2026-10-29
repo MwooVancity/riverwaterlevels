@@ -1,4 +1,45 @@
 {
+"_fetched": {
+"access": "iso",
+"acis": "iso",
+"airnow": "iso",
+"atlas14": "iso",
+"attains": "iso",
+"cameras": "iso",
+"cpc": "iso",
+"cpc610": "iso",
+"dam_cwms": "iso",
+"dam_rise": "iso",
+"fema_zone": "iso",
+"fieldmeas": "iso",
+"floodfreq": "iso",
+"meta": "iso",
+"multiyear": "iso",
+"near_wtemp": "iso",
+"nid": "iso",
+"peaks": "iso",
+"rating": "iso",
+"record": "iso",
+"related": "iso",
+"related_list": "iso",
+"ridb": "iso",
+"rise": "iso",
+"snotel": "iso",
+"stocking": "iso",
+"streamcat": "iso",
+"tides": "iso",
+"usdm": "iso",
+"usgs_full": "iso",
+"uv": "iso",
+"wqp": "iso",
+"wtemp": "iso",
+"year": "iso"
+},
+"access": {
+"count": "num",
+"fetched_at": "iso",
+"rows": "list"
+},
 "acis": {
 "days": "list",
 "fetched_at": "iso",
@@ -7,6 +48,10 @@
 "airnow": {
 "fetched_at": "iso",
 "rows": "list"
+},
+"alerts": {
+"events": "list",
+"n": "num"
 },
 "atlas14": {
 "ari": "list",
@@ -37,6 +82,30 @@
 "start": "str",
 "temp": "dict"
 },
+"dam_cwms": {
+"agency": "str",
+"dam": "str",
+"fetched_at": "iso",
+"flow": "dict",
+"kind": "str"
+},
+"dam_rise": {
+"agency": "str",
+"dam": "str",
+"fetched_at": "iso",
+"flow": "dict",
+"kind": "str",
+"pool": "dict"
+},
+"drought": {
+"d0": "num",
+"d1": "num",
+"d2": "num",
+"d3": "num",
+"d4": "num",
+"mapDate": "iso",
+"none": "num"
+},
 "fema_zone": {
 "fetched_at": "iso",
 "meters": "num",
@@ -48,6 +117,7 @@
 },
 "floodfreq": {
 "citation": "str",
+"dur": "list",
 "fetched_at": "iso",
 "range": "str",
 "rows": "list",
@@ -96,16 +166,22 @@
 "crests": "list",
 "fetched_at": "iso",
 "forecast": "dict",
+"hydronotes": "list",
 "impacts": "list",
 "lid": "str",
+"low_hist": "list",
+"low_impacts": "list",
 "lro": "dict",
 "name": "str",
+"obs_series": "list",
 "obs_stage": "dict",
 "reach_id": "str",
 "reliability": "str",
+"rf_at": "iso",
 "rfc": "dict",
 "riverflow": "dict",
 "stage_units": "str",
+"status": "dict",
 "wfo": "dict"
 },
 "nws": {
@@ -120,6 +196,7 @@
 "periods": "list",
 "radar": "str",
 "radar_ll": "list",
+"static": "dict",
 "tz": "str"
 },
 "peaks": {
@@ -535,6 +612,14 @@
 "12-30": "list",
 "12-31": "list"
 },
+"stocking": {
+"credit": "str",
+"fetched_at": "iso",
+"miles": "num",
+"rows": "list",
+"source": "str",
+"url": "str"
+},
 "streamcat": {
 "comid": "num",
 "fetched_at": "iso",
@@ -559,11 +644,26 @@
 "rows": "list",
 "truncated": "list"
 },
+"uv": {
+"date": "iso",
+"fetched_at": "iso",
+"index": "num",
+"peak": "num",
+"peak_t": "str",
+"rows": "list",
+"zip": "str"
+},
 "wpc": {
 "fetched_at": "iso",
 "n_reports": "num",
 "outlooks": "list",
 "reports": "list"
+},
+"wqp": {
+"count": "num",
+"fetched_at": "iso",
+"n_sites": "num",
+"rows": "list"
 },
 "wtemp": {
 "fetched_at": "iso",

@@ -1076,7 +1076,7 @@ def default_sites():
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
 DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains", "record", "year", "fieldmeas", "floodfreq", "acis",
-         "ridb", "streamcat", "stocking", "access", "rating", "multiyear"}
+         "ridb", "streamcat", "stocking", "access", "rating", "multiyear", "wqp", "uv", "dam_rise"}
 
 
 RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()
@@ -1153,6 +1153,77 @@ def nwm_due(rec):
         return True
 
 
+DAMS = {k: v for k, v in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "dams.json"), encoding="utf-8")).items() if not k.startswith("_")}
+
+
+def fetch_dam(site, kind):
+    """Dam release for the few gauges hand-matched in data/dams.json. USBR RISE: daily means (flow cfs, pool ft); USACE CWMS: latest hour or 15 minutes. None for any other gauge or kind."""
+    d = DAMS.get(site)
+    if not d or d["kind"] != kind:
+        return None
+    out = {"fetched_at": now_iso(), "dam": d["dam"], "agency": d["agency"], "kind": kind}
+    today = datetime.date.today()
+    if kind == "rise":
+        for k, item in (("flow", d["flow"]), ("pool", d["pool"])):
+            j = json.loads(get_text("https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (item, today - datetime.timedelta(days=5), today + datetime.timedelta(days=1))))
+            pts = [(v["dateTime"][:10], v["result"]) for x, v in j.items() if x.isdigit() and v.get("result") is not None]
+            if pts:
+                t, v = max(pts)
+                out[k] = {"v": v, "day": t, "unit": j.get("Units")}
+        return out if out.get("flow") else None
+    q = urllib.parse.urlencode({"name": d["ts"], "office": "NWDP", "begin": (datetime.datetime.utcnow() - datetime.timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ"), "end": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")})
+    j = json.loads(get_text("https://cwms-data.usace.army.mil/cwms-data/timeseries?" + q, headers={"Accept": "application/json;version=2", "User-Agent": "riverwaterlevels.com"}))
+    pts = [(t, v) for t, v, *_ in j.get("values") or [] if v is not None]
+    if not pts:
+        return None
+    t, v = max(pts)
+    out["flow"] = {"v": v, "t": datetime.datetime.fromtimestamp(t / 1000, datetime.timezone.utc).isoformat(), "unit": j.get("units"), "daily": "~1Day" in d["ts"]}
+    return out
+
+
+def fetch_wqp(site):
+    """The last 3 E. coli results (last 3 years) at Water Quality Portal stations on THIS river's channel, 15 km upstream and downstream, found by NLDI river navigation (not a map box)."""
+    sites = {}
+    for nav in ("UM", "DM"):
+        j = json.loads(get_text("https://api.water.usgs.gov/nldi/linked-data/nwissite/USGS-%s/navigation/%s/wqp?distance=15" % (site, nav)))
+        for f in j.get("features", []):
+            p = f["properties"]
+            sites[p["identifier"]] = p.get("name") or p["identifier"]
+    rows = []
+    if sites:
+        body = json.dumps({"siteid": list(sites), "characteristicName": ["Escherichia coli"], "startDateLo": (datetime.date.today() - datetime.timedelta(days=1095)).strftime("%m-%d-%Y"), "mimeType": "csv", "zip": "no"}).encode()
+        r = urllib.request.urlopen(urllib.request.Request("https://www.waterqualitydata.us/data/Result/search", data=body, headers={"Content-Type": "application/json", "Accept": "text/csv", "User-Agent": "riverwaterlevels.com"}), timeout=120)
+        import csv, io
+        seen = set()
+        for x in csv.DictReader(io.StringIO(r.read().decode("utf-8", "ignore"))):
+            v = x.get("ResultMeasureValue") or ""
+            if v == "ND" or not v:
+                v = x.get("ResultDetectionConditionText") or ""
+            k = (x["MonitoringLocationIdentifier"], x["ActivityStartDate"], v)
+            if not v or k in seen or not x.get("ActivityStartDate"):
+                continue
+            seen.add(k)
+            rows.append({"date": x["ActivityStartDate"], "value": v, "unit": x.get("ResultMeasure/MeasureUnitCode") or "", "site": sites.get(k[0], k[0]), "id": k[0]})
+        rows.sort(key=lambda r: r["date"], reverse=True)
+    return {"fetched_at": now_iso(), "n_sites": len(sites), "rows": rows[:3]}
+
+
+def fetch_uv(rec):
+    """EPA daily UV index for today by ZIP; the ZIP comes from the Census geocoder once per gauge and is kept."""
+    z = (rec.get("uv") or {}).get("zip")
+    if not z:
+        j = json.loads(get_text("https://geocoding.geo.census.gov/geocoder/geographies/coordinates?x=%.5f&y=%.5f&benchmark=Public_AR_Current&vintage=Current_Current&layers=all&format=json" % (rec["lon"], rec["lat"])))
+        zs = [x.get("ZCTA5") for k, v in j["result"]["geographies"].items() if "ZIP Code" in k for x in v]
+        z = zs[0] if zs and zs[0] else None
+        if not z:
+            return None
+    j = json.loads(get_text("https://data.epa.gov/efservice/getEnvirofactsUVDAILY/ZIP/%s/JSON" % z))
+    if not j:
+        return {"zip": z, "fetched_at": now_iso()}
+    d = datetime.datetime.strptime(j[0]["DATE"], "%b/%d/%Y").date().isoformat()
+    return {"zip": z, "index": int(j[0]["UV_INDEX"]), "date": d, "fetched_at": now_iso()}
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -1163,7 +1234,8 @@ def fetch_extras(site, rec, h, log):
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
                     ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
-                    ("rating", lambda: fetch_rating(site)),
+                    ("rating", lambda: fetch_rating(site)), ("wqp", lambda: fetch_wqp(site)), ("uv", lambda: fetch_uv(rec)),
+                    *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue

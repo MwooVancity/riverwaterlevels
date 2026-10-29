@@ -1,0 +1,11 @@
+{
+ "_note": "Gauge -> dam release series. kind rise = USBR RISE itemIds (daily means; flow cfs, pool ft). kind cwms = USACE CWMS Data API series, office NWDP. Hand-matched 2026-10-29; every id returned data that day.",
+ "09380000": {"dam": "Glen Canyon Dam (Lake Powell)", "agency": "U.S. Bureau of Reclamation", "kind": "rise", "flow": 4315, "pool": 508},
+ "09110000": {"dam": "Taylor Park Dam (Taylor Park Reservoir)", "agency": "U.S. Bureau of Reclamation", "kind": "rise", "flow": 4309, "pool": 796},
+ "09355500": {"dam": "Navajo Dam (Navajo Lake)", "agency": "U.S. Bureau of Reclamation", "kind": "rise", "flow": 4316, "pool": 612},
+ "07109500": {"dam": "Pueblo Dam (Lake Pueblo), about 10 miles upstream", "agency": "U.S. Bureau of Reclamation", "kind": "rise", "flow": 684, "pool": 682},
+ "13206000": {"dam": "Lucky Peak Dam", "agency": "U.S. Army Corps of Engineers", "kind": "cwms", "ts": "LUC.Flow-Out.Inst.15Minutes.0.Best"},
+ "14361500": {"dam": "Lost Creek Dam (Lost Creek Lake)", "agency": "U.S. Army Corps of Engineers", "kind": "cwms", "ts": "LOP.Flow-Out.Ave.1Hour.1Hour.CBT-REV"},
+ "12484500": {"dam": "Cle Elum Dam (one of several upstream)", "agency": "U.S. Bureau of Reclamation, via USACE CWMS", "kind": "cwms", "ts": "CLE.Flow-Out.Ave.~1Day.1Day.USBR-RAW"},
+ "14105700": {"dam": "The Dalles Dam", "agency": "U.S. Army Corps of Engineers", "kind": "cwms", "ts": "TDA.Flow-Out.Ave.1Hour.1Hour.CBT-REV"}
+}

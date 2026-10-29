@@ -110,6 +110,16 @@ def aged(bid, head, iso_s, age, G):
     return "%s (NWS forecast issued %s, %d h old)" % (head, md(parse_t(iso_s).astimezone(G["zone"])), age)
 
 
+def uv_line(G):
+    """One line for the weather block: today's EPA UV index and its EPA category, only when the cached value is for today's date at the gauge."""
+    u = G["rec"].get("uv") or {}
+    if u.get("index") is None or SOURCES["uv"]["status"] not in ("quoted", "owner-permission") or u.get("date") != G["now"].astimezone(G["zone"]).date().isoformat():
+        return ""
+    i = u["index"]
+    cat = "Low" if i <= 2 else "Moderate" if i <= 5 else "High" if i <= 7 else "Very high" if i <= 10 else "Extreme"
+    return '<p class="src">UV index today: %d (%s), EPA daily forecast for ZIP %s.</p>' % (i, cat, esc(u["zip"]))
+
+
 def b_weather(G, n_periods=14):
     n = G["rec"].get("nws") or {}
     per = n.get("periods") or []
@@ -146,8 +156,11 @@ def b_weather(G, n_periods=14):
             esc(d[0].get("name") or ""), temps, tlab, esc(d[0].get("shortForecast") or ""), rain, _wind(d[0])))
     rows = "".join(tr([esc(p.get("name") or ""), "%s%s" % (deg(p), esc(p.get("temperatureUnit") or "F")), _wind(p, False), ("%s%%" % p["pop"]) if p.get("pop") is not None else "&ndash;", esc(p.get("detailedForecast") or p.get("shortForecast") or "")]) for p in live)
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
-    return block("weather_forecast", aged("weather_forecast", "7-day weather %s" % where_(G), n.get("forecast_updated"), age, G), "official", '<div class="fcs" role="region" aria-label="Weather forecast by day" tabindex="0">%s</div>' % cards + more("Every NWS forecast period, in full", table(["Period", "Temp", "Wind", "Rain or snow", "Forecast"], rows)),
+    b = block("weather_forecast", aged("weather_forecast", "7-day weather %s" % where_(G), n.get("forecast_updated"), age, G), "official", '<div class="fcs" role="region" aria-label="Weather forecast by day" tabindex="0">%s</div>' % cards + uv_line(G) + more("Every NWS forecast period, in full", table(["Period", "Temp", "Wind", "Rain or snow", "Forecast"], rows)),
                  "Source: National Weather Service point forecast, updated %s. Each card is one day: the daytime period and the night after it (high / low, and the chance of rain or snow for each)." % upd, "nws", amber=age)
+    if uv_line(G):
+        b["also"] = ["uv"]  # EPA credit line under the block
+    return b
 
 
 def b_hourly(G):

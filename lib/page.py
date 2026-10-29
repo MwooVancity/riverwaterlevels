@@ -136,12 +136,12 @@ def tab_blocks(tab, G, pages):
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:River forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), "AD",
-                "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b3.b_stocking(G),
+                "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b3.b_stocking(G), b3.b_dam(G),
                 "SEC:Rain and longer outlook", b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_cpc(G),
                 "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G), b_snotel(G),
                 "FOLD:Flood record and history", b_peaks(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G),
-                "FOLD:Watershed, water quality and land", b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b_land(G),
+                "FOLD:Watershed, water quality and land", b3.b_samples(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G), b_land(G),
                 b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return []  # only the dashboard tab is built (one page per gauge)
 

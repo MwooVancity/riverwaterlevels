@@ -437,8 +437,6 @@ def hero(G, pages=None):
         gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
-    if ndam >= 1 and p is not None:
-        gone.append("dam releases: not added yet (federal agencies publish releases for some dams; not on this page yet)")
     strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 

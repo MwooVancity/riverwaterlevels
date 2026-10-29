@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "machine: two lines added to the existing official-links list (state fishing and boating rules); same list style; page checks 0 failing; 113 outside links reachable",
+ "notes": "first: text pass of new blocks on Lees Ferry and Boise (dam release table with time and 'not the flow at this gauge' line; E. coli dated samples / valid-empty sentence; UV row); km fixed to miles; break gate 0 faults on 1,216 variants; no layout change",
  "by": "reviewer",
- "at": "2026-10-29T22:52:42+00:00",
- "template": "2f3f454269b9",
- "level": "machine"
+ "at": "2026-10-29T23:25:35+00:00",
+ "template": "d3219dad1244",
+ "level": "first"
 }

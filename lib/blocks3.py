@@ -5,6 +5,10 @@ import collections, datetime, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
 
 
+def cleared(src_id):
+    return SOURCES[src_id]["status"] in ("quoted", "owner-permission")
+
+
 
 def b_nws_point(G, pages=None):
     n = G["rec"].get("nwps") or {}
@@ -138,6 +142,45 @@ def acis_name(n):
     import re
     t = re.sub(r"\bWfo\b", "NWS office", re.sub(r"\bAp\b", "Airport", (n or "").title()))
     return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)
+
+
+def b_dam(G):
+    """Release from the dam hand-matched to this gauge (data/dams.json): latest outflow, and lake level where the agency gives it. Hidden for every gauge without a dam."""
+    d = G["rec"].get("dam_rise") or G["rec"].get("dam_cwms")
+    f = (d or {}).get("flow")
+    if not f:
+        return None
+    sid = "usbr" if d["kind"] == "rise" else "cwms"
+    if not cleared(sid):
+        return None
+    if d["kind"] == "rise":
+        t = datetime.datetime.combine(datetime.date.fromisoformat(f["day"]), datetime.time(12), tzinfo=G["zone"])
+        when = "daily mean for %s" % fdate(f["day"])
+    else:
+        t = parse_t(f["t"])
+        when = ("daily mean ending %s" if f.get("daily") else "%s") % tzl(t, G["zone"])
+    src = "Source: %s, %s, fetched %s. %s." % (esc(d["agency"]), "Reclamation Information Sharing Environment (RISE)" if sid == "usbr" else "USACE Water Management CWMS Data API", esc(tzl(parse_t(d["fetched_at"]), G["zone"])), "Release is the water the dam lets out, not the flow at this gauge")
+    if (G["now"] - t).total_seconds() > 3 * 86400:
+        return block("dam_releases", "Dam release upstream", "agency", "<p>The latest release reported for %s is from %s, older than 3 days, so it is not shown.</p>" % (esc(d["dam"]), esc(fdate(t.date().isoformat()))), src, sid, empty=True)
+    rows = tr(["Outflow (release)", "%s cfs" % fmtc(f["v"]), esc(when)])
+    p = d.get("pool")
+    if p and (G["now"] - datetime.datetime.combine(datetime.date.fromisoformat(p["day"]), datetime.time(12), tzinfo=G["zone"])).total_seconds() <= 3 * 86400:
+        rows += tr(["Lake level (elevation above sea level)", "%s ft" % fmt(p["v"]), "reading for %s" % esc(fdate(p["day"]))])
+    return block("dam_releases", "Dam release upstream: %s" % esc(d["dam"]), "agency", table(["Measure", "Value", "Time"], rows, right=(1,)), src, sid)
+
+
+def b_samples(G):
+    """Last 3 E. coli results on this river's channel (15 km up and down, NLDI river navigation), none older than 3 years. No verdict."""
+    w = G["rec"].get("wqp")
+    if not w or "n_sites" not in w or not cleared("wqp"):  # a cache from before 2026-10-29 holds the old bounding-box shape
+        return None
+    cut = (G["now"] - datetime.timedelta(days=1095)).date().isoformat()
+    rows = [r for r in w.get("rows") or [] if r["date"] >= cut]
+    src = "Source: Water Quality Portal (EPA, USGS and state agencies), E. coli results at stations on this river within 9 miles upstream and downstream, found by USGS NLDI river navigation, fetched %s." % esc(tzl(parse_t(w["fetched_at"]), G["zone"]))
+    if not rows:
+        return block("water_samples", "E. coli samples on this stretch", "agency", "<p>No E. coli samples on file for this stretch in the last 3 years (Water Quality Portal).</p>", src, "wqp", empty=True)
+    body = table(["Sample date", "E. coli", "Station"], "".join(tr([esc(fdate(r["date"])), esc(("%s %s" % (r["value"], r["unit"])).strip() if r["value"][:1].isdigit() else r["value"]), esc("%s (%s)" % (r["site"], r["id"]))]) for r in rows))
+    return block("water_samples", "E. coli samples on this stretch", "agency", body, src, "wqp")
 
 
 def b_acis(G):
