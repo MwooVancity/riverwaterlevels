@@ -17,7 +17,7 @@ LABELS = {"00010": "Water temperature", "00300": "Dissolved oxygen", "63680": "T
 UNITS = {"degC": "°C", "deg C": "°C", "mg/l": "mg/L", "_FNU": "FNU (turbidity units)", "uS/cm": "µS/cm", "pH Units": "pH units", "ft3/s": "cfs"}
 
 
-TAGS = {"agency": "Agency data", "live": "Live gauge", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}
+TAGS = {"agency": "Agency data", "live": "Live gauge", "last": "Last report", "official": "Official NWS", "model": "Model guidance", "hist": "Historical record", "map": "Mapped layer", "obs": "Weather station", "calc": "Computed", "noaa": "NOAA tide table", "epa": "EPA monitor"}
 
 
 PADMAN = {"USFS": "US Forest Service", "NPS": "National Park Service", "BLM": "Bureau of Land Management", "FWS": "US Fish and Wildlife Service", "SDNR": "State natural resources agency",

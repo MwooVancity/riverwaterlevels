@@ -11,7 +11,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = [sys.executable, "-I"]
 NPX = "npx.cmd" if os.name == "nt" else "npx"
 
-GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
+GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py", "--carry"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
           ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"])]  # dist/ does not exist yet in CI at gate time
 GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]

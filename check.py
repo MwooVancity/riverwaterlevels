@@ -338,6 +338,8 @@ def hater_rules(h):
             bad.append("block %r is badged live but shows a reading older than a day" % m.group(1))
         if m.group(1) == "river_forecast" and m.group(2).count('class="rc') > 12:
             bad.append("river forecast shows more than 12 cards")
+        if m.group(1) == "air_obs" and ("data-wxst" not in m.group(2) or "querySelector('[data-wxst]')" not in h):
+            bad.append("weather-station block cannot refresh in the browser (no data-wxst marker or no WX_JS)")
         if m.group(1) == "air_obs" and "NWS station " not in m.group(2):
             bad.append("weather-station block does not name its station")
     m = re.search(r"Next NWS impact at [\d.,]+ ft \(([\d.,]+) ft above", t)
@@ -478,6 +480,7 @@ def selftest():
     assert not hater_rules('<section id="camera"><span class="tag t-agency">Agency data</span>taken Aug 22 (2 months before this page was built)</section>'), "selftest: old camera without a live badge wrongly flagged"
     assert hater_rules('<section id="river_forecast">' + '<div class="rc">x</div>' * 13 + '</section>'), "selftest: 13 forecast cards did not fire"
     assert hater_rules('<section id="air_obs"><table><tr><td>Air temperature</td><td>41 F</td></tr></table></section>'), "selftest: unnamed weather station did not fire"
+    assert any("cannot refresh" in x for x in hater_rules('<section id="air_obs">NWS station KBJC<table></table></section>')), "selftest: a weather block without its browser refresh did not fire"
     assert hater_rules("<p>Next NWS impact at 4200.0 ft (4196.8 ft above the latest reading)</p>"), "selftest: cfs impact printed as ft did not fire"
     assert not hater_rules("<p>Next NWS impact at 12.0 ft (3.2 ft above the latest reading)</p>"), "selftest: a normal next impact wrongly flagged"
     assert hater_rules('<p class="gaps">Not available for this gauge: live water temperature (no USGS temperature sensor at this gauge).</p><table><tr><td>Water temperature</td><td>60 F</td></tr></table>'), "selftest: 'no sensor' beside a sensor row did not fire"
@@ -600,6 +603,28 @@ def secret_scan(d):
     return bad
 
 
+CARRY_MAX = 10  # more failing gauge pages than this is a template fault: the whole release stops
+
+
+def carry(d, fails):
+    """Replace each failing gauge page with its live copy (dist/ when present, else the live site), so the other pages ship. True when every one was replaced."""
+    import shutil, urllib.request
+    ok = True
+    for rel in fails:
+        dst, old = os.path.join(d, rel), os.path.join(ROOT, "dist", rel)
+        try:
+            if os.path.isfile(old):
+                shutil.copy2(old, dst)
+            else:
+                url = "https://riverwaterlevels.com/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
+                open(dst, "wb").write(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read())
+            print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(fails[rel])[:160] + ")")
+        except Exception as e:
+            print("could not carry", rel, e)
+            ok = False
+    return ok
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")  # review notes quote page symbols (a Windows console is cp1252)
     if "--selftest" in sys.argv:
@@ -607,6 +632,12 @@ def main():
     d = next((a for a in sys.argv[1:] if not a.startswith("--")), os.path.join(ROOT, "dist_next"))
     res, site_bad, maxd = check_dir(d)
     fails = {k: v for k, v in res.items() if v}
+    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= CARRY_MAX and all(kind_of(k) == "gauge" for k in fails):
+        if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
+            carried = set(fails)
+            json.dump(sorted(r.replace("\\", "/") for r in carried), open(os.path.join(d, "_carried.json"), "w"))
+            res, site_bad, maxd = check_dir(d)
+            fails = {k: v for k, v in res.items() if v and k not in carried}  # a carried page is the live one: it passed the checks of its own release
     for k, v in fails.items():
         print("FAIL", k)
         for x in v[:8]:

@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "Template sample 14105700/01426500/01570500 all PASS on F1-F8; template NOTES: 'LIVE GAUGE' badge kept on a stale 'Gauge not reporting' card; SNOTEL distance only inside the collapsed list; NWS point codes on the first screen",
- "by": "hater-w6a",
- "at": "2026-10-28T23:34:24+00:00",
- "template": "f19d37a1214a",
+ "notes": "3/3 sample PASS (14105700, 01426500, 13206000). Template NOTES: b_wtemp source note says '(few) means fewer than 150 daily values' but no tile ever shows '(few)'; impact gaps round 5s down; hourly 24-h forecast table has no chart (table, not tiles)",
+ "by": "hater-w8a",
+ "at": "2026-10-29T00:09:52+00:00",
+ "template": "b112516e45ff",
  "level": "full"
 }

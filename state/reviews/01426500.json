@@ -1,9 +1,9 @@
 {
  "id": "01426500",
  "verdict": "PASS",
- "notes": "NOTES only: camera 'newest image' dated Aug 22 (honestly dated, phone-09); air-quality monitors 71 and 76 mi away, distance shown (phone-03); daily rain '-' for Oct 26/27 at Delhi, Schenevus and Hobart is a feed that did not publish (phone-07/08); 'State Game Land 299' is a PA unit listed 'at this gauge' on a NY page (phone-11, plausible at the state line); first screen names point by code 'HLEN6' (named in full lower down); numbers checked: rate cards add up to 466, forecast 2.5 ft is 0.2 ft below 2.67, stage distances add up, temperature bands agree",
- "by": "hater-w6a",
- "at": "2026-10-28T23:34:23+00:00",
- "template": "f19d37a1214a",
+ "notes": "NOTES: 63 stat years vs 114 daily-value years are labelled datasets (regulated record); camera image Aug 22 labelled with age; '-' rain days and visibility are unpublished feed values; temp-by-month '(few)' legend never rendered (template); offline artifacts ignored",
+ "by": "hater-w8a",
+ "at": "2026-10-29T00:09:51+00:00",
+ "template": "b112516e45ff",
  "level": "full"
 }

@@ -63,7 +63,14 @@ def main():
     stale = []
     gauges = json.loads(page("/gauges.json"))
     pages = {}
+    try:  # pages check.py --carry replaced with the live copy: they passed their own release, and their age is the live site's
+        carried = {"/" + r.rsplit("index.html", 1)[0] for r in (json.load(open(os.path.join(LOCAL, "_carried.json"))) if LOCAL else [])}
+    except (OSError, ValueError):
+        carried = set()
     for name, url, *_ in gauges:
+        if url in carried:
+            skipped.append("%s: carried from the live site (this build's page failed a check)" % url)
+            continue
         h = page(url)
         sid = re.search(r"USGS gauge (\d+)", h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)

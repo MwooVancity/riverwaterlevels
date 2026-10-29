@@ -7,6 +7,8 @@ from lib.core import _normalise
 
 def ctx(site, row, rec, now):
     """Everything derived once per gauge; blocks only read this."""
+    if not (rec.get("usgs") or {}).get("rows"):  # a cache without USGS readings skips this gauge, never the whole build
+        raise CriticalFail("no USGS readings in cache")
     rec = _normalise(rec)
     tzname = usgs_tz(rec) or rec.get("tz") or "UTC"
     zone = zoneinfo.ZoneInfo(tzname)
@@ -330,7 +332,7 @@ def hero(G, pages=None):
                 '<small class="cold">Below 60&deg;F: cold-water shock risk on immersion (<a href="https://www.weather.gov/safety/coldwater" rel="noopener">NWS cold water safety</a>)</small>' if wf < 60 else "")
         strip += ui.tile("wtemp", "thermo", "Water temperature", '%.0f<small>&deg;F</small>' % wf, cold + '<small>USGS sensor, %s</small>' % esc(c["wt"]["t"]))
     nw = G["rec"].get("near_wtemp")
-    if not c["wt"] and nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600:
+    if not c["wt"] and nw and nw.get("t") and isinstance(nw.get("f"), (int, float)) and isinstance(nw.get("mi"), (int, float)) and (G["now"] - parse_t(nw["t"])).total_seconds() < 48 * 3600:  # a null value skips the tile, never the page
         _nm = re.sub(r", (\w\w)$", lambda m: ", " + m.group(1).upper(), nw["name"].title())
         _nm = re.sub(r" (At|Below|Above|Near|Of|On|In)\b", lambda m: " " + m.group(1).lower(), _nm)
         _same = nw["name"].split()[0].lower() == G["river"].split()[0].lower()
@@ -368,7 +370,7 @@ def hero(G, pages=None):
         a = c["air"]
         wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
         # a station name that opens with a sensor code ("070W10895RWS1RP1 at Canyon Creek Rd") keeps only the place
-        strip += ui.tile("air", "wind", "Air temperature", '%.0f<small>&deg;F</small>' % a["f"], ('<small>%s</small>' % wtxt if wtxt else "") + '<small>Weather station %s%s%s, %s</small>' % (esc(a["st"]), (" (" + esc(re.sub(r"^\S*\d\S*\s+(at|near)\s+", "", a["name"])) + ")") if a.get("name") else "", (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])) + point_temp_note(G, a["f"]))  # inside the tile (hater r6: the note floated loose)
+        strip += ui.tile("air", "wind", "Air temperature", '<span data-wx="temp0">%.0f</span><small>&deg;F</small>' % a["f"], ('<small data-wx="wind0">%s</small>' % wtxt if wtxt else "") + '<small>Weather station %s%s%s, <span data-wx="t">%s</span></small>' % (esc(a["st"]), (" (" + esc(re.sub(r"^\S*\d\S*\s+(at|near)\s+", "", a["name"])) + ")") if a.get("name") else "", (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])) + point_temp_note(G, a["f"]).replace("<small>", '<small data-wx="note">', 1) + ('<span hidden data-wxst="%s" data-t="%s"></span>' % (esc(a["st"]), esc(a["iso"])) if a.get("iso") else ""))  # inside the tile (hater r6: the note floated loose)
     st_ = sun_times(G["lat"], G["lon"], G["ldate"])
     nx_ = sun_times(G["lat"], G["lon"], G["ldate"] + datetime.timedelta(days=1)) if st_ and G["now"] > st_[1] else None
     if nx_:  # after sunset the next thing a reader plans around is sunrise (hater 2026-10-27: "Sunset today" shown at night)
@@ -580,9 +582,9 @@ def nws_point_note(G):
         t = re.sub(r"\bmt\b\.?", "mount", t)
         t = re.sub(r"\bft\b\.?", "fort", t)
         return re.sub(r"[^a-z0-9 ]", " ", t).split()
-    nm, pl = norm(n.get("name")), norm(G["place"])
+    nm, pl = norm(n.get("name")), [w for w in norm(G["place"]) if w not in ("near", "nr", "at", "above", "abv", "below", "blw", "the", "of")]
     if not nm or not pl:
         return ""
-    if all(w in nm for w in pl):  # every word of the gauge's place is in the NWS name
+    if all(w in nm or w in "".join(nm) for w in pl):  # every word of the gauge's place is in the NWS name ("Desoto" in "De Soto")
         return ""
     return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("lid") or "", n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")

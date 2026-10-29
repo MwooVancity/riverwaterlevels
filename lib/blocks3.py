@@ -289,7 +289,7 @@ def conditions(G, pages=None):
         wk = ob.get("wind_kmh")
         dirs = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
         wd = dirs[int((ob["wind_dir"] % 360) / 22.5 + 0.5) % 16] if ob.get("wind_dir") is not None else ""
-        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone)}
+        out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": (wk * 0.621371) if wk is not None else None, "gust": (ob["gust_kmh"] * 0.621371) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone), "iso": ob["timestamp"]}
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
@@ -347,16 +347,17 @@ def b_camera(G):
     c = G["rec"].get("cameras")
     if not c or not c.get("cams"):
         return None
-    body, fresh = "", False
+    body, ages = "", []
     for x in c["cams"]:
         try:
             h = hours_old(x["taken"], G["now"])
             taken = tzl(parse_t(x["taken"]), G["zone"]) + (" (%s before this page was built)" % human_span(int(h // 24)) if h > 24 else "")
-            fresh = fresh or h <= 3
+            ages.append(h)
         except (KeyError, TypeError, ValueError):
             taken = "time not stated"
         body += '<figure class="cam"><a href="%s" rel="noopener"><img src="%s" alt="USGS camera: %s" width="720" height="405" loading="lazy" style="max-width:100%%;height:auto"></a><figcaption>%s &middot; taken %s%s</figcaption></figure>' % (
             esc(x["page"]), esc(x["small"]), esc(x["name"]), esc(x["name"]), esc(taken), (' &middot; <a href="%s" rel="noopener">timelapse video</a>' % esc(x["timelapse"])) if x.get("timelapse") else "")
+    fresh = len(ages) == len(c["cams"]) and all(h <= 3 for h in ages)
     return block("camera", "Camera at the gauge" if fresh else "Camera at the gauge, newest image", "live" if fresh else "agency", body,
                  "Source: U.S. Geological Survey HIVIS camera (NIMS API), newest image at build time; the image file is served by USGS. Fetched %s." % esc(tzl(parse_t(c["fetched_at"]), G["zone"])), "hivis")
 
@@ -377,6 +378,8 @@ def _aq_where(r):
 
 
 def _aq_time(r):
+    if not r.get("date") or not r.get("hour"):
+        return "time not stated"
     try:
         d = datetime.datetime.strptime("%s %s" % (r.get("date"), r.get("hour")), "%Y-%m-%d %H:%M")
     except (TypeError, ValueError):
@@ -395,7 +398,7 @@ def b_air_quality(G):
         except (TypeError, ValueError):
             return True
         return (G["now"] - d).total_seconds() <= 12 * 3600
-    a = dict(a, rows=[r for r in a["rows"] if _fresh(r)])  # full review: "Air quality now" from a reading 26 h old
+    a = dict(a, rows=[r for r in a["rows"] if _fresh(r) and isinstance(r.get("aqi"), (int, float))])  # full review: "Air quality now" from a reading 26 h old
     if not a["rows"]:
         return None
     a = dict(a, rows=[dict(r, site=r.get("site") if _aq_site(r.get("site")) != "not stated" else r.get("area")) for r in a["rows"]])  # hater r4: "MONITOR not stated" while AirNow names the reporting area

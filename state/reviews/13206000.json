@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "NOTES only: forecast tile 'HIGHEST FORECAST \u00b7 NOV 1, 5:00 AM MST 3.3 ft 235 cfs' while later tiles show 3.3 ft 237 cfs (stage tie/rounding; phone-07) | 'Recent rain at the gauge location' 0.00 in last 3 days vs nearby stations 0.06-0.14 in Oct 26-27 (two labelled datasets; phone-04, phone-08) | 'Typical water temperature by month' does not say where it was measured while top card says 'This gauge has no temperature sensor' (phone-10, phone-02) | hourly forecast 24 columns as a scrolled table, no chart (table not tiles; phone-03) | daily rain '\u2013' days at Boise 3.8 NW etc (feed gaps; phone-08)",
- "by": "hater-w6b",
- "at": "2026-10-28T23:32:28+00:00",
- "template": "f19d37a1214a",
+ "notes": "NOTES: '3,960 cfs above' (4,200-235=3,965) and sibling impact gaps round down; temp-by-month (1997-2002, Oct 8 days) face omits its period while hero says 'This gauge has no temperature sensor', '(few)' legend never rendered (template); recent rain lacks last-24-h row (feed); 44/47 years labelled datasets",
+ "by": "hater-w8a",
+ "at": "2026-10-29T00:09:51+00:00",
+ "template": "b112516e45ff",
  "level": "full"
 }

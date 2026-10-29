@@ -1,9 +1,9 @@
 {
  "id": "14105700",
  "verdict": "PASS",
- "notes": "NOTES only: stale reading is the offline 43 h artifact, but 'Gauge not reporting' and 'Water quality sensors' still carry the 'LIVE GAUGE' source badge under 'What the water is like now' (phone-02); SNOTEL stations show name only, distance inside the collapsed list (phone-07); 7-day chart dips look higher than the stated low of 74,100 cfs (phone-03/04, small chart); hourly table wind 0 mph still gets a direction 'N' (phone-03); far 'Other gauges' are labelled with distance; numbers checked: rate cards add up to 83,700, below-normal band agrees with chart, water-temperature bands and months agree",
- "by": "hater-w6a",
- "at": "2026-10-28T23:34:23+00:00",
- "template": "f19d37a1214a",
+ "notes": "NOTES: hourly forecast 24 h as shaded table (not tiles), no chart; SNOTEL distances only in disclosure; 148 vs 149 years are labelled datasets; temp-by-month source note promises a '(few)' marker never rendered (template, charts.py b_wtemp); offline artifacts (44 h old, radar/map) ignored",
+ "by": "hater-w8a",
+ "at": "2026-10-29T00:09:51+00:00",
+ "template": "b112516e45ff",
  "level": "full"
 }

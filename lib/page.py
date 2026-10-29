@@ -244,6 +244,16 @@ function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.text
 i.addEventListener('input',function(){show(i.value)});i.addEventListener('keydown',function(e){if(e.key==='Enter'){var as=o.querySelectorAll('a[href^="/river/"]'),a=null;for(var k=0;k<as.length;k++){if(as[k].getAttribute('href')!==location.pathname){a=as[k];break}}if(a){e.preventDefault();location.href=a.getAttribute('href')}}});i.addEventListener('focus',load);document.addEventListener('click',function(e){if(!o.contains(e.target)&&e.target!==i)o.hidden=true})})();</script>"""
 
 
+WX_JS = """<script>(function(){var m=document.querySelector('[data-wxst]');if(!m||!window.fetch)return;var st=m.getAttribute('data-wxst'),t0=Date.parse(m.getAttribute('data-t')),Z="@TZ@",C=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
+function put(k,v){[].slice.call(document.querySelectorAll('[data-wx="'+k+'"]')).forEach(function(e){e.textContent=v})}
+function run(){fetch('https://api.weather.gov/stations/'+encodeURIComponent(st)+'/observations/latest',{headers:{Accept:'application/geo+json'}}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var p=j&&j.properties,t=p&&Date.parse(p.timestamp);if(!t||!(t>t0))return;var V=function(k){return p[k]&&typeof p[k].value==='number'?p[k].value:null},c=V('temperature'),w=V('windSpeed'),d=V('windDirection'),g=V('windGust'),b=V('barometricPressure'),v=V('visibility');if(c===null)return;var NR='not reported',mph=w!==null?w*0.621371:null,wd=mph===null?NR:mph<1?'Calm':(d!==null?C[Math.floor(((d%360)/22.5)+0.5)%16]+' ':'')+Math.round(mph)+' mph';
+put('temp',Math.round(c*9/5+32)+' \u00b0F');put('temp0',Math.round(c*9/5+32));put('wind',wd);put('gust',g!==null?Math.round(g*0.621371)+' mph':NR);put('pres',b!==null?(b/3386.389).toFixed(2)+' inHg':NR);put('vis',v!==null?Math.round(v/1609.34)+' mi':NR);
+put('wind0',(mph===null?'':mph<1?'wind calm':'wind '+wd.replace(' mph','')+' mph')+(g!==null?', gusts '+Math.round(g*0.621371)+' mph':''));[].slice.call(document.querySelectorAll('[data-wx="note"]')).forEach(function(e){e.remove()});put('t',lt(new Date(t)));t0=t;
+var s=m.closest('section');if(s)[].slice.call(s.querySelectorAll('.tag.amber')).forEach(function(e){e.remove()})}).catch(function(){})}
+run();document.addEventListener('visibilitychange',function(){if(!document.hidden)run()});setInterval(function(){if(!document.hidden)run()},600000)})();</script>"""
+
+
 ALERTS_JS = """<script>(function(){var b=document.getElementById('alerts');if(!b||!window.fetch)return;var Z="@TZ@",CTY="@CTY@",IG=['Test Message','Administrative Message'];
 function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
 function ast(p){var s=[];((p.geocode&&p.geocode.UGC)||[]).forEach(function(u){var k=u.slice(0,2);if(s.indexOf(k)<0)s.push(k)});return s.length?' ('+s.sort().join(', ')+')':''}
@@ -323,6 +333,10 @@ def build_tab(tab, G, pages):
     blocks = merge_charts(blocks)
     flat = [x for b in blocks for x in (b if isinstance(b, list) else [b])]
     shown = [b for b in flat if isinstance(b, dict)]
+    if G["age_min"] > 180:  # break test 2026-10-28: a gauge not reporting for 3 h wears no live badge on any block
+        for b in shown:
+            if b["tag"] == "live":
+                b["tag"] = "last"
     river, place, st = G["river"], G["place"], G.get("st_shown") or G["st"]
     rp = river_at(river, place)
     # Title and meta description carry NO reading (2026-10-26): Google shows them from its last crawl, days or weeks old, and the edge
@@ -410,7 +424,7 @@ def build_tab(tab, G, pages):
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s</style></head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS, nav(), crumb, esc(rp), esc(st), sub, tabs_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else ""), footer(), tabbar))
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

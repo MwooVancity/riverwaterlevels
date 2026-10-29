@@ -195,7 +195,9 @@ def b_multiyear(G):
     if not m:
         return None
     ser, span = m["series"], m["span"]
-    years = sorted(ser, reverse=True)
+    years = [y for y in sorted(ser, reverse=True) if any(x is not None for x in ser[y])]  # a year with no published value draws nothing
+    if not years:
+        return None
     asof = datetime.date.fromisoformat(m["as_of"])
     if (G["ldate"] - asof).days > 10:
         return None
@@ -232,6 +234,9 @@ def b_peaks(G):
 def b_wtemp(G):
     w = G["rec"].get("wtemp")
     if not w or not w.get("months"):
+        return None
+    w = dict(w, months={m: v for m, v in w["months"].items() if isinstance(v, list) and len(v) == 2 and all(isinstance(x, (int, float)) for x in v)})  # a malformed month is left out, never the block
+    if not w["months"]:
         return None
     cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, format(round(n), ",")) for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
     mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}

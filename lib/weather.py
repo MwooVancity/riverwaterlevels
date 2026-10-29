@@ -70,28 +70,28 @@ def b_air(G):
         return None
     rows = []
     if o.get("temp_c") is not None:
-        rows.append(("Air temperature", "%.0f °F" % (o["temp_c"] * 9 / 5 + 32)))
+        rows.append(("temp", "Air temperature", "%.0f °F" % (o["temp_c"] * 9 / 5 + 32)))
     if o.get("wind_kmh") is not None:
         mph = o["wind_kmh"] * 0.621371
         d = o.get("wind_dir")
         comp = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"][int((d % 360) / 22.5 + 0.5) % 16] + " " if d is not None else ""
-        rows.append(("Wind", "Calm" if mph < 1 else "%s%.0f mph" % (comp, mph)))
+        rows.append(("wind", "Wind", "Calm" if mph < 1 else "%s%.0f mph" % (comp, mph)))
     if o.get("gust_kmh") is not None:
-        rows.append(("Gusts", "%.0f mph" % (o["gust_kmh"] * 0.621371)))
+        rows.append(("gust", "Gusts", "%.0f mph" % (o["gust_kmh"] * 0.621371)))
     if o.get("pressure_pa") is not None:
         inhg = o["pressure_pa"] / 3386.389
         tr_txt = ""
         if o.get("pressure_prev_pa") is not None:
             dl = (o["pressure_pa"] - o["pressure_prev_pa"]) / 3386.389
             tr_txt = ", steady" if abs(dl) < 0.02 else ", rising" if dl > 0 else ", falling"
-        rows.append(("Pressure", "%.2f inHg%s" % (inhg, tr_txt)))
+        rows.append(("pres", "Pressure", "%.2f inHg%s" % (inhg, tr_txt)))
     if o.get("visibility_m") is not None:
-        rows.append(("Visibility", "%.0f mi" % (o["visibility_m"] / 1609.34)))
+        rows.append(("vis", "Visibility", "%.0f mi" % (o["visibility_m"] / 1609.34)))
     if not rows:
         return None
     mi = (", %d mi from the gauge" % round(miles_between(G["lat"], G["lon"], o["ll"][1], o["ll"][0]))) if o.get("ll") else ""
-    body = '<p class="src">NWS station %s%s%s, observed %s.</p>' % (esc(o["station"]), (" (%s)" % esc(o["name"])) if o.get("name") else "", mi, esc(tzl(parse_t(o["timestamp"]), G["zone"]))) + table(["Measure", "Value"], "".join(tr([esc(a), esc(b)], right=(1,)) for a, b in rows), right=(1,))
-    return block("air_obs", "Air conditions at weather station %s" % esc(o["station"]), "obs", body, "Source: National Weather Service station %s, observed %s." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
+    body = '<p class="src">NWS station %s%s%s, observed <span data-wx="t">%s</span>.</p><span hidden data-wxst="%s" data-t="%s"></span>' % (esc(o["station"]), (" (%s)" % esc(o["name"])) if o.get("name") else "", mi, esc(tzl(parse_t(o["timestamp"]), G["zone"])), esc(o["station"]), esc(o["timestamp"])) + table(["Measure", "Value"], "".join(tr([esc(a), '<span data-wx="%s">%s</span>' % (k, esc(b))], right=(1,)) for k, a, b in rows), right=(1,))
+    return block("air_obs", "Air conditions at weather station %s" % esc(o["station"]), "obs", body, "Source: National Weather Service station %s, observed <span data-wx=\"t\">%s</span>." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
 
 
 def b_radar(G):
@@ -122,7 +122,7 @@ def b_weather(G, n_periods=14):
     for p in live[:n_periods]:
         pop = p.get("pop")
         cards += ('<div class="fc"><div>%s</div><b>%s&deg;%s</b><div>%s</div><div class="legend">Wind %s</div><div class="legend">%s</div></div>' % (
-            esc(p.get("name") or ""), esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), _wind(p),
+            esc(p.get("name") or ""), ("–" if p.get("temperature") is None else esc(str(p.get("temperature")))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), _wind(p),
             ("%s%% chance of rain or snow" % pop) if pop is not None else ""))
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
     return block("weather_forecast", "Weather forecast", "official", '<div class="fcs">%s</div>' % cards, "Source: National Weather Service point forecast, updated %s." % upd, "nws", amber=(age is not None and age > 12))
@@ -137,7 +137,7 @@ def b_hourly(G):
     rows = ""
     for p in [p for p in hr if parse_t(p["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]:
         pop = p.get("pop")
-        rows += tr([esc(tzl(parse_t(p["startTime"]), G["zone"], date=False)), "%s °%s" % (esc(str(p.get("temperature"))), esc(p.get("temperatureUnit") or "F")),
+        rows += tr([esc(tzl(parse_t(p["startTime"]), G["zone"], date=False)), "%s °%s" % (("–" if p.get("temperature") is None else esc(str(p.get("temperature")))), esc(p.get("temperatureUnit") or "F")),
                     _wind(p, False), "%s%%" % pop if pop is not None else "–", esc(p.get("shortForecast") or "")], right=(1, 3))
     if not rows:
         return None
