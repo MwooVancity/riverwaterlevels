@@ -11,6 +11,7 @@ import os, sys, re, json, copy, datetime
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 from lib import render  # noqa: E402
+from lib.common import flow_dir  # noqa: E402
 from lib.pages import load_effective  # noqa: E402
 
 bad = []
@@ -96,7 +97,7 @@ def main():
                 pass  # direction words that say the last hour differs from the last 6 h; nothing to contradict
             elif word == "rising" and val < 0 or word == "falling" and val > 0:
                 fail(site, "trend word %s contradicts headline %+d%%" % (word, val))
-            if c6 is not None and word in ("rising", "falling", "steady") and (word == "rising" and c6 < 2 or word == "falling" and c6 > -2 or word == "steady" and abs(c6) >= 2 and abs(c6) * G["lv"] / 100 >= 5 and not (abs(c6) < 5 and c["chg"].get(3) is not None and (abs(c["chg"][3]) < 0.5 or (c["chg"][3] > 0) != (c6 > 0)))):  # a small 6 h change the last 3 h do not carry is steady (full review 2026-10-27)
+            if c6 is not None and word in ("rising", "falling", "steady") and word != {"up": "rising", "down": "falling", "steady": "steady"}[flow_dir(round(c6, 1), G["lv"] * c6 / (100 + c6) if G["lv"] and c6 > -100 else None)]:  # the same rule the page uses (lib/common.flow_dir on the printed %), not a third copy (2026-10-29: copies disagreed at -1.96 %)
                 fail(site, "trend word %s disagrees with the change in the window it names (%+.1f%%)" % (word, c6))
         # 6. storms: the lightning line says thunderstorms exactly when the NWS hourly forecast for the next 24 h does
         sl = render.storm_line(G)
