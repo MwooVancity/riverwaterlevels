@@ -74,6 +74,17 @@ def old_mark(G):
     return (' <span class="oldm">%s old</span>' % age_text(G["lt"], G["now"])) if flow_is_old(G["age_min"]) else ""
 
 
+def chg_text(G):
+    """The 24 h change cell text, or None: no change when unknown, tidal, or when the gauge stopped reporting over 24 h ago (the % would be a trend from before it went quiet)."""
+    chg = G["chg"]
+    return None if (chg is None or G.get("osc") or flow_is_old(G["age_min"])) else ("%+d%%" % round(chg) if round(chg) else "0%")
+
+
+def chg_dash(G):
+    """The dash for a missing change; a gauge that stopped reporting says so in the cell's title."""
+    return '<span title="gauge not reporting">–</span>' if flow_is_old(G["age_min"]) else "–"
+
+
 def all_gauges_table(built, Gs):
     """Every built gauge in one table: flow, percentile, 24 h change and observed time, sortable in the browser."""
     rows = ""
@@ -82,14 +93,14 @@ def all_gauges_table(built, Gs):
         p = G["p"]
         ptxt = band_word(p)
         pv = "" if p is None else str({-1: 0, 101: 100}.get(p, p))
-        chg = G["chg"]
+        chg = None if flow_is_old(G["age_min"]) else G["chg"]
         large = "1" if float(r["drainage_sqmi"] or 0) >= 1000 else "0"
         fcf = "1" if ((G["rec"].get("nwps") or {}).get("forecast")) else "0"
         wqf = "1" if any(series(G["rec"], c) for c in LABELS if c != "00045") else "0"
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
             esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmtc(dir_lv(G)) + old_mark(G), pv, ptxt,
-            "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%"), G["lt"].isoformat(), esc(G["obs"])))
+            "" if (chg is None or G.get("osc")) else "%.0f" % chg, chg_text(G) or chg_dash(G), G["lt"].isoformat(), esc(G["obs"])))
     heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h change", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
     return ('<div class="card"><h2>All gauges on this site</h2><div class="scroll"><table id="alltab"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>'
@@ -180,14 +191,13 @@ def state_page(st, rows, Gs, sd=None):
     for (hs, rv), g in sorted(groups.items(), key=lambda kv: kv[0][1]):
         for r in sorted(g, key=lambda x: -float(x["drainage_sqmi"] or 0)):
             G = Gs[r["site"]]
-            chg = G["chg"]
-            ch = "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%")
+            ch = chg_text(G) or chg_dash(G)
             fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
             trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
                 r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), old_mark(G), band_word(G["p"]), ch, fcst, esc(G["obs"]))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
-            '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw, trs))
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for every river gauge in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
@@ -198,14 +208,14 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
     for r in rows:
         G = Gs[r["site"]]
         pv = band_word(G["p"])
-        chg = None if G.get("osc") else G["chg"]
-        ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
+        chg = None if (G.get("osc") or flow_is_old(G["age_min"])) else G["chg"]
+        ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else chg_dash(G)
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
             r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), old_mark(G), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
-            '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col" class="r">Drainage sq mi</th><th scope="col" class="r">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 st.lower(), esc(name), esc(river), esc(river), esc(name), len(rows), inv_count, esc(name), trs))
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))
 
@@ -281,7 +291,11 @@ def trust_pages(built_count, built_rows):
         ("How often the flow reaches each level (flow duration)", "The share of days in the record on which the flow was at or above a given amount, for all days of the year together. A flow reached on 50% of days is the long-run middle; this is a different comparison from the one for today's date."),
         ("Snow water equivalent", "The depth of water the snow on the ground would make if it melted, in inches, measured at a SNOTEL station. It says how much water is stored in the snowpack, not how deep the snow is."),
         ("Not supporting (EPA water quality)", "A state's rating, reported to the EPA, that a stretch of water does not meet its goals for some use such as swimming or fishing. It is a multi-year regulatory status, not a swim advisory or a current bacteria reading."),
-        ("Gauge-local time", "Times are shown in the time zone of the gauge, with the zone abbreviation."))), "Plain-language definitions of the river terms used on River Water Levels: cfs, gage height, percentile, flood stage, forecast point and more.")
+        ("Gauge-local time", "Times are shown in the time zone of the gauge, with the zone abbreviation."),
+        ("TMDL", "The EPA term for a cleanup plan for a stretch of water that does not meet its water quality goals."),
+        ("HUC", "A USGS watershed code: the number of the drainage area a stretch of water belongs to. A longer code is a smaller watershed."),
+        ("RFC (River Forecast Center)", "A National Weather Service office that issues the river forecasts and rainfall estimates for a region."),
+        ("Drought Monitor levels D0 to D4", "The categories of the U.S. Drought Monitor: D0 Abnormally Dry, D1 Moderate Drought, D2 Severe Drought, D3 Extreme Drought, D4 Exceptional Drought. The page shows the share of an area at each level or worse."))), "Plain-language definitions of the river terms used on River Water Levels: cfs, gage height, percentile, flood stage, forecast point and more.")
     t["/faq/"] = prose_page("FAQ", "/faq/", "".join("<h2>%s</h2><p>%s</p>" % (a, b) for a, b in (
         ("How often is the data updated?", "USGS gauges typically report about every 15 minutes. Each block shows the time of its own data, and blocks older than their limit are marked."),
         ("Why does a daily table row say partial day?", "The mean is shown only when the day has at least 80% of the expected readings. Today is usually partial."),
@@ -318,8 +332,8 @@ def trust_pages(built_count, built_rows):
         if s["status"] in ("quoted", "owner-permission") and s.get("id") not in ("openfema", "ncei"):  # terms read, but no block on any page shows them yet
             basis = {"quoted": "Terms read " + (s.get("read_on") or SOURCES_READ_ON), "owner-permission": "Written permission reported by the site owner"}[s["status"]]
             rows += '<tr><td>%s</td><td>%s</td><td>%s</td><td><a href="%s" rel="noopener">Terms</a></td></tr>' % (esc(s["name"]), esc(s.get("credit") or ""), esc(basis), esc(s["terms_url"]))
-    t["/data-sources/"] = prose_page("Data sources", "/data-sources/", '<div class="card scroll"><table><thead><tr><th>Source</th><th>Credit</th><th>Basis for reuse</th><th>Link</th></tr></thead><tbody>%s</tbody></table></div>'
-                                     '<h2>How often each source updates</h2><div class="card scroll"><table><thead><tr><th>Source</th><th>Source updates</th><th>This site refreshes</th></tr></thead><tbody>%s</tbody></table></div>'
+    t["/data-sources/"] = prose_page("Data sources", "/data-sources/", '<div class="card scroll"><table><thead><tr><th scope="col">Source</th><th scope="col">Credit</th><th scope="col">Basis for reuse</th><th scope="col">Link</th></tr></thead><tbody>%s</tbody></table></div>'
+                                     '<h2>How often each source updates</h2><div class="card scroll"><table><thead><tr><th scope="col">Source</th><th scope="col">Source updates</th><th scope="col">This site refreshes</th></tr></thead><tbody>%s</tbody></table></div>'
                                      '<p class="src">NWS material is public domain and not subject to copyright. Sources whose terms are not yet settled are not used on the site.</p>' % (rows, updrows), "The data sources used by River Water Levels and the terms checked.")
     return t
 
@@ -359,8 +373,10 @@ def robots():
     return "User-agent: *\nAllow: /\n\nSitemap: %s/sitemap.xml\n" % SITE_URL
 
 
-def not_found():
-    body = '<h1>Page not found</h1><p class="sub">That page is not on %s. Try the <a href="/">home page</a> or search for a river.</p>' % esc(BRAND)
+def not_found(built=()):
+    sts = sorted({r["state"] for r in built}, key=lambda s: STATE_NAMES.get(s, s))
+    lst = ('<p class="sub">Rivers by state: %s. <a href="/">All rivers on this site</a></p>' % " &middot; ".join('<a href="/rivers/%s/">%s</a>' % (s.lower(), esc(STATE_NAMES.get(s, s))) for s in sts)) if sts else '<p class="sub"><a href="/">All rivers on this site</a></p>'
+    body = '<h1>Page not found</h1><p class="sub">That page is not on %s. Try the <a href="/">home page</a> or search for a river.</p>%s' % (esc(BRAND), lst)
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found | %s</title><meta name="robots" content="noindex">%s%s%s</head><body>%s<main>%s</main>%s</body></html>' % (
         esc(BRAND), HEAD_EXTRA + PWA_HEAD, CSS_LINK, DIR_LINK, nav(), body, footer()))
 

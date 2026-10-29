@@ -188,9 +188,14 @@ def ordinal(n):
     return "%d%s" % (n, "th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
 
 
+def prep_lower(place):
+    """USGS names put 'Near', 'At', 'Above', 'Below' in capitals inside a place ('Glenwood Bridge Near Boise'): as prepositions they are lower case."""
+    return re.sub(r"(?<=\S )(Near|At|Above|Below)(?= \S)", lambda m: m.group(1).lower(), place or "")
+
+
 def river_at(river, place):
     """'Gauley River above Belva', 'Penns Creek', 'Missouri River at Kansas City': the place already names its preposition or the river."""
-    p = (place or "").strip()
+    p = prep_lower((place or "").strip())
     if not p or p.lower() == river.lower():
         return river
     first = p.split(" ", 1)[0].lower()

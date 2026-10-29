@@ -156,6 +156,12 @@ def check_html(h, rel):
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
         if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}", re.sub(r"<[^>]+>", "", sub.group(1))):
             bad.append("observed time without gauge-local zone label")
+    for r_ in re.findall(r"<tr>.*?</tr>", h, re.S):  # a row of a gauge that stopped reporting over 24 h ago must not carry a 24 h change
+        if 'class="oldm"' in r_ and re.search(r'<td class="r"[^>]*>(?:&#\d+; )?(?:[+-]\d+|0)%</td>', r_):
+            bad.append("a 24 h change % is shown for a gauge whose newest reading is over 24 h old")
+            break
+    if re.search(r"<th(?![^>]*\bscope=)[ >]", h):
+        bad.append("a table header cell has no scope (a screen reader cannot tie a cell to its column)")
     return bad
 
 
@@ -369,7 +375,7 @@ def hater_rules(h):
     if m and row and str(max([int(x) for x in row.group(1).split() if x.isdigit()] or [0])) != m.group(1):
         bad.append("thunder 'up to %s%%' does not match the hourly Thunder %% row" % m.group(1))
     hm = re.search(r'<table class="hm">.*?</table>', h, re.S)
-    for lab in re.findall(r"<tr><th>([^<]*)</th>", hm.group(0) if hm else ""):
+    for lab in re.findall(r'<tr><th scope="row">([^<]*)</th>', hm.group(0) if hm else ""):
         if len(html.unescape(lab)) > 14:
             bad.append("hourly table label %r is too wide for the phone's first column" % lab)  # final review: "Rain or snow (water) in/h" overlapped its first value
     # hater round 5
@@ -620,7 +626,7 @@ def selftest():
     assert hater_rules("<p>AQI 25 at not stated</p>"), "selftest: 'at not stated' did not fire"
     assert hater_rules("<p>the hourly grid gives a thunder chance of up to 15%.</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: thunder peak mismatch did not fire"
     assert not hater_rules("<p>the hourly grid gives a thunder chance of up to 9%.</p><tr><th>Thunder %</th><td>0</td><td>9</td></tr>"), "selftest: matching thunder peak wrongly flagged"
-    assert hater_rules('<table class="hm"><tbody><tr><th>Rain or snow (water) in/h</th><td>0</td></tr></tbody></table>'), "selftest: long hourly label did not fire"
+    assert hater_rules('<table class="hm"><tbody><tr><th scope="row">Rain or snow (water) in/h</th><td>0</td></tr></tbody></table>'), "selftest: long hourly label did not fire"
     assert hater_rules("<p>Past 7 days: 15th percentile, in the lower half of normal.</p>"), "selftest: percentile words off the USGS bands did not fire"
     assert not hater_rules("<p>Past 7 days: 15th percentile, below normal.</p>"), "selftest: correct band words wrongly flagged"
     assert hater_rules("<td>Nov 2, 05:00 AM MST</td>"), "selftest: leading-zero hour did not fire"
@@ -685,6 +691,8 @@ def selftest():
     assert check_html(good, rel) == [], check_html(good, rel)
     broken = {"no source line": good.replace('<p class="src">Source: USGS</p>', ""), "wrong canonical": good.replace("/river/a/b/", "/river/x/y/"),
               "banned undefined": good.replace("<p>x</p>", "<p>undefined</p>"), "no unit": good.replace("<small>cfs</small>", "<small></small>"), "no zone": good.replace("CDT", ""),
+              "th without scope": good.replace("<p>x</p>", "<table><tr><th>A</th></tr></table>"),
+              "24 h change on a silent gauge": good.replace("<p>x</p>", '<table><tr><td>Pigeon <span class="oldm">2 d old</span></td><td class="r">0%</td></tr></table>'),
               "two h1": good.replace("<h1>X</h1>", "<h1>X</h1><h1>Y</h1>"),
               "jargon heading": good.replace("<h2>H</h2>", "<h2>Percentile for the date</h2>"),
               "jargon tile": good.replace('<div class="tile norm dv"></div>', '<div class="tile norm dv"><i class="ic"></i><span>Compared</span><b>23rd percentile</b></div>'),

@@ -465,8 +465,19 @@ def b_tides(G):
         return None
     rows = "".join(tr([esc(_tide_t(r["t"], i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10])), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % (r["v"] + 0.0 if round(r["v"], 1) else 0.0)], right=(2,)) for i, r in enumerate(t["rows"]))
     near = "" if G.get("osc") else '<p class="src">The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, %.0f mi away, where the river is tidal.</p>' % t["mi"]
-    return block("tides", "%s at %s, %s" % ("Tides" if G.get("osc") else "Tides nearby", esc(t["name"] or t["station"]), "next two days" if len({r["t"][:10] for r in t["rows"]}) >= 2 else "rest of today" if t["rows"][0]["t"][:10] == now_l[:10] else _tide_t(t["rows"][0]["t"], True).rsplit(",", 1)[0]), "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
-                 "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops")
+    stn = esc(t["name"] or t["station"])
+    kind = "Tides" if G.get("osc") else "Tides nearby"
+    if len({r["t"][:10] for r in t["rows"]}) >= 2:
+        head = "%s at %s, next two days" % (kind, stn)
+    elif t["rows"][0]["t"][:10] == now_l[:10]:
+        head = "%s at %s, rest of today" % (kind, stn)
+    else:  # rows for another day than today in the gauge's zone: the heading names that day
+        head = "%s for %s at %s" % (kind, _tide_t(t["rows"][0]["t"], True).rsplit(",", 1)[0], stn)
+    fa = hours_old(t.get("fetched_at"), G["now"]) if t.get("fetched_at") else None
+    if fa is not None and fa > 12:
+        head += " (fetched %d h ago)" % fa
+    return block("tides", head, "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
+                 "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
 
 
 def b_wpc(G):

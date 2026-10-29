@@ -202,6 +202,12 @@ def upstream_dams(G):
 GLOSS = '<p class="src gloss">cfs = cubic feet of water passing the gauge each second. Gage height is the gauge&rsquo;s own scale, not water depth. <a href="/glossary/">Glossary</a></p>'  # newcomer clarity: the two units on the tiles, said once under them
 
 
+def tile_dir_word(chip):
+    """The flow tile's sub-line: the direction word alone ('Steady'); the % sits on the change card and the answer strip. Other chips (tidal range, 'Trend unknown (gauge not reporting)') stay whole."""
+    m = re.match(r"^((?:Steady|Rising|Falling|Unsteady|Unclear)(?:, leveling off)?): ", chip)
+    return m.group(1) if m else chip
+
+
 def strip_dir_word(chip):
     """The trend chip without its leading direction word: the answer strip says the change, the flow tile and the change card say the word."""
     return re.sub(r"^(?:Steady|Rising|Falling|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
@@ -304,7 +310,7 @@ def hero(G, pages=None):
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
         if v24_:
             dir_chip = "%s: %s to %s cfs over 24 h%s" % (osc_word(G, "chip"), fmtc(min(v24_)), fmtc(max(v24_)), " (below zero: the tide pushes water upstream)" if min(v24_) < 0 else "")
-    tiles = pre.replace("@@DIR@@", '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(dir_chip or "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
+    tiles = pre.replace("@@DIR@@", '<small class="dv">%s</small>' % (('<b class="qual">%s</b>' % qual_text(G["fl"][-1][2])) if G["fl"] and qual_text(G["fl"][-1][2]) else esc(tile_dir_word(dir_chip) if dir_chip else "Last 24 hours"))) + norm_html  # the trend lives in the answer pills and the change tile; the flow tile spells out its unit (a hover title does not work on a phone)  # flow, stage, comparison: the answer on the first phone screen
     strip = trend_html + strip  # change, then forecast, alerts, air, rain, sunset ride in one swipe row
     if c["fc"]:
         fcw = c["fc"]
@@ -426,7 +432,7 @@ def hero(G, pages=None):
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     if ndam >= 1 and p is not None:
-        gone.append("dam releases: not shown (no open federal release feed for these dams is used yet)")
+        gone.append("dam releases: not added yet (federal agencies publish releases for some dams; not on this page yet)")
     strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 
