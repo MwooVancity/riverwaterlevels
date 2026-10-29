@@ -104,6 +104,20 @@ def demoji(s):
     return s
 
 
+def fc_word(vals, cur, unit="ft"):
+    """'steady' when every forecast value prints the same, 'high' when the highest is above the latest reading, else 'at or below'.
+    The single source for "Forecast high" (w11-w13 reviews: three places chose the word three ways)."""
+    vals = [v for v in vals if v is not None]
+    if not vals:
+        return None
+    if len({("%.1f" % v) if unit == "ft" else fmtc(v) for v in vals}) == 1:
+        return "steady"
+    return "high" if cur is None or max(vals) > cur + (0.05 if unit == "ft" else 0.02 * abs(cur)) else "below"
+
+
+FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast (at or below the latest reading)"}
+
+
 def fmtd(v):
     """A difference in cfs, exact to the whole cfs (w10 review: 4,200 - 235 printed as 3,960)."""
     return "–" if v is None else "%.2f" % v if 0 < abs(v) < 1 else "{:,.0f}".format(v)

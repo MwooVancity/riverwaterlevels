@@ -326,7 +326,7 @@ def conditions(G, pages=None):
             out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
                          "falls": end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600 and peaks < 2, "end_v": end[1], "end_t": tzl(end[0], zone),
                          "swing": (lo_f, tzl(end[0], zone)) if peaks >= 2 and hi[1] - lo_f >= (0.5 if unit == "ft" else 0.1 * abs(hi[1])) else None,
-                         "datum": gap,
+                         "datum": gap, "word": fc_word([v_ for _, v_ in fut], (gap[0] if gap else (G["sg"][-1][1] if G["sg"] else (__import__("lib.hero", fromlist=["nws_stage"]).nws_stage(G) or (None, None))[1])) if unit == "ft" else G["lv"], unit),
                          "flow_at": next((x[2] for x in pts if x[0] == hi[0]), None) if unit == "ft" else None,
                          "offset": _fc_offset(G, pts, unit, gap),
                          "cur": (gap[0] if gap else (G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None)) if unit == "ft" else G["lv"]}

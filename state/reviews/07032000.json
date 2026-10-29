@@ -1,8 +1,9 @@
 {
  "id": "07032000",
  "verdict": "PASS",
- "notes": "No F1-F8 defect. Notes: NWS MEMT1 stage used because USGS has no gage height, stated plainly (phone-01); flow-duration table titled 'years not stated' (phone-09); 10 forecast tiles plus a forecast chart and 72-value table (phone-04/06); air temp 59 F station vs hourly 57 F forecast are two labelled datasets; map alt text overlap is offline artifact (phone-11).",
- "by": "hater-w4a",
- "at": "2026-10-28T13:44:41+00:00",
- "template": "e771d3d66379"
+ "notes": "No F1-F8 found in 13 phone + desktop + text. NOTES: phone-06 River forecast top card 'HIGHEST FORECAST \u00b7 OCT 29, 1:00 AM CDT -1.9 ft' while tile/legend say 'NWS forecast (at or below the latest reading)' - stated rule says the Highest forecast header appears only in the Forecast high case (true, not a misstatement, but spec not met); phone-06/07 9 cards shown of 25 runs (cards stop Nov 2, forecast runs to Nov 25) with no 'N of 25 shown' line; forecast tile has no NWS flood-status line (Atlanta has one); phone-04 stage chart x labels Oct 22/Oct 31 spacing 74 vs 100 px (first label nudged off its tick).",
+ "by": "hater-w14",
+ "at": "2026-10-29T01:36:13+00:00",
+ "template": "4a660324d934",
+ "level": "full"
 }

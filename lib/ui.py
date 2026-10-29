@@ -83,7 +83,7 @@ def spark(values, w=150, h=34):
     return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"/></svg>' % (w, h, w, h, " ".join(pts), ex, ey)
 
 
-def ladder(cats, cur, fc=None, now_label="Latest"):
+def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
     """Flood-stage scale for the stage block: a bar coloured by NWS category (action yellow, minor orange, moderate red, major purple) with a tick for the latest stage and one for the forecast high; the numbers sit in a key under the bar as ordinary text so they never overlap or shrink on a phone. cats = {name: ft}."""
     order = [(k, cats[k]) for k in ("action", "minor", "moderate", "major") if k in cats]
     if not order:
@@ -105,8 +105,8 @@ def ladder(cats, cur, fc=None, now_label="Latest"):
     key = "".join('<li><i style="background:%s"></i>%s <b>%.1f ft</b></li>' % (cols[k], k.capitalize(), v) for k, v in order)
     key += '<li class="now"><i class="lad-sw"></i>%s <b>%.2f ft</b></li>' % (esc_ui(now_label), cur) if cur is not None else ""
     if fc is not None:
-        key += '<li class="fcl"><i class="lad-fsw"></i>Forecast high <b>%.1f ft</b></li>' % fc
-    txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; forecast high %.1f ft" % fc) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
+        key += '<li class="fcl"><i class="lad-fsw"></i>%s <b>%.1f ft</b></li>' % (fc_label, fc)
+    txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; %s %.1f ft" % (fc_label.lower(), fc)) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
     return '<div class="lad" role="img" aria-label="%s"><div class="lad-bar">%s%s</div><ul class="lad-key">%s</ul></div>' % (txt, segs, marks, key)
 
 

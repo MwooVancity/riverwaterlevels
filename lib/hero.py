@@ -321,7 +321,7 @@ def hero(G, pages=None):
             _parts.append("forecast out of step with the gauge reading (details under River forecast)")
         if _parts:
             sub += '<small class="dv">%s</small>' % " &middot; ".join(_parts)
-        strip += ui.tile("fcst", "crest", ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fcw["v"] < fcw["cur"] - (0.05 if unit == "ft" else 0.02 * abs(fcw["cur"])) else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
+        strip += ui.tile("fcst", "crest", FC_LABEL[fcw["word"]] if unit == "ft" and fcw.get("word") else ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fcw["v"] < fcw["cur"] - (0.05 if unit == "ft" else 0.02 * abs(fcw["cur"])) else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
     elif nwl and G["has_forecast"]:
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:

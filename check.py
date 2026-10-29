@@ -272,6 +272,13 @@ def hater_rules(h):
     m = re.search(r"(?<![\d.,])\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)  # not the tail of "1.1 days ago"
     if m:
         bad.append("ungrammatical %r" % m.group(0))
+    rf_ = re.search(r'id="river_forecast".*?</section>', h, re.S)
+    if rf_:  # w12 review: neighbouring forecast cards printing the same level and flow
+        vals_ = re.findall(r'<div class="rc[^"]*"><span class="rt">[^<]*</span><b>(.*?)</b>(?:<small>(.*?)</small>)?</div>', rf_.group(0))
+        if any(a_ == b_ for a_, b_ in zip(vals_, vals_[1:])):
+            bad.append("two neighbouring forecast cards print the same values")
+    if "Forecast high" in t and ("NWS forecast (steady)" in t or "at or below the latest reading" in t):
+        bad.append("the forecast is called 'Forecast high' and also steady or at/below the reading on one page")
     if MOJI.search(t):
         bad.append("garbled characters %r: agency text decoded twice" % MOJI.search(t).group(0))
     imp = re.search(r'id="flood_impacts".*?</section>', h, re.S)
@@ -517,6 +524,8 @@ def selftest():
     assert hater_rules("<p>NWS and USGS read this gauge on different zero points</p><p>102.5 ft against 104.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: cross-datum forecast comparison did not fire"
     assert not hater_rules("<p>where the NWS and USGS read this gauge on different zero points, the margins use the NWS reading.</p><p>4.1 ft against 2.30 ft at the gauge, so the forecast itself starts off the reading.</p>"), "selftest: general zero-point note with a same-datum comparison wrongly flagged"
     assert hater_rules("<small>1535 dams upstream</small>"), "selftest: count without a comma did not fire"
+    assert hater_rules('<span>NWS forecast (steady)</span><b>3.0 ft</b><li class="fcl">Forecast high <b>3.0 ft</b></li>'), "selftest: two names for one forecast did not fire"
+    assert hater_rules('<section id="river_forecast"><div class="rc"><span class="rt">Oct 29</span><b>3.0 ft</b><small>1,110 cfs</small></div><div class="rc"><span class="rt">From Oct 29 to Nov 2</span><b>3.0 ft</b><small>1,110 cfs</small></div></section>'), "selftest: identical neighbouring forecast cards did not fire"
     assert hater_rules("<td>considered \u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201clow for paddlers</td>"), "selftest: garbled characters did not fire"
     assert demoji("considered \u00c3\u00a2\u00e2\u201a\u00ac\u00c5\u201clow") == "considered \u201clow", "selftest: demoji did not repair triple-encoded text"
     assert not hater_rules("<small>1,535 dams upstream since 2025</small>"), "selftest: comma'd count wrongly flagged"

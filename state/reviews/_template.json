@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "Three FULL reviews PASS (02336000, 13206000, 01426500); Low-water block, NWS notes, issued time, exact cfs distances OK; open NOTE: forecast-card merge/all-identical card broken on 2 of 3 pages",
- "by": "hater-w12",
- "at": "2026-10-29T01:17:41+00:00",
- "template": "96f1bb5185c8",
+ "notes": "3 full reviews (02336000, 07032000, 13302500) PASS on F1-F8; notes: Highest forecast header shows in the at-or-below case (07032000), forecast cards skip runs without an N-of-M line, '1 rows' grammar, edge x-axis labels nudged off ticks.",
+ "by": "hater-w14",
+ "at": "2026-10-29T01:36:13+00:00",
+ "template": "4a660324d934",
  "level": "full"
 }

@@ -69,7 +69,7 @@ def b_river_forecast(G):
     if gap:
         lead += '<p class="src">These forecast levels are on the NWS scale, which reads %.2f ft %s than the USGS gage height at this gauge: add %.2f ft to compare them with the USGS readings above.</p>' % (abs(gap[1] - gap[0]), "lower" if gap[0] < gap[1] else "higher", gap[1] - gap[0])
     sel = [fut[i] for i in keep]
-    top_i = max(range(len(sel)), key=lambda i: (sel[i][1] if sel[i][1] is not None else (sel[i][2] or 0)))
+    top_i = max(range(len(sel)), key=lambda i: (round(sel[i][1], 1) if sel[i][1] is not None else 0, sel[i][2] or 0))  # w13: a later 3.3 ft 237 cfs card beat the "highest" 3.3 ft 235 cfs
     pick = list(range(len(sel))) if len(sel) <= 10 else sorted({round(k * (len(sel) - 1) / 9) for k in range(10)} | {top_i})  # whole span, not only the first hours
     _d = collections.defaultdict(list)
     for i in range(len(sel)):
@@ -78,30 +78,40 @@ def b_river_forecast(G):
     if len(sel) > 10 and any(max(sel[i][1] for i in ix) - min(sel[i][1] for i in ix) >= 0.5 for ix in _d.values()):  # a daily swing: each day's high and low card (hater r7: the cards kept only the lows)
         pick = sorted({f_(ix, key=lambda i: sel[i][1]) for ix in list(_d.values())[:5] for f_ in (max, min)} | {top_i})  # at most 11 cards; the table holds every value
     pick.sort(key=lambda i: i != top_i)  # the highest forecast point is the first card
-    _m = []
-    for i in pick:
-        if _m and i != top_i and _m[-1][0] != top_i and (sel[i][1], sel[i][2]) == (sel[_m[-1][0]][1], sel[_m[-1][0]][2]):
-            _m[-1][1] = i
-        else:
-            _m.append([i, i])
-    span_ = {a_: b_ for a_, b_ in _m if b_ != a_}
-    pick = [a_ for a_, b_ in _m]
+    _pr = lambda i: (("%.1f" % sel[i][1]) if sel[i][1] is not None else "", fmtc(sel[i][2]) if sel[i][2] is not None else "")
+    run_ = [0]
+    for i in range(1, len(sel)):
+        run_.append(run_[-1] + (_pr(i) != _pr(i - 1)))
+    _ends = {}
+    for i, r_ in enumerate(run_):
+        _ends.setdefault(r_, [i, i])[1] = i
+    pick = sorted({_ends[run_[i]][0] for i in pick} | {_ends[run_[top_i]][0]})  # one card per run of identical printed values (w12 review: two cards for 18 identical values)
+    top_i = _ends[run_[top_i]][0]
+    _k = []
+    for i in pick:  # a sampled card printing the same as the card before it says nothing new (Salmon: 1,160 cfs twice with 1,170 unshown between)
+        if _k and _pr(i) == _pr(_k[-1]):
+            if i == top_i:
+                _k[-1] = i
+            continue
+        _k.append(i)
+    pick = _k
+    span_ = {a_: b_ for a_, b_ in _ends.values() if b_ != a_ and a_ in pick}
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
     _cv = (gap[0] if gap else (G["sg"][-1][1] if G["sg"] else None)) if sel[top_i][1] is not None else G["lv"]
     _below = _hv is not None and _cv is not None and _hv < _cv - (0.05 if sel[top_i][1] is not None else 0.02 * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
     lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead + hydronotes_html(G)
-    _flat = len({sel[i][1] if sel[i][1] is not None else sel[i][2] for i in pick}) == 1  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
+    _flat = fc_word([x[1] if x[1] is not None else x[2] for x in sel], _cv, "ft" if sel[top_i][1] is not None else "cfs") != "high"  # no "Highest forecast" header unless the forecast rises above the reading  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
     for i in pick:
         t_, s_, f_ = sel[i]
         main = ("%.1f <small>ft</small>" % s_) if s_ is not None else (("%s <small>cfs</small>" % fmtc(f_)) if f_ is not None else "–")
         subf = ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else ""
         fcards.append(card(("Highest forecast%s &middot; " % (" (below the latest reading)" if _below else "") if i == top_i and not _flat else "") + (("From %s to %s" % (esc(tzl(t_, G["zone"])), esc(tzl(sel[span_[i]][0], G["zone"])))) if i in span_ else esc(tzl(t_, G["zone"]))), main, subf, "crest" if i == top_i and not _flat else ""))
-    if len(pick) > 2 and len({(sel[i][1], sel[i][2]) for i in pick}) == 1:  # full review: nine identical "1.9 ft, 154 cfs" cards
+    if len(sel) > 1 and run_[-1] == 0:  # every value prints the same: one card (full review: nine identical "1.9 ft, 154 cfs" cards; w12: two cards)
         t_, s_, f_ = sel[pick[0]]
         fcards = [card("Every forecast value, %s to %s" % (esc(tzl(sel[0][0], G["zone"])), esc(tzl(sel[-1][0], G["zone"]))), ("%.1f <small>ft</small>" % s_) if s_ is not None else ("%s <small>cfs</small>" % fmtc(f_)), ("%s cfs" % fmtc(f_)) if (s_ is not None and f_ is not None) else "")]
     ftable = table(["Time (gauge-local)", "Gage height (NWS)", "Flow (NWS value)"], rows, right=(1, 2))
-    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more("All %d forecast values" % len(sel), ftable),
+    return block("river_forecast", "River forecast", "official", lead + rail(fcards, "River forecast points") + more(("All %d forecast values" % len(sel)) if len(runs) == len(keep) else ("All %d forecast values, in %d rows (neighbouring equal values grouped)" % (len(sel), len(runs))), ftable),
                  "Source: National Weather Service forecast point %s, issued %s. Official forecasts change as rain and releases change. NWS flow values come from the NWS rating for its point and can differ from USGS flow readings.%s" % (esc(n.get("lid") or ""), issued, thin), "nwps", amber=age)
 
 

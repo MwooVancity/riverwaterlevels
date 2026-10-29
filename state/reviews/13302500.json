@@ -1,8 +1,9 @@
 {
  "id": "13302500",
  "verdict": "PASS",
- "notes": "No F1-F8. Notes: SNOTEL station distances only inside the 'Each station: distance, elevation and date' expander (phone-10); 'Recent rain at the gauge location' 0.20 in vs Salmon 0.2 NNW station Oct 24 0.72 in, two labelled datasets with different day windows (phone-03/06); month-to-date '32nd lowest of the 112 years' vs 'Past 28 days: 32nd percentile' explained on page (phone-08); NWS impact text lowercase 'near salmon' quoted as issued (phone-04); 'Instantaneous flow record ... to Oct 27, 2026' while latest reading is Oct 28 (phone-13)",
- "by": "hater-w4g",
- "at": "2026-10-28T14:07:02+00:00",
- "template": "48b8f39d2a8d"
+ "notes": "No F1-F8 found in 14 phone + desktop + text. NOTES: phone-05/06 forecast cards show 9 of 14 runs and silently skip runs (Oct 31 6:00 PM MDT jumps to Nov 1 5:00 PM MST; Nov 2 11:00 AM jumps to Nov 3 11:00 AM) with no 'N of 14 shown' line; phone-01/04 'NWS forecast (steady) 2.4 ft' while the dashed curve falls 2.45 to ~2.37 ft and flow 1,230 to 1,160 cfs (-6%); phone-02 hourly table visibility '\u2013' for the last 4 hours (feed gap); phone-03 flow chart last x label Oct 28 nudged left of its tick (spacing 85 vs 107 px); recent rain 'Last 3 days to Oct 27 ... 0.20 in' vs Salmon 0.2 NNW station days (labelled as not lining up).",
+ "by": "hater-w14",
+ "at": "2026-10-29T01:36:13+00:00",
+ "template": "4a660324d934",
+ "level": "full"
 }

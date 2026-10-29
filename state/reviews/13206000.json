@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "No F1-F8 defect | NOTE worst: River forecast 11 cards, neighbours that print identically not merged: 'OCT 29 3.2 ft 234 cfs' and 'OCT 30 3.2 ft 234 cfs'; 'NOV 3/NOV 4 3.3 ft 236 cfs'; 'NOV 5/6/7 3.3 ft 237 cfs' (phone-07; merge compares raw not displayed values) | NOTE: 'HIGHEST FORECAST NOV 1, 5:00 AM 3.3 ft 235 cfs' while later cards show 3.3 ft 237 cfs (tie on stage, phone-07) | NOTE: Recent rain at gauge 'Last 3 days to Oct 28 6:00 AM 0.00 in' (phone-04) vs stations 1-4 mi away 0.06-0.14 in on Oct 27 (phone-08); caveat covers timing, not 0.00 vs 0.14 | NOTE: Typical water temperature by month is 1997-2002 data with Oct '8 days (few)' (phone-10); period only in the source note | NOTE: breadcrumb has no river level (phone-01)",
- "by": "hater-w12",
- "at": "2026-10-29T01:17:40+00:00",
- "template": "96f1bb5185c8",
+ "notes": "Full review, 15 phone + desktop + text: no F1-F8. Forecast cards verified against cache/13206000.json (40 NWS points, 38 ahead): 5 runs, times/DST and rounding exact. Forecast high 3.3 ft correct (above latest 3.24, not flat). Notes: HIGHEST FORECAST label on the Nov 1 run (235 cfs) while later runs print 3.3 ft with 236/237 cfs, reader may read later cards as higher; 'All 38 forecast values' expands to 5 run rows, not 38 values; water temp from a different river 6 mi away (labelled).",
+ "by": "hater-w13",
+ "at": "2026-10-29T01:26:39+00:00",
+ "template": "d86267a3957d",
  "level": "full"
 }

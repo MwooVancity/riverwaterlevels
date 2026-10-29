@@ -1,9 +1,9 @@
 {
  "id": "02336000",
  "verdict": "PASS",
- "notes": "No F1-F8 defect; Low-water block clean (curly quotes, 1,000-1,500 cfs commas) | NOTE worst: River forecast new merge/identical card did NOT work: all 18 NWS values are 3.0 ft 1,110 cfs (table: Oct 29 2:00 AM to Nov 2 8:00 AM) yet phone-08 shows two cards 'OCT 29, 2:00 AM EDT 3.0 ft 1,110 cfs' and 'FROM OCT 29, 2:00 PM EDT TO NOV 2, 8:00 AM EST 3.0 ft 1,110 cfs'; the 8:00 AM value is skipped (lib/forecast.py samples pick to 10 of 18, top card never merges, then len(pick)>2 guard misses the all-identical case) | NOTE: first-screen tile says 'FORECAST HIGH 3.0 FT Oct 29, 2:00 AM' when every value is 3.0 (phone-01) | NOTE: Chattooga River near Clayton, GA listed under 'Nearest gauges elsewhere' right after 'More gauges in GA' (phone-12)",
- "by": "hater-w12",
- "at": "2026-10-29T01:17:40+00:00",
- "template": "96f1bb5185c8",
+ "notes": "No F1-F8 found in 15 phone + desktop + text. NOTES: phone-08 'All 18 forecast values, in 1 rows' (grammar, '1 row'); phone-01 tile 'NWS FORECAST (STEADY) 3.0 ft ... 0.1 ft above now' and forecast card 1,110 cfs vs latest 1,030 cfs (+8%) reads as rising to a reader though the label rule is met; phone-04/05 chart first x label (Oct 22) sits right of its tick (spacing 84 vs 107 px); map alt text overlap offline only.",
+ "by": "hater-w14",
+ "at": "2026-10-29T01:36:13+00:00",
+ "template": "4a660324d934",
  "level": "full"
 }
