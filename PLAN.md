@@ -62,6 +62,11 @@ In order of value to a person at the river:
 9. Search past ~150 gauges (known bug), confirm "near me" on a phone.
 10. Alerts APPROVED by owner 2026-10-29: web push first (no emails stored, no outside account): reader picks a level on a gauge page, the existing */3 Worker cron compares the latest reading and sends a push (VAPID keys as Worker secrets, subscriptions in KV; watch the shared 1,000 KV writes/day). Needs item 6 (installable page) for iPhone. Email later only with an owner-opened email service. Built right after the offline batch.
 
+## Helpfulness audit loop (owner 2026-10-29: "literally everything, down to the UI"; "think of the user not Google")
+- Checklist: `tools/helpful_audit.md` (A purpose/first screen ... Q edge cases, 74 items). Judged as the person at the river, never as Google.
+- Loop until clean: run ALL categories on Memphis 07032000, Boise 13206000, Scottville 04122500 + home, one state page, one river hub (text pass on the cheaper model; screenshots only for [eyes] items) -> every BLOCKER and MAJOR fixed in batches (one batch per category group, each: build, my look at one screenshot, cloud dry run, push, read live) -> re-run the audit on the fixed categories -> MINOR items listed here with a decision.
+- Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: audit run 1 not started (newcomer clarity batch running first, 2026-10-29).
+
 ## Next steps (in order)
 1. Finish the refactor: Part A byte-identical, Part B diff read, one review of the changed pages, dry run, push. Done when read live.
 2. Open all 74 gauge pages: `python -I tools/open_wave.py 74 --apply` in the same push; sitemap + IndexNow; `python -I tools/index_live.py` 0 mismatches. Done when index_live shows 74 allowed.
