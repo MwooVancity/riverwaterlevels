@@ -81,7 +81,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 3. NOAA 10-day river model: the NWPS API returns an empty mediumRange for every series name (checked 2026-10-29, reach 2048241, Chattahoochee), so the 10-day line is missing on every page; the watchdog reports it. If still empty on 2026-11-29, look at the NWM medium-range bulk files instead.
 4. Edge-case fixtures still missing: unit allowlist per field. Done 2026-10-29: ice, zero flow, tidal reversal and irregular sampling variants in the break gate (0 reader faults, except ice above); NWS/USGS datum in tools/truth_fixtures.py.
 5. Sharded parallel collect (plan item 1): BUILT, ON since 2026-10-29 20:45 UTC (owner OK; undo: "sharded": false). sharded.yml (plan job, 20 collect shards, one finish job in the refresh group; a failed shard keeps its old files), switch data/pipeline.json {"sharded": false}; flip to true and push main to switch (if the plan job fails, the old single job runs). Shadow: 2,000 gauges steady state ~22 min (13 min slowest shard), WPC failures 8% -> 0%, rain 1-8% (empty answers, not fixed below 1%), truth contracts 0 failures at 2,000 (run 40941372688). Before ~500 gauges (about 2026-11-19 at 20/day; do by 2026-11-12): USGS-keyed history weekly, bulk neighbour temperature, USGS quota brake.
-6. Daily release runs at the 20/day cap; watch refresh time weekly.
+6. Daily release: 20/day. Raise 20 -> 50 -> 100 only when ALL hold (owner 2026-10-29 "what if 100 a day"): USGS quota brake built (1,000 calls/h breaks near 500 gauges); Search Console shows most opened pages indexed; refresh run under 40 min. Cloudflare free = 20,000 files (about 3 per gauge, so about 6,000 gauges): Workers Paid before. After a deploy read status.json, _health.json and ONE page, never every page.
 7. Cloudflare Web Analytics + privacy page line.
 8. Alerts (web push), then favorites and units switch.
 9. Outreach drafts for the owner; owner adds a contact address.
@@ -113,6 +113,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 - Access points and bacteria advisories (terms / no national feed).
 
 ## Done recently
+- 2026-10-29 23:42 UTC live (run 40973591559, refresh OK): dam releases on 8 gauges (cloud: RISE 4/4, CWMS 4/4; Lees Ferry and Boise pages read), E. coli samples (WQP 73/74), UV row (EPA 502 on 20 of 38, retried hourly), "not added yet" line gone (0 on pages read). Inundation link skipped: USGS publishes no site list.
 - 2026-10-29 evening: sharded collect ON (first run 40951494012: 20 of 20 shards, refresh OK, live built 21:06, 74 gauges, 0 failed); daily outside-link check in the watchdog found alerts.weather.gov dead (link removed, live read: 0 hits); watchdog health rules fixed (12 false "not working" lines down to real ones); docs/OPEN-ITEMS.md folded into this file.
 - 2026-10-29 dry run before deploy (dryrun.yml, 3035d71); water-temperature crash fix (098de3f); docs trimmed to CLAUDE.md + PLAN.md (c52b171).
 - 2026-10-28 batches 1-4: staleness table, NWS low-water levels, notes, flood status, forecast wording from one rule (4e8c788, 20a0130, 56c00a6, a021144, f0ecd72).
