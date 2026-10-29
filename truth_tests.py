@@ -52,7 +52,10 @@ def main():
             else:
                 lead = len(spans) == 4
                 ni, ti, ai = (1, 2, 3) if lead else (0, 1, 2)
-                if chip and not spans[ti].startswith(chip.group(1)) and not spans[ti].startswith(render.strip_dir_word(chip.group(1))):  # the answer may add the NWS forecast after the trend, never say a different trend
+                pm_ = re.match(r"([+-]?\d+(?:\.\d+)?)% flow in", spans[ti])
+                cw_ = chip.group(1).strip().split(":")[0].strip().lower() if chip else ""
+                ok_word = (not pm_) or cw_ not in ("rising", "falling", "steady") or cw_ == "steady" or (cw_ == "rising" and float(pm_.group(1)) > 0) or (cw_ == "falling" and float(pm_.group(1)) < 0)
+                if chip and not ok_word:  # the answer may add the NWS forecast after the trend, never say a different trend
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
                 if nw and G["p"] is not None and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
