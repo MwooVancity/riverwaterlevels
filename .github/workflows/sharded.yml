@@ -129,8 +129,7 @@ jobs:
       - name: Refresh (build, check, publish, deploy; live=false stops after the gates)
         continue-on-error: true  # same as refresh.yml: publish.py refuses a broken build; health is on /status and in this log
         run: |
-          if [ "${{ inputs.live }}" = "true" ]; then F="--no-collect"; else F="--dry"; fi
-          python refresh.py $F 2>&1 | tee refresh-out.log
+          if [ "${{ inputs.live }}" = "true" ]; then python refresh.py --no-collect 2>&1 | tee refresh-out.log; else python -I gates.py 2>&1 | tee refresh-out.log; fi  # practice: every gate, no stop at the first failure, no publish/deploy
       - name: Keep the day's new gauges only if the refresh passed
         if: ${{ inputs.live && steps.rel.outputs.released == '1' }}
         continue-on-error: true
