@@ -139,7 +139,7 @@ def b_acis(G):
     a = G["rec"].get("acis")
     if not a or not a.get("stations"):
         return None
-    heads = ["Station", "Distance"] + [datetime.date.fromisoformat(d).strftime("%b %d").replace(" 0", " ") for d in a["days"]]
+    heads = ["Station", "Distance"] + [md(datetime.date.fromisoformat(d)) for d in a["days"]]
     cell = lambda v: (lambda w: "not reported" if w in ("M", "S", "A") else ("trace" if w == "T" else "%s in" % w if w.replace(".", "", 1).isdigit() else esc(w)))(v.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ") if v[:1].isdigit() else v)  # a trailing ACIS flag letter ("0.00A") is a source code, not part of the value
     _seen = set()
     a = dict(a, stations=[x for x in a["stations"] if not ((acis_name(x["name"]), round(x["km"], 1)) in _seen or _seen.add((acis_name(x["name"]), round(x["km"], 1))))])  # full review: one station twice, 0.00 vs trace
@@ -255,15 +255,16 @@ def window_change(fl, lt, h):
 
 
 def _fc_offset(G, pts, unit, gap):
-    """The forecast point nearest the latest reading, compared with that reading: a forecast that is hours out of step with the gauge (dam releases, tide) must say so. None when they agree."""
-    if not pts or (unit == "ft" and gap):
+    """The forecast point nearest the latest reading, compared with that reading: a forecast that is hours out of step with the gauge (dam releases) must say so. None when they agree,
+    across zero points, and in a tidal reach, where one reading against a daily forecast says nothing (hater 2026-10-27, Freeport)."""
+    if not pts or (unit == "ft" and gap) or G["osc"]:
         return None
     t0 = G["lt"]
     near = min(pts, key=lambda x: abs((x[0] - t0).total_seconds()))
     if abs((near[0] - t0).total_seconds()) > FC_NEAR_S:
         return None
     if unit == "ft":
-        if not near[1] or not G["sg"] or (G["sg"][-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
+        if not near[1] or not G["sg"] or not stage_is_ft(G["sg"][-1][2]):
             return None
         cur, fv = G["sg"][-1][1], near[1]
         if abs(cur - fv) <= max(0.5, 0.05 * abs(cur)):
@@ -303,7 +304,7 @@ def conditions(G, pages=None):
                 out["chg"][h] = wc[2]
     sgl = G["sg"]
     out["sg6"] = None
-    if len(sgl) >= 8 and (sgl[-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet"):
+    if len(sgl) >= 8 and stage_is_ft(sgl[-1][2]):
         a6 = _at(sgl, sgl[-1][0] - datetime.timedelta(hours=6), 1800)
         out["sg6"] = (sgl[-1][1] - a6[1]) if a6 else None
     n = rec.get("nwps") or {}
@@ -323,13 +324,14 @@ def conditions(G, pages=None):
             peaks = 1 + sum(1 for a_, b_ in zip(near, near[1:]) if min(v_ for _, v_ in fut[a_:b_ + 1]) < hi[1] - depth)
             end = fut[-1]
             first_hi = near[0]
+            cur = fc_cur(G, gap) if unit == "ft" else G["lv"]  # the word, the tile and its margins judge one reading
             out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
                          "falls": end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600 and peaks < 2, "end_v": end[1], "end_t": tzl(end[0], zone),
                          "swing": (lo_f, tzl(end[0], zone)) if peaks >= 2 and hi[1] - lo_f >= (0.5 if unit == "ft" else 0.1 * abs(hi[1])) else None,
-                         "datum": gap, "word": fc_word([v_ for _, v_ in fut], __import__("lib.hero", fromlist=["fc_cur"]).fc_cur(G, gap) if unit == "ft" else G["lv"], unit),
+                         "datum": gap, "word": fc_word([v_ for _, v_ in fut], cur, unit),
                          "flow_at": next((x[2] for x in pts if x[0] == hi[0]), None) if unit == "ft" else None,
                          "offset": _fc_offset(G, pts, unit, gap),
-                         "cur": (gap[0] if gap else (G["sg"][-1][1] if G["sg"] and (G["sg"][-1][2].get("unit_of_measure") or "").lower() in ("ft", "feet") else None)) if unit == "ft" else G["lv"]}
+                         "cur": cur}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = live_alerts(G) or []
@@ -384,7 +386,7 @@ def _aq_time(r):
         d = datetime.datetime.strptime("%s %s" % (r.get("date"), r.get("hour")), "%Y-%m-%d %H:%M")
     except (TypeError, ValueError):
         return "%s %s %s" % (r.get("date") or "", r.get("hour") or "", r.get("tz") or "")
-    return ("%s %s" % (d.strftime("%b %d, %I:%M %p").replace(" 0", " ").replace(", 0", ", "), r.get("tz") or "")).strip()
+    return clock(d, r.get("tz") or "")
 
 
 def b_air_quality(G):
@@ -443,7 +445,7 @@ def b_recreation(G):
 
 def _tide_t(s, with_date):
     d = datetime.datetime.strptime(s, "%Y-%m-%d %H:%M")
-    return (d.strftime("%b %d, %I:%M %p") if with_date else d.strftime("%I:%M %p")).replace(" 0", " ").lstrip("0")
+    return clock(d, "", with_date)
 
 
 def b_tides(G):
@@ -498,15 +500,11 @@ def b_wpc(G):
 
 
 def b_stage_years(G):
-    """Years whose annual peak stage reached each NWS flood category. Shown only when USGS and NWS stages are on the same datum (latest readings agree within 0.10 ft) and the NWS publishes flood stages."""
+    """Years whose annual peak stage reached each NWS flood category. Shown only when USGS and NWS stages are on the same datum (datum_gap finds no gap between two comparable readings) and the NWS publishes flood stages."""
     n = G["rec"].get("nwps") or {}
     p = G["rec"].get("peaks")
     cats = n.get("categories") or {}
-    obs = n.get("obs_stage")
-    if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and obs and "minor" in cats and G["sg"]):
-        return None
-    t_us, v_us, meta = G["sg"][-1]
-    if (meta.get("unit_of_measure") or "ft") != "ft" or abs((parse_t(obs["t"]) - t_us).total_seconds()) > 5400 or abs(obs["v"] - v_us) > 0.10:
+    if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and "minor" in cats and stage_pair(G)) or datum_gap(G):
         return None
     rows = [r for r in p["rows"] if r[2] is not None and (not r[3] or r[3].replace(" ", "") == "['ESTIMATED']")] if all(len(r) > 3 for r in p["rows"]) else []  # any other USGS qualifier (different datum, backwater, not the annual maximum) can misstate the peak stage
     if len(rows) < 10:
@@ -516,8 +514,8 @@ def b_stage_years(G):
         if k in cats:
             out += tr(["%s flood stage" % k.capitalize(), "%.1f ft" % cats[k], "%d of %d" % (sum(1 for r in rows if r[2] >= cats[k]), len(rows))], right=(1, 2))
     out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Years reaching it"], out, right=(1, 2)),
-                 "Source: USGS annual peak gage heights (%d years with a recorded peak stage, %s to %s; peaks that USGS marks with any qualifier other than estimated are left out) compared with National Weather Service flood stages for forecast point %s. Shown because the latest USGS and NWS stage readings agree within 0.10 ft. Older stages can be on an older gauge datum." % (
-                     len(rows), esc(rows[0][0][:4]), esc(rows[-1][0][:4]), esc(n.get("lid") or "")), "usgs")
+                 "Source: USGS annual peak gage heights (%d years with a recorded peak stage, %s to %s; peaks that USGS marks with any qualifier other than estimated are left out) compared with National Weather Service flood stages for forecast point %s. Shown because the USGS and NWS stage readings agree within %.1f ft. Older stages can be on an older gauge datum." % (
+                     len(rows), esc(rows[0][0][:4]), esc(rows[-1][0][:4]), esc(n.get("lid") or ""), DATUM_TOL_FT), "usgs")
     out_b["also"] = ["nwps"]
     return out_b
 

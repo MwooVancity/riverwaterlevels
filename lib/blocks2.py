@@ -54,9 +54,9 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
 def b_stage_chart(G):
     sg, who = G["sg"], "USGS"
     ser_ = (G["rec"].get("nwps") or {}).get("obs_series") or []
-    if len(sg) < 8 and ser_ and (hours_old(ser_[-1][0], G["now"]) or 1e9) <= 24:  # no USGS gage height: the NWS observed stage at the forecast point (Memphis), only while fresh
+    if len(sg) < 8 and ser_ and nws_stage(G):  # no USGS gage height: the NWS observed stage at the forecast point (Memphis), only while the gage tile has it (one freshness rule)
         sg, who = [(parse_t(t), v, {}) for t, v in ser_], "NWS"
-    if len(sg) < 8 or (sg[-1][2].get("unit_of_measure") or "ft") != "ft":
+    if len(sg) < 8 or not stage_is_ft(sg[-1][2]):
         return None
     zone, now = G["zone"], G["now"]
     t1 = sg[-1][0]
@@ -82,13 +82,14 @@ def b_stage_chart(G):
     tend = fc[-1][0] if fc else t1
     label = "Gage height in feet over the last 7 days" + (" and the National Weather Service forecast" if fc else "")
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
-    cur = obs[-1][1]
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, "%.2f ft" % cur, esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, "%.2f ft" % obs[-1][1], esc(tzl(obs[-1][0], zone))], right=(1,))
+    cur = fc_cur(G, gap)  # flood stages and the forecast are NWS stages: measured against the stage on the NWS scale, as everywhere else
+    if cur is None:
+        cur = obs[-1][1]
     if gap:
-        cur = gap[0]  # flood stages are NWS stages: measure them against the NWS reading
-        rows += tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))
+        rows +=tr(["Stage read by the NWS", "%.2f ft" % gap[0], "%s: NWS and USGS read this gauge on different zero points (USGS %.2f ft at that time)%s" % (esc(tzl(gap[2], zone)), gap[1], "; the flood stages below are NWS stages" if cats else "")], right=(1,))
     for k in CATS:
         if k in cats:
             d = cats[k] - cur

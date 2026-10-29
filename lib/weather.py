@@ -49,12 +49,12 @@ def b_cpc(G):
             continue
         if (G["ldate"] - iss).days > 3:
             continue
-        span = "%s to %s" % (a_.strftime("%b %d").replace(" 0", " "), z_.strftime("%b %d").replace(" 0", " "))
+        span = "%s to %s" % (md(a_), md(z_))
         for k, lab in (("temp", "Temperature"), ("precip", "Precipitation")):
             if c.get(k):
                 rows += tr([name, span, lab, esc(c[k]["category"] or "–"), "%d%%" % c[k]["prob"]], right=(4,))
                 ocards.append(card("%s &middot; %s" % (name, lab), (esc(c[k]["category"] or "–") if (c[k].get("prob") or 0) > 34 else "Near equal chances"), "%s &middot; probability %d%%" % (span, c[k]["prob"])))
-        src_bits.append("%s for %s, issued %s" % (name, span, iss.strftime("%b %d").replace(" 0", " ")))
+        src_bits.append("%s for %s, issued %s" % (name, span, md(iss)))
     if not rows:
         return None
     return block("cpc_outlook", "Temperature and precipitation outlooks", "official", rail(ocards, "Temperature and precipitation outlooks"),

@@ -141,19 +141,20 @@ function tag(res, what, L) {
 }
 
 function local(iso, tz) {
-  return new Date(iso).toLocaleString("en-US", { timeZone: tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).replace(/[  ]/g, " "); // Intl uses narrow no-break spaces; the build uses plain ones
+  return new Date(iso).toLocaleString("en-US", { timeZone: tz, month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).replace(/\s/g, "\u00a0").replace(/,\u00a0/g, ", "); // as tzl() in lib/core.py writes a time: no-break spaces (Intl gives narrow ones) except after the comma, so a swapped-in time matches the build's
 }
 
-function age(iso) {
-  const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
-  return m < 180 ? m + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d";
-}
+// The age chip's colour cut-offs in minutes: STALE_H "chip_fresh" and "chip_ageing" in lib/core.py, times 60. The worker cannot import Python; check.py --selftest compares this line with STALE_H.
+const AGE_CHIP_MIN = [90, 360];
+
+// AGE_FN in lib/page.py, character for character (check.py --selftest): the edge, the page script and age_text() print one age
+function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}
 
 function rewrite(res, g, m) {
   // every string is computed HERE, before streaming starts: a throw inside a handler mid-stream would cut the page off (HTMLRewriter docs)
   const [fv, ft] = g.f, tz = m[2], built = m[1], mins = (Date.now() - Date.parse(ft)) / 60000;
-  const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.abs(fv) >= 1000 ? Number(fv.toPrecision(3)).toLocaleString("en-US") : Math.abs(fv) < 1 && fv !== 0 ? fv.toFixed(2) : Math.round(fv).toLocaleString("en-US"), ageTxt = age(ft);
-  const ab = "ab " + (mins <= 90 ? "fresh" : mins <= 360 ? "ageing" : "stale");
+  const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.abs(fv) >= 1000 ? Number(fv.toPrecision(3)).toLocaleString("en-US") : Math.abs(fv) < 1 && fv !== 0 ? fv.toFixed(2) : Math.round(fv).toLocaleString("en-US"), ageTxt = age(Date.parse(ft));
+  const ab = "ab " + (mins <= AGE_CHIP_MIN[0] ? "fresh" : mins <= AGE_CHIP_MIN[1] ? "ageing" : "stale");
   const stage0 = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(built);
   const note = '<p id="lbn" class="src lf2">' + (stage0 ? "Flow and gage height" : "Flow") + " at the top updated " + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
   const stage = stage0 ? Number(g.h[0]).toFixed(2) : null;

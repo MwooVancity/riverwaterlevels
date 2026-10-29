@@ -109,7 +109,7 @@ def main():
         Gs[s] = render.ctx(s, rows[s], copy.deepcopy(recs[s]), now)
     related.close(Gs, iso)
     for s, g in Gs.items():
-        rows[s].update({"_built": True, "_ll": (g["lat"], g["lon"]), "_lv": g["lv"], "_band": band_word(g["p"]), "_hub": False, "_single": True})
+        rows[s].update({"_built": True, "_ll": (g["lat"], g["lon"]), "_lv": dir_lv(g), "_band": band_word(g["p"]), "_hub": False, "_single": True})
     found = collections.defaultdict(set)
     n = 0
     for s in sites:

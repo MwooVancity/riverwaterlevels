@@ -1,7 +1,7 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
 import os, json, math, datetime, collections
 from lib.common import *
-from lib.core import SOURCES_READ_ON
+from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H
 from lib.render import robots_meta, CSS, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -29,11 +29,6 @@ def shell(title, desc, url, body, extra_main_class="", ld=""):
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s<style>%s%s</style></head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
                 esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS, EXTRA_CSS, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
-
-
-def dir_lv(G):
-    """The flow a list row shows: on a tidal reach the latest reading is a moment in the tide cycle (Freeport swings 1,090 to 12,500 cfs in a day), so lists show the 24 h mean the comparison uses; the gauge page shows the day's range."""
-    return G["basis"] if G.get("osc") and G.get("basis_mean") else G["lv"]
 
 
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;
@@ -86,7 +81,7 @@ def all_gauges_table(built, Gs):
         wqf = "1" if any(series(G["rec"], c) for c in LABELS if c != "00045") else "0"
         rows += ('<tr data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><td data-v="%s"><a href="%s">%s</a></td><td class="hmob" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="r" data-v="%s">%s</td><td class="hmob" data-v="%s">%s</td></tr>' % (
             esc((r["river"] + " " + r["place"] + " " + STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"]).lower().replace("st. ", "saint ")), large, fcf, wqf,
-            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmt(dir_lv(G)), pv, ptxt,
+            esc((r["river"] + " " + r["place"]).lower()), r["water_url"], esc(river_at(r["river"], r["place"])), r["state"], r["state"], "%.0f" % dir_lv(G), fmtc(dir_lv(G)), pv, ptxt,
             "" if (chg is None or G.get("osc")) else "%.0f" % chg, "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%"), G["lt"].isoformat(), esc(G["obs"])))
     heads = (("Gauge", "s"), ("State", "s"), ("Flow, cfs", "n"), ("Compared with normal", "n"), ("24 h change", "n"), ("Observed", "s"))
     th = "".join('<th scope="col"%s data-k="%s" data-i="%d">%s</th>' % (' class="r"' if k == "n" else ' class="hmob"' if i in (1, 5) else "", k, i, h) for i, (h, k) in enumerate(heads))
@@ -100,7 +95,7 @@ def item_line(g, Gs):
         return "%d gauges on this site" % len(g)
     G = Gs[g[0]["site"]]
     p = G["p"]
-    return "%s cfs%s" % (fmt(dir_lv(G)), "" if p is None else ", %s" % band_word(p).lower())
+    return "%s cfs%s" % (fmtc(dir_lv(G)), "" if p is None else ", %s" % band_word(p).lower())
 
 
 def home(built, Gs):
@@ -111,7 +106,7 @@ def home(built, Gs):
         if G["p"] is not None:
             pos = 1 if G["p"] == -1 else 99 if G["p"] == 101 else max(1, min(99, G["p"]))
             pv = '<div class="bar"><u></u><i style="left:%.0f%%"></i></div>' % pos
-        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small></b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmt(dir_lv(G)), pv, esc(r["place"]), r["state"])
+        cards += '<a class="card pop" href="%s"><small>%s</small><b>%s <small style="display:inline">cfs</small></b>%s<small>%s, %s</small></a>' % (r["water_url"], esc(r["river"]), fmtc(dir_lv(G)), pv, esc(r["place"]), r["state"])
     by_state = collections.defaultdict(lambda: collections.defaultdict(list))
     for r in built:
         by_state[r["state"]][(r["hub_slug"], r["river"])].append(r)
@@ -173,7 +168,7 @@ def state_page(st, rows, Gs, sd=None):
             ch = "–" if (chg is None or G.get("osc")) else ("%+d%%" % round(chg) if round(chg) else "0%")
             fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
             trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
-                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmt(dir_lv(G)), band_word(G["p"]), ch, fcst, esc(G["obs"]))
+                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), band_word(G["p"]), ch, fcst, esc(G["obs"]))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th>NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
@@ -191,7 +186,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else "–"
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmt(dir_lv(G)), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
+            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th>Gauge</th><th class="r">Latest flow</th><th class="r">Compared with normal</th><th class="r">24 h change</th><th class="r">Drainage sq mi</th><th class="r">NWS river forecast</th><th>Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
@@ -209,11 +204,11 @@ def status_page(built, Gs, built_at):
     trs = ""
     for r in sorted(built, key=lambda r: -Gs[r["site"]]["age_min"]):
         m = Gs[r["site"]]["age_min"]
-        cls = "fresh" if m <= 90 else "ageing" if m <= 360 else "stale"
+        cls = age_chip(m)
         trs += '<tr><td><a href="%s">%s</a></td><td>%s</td><td class="r"><span class="ab %s">%s</span></td></tr>' % (r["dashboard_url"], esc(river_at(r["river"], r["place"]) + ", " + r["state"]), esc(r["site"]), cls, ("%d min" % m) if m < 180 else ("%d h" % round(m / 60)))
-    built_at = datetime.datetime.fromisoformat(built_at).strftime("%b %d, %I:%M %p UTC").replace(" 0", " ")
-    body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Green: newest reading under 90 minutes old; amber: under 6 hours; red: older. Machine-readable: <a href="/status.json">status.json</a>.</p>'
-            '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>' % (esc(built_at), trs))
+    built_at = tzl(datetime.datetime.fromisoformat(built_at), datetime.timezone.utc)
+    body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Green: newest reading under %d minutes old; amber: under %d hours; red: older. Machine-readable: <a href="/status.json">status.json</a>.</p>'
+            '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>' % (esc(built_at), STALE_H["chip_fresh"] * 60, STALE_H["chip_ageing"], trs))
     return prose_page("Data status", "/status/", body, "Age of the newest USGS reading at every gauge on River Water Levels, as of the last build.")
 
 
@@ -255,7 +250,7 @@ def trust_pages(built_count, built_rows):
         ("Percentile for date", "Where the current flow falls among the gauge's published daily percentiles for the same calendar date. Our estimate, interpolated between the USGS percentiles (5th, 10th, 20th, 25th, 50th, 75th, 80th, 90th, 95th)."),
         ("Below normal, Normal range, Above normal", "The headline on each gauge page. It compares today's flow with the same calendar date in every year on record: Below normal means lower than three quarters of those years (under the 25th percentile), Normal range means between the 25th and 75th percentile, Above normal means higher than three quarters of them. Very low and Very high mean below the 5th or above the 95th percentile. The sentence under the headline states the same thing as a share of years."),
         ("Forecast high, Forecast high flow", "The highest value in the National Weather Service river forecast that is still ahead, with the time it first occurs and when the forecast was issued. Some forecast points are published in flow (cfs) instead of height, and then the card says so. If the latest reading is already above it, the card says that too. A forecast is the NWS's, not ours, and changes as rain and releases change."),
-        ("Rising, Falling, Steady, Leveling off, Unsteady, Unclear", "The word on the change card describes the last 6 hours of flow, from the latest reading and the reading about 6 hours earlier: Rising or Falling when flow moved more than 1%, Steady when it did not, Leveling off when it moved but has stopped in the last hour, Unsteady when the last hour points the other way, Unclear when a small flow change is contradicted by the gage height. The 24-hour and 1-hour changes are printed under it."),
+        ("Rising, Falling, Steady, Leveling off, Unsteady, Unclear", "The word on the change card describes the last 6 hours of flow, from the latest reading and the reading about 6 hours earlier: Rising or Falling when flow moved %d%% or more and by at least %d cfs, Steady when it did not, Leveling off when it moved but has stopped in the last hour, Unsteady when the last hour points the other way, Unclear when a small flow change is contradicted by the gage height. The 24-hour and 1-hour changes are printed under it." % (FLAT_PCT, FLAT_CFS)),  # the cut-offs flow_dir() uses (was "more than 1%")
         ("Upstream and downstream gauges, lag", "Gauges on this site that sit on the same river network (USGS NLDI). The lag is the shift in hours, up to 72, that best matches the hourly flow at the two gauges over the last 8 days; it is measured from the data, not a travel-time promise, and is shown only when the match is strong (r of 0.85 or more). A pair is listed on both pages."),
         ("Different zero points (NWS and USGS stage)", "A gauge can be read by the USGS and by the National Weather Service on different datums, so the two heights differ by a fixed amount. Flood stages and NWS forecasts are on the NWS scale. When the two readings differ by more than 0.3 ft the page says so and measures flood stages against the NWS reading."),
         ("Median for date","The 50th percentile of flow for the calendar date over the gauge's record."),

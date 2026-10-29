@@ -27,7 +27,7 @@ def b_related(G, pages):
     nodes = []
     for rel in ("upstream", "downstream"):
         if rel == "downstream":
-            nodes.append({"name": "<span>This gauge</span>", "flow": "%s cfs" % fmtc(G["lv"]), "sub": esc(G["obs"]), "cur": True})
+            nodes.append({"name": "<span>This gauge</span>", "flow": "%s cfs" % fmtc(dir_lv(G)), "sub": esc(G["obs"]), "cur": True})
         for x in items:
             pr = pages.get(x["site"])
             if x["relation"] == rel and pr and pr.get("_built"):
@@ -189,21 +189,28 @@ def sources_block(blocks, G):
         len(ids), lis, esc(humanize_iso(stats_src) if stats_src else "USGS daily statistics: not available for this gauge."), esc(G["method"]), esc(DISCLAIMER)))
 
 
+# the age chip in the browser: the same text and rounding as age_text() in lib/core.py; worker/index.js carries this exact line (check.py --selftest)
+# a time in the browser, written as tzl() in lib/core.py writes it: no-break spaces except after the comma (Intl uses narrow ones); Z is the gauge's zone
+LT_FN = "function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).replace(/\\s/g,'\\u00a0').replace(/,\\u00a0/g,', ')}"
+AGE_FN = "function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}"
+
+
 LIVE_JS = """<script>(function(){var ID="USGS-@SITE@",Z="@TZ@",hero=document.querySelector('.hero');if(!hero||!window.fetch)return;var snap=Date.parse(hero.getAttribute('data-t')),n=0;
 function q(k){return document.querySelector('[data-live="'+k+'"]')}
 function f(v){var a=Math.abs(v);return a>=1000?Number(v.toPrecision(3)).toLocaleString('en-US'):a<1&&v!==0?v.toFixed(2):Math.round(v).toLocaleString('en-US')}
-function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
-function age(d){var m=Math.round((Date.now()-d)/60000);return m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}
+""" + LT_FN + """
+""" + AGE_FN + """
 var ag=q('age'),ag0=ag&&Date.parse(ag.getAttribute('data-t'));if(ag)ag.textContent=age(new Date(ag0||snap));
 function edge(){return fetch('/live/'+ID.slice(5)+'.json').then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var g=j&&j.g&&j.g[ID.slice(5)];if(!g||!g.f||g.f[2]||!(g.f[0]>-999)||!j.t||Date.now()-Date.parse(j.t)>1800000)throw 0;return [{v:g.f[0],t:new Date(g.f[1])},g.h&&!g.h[2]&&g.h[0]>-999?{v:g.h[0],t:new Date(g.h[1])}:null]})}
 function apply(a){var F=a[0],S=a[1];
-if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var mn=(Date.now()-F.t)/60000;[].slice.call(document.querySelectorAll('span.ab')).forEach(function(e){e.className='ab '+(mn<=90?'fresh':mn<=360?'ageing':'stale')});var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(Date.now()-F.t.getTime()<10800000)[].slice.call(document.querySelectorAll('.tag.t-last')).forEach(function(e){e.className='tag t-live';e.textContent='Live gauge'});if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent=(S&&st&&S.t.getTime()>=snap?'Flow and gage height':'Flow')+' at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';var an=document.querySelector('p.answer')||hero;an.parentNode.insertBefore(bn,an.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
+if(F&&F.t.getTime()>=snap){q('flow').textContent=f(F.v);var ld=q('lead');if(ld)ld.textContent=f(F.v)+' cfs';var fo=q('flowobs');if(fo)fo.textContent=lt(F.t);q('obs').textContent=lt(F.t);[].slice.call(document.querySelectorAll('[data-cf]')).forEach(function(e){e.textContent=f(F.v)});[].slice.call(document.querySelectorAll('[data-co]')).forEach(function(e){e.textContent=lt(F.t)});if(ag)ag.textContent=age(F.t);var mn=(Date.now()-F.t)/60000;[].slice.call(document.querySelectorAll('span.ab')).forEach(function(e){e.className='ab '+(mn<=@FRESH@?'fresh':mn<=@AGEING@?'ageing':'stale')});var st=q('stage'),so=q('stageobs');if(S&&st&&S.t.getTime()>=snap){st.textContent=S.v.toFixed(2);[].slice.call(document.querySelectorAll('[data-cs]')).forEach(function(e){e.textContent=S.v.toFixed(2)});if(so)so.textContent=lt(S.t)}if(Date.now()-F.t.getTime()<@LIVE_MS@)[].slice.call(document.querySelectorAll('.tag.t-last')).forEach(function(e){e.className='tag t-live';e.textContent='Live gauge'});if(F.t.getTime()>snap){[].slice.call(document.querySelectorAll('.fcnote')).forEach(function(e){e.hidden=true});var bn=document.getElementById('lbn');if(!bn){bn=document.createElement('p');bn.id='lbn';bn.className='src lf2';bn.textContent=(S&&st&&S.t.getTime()>=snap?'Flow and gage height':'Flow')+' at the top updated '+lt(F.t)+'. Charts, tables and comparisons below are as of the page build, '+lt(new Date(snap))+'.';var an=document.querySelector('p.answer')||hero;an.parentNode.insertBefore(bn,an.nextSibling)}var nt=' The flow above is newer than this comparison, which is as of '+lt(new Date(snap))+'.',pc=document.getElementById('pcap'),cc=document.getElementById('ccap');if(pc){pc.setAttribute('data-n','1')}if(cc&&cc.getAttribute('data-n')!=='1'){cc.textContent+=nt;cc.setAttribute('data-n','1')}}}}
 function fail(){var a=q('age'),hh=document.querySelector('.hero2'),old=hh&&(Date.now()-new Date(hh.getAttribute('data-t')))>3600000;if(a&&old&&!document.getElementById('lf')){var s=document.createElement('span');s.id='lf';s.className='lf';s.textContent=' \u00b7 the newest reading could not be loaded just now';a.parentNode.parentNode.appendChild(s)}}
 function run(){edge().then(apply).catch(fail)}
-run();document.addEventListener('visibilitychange',function(){if(!document.hidden)run()});setInterval(function(){if(!document.hidden)run()},300000)})();</script>"""
+run();document.addEventListener('visibilitychange',function(){if(!document.hidden)run()});setInterval(function(){if(!document.hidden)run()},300000)})();</script>""".replace(
+    "@FRESH@", "%d" % (STALE_H["chip_fresh"] * 60)).replace("@AGEING@", "%d" % (STALE_H["chip_ageing"] * 60)).replace("@LIVE_MS@", "%d" % (STALE_H["usgs"] * 3600000))  # cut-offs from the one table
 
 
-AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));function u(){var m=Math.round((Date.now()-t)/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}u();setInterval(u,60000)})();</script>"""
+AGE_JS = """<script>(function(){var a=document.querySelector('[data-live="age"][data-t]');if(!a)return;var t=Date.parse(a.getAttribute('data-t'));""" + AGE_FN + """function u(){a.textContent=age(t)}u();setInterval(u,60000)})();</script>"""
 
 
 SAFETY = '<p class="src safety">Government data, shown with the time it was observed or issued. It is not a flood warning, and it does not decide for you: no alert does not mean conditions are safe. <a href="/disclaimer/">Disclaimer</a></p>'
@@ -243,7 +250,7 @@ i.addEventListener('input',function(){show(i.value)});i.addEventListener('keydow
 
 
 WX_JS = """<script>(function(){var m=document.querySelector('[data-wxst]');if(!m||!window.fetch)return;var st=m.getAttribute('data-wxst'),t0=Date.parse(m.getAttribute('data-t')),Z="@TZ@",C=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
+""" + LT_FN + """
 function put(k,v){[].slice.call(document.querySelectorAll('[data-wx="'+k+'"]')).forEach(function(e){e.textContent=v})}
 function run(){fetch('https://api.weather.gov/stations/'+encodeURIComponent(st)+'/observations/latest',{headers:{Accept:'application/geo+json'}}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){var p=j&&j.properties,t=p&&Date.parse(p.timestamp);if(!t||!(t>t0))return;var V=function(k){return p[k]&&typeof p[k].value==='number'?p[k].value:null},c=V('temperature'),w=V('windSpeed'),d=V('windDirection'),g=V('windGust'),b=V('barometricPressure'),v=V('visibility');if(c===null)return;var NR='not reported',mph=w!==null?w*0.621371:null,wd=mph===null?NR:mph<1?'Calm':(d!==null?C[Math.floor(((d%360)/22.5)+0.5)%16]+' ':'')+Math.round(mph)+' mph';
 put('temp',Math.round(c*9/5+32)+' \u00b0F');put('temp0',Math.round(c*9/5+32));put('wind',wd);put('gust',g!==null?Math.round(g*0.621371)+' mph':NR);put('pres',b!==null?(b/3386.389).toFixed(2)+' inHg':NR);put('vis',v!==null?Math.round(v/1609.34)+' mi':NR);
@@ -253,7 +260,7 @@ run();document.addEventListener('visibilitychange',function(){if(!document.hidde
 
 
 ALERTS_JS = """<script>(function(){var b=document.getElementById('alerts');if(!b||!window.fetch)return;var Z="@TZ@",CTY="@CTY@",IG=['Test Message','Administrative Message'];
-function lt(d){return d.toLocaleString('en-US',{timeZone:Z,month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}
+""" + LT_FN + """
 function ast(p){var s=[];((p.geocode&&p.geocode.UGC)||[]).forEach(function(u){var k=u.slice(0,2);if(s.indexOf(k)<0)s.push(k)});return s.length?' ('+s.sort().join(', ')+')':''}
 function as(s){var a=s.split(';').map(function(x){return x.trim()}).filter(Boolean),c=CTY.toLowerCase().replace(/ (county|parish)$/,'');if(c){var m=a.filter(function(x){var y=x.toLowerCase();return y===c||y.slice(-c.length-1)===' '+c});a=m.concat(a.filter(function(x){return m.indexOf(x)<0}))}return a.length<=6&&!c?s:a.slice(0,6).join('; ')+(a.length>6?'; and '+(a.length-6)+' more areas':'')}
 function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x)e.textContent=x;return e}
@@ -362,7 +369,7 @@ def build_tab(tab, G, pages):
     last = place if hub_part else river_at(river, place)  # full review: "HOME / NE / AT OMAHA" had no river
     crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (G["st"].lower(), esc(G["st"]), hub_part, esc(last))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
-    sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), "fresh" if G["age_min"] <= 90 else "ageing" if G["age_min"] <= 360 else "stale", iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
+    sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), age_chip(G["age_min"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
     ld_items = [("Home", "/"), (G["st"], "/rivers/%s/" % G["st"].lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
     fl7 = [x[0] for x in G["fl"]]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % (lambda j: j.replace("</", "<\\/"))(json.dumps({

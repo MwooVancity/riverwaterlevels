@@ -64,16 +64,27 @@ class CriticalFail(Exception):
     pass
 
 
-def tzl(dt, zone, date=True):
-    d = dt.astimezone(zone)
-    s = "%d:%s %s" % (d.hour % 12 or 12, d.strftime("%M %p"), d.strftime("%Z"))
-    s = ("%s %d, %s" % (d.strftime("%b"), d.day, s) if date else s).strip()
+def md(d):
+    """'Oct 5': month and day, no leading zero. Every date on a page is written this way (w-reviews: 'for Oct 05')."""
+    return "%s %d" % (d.strftime("%b"), d.day)
+
+
+def clock(d, tz, date=True):
+    """'Oct 5, 3:07 PM EDT' from a wall-clock time and its zone name: tzl, and the AirNow and tide times that arrive as local text."""
+    s = ("%d:%s %s" % (d.hour % 12 or 12, d.strftime("%M %p"), tz)).strip()
+    s = ("%s, %s" % (md(d), s) if date else s).strip()
     return s.replace(" ", "\u00a0").replace(",\u00a0", ", ")  # a long date wraps after the comma, never inside the time
 
 
+def tzl(dt, zone, date=True):
+    d = dt.astimezone(zone)
+    return clock(d, d.strftime("%Z"), date)
+
+
 def age_text(dt, now):
-    m = int((now - dt).total_seconds() / 60)
-    return "%d min" % m if m < 180 else ("%.0f h" % (m / 60) if m < 2880 else "%d d" % (m // 1440))
+    """The age chip's text; AGE_FN (lib/page.py) and worker/index.js print the same, rounded the same way."""
+    m = round_half_up((now - dt).total_seconds() / 60)
+    return "%d min" % m if m < 180 else ("%d h" % round_half_up(m / 60) if m < 2880 else "%d d" % round_half_up(m / 1440))
 
 
 def hours_old(iso_s, now):
@@ -96,6 +107,11 @@ def qual_text(r):
         return ""
     words = [QUAL.get(str(x).upper(), str(x)) for x in q if str(x).strip()]
     return ("USGS flag: " + "; ".join(esc(w) for w in words)) if words else ""
+
+
+def stage_is_ft(row):
+    """True when a gage-height reading is in feet: the one test every stage comparison uses (a missing unit is feet, the USGS and NWS default)."""
+    return (row.get("unit_of_measure") or "ft").lower() in ("ft", "feet")
 
 
 def series(rec, code):
@@ -194,11 +210,17 @@ def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
     return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber}
 
 
-STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24}  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
+STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24,  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
+           "chip_fresh": 1.5, "chip_ageing": 6}  # the age chip by the H1: fresh to 1.5 h, ageing to 6 h, then stale (page, LIVE_JS and worker/index.js all read these)
 
 
 def stale_after(bid):
     return STALE_H.get(bid, 12)
+
+
+def age_chip(age_min):
+    """The age chip's colour class (gauge page and status page): STALE_H, the same cut-offs as LIVE_JS and worker/index.js."""
+    return "fresh" if age_min <= STALE_H["chip_fresh"] * 60 else "ageing" if age_min <= STALE_H["chip_ageing"] * 60 else "stale"
 
 
 HIDE_H = {"river_forecast": 72, "nwm_guidance": 72, "nwm_medium_range": 72, "forecast_rain_totals": 72, "hourly_forecast": 72, "hourly_heatmap": 72,

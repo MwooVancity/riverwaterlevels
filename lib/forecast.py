@@ -101,7 +101,7 @@ def b_river_forecast(G):
     fcards = []
     _hv = sel[top_i][1] if sel[top_i][1] is not None else sel[top_i][2]
     _cv = fc_cur(G, gap) if sel[top_i][1] is not None else G["lv"]
-    _below = _hv is not None and _cv is not None and _hv < _cv - (FC_TOL_FT if sel[top_i][1] is not None else FC_TOL_REL * abs(_cv))  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
+    _below = _hv is not None and _cv is not None and fc_cmp(_hv, _cv, "ft" if sel[top_i][1] is not None else "cfs") == "below"  # 1.7 ft forecast vs 1.68 ft reading is rounding, not "below" (full review)  # full review: a rising river showed "Highest forecast 3.2 ft" under a 3.52 ft reading
     lead = '<p class="src">NWS forecast issued %s.%s</p>' % (issued, " The latest reading is already above every forecast point." if _below else "") + lead + hydronotes_html(G)
     _flat = fc_word([x[1] if x[1] is not None else x[2] for x in sel], _cv, "ft" if sel[top_i][1] is not None else "cfs") != "high"  # no "Highest forecast" header unless the forecast rises above the reading  # every card the same level: no card is "highest" (hater 2026-10-27, Freeport: ten 102.5 ft cards)
     for i in pick:
@@ -194,12 +194,13 @@ def _commas(v):
 
 
 def low_now(G):
-    """The NWS low-water impact whose range holds the latest reading, or None."""
+    """(impact, reading) for the NWS low-water impact whose range holds the latest reading (a stage range is on the NWS scale: fc_cur), or None."""
+    st = fc_cur(G, datum_gap(G))
     for i in (G["rec"].get("nwps") or {}).get("low_impacts") or []:
         r = _low_range(i["value"])
-        cur = (G["lv"] if r and r[2] == "cfs" else (G["sg"][-1][1] if G["sg"] else None)) if r else None
+        cur = (G["lv"] if r[2] == "cfs" else st) if r else None
         if r and cur is not None and r[0] <= cur <= r[1]:
-            return i
+            return i, cur
     return None
 
 
@@ -208,11 +209,11 @@ def b_low_water(G):
     li, lh = n.get("low_impacts") or [], n.get("low_hist") or []
     if not li and not lh:
         return None
-    hit = low_now(G)
+    hit, hcur = low_now(G) or (None, None)
     out = ""
     if li:
         rows = "".join(tr([esc(_commas(i["value"])) + (" <b>(latest reading is in this range)</b>" if i is hit else ""), esc(demoji(i["impact"]))]) for i in li)
-        out += ('<p class="src">The latest reading, %s, is in the NWS range %s.</p>' % (("%s cfs" % fmtc(G["lv"])) if (_low_range(hit["value"]) or (0, 0, ""))[2] == "cfs" else ("%.2f ft" % G["sg"][-1][1]), esc(_commas(hit["value"])))) if hit else ""
+        out += ('<p class="src">The latest reading, %s, is in the NWS range %s.</p>' % (("%s cfs" % fmtc(hcur)) if _low_range(hit["value"])[2] == "cfs" else ("%.2f ft" % hcur), esc(_commas(hit["value"])))) if hit else ""
         out += table(["Level", "National Weather Service low-water statement"], rows)
     if lh:
         out += table(["Record low date", "Stage", "Flow"], "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc((n.get("stage_units") or "ft").lower())), ("%s cfs" % fmtc(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"], right=(1, 2)) for c in lh), right=(1, 2))
@@ -237,7 +238,7 @@ def b_impacts(G):
     rows = "".join(tr([fv(s_), "<br>".join(esc(x) for x in by[s_])], right=(0,)) for s_ in sorted(by))
     pn = nws_point_note(G)
     gap_ = datum_gap(G)
-    cur_ = gap_[0] if gap_ else (G["sg"][-1][1] if G["sg"] else ((nws_stage(G) or (None, None))[1]))  # the reading on the NWS scale (Memphis: no USGS stage, the NWS observes it; hater r8)
+    cur_ = fc_cur(G, gap_)  # the reading on the NWS scale (Memphis: no USGS stage, the NWS observes it; hater r8)
     if flow_:
         gap_, cur_ = None, G["lv"]
     _ref = ("NWS reading of %.2f %s" % (gap_[0], esc(unit))) if gap_ else "latest reading"

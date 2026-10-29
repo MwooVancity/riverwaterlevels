@@ -85,8 +85,11 @@ def fmtc(v):
     if v is None:
         return "–"
     if 0 < abs(v) < 1:
-        return "%.2f" % v  # 0.45 cfs is not "0 cfs" (live numbers review: read as a dry creek)
-    return "{:,.0f}".format(float("%.3g" % v) if abs(v) >= 1000 else v)  # hater 2026-10-27: computed means printed as "280,917 cfs"
+        return "%.2f" % math.copysign(round_half_up(abs(v), 2), v)  # 0.45 cfs is not "0 cfs" (live numbers review: read as a dry creek); toFixed(2) rounds the size half up
+    if abs(v) >= 1000:  # hater 2026-10-27: computed means printed as "280,917 cfs"; 3 significant figures, half up like toPrecision(3) in LIVE_JS and the worker
+        q = 10 ** (math.floor(math.log10(abs(v))) - 2)
+        return "{:,.0f}".format(math.copysign(round_half_up(abs(v) / q) * q, v))
+    return "{:,.0f}".format(round_half_up(v))  # Math.round
 
 
 MOJI = re.compile("Ã[\u0080-\u00bf]|â€|â‚¬|Â[\u0080-\u00bf]")
@@ -107,6 +110,12 @@ def demoji(s):
 FC_TOL_FT, FC_TOL_REL = 0.05, 0.02  # a forecast within 0.05 ft (stage) or 2 % (flow) of the reading is level with it
 
 
+def fc_cmp(v, cur, unit="ft"):
+    """'above', 'level' or 'below': a forecast value against the latest reading, the tolerance always taken from the READING. Every forecast-vs-now word uses this."""
+    tol = FC_TOL_FT if unit == "ft" else FC_TOL_REL * abs(cur)
+    return "above" if v > cur + tol else "below" if v < cur - tol else "level"
+
+
 def fc_word(vals, cur, unit="ft"):
     """'steady' when every forecast value prints the same, 'high' when the highest is above the latest reading, else 'at or below'.
     The single source for "Forecast high" (w11-w13 reviews: three places chose the word three ways)."""
@@ -115,7 +124,7 @@ def fc_word(vals, cur, unit="ft"):
         return None
     if len({("%.1f" % v) if unit == "ft" else fmtc(v) for v in vals}) == 1:
         return "steady"
-    return "high" if cur is None or max(vals) > cur + (FC_TOL_FT if unit == "ft" else FC_TOL_REL * abs(cur)) else "below"
+    return "high" if cur is None or fc_cmp(max(vals), cur, unit) == "above" else "below"
 
 
 FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast (at or below the latest reading)"}
@@ -138,6 +147,12 @@ def km_mi(km):
     return km * 0.621371
 
 
+def round_half_up(x, nd=0):
+    """Round half up, as JavaScript's Math.round does: the page and its live refresh must print the same number (Python's round() and %-format round half to even)."""
+    q = 10 ** nd
+    return math.floor(x * q + 0.5) / q if nd else math.floor(x + 0.5)
+
+
 def r1(x):
     """A difference of two stages rounded half up to 0.1 before printing with %.1f."""
     return math.floor(x * 10 + 0.5 + 1e-9) / 10
@@ -145,7 +160,7 @@ def r1(x):
 
 def fmtd(v):
     """A difference in cfs, exact to the whole cfs (w10 review: 4,200 - 235 printed as 3,960)."""
-    return "–" if v is None else "%.2f" % v if 0 < abs(v) < 1 else "{:,.0f}".format(v)
+    return "–" if v is None else "%.2f" % math.copysign(round_half_up(abs(v), 2), v) if 0 < abs(v) < 1 else "{:,.0f}".format(round_half_up(v))  # half up, as fmtc
 
 
 def interp_pct(stats_row, v):
@@ -203,6 +218,12 @@ def band_word(p):
     if p <= 75:
         return "Normal range"
     return "Above normal"
+
+
+def dir_lv(G):
+    """The flow a list row shows: on a tidal reach the latest reading is a moment in the tide cycle (Freeport swings 1,090 to 12,500 cfs in a day), so lists show the 24 h mean the comparison uses; the gauge page shows the day's range.
+    Every list of gauges (home, state, hub, nearby, upstream and downstream) calls this."""
+    return G["basis"] if G.get("osc") and G.get("basis_mean") else G["lv"]
 
 
 def band_cls(p):

@@ -206,6 +206,18 @@ def visitor_calls(js):
             for m in re.finditer(r"(?<![\w.])(?<!async )fetch\(", js) if not any(a <= m.start() <= b for a, b in spans)]
 
 
+def edge_drift(js):
+    """The edge worker cannot import Python, so its copies are compared here: its age text must be AGE_FN (lib/page.py) character for character, and its
+    age-chip cut-offs must be STALE_H chip_fresh and chip_ageing (lib/core.py) in minutes. A fix in one copy only would show two ages or two colours."""
+    from lib.render import AGE_FN, STALE_H
+    bad = [] if AGE_FN in js else ["worker/index.js age() differs from AGE_FN in lib/page.py: the edge and the page would print different ages"]
+    m = re.search(r"const AGE_CHIP_MIN = \[(\d+), (\d+)\];", js)
+    want = (round(STALE_H["chip_fresh"] * 60), round(STALE_H["chip_ageing"] * 60))
+    if not m or (int(m.group(1)), int(m.group(2))) != want:
+        bad.append("worker/index.js AGE_CHIP_MIN is not STALE_H chip_fresh/chip_ageing in minutes %s: the edge would colour the age chip differently from the page" % (want,))
+    return bad
+
+
 def review_gaps(live_sites, reviews, code):
     """Owner 2026-10-27: no page is live unless a hater looked at it. reviews = {id: record from state/reviews}; code = template_hash()."""
     bad = []
@@ -391,7 +403,7 @@ def check_dir(d):
     site_bad = []
     urls = rel_of
     wjs = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
-    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
+    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
     from lib.common import template_hash
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
@@ -553,6 +565,10 @@ def selftest():
     assert cloak_risks('const ua = req.headers.get("User-Agent");'), "selftest: worker reading the user agent did not fire"
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
+    w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
+    assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
+    assert edge_drift(w_real.replace("m<2880", "m<2881")), "selftest: a worker age that drifted from AGE_FN did not fire"
+    assert edge_drift(w_real.replace("AGE_CHIP_MIN = [90, 360]", "AGE_CHIP_MIN = [90, 240]")), "selftest: a worker age-chip cut-off that drifted from STALE_H did not fire"
     wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
     a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
     assert near_dupes({"/x/": shingles(a), "/y/": shingles(a.replace("flow 120", "flow 9,400"))}), "selftest: near-duplicate pages (same words, other readings) did not fire"

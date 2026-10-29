@@ -102,7 +102,7 @@ def day_axis(t0, t1, zone, X, nx, fs, Hh, L, W):
         x_ = X(m)
         if x_ - 2.4 * fs < L - 4 or x_ + 2.4 * fs > W - 4:  # "Oct 22" is about 4.8 font sizes wide
             continue
-        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="middle">%s</text>' % (x_, Hh - 8, fs, m.strftime("%b %d").replace(" 0", " "))
+        xl += '<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="middle">%s</text>' % (x_, Hh - 8, fs, md(m))
     return xl
 
 
@@ -213,7 +213,7 @@ def b_multiyear(G):
     start = asof - datetime.timedelta(days=span - 1)
     return block("multi_year", "The same %d days in earlier years" % span, "hist", svg + legend + table(["Year", "Mean flow", "Highest day"], rows, right=(1, 2)),
                  "Source: USGS daily mean flows (Water Data API). Each line is the %d days from %s to %s, shifted to the same calendar dates in earlier years; gaps are days without a published value. Recent days are provisional." % (
-                     span, start.strftime("%b %d").replace(" 0", " "), asof.strftime("%b %d").replace(" 0", " ")), "usgs")
+                     span, md(start), md(asof)), "usgs")
 
 
 def b_peaks(G):

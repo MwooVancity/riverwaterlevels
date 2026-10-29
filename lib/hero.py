@@ -24,7 +24,7 @@ def ctx(site, row, rec, now):
     mmdd = ldate.isoformat()[5:10]
     srow = stats.get(mmdd) if stats else None
     win = [x for x in fl if x[0] > lt - datetime.timedelta(hours=24)]
-    mdate = ldate.strftime("%b %d").replace(" 0", " ")
+    mdate = md(ldate)
     basis, method = lv, "latest reading compared with USGS daily percentiles for %s" % mdate
     if len(win) >= 4:
         steps = sorted((win[i][0] - win[i - 1][0]).total_seconds() for i in range(1, len(win)))
@@ -58,7 +58,7 @@ TAILWATER = re.compile(r"\b(below|bl|blw|downstream of)\b.*\b(dam|lake|lk|reserv
 def flow_jitter(G):
     """Flow that swings more than 1.8x inside 24 h while it does not move with the gage height (correlation under 0.5 over the aligned readings): lock-and-dam, tide or backwater effects, so the flow is not a reliable direction.
     Gauges where flow and stage rise and fall together (dam releases, floods) are never flagged. Returns (low, high, correlation) or None."""
-    if G["osc"] or not G["sg"] or (G["sg"][-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
+    if G["osc"] or not G["sg"] or not stage_is_ft(G["sg"][-1][2]):
         return None
     t0 = G["lt"] - datetime.timedelta(hours=24)
     fl = {x[0]: x[1] for x in G["fl"] if x[0] >= t0 and x[1] > 0}
@@ -120,14 +120,6 @@ def point_temp_note(G, f):
 
 
 
-def next_impact_cats(n, v):
-    """'<small>29.5 ft below action stage (28.0 ft)</small>' from the NWS flood categories, or ''."""
-    cats = {k: x for k, x in (n.get("categories") or {}).items() if x is not None}
-    low = min(cats, key=cats.get) if cats else None
-    return '<small>%.1f ft below %s stage (%.1f ft)</small>' % (r1(cats[low] - v), low, cats[low]) if low and v < cats[low] else ""
-
-
-
 def usgs_place(row, rec):
     """(place, state) as the USGS site name words them: 'near Clayton', 'GA' for CHATTOOGA RIVER NEAR CLAYTON, GA on an SC site."""
     nm = ((rec.get("meta") or {}).get("loc") or {}).get("monitoring_location_name") or row.get("raw_name") or ""
@@ -152,8 +144,13 @@ assert sent_ends("Water spreads across S. Main St. Bridge. Then more.") == [39]
 
 
 def fc_cur(G, gap):
-    """The stage a forecast is measured against: tile, cards, stage table and legend all call this (w14: Memphis cards fell back to "none" and said Highest forecast)."""
-    return gap[0] if gap else (G["sg"][-1][1] if G["sg"] else (nws_stage(G) or (None, None))[1])
+    """The current stage on the NWS scale, in ft, that forecasts, flood stages, impacts and low-water ranges are measured against: the NWS reading across a zero-point gap,
+    else the USGS gage height, else the NWS-observed stage (Memphis: USGS publishes flow only); None when there is none. Every such comparison calls this (w14: Memphis cards fell back to "none")."""
+    if gap:
+        return gap[0]
+    if G["sg"] and stage_is_ft(G["sg"][-1][2]):
+        return G["sg"][-1][1]
+    return (nws_stage(G) or (None, None))[1]
 
 
 def nws_stage(G, max_h=24):
@@ -166,11 +163,11 @@ def nws_stage(G, max_h=24):
     return (t, v) if (G["now"] - t).total_seconds() <= max_h * 3600 and v > -999 else None
 
 
-def datum_gap(G):
-    """(NWS stage, USGS stage) when the two agencies read the same gauge on different zero points (latest readings within 30 minutes of each other differ by more than 0.3 ft); None when they agree or one is missing."""
+def stage_pair(G):
+    """(NWS stage, USGS stage, time) for the NWS-observed stage and the USGS gage height read closest to it, within 10 minutes; None when either is missing, so the two cannot be compared."""
     o = (G["rec"].get("nwps") or {}).get("obs_stage")
     sg = G["sg"]
-    if not o or not sg or (sg[-1][2].get("unit_of_measure") or "").lower() not in ("ft", "feet"):
+    if not o or not sg or not stage_is_ft(sg[-1][2]):
         return None
     try:
         t, v = parse_t(o["t"]), float(o["v"])
@@ -179,7 +176,17 @@ def datum_gap(G):
     u = min(sg, key=lambda x: abs((x[0] - t).total_seconds()))
     if abs((u[0] - t).total_seconds()) > 600:
         return None
-    return (v, u[1], t) if abs(v - u[1]) > 0.3 else None
+    return v, u[1], t
+
+
+DATUM_TOL_FT = 0.3  # NWS and USGS stages further apart than this are on different zero points
+
+
+def datum_gap(G):
+    """(NWS stage, USGS stage, time) when the two agencies read the same gauge on different zero points: the NWS-observed stage and the USGS reading closest to it (within 10 minutes) differ by more than 0.3 ft.
+    None when they agree or cannot be compared (stage_pair tells the two apart)."""
+    p = stage_pair(G)
+    return p if p and abs(p[0] - p[1]) > DATUM_TOL_FT else None
 
 
 def upstream_dams(G):
@@ -200,7 +207,7 @@ def hero(G, pages=None):
     if p is not None and srow:
         pct_med = "%.0f%% of the median" % (G["basis"] / srow[5] * 100) if srow[5] else ""
         what = ("the trailing 24 h mean (%s cfs)" % fmtc(G["basis"])) if G["basis_mean"] else ("the %s reading" % tzl(G["lt"], G["zone"], date=False))
-        cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], G["ldate"].strftime("%b %d"))
+        cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], md(G["ldate"]))
     else:
         pct_med, cap = "", "No percentile: no published statistics for this date."
     sg = G["sg"]
@@ -227,7 +234,7 @@ def hero(G, pages=None):
         o, n_ = nws_stage(G), G["rec"].get("nwps") or {}
         if o:
             tiles += ui.tile("stage", "stage", "Gage height", '%.2f <small>%s</small>' % (o[1], esc(n_.get("stage_units") or "ft")),
-                             '<small>NWS observed at %s, %s; USGS reports no gage height here%s</small>' % (esc(n_.get("lid") or ""), esc(tzl(o[0], G["zone"])), "; below zero means under the gauge's fixed reference level, not a dry river" if o[1] < 0 else "") + next_impact_cats(n_, o[1]))
+                             '<small>NWS observed at %s, %s; USGS reports no gage height here%s</small>' % (esc(n_.get("lid") or ""), esc(tzl(o[0], G["zone"])), "; below zero means under the gauge's fixed reference level, not a dry river" if o[1] < 0 else "") + (('<small class="dv">%s</small>' % next_impact(G)) if next_impact(G) else ""))
         else:
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(n_["lid"])) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
@@ -236,7 +243,7 @@ def hero(G, pages=None):
     else:
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
-        on = G["ldate"].strftime("%b %d")
+        on = md(G["ldate"])
         plain = ("Lower than at least 95%% of the %d years in the USGS daily statistics for %s." % (yrs, on) if p == -1 else
                  "Higher than at least 95%% of the %d years in the USGS daily statistics for %s." % (yrs, on) if p == 101 else
                  "Lower than %d%% of the %d years in the USGS daily statistics for %s." % (100 - round(p), yrs, on) if p < 50 else
@@ -296,8 +303,8 @@ def hero(G, pages=None):
             tiles += ui.tile("trend dv " + word.lower().split()[0], ico, "Change, last %s" % span, '%s%.1f%% <small class="word">%s</small>' % ("+" if use > 0 else "-" if use < 0 else "", abs(use), word),
                              '<small>%s%s</small>' % (parts, (" &middot; gage %+.2f ft/h" % gr) if (gr := gage_rate(G)) is not None else "") + (word_note if word == "Unclear" else "")
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
-    norm_html = ui.tile("norm", "map", "Is this normal for %s?" % G["ldate"].strftime("%b %d").replace(" 0", " "), norm_word,
-                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith("%s %d," % (G["ldate"].strftime("%b"), G["ldate"].day)) else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
+    norm_html = ui.tile("norm", "map", "Is this normal for %s?" % md(G["ldate"]), norm_word,
+                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = (G["rec"].get("nwps") or {}).get("lid")
     if nwl and (G["rec"].get("nwps") or {}).get("name"):
         nwl = "%s (%s)" % (nwl, G["rec"]["nwps"]["name"])  # w10 review: "NWS point TDAO3" by code only
@@ -311,7 +318,7 @@ def hero(G, pages=None):
     if c["fc"]:
         fcw = c["fc"]
         unit = fcw["unit"]
-        above = fcw["cur"] is not None and fcw["cur"] > fcw["v"] + (FC_TOL_FT if unit == "ft" else FC_TOL_REL * abs(fcw["v"]))
+        above = fcw["cur"] is not None and fc_cmp(fcw["v"], fcw["cur"], unit) == "below"  # the reading is above the whole forecast
         val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmtc(fcw["v"]))
         _pn = nws_point_note(G)
         sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else ((", " + esc((G["rec"].get("nwps") or {}).get("name"))) if (G["rec"].get("nwps") or {}).get("name") else ""))  # reviewers: the first screen named the point by code only
@@ -337,7 +344,7 @@ def hero(G, pages=None):
             _parts.append("forecast out of step with the gauge reading (details under River forecast)")
         if _parts:
             sub += '<small class="dv">%s</small>' % " &middot; ".join(_parts)
-        strip += ui.tile("fcst", "crest", FC_LABEL[fcw["word"]] if unit == "ft" and fcw.get("word") else ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fcw["v"] < fcw["cur"] - (FC_TOL_FT if unit == "ft" else FC_TOL_REL * abs(fcw["cur"])) else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
+        strip += ui.tile("fcst", "crest", FC_LABEL[fcw["word"]] if unit == "ft" and fcw.get("word") else ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fc_cmp(fcw["v"], fcw["cur"], unit) == "below" else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
     elif nwl and G["has_forecast"]:
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:
@@ -381,7 +388,7 @@ def hero(G, pages=None):
             dir_chip = (dir_chip or "Direction unclear") + "; NWS forecast rises to %s by %s" % (("%.1f ft" % fc_["v"]) if fu_ == "ft" else ("%s cfs" % fmtc(fc_["v"])), fc_["t"])
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
-    norm_txt = ("%s for %s" % (norm_word, G["ldate"].strftime("%b %d").replace(" 0", " "))) if p is not None else "No past-years comparison for this date"
+    norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
@@ -446,7 +453,7 @@ def last_year_flow(G):
         when = G["ldate"]
     if not (0 <= idx < len(row)) or row[idx] is None:
         return None
-    return row[idx], "%s %d, %d" % (when.strftime("%b"), when.day, when.year - 1)  # `when` is this year's date; the value is last year's
+    return row[idx], "%s, %d" % (md(when), when.year - 1)  # `when` is this year's date; the value is last year's
 
 
 def gage_rate(G):
@@ -538,10 +545,10 @@ def impact_list(G):
 def next_impact(G):
     """The next NWS impact statement above the latest reading, short, for the gage tile: the first thing a wader or boater wants to know about the level."""
     n = G["rec"].get("nwps") or {}
-    if not G["sg"]:
-        return ""
     gap = datum_gap(G)
-    cur = gap[0] if gap else G["sg"][-1][1]
+    cur = fc_cur(G, gap)
+    if cur is None:
+        return ""
     unit = (n.get("stage_units") or "ft").lower()
     _ref = ("the NWS reading of %.2f %s, on a different zero point from USGS" % (cur, unit)) if gap else "the latest reading"  # full review: Suwannee distances from 53.51 beside a 54.34 headline
     by = impact_list(G)  # the same list the impacts block shows (full review: tile 10.0 ft, block 7.0 ft)

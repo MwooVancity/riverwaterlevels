@@ -61,7 +61,7 @@ def main():
     for r in built:
         r["_built"] = True
         g = Gs[r["site"]]
-        r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), g["lv"], band_word(g["p"])
+        r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
         key = (r["hub_slug"], r["state"])
         by_hub[key].append(r)
     for key, g in by_hub.items():  # a hub page needs two or more built gauges; with one, the river address redirects to that gauge

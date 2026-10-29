@@ -1,5 +1,7 @@
 """Upstream/downstream gauges are found by the USGS NLDI from each gauge's side, so A can list B while B does not list A. This closes the relation for gauges that are both on the site:
 if A lists B as upstream, B gets A as downstream (and the other way round), with A's own latest flow and time. A measured lag is copied across. Nothing is invented: the pair comes from the same NLDI answer."""
+from lib.common import dir_lv
+
 INV = {"upstream": "downstream", "downstream": "upstream"}
 
 
@@ -14,7 +16,7 @@ def close(Gs, iso):
             items = rel.setdefault("items", [])
             if any(y["site"] == a for y in items):
                 continue
-            row = {"site": a, "relation": INV[x["relation"]], "flow": G["lv"], "time": iso(G["lt"])}
+            row = {"site": a, "relation": INV[x["relation"]], "flow": dir_lv(G), "time": iso(G["lt"])}
             for k in ("lag_h", "lag_r"):
                 if x.get(k) is not None:
                     row[k] = x[k]
