@@ -287,6 +287,14 @@ def hater_rules(h):
         row = re.search(r"Thunder %((?:\s+[\d\u2013-]+)+)", t)
         if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
             bad.append("says 'Thunderstorms: none' while the hourly table shows a thunder chance above 0")
+    rt_ = re.sub(r"(?i)(href|src|title|aria-label|data-[a-z-]+|id)=\"[^\"]*\"", "", re.sub(r'(?is)<head>.*?</head>|<(script|style|svg)\b.*?</\1>|<details class="srcd">.*?</details>|<p class="src">.*?</p>', " ", h))
+    m = re.search(r"\b[A-Z]{4}\d\b", re.sub(r"<[^>]+>", " ", rt_))
+    if m:  # audit run 1, row 9: "NWS point MEMT1" on the first screen; the point's code belongs in Source text and link titles, reader text uses its name
+        bad.append("an NWS forecast point code (%s) in reader text outside Source" % m.group(0))
+    if re.search(r'(?s)id="gauge_not_reporting".{0,300}Older than', h):  # row 8: the banner says the real age ("2 d old"), not a limit
+        bad.append("the not-reporting banner says 'Older than N h' instead of the real age")
+    if any(sec.count("(unnamed)") > 1 for sec in re.findall(r"(?s)<section.*?</section>", h)):  # row 12: seven "(unnamed)" rows read as padding
+        bad.append("more than one '(unnamed)' row in one block")
     m = re.search(r"(?<![\d.,])\b1 (hours|days|years|miles|minutes) (ago|earlier|before|away)", t)  # not the tail of "1.1 days ago"
     if m:
         bad.append("ungrammatical %r" % m.group(0))
@@ -295,7 +303,7 @@ def hater_rules(h):
         vals_ = re.findall(r'<div class="rc[^"]*"><span class="rt">[^<]*</span><b>(.*?)</b>(?:<small>(.*?)</small>)?</div>', rf_.group(0))
         if any(a_ == b_ for a_, b_ in zip(vals_, vals_[1:])):
             bad.append("two neighbouring forecast cards print the same values")
-    if ("Forecast high" in t or "Highest forecast" in t) and ("NWS forecast (steady)" in t or "at or below the latest reading" in t):
+    if ("Forecast high" in t or "Highest forecast" in t) and ("NWS forecast (steady)" in t or "no rise above the latest reading" in t):
         bad.append("the forecast is called 'Forecast high' and also steady or at/below the reading on one page")
     dw_ = re.search(r"(Steady|Rising|Falling): ([+-]?\d+(?:\.\d+)?)% flow in 6 h", t)
     rc_ = re.search(r"Last 6 h \S+ [+-]?[\d.]+% ([+-])([\d,]+) cfs", t)
@@ -551,7 +559,13 @@ def selftest():
     assert hater_rules('<section class="card blk" data-f="fc" id="no_river_forecast"><h2>River forecast availability</h2></section>'), "selftest: full-card empty state did not fire"
     assert hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>9</td><td>11</td></tr>"), "selftest: 'none' over a thunder chance did not fire"
     assert not hater_rules("<p>Thunderstorms: none in the forecast</p><tr><th>Thunder %</th><td>0</td><td>0</td></tr>"), "selftest: 'none' over zero thunder wrongly flagged"
-    assert hater_rules("<small>Peak: 1 hours ago.</small>"), "selftest: '1 hours ago' did not fire"
+    assert hater_rules("<small>1 d old &middot; NWS point MEMT1, Mississippi River at Memphis</small>"), "selftest: an NWS point code in reader text did not fire"
+    assert not hater_rules('<small>NWS forecast point Mississippi River at Memphis</small><p class="src">Source: NWS forecast point MEMT1</p><a href="/x/MEMT1" title="NWS point MEMT1">link</a>'), "selftest: a point code in Source or a link title wrongly flagged"
+    assert hater_rules('<section id="access_points"><td>(unnamed)</td><td>(unnamed)</td></section>'), "selftest: two '(unnamed)' rows in one block did not fire"
+    assert hater_rules('<section id="gauge_not_reporting"><h2>Gauge not reporting <span class="tag amber">Older than 12 h</span></h2></section>'), "selftest: 'Older than 12 h' in the not-reporting banner did not fire"
+    assert not hater_rules('<section id="gauge_not_reporting"><h2>Gauge not reporting <span class="tag amber">2 d old</span></h2><p>The newest reading is old.</p><p class="src">Source: USGS</p></section>'), "selftest: a real age in the not-reporting banner wrongly flagged"
+    assert not hater_rules('<section id="access_points"><p>7 more unnamed ramps or access points within 2.7 mi</p></section>'), "selftest: the grouped unnamed line wrongly flagged"
+    assert hater_rules("<small>Peak: 1 hours ago.</small>"),"selftest: '1 hours ago' did not fire"
     assert hater_rules('<h2>Flood impacts by stage, as issued by NWS <span class="tag t-official">Official NWS</span></h2>'), "selftest: NWS twice in a row in a heading did not fire"
     assert not hater_rules('<h2>Flood impacts by stage <span class="tag t-official">Official NWS</span></h2>'), "selftest: a clean official heading wrongly flagged"
     assert hater_rules('<p class="src">Source: U.S. EPA StreamCat ), watershed-wide metrics</p>'), "selftest: a stray ' )' in a source line did not fire"

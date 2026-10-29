@@ -10,7 +10,7 @@ def b_nws_point(G, pages=None):
     n = G["rec"].get("nwps") or {}
     if not n.get("lid"):
         return None
-    rows = tr(["Forecast point", "%s, %s" % (esc(n["lid"]), esc(n.get("name") or ""))])
+    rows = tr(["Forecast point", esc(n.get("name") or "Name not published")])
     nm = lambda x: ("%s (%s)" % (x.get("name"), x.get("abbreviation")) if x.get("name") and x.get("abbreviation") else (x.get("abbreviation") or x.get("name") or "")) if isinstance(x, dict) else (x or "")
     if n.get("wfo"):
         rows += tr(["Weather Forecast Office", esc(nm(n["wfo"]))])
@@ -18,7 +18,7 @@ def b_nws_point(G, pages=None):
         rows += tr(["River Forecast Center", esc(nm(n["rfc"]))])
     if n.get("reliability") and (n.get("forecast") or {}).get("points"):
         rows += tr(["Forecast reliability, as published", esc(n["reliability"])])
-    rows += tr(["Flood inundation maps", '<a href="https://water.noaa.gov/gauges/%s" rel="noopener">Check this forecast point at water.noaa.gov</a>' % esc(n["lid"])])
+    rows += tr(["Flood inundation maps", '<a href="https://water.noaa.gov/gauges/%s" rel="noopener" title="NWS point %s">Check this forecast point at water.noaa.gov</a>' % (esc(n["lid"]), esc(n["lid"]))])
     for key, lab in (("upstream", "Upstream forecast points"), ("downstream", "Downstream forecast points")):
         rfl = n.get("riverflow") or {}
         on_site = {(p.get("nws_lid") or "").upper(): p for p in (pages or {}).values() if p.get("_built") and p.get("nws_lid")}
@@ -88,9 +88,14 @@ def b_access(G):
         return None
     pri = {"Boat ramp": 0, "Whitewater put-in": 0, "Canoe/kayak put-in": 0, "Marina": 1}  # actual launch points before marinas, nearest first
     ordered = sorted(a["rows"], key=lambda x: (pri.get(x["type"], 2), x["mi"]))
-    rows = "".join(tr([esc(x["name"] or "(unnamed)"), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in ordered)
-    return block("access_points", "Boat ramps, put-ins and marinas nearby", "map",
-                 table(["Name", "Type", "Distance"], rows, right=(2,)),
+    named = [x for x in ordered if (x.get("name") or "").strip()]
+    unnamed = [x for x in ordered if not (x.get("name") or "").strip()]  # audit run 1, row 12: seven "(unnamed)" rows read as padding; they become one line
+    rows = "".join(tr([esc(x["name"]), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in named)
+    body = table(["Name", "Type", "Distance"], rows, right=(2,)) if named else ""
+    if unnamed:
+        far = max(x["mi"] for x in unnamed)
+        body += '<p>%d %sunnamed %s within %.1f mi. <a href="#gauge_map">Map of the gauge location</a></p>' % (len(unnamed), "more " if named else "", "ramp or access point" if len(unnamed) == 1 else "ramps or access points", far)
+    return block("access_points", "Boat ramps, put-ins and marinas nearby", "map", body,
                  "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
 
 
@@ -131,7 +136,7 @@ def b_stocking(G):
 def acis_name(n):
     """ACIS station names arrive in capitals: title-case the place, keep the compass suffix ("CHEVY CHASE 1.2 SW" -> "Chevy Chase 1.2 SW")."""
     import re
-    t = re.sub(r"\bAp\b", "Airport", (n or "").title())
+    t = re.sub(r"\bWfo\b", "NWS office", re.sub(r"\bAp\b", "Airport", (n or "").title()))
     return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)
 
 
@@ -154,12 +159,12 @@ def b_streamcat(G):
     if not s or not s.get("vals"):
         return None
     v = s["vals"]
-    spec = (("pctimp2019ws", "Impervious surface, 2019", lambda x: "%.1f%%" % x), ("pcturbmd2019ws", "Medium-intensity urban land, 2019", lambda x: "%.1f%%" % x), ("pctcrop2019ws", "Cropland, 2019", lambda x: "%.1f%%" % x),
+    spec = (("pctimp2019ws", "Impervious surface, 2019 (pavement and roofs)", lambda x: "%.1f%%" % x), ("pcturbmd2019ws", "Medium-intensity urban land, 2019", lambda x: "%.1f%%" % x), ("pctcrop2019ws", "Cropland, 2019", lambda x: "%.1f%%" % x),
             ("pctwdwet2019ws", "Woody wetland, 2019", lambda x: "%.1f%%" % x), ("elevws", "Mean elevation", lambda x: "%s ft" % fmt(x * 3.28084)), ("precip8110ws", "Mean annual precipitation, 1981 to 2010", lambda x: "%.1f in" % (x / 25.4)),
-            ("runoffws", "Mean annual runoff", lambda x: "%.1f in" % (x / 25.4)), ("bfiws", "Base-flow index", lambda x: "%.0f%%" % x), ("damdensws", "Dam density", lambda x: "%.3f per sq mi" % (x * 2.58999)))
+            ("runoffws", "Mean annual runoff (rain that leaves as streamflow)", lambda x: "%.1f in" % (x / 25.4)), ("bfiws", "Base-flow index (share of streamflow from groundwater)", lambda x: "%.0f%%" % x), ("damdensws", "Dam density (dams per square mile of watershed)", lambda x: "%.3f per sq mi" % (x * 2.58999)))
     rows = "".join(tr([lab, f(v[k])], right=(1,)) for k, lab, f in spec if k in v)
     from lib import ui
-    pc = [(l, k) for k, l in (("pctimp2019ws", "Impervious surface, 2019"), ("pcturbmd2019ws", "Medium-intensity urban land, 2019"), ("pctcrop2019ws", "Cropland, 2019"), ("pctwdwet2019ws", "Woody wetland, 2019"), ("bfiws", "Base-flow index (share of streamflow from groundwater)")) if k in v]
+    pc = [(l, k) for k, l in (("pctimp2019ws", "Impervious surface, 2019 (pavement and roofs)"), ("pcturbmd2019ws", "Medium-intensity urban land, 2019"), ("pctcrop2019ws", "Cropland, 2019"), ("pctwdwet2019ws", "Woody wetland, 2019"), ("bfiws", "Base-flow index (share of streamflow from groundwater)")) if k in v]
     wid = ui.bars([(l, v[k], "%.1f%%" % v[k]) for l, k in pc], 100) if pc else ""
     ch = ui.chips([(l, f(v[k])) for k, l, f in spec if k in ("elevws", "precip8110ws", "runoffws", "damdensws") and k in v])
     return block("watershed_characteristics", "Upstream watershed characteristics", "agency", wid + ch,

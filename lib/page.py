@@ -100,7 +100,9 @@ def b_nearby(G, pages):
         lis += '</ul><p class="src">More gauges in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
     if far:
         lis += '</ul><p class="src">Nearest gauges elsewhere on this site</p><ul class="nbr">' + li(far)
-    return block("nearby_gauges", "Other gauges nearby" if out else "Other gauges on this site", "live", ('<ul class="nbr">%s</ul>' % lis).replace('<ul class="nbr"></ul>', ""),
+    nearest = min(x[0] for x in out + same + far)
+    head = "Other gauges nearby" if out else ("Other gauges on this site (none on this river within 100 mi)" if nearest > 100 and len(skip) == 1 else "Other gauges on this site")
+    return block("nearby_gauges", head, "live", ('<ul class="nbr">%s</ul>' % lis).replace('<ul class="nbr"></ul>', ""),
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 
 
@@ -110,7 +112,7 @@ def b_official_links(G):
     lid = n.get("lid")
     links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
     if lid:
-        links.append(("NWS river page for forecast point %s" % lid, "https://water.noaa.gov/gauges/%s" % lid))
+        links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
     links.append(("NWS active alerts for this location", "https://alerts.weather.gov/search?point=%.4f,%.4f" % (G["lat"], G["lon"])))
     links.append(("This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
@@ -247,8 +249,16 @@ THEME_JS = """<script>(function(){var r=document.documentElement,b=document.getE
 
 
 CITE_JS = """<script>(function(){var b=document.querySelector('[data-cite]');if(!b||!navigator.clipboard)return;b.addEventListener('click',function(){navigator.clipboard.writeText(b.parentNode.querySelector('small').textContent.replace(/^Cite: /,'')).then(function(){b.textContent='Copied'})})})();</script>"""
-NAVSEARCH_JS = """<script>(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
-function show(q){q=q.toLowerCase().replace(/\\bst\\.? /g,'saint ').trim();o.textContent='';if(q.length<2){o.hidden=true;return}load().then(function(j){var n=0,hits=[];j.forEach(function(g){if((g[0]+' '+(g[4]||'')).toLowerCase().replace(/[,.]/g,' ').replace(/\\bst\\.? /g,'saint ').replace(/\\s+/g,' ').indexOf(q.replace(/[,.]/g,' ').replace(/\\s+/g,' '))>=0){hits.push(g)}});hits.sort(function(a,b){return (a[0].toLowerCase().indexOf(q)===0?0:1)-(b[0].toLowerCase().indexOf(q)===0?0:1)});hits.slice(0,8).forEach(function(g){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a);n++});if(!n){var s=document.createElement('span');s.innerHTML='No match: this site has '+j.length+' gauges so far. <a href="https://water.noaa.gov/" rel="noopener">Look up any river at water.noaa.gov</a>';o.appendChild(s)}o.hidden=false})}
+NAVSEARCH_JS = """<script>window.RWS=(function(){function nz(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\\bst\\.? /g,'saint ').replace(/[^a-z0-9]+/g,' ').trim()}
+function e1(a,b){if(a===b)return 1;var x=a.length,y=b.length,i=0;if(Math.abs(x-y)>1)return 0;while(i<x&&i<y&&a[i]===b[i])i++;return x===y?a.slice(i+1)===b.slice(i+1):x>y?a.slice(i+1)===b.slice(i):a.slice(i)===b.slice(i+1)}
+function tm(t,ws){for(var k=0;k<ws.length;k++){var w=ws[k];if(w.indexOf(t)>=0)return 1;if(t.length>=5&&(e1(t,w)||e1(t,w.slice(0,t.length))||e1(t,w.slice(0,t.length-1))||e1(t,w.slice(0,t.length+1))))return 1}return 0}
+function fm(q,h){var ts=nz(q).split(' ').filter(Boolean),ws=nz(h).split(' ');return ts.every(function(t){return tm(t,ws)})}
+function bg(s){var o={};for(var k=0;k<s.length-1;k++)o[s.substr(k,2)]=1;return o}
+function near(q,l,n){var a=bg(nz(q));return l.map(function(g){var b=bg(nz(g[0])),c=0,na=0,nb=0,m;for(m in a)na++;for(m in b){nb++;if(a[m])c++}return [2*c/((na+nb)||1),g]}).sort(function(x,y){return y[0]-x[0]}).slice(0,n).map(function(x){return x[1]})}
+return {nz:nz,fm:fm,near:near}})();
+(function(){var i=document.getElementById('gq'),o=document.getElementById('gr'),d=null;if(!i||!o||!window.fetch)return;function load(){if(d)return Promise.resolve(d);return fetch('/gauges.json').then(function(r){return r.json()}).then(function(j){d=j;return j}).catch(function(){d=[];return d})}
+function ln(g){var a=document.createElement('a');a.href=g[1];a.textContent=g[0];o.appendChild(a)}
+function show(q){var nq=RWS.nz(q);o.textContent='';if(nq.length<2){o.hidden=true;return}load().then(function(j){var hits=j.filter(function(g){return RWS.fm(q,g[0]+' '+(g[4]||''))});hits.sort(function(a,b){return (RWS.nz(a[0]).indexOf(nq)===0?0:1)-(RWS.nz(b[0]).indexOf(nq)===0?0:1)});hits.slice(0,8).forEach(ln);if(!hits.length){var s=document.createElement('span');s.textContent='No gauge name matches. Nearest names:';o.appendChild(s);RWS.near(q,j,5).forEach(ln);var t=document.createElement('span');t.innerHTML='This site has '+j.length+' gauges so far. <a href="https://water.noaa.gov/" rel="noopener">Look up any river at water.noaa.gov</a>';o.appendChild(t)}o.hidden=false})}
 i.addEventListener('input',function(){show(i.value)});i.addEventListener('keydown',function(e){if(e.key==='Enter'){var as=o.querySelectorAll('a[href^="/river/"]'),a=null;for(var k=0;k<as.length;k++){if(as[k].getAttribute('href')!==location.pathname){a=as[k];break}}if(a){e.preventDefault();location.href=a.getAttribute('href')}}});i.addEventListener('focus',load);document.addEventListener('click',function(e){if(!o.contains(e.target)&&e.target!==i)o.hidden=true})})();</script>"""
 
 

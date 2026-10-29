@@ -202,8 +202,8 @@ def b_about(G):
     items = [("USGS site name", loc.get("monitoring_location_name")), ("Site type", loc.get("site_type")), ("Agency", loc.get("agency_name")),
              ("County and state", ", ".join(x for x in (loc.get("county_name"), loc.get("state_name")) if x)),
              ("Drainage area", ("%s sq mi" % fmt(loc["drainage_area"])) if loc.get("drainage_area") else None),
-             ("Altitude of the gauge's zero point", ("%s ft (%s)" % (fmt(loc["altitude"]), loc.get("vertical_datum") or "datum not stated")) if loc.get("altitude") is not None else None),
-             ("Hydrologic unit code", loc.get("hydrologic_unit_code")), ("Coordinates", "%.4f, %.4f" % (G["lat"], G["lon"]))]
+             ("Altitude of the gauge's zero point", ("%s ft (%s)" % (fmt(loc["altitude"]), ("sea-level reference (NAVD88)" if loc.get("vertical_datum") == "NAVD88" else loc.get("vertical_datum")) or "datum not stated")) if loc.get("altitude") is not None else None),
+             ("Watershed (USGS hydrologic unit code)", loc.get("hydrologic_unit_code")), ("Coordinates", "%.4f, %.4f" % (G["lat"], G["lon"]))]
     for key, lab in (("flow_daily", "Daily mean flow record (USGS catalog)"), ("flow_inst", "Instantaneous flow record (USGS catalog; newer readings above)"), ("stage_inst", "Instantaneous gage height record (USGS catalog)")):
         if ts.get(key):
             items.append((lab, "%s to %s%s" % (fdate(ts[key][0]), fdate(ts[key][1]), " (later days on this page are daily means computed from the continuous readings; USGS daily statistics count only years with an approved value for each date, so their year counts are lower than this span)" if key == "flow_daily" else "")))
@@ -245,7 +245,7 @@ def b_noforecast(G):
     if (n.get("forecast") or {}).get("points") or has_nwm:
         return None
     if n.get("lid"):
-        msg = "National Weather Service forecast point %s currently has no river forecast issued." % esc(n["lid"])
+        msg = "National Weather Service %s currently has no river forecast issued." % esc(nws_pt(n))
     else:
         msg = "No National Weather Service river forecast point is linked to this USGS gauge."
     return block("no_river_forecast", "River forecast availability", "official", "<p>%s</p>" % msg,
@@ -312,6 +312,8 @@ def b_offline(G):
     if not G.get("offline"):
         return None
     days = G["age_min"] / 1440
-    return block("gauge_not_reporting", "Gauge not reporting", "live",
+    out = block("gauge_not_reporting", "Gauge not reporting", "live",
                  "<p>The newest USGS flow reading for this gauge is from %s, %.1f days ago. The values on this page are that last reading.</p>" % (esc(tzl(G["lt"], G["zone"])), days),
                  "Source: USGS Water Data API, checked %s. The page updates when USGS publishes a newer reading." % esc(tzl(parse_t(G["rec"]["usgs"]["fetched_at"]), G["zone"])), "usgs", amber=True)
+    out["age_tag"] = "%s old" % age_text(G["lt"], G["now"])  # the real age ("2 d old") in place of "Older than 12 h"
+    return out

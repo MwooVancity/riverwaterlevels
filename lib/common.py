@@ -117,7 +117,7 @@ def fc_cmp(v, cur, unit="ft"):
 
 
 def fc_word(vals, cur, unit="ft"):
-    """'steady' when every forecast value prints the same, 'high' when the highest is above the latest reading, else 'at or below'.
+    """'steady' when every forecast value prints the same, 'high' when the highest is above the latest reading, else 'below' (no rise above the latest reading).
     The single source for "Forecast high" (w11-w13 reviews: three places chose the word three ways)."""
     vals = [v for v in vals if v is not None]
     if not vals:
@@ -127,7 +127,12 @@ def fc_word(vals, cur, unit="ft"):
     return "high" if cur is None or fc_cmp(max(vals), cur, unit) == "above" else "below"
 
 
-FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast (at or below the latest reading)"}
+FC_LABEL = {"steady": "NWS forecast (steady)", "high": "Forecast high", "below": "NWS forecast: no rise above the latest reading"}
+
+
+def nws_pt(n):
+    """'forecast point Mississippi River at Memphis': the NWS point by its name. Its 5-character code (MEMT1) belongs in Source text and link titles only."""
+    return "forecast point " + n["name"] if (n or {}).get("name") else "forecast point"
 
 
 FLAT_PCT, FLAT_CFS = 2, 5  # a flow change under 2 % or under 5 cfs is steady (headline word, rate-table and hub arrows)

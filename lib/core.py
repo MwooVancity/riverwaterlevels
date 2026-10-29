@@ -253,7 +253,7 @@ FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}
 
 
 def render_block(b):
-    amber = (' <span class="tag amber">Older than %s</span>' % "%d h" % stale_after(b["id"])) if b.get("amber") else ""
+    amber = (' <span class="tag amber">%s</span>' % (b.get("age_tag") or "Older than %d h" % stale_after(b["id"]))) if b.get("amber") else ""
     src = '<details class="srcd"><summary>Source</summary><p class="src">%s%s</p></details>' % (b["source"], credit_line(b))  # one small toggle in the heading row; opens under the heading
     fam = FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now")
     if b.get("empty"):

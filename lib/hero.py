@@ -242,10 +242,10 @@ def hero(G, pages=None):
         o, n_ = nws_stage(G), G["rec"].get("nwps") or {}
         if o:
             tiles += ui.tile("stage", "stage", "Gage height", '%.2f <small>%s</small>' % (o[1], esc(n_.get("stage_units") or "ft")),
-                             '<small>NWS observed at %s, %s; USGS reports no gage height here%s</small>' % (esc(n_.get("lid") or ""), esc(tzl(o[0], G["zone"])), "; below zero means under the gauge's fixed reference level, not a dry river" if o[1] < 0 else "") + (('<small class="dv">%s</small>' % next_impact(G)) if next_impact(G) else ""))
+                             '<small>NWS observed at %s, %s; USGS reports no gage height here%s</small>' % (esc(n_.get("name") or "its forecast point"), esc(tzl(o[0], G["zone"])), "; below zero means under the gauge's fixed reference level, not a dry river" if o[1] < 0 else "") + (('<small class="dv">%s</small>' % next_impact(G)) if next_impact(G) else ""))
         else:
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
-                ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(n_["lid"])) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
+                ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
     if p is None:
         word, plain = "–", ""
     else:
@@ -293,9 +293,7 @@ def hero(G, pages=None):
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     norm_html = ui.tile("norm", "map", "Is this normal for %s?" % md(G["ldate"]), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
-    nwl = (G["rec"].get("nwps") or {}).get("lid")
-    if nwl and (G["rec"].get("nwps") or {}).get("name"):
-        nwl = "%s (%s)" % (nwl, G["rec"]["nwps"]["name"])  # w10 review: "NWS point TDAO3" by code only
+    nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
         v24_ = [x[1] for x in G["fl"] if x[0] > G["lt"] - datetime.timedelta(hours=24)]
@@ -309,7 +307,7 @@ def hero(G, pages=None):
         above = fcw["cur"] is not None and fc_cmp(fcw["v"], fcw["cur"], unit) == "below"  # the reading is above the whole forecast
         val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmtc(fcw["v"]))
         _pn = nws_point_note(G)
-        sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else ((", " + esc((G["rec"].get("nwps") or {}).get("name"))) if (G["rec"].get("nwps") or {}).get("name") else ""))  # reviewers: the first screen named the point by code only
+        sub = '<small>%s%s &middot; NWS %s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), (('forecast point named “%s”, not this gauge’s place' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else esc(nws_pt(G["rec"].get("nwps")))))  # the point by name; the code stays in Source text
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
         _parts = ["issued %s" % esc(fcw["issued"])] if fcw.get("issued") else []
         _fs = flood_status(G)
@@ -336,7 +334,7 @@ def hero(G, pages=None):
     elif nwl and G["has_forecast"]:
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:
-        strip += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>NWS forecast point %s has no current river forecast. The weather forecast below is not a river forecast.</small>' % esc(nwl))
+        strip += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>NWS %s has no current river forecast. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     else:
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"] and c["alerts"].get("age_h") is not None and c["alerts"]["age_h"] > stale_after("alerts"):  # a fresh answer is said by the answer line and the alerts block; only an old or missing answer gets a tile
@@ -427,7 +425,7 @@ def cite_line(G):
     # Lakebrief comparison 2026-10-21: one line a forum post or local paper can paste, built only from fields already on the page.
     # Water level comes from the same source as the gage tile (Memphis 2026-10-27: tile showed the NWS stage, cite said "not measured").
     cite ='<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
-        esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), (('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) + ((" (gage height at %s)" % esc(tzl(G["sg"][-1][0], G["zone"]))) if G["sg"][-1][0] != G["lt"] else "")) if G["sg"] else (("%.2f ft (NWS %s)" % (nws_stage(G)[1], esc((G["rec"].get("nwps") or {}).get("lid") or ""))) if nws_stage(G) else "not measured"), ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
+        esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), (('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) + ((" (gage height at %s)" % esc(tzl(G["sg"][-1][0], G["zone"]))) if G["sg"][-1][0] != G["lt"] else "")) if G["sg"] else (("%.2f ft (NWS %s)" % (nws_stage(G)[1], esc(nws_pt(G["rec"].get("nwps"))))) if nws_stage(G) else "not measured"), ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
     return cite
 
 
@@ -629,4 +627,4 @@ def nws_point_note(G):
         return ""
     if all(w in nm for w in pl) or "".join(pl) in "".join(nm):  # every word of the gauge's place is in the NWS name ("Desoto" in "De Soto")
         return ""
-    return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("lid") or "", n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")
+    return "The NWS links a forecast point to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")
