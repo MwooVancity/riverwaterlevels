@@ -15,7 +15,9 @@ NWPS_H = {"User-Agent": NWS_H["User-Agent"], "Accept": "application/json"}  # 20
 
 _last = [0.0]
 _last_host = {}
-import time as _time, zlib, copy
+import time as _time, zlib, copy, threading
+_tl = threading.Lock()  # NEXT runs a gauge's sources in threads: counters and per-host gaps are guarded
+_host_lock = {}
 NEXT = os.environ.get("COLLECT_NEXT") == "1"  # shadow design (check branch): per-run memo of shared GETs, staggered 3-hourly NWS forecast, daily retry of gauges NWPS does not know. Off = today's behaviour exactly.
 HOURLY_ONLY = "--hourly-only" in sys.argv  # shadow only: a gauge with no cache gets a seeded record with every slow source marked just-fetched, so the run measures the steady hourly cost
 TIME = {}  # label -> [calls, seconds]; written to state/collect-timing.json (2026-10-29: the run log showed only the total)
@@ -23,9 +25,10 @@ MEMO = {}
 
 
 def _tick(label, sec, n=1):
-    c = TIME.setdefault(label, [0, 0.0])
-    c[0] += n
-    c[1] += sec
+    with _tl:
+        c = TIME.setdefault(label, [0, 0.0])
+        c[0] += n
+        c[1] += sec
 
 
 def _label(url):
@@ -54,11 +57,12 @@ def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
         return copy.deepcopy(MEMO[url])
     for i in range(tries):
         host = urllib.parse.urlparse(url).netloc if NEXT else ""  # NEXT: one gap per host; today: one gap for all hosts
-        wait = gap - (time.time() - (_last_host.get(host, 0.0) if NEXT else _last[0]))
-        if wait > 0:
-            _tick("~gap sleep", wait, 0)
-            time.sleep(wait)
-        _last[0] = _last_host[host] = time.time()
+        with _host_lock.setdefault(host, threading.Lock()):  # the sleep is inside the lock: threads of one host queue up, other hosts go on
+            wait = gap - (time.time() - (_last_host.get(host, 0.0) if NEXT else _last[0]))
+            if wait > 0:
+                _tick("~gap sleep", wait, 0)
+                time.sleep(wait)
+            _last[0] = _last_host[host] = time.time()
         try:
             r = http_json(url, headers, timeout)
             if NEXT and "api.weather.gov" in url:
@@ -179,12 +183,19 @@ def fetch_nwps(site, lat, lon, prev=None):
             except Exception as e:
                 note("nwps.forecast", "failed", e)
             rflow = p0.get("riverflow") or {}
+            rf_at = p0.get("rf_at")
             try:
+                if NEXT and rflow and rf_at and not due(rf_at, 20 + zlib.crc32(site.encode()) % 8):
+                    raise StopIteration  # the upstream/downstream neighbour list does not change hourly
+                rf_at = now_iso()
                 rf = thr_json(NWPS + "gauges/%s/riverflow" % x["lid"], NWPS_H)
                 # NWPS lists upstream farthest first and downstream nearest first: keep the six nearest of each
                 allp = {k: [{"LID": i.get("LID"), "Name": i.get("Name")} for i in (rf.get(k) or []) if isinstance(i, dict)] for k in ("upstream", "downstream")}
                 rflow = {"upstream": allp["upstream"][-6:], "downstream": allp["downstream"][:6], "upstream_n": len(allp["upstream"]), "downstream_n": len(allp["downstream"])}
+            except StopIteration:
+                pass
             except Exception as e:
+                rf_at = p0.get("rf_at")
                 note("nwps.reach_flow", "failed", e)
             obs_stage, obs_series = p0.get("obs_stage"), p0.get("obs_series") or []
             try:
@@ -202,7 +213,7 @@ def fetch_nwps(site, lat, lon, prev=None):
             hist = [{"t": c.get("occurredTime"), "stage": c.get("stage"), "flow": c.get("flow")} for c in ((fl.get("crests") or {}).get("historic") or []) if isinstance(c.get("stage"), (int, float))][:10]
             imp = [{"stage": i.get("stage"), "statement": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(i["statement"]))).strip())} for i in (fl.get("impacts") or []) if isinstance(i.get("stage"), (int, float)) and i.get("statement")]
             return {"fetched_at": now_iso(), "lid": x["lid"], "name": det.get("name"), "reach_id": det.get("reachId"), "categories": cats, "forecast": fc,
-                    "riverflow": rflow, "obs_stage": obs_stage, "obs_series": obs_series, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
+                    "riverflow": rflow, "rf_at": rf_at, "obs_stage": obs_stage, "obs_series": obs_series, "stage_units": fl.get("stageUnits"), "crests": hist, "impacts": sorted(imp, key=lambda i: i["stage"]),
                     "wfo": det.get("wfo"), "rfc": det.get("rfc"), "reliability": det.get("forecastReliability"), "fim": bool((det.get("inundation") or {}).get("enabled")), "lro": fl.get("lro"),
                     "low_impacts": [{"value": str(i.get("value") or "").strip(), "impact": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(str(i.get("impact") or "")))).strip())} for i in (det.get("impactsLowWaters") or []) if isinstance(i, dict) and i.get("impact")],
                     "hydronotes": [{"text": demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", html.unescape(str(h_.get("statement") or "")))).strip()), "from": h_.get("effective"), "to": h_.get("expiration")} for h_ in (det.get("hydronotes") or []) if isinstance(h_, dict) and h_.get("statement")],
@@ -1047,10 +1058,11 @@ RUN = {}  # ponytail: outcome counts per source for this process (one collect ru
 
 
 def note(src, outcome, err=""):
-    c = RUN.setdefault(src, {"ok": 0, "absent": 0, "failed": 0, "err": ""})
-    c[outcome] += 1
-    if err:
-        c["err"] = str(err)[:80]
+    with _tl:
+        c = RUN.setdefault(src, {"ok": 0, "absent": 0, "failed": 0, "err": ""})
+        c[outcome] += 1
+        if err:
+            c["err"] = str(err)[:80]
 
 
 def run_source(rec, key, fn, log):
@@ -1309,10 +1321,16 @@ def fast(inv, sites):
             if add:
                 rec["usgs"]["fetched_at"] = now_iso()
             note("usgs", "ok" if s in new else "absent")
-            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"], rec.get("wpc"), s))):
-                run_source(rec, key, fn, log)
+            srcs = [("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"], rec.get("wpc"), s))]
             if nwm_due(rec):
-                run_source(rec, "nwm", lambda: fetch_nwm(s, rec.get("nwm")), log)
+                srcs.append(("nwm", lambda: fetch_nwm(s, rec.get("nwm"))))
+            if NEXT:  # the sources of one gauge wait on different hosts: run them side by side (each key is its own rec field; the per-host gap lock keeps the politeness)
+                from concurrent.futures import ThreadPoolExecutor
+                with ThreadPoolExecutor(len(srcs)) as ex:
+                    list(ex.map(lambda kf: run_source(rec, kf[0], kf[1], log), srcs))
+            else:
+                for key, fn in srcs:
+                    run_source(rec, key, fn, log)
             stamp = rec.setdefault("_fetched", {})
             if daily_due(stamp.get("usgs_full")):  # once a day the whole 8-day series again: USGS revises provisional readings
                 try:
