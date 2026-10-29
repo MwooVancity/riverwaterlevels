@@ -34,7 +34,7 @@ What gets deleted to make room: per-gauge screenshot reviews (done), duplicated 
 ## Review and gate cost (owner 2026-10-29: "we've blown a million tokens")
 - Spent 2026-10-28/29: about 1 million tokens, most of it on 8 full screenshot reviews (~170k each) that mostly returned notes; the deploy breaks were caught by machines.
 - Rule now (CLAUDE.md "Reviews and gates: first principles"): machine checks + cloud dry run by default; max one full review a day; non-visual changes signed at level machine.
-- To do: take `data/index-allow.json` out of `template_hash` (robots tags only; `tools/index_live.py` checks them), so opening pages to Google never needs a review signature. List gates with no real catch in their last 10 runs and delete them.
+- Done: `data/index-allow.json` is out of `template_hash` (opening pages to Google needs no review signature).
 
 ## Ranking: what is missing for #1 (2026-10-29)
 1. Trust and links (biggest gap): new domain, almost no links. Use the free embed panel: list fishing clubs, outfitters, paddling clubs, county and town pages per live river; Claude drafts each email, the owner sends. No spam, no paid links.
@@ -80,6 +80,9 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 6. Outreach drafts for the owner; owner adds a contact address.
 7. One new dataset per week (low-head dams first).
 8. Helpfulness audit after every feature batch; Search Console + analytics read weekly into this file.
+9. Owner dashboard at /ops/ (merged prompt 2026-10-29: three lights: healthy, growing, Google noticing; "you need to do" line; built by the hourly job; noindex header; unknown = "unknown").
+10. First-screen answers to real searches: each top Search Console query answered on its page's first screen (e.g. what the current cfs means on this river, from agency ranges where they exist).
+11. Share card: link preview image of the current-flow card; "checked against USGS at <time>" line on each page.
 
 ## Owner only
 - Send the link-outreach emails (drafts provided).
@@ -92,7 +95,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 
 ## Open decisions
 - Regulated gauges: dam name, upstream outflow, schedule link (RISE/CWMS/NID terms unclear).
-- Access points and bacteria advisories (terms / no national feed). Alerts backend (email/push on a reader's range).
+- Access points and bacteria advisories (terms / no national feed).
 
 ## Done recently
 - 2026-10-29 dry run before deploy (dryrun.yml, 3035d71); water-temperature crash fix (098de3f); docs trimmed to CLAUDE.md + PLAN.md (c52b171).
