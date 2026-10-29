@@ -429,6 +429,13 @@ def hater_rules(h):
     rt_ = re.search(r'class="tile rain(?![^"]*stale)[^"]*">.{0,400}?data-h="(\d+(?:\.\d+)?)"', h, re.S)
     if rt_ and float(rt_.group(1)) > 6:  # STALE_H["rain_totals"]
         bad.append("a rain tile shows an estimate older than 6 h as current (say 'Unknown: last estimate N ago')")
+    ft_ = re.search(r'class="tile fcst(?![^"]*stale)[^"]*">(?:(?!</div>).)*?data-h="(\d+(?:\.\d+)?)"', h, re.S)
+    if ft_ and float(ft_.group(1)) > 24:  # STALE_H["river_forecast"]; batch F
+        bad.append("the forecast tile shows a river forecast older than 24 h as current (add the age and the stale class, like the River forecast block)")
+    if re.search(r"<td>Water temperature</td>", h) and 'class="tile wtemp' not in h and "water temperature at this gauge" not in t:
+        bad.append("a water-temperature reading exists but its first-screen tile is hidden and the 'Not available' line does not name it with its age")
+    if re.search(r"<h1>[^<]*[a-z] (?:Of|The|And|Near|At|Above|Below) [^<]*</h1>", h):
+        bad.append("the H1 capitalises a small word (of/the/and/near/at/above/below) inside a name")
     tl_ = re.search(r"<title>(.*?)</title>", h, re.S)
     if 'id="gauge_not_reporting"' in h and tl_ and re.search(r"\blive\b", tl_.group(1), re.I):
         bad.append("the title of a not-reporting gauge says 'live'")
@@ -592,6 +599,14 @@ def selftest():
     assert hater_rules('<div class="hero hero2"></div><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: not-reporting banner below the tiles did not fire"
     assert hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee right now. Source: x</p>"), "selftest: state alert line without a time did not fire"
     assert not hater_rules("<p class=\"sub\">No active National Weather Service alerts in Tennessee (checked Oct 29, 7:00 AM CDT). Source: x</p>"), "selftest: state alert line with a time wrongly flagged"
+    assert hater_rules('<div class="tile fcst"><span>NWS forecast</span><b>8.1 ft</b><small class="dv" data-h="31.0">issued Oct 27</small></div>'), "selftest: old forecast tile without the stale marker did not fire"
+    assert not hater_rules('<div class="tile fcst stale"><span>NWS forecast</span><b>8.1 ft</b><small class="dv" data-h="31.0">issued Oct 27, 31 hours ago</small></div>'), "selftest: stale-marked forecast tile wrongly flagged"
+    assert not hater_rules('<div class="tile fcst none"><span>River forecast</span><b>Not issued</b></div><div class="tile rain"><small data-h="2.0">x</small></div>'), "selftest: forecast tile check leaked into the next tile"
+    assert hater_rules('<table><tr><td>Water temperature</td><td>61.0 F</td></tr></table><p class="gaps">Not available for this gauge: air quality.</p>'), "selftest: hidden water-temperature tile not named in the gaps line did not fire"
+    assert not hater_rules('<table><tr><td>Water temperature</td></tr></table><p class="gaps">Not available for this gauge: water temperature at this gauge: last reading 31 hours ago, shown below under Water quality sensors.</p>'), "selftest: named water-temperature gap wrongly flagged"
+    assert not hater_rules('<div class="tile wtemp"><span>Water temperature</span><b>61</b></div><table><tr><td>Water temperature</td></tr></table>'), "selftest: water-temperature tile present wrongly flagged"
+    assert hater_rules('<h1>Red River Of The North at Grand Forks, ND: water level and flow</h1>'), "selftest: capitalised small words in the H1 did not fire"
+    assert not hater_rules('<h1>Red River of the North at Grand Forks, ND: water level and flow</h1>'), "selftest: lower-case small words in the H1 wrongly flagged"
     assert hater_rules('<section id="gauge_not_reporting"></section><div class="tile flow"><small class="dv">Steady: -0.4% flow in 6 h</small></div>'), "selftest: direction word on a not-reporting gauge did not fire"
     assert hater_rules('<div class="tile rain"><span>Rain, last 24 h</span><b>0.00</b><small data-h="30.0">NWS</small></div>'), "selftest: old rain estimate shown as current did not fire"
     assert not hater_rules('<div class="tile rain stale"><span>Rain, last 24 h</span><b>Unknown</b><small>x</small></div>'), "selftest: unknown rain tile wrongly flagged"

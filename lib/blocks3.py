@@ -286,16 +286,20 @@ def conditions(G, pages=None):
     from lib.blocks2 import _at
     zone, fl, lt, lv, rec = G["zone"], G["fl"], G["lt"], G["lv"], G["rec"]
     ok = lambda sid: SOURCES[sid]["status"] in ("quoted", "owner-permission")
-    out = {"chg": {}, "fc": None, "alerts": None, "rain": None, "wt": None, "air": None, "up": None}
+    out = {"chg": {}, "fc": None, "alerts": None, "rain": None, "wt": None, "air": None, "up": None, "old": {}}  # old: tiles hidden for age -> the age in words, so the gaps line names them
     wts = series(rec, "00010")
     if wts and (G["now"] - wts[-1][0]).total_seconds() <= 24 * 3600 and (wts[-1][2].get("unit_of_measure") or "").lower().replace(" ", "") in ("degc", "°c"):
         out["wt"] = {"f": wts[-1][1] * 9 / 5 + 32, "t": tzl(wts[-1][0], zone)}
+    elif wts:
+        out["old"]["wt"] = age_words(wts[-1][0], G["now"])
     ob = (rec.get("nws") or {}).get("obs")
     if ob and ok("nws") and ob.get("temp_c") is not None and hours_old(ob.get("timestamp"), G["now"]) is not None and hours_old(ob.get("timestamp"), G["now"]) <= HIDE_H["air_obs"]:
         wk = ob.get("wind_kmh")
         dirs = ("N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW")
         wd = dirs[int((ob["wind_dir"] % 360) / 22.5 + 0.5) % 16] if ob.get("wind_dir") is not None else ""
         out["air"] = {"f": ob["temp_c"] * 9 / 5 + 32, "wind": km_mi(wk) if wk is not None else None, "gust": km_mi(ob["gust_kmh"]) if ob.get("gust_kmh") is not None else None, "dir": wd, "st": ob.get("station") or "", "name": ob.get("name") or "", "mi": round(miles_between(G["lat"], G["lon"], ob["ll"][1], ob["ll"][0])) if ob.get("ll") else None, "t": tzl(parse_t(ob["timestamp"]), zone), "iso": ob["timestamp"]}
+    elif ob and ok("nws") and ob.get("temp_c") is not None and ob.get("timestamp"):
+        out["old"]["air"] = age_words(parse_t(ob["timestamp"]), G["now"])
     if pages:
         for x in ((rec.get("related") or {}).get("items") or []):
             pr = pages.get(x["site"])
@@ -330,7 +334,7 @@ def conditions(G, pages=None):
             end = fut[-1]
             first_hi = near[0]
             cur = fc_cur(G, gap) if unit == "ft" else G["lv"]  # the word, the tile and its margins judge one reading
-            out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated",
+            out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated", "age_h": age, "ago": age_words(parse_t(f["issued"]), G["now"]) if f.get("issued") else None,
                          "falls": end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600 and peaks < 2, "end_v": end[1], "end_t": tzl(end[0], zone),
                          "swing": (lo_f, tzl(end[0], zone)) if peaks >= 2 and hi[1] - lo_f >= (0.5 if unit == "ft" else 0.1 * abs(hi[1])) else None,
                          "datum": gap, "word": fc_word([v_ for _, v_ in fut], cur, unit),
@@ -467,13 +471,13 @@ def b_tides(G):
     near = "" if G.get("osc") else '<p class="src">The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, %.0f mi away, where the river is tidal.</p>' % t["mi"]
     stn = esc(t["name"] or t["station"])
     kind = "Tides" if G.get("osc") else "Tides nearby"
+    fa = hours_old(t.get("fetched_at"), G["now"]) if t.get("fetched_at") else None
     if len({r["t"][:10] for r in t["rows"]}) >= 2:
         head = "%s at %s, next two days" % (kind, stn)
-    elif t["rows"][0]["t"][:10] == now_l[:10]:
+    elif t["rows"][0]["t"][:10] == now_l[:10] and not (fa is not None and fa > 12):  # an old fetch cannot say "rest of today": name the date
         head = "%s at %s, rest of today" % (kind, stn)
     else:  # rows for another day than today in the gauge's zone: the heading names that day
         head = "%s for %s at %s" % (kind, _tide_t(t["rows"][0]["t"], True).rsplit(",", 1)[0], stn)
-    fa = hours_old(t.get("fetched_at"), G["now"]) if t.get("fetched_at") else None
     if fa is not None and fa > 12:
         head += " (fetched %d h ago)" % fa
     return block("tides", head, "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),

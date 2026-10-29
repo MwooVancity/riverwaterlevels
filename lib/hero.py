@@ -320,7 +320,8 @@ def hero(G, pages=None):
         _pn = nws_point_note(G)
         sub = '<small>%s%s &middot; NWS %s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), (('forecast point named “%s”, not this gauge’s place' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else esc(nws_pt(G["rec"].get("nwps")))))  # the point by name; the code stays in Source text
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
-        _parts = ["issued %s" % esc(fcw["issued"])] if fcw.get("issued") else []
+        _old = fcw.get("age_h") is not None and fcw["age_h"] > stale_after("river_forecast")  # the same 24 h as the River forecast block's amber tag
+        _parts = ["issued %s%s" % (esc(fcw["issued"]), (", %s ago" % fcw["ago"]) if _old and fcw.get("ago") else "")] if fcw.get("issued") else []
         _fs = flood_status(G)
         if _fs:
             _parts.append(_fs)
@@ -340,8 +341,8 @@ def hero(G, pages=None):
         if fcw.get("offset"):
             _parts.append("forecast out of step with the gauge reading (details under River forecast)")
         if _parts:
-            sub += '<small class="dv">%s</small>' % " &middot; ".join(_parts)
-        strip += ui.tile("fcst", "crest", FC_LABEL[fcw["word"]] if unit == "ft" and fcw.get("word") else ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fc_cmp(fcw["v"], fcw["cur"], unit) == "below" else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
+            sub += '<small class="dv"%s>%s%s</small>' % ((' data-h="%.1f"' % fcw["age_h"]) if fcw.get("age_h") is not None else "", ('<span class="ab stale">Older than %d h</span> ' % stale_after("river_forecast")) if _old else "", " &middot; ".join(_parts))
+        strip += ui.tile("fcst" + (" stale" if _old else ""), "crest", FC_LABEL[fcw["word"]] if unit == "ft" and fcw.get("word") else ("NWS forecast" if above and not G["osc"] else ("NWS forecast (falling)" if fcw["cur"] is not None and fc_cmp(fcw["v"], fcw["cur"], unit) == "below" else ("Forecast high (NWS stage)" if fcw["datum"] else "Forecast high"))) if unit == "ft" else ("NWS forecast flow" if above and not G["osc"] else "Forecast high flow"), val, sub)
     elif nwl and G["has_forecast"]:
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:
@@ -415,14 +416,16 @@ def hero(G, pages=None):
         strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], td_, -6.0)) else "", moon_phase(td_)[0].lower(), moon_phase(td_)[1]))
     # "Calm daylight hours" tile deleted 2026-10-27: "calm" was our own threshold, not a source's; it failed 3 of 6 hater pages (gusts ignored, an hour past sunset). The hourly table shows wind, gusts and thunder per hour.
     gone = []
-    if not c["wt"] and not series(G["rec"], "00010") and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < NEAR_WTEMP_H * 3600):
+    if c["old"].get("wt"):  # hidden for age: name it with the age and where the reading still is
+        gone.append("water temperature at this gauge: last reading %s ago, shown below under Water quality sensors" % c["old"]["wt"])
+    elif not c["wt"] and not series(G["rec"], "00010") and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < NEAR_WTEMP_H * 3600):
         gone.append("live water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river%s)" % ("; monthly history is shown below" if (G["rec"].get("wtemp") or {}).get("months") else ""))
     if b_quality(G) is None:
         gone.append("clarity (no USGS turbidity or water-quality sensor at this gauge)")
     if not c["rain"]:
         gone.append("NWS radar rain estimate for the last 6 h (rain measured at nearby stations is shown below where reported)")
     if not c["air"]:
-        gone.append("air observation (no NWS station report in the last %d h)" % HIDE_H["air_obs"])
+        gone.append(("air observation (last NWS station report %s ago, older than %d h)" % (c["old"]["air"], HIDE_H["air_obs"])) if c["old"].get("air") else "air observation (no NWS station report in the last %d h)" % HIDE_H["air_obs"])
     if not ((G["rec"].get("airnow") or {}).get("rows")):
         gone.append("air quality (no EPA AirNow monitor reports for this location)")
     if not ((G["rec"].get("nws") or {}).get("hourly")) and not (((G["rec"].get("nws") or {}).get("grid") or {}).get("hours")):  # the hourly table also draws from the grid (hater 2026-10-27, Freeport: "not available" above a full table)

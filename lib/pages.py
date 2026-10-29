@@ -1,7 +1,7 @@
 """Effective page table: pages-all.csv (first-pass cleaner) plus human name overrides; slugs and hub membership recomputed from the full inventory
 so a URL never depends on build order. Slug rules per MASTER-SPEC section 1."""
 import os, re, csv, collections
-from lib.common import DATA, SITE_URL
+from lib.common import DATA, SITE_URL, prep_lower
 
 WAVE0 = "06893000 07010000 03294500 14105700 09380000 06192500 13334300 13317000 07109500 01463500 01646500 01358000 01576000 01636500 03185400 03192000 02336000 09498500 09506000 14103000 09085000 06041000 11447650 03011800 01555000".split()
 
@@ -21,6 +21,8 @@ def load_effective():
             r["river"], r["place"], r["name_confidence"] = ov[s]["river"], ov[s]["place"], "human"
         elif s in fx and s not in WAVE0:
             r["river"], r["place"], r["name_confidence"] = fx[s]["river"], fx[s]["place"], "auto2"
+    for r in rows.values():
+        r["river"] = prep_lower(r["river"])
     by_rs = collections.defaultdict(set)
     for r in rows.values():
         r["river_slug"] = slug(r["river"])
