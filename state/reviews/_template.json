@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "batch G top minors (glossary cut-offs from code, silent-gauge rate note, rain forecast age, live title at 6 h, partial-day note with counts, rain gap line, 44 px tap targets, anchor names, report-a-wrong-number, ATTAINS); builder looked at Memphis phone-02",
+ "notes": "batch H release blockers: home links 40 featured + all states (154 links), esc collapses doubled prepositions from agency names, dam-release wording once on first screen; builder read the built home page text; practice release 40886991246 had 0 failing pages",
  "by": "builder-machine",
- "at": "2026-10-29T07:29:49+00:00",
- "template": "cc8bcf91a55d",
+ "at": "2026-10-29T14:29:29+00:00",
+ "template": "af97aa188de6",
  "level": "machine"
 }
