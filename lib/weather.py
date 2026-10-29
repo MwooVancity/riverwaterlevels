@@ -228,7 +228,7 @@ def b_heatmap(G):
     if col.get("Rain/snow %"):
         rp = peak("Rain/snow %")
         bits.append("rain or snow chance up to %.0f%%%s" % (rp[0], (" (%d %s)" % (rp[1].hour % 12 or 12, "AM" if rp[1].hour < 12 else "PM")) if rp[0] >= 10 else ""))
-    if col.get("Thunder %"):
+    if col.get("Thunder %") and max(col["Thunder %"]) >= 1:  # "thunder up to 0%" said nothing (Boise, 2026-10-29)
         bits.append("thunder up to %.0f%%" % max(col["Thunder %"]))
     summary = ('<p class="lead">Next 24 h: %s.</p>' % " &middot; ".join(bits)) if bits else ""
     every3 = [hrs[i:i + 3] for i in range(0, len(hrs), 3)]

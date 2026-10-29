@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "owner-directed layout batch: hourly forecast as a summary line + one line per 3 hours (peaks kept) + every hour one tap below; blocks reordered for water activities; direction cfs from the earlier reading (Fort Collins); carried pages left out of index checks. Builder looked at 04122500 phone slices.",
+ "notes": "page polish batch: hourly sky word + wind arrows, 7-day strip, one-line empty states, one Source toggle per card; builder looked at Boise phone-05; thunder 0% line dropped",
  "by": "builder-machine",
- "at": "2026-10-29T04:46:47+00:00",
- "template": "9ec1902b4aa0",
+ "at": "2026-10-29T04:59:42+00:00",
+ "template": "23e7e7698897",
  "level": "machine"
 }
