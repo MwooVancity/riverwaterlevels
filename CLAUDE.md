@@ -6,9 +6,10 @@ Strategy and status: PLAN.md (read at session start, update after every batch).
 A person at or near this river today, on a phone, with 30 seconds: about to fish, paddle, swim, tube, wade, boat, camp, guide, or living, driving or rescuing beside it (flood watchers are one reader of many). The page answers, in order: is it dangerous now, what is the water like, is it normal, what is coming, how today compares. One static page per USGS gauge, government data only (USGS, NOAA/NWS, USDA, EPA). This folder is its own project; calcscrape rules do not apply.
 
 ## Hard rules
+- USER, NOT GOOGLE (owner 2026-10-18, 2026-10-29): every decision is judged by the person at the river, never by what Google might reward. A change that helps ranking but not the person is rejected; a change that helps the person needs no ranking reason. No SEO gaming, stuffing, doorway or padding; noindex is never the fix for a thin page, make it richer.
 - Owner is a non-coder: do the work, decide defaults, short plain replies, no "Next:" line.
 - Line 0: every reliable public dataset a reader at this river could use goes on the page with its exact source and time. Withhold only if wrong, misleading, padding or no mechanism; show the rest with its caveat.
-- User first, never Google first: no SEO gaming, stuffing, doorway or padding. Noindex is never the fix for a thin page; make it richer.
+
 - Clean UI: one page colour, white cards, one label and numeral style, unit beside the number, one line under each number, data age said once.
 - Page order, nothing collapsed on the Now tab: alert banner; H1, gauge id, one age chip; tiles (flow, gage height, is-this-normal, 6 h change, NWS forecast or "Not issued", water temperature, rain 24 h, air, sunset); water now; level, flow and flood risk; forecast on every river; how today compares; closed folds. Right column = Area tab.
 - Never show "safe", "runnable", "fishable" or any verdict; no composed sentences except labels and attributed source text.
@@ -67,7 +68,7 @@ A person at or near this river today, on a phone, with 30 seconds: about to fish
   - Once per batch, never per fix; a FAIL re-reviews only that page; a gauge's PASS stands (code changes: `_template` sample + `check.py` on all pages).
 - `node tools/hater_shots.mjs [sites]` writes `.cache/review/<site>/`; a reviewer who did NOT build the change reads what the mode requires with `tools/review_brief.md`, then `python -I tools/review_sign.py <site|_template> PASS|FAIL "defects, worst first" --level=first|full`. Never sign unseen; over 2 unseen phone slices = FAIL.
 - One defect a reader would notice = FAIL; a FAIL takes the gauge off the site until a PASS. A machine-catchable FAIL type becomes a `check.py` rule with a fixture in the same batch. Reviewers: 3 pages each, 2 at a time.
-- Brief core: "You hate this site; you are at this river with 30 seconds on a phone. FAIL any wrong or contradicting number, missing unit/time/source, unclear label, cut-off text, jargon, repetition, block that does not help today, fillable 'not measured', anything snoflo.org, water.noaa.gov or USGS shows better; judge as a Google quality rater for '<river> <place> water level'. Quote text and image, worst first."
+- Brief core: "You hate this site; you are at this river with 30 seconds on a phone. FAIL any wrong or contradicting number, missing unit/time/source, unclear label, cut-off text, jargon, repetition, block that does not help today, fillable 'not measured', anything snoflo.org, water.noaa.gov or USGS shows better; judge only as that person, never as Google. Quote text and image, worst first."
 
 ## Owner alone
 Publisher name and contact email (`data/publisher.json`, waived for now); opening or pulling pages from the index; ads and consent banner; Search Console verification; source-permission visits and keys (USACE, TVA, Recreation.gov, USGS HIVIS, AirNow, NID); GitHub dispatch token (`GH_DISPATCH_TOKEN`); domain renewal; Cloudflare plan (Workers Paid); outside uptime monitor; cutting any block; running gates when paused. What the owner does when something breaks: `docs/RUNBOOK.md`. Corrections log: `docs/CORRECTIONS.md`.

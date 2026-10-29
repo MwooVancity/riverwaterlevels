@@ -1,7 +1,7 @@
 # PLAN: riverwaterlevels.com
 
 ## Goal
-Be the #1 and genuinely most useful page for "<river> <place> water level / flow / today", one page per USGS gauge. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
+Be the most useful page for a person deciding about this river today, one page per USGS gauge. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
 ## Where we are (2026-10-29)
 - Gauges live: 74 (`data/waves.csv` status=live); queue 7,499, held for names 283, excluded 1,243.
