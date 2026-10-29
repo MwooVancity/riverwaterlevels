@@ -7,6 +7,7 @@ from lib.core import _safe
 from lib.charts import *
 from lib.weather import *
 from lib.forecast import *
+STATE_RULES = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "state-rules.json"), encoding="utf-8"))["states"]
 
 
 def b_related(G, pages):
@@ -114,6 +115,11 @@ def b_official_links(G):
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
+    from lib.directory import STATE_NAMES  # here, not at the top: directory imports render
+    for k, what in (("fish", "Fishing rules"), ("boat", "Boating rules")):  # owner 2026-10-29: the official state page an angler or boater needs next (data/state-rules.json, each URL from a search result and curl-checked)
+        e = (STATE_RULES.get(G["row"]["state"]) or {}).get(k)
+        if e:
+            links.append(("%s in %s (%s)" % (what, STATE_NAMES.get(G["row"]["state"], G["row"]["state"]), e["agency"]), e["url"]))
     links.append(("This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
     links.append(("Put this gauge's live panel on your own site (free embed, links back here)", "/embed" + G["row"]["dashboard_url"]))
     body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)

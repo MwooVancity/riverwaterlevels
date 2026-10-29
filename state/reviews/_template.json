@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "machine: collect.py logs stats/land on the hourly path (health file only); no page change",
+ "notes": "machine: two lines added to the existing official-links list (state fishing and boating rules); same list style; page checks 0 failing; 113 outside links reachable",
  "by": "reviewer",
- "at": "2026-10-29T22:46:27+00:00",
- "template": "2970e95ab979",
+ "at": "2026-10-29T22:52:42+00:00",
+ "template": "2f3f454269b9",
  "level": "machine"
 }

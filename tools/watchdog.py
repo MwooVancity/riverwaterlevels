@@ -106,7 +106,9 @@ def main():
         else:
             ok.append("Googlebot and a phone get the same page (flow %s, edge %s)" % (flows["googlebot"][0], flows["googlebot"][2]))
         if not out_ or datetime.datetime.now(datetime.timezone.utc).hour == 12:  # outside links, once a day in CI and at every session start: government pages move (NWS AHPS 2024, USGS legacy 2027-02-22)
-            ext = sorted(set(re.findall(r'href="(https?://(?!riverwaterlevels\.com)[^"]+)"', h)))
+            ext = set(re.findall(r'href="(https?://(?!riverwaterlevels\.com)[^"]+)"', h))
+            ext |= {e["url"] for st in json.load(open(os.path.join(ROOT, "data", "state-rules.json"), encoding="utf-8"))["states"].values() for e in (st.get("fish"), st.get("boat")) if e}  # one page shows only its own state's links
+            ext = sorted(ext)
             dead = []
             for u in ext:
                 try:

@@ -1,0 +1,810 @@
+{
+ "_source": "Official state agency regulations pages. Each URL came from a WebSearch result (domain-limited to the agency site) on 2026-10-29, then was checked with one curl each (200 kept; 403 bot wall noted in phrase; else null). Not from memory. 'phrase' is a short description taken from the search result. Entries that point at a PDF, a news-style page or a general landing page (no stable regulations landing page found) say so in the phrase.",
+ "states": {
+  "AL": {
+   "fish": {
+    "agency": "Alabama Department of Conservation and Natural Resources (Outdoor Alabama)",
+    "url": "https://www.outdooralabama.com/fishing/freshwater-fishing-creel-and-size-limits",
+    "evidence": "search-result",
+    "phrase": "freshwater fishing creel and size limits",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Alabama Law Enforcement Agency, Marine Patrol Division",
+    "url": "https://www.alea.gov/dps/marine-patrol/boating-rules-and-regulations",
+    "evidence": "search-result",
+    "phrase": "Boating Rules and Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "AK": {
+   "fish": {
+    "agency": "Alaska Department of Fish and Game",
+    "url": "https://www.adfg.alaska.gov/?adfg=fishregulations.sport",
+    "evidence": "search-result",
+    "phrase": "Sport Fishing Regulations, Alaska Department of Fish and Game",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Alaska Department of Natural Resources, Office of Boating Safety",
+    "url": "https://dnr.alaska.gov/parks/boating/laws.htm",
+    "evidence": "search-result",
+    "phrase": "Office of Boating Safety laws page",
+    "checked": "2026-10-29"
+   }
+  },
+  "AZ": {
+   "fish": {
+    "agency": "Arizona Game and Fish Department",
+    "url": "https://www.azgfd.com/fishing-2/licenses-and-regulations/",
+    "evidence": "search-result",
+    "phrase": "Licenses and Regulations - Fishing [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Arizona Game and Fish Department",
+    "url": "https://watercraft.azgfd.com/",
+    "evidence": "search-result",
+    "phrase": "Welcome to the Arizona Game and Fish Department (watercraft)",
+    "checked": "2026-10-29"
+   }
+  },
+  "AR": {
+   "fish": {
+    "agency": "Arkansas Game and Fish Commission",
+    "url": "https://www.agfc.com/regulations/general-fishing-regulations/",
+    "evidence": "search-result",
+    "phrase": "General Fishing Regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Arkansas Game and Fish Commission",
+    "url": "https://www.agfc.com/things-to-do/boating/",
+    "evidence": "search-result",
+    "phrase": "Boating - Arkansas Game & Fish Commission [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "CA": {
+   "fish": {
+    "agency": "California Department of Fish and Wildlife",
+    "url": "https://wildlife.ca.gov/Fishing/Inland",
+    "evidence": "search-result",
+    "phrase": "Inland Sport Fishing - California Department of Fish and Wildlife",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "California State Parks, Division of Boating and Waterways",
+    "url": "https://dbw.parks.ca.gov/?page_id=28711",
+    "evidence": "search-result",
+    "phrase": "Boating Safety and Education for All",
+    "checked": "2026-10-29"
+   }
+  },
+  "CO": {
+   "fish": {
+    "agency": "Colorado Parks and Wildlife",
+    "url": "https://cpw.state.co.us/rules-and-regulations",
+    "evidence": "search-result",
+    "phrase": "Rules and Regulations (fishing brochure and Chapter W-1 linked from here)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Colorado Parks and Wildlife",
+    "url": "https://cpw.state.co.us/activities/boating/boating-safety",
+    "evidence": "search-result",
+    "phrase": "Boating Safety",
+    "checked": "2026-10-29"
+   }
+  },
+  "CT": {
+   "fish": {
+    "agency": "Connecticut Department of Energy and Environmental Protection",
+    "url": "https://portal.ct.gov/DEEP/Fishing/Freshwater-Fishing-Guide/What-Is-New",
+    "evidence": "search-result",
+    "phrase": "Freshwater Fishing Guide - What Is New",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Connecticut Department of Energy and Environmental Protection",
+    "url": "https://portal.ct.gov/DEEP/Boating/Boating-and-Paddling",
+    "evidence": "search-result",
+    "phrase": "Laws and Requirements",
+    "checked": "2026-10-29"
+   }
+  },
+  "DE": {
+   "fish": {
+    "agency": "Delaware DNREC, Division of Fish and Wildlife",
+    "url": "https://dnrec.delaware.gov/fish-wildlife/fishing/regulations/",
+    "evidence": "search-result",
+    "phrase": "Licensing and Regulations - DNREC",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Delaware DNREC, Division of Fish and Wildlife",
+    "url": "https://dnrec.delaware.gov/fish-wildlife/boating/safety/",
+    "evidence": "search-result",
+    "phrase": "Boating Safety - DNREC",
+    "checked": "2026-10-29"
+   }
+  },
+  "DC": {
+   "fish": {
+    "agency": "District Department of Energy and Environment",
+    "url": "https://doee.dc.gov/service/regulated-fishing-activities",
+    "evidence": "search-result",
+    "phrase": "Regulated Fishing Activities",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Metropolitan Police Department, Harbor Patrol",
+    "url": "https://mpdc.dc.gov/page/boating-safety-and-equipment-requirements",
+    "evidence": "search-result",
+    "phrase": "Boating Safety and Equipment Requirements [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "FL": {
+   "fish": {
+    "agency": "Florida Fish and Wildlife Conservation Commission",
+    "url": "https://myfwc.com/fishing/freshwater/regulations/",
+    "evidence": "search-result",
+    "phrase": "Freshwater Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Florida Fish and Wildlife Conservation Commission",
+    "url": "https://myfwc.com/boating/regulations/",
+    "evidence": "search-result",
+    "phrase": "Boating Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "GA": {
+   "fish": {
+    "agency": "Georgia DNR, Wildlife Resources Division",
+    "url": "https://georgiawildlife.com/regulations",
+    "evidence": "search-result",
+    "phrase": "Regulations (hunting and fishing regulations guidebook)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Georgia DNR, Wildlife Resources Division",
+    "url": "https://georgiawildlife.com/know-boating-laws",
+    "evidence": "search-result",
+    "phrase": "Know Georgia Boating Laws Before Heading Out to Water",
+    "checked": "2026-10-29"
+   }
+  },
+  "HI": {
+   "fish": {
+    "agency": "Hawaii DLNR, Division of Aquatic Resources",
+    "url": "https://dlnr.hawaii.gov/dar/fishing/fishing-regulations/",
+    "evidence": "search-result",
+    "phrase": "Regulations (Hawaii fishing regulations)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Hawaii DLNR, Division of Boating and Ocean Recreation",
+    "url": "https://dlnr.hawaii.gov/dobor/boating-in-hawaii/",
+    "evidence": "search-result",
+    "phrase": "Boating In Hawaii",
+    "checked": "2026-10-29"
+   }
+  },
+  "ID": {
+   "fish": {
+    "agency": "Idaho Department of Fish and Game",
+    "url": "https://idfg.idaho.gov/sites/default/files/seasons-rules-fish-2025-2027.pdf",
+    "evidence": "search-result",
+    "phrase": "Fishing Seasons and Rules 2025-2027 booklet (PDF; no stable landing page found in results)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Idaho Department of Parks and Recreation",
+    "url": "https://parksandrecreation.idaho.gov/park-activity/boating/",
+    "evidence": "search-result",
+    "phrase": "Boating",
+    "checked": "2026-10-29"
+   }
+  },
+  "IL": {
+   "fish": {
+    "agency": "Illinois Department of Natural Resources",
+    "url": "https://www.dnr.illinois.gov/fishing",
+    "evidence": "search-result",
+    "phrase": "iFish - Your official source for Illinois fishing information",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Illinois Department of Natural Resources",
+    "url": "https://dnr.illinois.gov/safety/boatingsafety.html",
+    "evidence": "search-result",
+    "phrase": "Boating Safety - Illinois Department of Natural Resources",
+    "checked": "2026-10-29"
+   }
+  },
+  "IN": {
+   "fish": {
+    "agency": "Indiana Department of Natural Resources",
+    "url": "https://www.in.gov/dnr/fish-and-wildlife/fishing/fishing-guide-and-regulations/",
+    "evidence": "search-result",
+    "phrase": "Fish and Wildlife: Fishing Guide & Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Indiana Department of Natural Resources, Law Enforcement",
+    "url": "https://www.in.gov/dnr/law-enforcement/indiana-boating-advisories",
+    "evidence": "search-result",
+    "phrase": "Indiana Boating Advisories - Law Enforcement",
+    "checked": "2026-10-29"
+   }
+  },
+  "IA": {
+   "fish": {
+    "agency": "Iowa Department of Natural Resources",
+    "url": "https://www.iowadnr.gov/things-do/fishing/regulations-laws",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations & Laws",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Iowa Department of Natural Resources",
+    "url": "https://www.iowadnr.gov/things-do/boating",
+    "evidence": "search-result",
+    "phrase": "Boating",
+    "checked": "2026-10-29"
+   }
+  },
+  "KS": {
+   "fish": {
+    "agency": "Kansas Department of Wildlife and Parks",
+    "url": "https://ksoutdoors.com/Fishing/Fishing-Regulations",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations / Fishing / KDWP [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Kansas Department of Wildlife and Parks",
+    "url": "https://ksoutdoors.com/Services/Law-Enforcement/Regulations/Boating/115-30-04",
+    "evidence": "search-result",
+    "phrase": "Boating regulations (K.A.R. 115-30-04); also Regulation Kansas Boating Summary [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "KY": {
+   "fish": {
+    "agency": "Kentucky Department of Fish and Wildlife Resources",
+    "url": "https://fw.ky.gov/More/Pages/Guides.aspx",
+    "evidence": "search-result",
+    "phrase": "Hunting and Fishing Regulation Summary Guides",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Kentucky Department of Fish and Wildlife Resources",
+    "url": "https://fw.ky.gov/FishBoatGuide/pages/boating.aspx",
+    "evidence": "search-result",
+    "phrase": "Boating - Kentucky Department of Fish & Wildlife",
+    "checked": "2026-10-29"
+   }
+  },
+  "LA": {
+   "fish": {
+    "agency": "Louisiana Department of Wildlife and Fisheries",
+    "url": "https://www.wlf.louisiana.gov/page/recreational-freshwater-finfish-and-crawfish",
+    "evidence": "search-result",
+    "phrase": "Recreational Freshwater Finfish and Crawfish [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Louisiana Department of Wildlife and Fisheries",
+    "url": "https://www.wlf.louisiana.gov/page/boating-regulations",
+    "evidence": "search-result",
+    "phrase": "LDWF Recreational Boating Regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "ME": {
+   "fish": {
+    "agency": "Maine Department of Inland Fisheries and Wildlife",
+    "url": "https://www.maine.gov/ifw/fishing-boating/fishing/laws-rules/statewide-laws.html",
+    "evidence": "search-result",
+    "phrase": "Statewide General Fishing Laws [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Maine Department of Inland Fisheries and Wildlife",
+    "url": "https://www.maine.gov/ifw/fishing-boating/boating/index.html",
+    "evidence": "search-result",
+    "phrase": "Boating: Fishing & Boating: Maine Dept of Inland Fisheries and Wildlife [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "MD": {
+   "fish": {
+    "agency": "Maryland Department of Natural Resources",
+    "url": "https://dnr.maryland.gov/fisheries/pages/regulations/changes.aspx",
+    "evidence": "search-result",
+    "phrase": "Changes to Fishing Regulations (no single regulations landing page found in results)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Maryland Department of Natural Resources",
+    "url": "https://dnr.maryland.gov/boating/Pages/regulations/home.aspx",
+    "evidence": "search-result",
+    "phrase": "Boating regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "MA": {
+   "fish": {
+    "agency": "MassWildlife (Division of Fisheries and Wildlife)",
+    "url": "https://www.mass.gov/info-details/freshwater-fishing-regulations",
+    "evidence": "search-result",
+    "phrase": "Freshwater fishing regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Massachusetts Environmental Police",
+    "url": "https://www.mass.gov/info-details/massachusetts-boating-law-summary",
+    "evidence": "search-result",
+    "phrase": "Massachusetts Boating Law Summary [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "MI": {
+   "fish": {
+    "agency": "Michigan Department of Natural Resources",
+    "url": "https://www.michigan.gov/dnr/things-to-do/fishing/fishing-regulations",
+    "evidence": "search-result",
+    "phrase": "Michigan Fishing Regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Michigan Department of Natural Resources",
+    "url": "https://www.michigan.gov/dnr/things-to-do/boating/rules-and-regs",
+    "evidence": "search-result",
+    "phrase": "Boating rules and regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "MN": {
+   "fish": {
+    "agency": "Minnesota Department of Natural Resources",
+    "url": "https://dnr.state.mn.us/regulations/fishing/index.html",
+    "evidence": "search-result",
+    "phrase": "Fishing regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Minnesota Department of Natural Resources",
+    "url": "https://files.dnr.state.mn.us/rlp/regulations/boatwater/boatingguide.pdf",
+    "evidence": "search-result",
+    "phrase": "Minnesota Boating Guide 2026 (PDF; no stable landing page found in results)",
+    "checked": "2026-10-29"
+   }
+  },
+  "MS": {
+   "fish": {
+    "agency": "Mississippi Department of Wildlife, Fisheries, and Parks",
+    "url": "https://www.mdwfp.com/fishing-boating/public-water-body-regulations",
+    "evidence": "search-result",
+    "phrase": "Public Water Body Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Mississippi Department of Wildlife, Fisheries, and Parks",
+    "url": "https://www.mdwfp.com/enforcement-education/general-boating-rules-regulations",
+    "evidence": "search-result",
+    "phrase": "General Boating Rules & Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "MO": {
+   "fish": {
+    "agency": "Missouri Department of Conservation",
+    "url": "https://mdc.mo.gov/fishing/regulations",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Missouri State Highway Patrol, Water Patrol Division",
+    "url": "https://www.mshp.dps.missouri.gov/MSHPWeb/WaterPatrol/moBoatingLawInformation.html",
+    "evidence": "search-result",
+    "phrase": "Water Patrol Missouri Boating Law Information",
+    "checked": "2026-10-29"
+   }
+  },
+  "MT": {
+   "fish": {
+    "agency": "Montana Fish, Wildlife & Parks",
+    "url": "https://fwp.mt.gov/fish/regulations",
+    "evidence": "search-result",
+    "phrase": "FISH :: Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Montana Fish, Wildlife & Parks",
+    "url": "https://fwp.mt.gov/activities/boating/rules-regulations",
+    "evidence": "search-result",
+    "phrase": "Boating In Montana (rules and regulations)",
+    "checked": "2026-10-29"
+   }
+  },
+  "NE": {
+   "fish": {
+    "agency": "Nebraska Game and Parks Commission",
+    "url": "https://outdoornebraska.gov/guides-maps/fishing-guides-reports/fishing-guide/",
+    "evidence": "search-result",
+    "phrase": "Fishing Guide [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Nebraska Game and Parks Commission",
+    "url": "https://outdoornebraska.gov/parks/go-boating/boating-regulations/",
+    "evidence": "search-result",
+    "phrase": "Boating Regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "NV": {
+   "fish": {
+    "agency": "Nevada Department of Wildlife",
+    "url": "https://www.ndow.org/rules-regulations/",
+    "evidence": "search-result",
+    "phrase": "Rules & Regulations - Nevada Department of Wildlife",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Nevada Department of Wildlife",
+    "url": "https://www.ndow.org/get-outside/boating/rules-regulations/",
+    "evidence": "search-result",
+    "phrase": "Rules & Regulations - Nevada Department of Wildlife (boating)",
+    "checked": "2026-10-29"
+   }
+  },
+  "NH": {
+   "fish": {
+    "agency": "New Hampshire Fish and Game Department",
+    "url": "https://www.wildlife.nh.gov/laws-and-rules",
+    "evidence": "search-result",
+    "phrase": "Laws and Rules (links to the NH Freshwater Fishing Digest) [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "New Hampshire State Police, Marine Patrol",
+    "url": "https://www.nhsp.dos.nh.gov/our-services/field-operations-bureau/marine-patrol/marine-patrol-laws-rules",
+    "evidence": "search-result",
+    "phrase": "Marine Patrol Laws & Rules [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "NJ": {
+   "fish": {
+    "agency": "New Jersey DEP, Division of Fish and Wildlife",
+    "url": "https://dep.nj.gov/njfw/fishing/freshwater/regulations-and-permits/",
+    "evidence": "search-result",
+    "phrase": "Freshwater fishing regulations and permits (Freshwater Fishing Digest)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "New Jersey State Police, Marine Services Bureau",
+    "url": "https://www.nj.gov/oag/njsp/marine-services/index.shtml",
+    "evidence": "search-result",
+    "phrase": "Marine Services",
+    "checked": "2026-10-29"
+   }
+  },
+  "NM": {
+   "fish": {
+    "agency": "New Mexico Department of Game and Fish",
+    "url": "https://wildlife.dgf.nm.gov/fishing/fishing-regulations/",
+    "evidence": "search-result",
+    "phrase": "Legal and Safety Advisories - New Mexico Game and Fish (fishing regulations)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "New Mexico State Parks Division (EMNRD)",
+    "url": "https://www.emnrd.nm.gov/spd/activities/boating-2/regulations/",
+    "evidence": "search-result",
+    "phrase": "Regulations - State Parks (boating)",
+    "checked": "2026-10-29"
+   }
+  },
+  "NY": {
+   "fish": {
+    "agency": "New York State Department of Environmental Conservation",
+    "url": "https://dec.ny.gov/things-to-do/freshwater-fishing/regulations/general",
+    "evidence": "search-result",
+    "phrase": "General Freshwater Fishing Regulations - NYSDEC",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "New York State Parks, Recreation and Historic Preservation",
+    "url": "https://parks.ny.gov/activities/boating",
+    "evidence": "search-result",
+    "phrase": "Boating - New York State Parks & Historic Sites",
+    "checked": "2026-10-29"
+   }
+  },
+  "NC": {
+   "fish": {
+    "agency": "North Carolina Wildlife Resources Commission",
+    "url": "https://www.ncwildlife.gov/hunt/fishing-hunting-trapping-regulations",
+    "evidence": "search-result",
+    "phrase": "Fishing, Hunting & Trapping Regulations (digest)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "North Carolina Wildlife Resources Commission",
+    "url": "https://www.ncwildlife.gov/boating/laws-safety/boating-regulations",
+    "evidence": "search-result",
+    "phrase": "Boating Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "ND": {
+   "fish": {
+    "agency": "North Dakota Game and Fish Department",
+    "url": "https://gf.nd.gov/regulations/fishing",
+    "evidence": "search-result",
+    "phrase": "2026-28 Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "North Dakota Game and Fish Department",
+    "url": "https://gf.nd.gov/regulations/boating",
+    "evidence": "search-result",
+    "phrase": "Boating Safety Guide (2026-2028)",
+    "checked": "2026-10-29"
+   }
+  },
+  "OH": {
+   "fish": null,
+   "boat": null,
+   "_note": "2026-10-29: ohiodnr.gov answers 404 to every scripted request, root included; not confirmable, so no link"
+  },
+  "OK": {
+   "fish": {
+    "agency": "Oklahoma Department of Wildlife Conservation",
+    "url": "https://www.wildlifedepartment.com/fishing/regs",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Oklahoma Highway Patrol (Department of Public Safety)",
+    "url": "https://oklahoma.gov/dps/programs-services/boated.html",
+    "evidence": "search-result",
+    "phrase": "Oklahoma Boating Education (OHP Lake Patrol); no single rules landing page found in results",
+    "checked": "2026-10-29"
+   }
+  },
+  "OR": {
+   "fish": {
+    "agency": "Oregon Department of Fish and Wildlife",
+    "url": "https://myodfw.com/articles/regulation-updates",
+    "evidence": "search-result",
+    "phrase": "Fishing regulation updates (changes to the Oregon Sport Fishing Regulations)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Oregon State Marine Board",
+    "url": "https://www.oregon.gov/osmb/boater-info/pages/statewide-and-local-regulations.aspx",
+    "evidence": "search-result",
+    "phrase": "Statewide and Local Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "PA": {
+   "fish": {
+    "agency": "Pennsylvania Fish and Boat Commission",
+    "url": "https://www.fishandboat.com/Fishing/Regulations/Pages/default.aspx",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Pennsylvania Fish and Boat Commission",
+    "url": "https://www.fishandboat.com/Boating/Regulations/Pages/Powered-Boat-Regs.aspx",
+    "evidence": "search-result",
+    "phrase": "Powered Boat Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "RI": {
+   "fish": {
+    "agency": "Rhode Island Department of Environmental Management",
+    "url": "https://dem.ri.gov/natural-resources-bureau/fish-wildlife/rules-regulations/freshwater-sizes-and-limits",
+    "evidence": "search-result",
+    "phrase": "Rhode Island Freshwater Sizes and Limits [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Rhode Island Department of Environmental Management",
+    "url": "https://dem.ri.gov/natural-resources-bureau/law-enforcement/boating-safety-certification",
+    "evidence": "search-result",
+    "phrase": "Boating Safety Certification (DEM Environmental Police) [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "SC": {
+   "fish": {
+    "agency": "South Carolina Department of Natural Resources",
+    "url": "https://www.dnr.sc.gov/fishing/freshwaterfishing.html",
+    "evidence": "search-result",
+    "phrase": "SCDNR - Fishing - Freshwater Fishing",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "South Carolina Department of Natural Resources",
+    "url": "https://www.dnr.sc.gov/boating/safety.html",
+    "evidence": "search-result",
+    "phrase": "SCDNR - Boating Safety",
+    "checked": "2026-10-29"
+   }
+  },
+  "SD": {
+   "fish": {
+    "agency": "South Dakota Game, Fish and Parks",
+    "url": "https://gfp.sd.gov/pages/regulations/",
+    "evidence": "search-result",
+    "phrase": "Regulations (Fishing and Boating handbooks listed under View Handbooks)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "South Dakota Game, Fish and Parks",
+    "url": "https://gfp.sd.gov/pages/regulations/",
+    "evidence": "search-result",
+    "phrase": "Regulations (Fishing and Boating handbooks listed under View Handbooks)",
+    "checked": "2026-10-29"
+   }
+  },
+  "TN": {
+   "fish": {
+    "agency": "Tennessee Wildlife Resources Agency",
+    "url": "https://www.tn.gov/twra/fishing-regs.html",
+    "evidence": "search-result",
+    "phrase": "Tennessee Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Tennessee Wildlife Resources Agency",
+    "url": "https://www.tn.gov/twra/boating/regulations-and-safety-concerns.html",
+    "evidence": "search-result",
+    "phrase": "Boating Regulations and Safety Concerns",
+    "checked": "2026-10-29"
+   }
+  },
+  "TX": {
+   "fish": {
+    "agency": "Texas Parks and Wildlife Department",
+    "url": "https://tpwd.texas.gov/regulations/outdoor-annual/fishing/general-rules-regulations/general-fishing-regulations",
+    "evidence": "search-result",
+    "phrase": "General Fishing Regulations (Outdoor Annual)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Texas Parks and Wildlife Department",
+    "url": "https://tpwd.texas.gov/regulations/outdoor-annual/boating/operation-of-your-boat",
+    "evidence": "search-result",
+    "phrase": "Operation of Your Boat (Outdoor Annual)",
+    "checked": "2026-10-29"
+   }
+  },
+  "UT": {
+   "fish": {
+    "agency": "Utah Division of Wildlife Resources",
+    "url": "https://wildlife.utah.gov/guidebooks",
+    "evidence": "search-result",
+    "phrase": "Guidebooks (Utah Fishing Guidebook)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Utah Division of Outdoor Recreation (State Parks)",
+    "url": "https://recreation.utah.gov/boating-overview-original/rules-and-regulations/boating-registration-and-insurance/",
+    "evidence": "search-result",
+    "phrase": "Boating Registration & Insurance (boating rules and regulations) [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "VT": {
+   "fish": {
+    "agency": "Vermont Fish & Wildlife Department",
+    "url": "https://www.vtfishandwildlife.com/updated-fishing-regulations-overview",
+    "evidence": "search-result",
+    "phrase": "Updated Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Vermont Department of Environmental Conservation",
+    "url": "https://dec.vermont.gov/watershed/lakes-ponds/vermont-use-public-waters-rules",
+    "evidence": "search-result",
+    "phrase": "Vermont Use of Public Waters Rules",
+    "checked": "2026-10-29"
+   }
+  },
+  "VA": {
+   "fish": {
+    "agency": "Virginia Department of Wildlife Resources",
+    "url": "https://dwr.virginia.gov/fishing/regulations/",
+    "evidence": "search-result",
+    "phrase": "Freshwater Fishing Regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Virginia Department of Wildlife Resources",
+    "url": "https://dwr.virginia.gov/boating/boaters-guide/safe-boating/",
+    "evidence": "search-result",
+    "phrase": "Safe Boating (Boater's Guide)",
+    "checked": "2026-10-29"
+   }
+  },
+  "WA": {
+   "fish": {
+    "agency": "Washington Department of Fish and Wildlife",
+    "url": "https://wdfw.wa.gov/fishing/regulations",
+    "evidence": "search-result",
+    "phrase": "Fishing regulations",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Washington State Parks, Boating Program",
+    "url": "https://parks.wa.gov/about/rules-and-safety/recreational-boating-laws-regulations",
+    "evidence": "search-result",
+    "phrase": "Recreational Boating Laws & Regulations",
+    "checked": "2026-10-29"
+   }
+  },
+  "WV": {
+   "fish": {
+    "agency": "West Virginia Division of Natural Resources",
+    "url": "https://wvdnr.gov/fishing/fishing-regulations/",
+    "evidence": "search-result",
+    "phrase": "West Virginia Fishing Regulations [403 bot wall]",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "West Virginia Division of Natural Resources",
+    "url": "https://wvdnr.gov/lands-waters/boating/",
+    "evidence": "search-result",
+    "phrase": "Boating Laws, Safety & Water Trails in WV [403 bot wall]",
+    "checked": "2026-10-29"
+   }
+  },
+  "WI": {
+   "fish": {
+    "agency": "Wisconsin Department of Natural Resources",
+    "url": "https://dnr.wisconsin.gov/topic/fishing/regulations/RegulationsToolbox",
+    "evidence": "search-result",
+    "phrase": "Fishing Regulations Toolbox",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Wisconsin Department of Natural Resources",
+    "url": "https://dnr.wisconsin.gov/permits/registrations/boat/BeforeYouOperate.html",
+    "evidence": "search-result",
+    "phrase": "What you should know before you operate your boat",
+    "checked": "2026-10-29"
+   }
+  },
+  "WY": {
+   "fish": {
+    "agency": "Wyoming Game and Fish Department",
+    "url": "https://wgfd.wyo.gov/fishing-boating",
+    "evidence": "search-result",
+    "phrase": "Fishing & Boating (regulations booklet linked from here; no stable regulations landing page found in results)",
+    "checked": "2026-10-29"
+   },
+   "boat": {
+    "agency": "Wyoming Game and Fish Department",
+    "url": "https://wgfd.wyo.gov/fishing-boating/boating-watercraft",
+    "evidence": "search-result",
+    "phrase": "Boating - Watercraft",
+    "checked": "2026-10-29"
+   }
+  }
+ }
+}
