@@ -14,23 +14,61 @@ NWPS_H = {"User-Agent": NWS_H["User-Agent"], "Accept": "application/json"}  # 20
 
 
 _last = [0.0]
+import time as _time, zlib, copy
+NEXT = os.environ.get("COLLECT_NEXT") == "1"  # shadow design (check branch): per-run memo of shared GETs, staggered 3-hourly NWS forecast, daily retry of gauges NWPS does not know. Off = today's behaviour exactly.
+HOURLY_ONLY = "--hourly-only" in sys.argv  # shadow only: a gauge with no cache gets a seeded record with every slow source marked just-fetched, so the run measures the steady hourly cost
+TIME = {}  # label -> [calls, seconds]; written to state/collect-timing.json (2026-10-29: the run log showed only the total)
+MEMO = {}
+
+
+def _tick(label, sec, n=1):
+    c = TIME.setdefault(label, [0, 0.0])
+    c[0] += n
+    c[1] += sec
+
+
+def _label(url):
+    u = urllib.parse.urlparse(url)
+    return u.netloc + "/" + "/".join("#" if re.search(r"\d", x) or len(x) > 20 else x for x in u.path.split("/") if x)[:70]
+
+
+def _timed(fn):
+    def w(url, *a, **k):
+        t = _time.time()
+        try:
+            return fn(url, *a, **k)
+        finally:
+            _tick(_label(url), _time.time() - t)
+    return w
+
+
+http_json = _timed(http_json)
 
 
 def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
     """Throttled GET for the NWS/NOAA hosts: minimum gap between calls, honours Retry-After, exponential backoff on 429/5xx."""
     import time, urllib.error
+    if NEXT and url in MEMO:  # the same forecast, grid or station URL asked for by two gauges of one run
+        _tick("~memo hit", 0)
+        return copy.deepcopy(MEMO[url])
     for i in range(tries):
         wait = gap - (time.time() - _last[0])
         if wait > 0:
+            _tick("~gap sleep", wait, 0)
             time.sleep(wait)
         _last[0] = time.time()
         try:
-            return http_json(url, headers, timeout)
+            r = http_json(url, headers, timeout)
+            if NEXT and "api.weather.gov" in url:
+                MEMO[url] = r
+            return r
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 502, 503, 504) or i == tries - 1:
                 raise
             ra = e.headers.get("Retry-After") or ""
-            time.sleep(min(60, float(ra) if ra.replace(".", "", 1).isdigit() else 3 * 2 ** i))
+            b = min(60, float(ra) if ra.replace(".", "", 1).isdigit() else 3 * 2 ** i)
+            _tick("~backoff sleep", b)
+            time.sleep(b)
     raise RuntimeError("unreachable")
 
 
@@ -102,6 +140,8 @@ def fetch_related(site, inv, h, prev=None):
 def fetch_nwps(site, lat, lon, prev=None):
     """NWPS answers /gauges/<USGS id> directly; the returned usgsId must equal the gauge, so a coordinate match is never used."""
     import urllib.error, math
+    if NEXT and isinstance(prev, dict) and prev.get("lid") is None and prev.get("fetched_at") and not due(prev["fetched_at"], 20 + zlib.crc32(site.encode()) % 8):
+        return prev  # 404 from NWPS every hour for the ~3 in 4 gauges that have no forecast point; asked again daily, spread over 8 hours
     cw = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "nws-crosswalk.json"))).get(site)
     try:
         det = thr_json(NWPS + "gauges/%s" % site, NWPS_H)
@@ -362,6 +402,9 @@ def fetch_rating(site):
 def get_text(url, headers=None, timeout=90):
     import urllib.request
     return urllib.request.urlopen(urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels.com"}), timeout=timeout).read().decode("utf-8", "ignore")
+
+
+get_text = _timed(get_text)
 
 
 def county_codes(rec):
@@ -628,7 +671,7 @@ def nws_static(lat, lon, prev):
     return out
 
 
-def fetch_nws(lat, lon, prev=None):
+def fetch_nws(lat, lon, prev=None, site=""):
     S = nws_static(lat, lon, prev)
     pt = S["points"]
     out = {"fetched_at": now_iso(), "static": S, "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": S["radar_ll"], "periods": [], "alerts": None, "obs": None}
@@ -636,21 +679,34 @@ def fetch_nws(lat, lon, prev=None):
     for k in ("periods", "forecast_updated", "hourly", "hourly_updated", "grid", "obs"):  # alerts are not carried: an old alert must never read as active
         if p0.get(k) is not None:
             out[k] = p0[k]
+    slow = not NEXT or not p0.get("periods") or not p0.get("hourly") or not p0.get("grid") or (datetime.datetime.now(datetime.timezone.utc).hour + zlib.crc32(("%s%.3f" % (site, lon)).encode())) % 3 == 0  # first fetch, or this gauge's turn
     try:
+        if not slow:
+            raise StopIteration
         f = thr_json(pt["forecast"], NWS_H)["properties"]
         out["forecast_updated"] = f.get("updateTime") or f.get("generatedAt")
         out["periods"] = [{k: p.get(k) for k in ("name", "startTime", "endTime", "temperature", "temperatureUnit", "shortForecast", "detailedForecast", "windSpeed", "windDirection", "isDaytime")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in f.get("periods", [])[:14]]
+    except StopIteration:
+        pass
     except Exception as e:
         note("nws.forecast", "failed", e)
     try:
+        if not slow:
+            raise StopIteration
         hf = thr_json(pt["forecastHourly"], NWS_H)["properties"]
         out["hourly_updated"] = hf.get("updateTime") or hf.get("generatedAt")
         out["hourly"] = [{k: p.get(k) for k in ("startTime", "temperature", "temperatureUnit", "shortForecast", "windSpeed", "windDirection")} | {"pop": (p.get("probabilityOfPrecipitation") or {}).get("value")} for p in hf.get("periods", [])[:36]]
+    except StopIteration:
+        pass
     except Exception as e:
         note("nws.hourly", "failed", e)
     try:
+        if not slow:
+            raise StopIteration
         gp = thr_json(pt["forecastGridData"], NWS_H)["properties"]
         out["grid"] = grid_hours(gp)
+    except StopIteration:
+        pass
     except Exception as e:
         note("nws.grid", "failed", e)
     try:
@@ -993,12 +1049,15 @@ def note(src, outcome, err=""):
 
 def run_source(rec, key, fn, log):
     """Fetch one source into rec[key]. A failure keeps the previous value AND is recorded as failed: kept-previous is never counted as success."""
+    t0 = _time.time()
     try:
         v = fn()
     except Exception as e:
+        _tick("src " + key, _time.time() - t0)
         log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
         note(key, "failed", e)
         return False
+    _tick("src " + key, _time.time() - t0)
     rec[key] = v
     note(key, "ok" if v else "absent")
     return True
@@ -1066,7 +1125,7 @@ def fetch_extras(site, rec, h, log):
         if want and key not in want:
             continue
         stamp = rec.setdefault("_fetched", {})
-        if not want and not (daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 6)):
+        if not want and not (daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
             stamp[key] = now_iso()
@@ -1082,7 +1141,7 @@ def collect(site, inv):
     rec["river_name"] = g.get("name")
     rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
-    for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"))), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
+    for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"), site)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon))):
         run_source(rec, key, fn, log)
     if nwm_due(rec):
         run_source(rec, "nwm", lambda: fetch_nwm(site, rec.get("nwm")), log)
@@ -1198,18 +1257,33 @@ def fast_usgs(sites, h):
     return out
 
 
+SLOW_KEYS = sorted(DAILY | {"related", "tides", "cameras", "airnow", "near_wtemp"}) + ["usgs_full", "related_list"]
+
+
+def seed_record(s, inv, rows):
+    """Shadow only: the record a gauge would have after its first full collect, minus the slow sources (all marked just fetched), so a run measures the steady hourly cost."""
+    now = now_iso()
+    g = inv[s]
+    nwm_age = 4 if zlib.crc32(s.encode()) % 3 == 0 else 1  # a third of the gauges are due for the 3-hourly model each run
+    return {"site": s, "lat": float(g["lat"]), "lon": float(g["lon"]), "river_name": g.get("name"), "usgs": {"fetched_at": now, "rows": [], "truncated": []},
+            "_fetched": {k: now for k in SLOW_KEYS}, "nwm": {"fetched_at": iso(datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=nwm_age)), "comid": None}}
+
+
 def fast(inv, sites):
     h = usgs_headers()
+    t_phase = _time.time()
     try:
         new = fast_usgs(sites, h)
     except Exception as e:  # USGS unavailable or rate-limited: still refresh the weather sources
         print("FAIL usgs bulk", str(e)[:100])
         note("usgs", "failed", e)
         new = {}
+    _tick("phase usgs bulk", _time.time() - t_phase)
+    t_phase = _time.time()
     for s in sites:
         try:  # collect review #3: one gauge's bad cache or locked file is that gauge's failure, never the whole run's
             path = os.path.join(CACHE, s + ".json")
-            if not os.path.exists(path):  # a new live gauge: its first run is a full collect
+            if not os.path.exists(path) and not HOURLY_ONLY:  # a new live gauge: its first run is a full collect
                 try:
                     rec, log = collect(s, inv)
                 except Exception as e:
@@ -1221,7 +1295,7 @@ def fast(inv, sites):
                 os.replace(path + ".tmp", path)
                 print("ok new gauge", s, "; ".join(log))
                 continue
-            rec, log = json.load(open(path)), []
+            rec, log = (json.load(open(path)) if os.path.exists(path) else seed_record(s, inv, new.get(s))), []
             have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
             add = [r for r in new.get(s, []) if (r["parameter_code"], r["time"]) not in have]
             cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
@@ -1229,7 +1303,7 @@ def fast(inv, sites):
             if add:
                 rec["usgs"]["fetched_at"] = now_iso()
             note("usgs", "ok" if s in new else "absent")
-            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"))), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
+            for key, fn in (("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"]))):
                 run_source(rec, key, fn, log)
             if nwm_due(rec):
                 run_source(rec, "nwm", lambda: fetch_nwm(s, rec.get("nwm")), log)
@@ -1258,6 +1332,8 @@ def fast(inv, sites):
         except Exception as e:
             print("FAIL gauge", s, type(e).__name__, str(e)[:100], "(its previous cache stays)")
             note("gauge", "failed", e)
+    _tick("phase per-gauge sources", _time.time() - t_phase)
+    t_phase = _time.time()
     recs = {s: json.load(open(os.path.join(CACHE, s + ".json"))) for s in sites if os.path.exists(os.path.join(CACHE, s + ".json"))}
     try:
         fast_related(recs, h)
@@ -1267,8 +1343,11 @@ def fast(inv, sites):
         print("ok fast related flows")
     except Exception as e:
         print("FAIL related flows", str(e)[:100])
+    _tick("phase related flows", _time.time() - t_phase)
     write_health("run", len(sites))
+    t_phase = _time.time()
     fetch_states(sites)  # statewide alerts + drought for each state hub
+    _tick("phase state hubs", _time.time() - t_phase)
 
 
 STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
@@ -1327,6 +1406,30 @@ def fetch_states(sites):
             print("FAIL state", st, str(e)[:80])
 
 
+def pick_sites(inv):
+    """The live gauges; --queue=N adds the first N queued gauges (shadow timing only); --shard=i/N keeps the i-th of N equal slices of that list sorted by state then site, so a shard's gauges are neighbours (shared NWS grid, station and alert URLs)."""
+    import csv
+    arg = lambda k: next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--%s=" % k)), None)
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
+    sites = [r["site"] for r in rows if r["status"] == "live"]
+    if arg("queue"):
+        sites += [r["site"] for r in rows if r["status"] == "queue" and r["site"] in inv][:int(arg("queue"))]
+    if arg("shard"):
+        i, n = map(int, arg("shard").split("/"))
+        st = {r["site"]: r["state"] for r in rows}
+        sites = sorted(sites, key=lambda x: (st.get(x, ""), x))
+        sites = sites[i * len(sites) // n:(i + 1) * len(sites) // n]
+    return sorted(sites)
+
+
+def write_timing(wall):
+    """state/collect-timing.json: seconds and calls per endpoint and per source, for finding where the minutes go."""
+    out = {"at": now_iso(), "wall_s": round(wall, 1), "next": NEXT, "args": [a for a in sys.argv[1:] if a.startswith("--")], "labels": {k: [v[0], round(v[1], 1)] for k, v in sorted(TIME.items(), key=lambda kv: -kv[1][1])}}
+    os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
+    json.dump(out, open(os.path.join(ROOT, "state", "collect-timing.json"), "w"), indent=1)
+    print("TIMING wall %.0f s; top: %s" % (wall, "; ".join("%s %d calls %.0f s" % (k, v[0], v[1]) for k, v in list(out["labels"].items())[:12])))
+
+
 def main():
     inv = {}
     for l in open(os.path.join(LEGACY, "gauges-all.tsv"), encoding="utf-8").read().split("\n")[1:]:
@@ -1335,8 +1438,13 @@ def main():
             inv[c[1]] = {"lat": c[4], "lon": c[5], "name": c[2]}
     os.makedirs(CACHE, exist_ok=True)
     sites = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if "--print-sites" in sys.argv:  # collect-shadow.yml: which gauges this shard owns
+        print(chr(10).join(pick_sites(inv)))
+        return
     if not sites:  # the hourly run: every live gauge, each source on its own timer (2026-10-26: one lane replaced the 30-min fast + 6-h full lanes)
-        fast(inv, default_sites())
+        t0 = _time.time()
+        fast(inv, pick_sites(inv))
+        write_timing(_time.time() - t0)
         return
     for s in sites:
         try:

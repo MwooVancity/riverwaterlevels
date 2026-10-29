@@ -1,0 +1,98 @@
+name: collect-shadow
+
+# Phase 1 of the sharded collect (PLAN.md First-principles item 1). A practice collect beside the live one: it restores the data cache READ-ONLY,
+# collects the gauges in parallel shards, compares each shard's result with the cache it started from, merges the shards' files to prove they
+# do not collide, prints the time. It never saves the cache, never builds, never deploys, never commits. Start it by hand (gh workflow run).
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "number of parallel shards (max 20 run at once on the free plan)"
+        default: "1"
+      queue:
+        description: "also collect the first N queued gauges in steady-state mode (timing only, never released)"
+        default: "0"
+      next:
+        description: "true = the new design (memoised GETs, staggered NWS forecast, daily NWPS retry); false = today's collect"
+        default: "false"
+
+# its own group: the live refresh group must never wait behind, or cancel, a practice run
+concurrency:
+  group: collect-shadow
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      idx: ${{ steps.p.outputs.idx }}
+      t0: ${{ steps.p.outputs.t0 }}
+    steps:
+      - id: p
+        run: |
+          n=${{ inputs.shards }}
+          echo "idx=$(python3 -c "import json;print(json.dumps(list(range($n))))")" >> "$GITHUB_OUTPUT"
+          echo "t0=$(date +%s)" >> "$GITHUB_OUTPUT"
+
+  shard:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        i: ${{ fromJSON(needs.plan.outputs.idx) }}
+    env:
+      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+      COLLECT_NEXT: ${{ inputs.next == 'true' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore the live data cache (read only; this workflow has no save step)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cache
+            state
+          key: rwl-shadow-${{ github.run_id }}-${{ matrix.i }}
+          restore-keys: |
+            rwl-data-
+      - name: Collect this shard
+        run: |
+          cp -r cache "$RUNNER_TEMP/base"; cp state/source-health.json "$RUNNER_TEMP/base-health.json" 2>/dev/null || echo '{}' > "$RUNNER_TEMP/base-health.json"
+          A="--shard=${{ matrix.i }}/${{ inputs.shards }}"
+          if [ "${{ inputs.queue }}" != "0" ]; then A="$A --queue=${{ inputs.queue }} --hourly-only"; fi
+          python -I collect.py $A --print-sites > "$RUNNER_TEMP/sites.txt"
+          echo "shard ${{ matrix.i }}: $(wc -l < "$RUNNER_TEMP/sites.txt") gauges, args $A, next=$COLLECT_NEXT"
+          python -I collect.py $A | tail -n 40
+      - name: Compare with the cache it started from
+        run: |
+          python -I tools/shadow_compare.py "$RUNNER_TEMP/base" cache "$RUNNER_TEMP/sites.txt" "$RUNNER_TEMP/base-health.json" state/source-health.json "$RUNNER_TEMP/report.json"
+          mkdir -p out/cache
+          while read s; do cp "cache/$s.json" out/cache/ 2>/dev/null || true; done < "$RUNNER_TEMP/sites.txt"
+          cp cache/state-*.json out/cache/ 2>/dev/null || true
+          cp "$RUNNER_TEMP/report.json" out/report.json; cp state/collect-timing.json out/timing.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.i }}
+          path: out
+          retention-days: 2
+
+  summary:
+    needs: [plan, shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: shadow
+      - name: Totals, merge check, time sinks
+        run: |
+          wall=$(( $(date +%s) - ${{ needs.plan.outputs.t0 }} ))
+          python3 -I tools/shadow_summary.py shadow "$wall" | tee "$GITHUB_STEP_SUMMARY"
