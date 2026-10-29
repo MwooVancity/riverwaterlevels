@@ -12,6 +12,7 @@ PY = [sys.executable, "-I"]
 NPX = "npx.cmd" if os.name == "nt" else "npx"
 
 GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py", "--carry"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
+          ("break every input", PY + ["tools/break_blocks.py", "--gate"]),  # missing, stale, empty, duplicated data on 4 sample gauges (owner 2026-10-28)
           ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"])]  # dist/ does not exist yet in CI at gate time
 GATE_2 = [("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"])]
 GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]

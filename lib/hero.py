@@ -294,7 +294,7 @@ def hero(G, pages=None):
         above = fcw["cur"] is not None and fcw["cur"] > fcw["v"] + (0.05 if unit == "ft" else 0.02 * abs(fcw["v"]))
         val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmtc(fcw["v"]))
         _pn = nws_point_note(G)
-        sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else "")
+        sub = '<small>%s%s &middot; NWS point %s%s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), esc(fcw["lid"]), (' (named \u201c%s\u201d, not this gauge\u2019s place)' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else ((", " + esc((G["rec"].get("nwps") or {}).get("name"))) if (G["rec"].get("nwps") or {}).get("name") else ""))  # reviewers: the first screen named the point by code only
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
         _parts = []
         if G["osc"]:
@@ -582,9 +582,9 @@ def nws_point_note(G):
         t = re.sub(r"\bmt\b\.?", "mount", t)
         t = re.sub(r"\bft\b\.?", "fort", t)
         return re.sub(r"[^a-z0-9 ]", " ", t).split()
-    nm, pl = norm(n.get("name")), [w for w in norm(G["place"]) if w not in ("near", "nr", "at", "above", "abv", "below", "blw", "the", "of")]
+    nm, pl = norm(n.get("name")), [w for w in norm(G["place"]) if w not in ("near", "nr", "at", "above", "abv", "below", "blw")]
     if not nm or not pl:
         return ""
-    if all(w in nm or w in "".join(nm) for w in pl):  # every word of the gauge's place is in the NWS name ("Desoto" in "De Soto")
+    if all(w in nm for w in pl) or "".join(pl) in "".join(nm):  # every word of the gauge's place is in the NWS name ("Desoto" in "De Soto")
         return ""
     return "The NWS links its forecast point %s to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("lid") or "", n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")

@@ -31,7 +31,7 @@ def b_rain(G):
         wid += '<p class="src">The longer windows end earlier than the last-24-h estimate, so they do not include the most recent rain.</p>' 
     rcards = [card(lab, "%.2f <small>in</small>" % v[k], ("to %s" % esc(tzl(parse_t(vt[k]), G["zone"]))) if vt.get(k) else "") for k, lab in labs if k in v]
     return block("rain_totals", "Recent rain at the gauge location", "official", wid,
-                 "Source: NWS River Forecast Center multisensor precipitation estimate, about 2.5-mile grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=(age is not None and age > 6))
+                 "Source: NWS River Forecast Center multisensor precipitation estimate, about 2.5-mile grid at the gauge location, fetched %s. Estimate, not a gauge at the stream. Each window is a separate NWS product with its own end time (hourly and daily products), so a longer window can end earlier than a shorter one and show less rain." % esc(tzl(parse_t(n["fetched_at"]), G["zone"])), "rfc", amber=age)
 
 
 def b_cpc(G):
@@ -91,7 +91,7 @@ def b_air(G):
         return None
     mi = (", %d mi from the gauge" % round(miles_between(G["lat"], G["lon"], o["ll"][1], o["ll"][0]))) if o.get("ll") else ""
     body = '<p class="src">NWS station %s%s%s, observed <span data-wx="t">%s</span>.</p><span hidden data-wxst="%s" data-t="%s"></span>' % (esc(o["station"]), (" (%s)" % esc(o["name"])) if o.get("name") else "", mi, esc(tzl(parse_t(o["timestamp"]), G["zone"])), esc(o["station"]), esc(o["timestamp"])) + table(["Measure", "Value"], "".join(tr([esc(a), '<span data-wx="%s">%s</span>' % (k, esc(b))], right=(1,)) for k, a, b in rows), right=(1,))
-    return block("air_obs", "Air conditions at weather station %s" % esc(o["station"]), "obs", body, "Source: National Weather Service station %s, observed <span data-wx=\"t\">%s</span>." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=(age is not None and age > 3))
+    return block("air_obs", "Air conditions at weather station %s" % esc(o["station"]), "obs", body, "Source: National Weather Service station %s, observed <span data-wx=\"t\">%s</span>." % (esc(o["station"]), esc(tzl(parse_t(o["timestamp"]), G["zone"]))), "nws", amber=age)
 
 
 def b_radar(G):
@@ -125,7 +125,7 @@ def b_weather(G, n_periods=14):
             esc(p.get("name") or ""), ("–" if p.get("temperature") is None else esc(str(p.get("temperature")))), esc(p.get("temperatureUnit") or "F"), esc(p.get("shortForecast") or ""), _wind(p),
             ("%s%% chance of rain or snow" % pop) if pop is not None else ""))
     upd = esc(tzl(parse_t(n["forecast_updated"]), G["zone"])) if n.get("forecast_updated") else "time not stated"
-    return block("weather_forecast", "Weather forecast", "official", '<div class="fcs">%s</div>' % cards, "Source: National Weather Service point forecast, updated %s." % upd, "nws", amber=(age is not None and age > 12))
+    return block("weather_forecast", "Weather forecast", "official", '<div class="fcs">%s</div>' % cards, "Source: National Weather Service point forecast, updated %s." % upd, "nws", amber=age)
 
 
 def b_hourly(G):
@@ -142,7 +142,7 @@ def b_hourly(G):
     if not rows:
         return None
     return block("hourly_forecast", "Hourly forecast, next 24 hours", "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance", "Sky"], rows, right=(1, 3)),
-                 "Source: National Weather Service hourly point forecast, updated %s." % esc(tzl(parse_t(n["hourly_updated"]), G["zone"])), "nws", amber=(age > 12))
+                 "Source: National Weather Service hourly point forecast, updated %s." % esc(tzl(parse_t(n["hourly_updated"]), G["zone"])), "nws", amber=age)
 
 
 def b_heatmap(G):
@@ -193,4 +193,4 @@ def b_heatmap(G):
     big = max(per, key=lambda p: p["pop"]) if per else None
     popnote = ('<p class="src">The NWS gives %s a %d%% chance of rain or snow for the whole period; the highest single hour below is %d%%. A period chance counts rain or snow at any time in it, so it runs higher than any one hour.</p>' % (esc(big["name"]), big["pop"], max(hp))) if big and hp and big["pop"] > max(hp) + 15 else ""  # hater r5: "Tonight 93%" over hourly cells that peak at 69
     return block("hourly_heatmap", "Hourly forecast, next 24 hours", "official", storm_line(G) + popnote +'<div class="scroll"><table class="hm"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (head, rows),
-                 "Source: National Weather Service gridpoint forecast, updated %s; chance of rain or snow from the NWS hourly point forecast. Amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Hours are gauge-local. Darker cells mean a higher value in that row." % upd, "nws", amber=(age is not None and age > 12))
+                 "Source: National Weather Service gridpoint forecast, updated %s; chance of rain or snow from the NWS hourly point forecast. Amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Hours are gauge-local. Darker cells mean a higher value in that row." % upd, "nws", amber=age)

@@ -171,10 +171,16 @@ def credit_line(b):
 
 
 def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False):
+    if not isinstance(amber, bool):  # an age in hours: old by the one table
+        amber = amber is not None and amber > stale_after(bid)
     return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber}
 
 
-LIMIT_TEXT = {"alerts": "3 h", "air_obs": "3 h", "rain_totals": "6 h", "river_forecast": "24 h"}
+STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24}  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
+
+
+def stale_after(bid):
+    return STALE_H.get(bid, 12)
 
 
 # colour means one thing on every page: now (live gauge, weather station), fc (official forecasts, model guidance), rec (records, computed comparisons), area (agency data, map layers), safe (alerts, impacts, offline gauge)
@@ -185,7 +191,7 @@ FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}
 
 
 def render_block(b):
-    amber = (' <span class="tag amber">Older than %s</span>' % LIMIT_TEXT.get(b["id"], "12 h")) if b.get("amber") else ""
+    amber = (' <span class="tag amber">Older than %s</span>' % "%d h" % stale_after(b["id"])) if b.get("amber") else ""
     return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to this section">#</a></h2>%s<details class="srcd"><summary>Where this comes from</summary><p class="src">%s%s</p></details></section>' % (FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now"), b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], b["body"], b["source"], credit_line(b)))
 
 

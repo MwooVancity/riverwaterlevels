@@ -217,12 +217,18 @@ def main():
 
     # 4 and 5. rendered pages (dist_next)
     d = os.path.join(ROOT, "dist_next")
+    try:  # pages check.py --carry replaced with their live copy passed their own release
+        carried = set(json.load(open(os.path.join(d, "_carried.json"))))
+    except (OSError, ValueError):
+        carried = set()
     for root, _, fs in os.walk(d):
         for f in fs:
             if f != "index.html":
                 continue
             p = os.path.join(root, f)
             rel = os.path.relpath(p, d).replace("\\", "/")
+            if rel in carried:
+                continue
             h = open(p, encoding="utf-8").read()
             for m in re.finditer(r'<li class="now"><i class="lad-sw"></i>([^<]*)<b>', h):
                 t = m.group(1)

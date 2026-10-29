@@ -238,7 +238,7 @@ def b_wtemp(G):
     w = dict(w, months={m: v for m, v in w["months"].items() if isinstance(v, list) and len(v) == 2 and all(isinstance(x, (int, float)) for x in v)})  # a malformed month is left out, never the block
     if not w["months"]:
         return None
-    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, format(round(n), ",")) for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
+    cards = "".join('<div class="fc"><div>%s</div><b>%.0f&deg;F</b><div class="legend">%s days%s</div></div>' % (MONTHS[int(m) - 1], c * 9 / 5 + 32, format(round(n), ","), " (few)" if n < 150 else "") for m, (c, n) in sorted(w["months"].items(), key=lambda x: int(x[0])))
     mf = {int(m): c * 9 / 5 + 32 for m, (c, n) in w["months"].items()}
     def under(lo, hi):
         ms = [("<b>%s (this month)</b>" if m == G["ldate"].month else "%s") % MONTHS[m - 1][:3] for m in sorted(mf) if lo <= round(mf[m]) < hi]  # the row for today is marked; banded on the rounded value shown (full review)

@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "3/3 sample PASS (14105700, 01426500, 13206000). Template NOTES: b_wtemp source note says '(few) means fewer than 150 daily values' but no tile ever shows '(few)'; impact gaps round 5s down; hourly 24-h forecast table has no chart (table, not tiles)",
- "by": "hater-w8a",
- "at": "2026-10-29T00:09:52+00:00",
- "template": "b112516e45ff",
+ "notes": "3/3 template sample PASS in full mode (14105700, 01426500, 13206000); only NOTES: RFC recent-rain 0.00 vs nearby station rain without caveat when the 24 h row is missing, SNOTEL distance behind a toggle, raw USGS abbreviations in nearby-sensor names, hero NWS forecast card lacks issue time",
+ "by": "hater-w9a",
+ "at": "2026-10-29T00:22:03+00:00",
+ "template": "de367e70cf4d",
  "level": "full"
 }

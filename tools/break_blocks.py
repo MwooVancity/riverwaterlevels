@@ -136,6 +136,10 @@ def main():
     print("\n%d broken variants rendered over %d gauges; %d distinct faults" % (n, len(sites), len(found)))
     for (key, mname, f_), ss in sorted(found.items(), key=lambda x: (-len(x[1]), x[0])):
         print("%2d gauges | %-12s %-9s | %s | e.g. %s" % (len(ss), key, mname, f_, sorted(ss)[0]))
+    if GATE:
+        hard = [k for k in found if not k[2].startswith("BLOCK CRASH")]  # a crashed block is hidden by the guard and listed in status.json; a crashed page, a printed None or own stale readings badged live reach the reader
+        print("break gate: %d reader-visible fault(s)" % len(hard))
+        sys.exit(1 if hard else 0)
 
 
 if __name__ == "__main__":

@@ -233,7 +233,7 @@ def b_nwm_medium(G):
     ref = esc(tzl(parse_t(n["medium_reference_time"]), G["zone"])) if n.get("medium_reference_time") else "time not stated"
     span_d = (parse_t(fut[::stride][:20][-1]["t"]) - G["lt"]).total_seconds() / 86400
     return block("nwm_medium_range", "NOAA National Water Model, next %s (ensemble mean)" % (("%d days" % round(span_d)) if span_d >= 1.5 else "day"), "model", model_gap(G, fut[0]["flow"]) + table(["Time (gauge-local)", "Modeled flow (ensemble mean)"], rows, right=(1,)),
-                 "Source: NOAA National Water Model medium-range ensemble mean, reach %s, run %s. Model guidance, not an official forecast and not a measurement; error is larger on small basins." % (esc(str(n.get("comid"))), ref), "nwm", amber=(age is not None and age > 12))
+                 "Source: NOAA National Water Model medium-range ensemble mean, reach %s, run %s. Model guidance, not an official forecast and not a measurement; error is larger on small basins." % (esc(str(n.get("comid"))), ref), "nwm", amber=age)
 
 
 def b_noforecast(G):
@@ -266,7 +266,7 @@ def b_qpf(G):
         return None
     upd = esc(tzl(parse_t(g["updated"]), G["zone"])) if g.get("updated") else "time not stated"
     return block("forecast_rain_totals", "Forecast rain totals", "official", table(["Window", "Forecast rain"], rows, right=(1,)),
-                 "Source: National Weather Service gridpoint quantitative precipitation forecast at the gauge location, updated %s. A forecast, not a measurement." % upd, "nws", amber=(age is not None and age > 12))
+                 "Source: National Weather Service gridpoint quantitative precipitation forecast at the gauge location, updated %s. A forecast, not a measurement." % upd, "nws", amber=age)
 
 
 def b_drought(G):

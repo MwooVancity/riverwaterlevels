@@ -1,9 +1,9 @@
 {
  "id": "14105700",
  "verdict": "PASS",
- "notes": "NOTES: hourly forecast 24 h as shaded table (not tiles), no chart; SNOTEL distances only in disclosure; 148 vs 149 years are labelled datasets; temp-by-month source note promises a '(few)' marker never rendered (template, charts.py b_wtemp); offline artifacts (44 h old, radar/map) ignored",
- "by": "hater-w8a",
- "at": "2026-10-29T00:09:51+00:00",
- "template": "b112516e45ff",
+ "notes": "No F1-F8. NOTES: SNOTEL stations (Fifteenmile, Greenpoint, Red Hill) show distance only inside the 'Each station: distance, elevation and date' toggle (phone-07); 'Barlow Ranger District' listed as a recreation site with Boating/Swimming is an office, RIDB data (phone-08); 148 vs 149 years are two labelled stat sets (phone-01/06); hourly table and chip row clip at the right edge as horizontal scrollers (phone-02/03); 44 h age, 'Gauge not reporting', missing map/radar are offline artifacts",
+ "by": "hater-w9a",
+ "at": "2026-10-29T00:22:02+00:00",
+ "template": "de367e70cf4d",
  "level": "full"
 }

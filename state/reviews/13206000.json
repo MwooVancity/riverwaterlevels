@@ -1,9 +1,9 @@
 {
  "id": "13206000",
  "verdict": "PASS",
- "notes": "NOTES: '3,960 cfs above' (4,200-235=3,965) and sibling impact gaps round down; temp-by-month (1997-2002, Oct 8 days) face omits its period while hero says 'This gauge has no temperature sensor', '(few)' legend never rendered (template); recent rain lacks last-24-h row (feed); 44/47 years labelled datasets",
- "by": "hater-w8a",
- "at": "2026-10-29T00:09:51+00:00",
- "template": "b112516e45ff",
+ "notes": "No F1-F8. NOTES (worst first): 'Recent rain at the gauge location' Last 2 days/Last 3 days to Oct 28 6:00 AM: 0.00 in (phone-04) while 5 stations 1-4 mi away recorded 0.06-0.14 in on Oct 27 and 0.06 in Oct 26 (phone-07/08), two labelled datasets but the 'does not line up' caveat shown on other pages is missing here and the Last 24 h row is absent: verify the RFC 48/72 h source is not zero-filled; water temp source in raw USGS abbreviations 'Freestone Cr at Freestone Cr Trailhead Nr Boise Id' (phone-02); SNOTEL distance only inside toggle (phone-11); 'Highest forecast' 3.3 ft at 235 cfs while later 3.3 ft points reach 237 cfs (phone-07); NY Canal Diversion listed as an upstream river forecast point (phone-13)",
+ "by": "hater-w9a",
+ "at": "2026-10-29T00:22:02+00:00",
+ "template": "de367e70cf4d",
  "level": "full"
 }
