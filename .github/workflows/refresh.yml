@@ -89,6 +89,8 @@ jobs:
           m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
+          lim=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; d=json.load(sys.stdin); f=d.get('files') or 0; c=d.get('cache_mb') or 0; print('files %d of 20000, cache %d MB of 10000' % (f, c) if f > 14000 or c > 7000 else '')" 2>/dev/null || true)
+          if [ -n "$lim" ]; then echo "release SKIPPED: a hard limit is over 70% ($lim)"; exit 0; fi  # Cloudflare free files, GitHub cache: grow no further until the owner acts
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi

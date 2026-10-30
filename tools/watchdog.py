@@ -142,6 +142,18 @@ def main():
             ok.append("numbers verified against USGS %.1f h ago" % hours_since(tr["last_ok_at"]))
     except Exception as e:
         bad.append("cannot read /_truth.json (%s)" % str(e)[:60])
+    tok = os.environ.get("CLOUDFLARE_API_TOKEN")
+    if tok:  # a deploy key that expires stops every deploy with nobody around to renew it
+        try:
+            import urllib.request
+            v = json.load(urllib.request.urlopen(urllib.request.Request("https://api.cloudflare.com/client/v4/user/tokens/verify", headers={"Authorization": "Bearer " + tok}), timeout=20))
+            exp = (v.get("result") or {}).get("expires_on")
+            if exp and hours_since(exp) > -30 * 24:
+                bad.append("Cloudflare deploy key expires %s: create a new one and replace the GitHub secret CLOUDFLARE_API_TOKEN" % exp[:10])
+            else:
+                ok.append("Cloudflare deploy key: %s" % ("expires " + exp[:10] if exp else "no expiry date"))
+        except Exception as e:
+            ok.append("Cloudflare deploy key expiry not readable (%s)" % str(e)[:50])
     print("SITE HEALTH %s: %d problem(s)" % (datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), len(bad)))
     for x in bad:
         print("  PROBLEM:", x)
@@ -149,7 +161,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails ONCE A DAY (13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone")
+    SEVERE = ("site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
