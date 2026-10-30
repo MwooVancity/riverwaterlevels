@@ -1,7 +1,8 @@
 # PLAN: riverwaterlevels.com
 
 ## Goal
-Be the most useful page for a person deciding about this river today, one page per USGS gauge. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
+Be the most useful page for a person deciding about this river today, one page per USGS gauge.
+Scope (owner 2026-10-29: "purely the best river page there is. i want every river that exists"): rivers only, never lakes (Lakebrief has them). Phase 1: every USGS flow gauge (~9,100), 25/day, one gauge per river first (about late 2027). Phase 2: ungauged named rivers from the NOAA National Water Model (~250,000), every number labelled "model estimate, not measured"; starts only when Search Console shows gauge pages indexed and ranking, rate set from that evidence. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
 ## Cheap and lazy first (HARD, owner 2026-10-29: "This the cheap lazy way? Don't we have ponytail")
 Before any build or agent: does this need to exist at all? What already in the repo does it? Smallest change that works. A safety net for a failure an existing gate already blocks is not built.
