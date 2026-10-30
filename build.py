@@ -112,6 +112,7 @@ def main():
         return None
 
     block_counts = {}
+    live_copies = []
     for s, G in Gs.items():
         reason = due(s, G)
         if not reason:  # carried: the published page, its embed and data.json, unchanged
@@ -144,6 +145,7 @@ def main():
             old = prev_page(rows[s]["dashboard_url"])  # pipeline review #1: the hubs link this gauge, so its previous page is carried into this build (no broken link, no frozen site)
             if old:
                 write(nxt, rows[s]["dashboard_url"], old)
+                live_copies.append(rows[s]["dashboard_url"].strip("/") + "/index.html")  # its numbers may be the Worker's newer swap beside build-time text: truth_live and check skip it like any carried page
                 urls.append(rows[s]["dashboard_url"])
                 hashes[rows[s]["dashboard_url"]] = hashlib.sha256(old.encode()).hexdigest()[:16]
             continue
@@ -163,6 +165,8 @@ def main():
     if render.BLOCK_ERRORS:
         print("BLOCKS HIDDEN BY THE GUARD (%d): %s" % (len(render.BLOCK_ERRORS), "; ".join(render.BLOCK_ERRORS[:5])))
     json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
+    if live_copies:
+        json.dump(live_copies, open(os.path.join(nxt, "_carried.json"), "w"))
     print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:

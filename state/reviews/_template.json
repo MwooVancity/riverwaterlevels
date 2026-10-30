@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "machine: status.json gains files and cache_mb (limits); no page change",
+ "notes": "machine: build lists crash-carried live copies in _carried.json (checks skip them like other carried pages); no page change",
  "by": "reviewer",
- "at": "2026-10-30T01:31:56+00:00",
- "template": "9e217e1306f8",
+ "at": "2026-10-30T02:47:20+00:00",
+ "template": "d7c10a00f41f",
  "level": "machine"
 }
