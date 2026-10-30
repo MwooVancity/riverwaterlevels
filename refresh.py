@@ -8,9 +8,10 @@ sys.path.insert(0, ROOT)
 from gates import PY, NPX, GATES  # the one list of gates (gates.py)
 
 os.makedirs(os.path.join(ROOT, "runs"), exist_ok=True)
+# the break test feeds invented data to test CODE: it runs in dry runs only; on a deploy it could only freeze real, good pages (2026-10-30)
 DRY = "--dry" in sys.argv  # dryrun.yml: every gate on the cloud's last data, no collect, no publish, no deploy (2026-10-29: laptop data passed what the cloud failed, 3 times)
 NOCOLLECT = DRY or "--no-collect" in sys.argv  # sharded.yml: the shard jobs already collected and merged
-STEPS = ([] if NOCOLLECT else [PY + ["collect.py"]]) + [c for _, g in GATES for _, c in g] + ([] if DRY else [PY + ["publish.py"], [NPX, "wrangler", "deploy"]])
+STEPS = ([] if NOCOLLECT else [PY + ["collect.py"]]) + [c for _, g in GATES for n_, c in g if DRY or n_ != "break every input"] + ([] if DRY else [PY + ["publish.py"], [NPX, "wrangler", "deploy"]])
 code = 0
 with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as log:
     log.write("\n=== %s ===\n" % datetime.datetime.now().isoformat(timespec="seconds"))
