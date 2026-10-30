@@ -81,7 +81,7 @@ jobs:
         run: git checkout -- state/reviews && git clean -fdq state/reviews
       - name: Install the pinned wrangler
         run: npm ci --silent
-      - name: Daily release (owner cap 20 gauges/day; first run in the 11:00 UTC hour)
+      - name: Daily release (owner cap 25 gauges/day; first run from 11:00 UTC that has not released today)
         id: rel
         continue-on-error: true
         run: |
@@ -89,7 +89,7 @@ jobs:
           m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
-          if [ "$(date -u +%H)" = "11" ] && [ "$today" != "$last" ]; then
+          if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Refresh (collect, build, check, publish, deploy, live check)

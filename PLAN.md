@@ -77,7 +77,9 @@ In order of value to a person at the river:
 
 ## Before the Claude subscription ends (owner 2026-10-30: about 3 weeks; after that nobody changes code)
 Goal: a breakage never reaches a reader, and the owner hears about failures without Claude. In order:
-1. No emails, ever (owner 2026-10-30: "I don't want fuck up emails"; alarm built and removed the same day). After the subscription the owner sees health only on https://riverwaterlevels.com/status/ ; everything must heal itself or keep the last good site.
+1. Failure email ON (owner 2026-10-30, after removing it once: "bring back the GitHub emails"): the watchdog fails its run once a day (13 UTC) only on reader-visible problems; GitHub emails the owner. Test: watchdog.yml test_alarm button (run 40991985079 failed as designed).
+   Release fixed 2026-10-30: it ran only inside the 11 UTC hour and GitHub skips most hours (2026-10-29 had none), so most days released nothing; now the first run from 11 UTC that has not released today.
+   Open: build carries a live-site copy when a gauge crashes and dist/ is missing (its numbers were swapped by the Worker; likely cause of Austin 12.74 vs 12.76); Cloudflare free 100,000 requests/day (shared): find what happens past it, count it in the watchdog.
 2. Pin every tool version (Python, Node, wrangler, Ubuntu runner).
 3. Release stops itself when any limit is over 70% (files, cache, USGS calls); then the USGS brake.
 4. Move off the old USGS services (shut down 2027-02-22).

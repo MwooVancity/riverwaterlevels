@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "17 * * * *"
   workflow_dispatch:
+    inputs:
+      test_alarm:
+        description: "Send a test failure email to the owner"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,3 +40,10 @@ jobs:
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_live.py
+      - name: Owner alarm (once a day at 13 UTC, reader-visible problems only; the failed run makes GitHub email the owner)
+        if: steps.doctor.outputs.alarm != '' || github.event.inputs.test_alarm == 'true'
+        env:
+          ALARM: ${{ steps.doctor.outputs.alarm }}
+        run: |
+          echo "::error::River site problem a reader can see: ${ALARM:-TEST ONLY, nothing is wrong}"
+          exit 1
