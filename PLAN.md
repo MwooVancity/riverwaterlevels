@@ -75,6 +75,18 @@ In order of value to a person at the river:
 - Loop until clean: run ALL categories on Memphis 07032000, Boise 13206000, Scottville 04122500 + home, one state page, one river hub (text pass on the cheaper model; screenshots only for [eyes] items) -> every BLOCKER and MAJOR fixed in batches (one batch per category group, each: build, my look at one screenshot, cloud dry run, push, read live) -> re-run the audit on the fixed categories -> MINOR items listed here with a decision.
 - Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: DONE for blockers and majors. Runs: 1 = 1/18, 2 = 1/7, 3 = 0/7, 4 = 0/2, 5 = 0 BLOCKER, 0 MAJOR, 24 MINOR (2026-10-29). Batch G running on the 10 most useful MINOR items (glossary band cut-offs from code, silent-gauge rate note, rain-forecast age, 'live' title at 6 h, a 'Partial day' data bug, rain gap line, 44 px tap targets, anchor link names, report-a-wrong-number, ATTAINS). Remaining MINOR (decided: polish, after the feature work): Memphis empty columns and far-gauge padding, chart aria values, maskable icon, '168 h' wording, ramps sort. Re-run the audit after every feature batch.
 
+## Before the Claude subscription ends (owner 2026-10-30: about 3 weeks; after that nobody changes code)
+Goal: a breakage never reaches a reader, and the owner hears about failures without Claude. In order:
+1. Failure email: the Claude daily report dies with the subscription. The watchdog fails its GitHub run (GitHub emails the owner, free, built in) only on reader-visible problems: site not rebuilt for 3 h, live gauges missing, numbers disagree with USGS, a limit over 70%. Source noise never fails it.
+2. Pin every tool version (Python, Node, wrangler, Ubuntu runner).
+3. Release stops itself when any limit is over 70% (files, cache, USGS calls); then the USGS brake.
+4. Move off the old USGS services (shut down 2027-02-22).
+5. Compact the data cache format (687 KB per gauge).
+6. Key-expiry check (USGS, AirNow, Recreation.gov, Cloudflare).
+7. Remove the review-signature gate (needs a human after any code change).
+8. Indexing brake: release pauses if Google stops indexing new pages (needs Search Console access, owner).
+9. Owner runs /code-review ultra once, then no more code changes.
+
 ## Factory at 9,100 gauges (5-step audit 2026-10-30, measured)
 Order, each before its cliff (dates at 25/day):
 1. USGS 1,000 calls/h: live readings already bulk (300 ids/call); slow history about 6 calls/gauge/day = about 2,300/h at 9,100. Brake (stop near 800/h, rest wait a run) + history weekly. Cliff about 500 gauges, 2026-11-16; do by 2026-11-10.
