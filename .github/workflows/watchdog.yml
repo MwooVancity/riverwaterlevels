@@ -29,6 +29,7 @@ jobs:
       - id: doctor
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: python tools/watchdog.py
       - name: Heal - dispatch a refresh when the site stopped rebuilding
         if: steps.doctor.outputs.heal == 'refresh'

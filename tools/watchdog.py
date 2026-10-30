@@ -146,7 +146,9 @@ def main():
     if tok:  # a deploy key that expires stops every deploy with nobody around to renew it
         try:
             import urllib.request
-            v = json.load(urllib.request.urlopen(urllib.request.Request("https://api.cloudflare.com/client/v4/user/tokens/verify", headers={"Authorization": "Bearer " + tok}), timeout=20))
+            acct = os.environ.get("CLOUDFLARE_ACCOUNT_ID")  # an account key answers only at the account address (user address: 401)
+            url = ("https://api.cloudflare.com/client/v4/accounts/%s/tokens/verify" % acct) if acct else "https://api.cloudflare.com/client/v4/user/tokens/verify"
+            v = json.load(urllib.request.urlopen(urllib.request.Request(url, headers={"Authorization": "Bearer " + tok}), timeout=20))
             exp = (v.get("result") or {}).get("expires_on")
             if exp and hours_since(exp) > -30 * 24:
                 bad.append("Cloudflare deploy key expires %s: create a new one and replace the GitHub secret CLOUDFLARE_API_TOKEN" % exp[:10])
