@@ -179,7 +179,7 @@ def b_samples(G):
     src = "Source: Water Quality Portal (EPA, USGS and state agencies), E. coli results at stations on this river within 9 miles upstream and downstream, found by USGS NLDI river navigation, fetched %s." % esc(tzl(parse_t(w["fetched_at"]), G["zone"]))
     if not rows:
         return block("water_samples", "E. coli samples on this stretch", "agency", "<p>No E. coli samples on file for this stretch in the last 3 years (Water Quality Portal).</p>", src, "wqp", empty=True)
-    body = table(["Sample date", "E. coli", "Station"], "".join(tr([esc(fdate(r["date"])), esc(("%s %s" % (r["value"], r["unit"])).strip() if r["value"][:1].isdigit() else r["value"]), esc("%s (%s)" % (r["site"], r["id"]))]) for r in rows))
+    body = table(["Sample date", "E. coli", "Station"], "".join(tr([esc(fdate(r["date"])), esc(("%s %s" % (r["value"], r["unit"]) if r["unit"] and r["unit"].lower() != "none" else "%s (unit not reported)" % r["value"]) if r["value"][:1].isdigit() else r["value"]), esc("%s (%s)" % (r["site"], r["id"]))]) for r in rows))
     return block("water_samples", "E. coli samples on this stretch", "agency", body, src, "wqp")
 
 

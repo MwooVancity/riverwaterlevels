@@ -867,6 +867,8 @@ def main():
         print("SITE FAIL secret-like text in built file", x)
     site_bad += ["secret-like text in %d built file(s)" % len(leaks)] if leaks else []
     print("pages %d, failing %d, site-level failures %d, max click depth from home %d" % (len(res), len(fails), len(site_bad), maxd))
+    if fails or site_bad:  # tools/quarantine.py reads this after a failed release
+        json.dump({"pages": fails, "site": site_bad}, open(os.path.join(d, "_failed.json"), "w", encoding="utf-8"))
     sys.exit(1 if (fails or site_bad) else 0)
 
 

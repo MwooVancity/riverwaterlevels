@@ -100,6 +100,14 @@ jobs:
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
         run: python refresh.py 2>&1 | tee refresh-out.log
+      - name: Second try after a failed release (failing new gauges go back to the queue, or the whole release is undone; the site always updates)
+        if: ${{ steps.rel.outputs.released == '1' }}
+        continue-on-error: true
+        run: |
+          if ! grep -q "refresh OK" refresh-out.log; then
+            python -I tools/quarantine.py || { git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/; }
+            python refresh.py --no-collect 2>&1 | tee refresh-out.log
+          fi
       - name: Keep the day's new gauges only if the refresh passed
         if: steps.rel.outputs.released == '1'
         continue-on-error: true

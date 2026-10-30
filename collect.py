@@ -1203,7 +1203,7 @@ def fetch_wqp(site):
             if not v or k in seen or not x.get("ActivityStartDate"):
                 continue
             seen.add(k)
-            rows.append({"date": x["ActivityStartDate"], "value": v, "unit": x.get("ResultMeasure/MeasureUnitCode") or "", "site": sites.get(k[0], k[0]), "id": k[0]})
+            rows.append({"date": x["ActivityStartDate"], "value": v, "unit": "" if (x.get("ResultMeasure/MeasureUnitCode") or "").lower() == "none" else x.get("ResultMeasure/MeasureUnitCode") or "", "site": sites.get(k[0], k[0]), "id": k[0]})
         rows.sort(key=lambda r: r["date"], reverse=True)
     return {"fetched_at": now_iso(), "n_sites": len(sites), "rows": rows[:3]}
 
