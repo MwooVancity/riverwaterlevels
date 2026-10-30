@@ -83,7 +83,7 @@ jobs:
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
           if [ "$(date -u +%H)" = "11" ] && [ "$today" != "$last" ]; then
-            python -I tools/release.py 20 && python -I tools/open_wave.py 20 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
+            python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.

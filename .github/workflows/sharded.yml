@@ -124,7 +124,7 @@ jobs:
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
           if [ "$(date -u +%H)" = "11" ] && [ "$today" != "$last" ]; then
-            python -I tools/release.py 20 && python -I tools/open_wave.py 20 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
+            python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Refresh (build, check, publish, deploy; live=false stops after the gates)
         continue-on-error: true  # same as refresh.yml: publish.py refuses a broken build; health is on /status and in this log
