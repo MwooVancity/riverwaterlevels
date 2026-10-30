@@ -115,6 +115,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 - Access points and bacteria advisories (terms / no national feed).
 
 ## Done recently
+- 2026-10-30 01:09 UTC rolling rebuild LIVE (runs 40982333659, 40983566765, both refresh OK; pages cache restored and saved each run): live /_built.json shows 39 of 74 gauge pages rebuilt in the second run, 35 carried from the run before; Atlanta page flow 948 cfs.
 - 2026-10-29 23:42 UTC live (run 40973591559, refresh OK): dam releases on 8 gauges (cloud: RISE 4/4, CWMS 4/4; Lees Ferry and Boise pages read), E. coli samples (WQP 73/74), UV row (EPA 502 on 20 of 38, retried hourly), "not added yet" line gone (0 on pages read). Inundation link skipped: USGS publishes no site list.
 - 2026-10-29 evening: sharded collect ON (first run 40951494012: 20 of 20 shards, refresh OK, live built 21:06, 74 gauges, 0 failed); daily outside-link check in the watchdog found alerts.weather.gov dead (link removed, live read: 0 hits); watchdog health rules fixed (12 false "not working" lines down to real ones); docs/OPEN-ITEMS.md folded into this file.
 - 2026-10-29 dry run before deploy (dryrun.yml, 3035d71); water-temperature crash fix (098de3f); docs trimmed to CLAUDE.md + PLAN.md (c52b171).
