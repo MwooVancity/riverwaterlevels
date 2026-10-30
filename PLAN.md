@@ -75,6 +75,16 @@ In order of value to a person at the river:
 - Loop until clean: run ALL categories on Memphis 07032000, Boise 13206000, Scottville 04122500 + home, one state page, one river hub (text pass on the cheaper model; screenshots only for [eyes] items) -> every BLOCKER and MAJOR fixed in batches (one batch per category group, each: build, my look at one screenshot, cloud dry run, push, read live) -> re-run the audit on the fixed categories -> MINOR items listed here with a decision.
 - Done when a full re-run returns 0 BLOCKER and 0 MAJOR. Status: DONE for blockers and majors. Runs: 1 = 1/18, 2 = 1/7, 3 = 0/7, 4 = 0/2, 5 = 0 BLOCKER, 0 MAJOR, 24 MINOR (2026-10-29). Batch G running on the 10 most useful MINOR items (glossary band cut-offs from code, silent-gauge rate note, rain-forecast age, 'live' title at 6 h, a 'Partial day' data bug, rain gap line, 44 px tap targets, anchor link names, report-a-wrong-number, ATTAINS). Remaining MINOR (decided: polish, after the feature work): Memphis empty columns and far-gauge padding, chart aria values, maskable icon, '168 h' wording, ramps sort. Re-run the audit after every feature batch.
 
+## Factory at 9,100 gauges (5-step audit 2026-10-30, measured)
+Order, each before its cliff (dates at 25/day):
+1. USGS 1,000 calls/h: live readings already bulk (300 ids/call); slow history about 6 calls/gauge/day = about 2,300/h at 9,100. Brake (stop near 800/h, rest wait a run) + history weekly. Cliff about 500 gauges, 2026-11-16; do by 2026-11-10.
+2. Cloud data cache: 687 KB per gauge, 610 KB of it USGS rows as verbose records (5 params x 767 rows); about 6 GB at 9,100 vs GitHub 10 GB per repo (eviction = full recollect = quota blow-up). Store [time, value] pairs. Before about 2,000 gauges.
+3. NWS weather about 5 calls/gauge/hour: fetch on the page's 2 h rebuild rhythm (only what a rebuild uses). Before about 2,000 gauges.
+4. GitHub 20 free parallel jobs, all taken by 20 shards: use 16 shards so watchdog and dry runs do not queue.
+5. check.py and truth_live on rebuilt pages only. Before about 3,000 gauges (not measured yet).
+6. Cloudflare free 20,000 files (3 per gauge): Workers Paid (owner) or one shared embed page. Before about 6,000 gauges (July 2027).
+Fine at scale: build (0.1 s/gauge, rolling), release, tokens (3-page sample, 3 reads per deploy), laptop.
+
 ## Next steps (in order)
 Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google, per-gauge review dropped, deploy confirmed live, helpfulness audit to 0 majors, offline/installable, daily release inside refresh.yml (20/day cap; practice release 40892070041: 18 added, 2 skipped for no USGS readings, refresh OK; first real release next 11:00 UTC).
 1. Winter: ice gauges by 2026-12-01. When USGS withholds flow for ice (northern rivers, Dec-Mar), lib/hero.py ctx raises CriticalFail "no flow series" and the page freezes at the last pre-ice flow. Build a stage-only mode: gage height tiles plus "USGS withholds flow: ice". Proof: tools/break_blocks.py "ice" variant renders a page (today it is skipped).
