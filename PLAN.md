@@ -81,9 +81,9 @@ Goal: a breakage never reaches a reader, and the owner hears about failures with
    Release fixed 2026-10-30: it ran only inside the 11 UTC hour and GitHub skips most hours (2026-10-29 had none), so most days released nothing; now the first run from 11 UTC that has not released today.
    Fixed 2026-10-30: a crashed gauge's live-site copy (Worker-swapped numbers beside build-time text) is now listed in _carried.json, so checks skip it (Austin 12.74 vs 12.76).
    Owner: Cloudflare free = 100,000 Worker requests/day shared with asmrregistry, reset 00:00 UTC; past it a fail-closed route shows error 1027 until midnight (developers.cloudflare.com/workers/platform/limits). Workers Paid ($5/mo) before real traffic.
-2. Pin every tool version (Python, Node, wrangler, Ubuntu runner).
+2. Pinned: runners ubuntu-24.04, Python 3.12, Node 22, wrangler pinned (2026-10-30). Also fixed from the ChatGPT audit: a release that did not complete is undone before the refresh; carry limit is max(10, 5% of gauge pages) (forced bad page carried, others shipped).
 3. Release stops itself when any limit is over 70% (files, cache, USGS calls); then the USGS brake.
-4. Move off the old USGS services (shut down 2027-02-22).
+4. DONE: no code calls the old USGS services (2026-10-30 scan: only api.waterdata / api.water / streamstats / apps hosts).
 5. Compact the data cache format (687 KB per gauge).
 6. Key-expiry check (USGS, AirNow, Recreation.gov, Cloudflare).
 7. Remove the review-signature gate (needs a human after any code change).
