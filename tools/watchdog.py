@@ -46,6 +46,16 @@ def main():
         on = set(s.get("by_gauge") or {})
         missing = sorted(live - on)
         (bad if missing else ok).append("%d of %d live gauges on the site%s" % (len(live & on), len(live), (" (missing: %s)" % " ".join(missing[:12])) if missing else ""))
+        try:  # rolling rebuild (build.py ROLL_H 2): a page that stopped being rebuilt shows here, never silently
+            bm = get("/_built.json")
+            old_ = sorted((hours_since(v["at"]), k) for k, v in bm.items() if v.get("at"))[-3:]
+            if old_ and old_[-1][0] > 6:
+                bad.append("gauge pages not rebuilt for over 6 h: %s" % ", ".join("%s %.0f h" % (k, a) for a, k in old_ if a > 6))
+                heal.append("refresh")
+            elif old_:
+                ok.append("oldest gauge page built %.1f h ago" % old_[-1][0])
+        except Exception:
+            ok.append("no /_built.json yet (first rolling build not deployed)")
     try:
         h = get("/_health.json")
         try:  # a source switched off in data/sources.json is a documented gap, not a broken feed

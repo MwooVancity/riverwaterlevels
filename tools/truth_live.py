@@ -3,7 +3,7 @@ Usage: python tools/truth_live.py            (exit 1 and print each mismatch). R
        python tools/truth_live.py --dir dist_next   the same comparison on the BUILT pages before they are published (refresh.py runs it as a blocking gate; if the USGS or NWS API does not answer it only warns, never blocks)
 Rules per gauge page:
  - the page's flow reading time equals USGS's latest: flow must match (within 1% or 1 cfs); stage must match within 0.02 ft
- - USGS has a newer reading: the page may be behind by at most 3 hours (the browser refreshes the numbers on load, so a short lag is normal)
+ - USGS has a newer reading: up to 12 hours behind is a warning, beyond STALE_FAIL_H fails (the Worker swaps the live numbers; carried pages are up to 2.5 h old)
  - flood stages shown on the page (Action, Minor, Moderate, Major) equal the NWS forecast point's categories within 0.05 ft
  - the NWS forecast point named on the page exists and answers"""
 import json, os, re, sys, urllib.request, datetime

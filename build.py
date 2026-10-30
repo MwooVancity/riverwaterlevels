@@ -77,8 +77,57 @@ def main():
         urls.append(url)
         hashes[url] = hashlib.sha256(html.encode()).hexdigest()[:16]
 
+    # Rolling rebuild (owner 2026-10-29: "full rebuilds are not acceptable"). The Worker swaps live flow/stage every 3 min, so a page's static parts
+    # need rebuilding only every ROLL_H hours (2: weather observations turn amber at 3 h; truth_live fails a page only past 12 h). Rebuilt now: new page, code changed,
+    # hot (NWS alert, NWS river forecast, flow moved over 20% in 24 h), its slot this hour, or older than ROLL_H + 0.5 h (GitHub skipped runs).
+    # Otherwise the published copy in dist/ is carried. dist/_built.json says when each page was built and from which code; it travels with dist/,
+    # so a failed publish can never make it lie. No dist/ (first run, lost cache) or --full: everything is built.
+    ROLL_H = 2
+    tpl = template_hash()
+    D = os.path.join(ROOT, "dist")
+    try:
+        was = json.load(open(os.path.join(D, "_built.json"), encoding="utf-8"))
+        old_blocks = json.load(open(os.path.join(D, "_blocks.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        was, old_blocks = {}, {}
+    full = preview or "--full" in sys.argv or bool([a for a in sys.argv[1:] if not a.startswith("--")]) or not was
+    built_map, why = {}, collections.Counter()
+
+    def sig(G):  # what the page was built from that changes between rolling rebuilds and must show at once
+        al = sorted("%s|%s" % (a.get("event"), a.get("expires")) for a in (G["rec"].get("nws") or {}).get("alerts") or [])
+        return [((G["rec"].get("nwps") or {}).get("forecast") or {}).get("issued"), al]
+
+    def due(s, G):
+        u = rows[s]["dashboard_url"].strip("/")
+        b = was.get(s) or {}
+        if full or not all(os.path.isfile(os.path.join(D, p)) for p in (os.path.join(u, "index.html"), os.path.join(u, "data.json"), os.path.join("embed", u, "index.html"))):
+            return "new"
+        if b.get("tpl") != tpl or rows[s]["dashboard_url"] not in old_blocks:
+            return "code"
+        if sig(G) != b.get("sig") or abs(G.get("chg") or 0) > 20:  # a new NWS forecast issue or a changed alert set, not merely one existing (48 of 74 were "hot")
+            return "hot"
+        age_h = (now - datetime.datetime.fromisoformat(b["at"])).total_seconds() / 3600
+        if int(hashlib.md5(s.encode()).hexdigest(), 16) % ROLL_H == now.hour % ROLL_H or age_h >= ROLL_H + 0.5:
+            return "slot"
+        return None
+
     block_counts = {}
     for s, G in Gs.items():
+        reason = due(s, G)
+        if not reason:  # carried: the published page, its embed and data.json, unchanged
+            u = rows[s]["dashboard_url"]
+            for p in (u.strip("/") + "/index.html", u.strip("/") + "/data.json", "embed/" + u.strip("/") + "/index.html"):
+                os.makedirs(os.path.dirname(os.path.join(nxt, p)), exist_ok=True)
+                shutil.copy2(os.path.join(D, p), os.path.join(nxt, p))
+            urls.append(u)
+            hashes[u] = hashlib.sha256(open(os.path.join(D, u.strip("/"), "index.html"), "rb").read()).hexdigest()[:16]
+            block_counts[u] = old_blocks[u]
+            built_map[s] = was[s]
+            why["carried"] += 1
+            report["gauges"].append({"site": s, "url": u, "age_min": round(G["age_min"]), "percentile": G["p"]})
+            continue
+        why[reason] += 1
+        built_map[s] = {"at": iso(now), "tpl": tpl, "sig": sig(G)}
         n_err = len(render.BLOCK_ERRORS)
         try:
             page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one
@@ -88,6 +137,10 @@ def main():
         except Exception as e:  # one gauge's page must never stop the other 9,000: it is reported as failed and its previous page stays live
             report["failed"].append({"site": s, "reason": "page build raised %s: %s" % (type(e).__name__, str(e)[:100]), "url": rows[s]["dashboard_url"]})
             print("PAGE BUILD CRASH", s, type(e).__name__, str(e)[:100], "(skipped; previous page stays live)")
+            if was.get(s):  # the carried old page keeps its old build record, so the next run rebuilds it
+                built_map[s] = was[s]
+            else:
+                built_map.pop(s, None)
             old = prev_page(rows[s]["dashboard_url"])  # pipeline review #1: the hubs link this gauge, so its previous page is carried into this build (no broken link, no frozen site)
             if old:
                 write(nxt, rows[s]["dashboard_url"], old)
@@ -109,6 +162,8 @@ def main():
     report["block_errors"] = render.BLOCK_ERRORS[:50]
     if render.BLOCK_ERRORS:
         print("BLOCKS HIDDEN BY THE GUARD (%d): %s" % (len(render.BLOCK_ERRORS), "; ".join(render.BLOCK_ERRORS[:5])))
+    json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
+    print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
         emit("/", directory.home(built, Gs))
@@ -176,6 +231,8 @@ def main():
     runs = os.path.join(ROOT, "runs", now.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(runs, exist_ok=True)
     json.dump(report, open(os.path.join(runs, "report.json"), "w"), indent=1)
+    for old_run in sorted(os.listdir(os.path.dirname(runs)))[:-50]:  # laptop stays clean (owner 2026-10-28): keep the last 50 build reports
+        shutil.rmtree(os.path.join(os.path.dirname(runs), old_run), ignore_errors=True)
     print("gauges %d, pages %d, failed %d, redirects %d -> dist_next (run check.py, then publish.py)" % (len(Gs), len(urls), len(report["failed"]), len(redirects)))
 
 

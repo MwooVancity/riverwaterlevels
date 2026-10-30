@@ -92,6 +92,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Restore the last published pages (rolling rebuild carries unchanged gauge pages from dist/)
+        uses: actions/cache/restore@v4
+        with:
+          path: dist
+          key: rwl-pages-${{ github.run_id }}
+          restore-keys: |
+            rwl-pages-
       - name: Restore the last data cache
         uses: actions/cache/restore@v4
         with:
@@ -142,6 +149,12 @@ jobs:
           else
             echo "release DROPPED: the refresh did not pass; nothing committed"
           fi
+      - name: Save the published pages (a missing dist/ after a dry run only logs a warning)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: dist
+          key: rwl-pages-${{ github.run_id }}
       - name: Save the data cache
         if: always()
         uses: actions/cache/save@v4
