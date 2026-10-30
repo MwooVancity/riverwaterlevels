@@ -23,7 +23,7 @@ jobs:
   # The switch: data/pipeline.json {"sharded": false} = the single job below, exactly as before; true = sharded.yml (N collect shards, one merge+build+deploy job).
   # If this tiny job fails, "sharded" is empty and the single job runs: the old path is the fail-safe.
   plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       sharded: ${{ steps.p.outputs.sharded }}
       shards: ${{ steps.p.outputs.shards }}
@@ -44,7 +44,7 @@ jobs:
   refresh:
     needs: plan
     if: ${{ !cancelled() && needs.plan.outputs.sharded != 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
@@ -92,6 +92,9 @@ jobs:
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
+      - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
+        if: steps.rel.outputs.released != '1'
+        run: git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
         run: python refresh.py 2>&1 | tee refresh-out.log

@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   dryrun:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}

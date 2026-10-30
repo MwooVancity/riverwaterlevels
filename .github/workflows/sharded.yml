@@ -14,7 +14,7 @@ on:
 
 jobs:
   plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       idx: ${{ steps.p.outputs.idx }}
     steps:
@@ -23,7 +23,7 @@ jobs:
 
   shard:
     needs: plan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -75,7 +75,7 @@ jobs:
   finish:
     needs: [plan, shard]
     if: ${{ !cancelled() }}  # a failed shard must not stop the others' work from being published
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
@@ -133,6 +133,9 @@ jobs:
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
+      - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
+        if: steps.rel.outputs.released != '1'
+        run: git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/
       - name: Refresh (build, check, publish, deploy; live=false stops after the gates)
         continue-on-error: true  # same as refresh.yml: publish.py refuses a broken build; health is on /status and in this log
         run: |

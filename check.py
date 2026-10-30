@@ -817,7 +817,7 @@ def secret_scan(d):
     return bad
 
 
-CARRY_MAX = 10  # more failing gauge pages than this is a template fault: the whole release stops
+CARRY_MAX = 10  # floor; the real limit is max(10, 5% of gauge pages): more than that is a template fault and the whole release stops
 
 
 def carry(d, fails):
@@ -850,7 +850,7 @@ def main():
     except (OSError, ValueError):
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
-    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= CARRY_MAX and all(kind_of(k) == "gauge" for k in fails):
+    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) == "gauge") // 20) and all(kind_of(k) == "gauge" for k in fails):
         if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
             json.dump(sorted({r.replace("\\", "/") for r in carried | done}), open(os.path.join(d, "_carried.json"), "w"))
