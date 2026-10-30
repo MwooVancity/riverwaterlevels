@@ -226,6 +226,11 @@ def main():
     report["pages"] = len(urls)
     nfiles = sum(len(fs) for _, _, fs in os.walk(nxt))  # the real deploy count: pages + per-gauge embed/data.json + sitemaps + infra, not just len(urls)
     report["files"] = nfiles
+    sp_ = os.path.join(nxt, "status.json")  # limits measured every run, read by tools/watchdog.py (warns at 70%): Cloudflare 20,000 files, GitHub 10 GB cache
+    if os.path.exists(sp_):
+        st_ = json.load(open(sp_))
+        st_["files"], st_["cache_mb"] = nfiles, round(sum(e.stat().st_size for e in os.scandir(CACHE) if e.is_file()) / 1e6)
+        json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:
         raise SystemExit("file budget: %d files is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (nfiles, FILE_BUDGET))
     runs = os.path.join(ROOT, "runs", now.strftime("%Y%m%d-%H%M%S"))

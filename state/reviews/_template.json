@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "machine: rolling rebuild in build.py (carries unchanged gauge pages byte-identical from dist/); no page markup change; check.py 0 failing pages, selftest OK",
+ "notes": "machine: status.json gains files and cache_mb (limits); no page change",
  "by": "reviewer",
- "at": "2026-10-30T00:46:34+00:00",
- "template": "ff271142deb6",
+ "at": "2026-10-30T01:31:56+00:00",
+ "template": "9e217e1306f8",
  "level": "machine"
 }
