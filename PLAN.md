@@ -77,7 +77,7 @@ In order of value to a person at the river:
 
 ## Before the Claude subscription ends (owner 2026-10-30: about 3 weeks; after that nobody changes code)
 Goal: a breakage never reaches a reader, and the owner hears about failures without Claude. In order:
-1. Failure email: the Claude daily report dies with the subscription. The watchdog fails its GitHub run (GitHub emails the owner, free, built in) only on reader-visible problems: site not rebuilt for 3 h, live gauges missing, numbers disagree with USGS, a limit over 70%. Source noise never fails it.
+1. No emails, ever (owner 2026-10-30: "I don't want fuck up emails"; alarm built and removed the same day). After the subscription the owner sees health only on https://riverwaterlevels.com/status/ ; everything must heal itself or keep the last good site.
 2. Pin every tool version (Python, Node, wrangler, Ubuntu runner).
 3. Release stops itself when any limit is over 70% (files, cache, USGS calls); then the USGS brake.
 4. Move off the old USGS services (shut down 2027-02-22).

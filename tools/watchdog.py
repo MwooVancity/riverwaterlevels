@@ -147,15 +147,9 @@ def main():
         print("  PROBLEM:", x)
     for x in ok:
         print("  ok:", x)
-    # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails ONCE A DAY (13 UTC) when a reader-visible problem stands,
-    # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone")
-    alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
         open(out, "a").write("heal=%s\n" % ("refresh" if "refresh" in heal else "none"))
-        if alarm and datetime.datetime.now(datetime.timezone.utc).hour == 13:
-            open(out, "a").write("alarm=%s\n" % " | ".join(alarm)[:900].replace("\n", " "))
     return 0  # never fails: no owner email; problems are read at session start and healed here where possible
 
 
