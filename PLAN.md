@@ -1,7 +1,7 @@
 # PLAN: riverwaterlevels.com
 
 ## Goal
-Be the most useful page for a person deciding about this river today, one page per USGS gauge.
+Be the most useful page for a person deciding about this river today, anywhere in the world. US: one page per USGS gauge, on autopilot. New build work: non-US rivers first (see Global priority).
 Scope (owner 2026-10-29: "purely the best river page there is. i want every river that exists"): rivers only, never lakes (Lakebrief has them). Target (owner 2026-10-29: "ok 9100 pages it is then"): every USGS flow gauge, data/waves.csv 9,099 rows, 25/day, no ungauged-river phase. Order: 7,498 queued (to about Aug 2027); then 283 held-names after a name fix; then 490 short-record (no percentile yet: "is this normal" says Unknown) and 546 tiny-basin; 206 excluded-name (canals, drains) stay out: not rivers. About 8,900 pages at the end. USER, NOT GOOGLE: every change is judged by that person; ranking is the result of being most useful, never the goal of a change. Reader: a person at the river today, on a phone, deciding in 30 seconds (see CLAUDE.md).
 
 ## Cheap and lazy first (HARD, owner 2026-10-29: "This the cheap lazy way? Don't we have ponytail")
@@ -90,7 +90,14 @@ Goal: a breakage never reaches a reader, and the owner hears about failures with
 8. Indexing brake: release pauses if Google stops indexing new pages (needs Search Console access, owner).
 9. Owner runs /code-review ultra once, then no more code changes.
 
-## Rhine page (owner 2026-10-31; lifts the US-only rule for this page)
+## Global priority (owner 2026-10-31: "start doing global priority rather than usa")
+Metric: weekly clicks from English searches on non-US rivers. The US 25 a day continues with no new work beyond the subscription list above.
+Order: Rhine test page; if Search Console shows visits, more German rivers from the same source; then the next river with a demand number and a confirmed licence. Other cruise rivers (Danube and the rest) have no demand number yet: research, not build.
+Gate for each new river: demand number, official feed, reuse terms read from the agency. Any one missing = not built.
+Limits: English only; no country gets its own custom code in the 3 weeks left; each foreign feed fails alone. EU cookies: Rhine page ships with no Google Analytics or ads until the owner adds a consent banner, so it is measured by Search Console.
+ChatGPT research prompt issued 2026-10-31; answers are leads until checked at the source.
+
+## Rhine page (owner 2026-10-31; first global test)
 Reader: English-speaking river-cruise passenger. Demand (Ahrefs, US, competitor River Cruise app, estimates): rhine river water levels today 1K, ...for cruise ships 600, rhine water levels 450, river levels in europe 60, rhine river levels 50.
 One standalone page /rhine/, outside the gauge pipeline: 8-10 cruise-route gauges upstream to downstream (Basel, Mainz, Kaub, Koblenz, Koeln...), level in cm and feet, 24 h change, official low/normal/high label, reading time, source; a gauge reading is not depth; no verdict on sailing. Data: PEGELONLINE (WSV) REST API, no key, tested 2026-10-31 (Kaub 36 cm, 36 Rhine gauges, 786 in Germany). A failed fetch leaves only this page stale.
 Before building: first real release proven; PEGELONLINE terms read from the WSV itself (a catalog says CC BY 4.0, unconfirmed); look at the top result. If Search Console shows visits, add Moselle, Main, German Danube from the same source.
@@ -145,6 +152,7 @@ Done 2026-10-29: refactor (one helper per decision), all 74 pages open to Google
 - Access points and bacteria advisories (terms / no national feed).
 
 ## Done recently
+- 2026-10-31: Google Analytics live: tag read on home, privacy and one gauge page; scan of 195 built pages: 120 with the tag once, 74 embeds + 404 without on purpose. First visit not yet seen in Realtime: the owner's Chrome blocks the tag (503).
 - 2026-10-31 00:08 UTC deploy freeze ended (built 10:03 to 00:08, about 14 h, runs green): E. coli unit "None" failed pages, a new gauge with no earlier page blocked carry. Fixed: unit text, tools/quarantine.py with one retry per failed release, break test in dry runs only. First real release still unproven: next chance after 11:00 UTC 2026-10-31. Dry run still reports the break test nwps stale26h label on 01426500 (Forecast high + steady): open.
 - 2026-10-30 01:09 UTC rolling rebuild LIVE (runs 40982333659, 40983566765, both refresh OK; pages cache restored and saved each run): live /_built.json shows 39 of 74 gauge pages rebuilt in the second run, 35 carried from the run before; Atlanta page flow 948 cfs.
 - 2026-10-29 23:42 UTC live (run 40973591559, refresh OK): dam releases on 8 gauges (cloud: RISE 4/4, CWMS 4/4; Lees Ferry and Boise pages read), E. coli samples (WQP 73/74), UV row (EPA 502 on 20 of 38, retried hourly), "not added yet" line gone (0 on pages read). Inundation link skipped: USGS publishes no site list.

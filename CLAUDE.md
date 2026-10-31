@@ -3,9 +3,11 @@
 Strategy and status: PLAN.md (read at session start, update after every batch).
 
 ## Reader
-A person at or near this river today, on a phone, with 30 seconds: about to fish, paddle, swim, tube, wade, boat, camp, guide, or living, driving or rescuing beside it (flood watchers are one reader of many). The page answers, in order: is it dangerous now, what is the water like, is it normal, what is coming, how today compares. One static page per USGS gauge, government data only (USGS, NOAA/NWS, USDA, EPA). This folder is its own project; calcscrape rules do not apply.
+A person at or near this river today, on a phone, with 30 seconds: about to fish, paddle, swim, tube, wade, boat, camp, guide, or living, driving or rescuing beside it (flood watchers are one reader of many). The page answers, in order: is it dangerous now, what is the water like, is it normal, what is coming, how today compares. One static page per gauge, official government data only (any country; in the US: USGS, NOAA/NWS, USDA, EPA). This folder is its own project; calcscrape rules do not apply.
 
 ## Hard rules
+- GLOBAL PRIORITY (owner 2026-10-31): new build work goes to non-US rivers first, in order of real English search demand. Build a river only with a demand number and an official feed whose reuse terms are read from the agency. One test page per country before scaling it; English only. The US factory keeps running at 25 a day, untouched.
+- Non-US pages: own `data/sources.json` row, local unit plus feet, the agency's own low/high labels only, no sailing verdict; a dead foreign feed makes only that page stale, never blocks a US deploy. No Google Analytics or ads on EU-reader pages until a consent banner exists.
 - USER, NOT GOOGLE (owner 2026-10-18, 2026-10-29): every decision is judged by the person at the river, never by what Google might reward. A change that helps ranking but not the person is rejected; a change that helps the person needs no ranking reason. No SEO gaming, stuffing, doorway or padding; noindex is never the fix for a thin page, make it richer.
 - Owner is a non-coder: do the work, decide defaults, short plain replies, no "Next:" line.
 - Line 0: every reliable public dataset a reader at this river could use goes on the page with its exact source and time. Withhold only if wrong, misleading, padding or no mechanism; show the rest with its caveat.
