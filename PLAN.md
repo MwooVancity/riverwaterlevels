@@ -91,7 +91,9 @@ Goal: a breakage never reaches a reader, and the owner hears about failures with
 9. Owner runs /code-review ultra once, then no more code changes.
 
 ## Global priority (owner 2026-10-31: "start doing global priority rather than usa")
-Metric: weekly clicks from English searches on non-US rivers. The US 25 a day continues with no new work beyond the subscription list above.
+Objective: maximize weekly clicks. Baseline 2026-10-29: 0 clicks a week on 74 gauges. Scarce resource: about 3 weeks of build time. Bottleneck: readers, not pages or data; anything that does not bring or keep a reader waits, except keeping the site correct and running unattended.
+Rank each option: searches a month x chance of ranking x clicks per ranking / build days. Only the search number is measured so far; the rest are guesses until Search Console has data. Rhine test: about 2,160 US searches a month across 5 known terms.
+Metric for this section: weekly clicks from English searches on non-US rivers. The US 25 a day continues with no new work beyond the subscription list above.
 Order: Rhine test page; if Search Console shows visits, more German rivers from the same source; then the next river with a demand number and a confirmed licence. Other cruise rivers (Danube and the rest) have no demand number yet: research, not build.
 Gate for each new river: demand number, official feed, reuse terms read from the agency. Any one missing = not built.
 Limits: English only; no country gets its own custom code in the 3 weeks left; each foreign feed fails alone. EU cookies: Rhine page ships with no Google Analytics or ads until the owner adds a consent banner, so it is measured by Search Console.
