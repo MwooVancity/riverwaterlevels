@@ -7,15 +7,18 @@ Bottleneck: readers, not pages. Scarce resource: about 3 weeks of Claude (subscr
 US: every USGS flow gauge, `data/waves.csv` 9,099 rows, 25 a day, about 8,900 pages by late 2027. Queue: 7,498 queued; 283 held-names after a name fix; 490 short-record; 546 tiny-basin; 206 canals and drains stay out.
 Global: new build work goes here first (below).
 
-## Next steps (in order)
-1. Rhine test page (below).
-2. USGS quota brake and weekly history, by 2026-11-10 (cliff about 500 gauges, 2026-11-16).
-3. Ice gauges by 2026-12-01: USGS withholds flow, `lib/hero.py` raises "no flow series" and the page freezes. Build stage-only mode; proof: `tools/break_blocks.py` ice variant renders.
-4. Empty-cache test; 13 UTC alarm delay.
-5. Remove the review-signature gate (it needs a human after any code change).
-6. Keep readers: web push alerts (approved; VAPID keys as Worker secrets, subscriptions in KV, watch 1,000 KV writes a day), favorites, units switch.
-7. Owner runs `/code-review ultra` once, then no more code changes.
-If time remains: answer top Search Console queries on the first screen; share card; "checked against USGS at <time>" line; `/ops/` owner dashboard; outreach drafts (embed panel to clubs, outfitters, towns; owner sends).
+## Next steps (in order; user report 2026-10-31)
+1. Wrong text: About says rebuilt every 30 min; runs are hourly.
+2. Reader labels: "Normal range" to "Typical flow for <date>", plus Rising/Falling fast at 25% in 6 h; word 13 unworded USGS flags, "less than" on LESSTHAN; clearer "Not issued"; "Measured at this gauge".
+3. Ice gauges by 2026-11-15: USGS withholds flow, `lib/hero.py` raises "no flow series" and the page freezes (1,922 gauges in cold states). Build stage-only mode; proof: `tools/break_blocks.py` ice variant renders.
+4. Rhine test page (below), during the 2026 record low.
+5. USGS quota brake and weekly history, by 2026-11-10 (cliff about 500 gauges, 2026-11-16).
+6. Retire gauges dead 31+ days; frozen-page count in the watchdog; spike flag; hold 12355000, 05106000, 04127885 (foreign or wrong state).
+7. Empty-cache test; 13 UTC alarm delay. Remove the review-signature gate.
+8. Owner runs `/code-review ultra` once, then no more code changes.
+If time remains: official thresholds on 5 famous rivers; outreach drafts (owner sends).
+Stopped: web push, favorites, units switch, more countries until the Rhine has visits. Ad script off pages until AdSense approval: owner decision.
+Search Console 10-20 to 10-29: 359 impressions, 1 click, position 15.7, 60% Albuquerque. Quarterly repeat: `tools/quarter/`.
 
 ## Global
 Rank: searches a month x chance of ranking x clicks per ranking / build days. Only searches are measured; the rest are guesses until Search Console has data.
@@ -25,7 +28,7 @@ Order: Rhine; if visits, Moselle, Main and German Danube from the same source; t
 Reader: English-speaking river-cruise passenger. Ahrefs US estimates (competitor River Cruise App), about 2,160 a month: rhine river water levels today 1K; ...for cruise ships 600; rhine water levels 450; river levels in europe 60; rhine river levels 50. Snoflo shows none in the 2 sitemaps checked.
 Standalone `/rhine/`, outside the gauge pipeline: 8-10 cruise gauges upstream to downstream (Basel, Mainz, Kaub, Koblenz, Koeln), level in cm and feet, 24 h change, official low/normal/high label, time, source; a gauge reading is not depth; no sailing verdict. No Analytics or ads until a consent banner; measure by Search Console.
 Data: PEGELONLINE (WSV), no key, tested 2026-10-31: `pegelonline.wsv.de/webservices/rest-api/v2/stations/KAUB.json?includeTimeseries=true&includeCurrentMeasurement=true`; `stations.json?waters=RHEIN` (36 stations, 786 in Germany).
-Before building: step 1 done; WSV terms read (a catalog says CC BY 4.0, unconfirmed); look at the top result.
+Before building: step 1 done; WSV terms read 2026-10-31: DL-DE-Zero-2.0, no attribution required, liability disclaimed; look at the top result. Forecast terms unread: no forecast on the page.
 
 ## Byte audit (2026-10-31, over the wire)
 Gauge page 50 KB; Google tag 181 KB; ad script 206 KB: 89% of a phone's download, both background-loaded. Of a sample page's 46 KB: charts 20 KB (river data, already one decimal), shared scripts 5 KB. Ad script is the biggest cut if AdSense approval does not need it (owner decision). Cache file 324 KB, 78% USGS history; GitHub already compresses it.
