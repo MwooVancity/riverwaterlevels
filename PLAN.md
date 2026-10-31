@@ -8,16 +8,13 @@ US: every USGS flow gauge, `data/waves.csv` 9,099 rows, 25 a day, about 8,900 pa
 Global: new build work goes here first (below).
 
 ## Next steps (in order)
-1. Slow source: `access` took 101 of 192 s in shard 0 (run 41190939332) and timed out on 4 of 23 new gauges; find the cause. New gauges have no `legacy/land` file (23 of 23 absent); check what the page loses. Fix the name "Apple River above 05341499" (a gauge number in the title).
-2. Fix the break-test fault (nwps stale26h, 01426500: "Forecast high" plus steady) so dry runs reach Gate 2.
-3. Rhine test page (below).
-4. USGS quota brake and weekly history, by 2026-11-10 (cliff about 500 gauges, 2026-11-16).
-5. Ice gauges by 2026-12-01: USGS withholds flow, `lib/hero.py` raises "no flow series" and the page freezes. Build stage-only mode; proof: `tools/break_blocks.py` ice variant renders.
-6. Compact the data cache: [time, value] pairs instead of verbose records.
-7. Empty-cache test; 13 UTC alarm delay; 07094500 and 13290450 have no USGS rows.
-8. Remove the review-signature gate (it needs a human after any code change).
-9. Keep readers: web push alerts (approved; VAPID keys as Worker secrets, subscriptions in KV, watch 1,000 KV writes a day), favorites, units switch.
-10. Owner runs `/code-review ultra` once, then no more code changes.
+1. Rhine test page (below).
+2. USGS quota brake and weekly history, by 2026-11-10 (cliff about 500 gauges, 2026-11-16).
+3. Ice gauges by 2026-12-01: USGS withholds flow, `lib/hero.py` raises "no flow series" and the page freezes. Build stage-only mode; proof: `tools/break_blocks.py` ice variant renders.
+4. Empty-cache test; 13 UTC alarm delay.
+5. Remove the review-signature gate (it needs a human after any code change).
+6. Keep readers: web push alerts (approved; VAPID keys as Worker secrets, subscriptions in KV, watch 1,000 KV writes a day), favorites, units switch.
+7. Owner runs `/code-review ultra` once, then no more code changes.
 If time remains: answer top Search Console queries on the first screen; share card; "checked against USGS at <time>" line; `/ops/` owner dashboard; outreach drafts (embed panel to clubs, outfitters, towns; owner sends).
 
 ## Global
@@ -35,12 +32,12 @@ Gauge page 50 KB; Google tag 181 KB; ad script 206 KB: 89% of a phone's download
 
 ## Factory limits (dates at 25 a day)
 1. USGS 1,000 calls/h: history about 6 calls/gauge/day = 2,300/h at 9,100. Brake near 800/h, weekly history. Before 500 gauges.
-2. Data cache: one saved copy 16 MB at 97 gauges (165 KB per gauge, about 1.5 GB at 9,100; every shard downloads all of it hourly, 30 GB an hour at 9,100). GitHub holds 259 entries, 2.76 GB, one per run; oldest are evicted, the newest survives. Compact (step 6) before 2,000.
+2. Data cache: one saved copy 16 MB at 97 gauges, about 1.5 GB at 9,100. GitHub evicts oldest and keeps the newest, so no pause rule. Compacting was dropped: a cache file is already 324 KB to 29 KB compressed.
 3. NWS about 5 calls/gauge/hour: fetch on the 2 h rebuild rhythm. Before 2,000.
 4. GitHub 20 free parallel jobs, all taken by 20 shards: use 16. 
 5. `check.py` and `truth_live` on rebuilt pages only. Before 3,000 (not measured).
 6. Cloudflare 20,000 files, 3 per gauge: Workers Paid or one shared embed page. Before 6,000, about July 2027.
-Release pauses over 14,000 files, 7,000 MB cache, or refresh over 45 min.
+Release pauses over 14,000 files or a refresh over 45 min.
 
 ## Open data
 10-day NOAA model: NWPS `mediumRange` empty everywhere; if still empty 2026-11-29, use NWM bulk files. Off: NID, TVA schedules (refuse scripts), NPS alerts (needs key). Left out: Atlas 14, Wild and Scenic, lock status, American Whitewater (verdicts), FEMA zones (owner), inundation link (no site list). Open: access points, bacteria advisories (terms, no national feed); unit allowlist fixture. Audit polish left: Memphis empty columns, chart aria values, maskable icon, "168 h" wording, ramps sort.
@@ -55,6 +52,7 @@ Release pauses over 14,000 files, 7,000 MB cache, or refresh over 45 min.
 - Send outreach emails; Search Console Average position; domain renews 2027-10-16; source-permission visits (USACE, TVA, Recreation.gov, NID).
 
 ## Done recently
+- 2026-10-31: pipeline batch, dry run 41201312317 refresh OK, first to pass every gate. `access` and `land` now monthly (303 calls a day at 9,100); land fetched from USGS PAD-US in collect.py, 77 legacy files gone; rule fails a gauge number in a page name; Apple River and Mad River names fixed, old Apple address redirects; release date committed in `data/last-release.txt`; shadow compare step and caches gone; cache pause removed; forecast table row uses the shared word.
 - 2026-10-31: first real release, run 41195016454: 23 added, 97 gauges, 149 pages, refresh OK, commit 61c81ab; 07094500 and 13290450 held (no USGS rows). Apple River live, read this turn, no "no published statistics". Pipeline audit, last 5 runs: 3-7 min wall on normal runs; build, gates, deploy 46-54 s; release 34 min (89 s per gauge). Nothing changed.
 - 2026-10-31: Google Analytics live, G-96RG42R07G, property 561723165: tag read on home, privacy, one gauge; 120 of 120 main pages carry it once. CLAUDE.md and PLAN.md rewritten for bytes.
 - 2026-10-31 00:08 UTC: 14 h deploy freeze ended (E. coli unit "None", a new gauge with no earlier page). Fixed with unit text, `tools/quarantine.py`, one retry per failed release, break test in dry runs only.
