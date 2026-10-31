@@ -211,6 +211,7 @@ def river_at(river, place):
 
 
 ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997828618122077" crossorigin="anonymous"></script>'  # AdSense site loader (owner 2026-10-23); head of indexable pages only, never the embed panel or 404
+ADSENSE += '<script async src="https://www.googletagmanager.com/gtag/js?id=G-96RG42R07G"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-96RG42R07G")</script>'  # Google Analytics, same tag as calcscrape (owner 2026-10-31); same pages as the ad loader
 
 
 PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Normal range": "in the normal range", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}
