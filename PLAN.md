@@ -90,6 +90,9 @@ Goal: a breakage never reaches a reader, and the owner hears about failures with
 8. Indexing brake: release pauses if Google stops indexing new pages (needs Search Console access, owner).
 9. Owner runs /code-review ultra once, then no more code changes.
 
+## Byte audit (2026-10-31, measured over the wire)
+One gauge page 50 KB compressed; of a sample page's 46 KB, charts are 20 KB, shared inline scripts 5 KB. Google tag 181 KB and ad script 206 KB: 89% of what a phone downloads. Both load in the background, so readings show first. Charts are river data and already one decimal: leave them. Cache file 324 KB (78% USGS history), 29 KB gzipped: GitHub already compresses its cache, so no gain there. No ads earn anything yet; the ad script is the largest cut if it is not needed for AdSense approval (owner decision).
+
 ## Global priority (owner 2026-10-31: "start doing global priority rather than usa")
 Objective: maximize weekly clicks. Baseline 2026-10-29: 0 clicks a week on 74 gauges. Scarce resource: about 3 weeks of build time. Bottleneck: readers, not pages or data; anything that does not bring or keep a reader waits, except keeping the site correct and running unattended.
 Rank each option: searches a month x chance of ranking x clicks per ranking / build days. Only the search number is measured so far; the rest are guesses until Search Console has data. Rhine test: about 2,160 US searches a month across 5 known terms.
