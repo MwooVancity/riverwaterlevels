@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "none: Google Analytics tag in head and one privacy paragraph; no river data or layout changed",
+ "notes": "none: privacy description shortened; analytics tag only, nothing else a reader sees",
  "by": "builder",
- "at": "2026-10-31T02:11:13+00:00",
- "template": "1e699ee84301",
+ "at": "2026-10-31T02:12:49+00:00",
+ "template": "4cfc6162950b",
  "level": "machine"
 }
