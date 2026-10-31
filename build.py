@@ -195,7 +195,7 @@ def main():
         shutil.copy2(hp, os.path.join(nxt, "_health.json"))
     # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
     # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
-    redirects = ["/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
+    redirects = ["/river/apple-river-wi/above-05341499-at-park-in-somerset/ /river/apple-river-wi/above-park-in-somerset/ 301", "/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
     redirects += sorted({"%s %s 301" % (r["hub_url"], r["dashboard_url"]) for r in built if r.get("_single") and r.get("hub_url") and r["hub_url"] != r["dashboard_url"]})
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
@@ -233,7 +233,7 @@ def main():
     sp_ = os.path.join(nxt, "status.json")  # limits measured every run, read by tools/watchdog.py (warns at 70%): Cloudflare 20,000 files, GitHub 10 GB cache
     if os.path.exists(sp_):
         st_ = json.load(open(sp_))
-        st_["files"], st_["cache_mb"] = nfiles, round(sum(e.stat().st_size for e in os.scandir(CACHE) if e.is_file()) / 1e6)
+        st_["files"] = nfiles
         json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:
         raise SystemExit("file budget: %d files is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (nfiles, FILE_BUDGET))

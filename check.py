@@ -302,6 +302,9 @@ def hater_rules(h):
     """Defects the first hater round found on every page that a machine can see in the built HTML."""
     bad = []
     t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))
+    tn_ = re.search(r"<title>(.*?)(?:\(USGS|</title>)", h)
+    if tn_ and re.search(r"\b\d{7,}\b", tn_.group(1)):  # 2026-10-31: "Apple River above 05341499": a gauge number in the place name. release.py sends it back to the queue
+        bad.append("a gauge number inside the page name: add a line to data/name-overrides.csv")
     if re.search(r'(?:NWS|National Weather Service)\s*<span class="tag t-official">', h):  # newcomer review: "...as issued by NWS  OFFICIAL NWS" says it twice
         bad.append("a block heading ends in NWS right before its 'Official NWS' tag")
     if re.search(r"[A-Za-z] \)", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", h)))):  # "StreamCat )" and "thinned for display)": a stray bracket in a source line
@@ -614,6 +617,8 @@ def selftest():
     from lib.core import wind_arrow
     assert "rotate(180deg)" in wind_arrow(0) and "from N" in wind_arrow(0) and "rotate(90deg)" in wind_arrow(270), "selftest: wind arrow does not point where the wind blows to"
     stale_t = '<div class="tile alrt %s stale"><i class="ic"></i><span>NWS alerts</span><b>%s</b><small>Last NWS answer Oct 26.</small></div>'
+    assert hater_rules('<title>Apple River above 05341499 at Park: live water level and flow (USGS 05341498)</title>'), "selftest: gauge number in the page name did not fire"
+    assert not hater_rules('<title>Apple River at Somerset: live water level and flow (USGS 05341498)</title>'), "selftest: the USGS id after the name wrongly flagged"
     assert hater_rules(stale_t % ("off", "No alerts")), "selftest: 'No alerts' beside a stale alert check did not fire"
     assert not hater_rules(stale_t % ("unknown", "Unknown")), "selftest: 'Unknown' beside a stale alert check wrongly flagged"
     assert hater_rules('<section id="alerts"><h2>Weather alerts <span class="tag amber">Older than 3 h</span></h2><p>No active National Weather Service alerts were returned for this location.</p></section>'), "selftest: 'No active alerts' in a stale alerts block did not fire"

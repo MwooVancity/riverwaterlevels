@@ -65,7 +65,7 @@ if dead:
         w.writerows(rows)
     print("not released (no USGS readings): %s" % ", ".join(sorted(dead)))
     picks = [r for r in picks if r["site"] not in dead]
-subprocess.call(PY + [os.path.join(ROOT, "tools", "sync_legacy.py")], cwd=ROOT)  # CI builds from the repo: the new gauges' daily stats and land files must be committed with the wave (push legacy/ too)
+subprocess.call(PY + [os.path.join(ROOT, "tools", "sync_legacy.py")], cwd=ROOT)  # CI builds from the repo: the new gauges' daily stats must be committed with the wave (push legacy/ too)
 rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
 if rc:
     sys.exit("build failed (%d)" % rc)

@@ -4972,7 +4972,7 @@ queue,198,07121500,Timpas Creek,Mouth Near Swink,CO,44.7,30,58,30,,,,high,/river
 queue,198,08176550,Fifteenmile Creek,Weser,TX,44.7,30,55,70,,,,high,/river/fifteenmile-creek-tx/weser/
 queue,198,02076000,Dan River,South Boston,VA,44.7,70,63,70,"nri,fame",,,auto2,/river/dan-river-va/south-boston/
 queue,198,04160600,Belle River,Memphis,MI,44.7,30,58,30,,,,high,/river/belle-river-mi/memphis/
-live,198,05341498,Apple River,Above 05341499 At Park In Somerset,WI,44.7,30,70,70,,,,medium,/river/apple-river-wi/above-05341499-at-park-in-somerset/
+live,198,05341498,Apple River,Above Park In Somerset,WI,44.7,30,70,70,,,,medium,/river/apple-river-wi/above-park-in-somerset/
 queue,198,021677090,Big Creek,Big Creek Road Near Saluda,SC,44.7,30,57,70,,,,high,/river/big-creek-sc/big-creek-road-near-saluda/
 queue,199,03460000,Cataloochee Creek,Cataloochee,NC,44.7,30,58,30,,,,high,/river/cataloochee-creek/cataloochee/
 queue,199,05430150,Badfish Creek,Cooksville,WI,44.7,30,71,30,,,,high,/river/badfish-creek/cooksville/
@@ -5546,7 +5546,7 @@ queue,221,14180300,Blowout Creek,Detroit,OR,40.4,30,0,70,,,,high,/river/blowout-
 queue,221,09413500,Virgin River,Saint George,UT,40.4,60,77,0,nri,,33047,high,/river/virgin-river-ut/saint-george/
 queue,221,08177300,Perdido Creek,FM 622 Near Fannin,TX,40.4,30,0,70,,,,medium,/river/perdido-creek/fm-622-near-fannin/
 queue,221,11119750,Mission Creek,Mission Saint Near Santa Barbara,CA,40.4,10,80,40,,,,auto2,/river/mission-creek-ca/mission-saint-near-santa-barbara/
-queue,221,03266560,Mad River,West Liberty Oh - 03266560,OH,40.4,30,62,70,,,,auto2,/river/mad-river-oh/west-liberty-oh-03266560/
+queue,221,03266560,Mad River,West Liberty,OH,40.4,30,62,70,,,,auto2,/river/mad-river-oh/west-liberty/
 queue,221,05540290,Du Page River,Plainfield,IL,40.4,30,82,70,,,,auto2,/river/du-page-river/plainfield/
 queue,221,05557500,East Bureau Creek,Bureau,IL,40.4,30,59,30,,,,high,/river/east-bureau-creek/bureau/
 queue,222,07053250,Yocum Creek,Oak Grove,AR,40.4,30,60,30,,,,high,/river/yocum-creek/oak-grove/

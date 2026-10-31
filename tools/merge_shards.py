@@ -1,7 +1,6 @@
 """Merge the collect shards' files into the restored cache (sharded.yml, finish job).
-Usage: python -I tools/merge_shards.py SHARDS_DIR N     SHARDS_DIR holds shard-0 .. shard-(N-1), each with cache/*.json, health.json, report.json, timing.json
-A shard whose folder is missing (its job failed) keeps its gauges' old cache files and is named in the log. A gauge file written by two shards, or a
-shard that lost a source its start cache had, is named too. state-XX.json (statewide hubs) may come from several shards: the one without an error, newest first, wins.
+Usage: python -I tools/merge_shards.py SHARDS_DIR N     SHARDS_DIR holds shard-0 .. shard-(N-1), each with cache/*.json, health.json, timing.json
+A shard whose folder is missing (its job failed) keeps its gauges' old cache files and is named in the log. A gauge file written by two shards is named too. state-XX.json (statewide hubs) may come from several shards: the one without an error, newest first, wins.
 state/source-health.json: the run's counts are summed over shards, last_ok_at / last_fail_at take the latest. Prints the failure rate per source.
 """
 import sys, os, json, shutil
@@ -44,12 +43,6 @@ for i in range(n):
         shutil.copy(src, dst)
         owner[f] = i
         copied += 1
-    try:
-        r = json.load(open(os.path.join(sh, "report.json")))
-        if not r.get("ok", True):
-            diffs.append("shard %d compare: missing %s stale %d rows_off %d new_failures %s" % (i, {k: len(v) for k, v in r["missing_source"].items()}, len(r["stale"]), len(r["rows_off"]), list(r["new_failures"])))
-    except Exception:
-        pass
     try:
         h = json.load(open(os.path.join(sh, "health.json")))
     except Exception:

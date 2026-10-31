@@ -542,9 +542,9 @@ def fetch_access(lat, lon, radius_m=25000):
         parts.append("%s(around:%d,%.4f,%.4f);" % (sel, radius_m, lat, lon))
     q = "[out:json][timeout:25];(" + "".join(parts) + ");out center tags;"
     els = None
-    for attempt in range(2):  # Overpass public API rate-limits (429); one polite retry, then leave it for the next 6 h run (the block self-hides)
+    for attempt in range(2):  # Overpass public API rate-limits (429); one polite retry, then leave it for the next run (the block self-hides)
         try:
-            r = urllib.request.urlopen(urllib.request.Request("https://overpass-api.de/api/interpreter", data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": "riverwaterlevels.com river gauge access points"}), timeout=50)
+            r = urllib.request.urlopen(urllib.request.Request("https://overpass-api.de/api/interpreter", data=urllib.parse.urlencode({"data": q}).encode(), headers={"User-Agent": "riverwaterlevels.com river gauge access points"}), timeout=35)
             els = json.loads(r.read().decode("utf-8", "replace")).get("elements", [])
             break
         except urllib.error.HTTPError as e:
@@ -836,13 +836,20 @@ def fetch_rain(lat, lon, again=NEXT):
     return {"fetched_at": now_iso(), "inches": vals, "valid_through": {lab: issued.get(lid[k] - 1) for k, lab in want.items() if k in by}}
 
 
-def fetch_land(site):
-    p = os.path.join(LEGACY, "land", site + ".json")
-    if not os.path.exists(p):
-        return None
-    rows = json.load(open(p))
-    rows = [x for x in rows if not (x[1] in ("UNK", "UNKL") and x[2] in ("UK", None))]
-    return {"downloaded": datetime.date.fromtimestamp(os.path.getmtime(p)).isoformat(), "rows": rows}
+def fetch_land(lat, lon):
+    """Public land within 800 m of the gauge, from the USGS-hosted PAD-US fee managers layer. An ArcGIS error arrives as HTTP 200 with an "error" key: raise so the previous value stays."""
+    q = urllib.parse.urlencode({"geometry": "%.5f,%.5f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": 4326, "distance": 800, "units": "esriSRUnit_Meter", "spatialRel": "esriSpatialRelIntersects",
+                                "outFields": "Unit_Nm,Mang_Name,Pub_Access", "returnGeometry": "false", "resultRecordCount": 50, "f": "json"})
+    j = retry_json("https://services.arcgis.com/v01gqwM5QqNysAAi/ArcGIS/rest/services/Fee_Managers_PADUS/FeatureServer/0/query?" + q)
+    if "error" in j or "features" not in j:
+        raise RuntimeError("PAD-US: %s" % str(j.get("error"))[:60])
+    rows = []
+    for f in j["features"]:
+        a = f["attributes"]
+        x = [a.get("Unit_Nm"), a.get("Mang_Name"), a.get("Pub_Access")]
+        if x not in rows and not (x[1] in ("UNK", "UNKL") and x[2] in ("UK", None)):
+            rows.append(x)
+    return {"downloaded": datetime.date.today().isoformat(), "rows": rows} if rows else None
 
 
 def fetch_daily(site, h):
@@ -1076,7 +1083,8 @@ def default_sites():
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
 DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains", "record", "year", "fieldmeas", "floodfreq", "acis",
-         "ridb", "streamcat", "stocking", "access", "rating", "multiyear", "wqp", "uv", "dam_rise"}
+         "ridb", "streamcat", "stocking", "rating", "multiyear", "wqp", "uv", "dam_rise"}
+MONTHLY = {"access", "land"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
 
 
 RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()
@@ -1233,14 +1241,14 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)), ("land", lambda: fetch_land(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("wqp", lambda: fetch_wqp(site)), ("uv", lambda: fetch_uv(rec)),
                     *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
         stamp = rec.setdefault("_fetched", {})
-        if not want and not (daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
+        if not want and not (due(stamp.get(key), 720) if key in MONTHLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
             stamp[key] = now_iso()
@@ -1267,10 +1275,6 @@ def collect(site, inv):
         rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
     run_source(rec, "record", lambda: record_summary(fetch_daily(site, h), rec.get("stats")), log)
     fetch_extras(site, rec, h, log)
-    land = fetch_land(site)
-    note("land", "ok" if land else "absent")
-    if land:
-        rec["land"] = land
     rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
     rec["fetched_at"] = now_iso()
     return rec, log
@@ -1372,7 +1376,7 @@ def fast_usgs(sites, h):
     return out
 
 
-SLOW_KEYS = sorted(DAILY | {"related", "tides", "cameras", "airnow", "near_wtemp"}) + ["usgs_full", "related_list"]
+SLOW_KEYS = sorted(DAILY | MONTHLY | {"related", "tides", "cameras", "airnow", "near_wtemp"}) + ["usgs_full", "related_list"]
 
 
 def seed_record(s, inv, rows):
@@ -1443,10 +1447,6 @@ def fast(inv, sites):
                 rec["stats"] = json.load(open(sp))["d"]
                 rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
             fetch_extras(s, rec, h, log)
-            land = fetch_land(s)
-            note("land", "ok" if land else "absent")
-            if land:
-                rec["land"] = land
             rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
             rec["fetched_at"] = now_iso()
             json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))

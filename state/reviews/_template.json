@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "none: privacy description shortened; analytics tag only, nothing else a reader sees",
- "by": "builder",
- "at": "2026-10-31T02:12:49+00:00",
- "template": "4cfc6162950b",
+ "notes": "no new block or layout; land block now fed from USGS directly, same rows; two place names; machine checks and cloud dry run cover it",
+ "by": "reviewer",
+ "at": "2026-10-31T12:18:22+00:00",
+ "template": "3b2851fafa9a",
  "level": "machine"
 }

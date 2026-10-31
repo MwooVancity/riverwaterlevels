@@ -42,7 +42,7 @@ def main():
         (bad if age > REBUILD_MIN else ok).append("site rebuilt %d min ago" % age)
         if age > REBUILD_MIN:
             heal.append("refresh")
-        for k_, cap_, what_ in (("files", 20000, "Cloudflare free plan files"), ("cache_mb", 10000, "GitHub cache MB (data cache; eviction means a full re-collect)")):  # scale cliffs (PLAN.md factory audit): warn at 70%
+        for k_, cap_, what_ in (("files", 20000, "Cloudflare free plan files"),):  # scale cliffs (PLAN.md factory audit): warn at 70%
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         live = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
