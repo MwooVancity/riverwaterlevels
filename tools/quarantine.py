@@ -21,7 +21,7 @@ def main():
     was = {r["site"] for r in csv.DictReader(subprocess.check_output(["git", "show", "HEAD:data/waves.csv"], cwd=ROOT, text=True, encoding="utf-8").splitlines()) if r["status"] == "live"}
     rows, _ = load_effective()
     rel = {rows[s]["dashboard_url"].strip("/") + "/index.html": s for s in rows}
-    bad = {rel.get(k): v for k, v in pages.items()}
+    bad = {rel.get(k[6:] if k.startswith("embed/") else k): v for k, v in pages.items()}  # a gauge's embed page fails with it (2026-10-31)
     if None in bad or any(s in was for s in bad):
         sys.exit("a failing page is not a new gauge: %s" % sorted(pages)[:5])
     all_ = list(csv.DictReader(open(WAVES, encoding="utf-8")))
