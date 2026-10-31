@@ -18,7 +18,7 @@ Global: new build work goes here first (below).
 8. Owner runs `/code-review ultra` once, then no more code changes.
 If time remains: official thresholds on 5 famous rivers; outreach drafts (owner sends).
 Stopped: web push, favorites, units switch, more countries until the Rhine has visits. Ad script off pages until AdSense approval: owner decision.
-Queue order 2026-10-31: still the guess score. ChatGPT's list (37 rows, 0 search numbers) is not evidence, so nothing moved; reorder only from bulk search numbers per river, via `tools/release.py`'s owner list. One Google Trends test, US, 12 months: Salt highest average, Guadalupe one July spike, Russian lowest; Salt sits at queue place 1,296.
+Queue order 2026-10-31: still the guess score. ChatGPT's list (37 rows, 0 search numbers) is not evidence, so nothing moved; reorder only from search numbers, via `tools/release.py`'s owner list. Plan agreed with ChatGPT: pilot 50 keywords in Keyword Planner and stop if it cannot separate rivers; then "<town> river level", falling back to "<river> water level", on queued gauges; rank by strongest keyword; no data or ambiguous stays put; read top 20 results, dropping one only if a rival clearly serves that spot better; top 200 go on the list. Stop at any billing or security prompt. `runs/keywords/` is temporary. One Google Trends test, US, 12 months: Salt highest average, Guadalupe one July spike, Russian lowest; Salt sits at queue place 1,296.
 Search Console 10-20 to 10-29: 359 impressions, 1 click, position 15.7, 60% Albuquerque. Quarterly repeat: `tools/quarter/`.
 
 ## Global
