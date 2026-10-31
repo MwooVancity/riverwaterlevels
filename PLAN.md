@@ -90,6 +90,11 @@ Goal: a breakage never reaches a reader, and the owner hears about failures with
 8. Indexing brake: release pauses if Google stops indexing new pages (needs Search Console access, owner).
 9. Owner runs /code-review ultra once, then no more code changes.
 
+## Rhine page (owner 2026-10-31; lifts the US-only rule for this page)
+Reader: English-speaking river-cruise passenger. Demand (Ahrefs, US, competitor River Cruise app, estimates): rhine river water levels today 1K, ...for cruise ships 600, rhine water levels 450, river levels in europe 60, rhine river levels 50.
+One standalone page /rhine/, outside the gauge pipeline: 8-10 cruise-route gauges upstream to downstream (Basel, Mainz, Kaub, Koblenz, Koeln...), level in cm and feet, 24 h change, official low/normal/high label, reading time, source; a gauge reading is not depth; no verdict on sailing. Data: PEGELONLINE (WSV) REST API, no key, tested 2026-10-31 (Kaub 36 cm, 36 Rhine gauges, 786 in Germany). A failed fetch leaves only this page stale.
+Before building: first real release proven; PEGELONLINE terms read from the WSV itself (a catalog says CC BY 4.0, unconfirmed); look at the top result. If Search Console shows visits, add Moselle, Main, German Danube from the same source.
+
 ## Factory at 9,100 gauges (5-step audit 2026-10-30, measured)
 Order, each before its cliff (dates at 25/day):
 1. USGS 1,000 calls/h: live readings already bulk (300 ids/call); slow history about 6 calls/gauge/day = about 2,300/h at 9,100. Brake (stop near 800/h, rest wait a run) + history weekly. Cliff about 500 gauges, 2026-11-16; do by 2026-11-10.
