@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "no new block or layout; land block now fed from USGS directly, same rows; two place names; machine checks and cloud dry run cover it",
+ "notes": "forecast row label follows the one shared word; past points dropped; break test covers it",
  "by": "reviewer",
- "at": "2026-10-31T12:18:22+00:00",
- "template": "3b2851fafa9a",
+ "at": "2026-10-31T12:29:07+00:00",
+ "template": "1c9728dc42bc",
  "level": "machine"
 }

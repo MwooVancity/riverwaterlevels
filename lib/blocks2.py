@@ -98,10 +98,10 @@ def b_stage_chart(G):
         hi = max(fc, key=lambda x: x[1])
         rows += tr([FC_LABEL[fc_word([x[1] for x in fc], cur)], "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     if gap and f and f.get("points"):
-        fs_ = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1]
+        fs_ = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1 and t_ >= now]
         if fs_:
             hi = max(fs_, key=lambda x: x[1])
-            rows += tr(["Forecast high (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
+            rows += tr([FC_LABEL[fc_word([x[1] for x in fs_], cur)] + " (NWS stage)", "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     from lib import ui
     lad = ui.ladder({k: cats[k] for k in CATS if k in cats}, cur, max(fc, key=lambda x: x[1])[1] if fc else None, ("NWS reading, %s:" % tzl(gap[2], G["zone"], date=False)) if gap else "Latest, %s:" % tzl(sg[-1][0], G["zone"], date=False).replace(" ", " "), fc_label=FC_LABEL[fc_word([x[1] for x in fc], cur)] if fc else "Forecast high") if cats else ""
     body = (FLOOD_LEVELS if cats else "") + ("" if (cats or not nws) else "<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>") + lad + svg + ('<p class="src leg">Solid line: %s readings%s%s.</p>' % (who, " &middot; dashed curve: NWS forecast &middot; dotted vertical line: the latest reading" if fc else "", " &middot; dashed horizontal lines: NWS flood stages" if hl else "")) + more("Every stage and reading in a table", table(["Measure", "Gage height", "Note"], rows, right=(1,)))  # the ladder and chart carry the answer; the table is one tap away
