@@ -13,7 +13,7 @@ ROW = {"name_confidence": "high", "nws_lid": "", "place_final": "", "raw_name": 
 
 def ready(r):
     """The ship test: a real recent reading with its time. The series draws the chart; marks are shown when the agency has them."""
-    return r.get("cm") is not None and bool(r.get("time")) and len(r.get("series") or []) >= 8
+    return r.get("cm") is not None and bool(r.get("time")) and r.get("lat") is not None and r.get("lon") is not None and len(r.get("series") or []) >= 8
 
 
 def to_rec(page, r):
@@ -61,11 +61,23 @@ def localize(h, feed, river, place, hub):
     return h
 
 
-def page(p, r, now):
+def along(p, r, rows):
+    """The two nearest gauges each way on this river, with their readings: what is coming down to a reader here."""
+    names = [x["name"] for x in rows]
+    i = names.index(r["name"])
+    out = []
+    for x in rows[max(0, i - 2):i] + rows[i + 1:i + 3]:
+        out.append(("Upstream" if names.index(x["name"]) < i else "Downstream", x["name"].replace(" UP", "").title(), x["cm"], x["cm"] - x["then"] if x.get("then") is not None else None, LABEL.get(x.get("state"), "Unknown"), world_gauge_url(p, x["name"]) if ready(x) and x["name"] in (p.get("gauge_pages") or []) else None))
+    return out
+
+
+def page(p, r, now, rows=()):
     """(url, html) for one gauge, or None when it fails the ship test."""
     if not ready(r):
         return None
     row, rec = to_row(p, r), to_rec(p, r)
+    rec["feed"]["along"] = along(p, r, list(rows)) if rows else []
+    rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
     html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. Height above the gauge's zero point, not water depth" % (r["cm"] / 30.48), 1)

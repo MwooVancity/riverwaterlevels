@@ -189,19 +189,26 @@ def main():
         world_rows, world_ids = [], []
         for page in directory.world_pages():
             try:
-                wp = directory.world_page(page, json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8")), datetime.datetime.now(datetime.timezone.utc))
-            except OSError:
-                wp = None
-            if wp:
-                emit("/%s/" % page["slug"], wp)
                 d = json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8"))
-                for r in d["rows"]:
-                    gp = world.page(page, r, datetime.datetime.now(datetime.timezone.utc)) if r["name"] in (page.get("gauge_pages") or []) else None
-                    if gp:
+            except OSError:
+                continue
+            wnow, linked = datetime.datetime.now(datetime.timezone.utc), []
+            for r in d["rows"]:
+                try:  # one bad gauge skips its own page; it never stops the build
+                    gp = world.page(page, r, wnow, d["rows"]) if r["name"] in (page.get("gauge_pages") or []) else None
+                except Exception as e:
+                    print("world gauge skipped: %s %s" % (r.get("name"), str(e)[:100]))
+                    gp = None
+                if gp:
                         emit(gp[0], gp[1])
-                        world_ids.append(r["name"])
+                        linked.append(r["name"])
+                        if r.get("uuid"):
+                            world_ids.append(r["uuid"])
                         if r.get("lat") is not None:
                             world_rows.append(["%s at %s" % (page["river"], r["name"].replace(" UP", "").title()), directory.world_gauge_url(page, r["name"]), round(r["lat"], 4), round(r["lon"], 4), "Germany Europe"])
+            wp = directory.world_page(page, d, wnow, linked)
+            if wp:
+                emit("/%s/" % page["slug"], wp)
         json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]

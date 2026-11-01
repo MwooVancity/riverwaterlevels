@@ -669,3 +669,20 @@ def b_official_marks(G):
     cm = G["sg"][-1][1] * 30.48
     rows = "".join(tr([lab, "%.0f cm (%.1f ft)" % (f["marks"][k], f["marks"][k] / 30.48), "%+.0f cm" % (cm - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
     return block("official_marks", "How today compares", "agency", table(["Official mark", "Level", "Today against it"], rows, right=(1, 2)), "Source: %s, %s." % (f["api"], f["name"]), "pegelonline")
+
+
+def b_also(G):
+    """What else the agency measures at this gauge right now: flow, water temperature, air temperature."""
+    f = G["feed"]
+    words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
+    rows = "".join(tr([words.get(k, esc(v[2])), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
+    return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s." % (f["api"], f["name"]), "pegelonline") if rows else None
+
+
+def b_along(G):
+    """Nearest gauges up and down this river, with their readings."""
+    f = G["feed"]
+    if not f.get("along"):
+        return None
+    rows = "".join(tr([w, ('<a href="%s">%s</a>' % (u, esc(n))) if u else esc(n), "%.0f cm" % cm, ("%+.0f cm" % c) if c is not None else "–", lab], right=(2, 3)) for w, n, cm, c, lab, u in f["along"])
+    return block("along_river", "Along the river", "agency", table(["Direction", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), "pegelonline")

@@ -281,7 +281,7 @@ def prose_page(title, url, html_body, desc):
 WSV_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 
 
-def world_page(page, d, now):
+def world_page(page, d, now, linked=None):
     """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict. None without data."""
     rows = (d or {}).get("rows") or []
     if not rows:
@@ -295,7 +295,7 @@ def world_page(page, d, now):
         chg = "–" if old or r.get("then") is None else "%+.0f cm" % (r["cm"] - r["then"])
         label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
         gauge = esc(r["name"].replace(" UP", "").title())
-        if r["name"] in (page.get("gauge_pages") or []) and len(r.get("series") or []) >= 8:
+        if r["name"] in (linked or []):
             gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r["name"]), gauge)
         trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
             gauge, "" if page.get("lake") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))

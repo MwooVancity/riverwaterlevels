@@ -641,6 +641,7 @@ def selftest():
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
     assert "ft. Height above" in wh and "Low for Nov" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace("Official alerts", "x")), "selftest: world page rule missed US wording or a missing block"
+    assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
     assert world.page(wp0, dict(wr_, marks={}), wn), "selftest: a gauge with a reading but no marks must still ship"
     assert world_gauge_url(wp0, "KÖLN") == "/rhine/koeln/" and kind_of("rhine/kaub/index.html") == "world" and kind_of("rhine/index.html") == "trust", "selftest: world gauge address or kind"

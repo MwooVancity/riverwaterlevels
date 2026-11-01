@@ -128,7 +128,7 @@ def b_official_links(G):
 
 def tab_blocks(tab, G, pages):
     if tab == "dashboard" and G.get("feed"):  # a gauge outside the US: same page, only the blocks its feed can fill; each country's sources join this list
-        return ["SEC:Level and official marks", b2.b_stage_chart(G), b3.b_official_marks(G)]
+        return ["SEC:Level and official marks", b3.b_also(G), b2.b_stage_chart(G), b3.b_official_marks(G), b3.b_along(G)]
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
