@@ -1,5 +1,5 @@
 """Home, state, river hub, trust pages, sitemap, robots, redirects. Only gauges that have built pages are linked, so no link can 404."""
-import os, json, math, datetime, collections
+import os, csv, json, math, datetime, collections
 from lib.common import *
 from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
@@ -169,6 +169,26 @@ def home(built, Gs):
     return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service.", "/", body)
 
 
+def demand():
+    """Search tier per river name (tools/world_queue.py writes it); empty when the file is missing, and the line below then stays off."""
+    try:
+        return {r["river"]: int(r["tier"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "us-river-demand.csv"), encoding="utf-8"))}
+    except OSError:
+        return {}
+
+
+def most_searched(groups, tiers, st):
+    """Line above a long state table, which is alphabetical. Off up to 12 rivers: the whole table is then one short scroll."""
+    if len(groups) < 13:
+        return ""
+    top = sorted(((tiers[rv], max(float(x["drainage_sqmi"] or 0) for x in g), rv, g) for (hs, rv), g in groups.items() if tiers.get(rv)), key=lambda t: (-t[0], -t[1], t[2]))[:6]
+    if len(top) < 3:
+        return ""
+    links = " &middot; ".join('<a href="%s">%s</a>' % (g[0]["hub_url"] if g[0].get("_hub") else g[0]["water_url"], esc(rv)) for _, _, rv, g in top)
+    return ('<p class="sub">Most searched rivers in %s: %s</p><p class="src">Order: Google Keyword Planner search ranges for each river name, October 2025 to September 2026. '
+            'A name shared with another river can count its searches too.</p>' % (esc(STATE_NAMES.get(st, st)), links))
+
+
 def state_page(st, rows, Gs, sd=None):
     groups = collections.defaultdict(list)
     for r in rows:
@@ -216,7 +236,7 @@ def state_page(st, rows, Gs, sd=None):
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw, trs))
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw + most_searched(groups, demand(), st), trs))
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for every river gauge in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 

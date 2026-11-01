@@ -11,7 +11,7 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 125, "hub": 80, "state": 480, "home": 200, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
+BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 200, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
 FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
 
 
@@ -525,6 +525,10 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
+        site_bad += redirect_limit(len(redirects))
+    sp = os.path.join(d, "single-rivers.json")
+    if os.path.exists(sp):
+        redirects.update(json.load(open(sp, encoding="utf-8")))
     static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json", "/_health.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     static |= {"/" + f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))}  # the stylesheets carry a content hash in their name: the file must exist
     graph = {}
@@ -613,7 +617,21 @@ def check_dir(d):
     return results, site_bad, (max(depth.values()) if depth else 0)
 
 
+def redirect_limit(n):
+    """Cloudflare refuses the whole deploy past 100 rules once one is dynamic; the build passes and the live site freezes (2026-11-01)."""
+    return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
+
+
 def selftest():
+    assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
+    from lib.directory import most_searched
+    fg = {("r%d" % i, "River %d" % i): [{"drainage_sqmi": str(i), "water_url": "/river/r%d/x/" % i, "hub_url": "/river/r%d/" % i, "_hub": i == 2}] for i in range(13)}
+    ft = {"River 1": 500, "River 2": 5000, "River 3": 500, "River 4": 50}
+    fl = most_searched(fg, ft, "TX")
+    assert fl.index("River 2<") < fl.index("River 3<") < fl.index("River 1<") < fl.index("River 4<"), "selftest: most searched out of order (tier, then drainage)"
+    assert 'href="/river/r2/"' in fl and 'href="/river/r3/x/"' in fl and "River 5<" not in fl, "selftest: most searched has a wrong link or an unsearched river"
+    assert not most_searched(dict(list(fg.items())[:12]), ft, "TX"), "selftest: most searched showed on a short state page"
+    assert not most_searched(fg, {"River 1": 500, "River 2": 50}, "TX") and not most_searched(fg, {}, "TX"), "selftest: most searched showed with too few numbers"
     from lib.core import wind_arrow
     assert "rotate(180deg)" in wind_arrow(0) and "from N" in wind_arrow(0) and "rotate(90deg)" in wind_arrow(270), "selftest: wind arrow does not point where the wind blows to"
     stale_t = '<div class="tile alrt %s stale"><i class="ic"></i><span>NWS alerts</span><b>%s</b><small>Last NWS answer Oct 26.</small></div>'

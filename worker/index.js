@@ -33,6 +33,10 @@ export default {
       }
       if (!url.pathname.startsWith("/river/")) return env.ASSETS.fetch(req);
       let res = await env.ASSETS.fetch(req);
+      if (res.status === 404) { // a river with one gauge has no hub page: its address leads to that gauge (build.py writes the map)
+        const to = (await (await env.ASSETS.fetch("https://riverwaterlevels.com/single-rivers.json")).json())[url.pathname];
+        if (to) return secure(new Response(null, { status: 301, headers: { location: to } }), url);
+      }
       if (res.status !== 304 && (!res.ok || !(res.headers.get("content-type") || "").includes("text/html"))) return secure(res, url);
       const [m, L] = await Promise.all([sites(env).then((s) => s[url.pathname]), stored(env)]);
       const g = m && L && L.g && L.g[m[0]];

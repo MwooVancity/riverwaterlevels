@@ -193,10 +193,10 @@ def main():
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
     if os.path.exists(hp):
         shutil.copy2(hp, os.path.join(nxt, "_health.json"))
-    # rivers with a single gauge: /river/<river>/ redirects to that gauge's dashboard
-    # one dynamic rule (Cloudflare allows 100 dynamic and 2,000 static rules): the old /water/ address of every gauge leads to its page
+    # Cloudflare counts every rule after the first dynamic one as dynamic, limit 100 (deploy refused 2026-11-01, site frozen 7 h), and one
+    # rule per river would pass 2,000 static anyway, so rivers with a single gauge go to single-rivers.json and worker/index.js sends the 301
     redirects = ["/river/apple-river-wi/above-05341499-at-park-in-somerset/ /river/apple-river-wi/above-park-in-somerset/ 301", "/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
-    redirects += sorted({"%s %s 301" % (r["hub_url"], r["dashboard_url"]) for r in built if r.get("_single") and r.get("hub_url") and r["hub_url"] != r["dashboard_url"]})
+    json.dump({r["hub_url"]: r["dashboard_url"] for r in built if r.get("_single") and r.get("hub_url") and r["hub_url"] != r["dashboard_url"]}, open(os.path.join(nxt, "single-rivers.json"), "w"), separators=(",", ":"), sort_keys=True)
     lm_path = os.path.join(ROOT, "state", "lastmod.json")
     os.makedirs(os.path.dirname(lm_path), exist_ok=True)
     lm = json.load(open(lm_path)) if os.path.exists(lm_path) else {}

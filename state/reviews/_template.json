@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "forecast row label follows the one shared word; past points dropped; break test covers it",
- "by": "reviewer",
- "at": "2026-10-31T12:29:07+00:00",
- "template": "1c9728dc42bc",
+ "notes": "none: line is off on every state page today (needs 13 rivers); selftest covers it",
+ "by": "claude-hotfix",
+ "at": "2026-11-01T17:23:30+00:00",
+ "template": "bdba8c86fd40",
  "level": "machine"
 }

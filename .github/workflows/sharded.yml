@@ -145,6 +145,7 @@ jobs:
         continue-on-error: true
         run: |
           if ! grep -q "refresh OK" refresh-out.log; then
+            rm -rf dist  # a failed deploy already published here: pages carried from it link to gauges this try takes back
             python -I tools/quarantine.py || { git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/; }
             python refresh.py --no-collect 2>&1 | tee refresh-out.log
           fi
