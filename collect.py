@@ -1546,9 +1546,11 @@ def fetch_world():
                 st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
                 cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
-                past = http_json(base + q + "/W/measurements.json?start=P1D", {}, 30)
-                rows.append({"name": name, "km": st["km"], "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": past[0]["value"] if past else None,
-                             "glw": marks.get("GlW"), "nnw": marks.get("NNW")})
+                past = http_json(base + q + "/W/measurements.json?start=P7D", {}, 30)
+                day_ago = datetime.datetime.fromisoformat(cur["timestamp"]) - datetime.timedelta(days=1)
+                then = next((p["value"] for p in past if datetime.datetime.fromisoformat(p["timestamp"]) >= day_ago), None)
+                rows.append({"name": name, "km": st["km"], "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
+                             "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]]})
             except Exception as e:
                 miss += 1
                 note("pegelonline", "failed", e)

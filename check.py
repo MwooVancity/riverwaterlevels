@@ -616,6 +616,8 @@ def selftest():
     wp0 = world_pages()[0]
     rp = world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr, dict(rr, name="MAINZ", time="2026-10-29T12:00:00+01:00"), dict(rr, name="BONN", state="commented")]}, rn)
     assert "21 cm (0.7 ft)" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
+    assert "<svg" in world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [dict(rr, week=[300.0 - i for i in range(20)], mw=341.0)]}, rn), "selftest: a world page lost its 7-day line"
+    assert "Lake Constance water levels" in world_page(dict(wp0, river="Lake Constance", lake=True), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr]}, rn), "selftest: a lake page calls itself a river"
     assert world_page(wp0, None, rn) is None and world_page(wp0, {"rows": []}, rn) is None, "selftest: a Rhine page without data"
     from lib.hero import fast_change
     assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"
