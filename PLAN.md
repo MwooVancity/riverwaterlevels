@@ -15,7 +15,7 @@ The page unit is a gauge, not a river name. Live counts: US 7,564; Canada 2,627 
 2. Feed and terms check per country (agent report in progress): official feed, terms read from the agency, source row.
 3. One shared world gauge page and a release that picks world gauges itself, unattended, so adding a country is data, not code. Replaces the `/rhine/` code path; `/rhine/` stays as the river summary.
 4. Test one page per country against the 80% rule: level-only pages may fail it (guess).
-5. Publish order: Canada first (earns with no consent banner), ahead of US rows with no search number; then numbered US rows; Ireland, England, Germany (no ads until banner); then no-number US. Australia and NZ only if a real-time feed and terms pass.
+5. Publish order: no country order. One ranking of gauges: search tier first, then can it earn now (US, Canada yes; UK and EU only after the banner), then page richness. Every gauge with a number goes before any without. Among no-number gauges, US pages (richer) go before Canada. Australia and NZ only if a real-time feed and terms pass.
 6. `/code-review high` before 2026-11-20 (never ultra), with the reader review of ice and label pages, then hands off.
 If time remains: official thresholds on 5 famous rivers; outreach drafts (owner sends).
 Stopped: web push, favorites, units switch. Owner: consent banner is what lets EU and UK pages earn; until then they carry no ads or Analytics.
