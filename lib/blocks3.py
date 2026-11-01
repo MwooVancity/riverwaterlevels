@@ -658,3 +658,14 @@ def b_flood_outlook(G):
     _old = ('<p class="src">The NWS produced this outlook %d days ago, on %s, and has not published a newer one for this point.</p>' % (_od, esc(fdate(str(lro["producedTime"])[:10])))) if _od is not None and _od > 120 else ""
     return block("flood_outlook", "Long-range flood outlook%s" % ((", " + period) if period else ""), "official", _old + table(["Category", "Chance at this forecast point"], rows, right=(1,)),
                  "Source: National Weather Service long-range river flood outlook for forecast point %s,%s; the published chance of flooding in each category during the outlook period. Fetched %s." % (esc(n.get("lid") or ""), when, esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
+
+
+def b_official_marks(G):
+    """The agency's own high and low marks for a gauge outside the US, against today."""
+    f = G["feed"]
+    if not f.get("marks"):
+        return None
+    from lib.world import MARKS
+    cm = G["sg"][-1][1] * 30.48
+    rows = "".join(tr([lab, "%.0f cm (%.1f ft)" % (f["marks"][k], f["marks"][k] / 30.48), "%+.0f cm" % (cm - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
+    return block("official_marks", "How today compares", "agency", table(["Official mark", "Level", "Today against it"], rows, right=(1, 2)), "Source: %s, %s." % (f["api"], f["name"]), "pegelonline")

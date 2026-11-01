@@ -14,7 +14,7 @@ def main():
         if "Europe" not in str(row[4:5]):
             continue
         page = get("https://riverwaterlevels.com" + row[1])
-        name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-w="cm">(-?\d+)', page)
+        name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
         ok = shown and abs(int(shown.group(1)) - cur) <= 50
         print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")

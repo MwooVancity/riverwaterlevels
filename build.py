@@ -6,7 +6,7 @@ import os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import render, directory, indexing, related
+from lib import render, directory, indexing, related, world
 
 
 FILE_BUDGET = 19000
@@ -196,9 +196,9 @@ def main():
                 emit("/%s/" % page["slug"], wp)
                 d = json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8"))
                 for r in d["rows"]:
-                    gp = directory.world_gauge_page(page, r, d, datetime.datetime.now(datetime.timezone.utc)) if r["name"] in (page.get("gauge_pages") or []) else None
+                    gp = world.page(page, r, datetime.datetime.now(datetime.timezone.utc)) if r["name"] in (page.get("gauge_pages") or []) else None
                     if gp:
-                        emit(directory.world_gauge_url(page, r["name"]), gp)
+                        emit(gp[0], gp[1])
                         world_ids.append(r["name"])
                         if r.get("lat") is not None:
                             world_rows.append(["%s at %s" % (page["river"], r["name"].replace(" UP", "").title()), directory.world_gauge_url(page, r["name"]), round(r["lat"], 4), round(r["lon"], 4), "Germany Europe"])

@@ -604,10 +604,11 @@ def check_dir(d):
 
 
 def world_rules(h):
-    """A world gauge page ships only with everything the standard asks for; a thin one fails the build."""
-    need = ("Water level", "Is this normal?", "24 h change", "River forecast", "Official alerts", "Last 7 days", '<svg class="spark', "How today compares", "Source: ", "not water depth")
-    miss = [x for x in need if x not in h and not (x == "not water depth" and "Not reporting" in h)]
-    return ["world gauge page is missing: " + ", ".join(miss)] if miss else []
+    """A world gauge page must answer the water level, and no US wording may survive the swap in lib/world.py."""
+    t = re.sub(r"<script.*?</script>|<style.*?</style>", " ", h, flags=re.S)
+    miss = [x for x in ("Water level", "Is this normal", "24 h change", "River forecast", "Official alerts", "<svg", "Source: ") if x not in t]
+    left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov") if x in t]
+    return (["world gauge page is missing: " + ", ".join(miss)] if miss else []) + (["world gauge page still says: " + ", ".join(left)] if left else [])
 
 
 def redirect_limit(n):
@@ -630,18 +631,18 @@ def selftest():
     wp0 = world_pages()[0]
     rp = world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr, dict(rr, name="MAINZ", time="2026-10-29T12:00:00+01:00"), dict(rr, name="BONN", state="commented")]}, rn)
     assert "21 cm (0.7 ft)" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
-    assert "<svg" in world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [dict(rr, week=[300.0 - i for i in range(20)], mw=341.0)]}, rn), "selftest: a world page lost its 7-day line"
     assert "Lake Constance water levels" in world_page(dict(wp0, river="Lake Constance", lake=True), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr]}, rn), "selftest: a lake page calls itself a river"
-    from lib.directory import world_gauge_page, world_gauge_url
-    fm = {"MW": 208.0, "MNW": 65.0, "NNW": 25.0}
-    fr = dict(rr, week=[30.0 - i for i in range(20)], marks=fm)
-    fp = world_gauge_page(dict(wp0, gauge_pages=["KAUB"]), fr, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [fr]}, rn)
-    assert ">21</span> <small>cm</small>" in fp and "Not issued" in fp and "Unknown" in fp and "-187 cm" in fp and "Lowest on record" in fp, "selftest: a world gauge page lost its level, a block state or a mark"
-    assert not world_rules(fp) and world_rules(fp.replace("Last 7 days", "x")) and world_rules(fp.replace("Not issued", "x").replace("River forecast", "x")), "selftest: world page rule missed a thin page or failed a full one"
-    nm = world_gauge_page(wp0, dict(fr, marks={}), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [fr]}, rn)
-    assert not world_rules(nm) and "no official marks" in nm, "selftest: a gauge with a reading but no marks must still ship and say so"
-    assert world_gauge_page(wp0, dict(rr, week=[]), {"rows": [rr]}, rn) is None, "selftest: a world gauge page without marks or a chart"
-    assert "Not reporting" in world_gauge_page(wp0, dict(fr, time="2026-10-20T12:00:00+01:00"), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [fr]}, rn), "selftest: an old world reading shown as current"
+    from lib import world
+    from lib.directory import world_gauge_url
+    wn = dt_.datetime(2026, 11, 1, 12, 10, tzinfo=dt_.timezone.utc)
+    wr_ = {"name": "KAUB", "km": 546.2, "lat": 50.08, "lon": 7.76, "cm": 21.0, "time": "2026-11-01T13:00:00+01:00", "state": "low", "marks": {"MW": 208.0, "NNW": 25.0},
+           "series": [[(wn - dt_.timedelta(minutes=10 + 15 * i)).isoformat(), 30.0 - i * 0.01] for i in range(120, -1, -1)]}
+    wu, wh = world.page(wp0, wr_, wn)
+    assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
+    assert "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
+    assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace("Official alerts", "x")), "selftest: world page rule missed US wording or a missing block"
+    assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
+    assert world.page(wp0, dict(wr_, marks={}), wn), "selftest: a gauge with a reading but no marks must still ship"
     assert world_gauge_url(wp0, "KÖLN") == "/rhine/koeln/" and kind_of("rhine/kaub/index.html") == "world" and kind_of("rhine/index.html") == "trust", "selftest: world gauge address or kind"
     assert world_page(wp0, None, rn) is None and world_page(wp0, {"rows": []}, rn) is None, "selftest: a Rhine page without data"
     from lib.hero import fast_change

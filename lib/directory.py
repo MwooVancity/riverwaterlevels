@@ -295,74 +295,26 @@ def world_page(page, d, now):
         chg = "–" if old or r.get("then") is None else "%+.0f cm" % (r["cm"] - r["then"])
         label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
         gauge = esc(r["name"].replace(" UP", "").title())
-        if r["name"] in (page.get("gauge_pages") or []) and world_gauge_ready(r):
+        if r["name"] in (page.get("gauge_pages") or []) and len(r.get("series") or []) >= 8:
             gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r["name"]), gauge)
-        trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
-            gauge, "" if page.get("lake") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, ("%.0f cm" % r["mw"]) if r.get("mw") is not None else "–", ("%.0f cm" % r["glw"]) if r.get("glw") is not None else "–",
-            ("%.0f cm" % r["nnw"]) if r.get("nnw") is not None else "–", esc(tzl(t, zone)), "" if old else ui.spark(r.get("week") or [], 110, 28))
+        trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
+            gauge, "" if page.get("lake") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">WSV label</th>'
-            '<th scope="col" class="r">Average level (MW)</th><th scope="col" class="r">Equivalent low water (GlW)</th><th scope="col" class="r">Lowest on record (NNW)</th><th scope="col">Time</th><th scope="col">Last 7 days</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. GlW is the agreed low-water mark used for shipping; a dash means none is published. River km is the agency\'s own. '
+            '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>'
+            '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. River km is the agency\'s own. '
             'Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
     n = len(rows)
     return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, in cm and feet, with 24-hour change. Source: WSV." % (page["river"], n), "/%s/" % page["slug"], body)
-
-
-WSV_MARKS = (("HHW", "Highest on record"), ("HW", "Highest in the agency's latest 10-year period"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
-             ("MW", "Average level"), ("MNW", "Mean low water"), ("GlW", "Equivalent low water (GlW)"), ("NW", "Lowest in the agency's latest 10-year period"), ("NNW", "Lowest on record"))
-
-
-# A newer reading from the Worker's stored copy (/live/world.json, polled every 3 min); never steps back, and the built page stands if this fails.
-WORLD_JS = """<script>(function(){var w=document.getElementById('wg');if(!w||!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})[w.dataset.n];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;
-function s(k,v){var e=document.querySelector('[data-w='+k+']');if(e)e.textContent=v}s('cm',Math.round(g[0]));s('ft',(g[0]/30.48).toFixed(1));if(w.dataset.then)s('chg',((g[0]-w.dataset.then>=0?'+':'')+Math.round(g[0]-w.dataset.then)));
-s('obs',new Date(g[1]).toLocaleString('en-US',{timeZone:'Europe/Berlin',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}));var L={low:'Low',normal:'Normal',high:'High'}[g[2]];if(L){var b=document.querySelector('.tile.norm b');if(b)b.textContent=L}}).catch(function(){})})();</script>"""
 
 
 def world_slug(name):
     return re.sub(r"[^a-z0-9]+", "-", name.replace(" UP", "").lower().replace("ö", "oe").replace("ü", "ue").replace("ä", "ae").replace("ß", "ss")).strip("-")
 
 
-def world_gauge_ready(r):
-    """The bar (owner 2026-11-01): it answers the water level. A real recent reading with its time; official marks are shown when the agency has them."""
-    return r.get("cm") is not None and bool(r.get("time")) and len(r.get("week") or []) >= 6
-
-
 def world_gauge_url(page, name):
     return "/%s/%s/" % (page["slug"], world_slug(name))
-
-
-def world_gauge_page(page, r, d, now):
-    """One gauge, the standard page for a gauge outside the US: the same five questions and block states as a US gauge page. None until the feed has given its marks."""
-    if not world_gauge_ready(r):
-        return None
-    marks, week = r.get("marks") or {}, r["week"]
-    place, name, zone = r["name"].replace(" UP", "").title(), world_name(page), zoneinfo.ZoneInfo("Europe/Berlin")
-    t = datetime.datetime.fromisoformat(r["time"])
-    old, seen = (now - t).total_seconds() > 24 * 3600, tzl(t, zone)
-    cm = "Not reporting" if old else '<span data-w="cm">%.0f</span> <small>cm</small>' % r["cm"]
-    feet = "Last reading %.0f cm at %s." % (r["cm"], seen) if old else '<span data-w="ft">%.1f</span> ft. Height at the gauge, not water depth.' % (r["cm"] / 30.48)
-    label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
-    chg = "–" if old or r.get("then") is None else '<span data-w="chg">%+.0f</span> <small>cm</small>' % (r["cm"] - r["then"])
-    tiles = (ui.tile("stage", "stage", "Water level", cm, "<small>%s</small>" % feet) +
-             ui.tile("norm", "steady", "Is this normal?", label, "<small>WSV label, against this gauge's mean low and mean high water.</small>") +
-             ui.tile("trend", "steady", "24 h change", chg, "<small>Against the reading 24 hours earlier.</small>") +
-             ui.tile("fcst none", "crest", "River forecast", "Not issued", "<small>No forecast is shown for this gauge.</small>") +
-             ui.tile("alerts", "bell", "Official alerts", "Unknown", "<small>No official alert feed is connected for this gauge. Check local authorities.</small>"))
-    rows = "".join("<tr><td>%s</td><td class=\"r\">%.0f cm (%.1f ft)</td><td class=\"r\">%s</td></tr>" % (lab, marks[k], marks[k] / 30.48, "–" if old else "%+.0f cm" % (r["cm"] - marks[k]))
-                   for k, lab in sorted(WSV_MARKS, key=lambda m: -(marks.get(m[0]) or 0)) if marks.get(k) is not None)
-    others = [x for x in d["rows"] if x["name"] != r["name"] and x["name"] in (page.get("gauge_pages") or [])]
-    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/%s/">%s</a> / %s</div><h1>%s at %s water level today</h1>'
-            '<p class="sub">Gauge %s &middot; observed <span data-w="obs">%s</span></p><div class="hero hero2" id="wg" data-n="%s" data-t="%s" data-then="%s">%s</div>'
-            '<h2>Last 7 days</h2><div class="card">%s<p class="src">Low %.0f cm, high %.0f cm. Source: PEGELONLINE (WSV).</p></div>'
-            '<h2>How today compares</h2>%s'
-            '<p class="src">%s Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s.</p>' % (
-                page["slug"], esc(page["river"]), esc(place), esc(page["river"]), esc(place), esc(r["name"]), esc(seen), esc(r["name"]), esc(r["time"]), "" if r.get("then") is None else "%.0f" % r["then"], tiles, ui.spark(week, 760, 170), min(week), max(week),
-                ('<div class="card scroll"><table><thead><tr><th scope="col">Official mark</th><th scope="col" class="r">Level</th><th scope="col" class="r">Today against it</th></tr></thead><tbody>%s</tbody></table></div>' % rows) if rows else "<p>The agency publishes no official marks for this gauge.</p>",
-                "".join('<a href="%s">%s</a> ' % (world_gauge_url(page, x["name"]), esc(x["name"].replace(" UP", "").title())) for x in others),
-                esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
-    return shell("%s at %s water level today | %s" % (page["river"], place, BRAND), "%s at %s: current level in cm and feet, 7-day line and official high and low marks. Source: WSV." % (page["river"], place), world_gauge_url(page, r["name"]), body + WORLD_JS)
 
 
 def status_page(built, Gs, built_at):

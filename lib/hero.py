@@ -53,6 +53,9 @@ def ctx(site, row, rec, now):
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     out["stage_only"] = stage_only
+    out["feed"] = rec.get("feed") or {}
+    day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None
+    out["stage_chg"] = sg[-1][1] - day_ago[1] if day_ago and abs((day_ago[0] - sg[-1][0]).total_seconds() + 86400) <= 7200 else None  # no flow, so the 24 h change is in height
     if fl and flow_jitter(out):
         out["chg"] = None  # flow that does not follow the gage height gives no honest 24 h percent
     return out
@@ -234,10 +237,12 @@ def hero(G, pages=None):
         what = ("the trailing 24 h mean (%s cfs)" % fmtc(G["basis"])) if G["basis_mean"] else ("the %s reading" % tzl(G["lt"], G["zone"], date=False))
         cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], md(G["ldate"]))
     else:
-        pct_med, cap = "", "No percentile: no published statistics for this date."
+        pct_med, cap = "", "" if G["feed"] else "No percentile: no published statistics for this date."
     sg = G["sg"]
     stage_txt = ("%.2f" % sg[-1][1]) if sg else "–"
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
+    if G["feed"].get("unit") == "cm" and sg:
+        stage_txt, stage_unit = "%.0f" % (sg[-1][1] * 30.48), "cm"  # the agency's unit first, feet in the line under it
     chg = G["chg"]
     ndam = upstream_dams(G)
     if p is not None and ndam >= 1:
@@ -250,7 +255,9 @@ def hero(G, pages=None):
     cmp_ = None  # tiles are assembled flow, stage, direction, comparison, then the rest
     strip = ""
     bcls = band_cls(p) and "b-" + band_cls(p)
-    if G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
+    if G["feed"]:
+        tiles = ""  # this agency publishes level only: no flow tile to explain
+    elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:
         tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
@@ -267,7 +274,7 @@ def hero(G, pages=None):
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
     if p is None:
-        word, plain = "–", ""
+        word, plain = G["feed"].get("label") or "–", G["feed"].get("label_note") or ""
     else:
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
@@ -293,7 +300,11 @@ def hero(G, pages=None):
         tiles += ui.tile("trend dv " + word.lower(), ico, "Gage height, last 6 h", '%s%.2f <small>ft</small> <small class="word">%s</small>' % ("+" if d6 > 0 else "", d6, word),
                          '<small id="ccap">Flow readings here swing between %s and %s cfs within 24 h and do not move with the gage height (correlation %.2f), so the flow is not a reliable direction and the gage height is used.</small>' % (fmtc(lo_), fmtc(hi_), rg_))
     else:
-        if chg is None:
+        if G.get("stage_chg") is not None:
+            sc = G["stage_chg"]
+            sc_txt = "%+.0f <small>cm</small>" % (sc * 30.48) if G["feed"].get("unit") == "cm" else "%+.2f <small>ft</small>" % sc
+            tiles += ui.tile("trend", "steady", "24 h change", sc_txt, '<small id="ccap">Height against the reading 24 hours earlier</small>')
+        elif chg is None:
             tiles += ui.tile("trend", "steady", "24 h change", "–", '<small id="ccap">No reading 24 h earlier</small>')
         else:
             c6 = c["chg"].get(6)
@@ -453,7 +464,7 @@ def hero(G, pages=None):
         gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
     if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
-    strip_html = daily_swing(G) + GLOSS + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
+    strip_html = daily_swing(G) + ("" if G["feed"] else GLOSS) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 
 
