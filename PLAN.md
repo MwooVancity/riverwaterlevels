@@ -8,7 +8,7 @@ US: every USGS flow gauge, `data/waves.csv` 9,099 rows, 25 a day, about 8,900 pa
 Global: new build work goes here first (below).
 
 ## Next steps (in order; user report 2026-10-31)
-1. Rhine test page (below), during the 2026 record low.
+1. UK page: read Environment Agency terms first (England only), one shared design with /rhine/; Moselle and Main from the Rhine code if cheap. Reader review of the ice page still owed.
 2. Claude runs `/code-review high` once (never ultra, owner 2026-11-01), then no more code changes.
 If time remains: official thresholds on 5 famous rivers; outreach drafts (owner sends).
 Stopped: web push, favorites, units switch, more countries until the Rhine has visits. Ad script off pages until AdSense approval: owner decision.
@@ -51,6 +51,7 @@ Release pauses over 14,000 files or a refresh over 45 min.
 - Send outreach emails; Search Console Average position; domain renews 2027-10-16; source-permission visits (USACE, TVA, Recreation.gov, NID).
 
 ## Done recently
+- 2026-11-01: `/rhine/` live, read 19:17 UTC: 10 WSV gauges, Kaub 20 cm (agency lowest 25 cm), no Analytics or ads, in sitemap, linked from home. Fed by `fetch_rhine` on shard 0, `cache/_rhine.json`. Home link budget 300 (201 links froze the Rhine deploy; 144 gauges would have frozen the site). Practice run with a full release passed at 144 gauges.
 - 2026-11-01 batches: "Typical for this date", Rising/Falling fast (a quarter in 6 h and 10 cfs), USGS flags worded, About says hourly, 3 foreign gauges gated. Ice: stage-only page when flow is gone or over 30 days old (break gate proves it; no live gauge shows it yet, reader review owed). USGS history weekly in 168 slots (325 calls/h at 9,100); a 429 stops history for that run. Dead gauges keep a not-reporting page instead of retiring. Alarm 01 and 13 UTC. Review signature gate removed. Empty cache: build exits, nothing published (read locally). Spike flag dropped; frozen-page count already in the watchdog.
 - 2026-11-01: 8 h deploy freeze ended (built_at 09:38 to 17:21 UTC, read live; numbers kept updating at the edge). Cloudflare counted every rule after the first dynamic one in `_redirects` against the 100 limit; 25 new gauges made 101. Single-gauge river forwards moved to `single-rivers.json` plus the Worker, 4 rules left, `/river/kinzua-creek/` 301 read live. Retry after a failed deploy now rebuilds all pages (untested: runs only when a deploy fails). GitHub shows these runs green; only the watchdog alarm caught it. State pages: "Most searched" line above tables of 13+ rivers (off everywhere today), state link budget 700 (Texas reaches 480 gauges). New queue order on main, commit e50eccb, built_at 17:32 UTC read live, 119 gauges; first release in the new order runs from 11 UTC 2026-11-02 (unverified until then).
 - 2026-10-31: pipeline batch, dry run 41201312317 refresh OK, first to pass every gate. `access` and `land` now monthly (303 calls a day at 9,100); land fetched from USGS PAD-US in collect.py, 77 legacy files gone; rule fails a gauge number in a page name; Apple River and Mad River names fixed, old Apple address redirects; release date committed in `data/last-release.txt`; shadow compare step and caches gone; cache pause removed; forecast table row uses the shared word.
