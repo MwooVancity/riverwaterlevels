@@ -1,9 +1,9 @@
 {
  "id": "_template",
  "verdict": "PASS",
- "notes": "none: site frozen by Cloudflare rule limit; redirect map moved, no reader text changed",
+ "notes": "none: line is off on every state page today (needs 13 rivers); selftest covers it",
  "by": "claude-hotfix",
- "at": "2026-11-01T16:44:53+00:00",
- "template": "26604ad705ff",
+ "at": "2026-11-01T17:23:30+00:00",
+ "template": "bdba8c86fd40",
  "level": "machine"
 }
