@@ -186,6 +186,12 @@ def main():
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
+        try:
+            rhine = directory.rhine_page(json.load(open(os.path.join(CACHE, "_rhine.json"), encoding="utf-8")), datetime.datetime.now(datetime.timezone.utc))
+        except OSError:
+            rhine = None
+        if rhine:
+            emit("/rhine/", rhine)
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),

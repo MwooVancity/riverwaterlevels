@@ -610,6 +610,13 @@ def selftest():
     ago = lambda h: (at - dt_.timedelta(hours=h)).isoformat()
     assert week_due(None, "01", at) and week_due(ago(30), "01", at) and week_due(ago(400), "01", at + dt_.timedelta(hours=1)), "selftest: history not due for a new gauge, in its slot, or after 14 days"
     assert not week_due(ago(2), "01", at) and not week_due(ago(30), "01", at + dt_.timedelta(hours=1)), "selftest: history due just after a fetch or outside its slot"
+    from lib.directory import rhine_page
+    rn = dt_.datetime(2026, 11, 1, 12, tzinfo=dt_.timezone.utc)
+    rr = {"name": "KAUB", "km": 546.2, "cm": 21.0, "time": "2026-11-01T12:00:00+01:00", "state": "low", "then": 30.0, "glw": 77.0, "nnw": 25.0}
+    rp = rhine_page({"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr, dict(rr, name="MAINZ", time="2026-10-29T12:00:00+01:00"), dict(rr, name="BONN", state="commented")]}, rn)
+    assert "21 cm (0.7 ft)" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
+    assert "googletagmanager" not in rp and "adsbygoogle" not in rp, "selftest: the Rhine page carries Analytics or ads before a consent banner exists"
+    assert rhine_page(None, rn) is None and rhine_page({"rows": []}, rn) is None, "selftest: a Rhine page without data"
     from lib.hero import fast_change
     assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"
     assert not fast_change("6 h", 50, 3) and not fast_change("24 h", 50, 1000) and not fast_change("6 h", 20, 1000) and not fast_change("6 h", -100, 0), "selftest: fast fired on a trickle, a 24 h span or a small change"

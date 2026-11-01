@@ -103,7 +103,7 @@
     "access",
     "access_points"
    ],
-   "credit": "Access points: \u00a9 OpenStreetMap contributors (ODbL)",
+   "credit": "Access points: © OpenStreetMap contributors (ODbL)",
    "read_on": "2026-10-23",
    "evidence": "search-result"
   },
@@ -169,7 +169,7 @@
    "name": "U.S. Drought Monitor",
    "status": "quoted",
    "terms_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
-   "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '\u00a92026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
+   "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '©2026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
    "credit": "The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.",
    "blocks": [
     "drought_monitor"
@@ -203,15 +203,13 @@
    "id": "uv",
    "name": "U.S. EPA Envirofacts hourly UV index",
    "status": "owner-permission",
-   "read_on": "2026-10-29",
+   "read_on": "2026-10-23",
    "permission": "owner 2026-10-29",
-   "evidence": "owner-permission",
+   "evidence": "search-result",
    "off_reason_was": "2026-10-25: the hourly UV service we called by LATITUDE/LONGITUDE now returns 404 (verified across gauges); the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so a keyless lat/lon->ZIP step must be wired before UV returns. Documented gap, not a silent failure.",
    "terms_url": "https://www.epa.gov/enviro/envirofacts-data-service-api",
    "summary": "EPA Envirofacts daily UV index by ZIP (data.epa.gov), ZIP from the Census geocoder; no auth. Today's value only, credited to EPA; category from the published EPA UV Index scale.",
    "credit": "UV index: U.S. Environmental Protection Agency",
-   "read_on": "2026-10-23",
-   "evidence": "search-result",
    "blocks": [
     "uv_index"
    ]
@@ -364,17 +362,27 @@
    "id": "wqp",
    "name": "Water Quality Portal (EPA, USGS, state agencies)",
    "status": "owner-permission",
-   "read_on": "2026-10-29",
+   "read_on": "2026-10-23",
    "permission": "owner 2026-10-29",
-   "evidence": "owner-permission",
+   "evidence": "search-result",
    "terms_url": "https://www.waterqualitydata.us/",
    "credit": "Water samples: Water Quality Portal (EPA, USGS, states)",
    "summary": "E. coli results at stations on this river's own channel (USGS NLDI upstream and downstream navigation, 15 km), last 3 years, last 3 samples; no verdict.",
-   "read_on": "2026-10-23",
-   "evidence": "search-result",
    "blocks": [
     "water_samples"
    ]
+  },
+  {
+   "id": "pegelonline",
+   "name": "PEGELONLINE, German Federal Waterways and Shipping Administration (WSV)",
+   "status": "quoted",
+   "terms_url": "https://www.pegelonline.wsv.de/gast/nutzungsbedingungen",
+   "summary": "Data licence Germany Zero 2.0 (DL-DE-Zero-2.0): no attribution required, liability disclaimed. Read 2026-10-31.",
+   "credit": "Data: WSV, PEGELONLINE",
+   "blocks": [
+    "rhine"
+   ],
+   "read_on": "2026-10-31"
   }
  ]
 }
