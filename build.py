@@ -186,6 +186,7 @@ def main():
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
+        world_rows, world_ids = [], []
         for page in directory.world_pages():
             try:
                 wp = directory.world_page(page, json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8")), datetime.datetime.now(datetime.timezone.utc))
@@ -198,6 +199,10 @@ def main():
                     gp = directory.world_gauge_page(page, r, d, datetime.datetime.now(datetime.timezone.utc)) if r["name"] in (page.get("gauge_pages") or []) else None
                     if gp:
                         emit(directory.world_gauge_url(page, r["name"]), gp)
+                        world_ids.append(r["name"])
+                        if r.get("lat") is not None:
+                            world_rows.append(["%s at %s" % (page["river"], r["name"].replace(" UP", "").title()), directory.world_gauge_url(page, r["name"]), round(r["lat"], 4), round(r["lon"], 4), "Germany Europe"])
+        json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
@@ -225,7 +230,7 @@ def main():
     open(os.path.join(nxt, "ads.txt"), "w", encoding="utf-8").write("google.com, pub-8997828618122077, DIRECT, f08c47fec0942fa0\n")  # AdSense authorized-sellers file (owner 2026-10-23)
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found(built))
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
-    json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built], open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
+    json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built] + world_rows, open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     # the edge live layer (worker/index.js): which page is which gauge, the reading the page was built with, and its time zone
     json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"]] for r in built], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")

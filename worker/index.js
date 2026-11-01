@@ -14,12 +14,17 @@ const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits 
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(poll(env));
+    ctx.waitUntil(pollWorld(env));
     ctx.waitUntil(build(env, new Date(event.scheduledTime)));
   },
 
   async fetch(req, env, ctx) {
     const url = new URL(req.url);
     try {
+      if (url.pathname === "/live/world.json") {
+        const w = (await env.LIVE.get("world", { cacheTtl: 30 })) || "{}";
+        return secure(new Response(w, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" } }), url);
+      }
       const lj = url.pathname.match(/^\/live\/(\d{8,15})\.json$/);
       if (lj) {
         const L = await stored(env), g = L && L.g && L.g[lj[1]];
@@ -82,6 +87,23 @@ async function sites(env) {
 
 function stored(env) {
   return env.LIVE.get("live", { type: "json", cacheTtl: 30 }); // ponytail: one key; past ~1,500 gauges read one gauge by text slice instead of parsing all
+}
+
+// gauges outside the US: one bulk PEGELONLINE call, no key; a dead feed keeps the stored copy and the built pages stand
+async function pollWorld(env) {
+  try {
+    const names = await (await env.ASSETS.fetch("https://riverwaterlevels.com/world-sites.json")).json();
+    if (!names.length) return;
+    const r = await fetch("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations.json?ids=" + encodeURIComponent(names.join(",")) + "&timeseries=W&includeTimeseries=true&includeCurrentMeasurement=true", { headers: { "User-Agent": UA } });
+    if (!r.ok) return;
+    const g = {};
+    for (const s of await r.json()) {
+      const c = ((s.timeseries || [])[0] || {}).currentMeasurement;
+      if (c && !isNaN(c.value)) g[s.shortname] = [c.value, c.timestamp, c.stateMnwMhw];
+    }
+    const prev = (await env.LIVE.get("world", { type: "json" })) || {};
+    if (JSON.stringify(prev.g || {}) !== JSON.stringify(g)) await env.LIVE.put("world", JSON.stringify({ t: new Date().toISOString(), g })); // the feed moves every 15 min: at most 96 writes a day
+  } catch (e) { /* the next cron retries */ }
 }
 
 // the cron: ask USGS what changed since the cursor, merge, write once if anything changed
