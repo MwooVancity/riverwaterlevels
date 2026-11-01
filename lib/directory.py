@@ -277,7 +277,7 @@ WSV_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 
 
 def world_page(page, d, now):
-    """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict, no Analytics or ads until a consent banner exists. None without data."""
+    """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict. None without data."""
     rows = (d or {}).get("rows") or []
     if not rows:
         return None
@@ -298,8 +298,7 @@ def world_page(page, d, now):
             '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. GlW is the agreed low-water mark used for shipping; a dash means none is published. River km is the agency\'s own. '
             'Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(page["river"]), esc(page["lead"]), trs, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
     n = len(rows)
-    return (shell("%s river water levels today | %s" % (page["river"], BRAND), "%s water levels at %d official gauges, in cm and feet, with 24-hour change. Source: WSV." % (page["river"], n), "/%s/" % page["slug"], body)
-            .replace(ADSENSE, ""))
+    return shell("%s river water levels today | %s" % (page["river"], BRAND), "%s water levels at %d official gauges, in cm and feet, with 24-hour change. Source: WSV." % (page["river"], n), "/%s/" % page["slug"], body)
 
 
 def status_page(built, Gs, built_at):
