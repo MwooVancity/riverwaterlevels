@@ -165,8 +165,18 @@ def home(built, Gs):
              '<button type="button" class="pill" data-f="fc">Has river forecast</button><button type="button" class="pill" data-f="wq">Has water quality sensors</button></div>%s' % (len(built), jump))
     body = ('<h1>River levels and flows for US rivers and creeks</h1><p class="sub">Flow and water level at %d USGS gauges across the US, with National Weather Service forecasts and alerts.</p>'
             '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
-            % (len(built), '<p class="sub"><a href="/rhine/">Rhine river water levels</a></p>' if os.path.exists(os.path.join(ROOT, "cache", "_rhine.json")) else "", conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + NEAR_JS))
+            % (len(built), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + NEAR_JS))
     return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service.", "/", body)
+
+
+def world_pages():
+    return json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))
+
+
+def world_links():
+    """Only pages that exist: a river with no cache file yet has no page to link to."""
+    on = [p for p in world_pages() if os.path.exists(os.path.join(ROOT, "cache", "_river-%s.json" % p["slug"]))]
+    return ('<p class="sub">%s</p>' % " &middot; ".join('<a href="/%s/">%s river water levels</a>' % (p["slug"], esc(p["river"])) for p in on)) if on else ""
 
 
 def demand():
@@ -263,11 +273,11 @@ def prose_page(title, url, html_body, desc):
     return shell(title + " | " + BRAND, desc, url, '<div class="crumb"><a href="/">Home</a> / %s</div><div class="prose"><h1>%s</h1>%s</div>' % (esc(title), esc(title), html_body), ld=crumb_ld([("Home", "/"), (title, None)]))
 
 
-RHINE_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
+WSV_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 
 
-def rhine_page(d, now):
-    """/rhine/, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict, no Analytics or ads until a consent banner exists. None without data."""
+def world_page(page, d, now):
+    """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict, no Analytics or ads until a consent banner exists. None without data."""
     rows = (d or {}).get("rows") or []
     if not rows:
         return None
@@ -278,16 +288,17 @@ def rhine_page(d, now):
         old = (now - t).total_seconds() > 24 * 3600
         cm = "Not reporting" if old else "%.0f cm (%.1f ft)" % (r["cm"], r["cm"] / 30.48)
         chg = "–" if old or r.get("then") is None else "%+.0f cm" % (r["cm"] - r["then"])
-        label = "–" if old else RHINE_LABEL.get(r.get("state"), "Unknown")
+        label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
         trs += "<tr><td>%s<div class=\"src\">km %.0f</div></td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td></tr>" % (
-            esc(r["name"].title()), r["km"], cm, chg, label, ("%.0f cm" % r["glw"]) if r.get("glw") is not None else "–", ("%.0f cm" % r["nnw"]) if r.get("nnw") is not None else "–", esc(tzl(t, zone)))
-    body = ('<div class="crumb"><a href="/">Home</a> / Rhine</div><h1>Rhine river water levels today</h1>'
-            '<p class="sub">Official gauges from Basel to Emmerich, upstream to downstream. A gauge reading is not the depth of the river.</p>'
+            esc(r["name"].replace(" UP", "").title()), r["km"], cm, chg, label, ("%.0f cm" % r["glw"]) if r.get("glw") is not None else "–", ("%.0f cm" % r["nnw"]) if r.get("nnw") is not None else "–", esc(tzl(t, zone)))
+    body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river water levels today</h1>'
+            '<p class="sub">%s A gauge reading is not the depth of the river.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">WSV label</th>'
             '<th scope="col" class="r">Equivalent low water (GlW)</th><th scope="col" class="r">Lowest on record (NNW)</th><th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. GlW is the agreed low-water mark used for Rhine shipping. River km counts downstream along the Rhine. '
-            'Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s. The site rebuilds about once an hour.</p>' % (trs, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
-    return (shell("Rhine river water levels today | " + BRAND, "Rhine water levels at 10 official gauges from Basel to Emmerich, including Kaub, in cm and feet, with 24-hour change. Source: WSV.", "/rhine/", body)
+            '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. GlW is the agreed low-water mark used for shipping; a dash means none is published. River km is the agency\'s own. '
+            'Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(page["river"]), esc(page["lead"]), trs, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
+    n = len(rows)
+    return (shell("%s river water levels today | %s" % (page["river"], BRAND), "%s water levels at %d official gauges, in cm and feet, with 24-hour change. Source: WSV." % (page["river"], n), "/%s/" % page["slug"], body)
             .replace(ADSENSE, ""))
 
 

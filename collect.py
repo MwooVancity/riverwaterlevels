@@ -1478,7 +1478,7 @@ def fast(inv, sites):
     fetch_states(sites)  # statewide alerts + drought for each state hub
     _tick("phase state hubs", _time.time() - t_phase)
     if not any(a.startswith("--shard=") and not a.startswith("--shard=0/") for a in sys.argv):
-        fetch_rhine()
+        fetch_world()
 
 
 STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
@@ -1525,36 +1525,41 @@ def states_of(sites):
     return out
 
 
-RHINE = ("BASEL-RHEINHALLE", "MAXAU", "MANNHEIM", "MAINZ", "KAUB", "KOBLENZ", "KÖLN", "DÜSSELDORF", "DUISBURG-RUHRORT", "EMMERICH")  # the cruise stretch, upstream to downstream
-
-
-def fetch_rhine():
-    """cache/_rhine.json for the /rhine/ page: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row, so a dead feed stales only this page."""
-    path = os.path.join(CACHE, "_rhine.json")
-    try:
-        old = {r["name"]: r for r in json.load(open(path, encoding="utf-8"))["rows"]}
-    except (OSError, ValueError, KeyError):
-        old = {}
-    base = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/"
-    rows = []
-    for name in RHINE:
-        q = urllib.parse.quote(name)
+def fetch_world():
+    """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row;
+    three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
+    base, miss = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", 0
+    if os.path.exists(os.path.join(CACHE, "_rhine.json")) and not os.path.exists(os.path.join(CACHE, "_river-rhine.json")):
+        os.replace(os.path.join(CACHE, "_rhine.json"), os.path.join(CACHE, "_river-rhine.json"))
+    for page in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8")):
+        path = os.path.join(CACHE, "_river-%s.json" % page["slug"])
         try:
-            st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
-            w = next(t for t in st["timeseries"] if t["shortname"] == "W")
-            cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
-            past = http_json(base + q + "/W/measurements.json?start=P1D", {}, 30)
-            rows.append({"name": name, "km": st["km"], "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": past[0]["value"] if past else None,
-                         "glw": marks.get("GlW"), "nnw": marks.get("NNW")})
-        except Exception as e:
-            note("pegelonline", "failed", e)
-            if name in old:
-                rows.append(old[name])
-        else:
-            note("pegelonline", "ok")
-    if rows:
-        json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
-        os.replace(path + ".tmp", path)
+            old = {r["name"]: r for r in json.load(open(path, encoding="utf-8"))["rows"]}
+        except (OSError, ValueError, KeyError):
+            old = {}
+        rows = []
+        for name in page["stations"]:
+            q = urllib.parse.quote(name)
+            try:
+                if miss >= 3:
+                    raise RuntimeError("feed down this run")
+                st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
+                w = next(t for t in st["timeseries"] if t["shortname"] == "W")
+                cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
+                past = http_json(base + q + "/W/measurements.json?start=P1D", {}, 30)
+                rows.append({"name": name, "km": st["km"], "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": past[0]["value"] if past else None,
+                             "glw": marks.get("GlW"), "nnw": marks.get("NNW")})
+            except Exception as e:
+                miss += 1
+                note("pegelonline", "failed", e)
+                if name in old:
+                    rows.append(old[name])
+            else:
+                miss = 0
+                note("pegelonline", "ok")
+        if rows:
+            json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+            os.replace(path + ".tmp", path)
 
 
 def fetch_states(sites):
