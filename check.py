@@ -210,7 +210,7 @@ def cloak_risks(js):
     return ["edge worker reads the visitor's identity (%s): Google and phones could get different pages" % m.group(0) for m in re.finditer(pat, js)]
 
 
-TIMER_ONLY = ("poll", "build")  # worker functions run by the cron, never by a visitor's request
+TIMER_ONLY = ("pollWorld", "poll", "build")  # worker functions run by the cron, never by a visitor's request
 
 
 def visitor_calls(js):
