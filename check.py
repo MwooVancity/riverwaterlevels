@@ -11,8 +11,11 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
-FLOOR = {"gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
+BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 60, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
+FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
+
+
+WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
 def kind_of(rel):
@@ -23,6 +26,8 @@ def kind_of(rel):
         return "state"
     if parts[0] == "status":  # the all-gauges freshness dashboard: one link per gauge, grows with the site, not a prose page
         return "status"
+    if parts[0] in WORLD and len(parts) == 3:
+        return "world"
     if parts[0] == "river":
         return "hub" if len(parts) == 3 else "gauge"
     return "trust"
@@ -461,7 +466,7 @@ def check_dir(d):
                 p = os.path.join(root, f)
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
-                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
+                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else []) + (world_rules(h) if kind_of(rel) == "world" else [])
                 if rel.replace("\\", "/") == "glossary/index.html":
                     results[rel] += glossary_gaps(h)
                 sid = re.search(r"USGS gauge (\d{8,15})\b", h)
@@ -478,6 +483,8 @@ def check_dir(d):
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
+                if kind_of(rel) == "world":
+                    gauge_sh[u] = shingles(h)
                 if kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h):
                     gauge_sh[u] = shingles(h)
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
@@ -596,6 +603,13 @@ def check_dir(d):
     return results, site_bad, (max(depth.values()) if depth else 0)
 
 
+def world_rules(h):
+    """A world gauge page ships only with everything the standard asks for; a thin one fails the build."""
+    need = ("Water level", "Is this normal?", "24 h change", "River forecast", "Official alerts", "Last 7 days", '<svg class="spark', "How today compares", "Average level", "Source: ", "not water depth")
+    miss = [x for x in need if x not in h and not (x == "not water depth" and "Not reporting" in h)]
+    return ["world gauge page is missing: " + ", ".join(miss)] if miss else []
+
+
 def redirect_limit(n):
     """Cloudflare refuses the whole deploy past 100 rules once one is dynamic; the build passes and the live site freezes (2026-11-01)."""
     return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
@@ -618,6 +632,15 @@ def selftest():
     assert "21 cm (0.7 ft)" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
     assert "<svg" in world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [dict(rr, week=[300.0 - i for i in range(20)], mw=341.0)]}, rn), "selftest: a world page lost its 7-day line"
     assert "Lake Constance water levels" in world_page(dict(wp0, river="Lake Constance", lake=True), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr]}, rn), "selftest: a lake page calls itself a river"
+    from lib.directory import world_gauge_page, world_gauge_url
+    fm = {"MW": 208.0, "MNW": 65.0, "NNW": 25.0}
+    fr = dict(rr, week=[30.0 - i for i in range(20)], marks=fm)
+    fp = world_gauge_page(dict(wp0, gauge_pages=["KAUB"]), fr, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [fr]}, rn)
+    assert "21 <small>cm</small>" in fp and "Not issued" in fp and "Unknown" in fp and "-187 cm" in fp and "Lowest on record" in fp, "selftest: a world gauge page lost its level, a block state or a mark"
+    assert not world_rules(fp) and world_rules(fp.replace("Average level", "x")) and world_rules(fp.replace("Not issued", "x").replace("River forecast", "x")), "selftest: world page rule missed a thin page or failed a full one"
+    assert world_gauge_page(wp0, dict(rr, week=[]), {"rows": [rr]}, rn) is None, "selftest: a world gauge page without marks or a chart"
+    assert "Not reporting" in world_gauge_page(wp0, dict(fr, time="2026-10-20T12:00:00+01:00"), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [fr]}, rn), "selftest: an old world reading shown as current"
+    assert world_gauge_url(wp0, "KÖLN") == "/rhine/koeln/" and kind_of("rhine/kaub/index.html") == "world" and kind_of("rhine/index.html") == "trust", "selftest: world gauge address or kind"
     assert world_page(wp0, None, rn) is None and world_page(wp0, {"rows": []}, rn) is None, "selftest: a Rhine page without data"
     from lib.hero import fast_change
     assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"

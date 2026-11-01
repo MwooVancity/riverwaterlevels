@@ -193,6 +193,11 @@ def main():
                 wp = None
             if wp:
                 emit("/%s/" % page["slug"], wp)
+                d = json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8"))
+                for r in d["rows"]:
+                    gp = directory.world_gauge_page(page, r, d, datetime.datetime.now(datetime.timezone.utc)) if r["name"] in (page.get("gauge_pages") or []) else None
+                    if gp:
+                        emit(directory.world_gauge_url(page, r["name"]), gp)
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
