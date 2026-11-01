@@ -68,10 +68,15 @@ def main():
     except (OSError, ValueError):
         carried = set()
     for name, url, *_ in gauges:
+        if not url.startswith("/river/"):  # gauges outside the US: tools/truth_world.py checks them against their own feed
+            continue
         if url in carried:
             skipped.append("%s: carried from the live site (this build's page failed a check)" % url)
             continue
         h = page(url)
+        if '>Latest flow</span><b>Not published<' in h:  # ice: USGS publishes stage only, so no flow to compare; a page must never fail for saying so
+            skipped.append("%s: flow not published by USGS" % url)
+            continue
         sid = re.search(r"USGS gauge (\d+)", h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)
         stage = re.search(r'data-live="stage">([\d.\-]+)<', h)
