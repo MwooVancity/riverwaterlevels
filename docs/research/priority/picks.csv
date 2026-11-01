@@ -1,8 +1,6 @@
 site,river,place,state,category
 14233500,Cowlitz River,Kosmos,WA,85
 02224940,Altamaha River,US 221 Near Charlotteville,GA,85
-03245500,Little Miami River,Milford,OH,100
-05062000,Buffalo River,Dilworth,MN,100
 14142500,Sandy River,Below Bull Run River Near Bull Run,OR,100
 01628500,South Fork Shenandoah River,Lynnwood,VA,100
 12352500,Bitterroot River,Missoula,MT,100
@@ -167,7 +165,6 @@ site,river,place,state,category
 14231000,Cowlitz River,Randle,WA,75
 14243000,Cowlitz River,Castle Rock,WA,30
 02225000,Altamaha River,Baxley,GA,60
-03240000,Little Miami River,Oldtown,OH,100
 05395000,Wisconsin River,Merrill,WI,100
 09073400,Roaring Fork River,Aspen,CO,100
 01421900,West Branch Delaware River,From Delhi,NY,100
@@ -583,16 +580,6 @@ site,river,place,state,category
 08160400,Colorado River,Above La Grange,TX,10
 03150500,Muskingum River,Beverly,OH,10
 03150000,Muskingum River,McConnelsville,OH,10
-10351600,Truckee River,Below Derby Dam Near Wadsworth,NV,100
-11290000,Tuolumne River,Modesto,CA,100
-02055000,Roanoke River,Roanoke,VA,100
-04118500,Rogue River,Rockford,MI,100
-03451500,French Broad River,Asheville,NC,100
-09364500,Animas River,Farmington,NM,100
-02093000,New River,Gum Branch,NC,100
-01503000,Susquehanna River,Conklin,NY,100
-09361500,Animas River,Durango,CO,100
-03470000,Little Pigeon River,Sevierville,TN,100
 01546500,Spring Creek,Axemann,PA,100
 12079000,Deschutes River,Rainier,WA,100
 11427000,North Fork American River,North Fork Dam,CA,100
@@ -1390,9 +1377,6 @@ site,river,place,state,category
 15356000,Yukon River,Eagle,AK,10
 07331299,Spring Creek,Above Pennington Creek Near Mill Creek,OK,10
 15214000,Copper River,Million Dollar Bridge Near Cordova,AK,10
-03083500,Youghiogheny River,Sutersville,PA,100
-14056500,Deschutes River,Below Wickiup Reservoir Near La Pine,OR,100
-14064500,Deschutes River,Benham Falls Near Bend,OR,100
 01632000,North Fork Shenandoah River,Cootes Store,VA,100
 03050500,Tygart Valley River,Elkins,WV,100
 07086000,Arkansas River,Granite,CO,100
@@ -2601,15 +2585,6 @@ site,river,place,state,category
 06139900,Beaver Creek,Reservoir Bndry Near Rocky Boy,MT,10
 06139850,Beaver Creek,Above Elk Creek Near Rocky Boy,MT,10
 05120000,Souris River,Verendrye,ND,10
-10344500,Little Truckee River,Below Boca Dam Near Truckee,CA,100
-05061500,South Branch Buffalo River,Sabin,MN,100
-01109060,Threemile River,North Dighton,MA,100
-01108000,Taunton River,Bridgewater,MA,100
-01097000,Assabet River,Maynard,MA,100
-02235000,Wekiva River,Sanford,FL,100
-01668000,Rappahannock River,Fredericksburg,VA,100
-13056500,Henrys Fork,Rexburg,ID,100
-03527000,Clinch River,Speers Ferry,VA,100
 01411000,Great Egg Harbor River,Folsom,NJ,100
 01603000,North Branch Potomac River,Cumberland,MD,100
 01181000,West Branch Westfield River,Huntington,MA,100
