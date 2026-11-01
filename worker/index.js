@@ -14,7 +14,7 @@ const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits 
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(poll(env));
-    ctx.waitUntil(pollWorld(env));
+    if (new Date(event.scheduledTime).getUTCMinutes() % 15 < 3) ctx.waitUntil(pollWorld(env)); // the feed moves every 15 min, so polling faster buys nothing
     ctx.waitUntil(build(env, new Date(event.scheduledTime)));
   },
 
