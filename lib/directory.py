@@ -291,7 +291,7 @@ def world_page(page, d, now):
     for r in rows:
         t = datetime.datetime.fromisoformat(r["time"])
         old = (now - t).total_seconds() > 24 * 3600
-        cm = "Not reporting" if old else "%.0f cm (%.1f ft)" % (r["cm"], r["cm"] / 30.48)
+        cm = "Not reporting" if old else '<span style="white-space:nowrap">%.0f cm</span><div class="src">%.1f ft</div>' % (r["cm"], r["cm"] / 30.48)
         chg = "–" if old or r.get("then") is None else "%+.0f cm" % (r["cm"] - r["then"])
         label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
         gauge = esc(r["name"].replace(" UP", "").title())

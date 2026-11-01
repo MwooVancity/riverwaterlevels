@@ -416,11 +416,12 @@ def hero(G, pages=None):
     strip_chip = strip_dir_word(dir_chip) if shown_ else dir_chip  # "Steady" is said by the flow tile and the change card, not a third time
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
-    norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else "No past-years comparison for this date"
+    feed_chg = "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48) if G["feed"] and G.get("stage_chg") is not None else ""
+    norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None or G["feed"] else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
-        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or feed_chg or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
         rn_ = c["rain"]
         if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"

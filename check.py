@@ -630,7 +630,7 @@ def selftest():
     rr = {"name": "KAUB", "km": 546.2, "cm": 21.0, "time": "2026-11-01T12:00:00+01:00", "state": "low", "then": 30.0, "glw": 77.0, "nnw": 25.0}
     wp0 = world_pages()[0]
     rp = world_page(wp0, {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr, dict(rr, name="MAINZ", time="2026-10-29T12:00:00+01:00"), dict(rr, name="BONN", state="commented")]}, rn)
-    assert "21 cm (0.7 ft)" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
+    assert ">21 cm</span>" in rp and "0.7 ft" in rp and "-9 cm" in rp and ">Low<" in rp and "Not reporting" in rp and "Unknown" in rp, "selftest: Rhine row wrong (level, change, label, stale gauge or unknown label)"
     assert "Lake Constance water levels" in world_page(dict(wp0, river="Lake Constance", lake=True), {"fetched_at": "2026-11-01T11:00:00+00:00", "rows": [rr]}, rn), "selftest: a lake page calls itself a river"
     from lib import world
     from lib.directory import world_gauge_url
@@ -639,7 +639,7 @@ def selftest():
            "series": [[(wn - dt_.timedelta(minutes=10 + 15 * i)).isoformat(), 30.0 - i * 0.01] for i in range(120, -1, -1)]}
     wu, wh = world.page(wp0, wr_, wn)
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
-    assert "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
+    assert "ft. Height above" in wh and "Low for Nov" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace("Official alerts", "x")), "selftest: world page rule missed US wording or a missing block"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
     assert world.page(wp0, dict(wr_, marks={}), wn), "selftest: a gauge with a reading but no marks must still ship"

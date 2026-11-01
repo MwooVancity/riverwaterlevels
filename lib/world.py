@@ -33,7 +33,7 @@ def to_row(page, r):
 SWAP = (("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
-        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("No past-years comparison for this date", ""), ("Direction unclear", ""))
+        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."))
 LIVE = """<script>(function(){var w=document.querySelector('.hero');if(!w||!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;
 var e=document.querySelector('[data-live=stage]');if(e)e.textContent=Math.round(g[0]);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}).catch(function(){})})();</script>"""
 
@@ -68,4 +68,5 @@ def page(p, r, now):
     row, rec = to_row(p, r), to_rec(p, r)
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
+    html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. Height above the gauge's zero point, not water depth" % (r["cm"] / 30.48), 1)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"])
