@@ -24,8 +24,6 @@ def ctx(site, row, rec, now):
     else:
         lt, lv, lrow = fl[-1]
     age_min = (now - lt).total_seconds() / 60
-    if age_min > 30 * 24 * 60:
-        raise CriticalFail("latest flow older than 30 days (%.0f d)" % (age_min / 1440))
     stats = rec.get("stats")
     ldate = lt.astimezone(zone).date()
     mmdd = ldate.isoformat()[5:10]

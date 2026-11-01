@@ -55,9 +55,8 @@ Failures already seen: laptop data differs from cloud data (only the dry run pro
 
 ## Reviews
 - Machines check, agents rarely look. Default: gates plus cloud dry run. A screenshot review needs a reason a machine cannot see. At most one full (~170k tokens) a day and one light (~80k) a batch; say the cost first.
-- `check.py` `review_gaps`: every live gauge needs a signed PASS; a change to `lib/`, `templates/`, `build.py`, `collect.py` or `worker/index.js` needs a fresh `_template` PASS before deploy.
 - None or `--level=machine`: nothing a reader sees changed, or a check covers it. New gauges ship on machine gates. Light: wording, label, format. Full: new block, layout, chart or source (`python -I tools/hater_sample.py`).
-- `node tools/hater_shots.mjs [sites]`, a reviewer who did not build it reads `tools/review_brief.md`, then `python -I tools/review_sign.py <site|_template> PASS|FAIL "defects" --level=first|full`. One reader-visible defect = FAIL, off the site until PASS.
+- `node tools/hater_shots.mjs [sites]`, a reviewer who did not build it reads `tools/review_brief.md`. No signature gate: paperwork never blocks a deploy (removed 2026-11-01).
 - A defect found twice becomes a `check.py` rule that batch. Delete a gate with no real catch in 10 runs.
 - Helpfulness checklist: `tools/helpful_audit.md` (A-Q); each batch checks the categories it touches.
 

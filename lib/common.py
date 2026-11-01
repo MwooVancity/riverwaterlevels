@@ -1,4 +1,5 @@
 """Shared paths, data loading and helpers for the River Water Levels build."""
+import zlib
 import os, re, csv, json, math, datetime, html, urllib.request, urllib.parse
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -245,6 +246,19 @@ def band_word(p):
     if p <= BAND_CUTS[2]:
         return "Typical for this date"
     return "Above normal"
+
+
+def week_due(ts, site, now=None):
+    """Each gauge's history comes due in its own hour of the week, so calls spread evenly over 168 hours. A new gauge comes due at once;
+    a run GitHub skipped costs one week, never more (14 days is due on any run)."""
+    if not ts:
+        return True
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        age = (now - datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))).total_seconds() / 3600
+    except ValueError:
+        return True
+    return age > 336 or (age > 24 and now.weekday() * 24 + now.hour == zlib.crc32(site.encode()) % 168)
 
 
 def dir_lv(G):

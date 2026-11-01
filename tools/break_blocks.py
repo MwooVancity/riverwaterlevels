@@ -188,6 +188,12 @@ def main():
                 bad = ["ICE CRASH %s: %s" % (type(e).__name__, str(e)[:80])]
             for f_ in bad:
                 found[("usgs", label, f_)].add(s)
+        try:  # dead: nothing for 40 days; the page says so with its real age instead of freezing as if current
+            dead = render.ctx(s, rows[s], copy.deepcopy(recs[s]), datetime.datetime.fromisoformat(max(r["time"] for r in recs[s]["usgs"]["rows"])) + datetime.timedelta(days=40))
+            if "gauge_not_reporting" not in render.build_tab("dashboard", dead, rows)[0]:
+                found[("usgs", "dead 40 d", "DEAD PAGE has no not-reporting banner")].add(s)
+        except Exception as e:
+            found[("usgs", "dead 40 d", "DEAD CRASH %s: %s" % (type(e).__name__, str(e)[:80]))].add(s)
     print("\n%d broken variants rendered over %d gauges; %d distinct faults" % (n, len(sites), len(found)))
     for (key, mname, f_), ss in sorted(found.items(), key=lambda x: (-len(x[1]), x[0])):
         print("%2d gauges | %-12s %-9s | %s | e.g. %s" % (len(ss), key, mname, f_, sorted(ss)[0]))

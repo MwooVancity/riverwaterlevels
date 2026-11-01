@@ -69,6 +69,9 @@ def thr_json(url, headers=None, timeout=60, gap=1.5, tries=6):
                 MEMO[url] = r
             return r
         except urllib.error.HTTPError as e:
+            if e.code == 429 and "api.waterdata.usgs.gov" in url:
+                USGS_OUT[0] = True
+                raise
             if e.code not in (429, 500, 502, 503, 504) or i == tries - 1:
                 raise
             ra = e.headers.get("Retry-After") or ""
@@ -1082,8 +1085,9 @@ def default_sites():
 
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"meta", "peaks", "wtemp", "snotel", "cpc", "cpc610", "usdm", "attains", "record", "year", "fieldmeas", "floodfreq", "acis",
-         "ridb", "streamcat", "stocking", "rating", "multiyear", "wqp", "uv", "dam_rise"}
+DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "wqp", "uv", "dam_rise"}
+WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear"}  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
+USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
 MONTHLY = {"access", "land"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
 
 
@@ -1248,7 +1252,9 @@ def fetch_extras(site, rec, h, log):
         if want and key not in want:
             continue
         stamp = rec.setdefault("_fetched", {})
-        if not want and not (due(stamp.get(key), 720) if key in MONTHLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
+        if key in WEEKLY and USGS_OUT[0]:
+            continue
+        if not want and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
             stamp[key] = now_iso()

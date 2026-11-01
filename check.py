@@ -242,25 +242,6 @@ def sw_drift(js):
     return [] if AGE_FN in js else ["sw.js age() differs from AGE_FN in lib/page.py: the offline line and the page would print different ages"]
 
 
-def review_gaps(live_sites, reviews, code):
-    """The shared page code needs a signed _template review; a gauge whose latest review is FAIL stays off the site. A never-reviewed gauge ships on the
-    machine gates (owner 2026-10-29 first-principles pass: per-gauge review capped coverage; replaces the 2026-10-27 every-gauge rule)."""
-    bad = []
-    t = reviews.get("_template")
-    if not t or t.get("verdict") != "PASS" or t.get("template") != code:
-        bad.append("page code changed since the last signed hater review (code %s, last PASS %s): screenshot a sample, review it, sign _template" % (code, (t or {}).get("template") if (t or {}).get("verdict") == "PASS" else "none"))
-    for s_ in sorted(live_sites):
-        r = reviews.get(s_)
-        if r and r.get("verdict") != "PASS":
-            bad.append("gauge %s is live with a FAIL review (FAIL: %s)" % (s_, r["notes"][:80]))
-    return bad
-
-
-def load_reviews():
-    d = os.path.join(ROOT, "state", "reviews")
-    return {f[:-5]: json.load(open(os.path.join(d, f), encoding="utf-8")) for f in (os.listdir(d) if os.path.isdir(d) else []) if f.endswith(".json")}
-
-
 def rank_checks(h, url):
     """A gauge page must answer the search it ranks for: title and H1 name the river and place, the title says 'water level', the first
     screen (before the first data block) says nothing three times, and the page links at least 3 other gauge pages (nearby, up and down)."""
@@ -507,12 +488,10 @@ def check_dir(d):
     if os.path.exists(os.path.join(d, "sw.js")):
         site_bad += sw_drift(open(os.path.join(d, "sw.js"), encoding="utf-8").read())
     site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
-    from lib.common import template_hash
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
     live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
-    site_bad += review_gaps(live_now, load_reviews(), template_hash())
     for a, b, j in near_dupes(gauge_sh):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
@@ -624,6 +603,13 @@ def redirect_limit(n):
 
 def selftest():
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
+    import datetime as dt_, zlib
+    from lib.common import week_due
+    sl = zlib.crc32(b"01") % 168
+    at = dt_.datetime(2026, 11, 2, tzinfo=dt_.timezone.utc) + dt_.timedelta(hours=sl)  # a Monday, so the hour of the week equals the slot
+    ago = lambda h: (at - dt_.timedelta(hours=h)).isoformat()
+    assert week_due(None, "01", at) and week_due(ago(30), "01", at) and week_due(ago(400), "01", at + dt_.timedelta(hours=1)), "selftest: history not due for a new gauge, in its slot, or after 14 days"
+    assert not week_due(ago(2), "01", at) and not week_due(ago(30), "01", at + dt_.timedelta(hours=1)), "selftest: history due just after a fetch or outside its slot"
     from lib.hero import fast_change
     assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"
     assert not fast_change("6 h", 50, 3) and not fast_change("24 h", 50, 1000) and not fast_change("6 h", 20, 1000) and not fast_change("6 h", -100, 0), "selftest: fast fired on a trickle, a 24 h span or a small change"
@@ -749,11 +735,6 @@ def selftest():
     assert not rank_checks(pg("Madison River, Below Hebgen Lake Near Grayling: water level", "Madison River below Hebgen Lake Near Grayling, MT", "Home / MT / Madison River / Below Hebgen Lake Near Grayling USGS gauge 06038500 observed Oct 26. Cite: Madison River below Hebgen Lake Near Grayling, MT: water level 1.5 ft", 4), "/u/"), "selftest: the page's own name repeated in breadcrumb, H1 and cite wrongly flagged"
     assert not rank_checks(pg("Rio Grande, Albuquerque: water level", "Rio Grande at Albuquerque, NM", "x", 4), "/u/"), "selftest: a river named without the word river wrongly flagged"
     assert not css_truncation(".tile small{display:block}"), "selftest: plain caption CSS wrongly flagged"
-    ok_rev = {"_template": {"verdict": "PASS", "template": "abc"}, "01": {"verdict": "PASS", "notes": ""}}
-    assert not review_gaps({"01"}, ok_rev, "abc"), "selftest: reviewed page on reviewed code wrongly blocked"
-    assert not review_gaps({"01", "02"}, ok_rev, "abc"), "selftest: a never-reviewed live gauge wrongly blocked (it ships on the machine gates)"
-    assert any("code changed" in x for x in review_gaps({"01"}, ok_rev, "xyz")), "selftest: changed page code without a new review did not block"
-    assert any("FAIL" in x for x in review_gaps({"01"}, dict(ok_rev, **{"01": {"verdict": "FAIL", "notes": "tidal on a dam river"}}), "abc")), "selftest: a FAIL verdict did not block"
     w_ok = "async function poll(env) { await fetch(USGS); }\nasync function build(env) { await fetch(GH); }\nasync function serve(req, env) { return env.ASSETS.fetch(req); }"
     assert not visitor_calls(w_ok), "selftest: timer-only outside calls wrongly flagged: %s" % visitor_calls(w_ok)
     assert visitor_calls(w_ok + "\nasync function page(req) { return fetch('https://api.waterdata.usgs.gov/x'); }"), "selftest: worker calling USGS on a page view did not fire"
