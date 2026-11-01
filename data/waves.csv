@@ -24,36 +24,36 @@ live,,03185400,New River,Thurmond,WV,66.7,100,61,40,"nri,nri-paddle,nri-fish,fam
 live,,09506000,Verde River,Camp Verde,AZ,57.2,100,61,40,"wsr-fish,wsr,fame",,,high,/river/verde-river/camp-verde/
 live,,14105700,Columbia River,The Dalles,OR,39.6,10,67,40,,,,high,/river/columbia-river-or/the-dalles/
 queue,,11447650,Sacramento River,Freeport,CA,12.8,10,88,0,,tiny-basin,,human,/river/sacramento-river/freeport/
-queue,1,10344500,Little Truckee River,Below Boca Dam Near Truckee,CA,93.9,100,80,90,"tail,fame",,,high,/river/little-truckee-river/below-boca-dam-near-truckee/
-queue,1,10351600,Truckee River,Below Derby Dam Near Wadsworth,NV,93.8,100,75,90,"tail,fame",,33990,high,/river/truckee-river-nv/below-derby-dam-near-wadsworth/
-queue,1,11290000,Tuolumne River,Modesto,CA,90.4,100,87,70,fame,,,auto2,/river/tuolumne-river/modesto/
-queue,1,03245500,Little Miami River,Milford,OH,89.9,100,83,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/little-miami-river/milford/
+live,1,10344500,Little Truckee River,Below Boca Dam Near Truckee,CA,93.9,100,80,90,"tail,fame",,,high,/river/little-truckee-river/below-boca-dam-near-truckee/
+live,1,10351600,Truckee River,Below Derby Dam Near Wadsworth,NV,93.8,100,75,90,"tail,fame",,33990,high,/river/truckee-river-nv/below-derby-dam-near-wadsworth/
+live,1,11290000,Tuolumne River,Modesto,CA,90.4,100,87,70,fame,,,auto2,/river/tuolumne-river/modesto/
+live,1,03245500,Little Miami River,Milford,OH,89.9,100,83,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/little-miami-river/milford/
 live,1,08168500,Guadalupe River,Above Comal River At New Braunfels,TX,89.7,100,83,70,fame,,,auto2,/river/guadalupe-river-tx/above-comal-river-at-new-braunfels/
-queue,1,02055000,Roanoke River,Roanoke,VA,89.6,100,81,70,fame,,,high,/river/roanoke-river-va/roanoke/
-queue,1,04118500,Rogue River,Rockford,MI,89.6,100,81,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/rogue-river-mi/rockford/
-queue,1,03451500,French Broad River,Asheville,NC,89.4,100,80,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/french-broad-river-nc/asheville/
-queue,1,03083500,Youghiogheny River,Sutersville,PA,89.3,100,79,70,fame,,24571,high,/river/youghiogheny-river-pa/sutersville/
-queue,1,14056500,Deschutes River,Below Wickiup Reservoir Near La Pine,OR,89.2,100,58,90,"wsr-rec,wsr-fish,wsr,tail,fame",,15019,high,/river/deschutes-river-or/below-wickiup-reservoir-near-la-pine/
+live,1,02055000,Roanoke River,Roanoke,VA,89.6,100,81,70,fame,,,high,/river/roanoke-river-va/roanoke/
+live,1,04118500,Rogue River,Rockford,MI,89.6,100,81,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/rogue-river-mi/rockford/
+live,1,03451500,French Broad River,Asheville,NC,89.4,100,80,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/french-broad-river-nc/asheville/
+live,1,03083500,Youghiogheny River,Sutersville,PA,89.3,100,79,70,fame,,24571,high,/river/youghiogheny-river-pa/sutersville/
+queue,1,14056500,Deschutes River,Below Wickiup Reservoir Near La Pine,OR,89.2,100,58,90,"wsr-rec,wsr-fish,wsr,tail,fame",no-usgs-rows,15019,high,/river/deschutes-river-or/below-wickiup-reservoir-near-la-pine/
 live,1,10346000,Truckee River,Farad,CA,89.2,100,80,70,fame,,33990,auto2,/river/truckee-river-ca/farad/
-queue,1,05062000,Buffalo River,Dilworth,MN,89.0,100,77,70,fame,,,high,/river/buffalo-river-mn/dilworth/
-queue,1,05061500,South Branch Buffalo River,Sabin,MN,88.9,100,76,70,fame,,,high,/river/south-branch-buffalo-river/sabin/
-queue,1,01109060,Threemile River,North Dighton,MA,88.9,100,76,70,"wsr-rec,wsr-fish,wsr",,,high,/river/threemile-river/north-dighton/
+live,1,05062000,Buffalo River,Dilworth,MN,89.0,100,77,70,fame,,,high,/river/buffalo-river-mn/dilworth/
+queue,1,05061500,South Branch Buffalo River,Sabin,MN,88.9,100,76,70,fame,page-check: no built page at /river/south-branch-buffalo-river/sabin/,,high,/river/south-branch-buffalo-river/sabin/
+live,1,01109060,Threemile River,North Dighton,MA,88.9,100,76,70,"wsr-rec,wsr-fish,wsr",,,high,/river/threemile-river/north-dighton/
 live,1,14361500,Rogue River,Grants Pass,OR,88.8,100,76,70,"nri,fame",,,high,/river/rogue-river-or/grants-pass/
-queue,1,01108000,Taunton River,Bridgewater,MA,88.8,100,75,70,"wsr-rec,wsr-fish,wsr",,,high,/river/taunton-river/bridgewater/
-queue,1,09364500,Animas River,Farmington,NM,88.7,100,75,70,fame,,,high,/river/animas-river-nm/farmington/
-queue,1,02235000,Wekiva River,Sanford,FL,88.6,100,74,70,"wsr-rec,wsr-fish,wsr",,,high,/river/wekiva-river/sanford/
-queue,1,01097000,Assabet River,Maynard,MA,88.6,100,74,70,"wsr-rec,wsr",,,high,/river/assabet-river/maynard/
+live,1,01108000,Taunton River,Bridgewater,MA,88.8,100,75,70,"wsr-rec,wsr-fish,wsr",,,high,/river/taunton-river/bridgewater/
+live,1,09364500,Animas River,Farmington,NM,88.7,100,75,70,fame,,,high,/river/animas-river-nm/farmington/
+live,1,02235000,Wekiva River,Sanford,FL,88.6,100,74,70,"wsr-rec,wsr-fish,wsr",,,high,/river/wekiva-river/sanford/
+live,1,01097000,Assabet River,Maynard,MA,88.6,100,74,70,"wsr-rec,wsr",,,high,/river/assabet-river/maynard/
 excluded,1,02320700,Santa Fe River,Graham,FL,88.4,100,77,70,"nri,fame",,,auto2,/river/santa-fe-river-fl/graham/
 queue,1,07094500,Arkansas River,Parkdale,CO,88.3,100,72,70,"nri,nri-fish,fame",no-usgs-rows,104327,high,/river/arkansas-river-co/parkdale/
-queue,1,01503000,Susquehanna River,Conklin,NY,88.2,100,71,70,fame,,,high,/river/susquehanna-river-ny/conklin/
-queue,1,01668000,Rappahannock River,Fredericksburg,VA,88.2,100,72,70,"nri,nri-fish,fame",,,high,/river/rappahannock-river/fredericksburg/
-queue,1,02093000,New River,Gum Branch,NC,88.2,100,73,70,fame,,,auto2,/river/new-river-nc/gum-branch/
-queue,1,13056500,Henrys Fork,Rexburg,ID,88.1,100,71,70,fame,,,high,/river/henrys-fork-id/rexburg/
-queue,2,03240000,Little Miami River,Oldtown,OH,88.8,100,76,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/little-miami-river/oldtown/
-queue,2,14064500,Deschutes River,Benham Falls Near Bend,OR,88.6,100,74,70,"wsr-rec,wsr-fish,wsr,fame",,15019,high,/river/deschutes-river-or/benham-falls-near-bend/
-queue,2,03527000,Clinch River,Speers Ferry,VA,88.0,100,70,70,fame,,12745,high,/river/clinch-river-va/speers-ferry/
-queue,2,09361500,Animas River,Durango,CO,88.0,100,70,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/animas-river-co/durango/
-queue,2,03470000,Little Pigeon River,Sevierville,TN,88.0,100,70,70,fame,,,high,/river/little-pigeon-river/sevierville/
+live,1,01503000,Susquehanna River,Conklin,NY,88.2,100,71,70,fame,,,high,/river/susquehanna-river-ny/conklin/
+live,1,01668000,Rappahannock River,Fredericksburg,VA,88.2,100,72,70,"nri,nri-fish,fame",,,high,/river/rappahannock-river/fredericksburg/
+live,1,02093000,New River,Gum Branch,NC,88.2,100,73,70,fame,,,auto2,/river/new-river-nc/gum-branch/
+live,1,13056500,Henrys Fork,Rexburg,ID,88.1,100,71,70,fame,,,high,/river/henrys-fork-id/rexburg/
+live,2,03240000,Little Miami River,Oldtown,OH,88.8,100,76,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/little-miami-river/oldtown/
+queue,2,14064500,Deschutes River,Benham Falls Near Bend,OR,88.6,100,74,70,"wsr-rec,wsr-fish,wsr,fame",no-usgs-rows,15019,high,/river/deschutes-river-or/benham-falls-near-bend/
+live,2,03527000,Clinch River,Speers Ferry,VA,88.0,100,70,70,fame,,12745,high,/river/clinch-river-va/speers-ferry/
+live,2,09361500,Animas River,Durango,CO,88.0,100,70,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/animas-river-co/durango/
+live,2,03470000,Little Pigeon River,Sevierville,TN,88.0,100,70,70,fame,,,high,/river/little-pigeon-river/sevierville/
 queue,2,01546500,Spring Creek,Axemann,PA,88.0,100,70,70,fame,,,high,/river/spring-creek-pa/axemann/
 queue,2,12079000,Deschutes River,Rainier,WA,87.9,100,69,70,fame,,,high,/river/deschutes-river-wa/rainier/
 queue,2,11427000,North Fork American River,North Fork Dam,CA,87.9,100,71,70,fame,,,auto2,/river/north-fork-american-river/north-fork-dam/
