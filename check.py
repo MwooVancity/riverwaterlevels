@@ -624,6 +624,11 @@ def redirect_limit(n):
 
 def selftest():
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
+    from lib.hero import fast_change
+    assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"
+    assert not fast_change("6 h", 50, 3) and not fast_change("24 h", 50, 1000) and not fast_change("6 h", 20, 1000) and not fast_change("6 h", -100, 0), "selftest: fast fired on a trickle, a 24 h span or a small change"
+    from lib.core import qual_text
+    assert "less than" in qual_text({"qualifier": ["LESSTHAN"]}) and "force" in qual_text({"qualifier": ["FORCE_NEW"]}) and "_" not in qual_text({"qualifier": ["FORCE_NEW"]}), "selftest: a USGS flag was not put in words"
     from lib.directory import most_searched
     fg = {("r%d" % i, "River %d" % i): [{"drainage_sqmi": str(i), "water_url": "/river/r%d/x/" % i, "hub_url": "/river/r%d/" % i, "_hub": i == 2}] for i in range(13)}
     ft = {"River 1": 500, "River 2": 5000, "River 3": 500, "River 4": 50}
@@ -803,7 +808,7 @@ def selftest():
              "image after the first without loading=lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" decoding="async">'),
              "ok:first image eager, the rest lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" loading="lazy" decoding="async">'),
              "&lt;/?[a-zA-Z]+": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p>For more information click &lt;a href=&quot;x.php&quot;&gt;here&lt;/a&gt;.</p>'),
-             "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Normal range</span></p>')}
+             "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Typical for this date</span></p>')}
     obs = {"nwps": {"lid": "MEMT1", "obs_stage": {"t": "2026-10-26T10:00:00Z", "v": 1.6}}}
     import datetime
     at = datetime.datetime(2026, 10, 26, 12, tzinfo=datetime.timezone.utc)

@@ -125,7 +125,10 @@ def hours_old(iso_s, now):
 
 
 QUAL = {"ICE": "ice at the gauge, reading affected", "EQUIP": "equipment problem", "ESTIMATED": "estimated, not measured", "BACKWATER": "backwater from downstream, flow uncertain",
-        "RATINGDEV": "flow rating under review", "SEASONAL": "seasonal gauge", "DISCONTINUED": "discontinued", "UNAVAIL": "reading unavailable"}
+        "RATINGDEV": "flow rating under review", "SEASONAL": "seasonal gauge", "DISCONTINUED": "discontinued", "UNAVAIL": "reading unavailable",
+        "LESSTHAN": "the true value is less than this reading", "GREATERTHAN": "the true value is greater than this reading", "TEST": "test reading", "REVISED": "revised by USGS",
+        "FLOOD": "flooding at the gauge, reading affected", "DEBRIS": "debris at the gauge, reading affected", "DRY": "dry at the gauge", "DIFFDATUM": "measured from a different datum",
+        "PARTIAL_RECORD": "partial record", "FORCEINTERPOLATION": "interpolated, not measured", "OPPORTUNISTIC": "not a routine reading"}
 
 
 def qual_text(r):
@@ -135,7 +138,7 @@ def qual_text(r):
         q = [q]
     if not isinstance(q, list):
         return ""
-    words = [QUAL.get(str(x).upper(), str(x)) for x in q if str(x).strip()]
+    words = [QUAL.get(str(x).upper(), str(x).replace("_", " ").lower()) for x in q if str(x).strip()]
     return ("USGS flag: " + "; ".join(esc(w) for w in words)) if words else ""
 
 

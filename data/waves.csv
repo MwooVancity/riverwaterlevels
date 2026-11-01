@@ -515,7 +515,7 @@ queue,20,11189500,South Fork Kern River,Onyx,CA,77.5,100,0,70,"nri,nri-paddle,nr
 queue,20,09229500,Henrys Fork,Manila,WY,77.5,100,0,70,fame,,,high,/river/henrys-fork-wy/manila/
 queue,20,04293500,Missisquoi River,East Berkshire,VT,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/missisquoi-river/east-berkshire/
 queue,20,14316500,North Umpqua River,Above Copeland Creek Near Toketee Falls,OR,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,nri,fame",,,high,/river/north-umpqua-river/above-copeland-creek-near-toketee-falls/
-queue,20,12355000,Flathead River,Flathead British Columbia,AK,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/flathead-river-ak/flathead-british-columbia/
+queue,20,12355000,Flathead River,Flathead British Columbia,AK,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,fame",foreign-or-wrong-state,,high,/river/flathead-river-ak/flathead-british-columbia/
 queue,20,13011900,Buffalo Fork,Above Lava Creek Near Moran,WY,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/buffalo-fork/above-lava-creek-near-moran/
 queue,20,06411500,Rapid Creek,Below Pactola Dam,SD,77.5,65,72,90,tail,,,high,/river/rapid-creek-sd/below-pactola-dam/
 queue,20,12342500,West Fork Bitterroot River,Conner,MT,77.5,100,0,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/west-fork-bitterroot-river/conner/
@@ -3614,7 +3614,7 @@ queue,144,09019000,Colorado River,Below Lake Granby,CO,53.4,100,0,50,"tail,fame"
 queue,144,04234398,West River,Middlesex,NY,53.4,70,58,30,fame,,,high,/river/west-river-ny/middlesex/
 queue,144,06885500,Black Vermillion River,Frankfort,KS,53.3,30,49,70,,,,high,/river/black-vermillion-river/frankfort/
 queue,144,02058400,Pigg River,Sandy Level,VA,53.3,30,49,70,,,915,high,/river/pigg-river/sandy-level/
-queue,144,05106000,Sprague Creek,Sprague Manitoba Canada,MN,53.3,30,48,70,,,,high,/river/sprague-creek/sprague-manitoba-canada/
+queue,144,05106000,Sprague Creek,Sprague Manitoba Canada,MN,53.3,30,48,70,,foreign-or-wrong-state,,high,/river/sprague-creek/sprague-manitoba-canada/
 queue,144,06903700,South Fork Chariton River,Promise City,IA,53.3,30,50,70,,,,high,/river/south-fork-chariton-river/promise-city/
 queue,144,14242580,Toutle River,Tower Road Near Silver Lake,WA,53.3,30,66,70,,,,high,/river/toutle-river/tower-road-near-silver-lake/
 queue,144,05393500,Spirit River,Spirit Falls,WI,53.3,30,49,70,,,,high,/river/spirit-river/spirit-falls/
@@ -7283,7 +7283,7 @@ queue,291,10246835,Big Warm Springs,Duckwater,NV,21.8,10,0,40,,,,high,/river/big
 queue,291,01069700,Branch Brook,Kennebunk Maine,ME,21.8,10,64,0,,,,high,/river/branch-brook/kennebunk-maine/
 queue,291,10172765,Clover Creek,Above Big Hollow Near Clover,UT,21.8,10,65,0,,,,high,/river/clover-creek-ut/above-big-hollow-near-clover/
 queue,291,04085074,Dutchman Creek,Cyrus Saint Near Ashwaubenon,WI,21.8,10,76,0,,,,high,/river/dutchman-creek/cyrus-saint-near-ashwaubenon/
-queue,291,04127885,Saint Marys River,Sault Ste Marie Ontario,MI,21.7,10,65,0,,,,auto2,/river/saint-marys-river-mi/sault-ste-marie-ontario/
+queue,291,04127885,Saint Marys River,Sault Ste Marie Ontario,MI,21.7,10,65,0,,foreign-or-wrong-state,,auto2,/river/saint-marys-river-mi/sault-ste-marie-ontario/
 queue,291,09470700,Banning Creek,Bisbee,AZ,21.7,10,55,0,,,,high,/river/banning-creek/bisbee/
 queue,291,01581960,Beetree Run,Bentley Springs,MD,21.7,10,57,0,,,,auto2,/river/beetree-run/bentley-springs/
 queue,291,15237730,Grouse Creek,Grouse Lake Outlet Near Seward,AK,21.7,10,52,0,,,,auto2,/river/grouse-creek/grouse-lake-outlet-near-seward/

@@ -203,8 +203,8 @@ def main(only=None):
     if base is None:
         fail("setup", "no gauge with statistics to test the bands")
     else:
-        want = {-1: "Much below normal", 3: "Much below normal", 9: "Much below normal", 10: "Below normal", 24: "Below normal", 25: "Normal range", 40: "Normal range", 49.9: "Normal range", 50: "Normal range", 60: "Normal range",
-                75: "Normal range", 76: "Above normal", 90: "Above normal", 91: "Much above normal", 94: "Much above normal", 99: "Much above normal", 101: "Much above normal"}
+        want = {-1: "Much below normal", 3: "Much below normal", 9: "Much below normal", 10: "Below normal", 24: "Below normal", 25: "Typical for this date", 40: "Typical for this date", 49.9: "Typical for this date", 50: "Typical for this date", 60: "Typical for this date",
+                75: "Typical for this date", 76: "Above normal", 90: "Above normal", 91: "Much above normal", 94: "Much above normal", 99: "Much above normal", 101: "Much above normal"}
         for p, w in want.items():
             G2 = copy.deepcopy(base)
             G2["p"] = p

@@ -81,3 +81,4 @@
 {"id": "_template", "verdict": "PASS", "notes": "forecast row label follows the one shared word; past points dropped; break test covers it", "by": "reviewer", "at": "2026-10-31T12:29:07+00:00", "template": "1c9728dc42bc", "level": "machine"}
 {"id": "_template", "verdict": "PASS", "notes": "none: site frozen by Cloudflare rule limit; redirect map moved, no reader text changed", "by": "claude-hotfix", "at": "2026-11-01T16:44:53+00:00", "template": "26604ad705ff", "level": "machine"}
 {"id": "_template", "verdict": "PASS", "notes": "none: line is off on every state page today (needs 13 rivers); selftest covers it", "by": "claude-hotfix", "at": "2026-11-01T17:23:30+00:00", "template": "bdba8c86fd40", "level": "machine"}
+{"id": "_template", "verdict": "PASS", "notes": "none: labels and wording; machine gates; light reader review comes with the ice batch", "by": "claude-batch1", "at": "2026-11-01T17:39:49+00:00", "template": "8d5146561126", "level": "machine"}

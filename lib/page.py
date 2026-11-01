@@ -341,7 +341,7 @@ def merge_charts(blocks):
     return out
 
 
-WINDOW_KEY = "Windows used: today's date in past years (Normal range), the last 7 and 28 days, this month, and all days on record (how often each flow is reached)."
+WINDOW_KEY = "Windows used: today's date in past years (Typical for this date), the last 7 and 28 days, this month, and all days on record (how often each flow is reached)."
 
 
 def build_tab(tab, G, pages):

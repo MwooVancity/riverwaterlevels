@@ -135,7 +135,7 @@ def b_daily(G):
                  "Source: USGS Water Data API (daily values where USGS has published them; otherwise the mean of continuous readings on that gauge-local date, shown only with at least 80% of expected readings).", "usgs")
 
 
-LEG = '<p class="src leg">Shaded: the normal range for each date (25th to 75th percentile of past years) &middot; dashed line: the median.</p>'  # hater 2026-10-27: band and dashed line had no visible label on a phone
+LEG = '<p class="src leg">Shaded: the typical range for each date (25th to 75th percentile of past years) &middot; dashed line: the median.</p>'  # hater 2026-10-27: band and dashed line had no visible label on a phone
 
 
 def b_record(G):

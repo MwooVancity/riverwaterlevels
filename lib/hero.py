@@ -73,6 +73,11 @@ def flow_jitter(G):
     return (min(a_), max(a_), r_) if r_ < 0.5 else None
 
 
+def fast_change(span, pct, lv):
+    """Moved 25% or more in 6 h and by at least 10 cfs (2 to 3 cfs on a trickle is +50% and is not fast)."""
+    return span == "6 h" and abs(pct) >= 25 and pct > -100 and bool(lv) and abs(lv - lv * 100 / (100 + pct)) >= 10
+
+
 DIR_WORD = {"up": ("Rising", "up"), "down": ("Falling", "down"), "steady": ("Steady", "steady")}  # flow_dir() as the trend tile's word and icon
 
 
@@ -204,13 +209,13 @@ GLOSS = '<p class="src gloss">cfs = cubic feet of water passing the gauge each s
 
 def tile_dir_word(chip):
     """The flow tile's sub-line: the direction word alone ('Steady'); the % sits on the change card and the answer strip. Other chips (tidal range, 'Trend unknown (gauge not reporting)') stay whole."""
-    m = re.match(r"^((?:Steady|Rising|Falling|Unsteady|Unclear)(?:, leveling off)?): ", chip)
+    m = re.match(r"^((?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?): ", chip)
     return m.group(1) if m else chip
 
 
 def strip_dir_word(chip):
     """The trend chip without its leading direction word: the answer strip says the change, the flow tile and the change card say the word."""
-    return re.sub(r"^(?:Steady|Rising|Falling|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
+    return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
 
 
 def hero(G, pages=None):
@@ -291,6 +296,8 @@ def hero(G, pages=None):
             parts = " &middot; ".join("%s: %s%.1f%%" % (n, "+" if v >= 0 else "", v) for n, v in other)
             uz = round(use)
             dir_chip = ("Steady: no change in %s" % span) if word == "Steady" and abs(use) < 0.05 else "%s: %s%.1f%% flow in %s" % (("%s, leveling off" % ("Falling" if use < 0 else "Rising")) if word == "Leveling off" else word, "+" if use > 0 else "-" if use < 0 else "", abs(use), span)
+            if word in ("Rising", "Falling") and fast_change(span, use, G["lv"]):
+                dir_chip = dir_chip.replace(word + ":", word + " fast:", 1)
             if word == "Unsteady" and c1 is not None:
                 dir_chip += ", %+.1f%% in the last hour" % c1
             word_note = word_note or {"Leveling off": "<small>It moved over %s but has changed by less than 0.5%% in the last hour.</small>" % span, "Unsteady": "<small>The last hour points the other way from the last %s.</small>" % span}.get(word, "")

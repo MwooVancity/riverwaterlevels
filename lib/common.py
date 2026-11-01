@@ -214,7 +214,7 @@ ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/ad
 ADSENSE += '<script async src="https://www.googletagmanager.com/gtag/js?id=G-96RG42R07G"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-96RG42R07G")</script>'  # Google Analytics, same tag as calcscrape (owner 2026-10-31); same pages as the ad loader
 
 
-PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Normal range": "in the normal range", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}
+PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Typical for this date": "typical for this date", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}
 
 
 def sig3(v):
@@ -228,7 +228,7 @@ BAND_CUTS = (10, 25, 75, 90)  # percentile cut-offs of the five classes (USGS Wa
 def band_glossary():
     """The glossary sentence for the five headline words, generated from BAND_CUTS."""
     a, b, c, d = BAND_CUTS
-    return ("Much below normal means below the %dth percentile, Below normal from the %dth up to the %dth, Normal range from the %dth to the %dth, "
+    return ("Much below normal means below the %dth percentile, Below normal from the %dth up to the %dth, Typical for this date from the %dth to the %dth, "
             "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
 
 
@@ -243,7 +243,7 @@ def band_word(p):
     if p < BAND_CUTS[1]:
         return "Below normal"
     if p <= BAND_CUTS[2]:
-        return "Normal range"
+        return "Typical for this date"
     return "Above normal"
 
 
