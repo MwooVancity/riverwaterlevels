@@ -525,6 +525,10 @@ def check_dir(d):
             q = l.split()
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
+        site_bad += redirect_limit(len(redirects))
+    sp = os.path.join(d, "single-rivers.json")
+    if os.path.exists(sp):
+        redirects.update(json.load(open(sp, encoding="utf-8")))
     static = {"/sitemap.xml", "/robots.txt", "/favicon.svg", "/og.png", "/favicon.ico", "/status.json", "/llms.txt", "/ads.txt", "/live-sites.json", "/_health.json"} | {"/sitemap-%d.xml" % i for i in range(1, 20)}
     static |= {"/" + f for f in os.listdir(d) if os.path.isfile(os.path.join(d, f))}  # the stylesheets carry a content hash in their name: the file must exist
     graph = {}
@@ -613,7 +617,13 @@ def check_dir(d):
     return results, site_bad, (max(depth.values()) if depth else 0)
 
 
+def redirect_limit(n):
+    """Cloudflare refuses the whole deploy past 100 rules once one is dynamic; the build passes and the live site freezes (2026-11-01)."""
+    return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
+
+
 def selftest():
+    assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
     from lib.core import wind_arrow
     assert "rotate(180deg)" in wind_arrow(0) and "from N" in wind_arrow(0) and "rotate(90deg)" in wind_arrow(270), "selftest: wind arrow does not point where the wind blows to"
     stale_t = '<div class="tile alrt %s stale"><i class="ic"></i><span>NWS alerts</span><b>%s</b><small>Last NWS answer Oct 26.</small></div>'
