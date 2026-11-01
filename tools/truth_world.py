@@ -11,9 +11,17 @@ def get(u):
 def main():
     bad = 0
     for row in json.loads(get("https://riverwaterlevels.com/gauges.json")):
-        if "Europe" not in str(row[4:5]):
+        canada = "Canada" in str(row[4:5])
+        if "Europe" not in str(row[4:5]) and not canada:
             continue
         page = get("https://riverwaterlevels.com" + row[1])
+        if canada:
+            sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
+            live = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&sortby=-DATETIME&properties=LEVEL" % sid))["features"][0]["properties"]["LEVEL"]
+            ok = shown and abs(float(shown.group(1)) - live) <= 0.5
+            print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
+            bad += not ok
+            continue
         name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
         ok = shown and abs(int(shown.group(1)) - cur) <= 50

@@ -1525,6 +1525,35 @@ def states_of(sites):
     return out
 
 
+ECCC_ZONE = {"BC": "America/Vancouver", "AB": "America/Edmonton", "SK": "America/Regina", "MB": "America/Winnipeg", "ON": "America/Toronto", "QC": "America/Toronto", "NB": "America/Halifax", "NS": "America/Halifax", "PE": "America/Halifax", "NL": "America/St_Johns", "YT": "America/Whitehorse", "NT": "America/Edmonton", "NU": "America/Toronto"}
+
+
+def fetch_eccc(sid, prev):
+    """One Canadian gauge: 8 days of 5-minute level and flow, and monthly means once a week. Canada publishes no low or high label, so ours is a rank among past years, said as ours."""
+    api = "https://api.weather.gc.ca/collections/"
+    live = http_json(api + "hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=2400&sortby=-DATETIME&properties=DATETIME,LEVEL,DISCHARGE,STATION_NAME,PROV_TERR_STATE_LOC" % sid, {}, 30)["features"]
+    pts = [f["properties"] for f in live if f["properties"].get("LEVEL") is not None][::-1]
+    if not pts:
+        raise RuntimeError("no Canadian readings")
+    prev = prev or {}
+    months = prev.get("months")
+    if not months or due(prev.get("months_at"), 168):
+        hist = http_json(api + "hydrometric-monthly-mean/items?f=json&STATION_NUMBER=%s&limit=1500" % sid, {}, 30)["features"]
+        months = {}
+        for f in hist:
+            p = f["properties"]
+            if p.get("MONTHLY_MEAN_LEVEL") is not None:
+                months.setdefault(p["DATE"][5:7], []).append(round(p["MONTHLY_MEAN_LEVEL"], 3))
+    last = pts[-1]
+    geo = (live[0].get("geometry") or {}).get("coordinates") or [None, None]
+    series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
+    day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
+    then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
+    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "zone": ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
+            "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
+            "also": {"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}}
+
+
 def fetch_world():
     """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row;
     three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
@@ -1543,6 +1572,11 @@ def fetch_world():
             try:
                 if miss >= 3:
                     raise RuntimeError("feed down this run")
+                if page.get("feed") == "eccc":
+                    rows.append(fetch_eccc(name, old.get(name)))
+                    miss = 0
+                    note("eccc", "ok")
+                    continue
                 st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
                 cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}

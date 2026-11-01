@@ -243,6 +243,8 @@ def hero(G, pages=None):
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
     if G["feed"].get("unit") == "cm" and sg:
         stage_txt, stage_unit = "%.0f" % (sg[-1][1] * 30.48), "cm"  # the agency's unit first, feet in the line under it
+    if G["feed"].get("unit") == "m" and sg:
+        stage_txt, stage_unit = "%.2f" % (sg[-1][1] / 3.28084), "m"
     chg = G["chg"]
     ndam = upstream_dams(G)
     if p is not None and ndam >= 1:
@@ -302,7 +304,7 @@ def hero(G, pages=None):
     else:
         if G.get("stage_chg") is not None:
             sc = G["stage_chg"]
-            sc_txt = "%+.0f <small>cm</small>" % (sc * 30.48) if G["feed"].get("unit") == "cm" else "%+.2f <small>ft</small>" % sc
+            sc_txt = {"cm": "%+.0f <small>cm</small>" % (sc * 30.48), "m": "%+.2f <small>m</small>" % (sc / 3.28084)}.get(G["feed"].get("unit"), "%+.2f <small>ft</small>" % sc)
             tiles += ui.tile("trend", "steady", "24 h change", sc_txt, '<small id="ccap">Height against the reading 24 hours earlier</small>')
         elif chg is None:
             tiles += ui.tile("trend", "steady", "24 h change", "–", '<small id="ccap">No reading 24 h earlier</small>')
@@ -416,7 +418,7 @@ def hero(G, pages=None):
     strip_chip = strip_dir_word(dir_chip) if shown_ else dir_chip  # "Steady" is said by the flow tile and the change card, not a third time
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
-    feed_chg = "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48) if G["feed"] and G.get("stage_chg") is not None else ""
+    feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
     norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None or G["feed"] else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from

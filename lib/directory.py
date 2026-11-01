@@ -174,6 +174,14 @@ def world_pages():
     return json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))
 
 
+def world_level(v, r):
+    return "%.2f m" % v if r.get("unit") == "m" else "%.0f cm" % v
+
+
+def world_ft(v, r):
+    return v * 3.28084 if r.get("unit") == "m" else v / 30.48
+
+
 def world_name(p):
     return p["river"] if p.get("lake") else p["river"] + " river"
 
@@ -286,27 +294,27 @@ def world_page(page, d, now, linked=None):
     rows = (d or {}).get("rows") or []
     if not rows:
         return None
-    zone = zoneinfo.ZoneInfo("Europe/Berlin")
+    canada = page.get("feed") == "eccc"
     trs = ""
     for r in rows:
-        t = datetime.datetime.fromisoformat(r["time"])
+        t = datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00"))
+        zone = zoneinfo.ZoneInfo(r.get("zone", "Europe/Berlin"))
         old = (now - t).total_seconds() > 24 * 3600
-        cm = "Not reporting" if old else '<span style="white-space:nowrap">%.0f cm</span><div class="src">%.1f ft</div>' % (r["cm"], r["cm"] / 30.48)
-        chg = "–" if old or r.get("then") is None else "%+.0f cm" % (r["cm"] - r["then"])
+        cm = "Not reporting" if old else '<span style="white-space:nowrap">%s</span><div class="src">%.1f ft</div>' % (world_level(r["cm"], r), world_ft(r["cm"], r))
+        chg = "–" if old or r.get("then") is None else ("%+.2f m" if r.get("unit") == "m" else "%+.0f cm") % (r["cm"] - r["then"])
         label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
-        gauge = esc(r["name"].replace(" UP", "").title())
+        gauge = esc(r.get("title") or r["name"].replace(" UP", "").title())
         if r["name"] in (linked or []):
-            gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r["name"]), gauge)
+            gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r.get("title") or r["name"]), gauge)
         trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
             gauge, "" if page.get("lake") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>'
-            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">WSV label</th>'
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Label</th>'
             '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. River km is the agency\'s own. '
-            'Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV), fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
+            '<p class="src">%s fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, ("Label: our calculation, today's level against past monthly means; Canada publishes no normal range. Source: Water Survey of Canada, Environment and Climate Change Canada," if canada else "WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. River km is the agency\'s own. Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV),"), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
     n = len(rows)
-    return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, in cm and feet, with 24-hour change. Source: WSV." % (page["river"], n), "/%s/" % page["slug"], body)
+    return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)
 
 
 def world_slug(name):

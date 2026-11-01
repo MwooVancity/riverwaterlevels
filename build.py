@@ -187,26 +187,28 @@ def main():
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
         world_rows, world_ids = [], []
+        wnow, wpages = datetime.datetime.now(datetime.timezone.utc), []
         for page in directory.world_pages():
             try:
                 d = json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8"))
             except OSError:
                 continue
-            wnow, linked = datetime.datetime.now(datetime.timezone.utc), []
+            if page.get("feed") == "eccc":
+                for r in d["rows"]:
+                    r["state"] = world.canada_label(r, wnow)[0].lower()
+            wpages.append((page, d))
+        wkeep = world.choose(wpages, wnow)
+        for page, d in wpages:
+            keep = wkeep[page["slug"]]
             for r in d["rows"]:
-                try:  # one bad gauge skips its own page; it never stops the build
-                    gp = world.page(page, r, wnow, d["rows"]) if r["name"] in (page.get("gauge_pages") or []) else None
-                except Exception as e:
-                    print("world gauge skipped: %s %s" % (r.get("name"), str(e)[:100]))
-                    gp = None
-                if gp:
-                        emit(gp[0], gp[1])
-                        linked.append(r["name"])
-                        if r.get("uuid"):
-                            world_ids.append(r["uuid"])
-                        if r.get("lat") is not None:
-                            world_rows.append(["%s at %s" % (page["river"], r["name"].replace(" UP", "").title()), directory.world_gauge_url(page, r["name"]), round(r["lat"], 4), round(r["lon"], 4), "Germany Europe"])
-            wp = directory.world_page(page, d, wnow, linked)
+                if r["name"] not in keep:
+                    continue
+                gp = world.page(page, r, wnow, d["rows"], keep)
+                emit(gp[0], gp[1])
+                if r.get("uuid"):
+                    world_ids.append(r["uuid"])
+                world_rows.append([(r.get("title") or "%s at %s" % (page["river"], r["name"].replace(" UP", "").title())), gp[0], round(r["lat"], 4), round(r["lon"], 4), "Canada" if page.get("feed") == "eccc" else "Germany Europe"])
+            wp = directory.world_page(page, d, wnow, keep)
             if wp:
                 emit("/%s/" % page["slug"], wp)
         json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)

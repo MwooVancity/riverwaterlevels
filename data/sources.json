@@ -383,6 +383,18 @@
     "world_pages"
    ],
    "read_on": "2026-10-31"
+  },
+  {
+   "id": "eccc",
+   "name": "Environment and Climate Change Canada, Water Survey of Canada",
+   "status": "quoted",
+   "terms_url": "https://eccc-msc.github.io/open-data/licence/readme_en/",
+   "summary": "Worldwide royalty-free licence including commercial purposes; the Water Office disclaimer bars bundling and reselling the raw data and allows adding value. Read 2026-11-01.",
+   "credit": "Data Source: Environment and Climate Change Canada",
+   "blocks": [
+    "world_pages"
+   ],
+   "read_on": "2026-11-01"
   }
  ]
 }
