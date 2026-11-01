@@ -4,27 +4,24 @@
 Most useful page for a person deciding about this river today, anywhere. Rivers only, never lakes (Lakebrief has them).
 Objective: weekly clicks plus returning visitors. Baseline 2026-10-29: 74 gauges, 0 clicks a week; Search Console week 1: 64 impressions.
 Bottleneck: readers, not pages. Scarce resource: about 3 weeks of Claude (subscription ends about 2026-11-20); after that nobody changes code.
-US: every USGS flow gauge, `data/waves.csv` 9,099 rows, 25 a day, about 8,900 pages by late 2027. Queue: 7,498 queued; 283 held-names after a name fix; 490 short-record; 546 tiny-basin; 206 canals and drains stay out.
-Global: new build work goes here first (below).
+US (earns the ads): every USGS flow gauge, `data/waves.csv` 9,099 rows, publishes 25 a day by itself in search-demand order, about 8,900 pages by late 2027. Needs no build time. Held out: 283 names, 490 short-record, 546 tiny-basin, 206 canals and drains.
+World (earns no ads yet): build time goes here because the US runs itself. `/rhine/` is the test. EU and UK pages carry no ads until a consent banner exists, so a world page is a bet on traffic, not on AdSense.
 
-## Next steps (in order; user report 2026-10-31)
-1. UK page: read Environment Agency terms first (England only), one shared design with /rhine/; Moselle and Main from the Rhine code if cheap. Reader review of the ice page still owed.
-2. Claude runs `/code-review high` once (never ultra, owner 2026-11-01), then no more code changes.
+## Next steps (in order)
+1. `/code-review high` once on the 2026-11-01 batches (never ultra, owner 2026-11-01). Fix what it finds. Reader review of the ice and label pages comes with it.
+2. Read Search Console weekly: does `/rhine/` get impressions? Does the new US order move clicks? Nothing is built on a guess until these answer.
+3. If the Rhine gets visits: Moselle, Main and German Danube from `fetch_rhine`, then a UK page (Environment Agency terms unread, England only). If not by 2026-11-15: no more countries.
+4. Last code change before 2026-11-20, then hands off.
 If time remains: official thresholds on 5 famous rivers; outreach drafts (owner sends).
-Stopped: web push, favorites, units switch, more countries until the Rhine has visits. Ad script off pages until AdSense approval: owner decision.
+Stopped: web push, favorites, units switch. Ad script off pages until AdSense approval: owner decision.
 Queue 2026-11-01: `data/world-queue.csv`, 20,000 rows, built by `tools/world_queue.py` from Keyword Planner worldwide (Oct 2025 to Sep 2026, account livedatacalc, no spend) and Wikidata rivers with an English article (40,951 rivers, 25,478 names kept). `docs/research/priority/picks.csv` is its US part (7,448 gauges left on 2026-11-01), and `tools/release.py` publishes from it first, so reordering needs no code. Keywords: 7,048 US, then 28,068 worldwide; 1,476 had a number (only 284 non-US rivers), so 17,114 rows have no demand number. Decision 2026-11-01: the US part publishes now; world rows are a research list, build order below. Groups: first gauge of a river by tier, next gauge lower, no-data US by old score, foreign no-data last (12,243, English-speaking countries first, no feed checked). Edge rules: top tier capped at 1K-10K ("yellow river flow" 500K is trivia); flow alone cannot reach the top tier; a name in 2+ states, abroad, or starting "Lake" drops a tier. Keyword Planner limits seen: 9,900 per upload works, 28,068 fails silently; it defaults to Canada; monthly columns come back empty; bids on only 4 of 7,048 keywords, so no ad-value signal; ranges only. Not done: "flow" and plural wording for foreign rivers; top-result reading; Wikipedia tie-break. Same-river gauges in two states each count as a first gauge. Foreign rows are not ready: no shared foreign code path exists.
 Search numbers miss real demand (Albuquerque no data, 60% of our impressions), so Search Console overrules this order once it has data. Quarterly repeat of the upload is manual, Claude only.
 Search Console 10-20 to 10-29: 359 impressions, 1 click, position 15.7, 60% Albuquerque. Quarterly repeat: `tools/quarter/`.
 
 ## Global
 Rank: searches a month x chance of ranking x clicks per ranking / build days. Only searches are measured; the rest are guesses until Search Console has data.
-Order: ice gauges and USGS quota first; Rhine; Moselle, Main and German Danube from the same source; then UK (top non-US demand after the big five; Environment Agency terms unread, England only) with one shared page design; then stop until Search Console has data. Each must pass all three: demand number, official feed, reuse terms read from the agency. Danube outside Germany (many feeds), Marikina, Kelani (flood readers): not built. No custom code per country in the time left. ChatGPT answers are leads until checked at the source.
-
-### Rhine page
-Reader: English-speaking river-cruise passenger. Ahrefs US estimates (competitor River Cruise App), about 2,160 a month: rhine river water levels today 1K; ...for cruise ships 600; rhine water levels 450; river levels in europe 60; rhine river levels 50. Snoflo shows none in the 2 sitemaps checked.
-Standalone `/rhine/`, outside the gauge pipeline: 8-10 cruise gauges upstream to downstream (Basel, Mainz, Kaub, Koblenz, Koeln), level in cm and feet, 24 h change, official low/normal/high label, time, source; a gauge reading is not depth; no sailing verdict. No Analytics or ads until a consent banner; measure by Search Console.
-Data: PEGELONLINE (WSV), no key, tested 2026-10-31: `pegelonline.wsv.de/webservices/rest-api/v2/stations/KAUB.json?includeTimeseries=true&includeCurrentMeasurement=true`; `stations.json?waters=RHEIN` (36 stations, 786 in Germany).
-Before building: step 1 done; WSV terms read 2026-10-31: DL-DE-Zero-2.0, no attribution required, liability disclaimed; look at the top result. Forecast terms unread: no forecast on the page.
+Every new river must pass all three: demand number, official feed, reuse terms read from the agency. Danube outside Germany (many feeds), Marikina, Kelani (flood readers): not built. No custom code per country in the time left. ChatGPT answers are leads until checked at the source.
+`/rhine/`: reader is an English-speaking cruise passenger. Ahrefs US estimates about 2,160 a month (rhine river water levels today 1K; ...for cruise ships 600; rhine water levels 450). Top results on 2026-11-01 are news stories, no live gauge table. Data: PEGELONLINE (WSV), no key, no sign-up, DL-DE-Zero-2.0, terms read 2026-10-31. No forecast (terms unread), no sailing verdict, no Analytics or ads; measured by Search Console only.
 
 ## Byte audit (2026-10-31, over the wire)
 Gauge page 50 KB; Google tag 181 KB; ad script 206 KB: 89% of a phone's download, both background-loaded. Of a sample page's 46 KB: charts 20 KB (river data, already one decimal), shared scripts 5 KB. Ad script is the biggest cut if AdSense approval does not need it (owner decision). Cache file 324 KB, 78% USGS history; GitHub already compresses it.
