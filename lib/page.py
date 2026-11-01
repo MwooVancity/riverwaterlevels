@@ -380,6 +380,8 @@ def build_tab(tab, G, pages):
         desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s%s%s." % (rp, st, live, G["site"], (", vs records since %s" % _yrs) if _yrs else "", ", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
         if len(desc) > 155:  # SEO review: Google cuts descriptions near 155 characters
             desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s." % (rp, st, live, G["site"])
+        if G.get("stage_only"):
+            desc = desc.replace("today's flow and water level", "today's water level")
     else:
         desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]

@@ -107,6 +107,8 @@ def day_axis(t0, t1, zone, X, nx, fs, Hh, L, W):
 
 
 def b_flow_chart(G):
+    if G.get("stage_only"):
+        return None
     svg = _chart_svg(G, 760, 250, 11, 7, "cw") + _chart_svg(G, 340, 250, 12, 4, "cn")
     return block("flow_chart", "Last 7 days", "live", svg + (LEG if G["rec"].get("stats") else ""), "Source: USGS Water Data API (continuous values), observed to %s.%s Flow in cfs." % (esc(G["obs"]), " Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median." if G["rec"].get("stats") else ""), "usgs")
 
@@ -131,6 +133,8 @@ def b_daily(G):
         else:
             val, note = "–", "Partial day (%d of about %d readings)" % (len(vs), round(exp_n))
         rows += tr([d.strftime("%b %d, %Y").replace(" 0", " "), val, note], right=(1,))
+    if not rows:
+        return None
     return block("daily_readings", "Daily mean flow", "live", table(["Date (gauge-local)", "Mean flow", "Note"], rows, right=(1,)),
                  "Source: USGS Water Data API (daily values where USGS has published them; otherwise the mean of continuous readings on that gauge-local date, shown only with at least 80% of expected readings).", "usgs")
 

@@ -184,7 +184,7 @@ def _xy_svg(pts, cur, W, Hh, fs, cls, label):
 
 def b_rating(G):
     r = G["rec"].get("rating")
-    if not r or len(r.get("pts") or []) < 8 or not G["sg"]:
+    if not r or len(r.get("pts") or []) < 8 or not G["sg"] or G.get("stage_only"):
         return None
     pts = [tuple(p) for p in r["pts"]]
     cur = (G["sg"][-1][1], G["lv"])

@@ -13,16 +13,23 @@ def ctx(site, row, rec, now):
     tzname = usgs_tz(rec) or rec.get("tz") or "UTC"
     zone = zoneinfo.ZoneInfo(tzname)
     fl, sg = series(rec, "00060"), series(rec, "00065")
-    if not fl:
+    # ice: USGS withholds flow for weeks and keeps the stage (1,922 gauges in cold states); the page lives on the stage, never on an old flow
+    month = datetime.timedelta(days=30)
+    stage_only = bool(sg) and now - sg[-1][0] < month and (not fl or now - fl[-1][0] > month)
+    if stage_only:
+        fl = []
+        lt, lv, lrow = sg[-1][0], None, sg[-1][2]
+    elif not fl:
         raise CriticalFail("no flow series")
-    lt, lv, lrow = fl[-1]
+    else:
+        lt, lv, lrow = fl[-1]
     age_min = (now - lt).total_seconds() / 60
     if age_min > 30 * 24 * 60:
         raise CriticalFail("latest flow older than 30 days (%.0f d)" % (age_min / 1440))
     stats = rec.get("stats")
     ldate = lt.astimezone(zone).date()
     mmdd = ldate.isoformat()[5:10]
-    srow = stats.get(mmdd) if stats else None
+    srow = stats.get(mmdd) if stats and lv is not None else None
     win = [x for x in fl if x[0] > lt - datetime.timedelta(hours=24)]
     mdate = md(ldate)
     basis, method = lv, "latest reading compared with USGS daily percentiles for %s" % mdate
@@ -35,11 +42,11 @@ def ctx(site, row, rec, now):
             if basis and abs(lv / basis - 1) > 0.3 and not oscillating(fl) and max(x[1] for x in win) < 1.5 * max(1e-9, min(x[1] for x in win)):  # the day's mean says little about a river that has just moved by a third or more: judge the latest reading (tidal and oscillating gauges keep the mean)
                 basis, method = lv, "latest reading compared with USGS daily percentiles for %s" % mdate
     p = interp_pct(srow, basis) if srow else None
-    ago = min(fl, key=lambda x: abs((x[0] - (lt - datetime.timedelta(hours=24))).total_seconds()))
+    ago = min(fl or [(lt,)], key=lambda x: abs((x[0] - (lt - datetime.timedelta(hours=24))).total_seconds()))
     steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(max(1, len(fl) - 200), len(fl)))
     tol = max(1200, 0.6 * (steps[len(steps) // 2] if steps else 900))
-    osc = oscillating(fl)  # tidal only when the flow itself cycles within the day; a nearby NOAA station shows a tide table but does not make this gauge tidal (Potomac at Little Falls and Delaware at Trenton sit just above the head of tide)
-    wc24 = b3.window_change(fl, lt, 24)
+    osc = bool(fl) and oscillating(fl)  # tidal only when the flow itself cycles within the day; a nearby NOAA station shows a tide table but does not make this gauge tidal (Potomac at Little Falls and Delaware at Trenton sit just above the head of tide)
+    wc24 = b3.window_change(fl, lt, 24) if fl else None
     chg = wc24[2] if (not osc) and wc24 and abs((ago[0] - (lt - datetime.timedelta(hours=24))).total_seconds()) <= tol else None  # the same smoothed value as the rate table
     _pn = rec.get("nwps")
     if isinstance(_pn, dict) and isinstance(_pn.get("name"), str):
@@ -47,7 +54,8 @@ def ctx(site, row, rec, now):
     out = {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
-    if flow_jitter(out):
+    out["stage_only"] = stage_only
+    if fl and flow_jitter(out):
         out["chg"] = None  # flow that does not follow the gage height gives no honest 24 h percent
     return out
 
@@ -244,7 +252,10 @@ def hero(G, pages=None):
     cmp_ = None  # tiles are assembled flow, stage, direction, comparison, then the rest
     strip = ""
     bcls = band_cls(p) and "b-" + band_cls(p)
-    tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
+    if G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
+        tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
+    else:
+        tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
     if sg:
         tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
                          ui.spark([x[1] for x in sg if x[0] >= d24]) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))

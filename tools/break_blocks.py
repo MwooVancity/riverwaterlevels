@@ -169,6 +169,25 @@ def main():
                 n += 1
                 for f_ in faults:
                     found[(key, mname, f_)].add(s)
+    for s in sites:  # ice: flow gone or a month old, stage still reporting; the gauge must keep a page that says so
+        for label, keep in (("no flow", lambda t: False), ("old flow", lambda t: t < "2000")):
+            rec = copy.deepcopy(recs[s])
+            rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] if r["parameter_code"] != "00060" or keep(r["time"])]
+            if not any(r["parameter_code"] == "00065" for r in rec["usgs"]["rows"]):
+                continue
+            if label == "old flow":
+                rec["usgs"]["rows"].append({"parameter_code": "00060", "time": "1999-01-01T00:00:00+00:00", "value": "500", "unit_of_measure": "ft^3/s", "qualifier": None})
+                rec["usgs"]["rows"].sort(key=lambda r: r["time"])
+            ice_now = datetime.datetime.fromisoformat(max(r["time"] for r in rec["usgs"]["rows"])) + datetime.timedelta(minutes=30)
+            n0 = len(render.BLOCK_ERRORS)
+            try:
+                h = render.build_tab("dashboard", render.ctx(s, rows[s], rec, ice_now), rows)[0]
+                bad = [] if re.search("Latest flow.{0,300}Not published", h, re.S) else ["ICE PAGE shows no Not published on the flow tile"]
+                bad += ["ICE " + e for e in render.BLOCK_ERRORS[n0:] if e.split(": ")[1:2] and e.split(": ")[1] in render.SAFETY_BLOCKS]
+            except Exception as e:
+                bad = ["ICE CRASH %s: %s" % (type(e).__name__, str(e)[:80])]
+            for f_ in bad:
+                found[("usgs", label, f_)].add(s)
     print("\n%d broken variants rendered over %d gauges; %d distinct faults" % (n, len(sites), len(found)))
     for (key, mname, f_), ss in sorted(found.items(), key=lambda x: (-len(x[1]), x[0])):
         print("%2d gauges | %-12s %-9s | %s | e.g. %s" % (len(ss), key, mname, f_, sorted(ss)[0]))
