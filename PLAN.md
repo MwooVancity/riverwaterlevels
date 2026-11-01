@@ -2,7 +2,7 @@
 
 ## Goal
 Most useful page for a person deciding about this river today, anywhere. Rivers only, never lakes (Lakebrief has them).
-Objective: weekly clicks plus returning visitors. Baseline 2026-10-29: 74 gauges, 0 clicks a week; Search Console week 1: 64 impressions.
+Objective: be helpful and make the owner the most money: AdSense earnings from people helped. Baseline 2026-10-29: 74 gauges, 0 clicks a week; Search Console week 1: 64 impressions.
 Bottleneck: readers, not pages. Scarce resource: about 3 weeks of Claude (subscription ends about 2026-11-20); after that nobody changes code.
 US (earns the ads): every USGS flow gauge, `data/waves.csv` 9,099 rows, publishes 25 a day by itself in search-demand order, about 8,900 pages by late 2027. Needs no build time. Held out: 283 names, 490 short-record, 546 tiny-basin, 206 canals and drains.
 World: all build time goes here because the US runs itself. EU and UK pages carry no ads until a consent banner exists.
