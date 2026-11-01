@@ -8,6 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOTAL = 20000
 CAP = 5000  # a higher number here is trivia, not gauge checking: "yellow river flow" 500K, "jordan river flow" 50K
 STEP = {5000: 500, 500: 50, 50: 0, 0: 0}
+NOT_RIVER = re.compile(r"\b(dispute|flood|floods|pollution|battle|treaty|bridge)\b", re.I)
 ENGLISH = ["GB", "IE", "CA", "AU", "NZ", "ZA", "IN", "PH", "LK", "SG", "KE", "NG"]
 
 
@@ -29,6 +30,24 @@ def best(tier, keywords):
     if k.endswith(" flow") and not any(tier.get(norm(x)) for x in keywords if not x.endswith(" flow")):
         t = min(t, 500)  # flow alone is often trivia (Jordan River, Holy Land), never the top tier
     return t, k
+
+
+def write_demand(tier):
+    """data/us-river-demand.csv: one row per US river name with a search number, after the shared-name rules. lib/directory.py orders state pages by it."""
+    w = [r for r in load("waves.csv") if r["status"] in ("live", "queue")]
+    states = C.defaultdict(set)
+    for r in w:
+        states[r["river"]].add(r["state"])
+    abroad = {r["name"] + " river" for r in load("world-rivers.csv") if "US" not in r["cc"]}
+    with open(os.path.join(ROOT, "data", "us-river-demand.csv"), "w", newline="", encoding="utf-8") as f:
+        o = csv.writer(f)
+        o.writerow(["river", "tier"])
+        for name in sorted(states):
+            n = name.lower()
+            t, _ = best(tier, [n + " water level", n + " flow"])
+            t = STEP[t] if len(states[name]) > 1 or n.startswith("lake ") or n in abroad else t
+            if t:
+                o.writerow([name, t])
 
 
 def group(t, first):
@@ -67,22 +86,31 @@ def us_rows(tier):
 def world_rows(tier, us_names):
     names = C.defaultdict(set)
     count = C.Counter()
-    title = {}
+    uk = C.defaultdict(list)
+    titles = C.defaultdict(list)
     for r in load("world-rivers.csv"):
-        names[r["name"]] |= set(filter(None, r["cc"].split("|")))
+        if NOT_RIVER.search(r["title"]):
+            continue
+        cc = set(filter(None, r["cc"].split("|")))
+        names[r["name"]] |= cc
         count[r["name"]] += 1
-        title.setdefault(r["name"], r["title"])
+        titles[r["name"]].append(r["title"])
+        if cc & {"GB", "IE"}:
+            uk[r["name"]].append(r["title"])
     out = []
     for n, cc in names.items():
         head = n if n.startswith("rio ") else n + " river"
         if head in us_names and "US" in cc:
             continue  # same river as our US gauges
         t, k = best(tier, ["river %s level" % n, head + " water level", head + " flow"])
-        shared = count[n] > 1 or head in us_names
+        british = t and k.startswith("river ")  # "river thames level" is British wording, so only a British namesake competes
+        shared = len(uk[n]) > 1 if british else count[n] > 1 or head in us_names
         if shared:
             t = STEP[t]
+        pool = uk[n] if british else titles[n]
+        title = min(pool, key=lambda x: ("(" in x or "," in x, len(x), x))
         rank_cc = min((ENGLISH.index(c) for c in cc if c in ENGLISH), default=len(ENGLISH))
-        out.append(dict(group=group(t, True) if t else 8, tier=t, keyword=k if t else "", river=title[n], place="", region="", country="|".join(sorted(cc - {"US"})),
+        out.append(dict(group=group(t, True) if t else 8, tier=t, keyword=k if t else "", river=title, place="", region="", country="|".join(sorted(cc - {"US"})),
                         gauge="", shared="yes" if shared else "", feed="PEGELONLINE" if "DE" in cc else "not checked", ready="no",
                         score=-rank_cc * 100 + len(cc), category=""))
     return out
@@ -90,6 +118,7 @@ def world_rows(tier, us_names):
 
 def main():
     tier = tiers()
+    write_demand(tier)
     us, us_names = us_rows(tier)
     world = world_rows(tier, us_names)
     rows = sorted(us + world, key=lambda r: (r["group"], -r["tier"], r["ready"] != "yes", -r["score"], r["river"]))[:TOTAL]
