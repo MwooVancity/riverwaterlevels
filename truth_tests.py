@@ -75,6 +75,10 @@ def main(only=None):
         for nm, ser in (("flow", G["fl"]), ("stage", G["sg"])):
             if ser and render.qual_text(ser[-1][2]) and "USGS flag:" not in h:
                 fail(site, "latest %s reading carries a USGS qualifier %s but the page prints it as a plain number" % (nm, ser[-1][2].get("qualifier")))
+        if G.get("stage_only"):  # ice: every check below is about a flow this page does not have
+            if "Not published" not in h:
+                fail(site, "USGS publishes no flow here and the page does not say so")
+            continue
         # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):
