@@ -74,7 +74,7 @@ async function build(env, now) {
   await env.LIVE.put("dispatch", now.toISOString() + " " + r.status + " " + (r.headers.get("github-authentication-token-expiration") || "")); // 204 = GitHub accepted; one write an hour at most
 }
 
-function start(env, file) {
+async function start(env, file) { // called only from build(): the cron
   return fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/" + file + "/dispatches", {
     method: "POST",
     headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
