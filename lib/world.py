@@ -117,6 +117,16 @@ def localize(h, feed, river, place, hub, flat=False):
     return h
 
 
+PROOFS = ("reading", "time", "alerts", "unit", "terms", "water")
+PROVED = {  # what a person or script saw on live data, one line each; a country with a gap fails check.py before any of its pages ship. An alert proof means a real live alert reached the code, not an empty list
+    "pegelonline": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Kaub page 3:00 AM CET against feed timestamp +01:00, 2026-11-02", "alerts": "Kaub frost warning from the DWD zip reached the point test, Zurich none, 2026-11-02", "unit": "cm above gauge zero, PEGELONLINE", "terms": "DL-DE-Zero-2.0; DWD CC BY 4.0, read 2026-11-02", "water": "inland rivers and Lake Constance, no tidal gauge listed"},
+    "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish failed 2026-11-02 (MST), fixed by province and longitude, read again after deploy", "alerts": "453 live fog, wind and air quality alerts 2026-11-02; status words issued and continued, 0 reached pages until fixed", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
+
+
+def proof_faults(feeds, proved):
+    return ["%s has no proof of %s" % (f, k) for f in feeds for k in PROOFS if len((proved.get(f) or {}).get(k) or "") < 10]
+
+
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired, so no new gauges for that country (check.py)

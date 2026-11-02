@@ -1530,9 +1530,6 @@ def states_of(sites):
 ECCC_ZONE = {"BC": "America/Vancouver", "AB": "America/Edmonton", "SK": "America/Regina", "MB": "America/Winnipeg", "ON": "America/Toronto", "QC": "America/Toronto", "NB": "America/Halifax", "NS": "America/Halifax", "PE": "America/Halifax", "NL": "America/St_Johns", "YT": "America/Whitehorse", "NT": "America/Edmonton", "NU": "America/Toronto"}
 
 
-ECCC_OFFSET = {"-8": "America/Vancouver", "-7": "America/Edmonton", "-6": "America/Winnipeg", "-5": "America/Toronto", "-4": "America/Halifax"}  # the station's own zone beats its province: eastern BC keeps Mountain time
-
-
 def fetch_eccc(sid, prev):
     """One Canadian gauge: 8 days of 5-minute level and flow, and monthly means once a week. Canada publishes no low or high label, so ours is a rank among past years, said as ours."""
     api = "https://api.weather.gc.ca/collections/"
@@ -1549,8 +1546,6 @@ def fetch_eccc(sid, prev):
             p = f["properties"]
             if p.get("MONTHLY_MEAN_LEVEL") is not None:
                 months.setdefault(p["DATE"][5:7], []).append(round(p["MONTHLY_MEAN_LEVEL"], 3))
-        peak = http_json(api + "hydrometric-annual-peaks/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"]
-        prev = dict(prev, offset=peak[0]["properties"].get("TIMEZONE_OFFSET") if peak else None)
         years = [f["properties"] for f in http_json(api + "hydrometric-annual-statistics/items?f=json&STATION_NUMBER=%s&limit=400" % sid, {}, 30)["features"] if f["properties"].get("DATA_TYPE_EN") == "Water Level"]
         tops, lows = [p["MAX_VALUE"] for p in years if p.get("MAX_VALUE") is not None], [p["MIN_VALUE"] for p in years if p.get("MIN_VALUE") is not None]
         prev = dict(prev, years=[[int(p["IDENTIFIER"].split(".")[1]), round(p["MAX_VALUE"], 3), p.get("MAX_DATE"), round(p["MIN_VALUE"], 3), p.get("MIN_DATE")] for p in years if p.get("MAX_VALUE") is not None and p.get("MIN_VALUE") is not None][-15:], record=dict({"HHW": round(max(tops), 3)} if tops else {}, **({"NNW": round(min(lows), 3)} if lows else {})), drainage=(http_json(api + "hydrometric-stations/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"] or [{"properties": {}}])[0]["properties"].get("DRAINAGE_AREA_GROSS"))
@@ -1565,7 +1560,7 @@ def fetch_eccc(sid, prev):
     series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
     day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
-    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "offset": prev.get("offset"), "zone": ECCC_OFFSET.get(str(prev.get("offset"))) if last["PROV_TERR_STATE_LOC"] not in ("SK", "NL") and ECCC_OFFSET.get(str(prev.get("offset"))) else ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
+    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "zone": "America/Edmonton" if last["PROV_TERR_STATE_LOC"] == "BC" and (geo[0] or -130) > -117.5 else ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
             "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}

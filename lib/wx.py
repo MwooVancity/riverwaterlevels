@@ -53,7 +53,7 @@ def canada_alerts(d):
     out = []
     for f in feats:
         p, g = f["properties"], f.get("geometry") or {}
-        if p.get("status_en") != "active":
+        if (p.get("status_en") or "").lower() in ("ended", "cancelled", "canceled"):  # only a stated end drops an alert: a word we have not seen must show, never hide
             continue
         polys = [g["coordinates"]] if g.get("type") == "Polygon" else g.get("coordinates") or []
         out.append({"rings": [[(y, x) for x, y, *_ in poly[0]] for poly in polys], "event": (p.get("alert_name_en") or "").capitalize(), "severity": {"yellow": "Moderate", "orange": "Severe", "red": "Extreme"}.get((p.get("risk_colour_en") or "").lower(), "Unknown"),
@@ -227,6 +227,10 @@ def demo():
     assert canada_alerts({"numberMatched": 2, "features": []}) is None, "a cut-short list must be unknown, never none"
     ended = {"numberMatched": 1, "features": [{"properties": {"status_en": "ended"}, "geometry": None}]}
     assert canada_alerts(ended) == [], "an ended alert must not show"
+    ring = {"type": "Polygon", "coordinates": [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]]}
+    for word in ("issued", "continued", "some new word", None):
+        got = canada_alerts({"numberMatched": 1, "features": [{"properties": {"status_en": word, "alert_name_en": "fog advisory"}, "geometry": ring}]})
+        assert alerts_at(5, 5, got) and alerts_at(5, 5, got)[0]["event"] == "Fog advisory", "a live alert must reach the page"
     assert nearest(50, 8, {"far": [60, 8, "x"]}) == (None, None), "a far station must not stand in for this river"
     assert canada_city({"currentConditions": {"timestamp": "t", "wind": {"speed": {"value": "calm"}}, "temperature": {"value": None}}}, 0, 0)["obs"]["wind_kmh"] == 0, "calm is a value"
     assert dwd_stations("h\n-\n01001 ENJA JAN MAYEN             70.56   -8.40    10\n")["01001"][:2] == [70.9333, -8.6667], "catalogue positions are degrees.minutes"
