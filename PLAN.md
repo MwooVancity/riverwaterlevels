@@ -29,6 +29,18 @@ Alarm 2026-11-02: GitHub ran only 9 of 22 alarm hours in 11 days, so the alarm n
 Fresh review 2026-11-02, 13 findings fixed: world age ticks, Canadian agency flags, side readings keep their time and die at 24 h, frozen DWD file reads Unknown, emergency line by country, Kenora and Labrador zones, carry at 5%, watchdog steps time-limited, live world pages never held, past archive years restored, three more alarms. Owner: Workers Paid before about 1,500 gauges, about 2026-12-26; alarm at 1,200.
 New country checklist: reading against the agency's page, time zone against the agency, alert coverage on a real active alert, unit and zero point named, terms read, water type labelled (river, lake, reservoir, tidal).
 
+## Road to autopilot (approved 2026-11-02; this order wins over the numbers below)
+One session per stage. Each batch: `check`, dry run, main, read live, update here.
+1. Nov 3-5: clear every `COVER` `next:` item or answer `none: reason` until `FROZEN` is empty.
+2. Nov 5-7: match foreign queue rows to agency station lists in `tools/world_queue.py`; ambiguous stays not ready; 15-row sample.
+3. Nov 7: one ranking, tier x country rate x can show ads.
+4. Nov 7-11: unattended world release: `world-pages.json` generated from the queue, `release.py` picks world gauges inside the 25 a day, per-gauge holds back to the queue, wrong-gauge guard, feed-driven `fetch_world` and `pollWorld`, daily count split US and world. Dry run, 5 a day, then 25.
+5. Nov 11-12: limits: plan-based file stop, world past 150, USGS pause under 300, Worker CPU measured.
+6. Nov 12-14: England as data, no custom code.
+7. Nov 14-16: stale facts, station moves, datum skew, trim CLAUDE.md, runbook for an owner with no Claude, `/code-review high`, fresh website audit.
+Nov 17-20 spare. Short of time, cut England first, then past-150 limits, then `none` answers. Never stage 4 or truth guards. Done means three days with no session open: site grows, no false alarm.
+Owner by date: contact email and AdSense consent mode now; SEPA, OPW, NRW sign-ups before Nov 12; uptime monitor before Nov 20; Workers Paid about Dec 26.
+
 ## Next steps (in order; full speed)
 Done 2026-11-01: one template live, `lib/world.py`, Kaub and Konstanz, phone width read. Canada next: ECCC `api.weather.gc.ca/collections/hydrometric-realtime` (no key, 5-min level and flow, 8,840 rows per station, 30 days) plus `hydrometric-stations` (coordinates, drainage), `hydrometric-daily-mean`, `hydrometric-annual-statistics`: can fill the US flow path, not only stage-only; add a FEEDS row and label our normal as ours, not official. Credit: Data Source: Environment and Climate Change Canada. Canada live with 2 of 5 test gauges, hub `/canada/`, level label is our rank against monthly means (level datum shifts across decades can skew it: move to flow if a label looks wrong). `lib/world.py` `choose` holds any world page over 75% alike, in `gauge_pages` order, so text drift never blocks a deploy; a held gauge returns by itself. More unique data per gauge lets more publish. 4 Austrian Danube gauges have no coordinates in the feed. Last step: spawn a fresh website-expert audit, project wide, top 15 defects, no edits.
 0. Done, kept for the record: one template. `world_gauge_page` is a hand-built copy and looks worse than US pages. Convert feed readings into the record `lib/hero.py` reads, use the stage-only path, and build world gauges with `render.build_tab`; each feed supplies agency name, credit, unit and label. Delete `world_gauge_page`, `world_rules`, cut river tables to gauge, level, change, label. All 119 US pages must build unchanged. Phone-width screenshot before ship. World gauges share the 25 a day through one ranking (decision 2026-11-01).
