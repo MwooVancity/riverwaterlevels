@@ -1551,7 +1551,7 @@ def fetch_eccc(sid, prev):
     if not months or due(prev.get("months_at"), 168):
         hist = http_json(api + "hydrometric-monthly-mean/items?f=json&STATION_NUMBER=%s&limit=1500" % sid, {}, 30)["features"]
         months = {}
-        for f in hist:
+        for f in sorted(hist, key=lambda f: f["properties"]["DATE"]):
             p = f["properties"]
             if p.get("MONTHLY_MEAN_LEVEL") is not None:
                 months.setdefault(p["DATE"][5:7], []).append(round(p["MONTHLY_MEAN_LEVEL"], 3))
@@ -1573,6 +1573,22 @@ def fetch_eccc(sid, prev):
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
             "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
+
+
+def side_readings(series):
+    """A station's other readings, each with its own time, gone after 24 h."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    return {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title(), t["currentMeasurement"]["timestamp"]] for t in series
+            if t["shortname"] != "W" and t.get("currentMeasurement") and (now - datetime.datetime.fromisoformat(t["currentMeasurement"]["timestamp"])).total_seconds() < 86400}
+
+
+def usgs_low():
+    """The key is shared with the Worker's live poll: under 300 calls left this hour, this run leaves history alone. The site reports the budget; no answer means no pause."""
+    try:
+        rem = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com/live/00000000.json", headers={"User-Agent": "riverwaterlevels.com"}), timeout=20).headers.get("x-rwl-usgs-remaining")
+        return rem is not None and float(rem) < 300
+    except (OSError, ValueError):
+        return False
 
 
 def fresh_raw(url, hours, timeout=45):
@@ -1762,7 +1778,7 @@ def fetch_world():
                 except urllib.error.HTTPError:
                     fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
                 rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "ship": cur.get("stateNswHsw"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
-                             "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title(), t["currentMeasurement"]["timestamp"]] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement") and (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(t["currentMeasurement"]["timestamp"])).total_seconds() < 86400}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
+                             "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": side_readings(st["timeseries"]), **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1
                 note("pegelonline", "failed", e)
@@ -1850,4 +1866,6 @@ def main():
     fetch_states(sites)  # statewide alerts + drought for each state hub
 
 
-main()
+if __name__ == "__main__":
+    USGS_OUT[0] = usgs_low()
+    main()

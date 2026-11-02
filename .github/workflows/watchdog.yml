@@ -12,6 +12,10 @@ on:
         description: "Send a test failure email to the owner"
         type: boolean
         default: false
+      test_keepalive:
+        description: "Add the keep-alive empty commit now"
+        type: boolean
+        default: false
 
 permissions:
   contents: write  # only the keep-alive commit below
@@ -22,14 +26,15 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - id: doctor
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKERS_PAID: ${{ vars.WORKERS_PAID }}
         run: python tools/watchdog.py
       - name: Heal - dispatch a refresh when the site stopped rebuilding
         if: steps.doctor.outputs.heal == 'refresh'
@@ -48,6 +53,8 @@ jobs:
         id: truth
         continue-on-error: true
         timeout-minutes: 4
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_world.py
       - name: One alarm per half day (the first run in 01-06 or 13-18 UTC; GitHub skips most single hours)
         id: clock
@@ -61,14 +68,14 @@ jobs:
           fi
       - name: Keep the schedules on (GitHub turns them off after 60 days with no commit; the daily release normally commits)
         run: |
-          if [ $(( $(date +%s) - $(git log -1 --format=%ct) )) -gt 3888000 ]; then
+          if [ $(( $(date +%s) - $(git log -1 --format=%ct) )) -gt 3888000 ] || [ "${{ github.event.inputs.test_keepalive }}" = "true" ]; then
             git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
             git commit --allow-empty -m "keep schedules on: no commit for 45 days" && git push origin HEAD:main
           fi
       - name: Owner alarm (at most twice a day, reader-visible problems only; the failed run makes GitHub email the owner)
         if: github.event.inputs.test_alarm == 'true' || (steps.clock.outputs.open == '1' && (steps.doctor.outputs.alarm != '' || steps.truth.outcome == 'failure'))
         env:
-          ALARM: "${{ steps.doctor.outputs.alarm || (steps.truth.outcome == 'failure' && 'A world page differs from its agency, see the truth step') || '' }}"
+          ALARM: "${{ steps.doctor.outputs.alarm || (steps.truth.outcome == 'failure' && 'A page differs from its agency, see the truth step') || '' }}"
         run: |
           echo "::error::River site problem a reader can see: ${ALARM:-TEST ONLY, nothing is wrong}"
           exit 1

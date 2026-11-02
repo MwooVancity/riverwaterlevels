@@ -74,7 +74,7 @@ async function build(env, now) {
     headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
     body: JSON.stringify({ ref: "main" }),
   });
-  await env.LIVE.put("dispatch", now.toISOString() + " " + r.status); // 204 = GitHub accepted; one write an hour at most
+  await env.LIVE.put("dispatch", now.toISOString() + " " + r.status + " " + (r.headers.get("github-authentication-token-expiration") || "")); // 204 = GitHub accepted; one write an hour at most
 }
 
 async function sites(env) {

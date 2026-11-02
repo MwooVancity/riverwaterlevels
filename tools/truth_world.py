@@ -1,12 +1,29 @@
 """World gauge pages against the live PEGELONLINE feed (log only, as truth_live.py is for the US). The built number may lag an hour; a gap over 50 cm is a fault."""
-import json, re, sys, time, urllib.parse, urllib.request
+import json, os, re, sys, time, urllib.parse, urllib.request
 
 UA = {"User-Agent": "riverwaterlevels.com truth check"}
 BATCH = 40
 
 
 def get(u):
-    return urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=30).read().decode("utf-8")
+    key = {"X-Api-Key": os.environ["USGS_API_KEY"]} if "waterdata" in u and os.environ.get("USGS_API_KEY") else {}
+    return urllib.request.urlopen(urllib.request.Request(u, headers=dict(UA, **key)), timeout=30).read().decode("utf-8")
+
+
+def moved(rows):
+    """US gauges whose USGS location sits over about 5 km from ours: a moved station is a wrong place. One call, 300 gauges a run, so every gauge within len/300 runs."""
+    us = [(r[4].rsplit(" ", 1)[-1], r) for r in rows if str(r[4]).rsplit(" ", 1)[-1].isdigit()]
+    start = time.gmtime().tm_hour * 300 % max(1, len(us))
+    part = dict((us[start:] + us[:start])[:300])
+    if not part:
+        return 0
+    bad = 0
+    for f in json.loads(get("https://api.waterdata.usgs.gov/ogcapi/v1/collections/monitoring-locations/items?id=%s&properties=monitoring_location_number&limit=500&f=json" % ",".join("USGS-" + s for s in part)))["features"]:
+        r, (lon, lat) = part.get(f["properties"]["monitoring_location_number"]), f["geometry"]["coordinates"][:2]
+        if r and abs(lat - r[2]) + abs(lon - r[3]) > 0.05:
+            print(r[1], "FAULT USGS now places this gauge at", lat, lon, "we say", r[2], r[3])
+            bad += 1
+    return bad
 
 
 def check(row):
@@ -33,7 +50,12 @@ def check(row):
 
 def main():
     bad = 0
-    rows = [r for r in json.loads(get("https://riverwaterlevels.com/gauges.json")) if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5])]
+    every = json.loads(get("https://riverwaterlevels.com/gauges.json"))
+    try:
+        bad += moved(every)
+    except Exception as e:
+        print("station check skipped, no answer:", str(e)[:80])
+    rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5])]
     start = time.gmtime().tm_hour * BATCH % max(1, len(rows))
     for row in (rows[start:] + rows[:start])[:BATCH]:  # ponytail: 40 a run so the 10-minute job holds at any page count; all pages take len/40 runs
         try:
@@ -50,6 +72,10 @@ def selftest():
     assert main() == 0, "a dead feed counted as a fault"
     get = lambda u: '[[0, "/x/", 1, 2, "Canada"]]' if "gauges.json" in u else '<i data-n="A"></i><b data-live="stage">9.0' if "/x/" in u else '{"features": [{"properties": {"LEVEL": 1.0}}]}'
     assert main() == 1, "a wrong number passed"
+    get = lambda u: '{"features": [{"properties": {"monitoring_location_number": "01"}, "geometry": {"coordinates": [-72.0, 40.0]}}]}'
+    assert moved([["n", "/u/", 40.0, -72.0, "Ohio OH 01"]]) == 0, "a gauge in place was called moved"
+    assert moved([["n", "/u/", 41.0, -72.0, "Ohio OH 01"]]) == 1, "a moved gauge passed"
+    assert moved([["n", "/u/", 41.0, -72.0, "Germany Europe"]]) == 0, "a world row reached USGS"
     get = real
     print("selftest OK")
 

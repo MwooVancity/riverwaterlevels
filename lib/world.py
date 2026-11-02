@@ -31,12 +31,13 @@ def fmt_level(v, unit):
 
 def canada_label(r, when):
     """Canada publishes no label. Ours: today's level ranked among past monthly means for this month, needing 10 years; the page says it is our calculation."""
-    past = sorted((r.get("months") or {}).get("%02d" % when.month) or [])
+    every = (r.get("months") or {}).get("%02d" % when.month) or []
+    past = sorted(every[-20:])  # oldest first from collect: a gauge's zero can shift across decades, so only the latest 20 years rank today
     if len(past) < 10:
         return "Unknown", "Canada publishes no normal range, and this gauge has too few years to compare.", {}
-    q1, q3, mean = past[len(past) // 4], past[3 * len(past) // 4], sum(past) / len(past)
+    q1, q3 = past[len(past) // 4], past[3 * len(past) // 4]
     word = "Low" if r["cm"] < q1 else "High" if r["cm"] > q3 else "Normal"
-    return word, "Our calculation: today's level against %d years of monthly means for %s, from ECCC data." % (len(past), when.strftime("%B")), {"MMAX": past[-1], "MAVG": round(mean, 3), "MMIN": past[0]}
+    return word, "Our calculation: today's level against the latest %d years of monthly means for %s, from ECCC data." % (len(past), when.strftime("%B")), {"MMAX": max(every), "MAVG": round(sum(every) / len(every), 3), "MMIN": min(every)}
 
 
 def to_rec(page, r):

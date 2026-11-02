@@ -111,7 +111,7 @@ def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
     lid = n.get("lid")
-    links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
+    links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))

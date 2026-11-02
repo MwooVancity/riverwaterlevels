@@ -28,7 +28,7 @@ jobs:
       sharded: ${{ steps.p.outputs.sharded }}
       shards: ${{ steps.p.outputs.shards }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: p
         run: python3 -c "import json;d=json.load(open('data/pipeline.json'));print('sharded=' + ('true' if d.get('sharded') is True else 'false'));print('shards=%d' % int(d.get('shards', 20)))" >> "$GITHUB_OUTPUT"
 
@@ -54,22 +54,22 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: Restore the last published pages (rolling rebuild carries unchanged gauge pages from dist/)
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: dist
           key: rwl-pages-${{ github.run_id }}
           restore-keys: |
             rwl-pages-
       - name: Restore the last data cache
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: |
             cache
@@ -89,8 +89,11 @@ jobs:
           m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
-          lim=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; d=json.load(sys.stdin); f=d.get('files') or 0; print('files %d of 20000' % f if f > 14000 else '')" 2>/dev/null || true)
-          if [ -n "$lim" ]; then echo "release SKIPPED: a hard limit is over 70% ($lim)"; exit 0; fi  # Cloudflare free files: grow no further until the owner acts
+          cap=${{ vars.WORKERS_PAID && 100000 || 20000 }}  # WORKERS_PAID: repo variable the owner sets after buying the plan
+          lim=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; d=json.load(sys.stdin); f=d.get('files') or 0; c=int(sys.argv[1]); print('files %d of %d' % (f, c) if f > 0.7 * c else '')" "$cap" 2>/dev/null || true)
+          if [ -n "$lim" ]; then echo "release SKIPPED: a hard limit is over 70% ($lim)"; exit 0; fi  # grow no further until the owner acts
+          k=$(python -I tools/worker_load.py 2>/dev/null || true)
+          if [ -z "${{ vars.WORKERS_PAID }}" ] && [ "${k:-0}" -ge 10 ]; then echo "release SKIPPED: Cloudflare stopped the Worker $k times in 24 h"; exit 0; fi  # a stopped run is a reader's error page
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
@@ -123,13 +126,13 @@ jobs:
           fi
       - name: Save the published pages (a missing dist/ after a dry run only logs a warning)
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: dist
           key: rwl-pages-${{ github.run_id }}
       - name: Save the data cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: |
             cache

@@ -896,6 +896,8 @@ def selftest():
             assert not got, "selftest: %r wrongly failed: %s" % (want, got)
             continue
         assert any(want in g for g in got), "selftest: %r did not fire (got %s)" % (want, got)
+    import tools.edge_tests
+    tools.edge_tests.run()
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 

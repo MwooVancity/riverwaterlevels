@@ -8,6 +8,9 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
 ## Email: which ones need you
+"Workers Paid is due" or "Cloudflare plan files": buy Workers Paid in Cloudflare ($5 a month), then in GitHub open Settings, Secrets and variables, Actions, Variables, and add WORKERS_PAID with value 1. Growth restarts by itself.
+"GitHub build key expires" or "build key rejected": in GitHub make a new fine-grained token with Actions read and write on this repo only, then put it in Cloudflare, Workers, riverwaterlevels, Settings, Variables and Secrets, as GH_DISPATCH_TOKEN. Until then the site still rebuilds, more slowly.
+"FAULT USGS now places this gauge at" in the watchdog log: the agency moved a station. Pull the page with `python -I tools/open_wave.py --pull <url>`.
 "no new gauges released": the daily release stopped. Check Cloudflare file limits first (a plan upgrade clears a stop near 70%). The site itself stays up and current.
 A failed run with no steps, or a one-off "refresh" failure that the next run clears, is GitHub itself: ignore it. A repeat of the same watchdog email, at most two a day, is real.
 

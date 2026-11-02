@@ -5,11 +5,12 @@ queued).
 Reports (cannot heal, read at session start): live gauges missing from the site, sources that stopped working (hours since last_ok_at),
 numbers not verified against USGS, a stale edge answer, and Googlebot getting a different page than a phone (no cloaking, ever).
 At most one USGS call (the edge's own per-gauge fetch, when its 3-min cache is cold)."""
-import csv, json, os, sys, datetime
+import csv, json, os, socket, sys, datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from lib.common import http_open
 from lib.source_list import UNIVERSAL
+from tools.worker_load import LIMIT, stopped
 
 SITE = "https://riverwaterlevels.com"
 UA = {"User-Agent": "Mozilla/5.0 (rwl-doctor)"}
@@ -52,7 +53,7 @@ def main():
         (bad if age > REBUILD_MIN else ok).append("site rebuilt %d min ago" % age)
         if age > REBUILD_MIN:
             heal.append("refresh")
-        for k_, cap_, what_ in (("files", 20000, "Cloudflare free plan files"),):  # scale cliffs (PLAN.md factory audit): warn at 70%
+        for k_, cap_, what_ in (("files", 100000 if os.environ.get("WORKERS_PAID") else 20000, "Cloudflare plan files"),):  # scale cliffs (PLAN.md factory audit): warn at 70%
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         live = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
@@ -117,7 +118,10 @@ def main():
         (bad if la is None or la > EDGE_MAX_S else ok).append("edge stored copy last updated %s ago" % ("never" if la is None else "%d s" % la))
         bt = rr.headers.get("x-rwl-build-trigger")  # "<iso> <status>": the Worker cron asked GitHub for a build
         if bt:
-            (ok if bt.endswith(" 204") else bad).append("last build trigger from Cloudflare: %s (204 = GitHub accepted)" % bt)
+            at_, code, *end = bt.split(" ", 2)
+            (ok if code == "204" else bad).append("%s: %s (204 = GitHub accepted)" % ("build key rejected, last build trigger from Cloudflare" if code in ("401", "403") else "last build trigger from Cloudflare", bt))
+            if end and end[0].strip() and hours_since(end[0].replace(" UTC", "+00:00").replace(" ", "T")) > -30 * 24:
+                bad.append("GitHub build key expires %s: make a new one and replace the Cloudflare secret GH_DISPATCH_TOKEN (RUNBOOK)" % end[0][:10])
         else:
             ok.append("Cloudflare has not needed to trigger a build yet (GitHub's own schedule ran in time)")
         if rr.headers.get("x-rwl-usgs-remaining"):
@@ -143,8 +147,8 @@ def main():
             for u in ext:
                 try:
                     http_open(u.replace("&amp;", "&"), UA, 20).close()
-                except Exception as e:  # ponytail: only "gone" counts; 403/429/5xx mean the server answered (bot walls, rate limits), so no false alarm
-                    if getattr(e, "code", None) in (404, 410) or not hasattr(e, "code"):
+                except Exception as e:  # ponytail: only "gone" counts; 403/429/5xx mean the server answered, and a timeout from one network proves nothing
+                    if getattr(e, "code", None) in (404, 410) or isinstance(getattr(e, "reason", None), socket.gaierror):
                         dead.append("%s (%s)" % (u, getattr(e, "code", None) or str(e)[:40]))
             (bad if dead else ok).append("outside links on %s: %d checked%s" % (path, len(ext), (", dead: " + "; ".join(dead[:6])) if dead else ", none gone"))
     except Exception as e:
@@ -177,8 +181,9 @@ def main():
         stall = release_stall()
         if stall:
             bad.append(stall)
-        if 1200 <= get("/status.json").get("gauges", 0) < 1225:  # one day of emails, then quiet: the plan cannot be read from here
-            bad.append("Workers Paid is due before about 1,500 gauges: the free 10 ms CPU limit will start failing pages")
+        cut = stopped()
+        if cut is not None:
+            (bad if cut >= LIMIT and not os.environ.get("WORKERS_PAID") else ok).append("Cloudflare stopped the Worker %d times in 24 h%s" % (cut, " (Workers Paid is due: readers got error pages; then set the GitHub variable WORKERS_PAID, RUNBOOK)" if cut >= LIMIT else ""))
     except (OSError, ValueError, KeyError, AttributeError) as e:
         bad.append("no new gauges released: release record unreadable (%s)" % str(e)[:60])
     print("SITE HEALTH %s: %d problem(s)" % (datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), len(bad)))
@@ -188,7 +193,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
