@@ -4,6 +4,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import collect
 from lib import world
+from lib import wx as wx_mod
 
 
 def run():
@@ -21,6 +22,21 @@ def run():
     b = blocks2.b_flow_behind(G)
     assert b and "1.07 ft higher" in b["body"] and "7 h" in b["body"], "flow ending in a flood was not said"
     assert not blocks2.flow_behind(dict(G, sg=G["sg"][:1])), "a current flow was called behind"
+    import io, zipfile
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, "w") as zf:
+        zf.writestr("x.geojson", json.dumps({"crs": {"properties": {"name": "EPSG:3857"}}, "features": [{"properties": {"DM": 2}, "geometry": {"type": "Polygon", "coordinates": [[[123.456, 234.567], [0, 0], [99, 0], [123.456, 234.567]]]}}]}))
+    assert wx_mod.drought_map(b.getvalue())[0][2][0][0][1] != round(wx_mod.drought_map(b.getvalue())[0][2][0][0][1], 3), "drought coordinates were rounded: false gaps open in solid areas"
+    row = lambda m, c: {"geometry": {"coordinates": [-123.0, 49.0]}, "properties": {"CLIMATE_IDENTIFIER": "A", "STATION_NAME": "A", "MONTH": m, "VALUE": 1.0, "PERIOD_BEGIN": 1981, "PERIOD_END": 2010, "YEAR_COUNT_NORMAL_PERIOD": c}}
+    near = {"lat": 49.0, "lon": -123.0}
+    real_json = collect.http_json
+    try:
+        collect.http_json = lambda *a, **k: {"features": [row(10, 1)]}
+        assert collect.normals_canada(near) is None, "one October passed as a 30-year normal"
+        collect.http_json = lambda *a, **k: {"features": [row(m, 30) for m in range(1, 13)]}
+        assert collect.normals_canada(near)["temp"]["10"] == 1.0, "a real normal was refused"
+    finally:
+        collect.http_json = real_json
     z = collect.eccc_zone
     on = {"PROV_TERR_STATE_LOC": "ON", "DATETIME_LST": "2026-11-02T10:00:00-05:00"}
     assert z(dict(on, DATETIME_LST="2026-11-02T10:00:00-06:00"), -94.5) == "America/Winnipeg", "Kenora kept Toronto time"

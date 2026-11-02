@@ -18,9 +18,9 @@ def nearest(lat, lon, spots, limit=NEAR_KM):
 
 
 def drought_map(blob):
-    """The Canadian Drought Monitor zip, one GeoJSON per class in EPSG:3857, into [[class, [lat, lon box, rings]]]. Three decimals, about 100 m."""
+    """The Canadian Drought Monitor zip, one GeoJSON per class in EPSG:3857, into [[class, [lat, lon box, rings]]]. Coordinates stay whole: rounding opened false gaps inside solid areas."""
     z, out = zipfile.ZipFile(io.BytesIO(blob)), []
-    to_ll = lambda p: [round(math.degrees(2 * math.atan(math.exp(p[1] / 6378137.0)) - math.pi / 2), 3), round(math.degrees(p[0] / 6378137.0), 3)]
+    to_ll = lambda p: [math.degrees(2 * math.atan(math.exp(p[1] / 6378137.0)) - math.pi / 2), math.degrees(p[0] / 6378137.0)]
     for n in sorted(z.namelist()):
         d = json.loads(z.read(n))
         assert d["crs"]["properties"]["name"].endswith("3857"), "drought map changed projection"

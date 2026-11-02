@@ -623,6 +623,8 @@ def world_rules(h):
     if bare:
         return ["world gauge page shows a US unit with no local one: %s" % bare[:4]]
     miss = [x for x in ("Water level", "Is this normal", "24 h change", ("Level forecast" if "Level forecast" in t else "River forecast"), 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
+    if '"name":"ZZ"' in h:
+        return ["world gauge page carries the placeholder state in its breadcrumb markup"]
     left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov", "Delaware", "California") if x in t]
     return (["world gauge page is missing: " + ", ".join(miss)] if miss else []) + (["world gauge page still says: " + ", ".join(left)] if left else [])
 

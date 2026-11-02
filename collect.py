@@ -2,6 +2,7 @@
 Each source is fetched independently; a failed source keeps its previous cached value (and old fetched_at), it never blanks the record.
 Usage: python -I collect.py [site ...]   (default: wave 0)
 """
+import collections
 import email.utils
 import os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -1475,7 +1476,7 @@ def fast(inv, sites):
             rec["fetched_at"] = now_iso()
             json.dump(rec, open(path + ".tmp", "w"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
-            print("ok", s, "new usgs rows", len(add), "; ".join(log))
+            print("ok", s, "new usgs rows", add, "corrected", fixed, "; ".join(log))
         except Exception as e:
             print("FAIL gauge", s, type(e).__name__, str(e)[:100], "(its previous cache stays)")
             note("gauge", "failed", e)
@@ -1728,7 +1729,7 @@ ACCESS_LEFT = [5]  # Overpass gauges a run: public server, 2,627 Canadian gauges
 def world_extras(page, r, prev, ctx):
     """Blocks on slow clocks, each kept from the last run: access and normals monthly, drought with the monthly map, 30 days of water temperature daily. A failure keeps the old answer and the block says its age."""
     canada = page.get("feed") == "eccc"
-    for k in ("access", "access_at", "normals", "normals_at", "drought", "drought_map", "wt30", "wt30_at"):
+    for k in ("access", "access_at", "normals", "normals_at", "drought", "drought_map", "drought_v", "wt30", "wt30_at"):
         if k in prev:
             r[k] = prev[k]
     if due(r.get("access_at"), 720) and ACCESS_LEFT[0] > 0:
@@ -1737,16 +1738,16 @@ def world_extras(page, r, prev, ctx):
             r["access"], r["access_at"] = fetch_access(r["lat"], r["lon"]), now_iso()
         except Exception as e:
             note("world-access", "failed", e)
-    if due(r.get("normals_at"), 720):
+    if due(r.get("normals_at"), 720) or (canada and (r.get("normals") or {}).get("v") != 2):
         try:
             r["normals"], r["normals_at"] = (normals_canada if canada else normals_germany)(r), now_iso()
         except Exception as e:
             note("world-normals", "failed", e)
     if canada:
         try:
-            m = listing("ca-drought", CDM + "%d/" % datetime.date.today().year, drought_latest, 72)
-            if m and m["map"] != r.get("drought_map"):
-                r["drought"], r["drought_map"] = wx.drought_at(r["lat"], r["lon"], m["polys"]), m["map"]
+            m = listing("ca-drought2", CDM + "%d/" % datetime.date.today().year, drought_latest, 72)
+            if m and (m["map"] != r.get("drought_map") or r.get("drought_v") != 2):
+                r["drought"], r["drought_map"], r["drought_v"] = wx.drought_at(r["lat"], r["lon"], m["polys"]), m["map"], 2
         except Exception as e:
             note("world-drought", "failed", e)
     elif "WT" in (r.get("also") or {}) and due(r.get("wt30_at"), 20):
@@ -1773,9 +1774,10 @@ def drought_latest(index):
 
 def normals_canada(r):
     """The nearest station within about 50 km with a current normal for temperature and rain; one call a gauge a month."""
-    api = "https://api.weather.gc.ca/collections/climate-normals/items?f=json&limit=2000&CURRENT_FLAG=Y&bbox=%.3f,%.3f,%.3f,%.3f&NORMAL_ID=%%d&properties=CLIMATE_IDENTIFIER,STATION_NAME,MONTH,VALUE,PERIOD_BEGIN,PERIOD_END" % (r["lon"] - .7, r["lat"] - .5, r["lon"] + .7, r["lat"] + .5)
+    api = "https://api.weather.gc.ca/collections/climate-normals/items?f=json&limit=2000&CURRENT_FLAG=Y&bbox=%.3f,%.3f,%.3f,%.3f&NORMAL_ID=%%d&properties=CLIMATE_IDENTIFIER,STATION_NAME,MONTH,VALUE,PERIOD_BEGIN,PERIOD_END,YEAR_COUNT_NORMAL_PERIOD" % (r["lon"] - .7, r["lat"] - .5, r["lon"] + .7, r["lat"] + .5)
     temp, rain = http_json(api % 1, {}, 30)["features"], http_json(api % 56, {}, 30)["features"]
-    both = {f["properties"]["CLIMATE_IDENTIFIER"] for f in temp} & {f["properties"]["CLIMATE_IDENTIFIER"] for f in rain}
+    full = lambda fs: {i for i, n in collections.Counter(f["properties"]["CLIMATE_IDENTIFIER"] for f in fs if f["properties"]["MONTH"] <= 12 and f["properties"]["VALUE"] is not None and (f["properties"]["YEAR_COUNT_NORMAL_PERIOD"] or 0) >= 15).items() if n == 12}  # Seymour Falls: one October, one year, shown as a normal
+    both = full(temp) & full(rain)
     spots = {f["properties"]["CLIMATE_IDENTIFIER"]: [f["geometry"]["coordinates"][1], f["geometry"]["coordinates"][0]] for f in temp if f["properties"]["CLIMATE_IDENTIFIER"] in both}
     sid, away = wx.nearest(r["lat"], r["lon"], spots, 50)
     if not sid:
@@ -1783,7 +1785,7 @@ def normals_canada(r):
     pick = lambda fs: {str(f["properties"]["MONTH"]): f["properties"]["VALUE"] for f in fs if f["properties"]["CLIMATE_IDENTIFIER"] == sid and f["properties"]["MONTH"] <= 12}
     p = next(f["properties"] for f in temp if f["properties"]["CLIMATE_IDENTIFIER"] == sid)
     t, m = pick(temp), pick(rain)
-    return {"place": p["STATION_NAME"].title(), "km": away, "period": "%s to %s" % (p["PERIOD_BEGIN"], p["PERIOD_END"]), "temp": t, "rain": m}
+    return {"v": 2, "place": p["STATION_NAME"].title(), "km": away, "period": "%s to %s" % (p["PERIOD_BEGIN"], p["PERIOD_END"]), "temp": t, "rain": m}
 
 
 def normals_table(blob):

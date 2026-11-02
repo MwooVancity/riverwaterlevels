@@ -711,7 +711,7 @@ def b_world_aq(G):
     age = hours_old(a["t"], G["now"]) if a else None
     if not a or age is None or age > HIDE_H["air_quality"]:
         return None
-    return block("air_quality", "Air quality near the river", "official", table(["Station", "Index", "Distance"], tr([esc(a["place"]), esc(a["value"]), "%d km" % a["km"]], right=(1, 2)), right=(1, 2)), "Source: %s, %s, measured %s." % (esc(a["src"]), esc(a["scale"]), esc(tzl(parse_t(a["t"]), G["zone"]))), f["src"], amber=age)
+    return block("air_quality", "Air quality near the river", "official", table(["Station", "Index", "Distance"], tr([esc(a["place"]), esc(a["value"]), "%d km" % a["km"]], right=(1, 2)), right=(1, 2)), "Source: %s, %s, measured %s." % (esc(a["src"]), esc(a["scale"]), esc(tzl(parse_t(a["t"]), G["zone"]))), "uba" if f["src"] == "pegelonline" else f["src"], amber=age)
 
 
 def b_world_links(G):

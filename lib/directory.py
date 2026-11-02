@@ -183,7 +183,7 @@ def world_ft(v, r):
 
 
 def world_name(p):
-    return p["river"] if p.get("lake") else p["river"] + " river"
+    return p["river"] if p.get("lake") or p.get("flat") else p["river"] + " river"
 
 
 def world_links():
@@ -260,7 +260,7 @@ def state_page(st, rows, Gs, sd=None):
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw + most_searched(groups, demand(), st), trs))
-    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for every river gauge in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
+    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
 def hub_page(hub_slug, st, rows, inv_count, Gs):
@@ -307,7 +307,7 @@ def world_page(page, d, now, linked=None):
         if r["name"] in (linked or []):
             gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r.get("title") or r["name"]), gauge)
         trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
-            gauge, "" if page.get("lake") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))
+            gauge, "" if page.get("lake") or page.get("flat") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Label</th>'
