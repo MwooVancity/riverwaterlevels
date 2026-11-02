@@ -7,6 +7,9 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 2. Claude pulls the page from Google the same hour (`python -I tools/open_wave.py --pull <url>`), rolls back the live site if needed (`npx wrangler rollback`, Cloudflare keeps the previous releases) and finds the cause.
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
+## Email: which ones need you
+A failed run with no steps, or a one-off "refresh" failure that the next run clears, is GitHub itself: ignore it. A repeat of the same watchdog email, at most two a day, is real.
+
 ## Email: "watchdog failed" (hourly check of the live site)
 The email body lists the reason. Match it:
 - **"last build is N min old"**: the deployer stopped. Open https://github.com/MwooVancity/riverwaterlevels/actions, click "refresh", press "Run workflow". If it fails again, tell Claude "refresh keeps failing".

@@ -46,7 +46,7 @@ A person at or near this river today, on a phone, with 30 seconds: to fish, padd
 - One gauge per river first. New pages enter Google only via `tools/open_wave.py`.
 - Cloudflare free limits are per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.
 - A rule not in `gates.py`/`check.py` is a note. Every new check ships with a fixture (`check.py --selftest`).
-- Gates block only what shows a reader something wrong; what can heal never blocks. `tools/watchdog.py` heals hourly and alarms the owner at 01 and 13 UTC. Fix failures at the cause, never by loosening a check.
+- Gates block only what shows a reader something wrong; what can heal never blocks. `tools/watchdog.py` heals hourly and alarms the owner at most twice a day. Fix failures at the cause, never by loosening a check.
 - Windows: no `&&` in PowerShell; `MSYS_NO_PATHCONV=1` in Git Bash; `python -I`.
 
 ## Commands

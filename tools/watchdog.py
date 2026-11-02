@@ -175,7 +175,7 @@ def main():
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
         open(out, "a").write("heal=%s\n" % ("refresh" if "refresh" in heal else "none"))
-        if alarm and datetime.datetime.now(datetime.timezone.utc).hour in (1, 13):
+        if alarm:  # watchdog.yml decides whether this run may email: GitHub skipped 59% of the 01 and 13 UTC hours (2026-11-02)
             open(out, "a").write("alarm=%s\n" % " | ".join(alarm)[:900].replace("\n", " "))
     return 0  # never fails: no owner email; problems are read at session start and healed here where possible
 

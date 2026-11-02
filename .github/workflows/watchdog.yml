@@ -14,7 +14,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write  # only the keep-alive commit below
   actions: write   # to dispatch refresh.yml when the site stopped rebuilding
 
 jobs:
@@ -47,11 +47,24 @@ jobs:
         id: truth
         continue-on-error: true
         run: python tools/truth_world.py
-      - name: Alarm hour
+      - name: One alarm per half day (the first run in 01-06 or 13-18 UTC; GitHub skips most single hours)
         id: clock
-        run: echo "h=$(date -u +%H)" >> "$GITHUB_OUTPUT"
-      - name: Owner alarm (01 and 13 UTC, reader-visible problems only; the failed run makes GitHub email the owner)
-        if: steps.doctor.outputs.alarm != '' || github.event.inputs.test_alarm == 'true' || (steps.truth.outcome == 'failure' && (steps.clock.outputs.h == '01' || steps.clock.outputs.h == '13'))
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          h=$((10#$(date -u +%H) % 12))
+          if [ "$h" -ge 1 ] && [ "$h" -le 6 ]; then
+            sent=$(gh run list --workflow watchdog.yml --event schedule --status failure --created ">=$(date -u -d "-$h hours" +%FT%H:00:00Z)" --json databaseId --jq length || echo 0)
+            if [ "$sent" = "0" ]; then echo "open=1" >> "$GITHUB_OUTPUT"; fi
+          fi
+      - name: Keep the schedules on (GitHub turns them off after 60 days with no commit; the daily release normally commits)
+        run: |
+          if [ $(( $(date +%s) - $(git log -1 --format=%ct) )) -gt 3888000 ]; then
+            git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+            git commit --allow-empty -m "keep schedules on: no commit for 45 days" && git push origin HEAD:main
+          fi
+      - name: Owner alarm (at most twice a day, reader-visible problems only; the failed run makes GitHub email the owner)
+        if: github.event.inputs.test_alarm == 'true' || (steps.clock.outputs.open == '1' && (steps.doctor.outputs.alarm != '' || steps.truth.outcome == 'failure'))
         env:
           ALARM: "${{ steps.doctor.outputs.alarm || (steps.truth.outcome == 'failure' && 'A world page differs from its agency, see the truth step') || '' }}"
         run: |
