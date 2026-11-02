@@ -62,7 +62,7 @@ def canada_alerts(d):
         polys = [g["coordinates"]] if g.get("type") == "Polygon" else g.get("coordinates") or []
         out.append({"rings": [[(y, x) for x, y, *_ in poly[0]] for poly in polys], "event": (p.get("alert_name_en") or "").capitalize(), "severity": {"yellow": "Moderate", "orange": "Severe", "red": "Extreme"}.get((p.get("risk_colour_en") or "").lower(), "Unknown"),
                     "headline": (p.get("alert_text_en") or "").split("\n\n")[0][:300], "areaDesc": p.get("feature_name_en") or "", "ends": p.get("event_end_datetime"), "expires": p.get("expiration_datetime")})
-    return out
+    return None if out and not any(a["rings"] for a in out) else out  # alerts with no usable shapes reach nobody: unknown, never none
 
 
 def canada_city(props, lat, lon):
@@ -112,6 +112,8 @@ def dwd_alerts(blob):
                 rings = [[tuple(float(v) for v in pt.split(",")) for pt in (a.text or "").split()] for a in area.findall("c:polygon", NS)]
                 out.append({"rings": [r for r in rings if len(r) > 2], "event": (i.findtext("c:event", "", NS) or "").capitalize(), "severity": i.findtext("c:severity", "Unknown", NS), "headline": " ".join(x for x in (i.findtext("c:headline", "", NS), i.findtext("c:description", "", NS)) if x)[:300],
                             "areaDesc": area.findtext("c:areaDesc", "", NS), "ends": i.findtext("c:expires", None, NS), "expires": i.findtext("c:expires", None, NS)})
+    if out and not any(a["rings"] for a in out):
+        raise ValueError("DWD alerts with no shapes")  # the caller keeps the last answer, which ages into Unknown
     return out
 
 
@@ -195,6 +197,21 @@ def dwd_forecast(blob, zone):
     return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00")}
 
 
+def suspect(series, unit, now):
+    """(hold, note) for a reading that may be false, from its own series. A time in the future is wrong, so it holds; a flat week or a jump in one step may be real, so the page says so and shows it."""
+    if not series:
+        return False, ""
+    pts = [(datetime.datetime.fromisoformat(t.replace("Z", "+00:00")), v) for t, v in series]
+    if pts[-1][0] > now + datetime.timedelta(hours=1):
+        return True, "reading time is in the future"
+    big = 50 if unit == "cm" else 0.5
+    if len(pts) >= 2 and abs(pts[-1][1] - pts[-2][1]) > big and (pts[-1][0] - pts[-2][0]).total_seconds() <= 7200:
+        return False, "Latest reading jumped sharply from the one before; it may be a sensor fault. "
+    if len(pts) >= 96 and (pts[-1][0] - pts[0][0]).days >= 6 and len({v for _, v in pts}) == 1:
+        return False, "Reading has not changed in %d days; the sensor may be stuck. " % (pts[-1][0] - pts[0][0]).days
+    return False, ""
+
+
 def day_stats(feats):
     """A gauge's whole daily record into what a page needs: low, median and high for each calendar date, and the deciles of every day on record."""
     by, every = {}, []
@@ -225,6 +242,13 @@ def demo():
     assert got["days"]["03-05"][:3] == [5.0, 5.0, 5.0] and got["deciles"][0] == 1.0 and got["deciles"][10] == 28.0
     two = [{"rings": [box], "event": "x", "headline": "h", "areaDesc": "here"}, {"rings": [box], "event": "x", "headline": "h", "areaDesc": "also"}, {"rings": [[(50, 50), (50, 60), (60, 60)]], "event": "x", "headline": "h", "areaDesc": "far"}]
     assert [a["areaDesc"] for a in alerts_at(5, 5, two)] == ["here"], "one line per alert, named for the county that holds the gauge"
+    t0 = datetime.datetime(2026, 11, 2, 12, tzinfo=UTC)
+    at = lambda h: (t0 + datetime.timedelta(hours=h)).isoformat()
+    assert suspect([[at(5), 10]], "cm", t0)[0], "a future reading holds"
+    assert "jumped" in suspect([[at(-1), 10], [at(0), 200]], "cm", t0)[1] and not suspect([[at(-1), 10], [at(0), 200]], "cm", t0)[0], "a jump shows, marked"
+    assert "not changed" in suspect([[at(-i), 10] for i in range(168, -1, -1)], "cm", t0)[1], "a flat week is marked"
+    assert suspect([[at(-i), 10 + i % 3] for i in range(168, -1, -1)], "cm", t0) == (False, "")
+    assert canada_alerts({"numberMatched": 1, "features": [{"properties": {"status_en": "issued"}, "geometry": None}]}) is None, "alerts with no shapes are unknown"
     arc = {}
     for v in (5, 9, 2):
         day_add(arc, "g", "2026-11-02", v)

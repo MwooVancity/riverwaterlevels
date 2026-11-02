@@ -654,7 +654,7 @@ def selftest():
            "series": [[(wn - dt_.timedelta(minutes=10 + 15 * i)).isoformat(), 30.0 - i * 0.01] for i in range(120, -1, -1)]}
     wu, wh = world.page(wp0, wr_, wn)
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
-    assert "ft. Height above" in wh and "Low for Nov" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
+    assert "ft. Height above" in wh and "Low, WSV label" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
     assert not world.proof_faults(world.FEEDS, world.PROVED) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]

@@ -677,6 +677,8 @@ def b_also(G):
     f = G["feed"]
     words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
     rows = "".join(tr([words.get(k, esc(v[2])), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
+    if f.get("ship") in ("low", "normal", "high"):
+        rows += tr(["Shipping level, agency label (not a sailing decision)", f["ship"].capitalize()], right=(1,))
     return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s, with the reading at %s." % (f["api"], f["name"], esc(G["obs"])), f["src"]) if rows else None
 
 

@@ -61,7 +61,8 @@ def b_stage_chart(G):
     zone, now = G["zone"], G["now"]
     t1 = sg[-1][0]
     t0 = max(sg[0][0], t1 - datetime.timedelta(days=7))
-    obs = [(t, v) for t, v, _ in sg if t >= t0]
+    local = {"cm": 30.48, "m": 0.3048}.get(G["feed"].get("unit"), 1)  # world gauges draw in the agency's unit
+    obs = [(t, v * local) for t, v, _ in sg if t >= t0]
     n = G["rec"].get("nwps") or {}
     nws = cleared("nwps")
     fc, issued = [], None
@@ -75,16 +76,16 @@ def b_stage_chart(G):
     cats = (n.get("categories") or {}) if nws else {}
     vals = [v for _, v in obs] + [v for _, v in fc]
     lo, hi = min(vals), max(vals)
-    if hi - lo < 1.0:  # a tiny rise must not look like a flood: keep at least one foot of axis
-        lo, hi = (lo + hi) / 2 - 0.5, (lo + hi) / 2 + 0.5
+    if hi - lo < local:  # a tiny rise must not look like a flood: keep at least one foot of axis
+        lo, hi = (lo + hi) / 2 - local / 2, (lo + hi) / 2 + local / 2
     vmin, vmax, ticks = nice_ticks(lo, hi)
     hl = [(k.capitalize(), cats[k]) for k in CATS if k in cats and vmin <= cats[k] <= vmax] if not gap else []
     tend = fc[-1][0] if fc else t1
-    label = "Gage height in feet over the last 7 days" + (" and the National Weather Service forecast" if fc else "")
+    label = "Gage height in %s over the last 7 days" % {"cm": "centimetres", "m": "metres"}.get(G["feed"].get("unit"), "feet") + (" and the National Weather Service forecast" if fc else "")
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, "%.2f ft" % obs[-1][1], esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, ("%.2f %s (%.2f ft)" % (obs[-1][1], G["feed"]["unit"], obs[-1][1] / local)) if local != 1 else "%.2f ft" % obs[-1][1], esc(tzl(obs[-1][0], zone))], right=(1,))
     cur = fc_cur(G, gap)  # flood stages and the forecast are NWS stages: measured against the stage on the NWS scale, as everywhere else
     if cur is None:
         cur = obs[-1][1]

@@ -419,7 +419,7 @@ def hero(G, pages=None):
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
-    norm_txt = ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None or G["feed"] else "No past-years comparison for this date"
+    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (

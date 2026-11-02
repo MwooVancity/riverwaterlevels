@@ -3,7 +3,7 @@ One template, so every fix to the gauge page reaches these too. A new feed adds 
 import datetime, re
 from lib import render
 import os, zoneinfo
-from lib import core, ui
+from lib import core, ui, wx
 from lib.common import parse_t
 from lib.core import HIDE_H, hours_old
 from lib.directory import esc, world_gauge_url, world_slug
@@ -66,7 +66,7 @@ def to_rec(page, r):
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
     links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, label=label, label_note=note, marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -111,6 +111,7 @@ def localize(h, feed, river, place, hub, flat=False):
     h = re.sub(r" Credit: [^<]*?subject to copyright\.", "", h).replace(">Official NWS<", ">Official<")  # the US credit is a false statement about any other agency's data
     h = h.replace("National Weather Service", feed["wx"]).replace("USGS sensor", "%s sensor" % feed["agency"]).replace("check weather.gov", "check " + feed["wx_site"]).replace("NWS RFC estimate", "Station rain total")
     h = h.replace("NWS forecast", "forecast").replace("NWS station", "Station").replace("NWS ", feed["wx"] + " ")
+    h = h.replace('fill="var(--mut)">ft</text>', 'fill="var(--mut)">%s</text>' % feed["unit"])
     h = metric(h).replace("Government data, shown with", esc(feed["emergency"]) + " Government data, shown with", 1)
     credit = "Source: %s, %s" % (feed["api"], feed["name"])
     head = esc(place) if flat else "%s at %s" % (esc(river), esc(place))
@@ -298,7 +299,11 @@ def page(p, r, now, rows=(), keep=()):
     """(url, html) for one gauge, or None when it fails the ship test."""
     if not ready(r):
         return None
+    hold, odd = wx.suspect(r["series"], r.get("unit", "cm"), now)
+    if hold:
+        return None
     row, rec = to_row(p, r), to_rec(p, r)
+    rec["feed"]["label_note"] = odd + rec["feed"]["label_note"]
     rec["feed"]["lake"] = p.get("lake")
     rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows and not p.get("flat") else []  # a flat list is gauges on different rivers: never up or downstream

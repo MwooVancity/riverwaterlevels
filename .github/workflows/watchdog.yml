@@ -43,13 +43,17 @@ jobs:
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_live.py
-      - name: World gauge pages against their feed (log only)
+      - name: World gauge pages against their feed
+        id: truth
         continue-on-error: true
         run: python tools/truth_world.py
+      - name: Alarm hour
+        id: clock
+        run: echo "h=$(date -u +%H)" >> "$GITHUB_OUTPUT"
       - name: Owner alarm (01 and 13 UTC, reader-visible problems only; the failed run makes GitHub email the owner)
-        if: steps.doctor.outputs.alarm != '' || github.event.inputs.test_alarm == 'true'
+        if: steps.doctor.outputs.alarm != '' || github.event.inputs.test_alarm == 'true' || (steps.truth.outcome == 'failure' && (steps.clock.outputs.h == '01' || steps.clock.outputs.h == '13'))
         env:
-          ALARM: ${{ steps.doctor.outputs.alarm }}
+          ALARM: ${{ steps.doctor.outputs.alarm || 'A world page differs from its agency: see the truth step' }}
         run: |
           echo "::error::River site problem a reader can see: ${ALARM:-TEST ONLY, nothing is wrong}"
           exit 1

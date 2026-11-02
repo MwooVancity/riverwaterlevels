@@ -1732,7 +1732,7 @@ def fetch_world():
                     fc = http_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
                 except urllib.error.HTTPError:
                     fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
-                rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
+                rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "ship": cur.get("stateNswHsw"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
                              "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title()] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement")}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1

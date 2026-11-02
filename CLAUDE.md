@@ -2,6 +2,9 @@
 
 Status and next steps: PLAN.md. This folder is its own project; calcscrape rules do not apply.
 
+## HARD: truth first (owner 2026-11-02)
+A false page is worse than no page; anything untrue is unhelpful. Every fact on a page is proven on live data from the agency, never from memory, a search result or fake fixtures alone. No proof: it does not ship or it says Unknown. Silence never reads as safe: a feed down, cut short, outside its area or parsed to nothing is Unknown. A wrong time, unit, place or gauge is a defect of the highest rank. Our calculations say they are ours. A reading that looks false is held (future time) or marked (stuck, jump). `lib/wx.py` `suspect`, `lib/world.py` `PROVED`, `COVER`, `missing`, `tools/truth_world.py`.
+
 ## HARD: edge case at scale (owner 2026-11-01)
 Every change states how it fails today AND at 14,000 pages (calls, CPU, URL length, file count, KV writes, run time, a dead feed) with the number where it breaks. Anything unattended must survive past 2026-11-20, when nobody can change code.
 
@@ -31,7 +34,7 @@ A person at or near this river today, on a phone, with 30 seconds: to fish, padd
 - Every number has a unit, a time and a Source line. A block shows only if its `data/sources.json` row is `quoted` or `owner-permission`.
 - Four block states: valid, valid-empty (a sentence), unavailable ("Unknown", never "none"), stale (real age, marked old). `SAFETY_BLOCKS` failing keeps the previous page; other blocks hide alone and the gaps line names them.
 - Stale limits: flow 24 h "not reporting"; river forecast amber 24 h, hidden 72 h; weather obs 3 h/12 h; hourly forecast amber 12 h, hidden 72 h; alerts 3 h; rain 6 h; water temperature tile under 24 h. Ignore NWS Test/Administrative alerts.
-- `tools/truth_live.py` (US) and `tools/truth_world.py` check pages against live feeds. A sentence no source can check is deleted. A derived line needing a third fix is deleted. Over 80% shared text, numbers included, fails the build: a gauge's own readings are its own content (owner 2026-11-02).
+- A sentence no source can check is deleted. A derived line needing a third fix is deleted. Over 80% shared text, numbers included, fails the build: a gauge's own readings are its own content (owner 2026-11-02).
 - New country: `PROVED` in `lib/world.py` needs reading, time, alerts, unit, terms and water type seen on live data; an alert proof needs a real live alert, never an empty list.
 - World guarantee: `lib/world.py` `COVER` answers every US block per country (have, none: reason, next: source). A US block with no answer fails `check.py`; a country with a next item adds no gauges (`FROZEN`). `missing` holds a new gauge whose data is not on its page; an outage never pulls a live page. `world_rules` is an allowlist of hosts and units.
 

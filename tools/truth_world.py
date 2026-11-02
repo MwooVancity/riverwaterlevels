@@ -20,6 +20,11 @@ def main():
             live = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&sortby=-DATETIME&properties=LEVEL" % sid))["features"][0]["properties"]["LEVEL"]
             ok = shown and abs(float(shown.group(1)) - live) <= 0.5
             print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
+            near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&skipGeometry=true&properties=status_en&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
+            live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled")]
+            if live_al and "No active Environment Canada" in page:
+                print(row[1], "FAULT page says no alerts, agency has", len(live_al))
+                bad += 1
             bad += not ok
             continue
         name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
