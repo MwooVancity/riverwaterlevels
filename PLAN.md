@@ -62,6 +62,7 @@ NWPS `mediumRange` empty; if still empty 2026-11-29, use NWM bulk files. Off: NI
 ## Owner only
 - Workers Paid ($5/mo): 100,000 files; free is 100,000 requests a day shared, past it error 1027 until midnight UTC.
 - Publisher name and contact address; `data/publisher.json` email is empty.
+- AdSense: turn on consent mode in Privacy & messaging (flags are off by default); add a contact email, then build `/contact/` and link it in the footer.
 - AdSense decision. CSP stays report-only while ads are on pages.
 - Free sign-ups: SEPA registration, OPW courtesy email, NRW key.
 - Replace the Google robot key `livedatacalc-automation` (printed in chat 2026-10-31); old key starts 73f0baf9.

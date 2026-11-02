@@ -211,8 +211,10 @@ def river_at(river, place):
     return "%s at %s" % (river, p)
 
 
-ADSENSE = '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997828618122077" crossorigin="anonymous"></script>'  # AdSense site loader (owner 2026-10-23); head of indexable pages only, never the embed panel or 404
-ADSENSE += '<script async src="https://www.googletagmanager.com/gtag/js?id=G-96RG42R07G"></script><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("js",new Date());gtag("config","G-96RG42R07G")</script>'  # Google Analytics, same tag as calcscrape (owner 2026-10-31); same pages as the ad loader
+EEA_UK_CH = "AT BE BG HR CY CZ DK EE FI FR DE GR HU IE IT LV LT LU MT NL PL PT RO SK SI ES SE IS LI NO GB CH".split()
+CONSENT = '<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag("consent","default",{ad_storage:"denied",ad_user_data:"denied",ad_personalization:"denied",analytics_storage:"denied",wait_for_update:500,region:%s})</script>' % json.dumps(EEA_UK_CH, separators=(",", ":"))  # German pages reach EU readers: no cookie before Google's consent message answers
+ADSENSE = CONSENT + '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8997828618122077" crossorigin="anonymous"></script>'  # AdSense site loader (owner 2026-10-23); head of indexable pages only, never the embed panel or 404
+ADSENSE += '<script async src="https://www.googletagmanager.com/gtag/js?id=G-96RG42R07G"></script><script>gtag("js",new Date());gtag("config","G-96RG42R07G")</script>'  # Google Analytics, same tag as calcscrape (owner 2026-10-31); same pages as the ad loader
 
 
 PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Typical for this date": "typical for this date", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}

@@ -473,6 +473,7 @@ def check_dir(d):
                 cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
                 if cp and os.path.exists(cp):
                     results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
+                results[rel] += ad_gaps(rel, h)
                 stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
                 if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
                     results[rel].append("says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics")
@@ -631,7 +632,20 @@ def redirect_limit(n):
     return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
 
 
+def ad_gaps(rel, h):
+    """AdSense required content: consent defaults run before any Google tag, and the privacy page keeps Google's disclosures."""
+    bad = []
+    if "adsbygoogle.js" in h and not -1 < h.find('gtag("consent","default"') < h.find("adsbygoogle.js"):
+        bad.append("Google ad tag before the consent defaults")
+    if rel.replace("\\", "/") == "privacy/index.html":
+        bad += ["privacy page lost %r" % w for w in ("use cookies to serve ads", "opt out of personalized advertising", "aboutads.info", "adssettings.google.com", "consent message") if w not in h]
+    return bad
+
+
 def selftest():
+    ad = '<script>gtag("consent","default",{})</script><script src="adsbygoogle.js"></script>'
+    assert not ad_gaps("a/index.html", ad) and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script><script>gtag("consent","default",{})</script>') and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script>'), "selftest: the consent order rule did not fire"
+    assert ad_gaps("privacy/index.html", "<p>none</p>"), "selftest: the privacy wording rule did not fire"
     from lib.common import interp_pct
     assert interp_pct([2, None, None, None, None, 56.0, None, None, None, None], 10) is None, "selftest: a median alone gave a percentile"
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
