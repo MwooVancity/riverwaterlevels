@@ -8,6 +8,7 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
 ## Email: which ones need you
+"no new gauges released": the daily release stopped. Check Cloudflare file limits first (a plan upgrade clears a stop near 70%). The site itself stays up and current.
 A failed run with no steps, or a one-off "refresh" failure that the next run clears, is GitHub itself: ignore it. A repeat of the same watchdog email, at most two a day, is real.
 
 ## Email: "watchdog failed" (hourly check of the live site)

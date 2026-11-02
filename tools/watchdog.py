@@ -28,6 +28,16 @@ def hours_since(iso):
     return (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(iso.replace("Z", "+00:00"))).total_seconds() / 3600
 
 
+def release_stall():
+    """A line when the daily release has added nothing for 3 days while gauges wait; its skips only ever reached the log."""
+    with open(os.path.join(ROOT, "data", "last-release.txt")) as f:
+        last = datetime.date.fromisoformat(f.read().strip())
+    days = (datetime.datetime.now(datetime.timezone.utc).date() - last).days
+    with open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8") as f:
+        waiting = sum(1 for r in csv.DictReader(f) if r["status"] == "queue" and not r["gate"])
+    return "no new gauges released for %d days, %d waiting" % (days, waiting) if days >= 3 and waiting else None
+
+
 def main():
     ok, bad, heal = [], [], []
     out_ = os.environ.get("GITHUB_OUTPUT")
@@ -163,6 +173,12 @@ def main():
                 ok.append("Cloudflare deploy key: %s" % ("expires " + exp[:10] if exp else "no expiry date"))
         except Exception as e:
             ok.append("Cloudflare deploy key expiry not readable (%s)" % str(e)[:50])
+    try:
+        stall = release_stall()
+        if stall:
+            bad.append(stall)
+    except (OSError, ValueError, KeyError) as e:
+        bad.append("no new gauges released: release record unreadable (%s)" % str(e)[:60])
     print("SITE HEALTH %s: %d problem(s)" % (datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), len(bad)))
     for x in bad:
         print("  PROBLEM:", x)
@@ -170,7 +186,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("no new gauges released", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
@@ -180,4 +196,15 @@ def main():
     return 0  # never fails: no owner email; problems are read at session start and healed here where possible
 
 
-sys.exit(main())
+if "--selftest" in sys.argv:
+    real = open
+    try:
+        open = lambda p, *a, **k: __import__("io").StringIO("2026-01-01\n" if p.endswith(".txt") else "status,gate\nqueue,\n")
+        assert "days, 1 waiting" in release_stall(), "a stalled release went unreported"
+        open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
+        assert release_stall() is None, "a fresh release was reported"
+    finally:
+        open = real
+    print("selftest OK")
+else:
+    sys.exit(main())
