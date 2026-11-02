@@ -46,7 +46,7 @@ def b_land(G):
         return None
     seen_l, uniq = set(), []
     for t in land["rows"]:
-        u = re.sub(r"\s*\bUnknown\b\s*", " ", t[0] or "").strip() or "Unnamed unit"
+        u = re.sub(r"\b(\w+) \1\b", r"\1", re.sub(r"\s*\bUnknown\b\s*", " ", t[0] or "").strip()) or "Unnamed unit"  # PAD-US: "Clackamas County County Facility or Land"
         if re.match(r"(?i)private land owner", u) or (t[1] or "").upper() == "PVT":
             continue  # a private owner is not public land (hater 2026-10-27: "Private Land Owner 1", "Isles Unknown")
         if u.lower() not in seen_l:

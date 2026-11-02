@@ -32,6 +32,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Every workflow file parses (a bad one stops running with no job and no log)
+        run: |
+          pip install -q pyyaml
+          python -c "import glob, yaml; [yaml.safe_load(open(f, encoding='utf-8')) for f in glob.glob('.github/workflows/*.yml')]; print('workflows parse')"
       - uses: actions/setup-node@v4
         with:
           node-version: "22"

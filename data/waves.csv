@@ -36,7 +36,7 @@ live,1,03083500,Youghiogheny River,Sutersville,PA,89.3,100,79,70,fame,,24571,hig
 queue,1,14056500,Deschutes River,Below Wickiup Reservoir Near La Pine,OR,89.2,100,58,90,"wsr-rec,wsr-fish,wsr,tail,fame",no-usgs-rows,15019,high,/river/deschutes-river-or/below-wickiup-reservoir-near-la-pine/
 live,1,10346000,Truckee River,Farad,CA,89.2,100,80,70,fame,,33990,auto2,/river/truckee-river-ca/farad/
 live,1,05062000,Buffalo River,Dilworth,MN,89.0,100,77,70,fame,,,high,/river/buffalo-river-mn/dilworth/
-queue,1,05061500,South Branch Buffalo River,Sabin,MN,88.9,100,76,70,fame,page-check: no built page at /river/south-branch-buffalo-river/sabin/,,high,/river/south-branch-buffalo-river/sabin/
+queue,1,05061500,South Branch Buffalo River,Sabin,MN,88.9,100,76,70,fame,,,high,/river/south-branch-buffalo-river/sabin/
 live,1,01109060,Threemile River,North Dighton,MA,88.9,100,76,70,"wsr-rec,wsr-fish,wsr",,,high,/river/threemile-river/north-dighton/
 live,1,14361500,Rogue River,Grants Pass,OR,88.8,100,76,70,"nri,fame",,,high,/river/rogue-river-or/grants-pass/
 live,1,01108000,Taunton River,Bridgewater,MA,88.8,100,75,70,"wsr-rec,wsr-fish,wsr",,,high,/river/taunton-river/bridgewater/
@@ -61,7 +61,7 @@ queue,2,01411000,Great Egg Harbor River,Folsom,NJ,87.9,100,71,70,"wsr-rec,wsr",,
 queue,2,01603000,North Branch Potomac River,Cumberland,MD,87.8,100,69,70,fame,,,high,/river/north-branch-potomac-river-md/cumberland/
 queue,2,01181000,West Branch Westfield River,Huntington,MA,87.8,100,69,70,"wsr-rec,wsr-fish,wsr",,,high,/river/west-branch-westfield-river/huntington/
 live,2,01628500,South Fork Shenandoah River,Lynnwood,VA,87.8,100,70,70,fame,,,auto2,/river/south-fork-shenandoah-river/lynnwood/
-queue,2,14142500,Sandy River,Below Bull Run River Near Bull Run,OR,87.8,100,70,70,"wsr-rec,wsr-fish,wsr,nri,fame",page-check: doubled word 'County County' near 'cts |  Restricted access |    Clackamas County County Facility or Land |  County |  Access un',4256,auto2,/river/sandy-river-or/below-bull-run-river-near-bull-run/
+queue,2,14142500,Sandy River,Below Bull Run River Near Bull Run,OR,87.8,100,70,70,"wsr-rec,wsr-fish,wsr,nri,fame",,4256,auto2,/river/sandy-river-or/below-bull-run-river-near-bull-run/
 live,2,03171000,New River,Radford,VA,87.7,100,70,70,fame,,,auto2,/river/new-river-va/radford/
 queue,2,02053800,South Fork Roanoke River,Shawsville,VA,87.7,100,69,70,fame,,,auto2,/river/south-fork-roanoke-river/shawsville/
 queue,2,03057000,Tygart Valley River,Colfax,WV,87.6,100,67,70,"nri,nri-paddle,fame",,7948,high,/river/tygart-valley-river/colfax/
@@ -182,7 +182,7 @@ queue,7,04113000,Grand River,Lansing,MI,82.9,85,81,70,"nri,nri-paddle,nri-fish,f
 queue,7,03427500,East Fork Stones River,Lascassas,TN,82.9,85,81,70,"nri,nri-paddle",,,high,/river/east-fork-stones-river/lascassas/
 queue,7,01595800,North Branch Potomac River,Barnum,WV,82.8,100,55,70,fame,,,high,/river/north-branch-potomac-river-wv/barnum/
 queue,7,04112500,Red Cedar River,East Lansing,MI,82.7,85,79,70,"nri,nri-paddle,nri-fish",,,high,/river/red-cedar-river-mi/east-lansing/
-queue,7,06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,82.7,100,27,90,"tail,fame",site-check: says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics,8559,high,/river/big-hole-river/below-big-lake-creek-at-wisdom/
+queue,7,06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,82.7,100,27,90,"tail,fame",,8559,high,/river/big-hole-river/below-big-lake-creek-at-wisdom/
 queue,7,03436100,Red River,Port Royal,TN,82.6,85,79,70,"nri,nri-paddle",,,high,/river/red-river-tn/port-royal/
 queue,7,03266000,Stillwater River,Englewood,OH,82.6,85,79,70,"nri,nri-paddle",,,high,/river/stillwater-river-oh/englewood/
 queue,7,02329000,Ochlockonee River,Havana,FL,82.6,85,80,70,"nri,nri-paddle",,,auto2,/river/ochlockonee-river-fl/havana/

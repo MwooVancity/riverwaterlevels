@@ -178,7 +178,7 @@ def fmtd(v):
 def interp_pct(stats_row, v):
     """Percentile of v within a published daily-percentile row [years, p5, p10, p20, p25, p50, p75, p80, p90, p95]."""
     pts = [(p, stats_row[i + 1]) for i, p in enumerate(PCT) if stats_row[i + 1] is not None]
-    if not pts:
+    if len(pts) < 2 or pts[0][0] != 5 or pts[-1][0] != 95:  # "below 5th" needs a published 5th: a 2-year row has only the median
         return None
     if v < pts[0][1]:
         return -1

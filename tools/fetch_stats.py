@@ -39,7 +39,7 @@ def parse(t):
                 if v.get("time_of_year_type") != "day_of_year" or v.get("computation") != "percentile":
                     continue
                 by = dict(zip(v.get("percentiles") or [], v.get("values") or []))
-                row = [float(by[p]) if by.get(p) not in (None, "") else None for p in SLOT]
+                row = [float(by[p]) if by.get(p) not in (None, "", "nan", "NaN") else None for p in SLOT]
                 if row[4] is not None:
                     out[v["time_of_year"]] = [int(v.get("sample_count") or 0)] + row
     return out
