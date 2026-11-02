@@ -11,7 +11,7 @@ def scan(root, old=None):
     seen = {}
     for p in glob.glob(os.path.join(root, "**", "index.html"), recursive=True):
         h = open(p, encoding="utf-8", errors="ignore").read()
-        if 'class="hero' not in h:
+        if 'class="hero hero2' not in h:
             continue
         c = "US" if "/river/" in p.replace("\\", "/") else "Canada" if "/canada/" in p.replace("\\", "/") else "Germany"
         d = seen.setdefault(c, {"pages": 0, "blocks": {}})

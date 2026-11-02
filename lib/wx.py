@@ -197,7 +197,7 @@ def dwd_forecast(blob, zone):
     def series(k):
         m = re.search(r'elementName="%s">\s*<dwd:value>([^<]*)' % k, text)
         return [num(v) for v in m.group(1).split()] if m else [None] * len(times)
-    t, ff, dd, n, ww, pop, rain = (series(k) for k in ("TTT", "FF", "DD", "N", "ww", "wwP", "RR1c"))
+    t, ff, dd, n, ww, pop, rain = (series(k) for k in ("TTT", "FF", "DD", "N", "ww", "wwP", "RRdc"))  # RRdc, the 24 h total: hourly RR1c counts only rain tied to the forecast weather and read 3.6 mm where the daily totals said 9.6
     hours = []
     for i, when in enumerate(times):
         if t[i] is None:
@@ -218,7 +218,7 @@ def dwd_forecast(blob, zone):
     for h in hours:
         for k in ("_kmh", "_ww", "_t", "_local"):
             del h[k]
-    return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00"), "grid": {"updated": issued.group(1), "hours": [{"t": when.isoformat(), "qpf_mm": rain[k]} for k, when in enumerate(times) if rain[k] is not None]}}
+    return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00"), "rain_days": {"updated": issued.group(1), "days": [[when.isoformat(), rain[k]] for k, when in enumerate(times) if rain[k] is not None]}}
 
 
 def suspect(series, unit, now):

@@ -55,10 +55,15 @@ def run():
     with tempfile.TemporaryDirectory() as d:
         for i in range(20):
             os.makedirs(os.path.join(d, "river", str(i)))
-            open(os.path.join(d, "river", str(i), "index.html"), "w").write('<div class="hero"><section data-g="now" class="card blk" data-f="x" id="%s"></section>' % ("a" if i < 5 else "b"))
+            open(os.path.join(d, "river", str(i), "index.html"), "w").write('<div class="hero hero2"><section data-g="now" class="card blk" data-f="x" id="%s"></section>' % ("a" if i < 5 else "b"))
         got = coverage.scan(d, {"best": {"US": {"a": 0.9}}})
         assert got["shares"]["US"]["blocks"]["a"] == 0.25 and "US a" in got["drops"][0], "a block vanishing across pages went unseen"
         assert not coverage.scan(d, {"best": {"US": {"a": 0.25}}})["drops"], "a steady block alarmed"
+
+    far = dict(base, name="F", lat=60.0, then=1.0)
+    near = dict(base, name="N", lat=50.3, then=1.0)
+    got = world.along({"flat": True, "feed": "eccc", "slug": "x"}, base, [base, far, near])
+    assert [g[1] for g in got] == ["N"] and got[0][0] == "Nearby", "a far gauge read as nearby"
 
     real = world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE
     p = {"slug": "x", "gauge_pages": ["01AB"], "river": "X"}

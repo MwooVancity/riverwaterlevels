@@ -738,6 +738,16 @@ def b_world_wt30(G):
     return block("water_temp_recent", "Water temperature, last 30 days", "agency", table(["Measure", "Temperature"], tr(["Lowest", "%.1f °C" % w["low"]], right=(1,)) + tr(["Highest", "%.1f °C" % w["high"]], right=(1,)), right=(1,)), "Source: %s, %s, from %s to %s." % (f["api"], f["name"], esc(w["first"][:10]), esc(w["last"][:10])), f["src"])
 
 
+def b_world_rain(G):
+    """DWD's forecast rain, as the 24 h totals it publishes."""
+    r = (G["rec"].get("nws") or {}).get("rain_days") or {}
+    days = [d for d in r.get("days") or [] if parse_t(d[0]) >= G["now"]]
+    if not days or hours_old(r.get("updated"), G["now"]) > HIDE_H["forecast_rain_totals"]:
+        return None
+    rows = "".join(tr(["24 hours to %s" % esc(tzl(parse_t(t), G["zone"])), "%.1f mm" % mm], right=(1,)) for t, mm in days)
+    return block("forecast_rain_totals", "Forecast rain totals", "official", table(["Period", "Forecast rain"], rows, right=(1,)), "Source: Deutscher Wetterdienst, MOSMIX forecast for the nearest forecast station, issued %s. A forecast, not a measurement." % esc(tzl(parse_t(r["updated"]), G["zone"])), "dwd")
+
+
 def b_world_normals(G):
     """The official climate normal for each month at the nearest climate station."""
     f, n = G["feed"], G["feed"].get("normals")

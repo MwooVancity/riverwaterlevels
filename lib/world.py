@@ -82,7 +82,7 @@ def to_row(page, r):
 SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active National Weather Service alerts were returned for this location.", "No active @WX@ weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed."), ("The newest USGS flow reading", "The newest reading"), ("when USGS publishes", "when the agency publishes"), ("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
-        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("gridpoint quantitative precipitation forecast at the gauge location", "MOSMIX point forecast for the nearest forecast station"), ("within about 15 miles of the gauge", "within about 25 km of the gauge"), (' <a href="#gauge_map">Map of the gauge location</a>', ""))
+        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("within about 15 miles of the gauge", "within about 25 km of the gauge"), (' <a href="#gauge_map">Map of the gauge location</a>', ""))
 LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');function tick(t){if(a){var m=Math.round((Date.now()-Date.parse(t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}}if(!w)return;tick(w.dataset.t);if(!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;tick(g[1]);
 var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}).catch(function(){})})();</script>"""
 
@@ -249,11 +249,11 @@ def choose(pages, now):
 
 
 def along(p, r, rows, keep=()):
-    """The two nearest gauges each way on this river, with their readings: what is coming down to a reader here. A flat list has no river order, so it shows the four closest."""
+    """The two nearest gauges each way on this river, with their readings: what is coming down to a reader here. A flat list has no river order, so it shows the four closest within 100 km."""
     names = [x["name"] for x in rows]
     i = names.index(r["name"])
     out = []
-    near = sorted((x for x in rows if x is not r and x.get("lat") is not None and x.get("cm") is not None), key=lambda x: wx.km(r["lat"], r["lon"], x["lat"], x["lon"]))[:4] if p.get("flat") else rows[max(0, i - 2):i] + rows[i + 1:i + 3]
+    near = sorted((x for x in rows if x is not r and x.get("lat") is not None and x.get("cm") is not None and wx.km(r["lat"], r["lon"], x["lat"], x["lon"]) <= 100), key=lambda x: wx.km(r["lat"], r["lon"], x["lat"], x["lon"]))[:4] if p.get("flat") else rows[max(0, i - 2):i] + rows[i + 1:i + 3]
     for x in near:
         out.append(("Nearby" if p.get("flat") else "Upstream" if names.index(x["name"]) < i else "Downstream", x.get("title") or x["name"].replace(" UP", "").title(), fmt_level(x["cm"], x.get("unit", "cm")), fmt_level(x["cm"] - x["then"], x.get("unit", "cm")).replace("-", "-") if x.get("then") is not None else None, LABEL.get(x.get("state"), "Unknown"), world_gauge_url(p, x.get("title") or x["name"]) if x["name"] in keep else None))
     return out
@@ -305,8 +305,8 @@ def owed(r):
         out.append("drought_monitor")
     if r.get("wt30") and hours_old(r["wt30"]["last"], datetime.datetime.now(datetime.timezone.utc)) <= 72:
         out.append("water_temp_recent")
-    g = w.get("grid") or {}
-    if g.get("updated") and hours_old(g["updated"], datetime.datetime.now(datetime.timezone.utc)) <= HIDE_H["forecast_rain_totals"] and len([h for h in g.get("hours", []) if parse_t(h["t"]) >= datetime.datetime.now(datetime.timezone.utc)]) >= 24:
+    g = w.get("rain_days") or {}
+    if g.get("updated") and hours_old(g["updated"], datetime.datetime.now(datetime.timezone.utc)) <= HIDE_H["forecast_rain_totals"] and any(parse_t(d[0]) >= datetime.datetime.now(datetime.timezone.utc) for d in g.get("days", [])):
         out.append("forecast_rain_totals")
     return out
 
