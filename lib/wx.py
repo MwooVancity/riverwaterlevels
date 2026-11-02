@@ -1,5 +1,5 @@
 """Weather, alerts and air quality for gauges outside the US: agency formats into the record the US blocks read (rec["nws"]). Parsers only, no network: collect.py fetches, one call per city or station, never per gauge."""
-import csv, datetime, io, math, re, zipfile
+import csv, datetime, io, json, math, re, zipfile
 import xml.etree.ElementTree as ET
 
 NEAR_KM = 60  # a station further than this says nothing about the water here
@@ -15,6 +15,30 @@ def nearest(lat, lon, spots, limit=NEAR_KM):
     """(id, km) of the closest {id: [lat, lon, ...]}, or (None, None) past the limit."""
     best = min(((km(lat, lon, s[0], s[1]), i) for i, s in spots.items()), default=None)
     return (best[1], round(best[0])) if best and best[0] <= limit else (None, None)
+
+
+def drought_map(blob):
+    """The Canadian Drought Monitor zip, one GeoJSON per class in EPSG:3857, into [[class, [lat, lon box, rings]]]. Three decimals, about 100 m."""
+    z, out = zipfile.ZipFile(io.BytesIO(blob)), []
+    to_ll = lambda p: [round(math.degrees(2 * math.atan(math.exp(p[1] / 6378137.0)) - math.pi / 2), 3), round(math.degrees(p[0] / 6378137.0), 3)]
+    for n in sorted(z.namelist()):
+        d = json.loads(z.read(n))
+        assert d["crs"]["properties"]["name"].endswith("3857"), "drought map changed projection"
+        for f in d["features"]:
+            g = f["geometry"]
+            for poly in ([g["coordinates"]] if g["type"] == "Polygon" else g["coordinates"]):
+                rings = [[to_ll(p) for p in r] for r in poly]
+                out.append([f["properties"]["DM"], [min(p[0] for p in rings[0]), max(p[0] for p in rings[0]), min(p[1] for p in rings[0]), max(p[1] for p in rings[0])], rings])
+    return out
+
+
+def drought_at(lat, lon, polys):
+    """The worst class mapped at a point, or None. Holes count by even-odd. ponytail: the box skips most shapes; run once a month per gauge."""
+    worst = None
+    for dm, box, rings in polys:
+        if box[0] <= lat <= box[1] and box[2] <= lon <= box[3] and sum(inside(lat, lon, r) for r in rings) % 2 and (worst is None or dm > worst):
+            worst = dm
+    return worst
 
 
 def inside(lat, lon, ring):
@@ -173,7 +197,7 @@ def dwd_forecast(blob, zone):
     def series(k):
         m = re.search(r'elementName="%s">\s*<dwd:value>([^<]*)' % k, text)
         return [num(v) for v in m.group(1).split()] if m else [None] * len(times)
-    t, ff, dd, n, ww, pop = (series(k) for k in ("TTT", "FF", "DD", "N", "ww", "wwP"))
+    t, ff, dd, n, ww, pop, rain = (series(k) for k in ("TTT", "FF", "DD", "N", "ww", "wwP", "RR1c"))
     hours = []
     for i, when in enumerate(times):
         if t[i] is None:
@@ -194,7 +218,7 @@ def dwd_forecast(blob, zone):
     for h in hours:
         for k in ("_kmh", "_ww", "_t", "_local"):
             del h[k]
-    return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00")}
+    return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00"), "grid": {"updated": issued.group(1), "hours": [{"t": when.isoformat(), "qpf_mm": rain[k]} for k, when in enumerate(times) if rain[k] is not None]}}
 
 
 def suspect(series, unit, now):

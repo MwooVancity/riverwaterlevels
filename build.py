@@ -6,10 +6,10 @@ import glob, os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import render, directory, indexing, related, world
+from lib import coverage, render, directory, indexing, related, world
 
 
-FILE_BUDGET = 19000
+FILE_BUDGET = 95000 if os.environ.get("WORKERS_PAID") else 19000
 
 
 def write(root, url, html):
@@ -198,6 +198,7 @@ def main():
                     r["state"] = world.canada_label(r, wnow)[0].lower()
             wpages.append((page, d))
         wkeep = world.choose(wpages, wnow)
+        wlisted = sum(len(p.get("gauge_pages") or []) for p, _ in wpages)
         for page, d in wpages:
             keep = wkeep[page["slug"]]
             for r in d["rows"]:
@@ -218,7 +219,7 @@ def main():
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
-                   "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
+                   "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "world": {"listed": wlisted, "shown": sum(len(v) for v in wkeep.values()), "gaps": {k: v[:6] for k, v in list(world.GAPS.items())[:40]}}, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
     if os.path.exists(hp):
         shutil.copy2(hp, os.path.join(nxt, "_health.json"))
@@ -263,9 +264,10 @@ def main():
     if os.path.exists(sp_):
         st_ = json.load(open(sp_))
         st_["files"] = nfiles
+        st_["coverage"] = coverage.scan(nxt, json.load(open(os.path.join(ROOT, "dist", "status.json"))).get("coverage") if os.path.exists(os.path.join(ROOT, "dist", "status.json")) else None)
         json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:
-        raise SystemExit("file budget: %d files is over %d (Cloudflare free plan allows 20,000 files per deploy)" % (nfiles, FILE_BUDGET))
+        raise SystemExit("file budget: %d files is over %d (the Cloudflare plan's limit per deploy)" % (nfiles, FILE_BUDGET))
     runs = os.path.join(ROOT, "runs", now.strftime("%Y%m%d-%H%M%S"))
     os.makedirs(runs, exist_ok=True)
     json.dump(report, open(os.path.join(runs, "report.json"), "w"), indent=1)

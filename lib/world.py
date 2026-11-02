@@ -68,8 +68,8 @@ def to_rec(page, r):
     w = r.get("wx") or {}
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
     links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
-    return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+    return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": w.get("rain") or {},
+            "feed": dict(f, emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -82,7 +82,7 @@ def to_row(page, r):
 SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active National Weather Service alerts were returned for this location.", "No active @WX@ weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed."), ("The newest USGS flow reading", "The newest reading"), ("when USGS publishes", "when the agency publishes"), ("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
-        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."))
+        ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("gridpoint quantitative precipitation forecast at the gauge location", "MOSMIX point forecast for the nearest forecast station"), ("within about 15 miles of the gauge", "within about 25 km of the gauge"), (' <a href="#gauge_map">Map of the gauge location</a>', ""))
 LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');function tick(t){if(a){var m=Math.round((Date.now()-Date.parse(t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}}if(!w)return;tick(w.dataset.t);if(!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;tick(g[1]);
 var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}).catch(function(){})})();</script>"""
 
@@ -94,7 +94,7 @@ def metric(h):
     h = re.sub(r"(-?\d+)<small>&deg;F</small>", lambda m: "%.0f<small>&deg;C (%s &deg;F)</small>" % ((float(m.group(1)) - 32) * 5 / 9, m.group(1)), h)
     h = re.sub(r"(?<![\w(.])()(-?\d+)(?: °F|&deg;F)", temp, h)
     h = re.sub(r"(\d+) mph", lambda m: "%.0f km/h (%s mph)" % (float(m.group(1)) * 1.609, m.group(1)), h)
-    h = re.sub(r"(\d+) mi\b", lambda m: "%.0f km" % (float(m.group(1)) * 1.609), h)
+    h = re.sub(r"(?<![\d.])(\d+(?:\.\d)?) mi\b", lambda m: ("%.1f km" if "." in m.group(1) else "%.0f km") % (float(m.group(1)) * 1.609), h)
     h = re.sub(r"([\d.]+) inHg", lambda m: "%.0f hPa" % (float(m.group(1)) * 33.864), h)
     h = re.sub(r"(\d+\.\d\d) <small>in</small>", lambda m: "%.1f <small>mm</small>" % (float(m.group(1)) * 25.4), h)
     return re.sub(r"(\d+\.\d\d) in(?=[,<])", lambda m: "%.1f mm" % (float(m.group(1)) * 25.4), h)
@@ -157,9 +157,9 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_rain": ("none: city pages carry no rain total; the SWOB record at Ottawa airport carried none on 2026-11-02", "have"),
     "b_river_forecast": ("none: river forecasts are provincial in Canada, with no national open feed", "have"),
     "b_quality": ("none: the Water Office real-time feed publishes level and flow only", "have"),
-    "b_wtemp": ("none: the Water Office real-time feed publishes level and flow only", "next: water temperature history from WT measurements"),
-    "b_qpf": ("none: city forecast text carries rain chance, no totals", "next: daily rain totals from MOSMIX RRdc"),
-    "b_acis": ("next: climate-normals collection", "next: DWD climate normals, source not read"),
+    "b_wtemp": ("none: the Water Office real-time feed publishes level and flow only", "have"),
+    "b_qpf": ("none: city forecast text carries rain chance, no totals", "have"),
+    "b_acis": ("have", "have"),
     "b_month_chart": ("none: the history table carries this date against every year", "none: PEGELONLINE keeps 30 days and no history"),
     "b_year_chart": ("none: the history table lists each recent year", "none: PEGELONLINE keeps 30 days and no history"),
     "b_multiyear": ("have", "none: PEGELONLINE keeps 30 days and no history"),
@@ -169,9 +169,9 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_peaks": ("have", "none: PEGELONLINE publishes marks, not annual peaks"),
     "b_stage_years": ("have", "none: PEGELONLINE publishes marks, not yearly values"),
     "b_daily": ("none: published daily means end over a year back; the chart and our archive cover recent days", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_drought": ("next: Canadian Drought Monitor, source not read", "next: DWD drought data, source not read"),
-    "b_access": ("next: search for a national boat-access feed", "next: ELWIS locks and notices to skippers, source not read"),
-    "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("next: nearby gauges from hydrometric-stations", "have"),
+    "b_drought": ("have", "none: DWD publishes crop soil moisture and a climate index, no drought class for a place"),
+    "b_access": ("have", "have"),
+    "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
     "b_about": ("have", "have"),
     "b_map": ("none: the map service is USGS, US only; links open the agency map", "none: the map service is USGS, US only; links open the agency map"),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
@@ -214,6 +214,9 @@ def alike(a, b):
     return bool(a and b) and len(a & b) / len(a | b) > ALIKE
 
 
+GAPS = {}  # gauge -> blocks its data allows and its page lacks, live or held; build.py writes it to status.json and the watchdog alarms
+
+
 def choose(pages, now):
     """Names per page that may publish: first pass over every gauge, a page too like one already kept waits. ponytail: all pairs, fine to about 3,000 world gauges; past that compare within a feed."""
     kept, names = [], {}
@@ -230,6 +233,8 @@ def choose(pages, now):
             if not got:
                 continue
             gone = missing(got[1], r) + core.BLOCK_ERRORS[broke:]  # a block that crashed is never a quiet gap
+            if gone:
+                GAPS[r["name"]] = gone
             live = os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist", world_gauge_url(p, r.get("title") or r["name"]).strip("/"), "index.html"))  # holds stop new gauges; an outage never pulls a page
             if gone and GATE and not live:
                 print("world gauge held, page lacks what its data allows: %s %s" % (r["name"], ", ".join(gone)))
@@ -244,12 +249,13 @@ def choose(pages, now):
 
 
 def along(p, r, rows, keep=()):
-    """The two nearest gauges each way on this river, with their readings: what is coming down to a reader here."""
+    """The two nearest gauges each way on this river, with their readings: what is coming down to a reader here. A flat list has no river order, so it shows the four closest."""
     names = [x["name"] for x in rows]
     i = names.index(r["name"])
     out = []
-    for x in rows[max(0, i - 2):i] + rows[i + 1:i + 3]:
-        out.append(("Upstream" if names.index(x["name"]) < i else "Downstream", x.get("title") or x["name"].replace(" UP", "").title(), fmt_level(x["cm"], x.get("unit", "cm")), fmt_level(x["cm"] - x["then"], x.get("unit", "cm")).replace("-", "-") if x.get("then") is not None else None, LABEL.get(x.get("state"), "Unknown"), world_gauge_url(p, x.get("title") or x["name"]) if x["name"] in keep else None))
+    near = sorted((x for x in rows if x is not r and x.get("lat") is not None and x.get("cm") is not None), key=lambda x: wx.km(r["lat"], r["lon"], x["lat"], x["lon"]))[:4] if p.get("flat") else rows[max(0, i - 2):i] + rows[i + 1:i + 3]
+    for x in near:
+        out.append(("Nearby" if p.get("flat") else "Upstream" if names.index(x["name"]) < i else "Downstream", x.get("title") or x["name"].replace(" UP", "").title(), fmt_level(x["cm"], x.get("unit", "cm")), fmt_level(x["cm"] - x["then"], x.get("unit", "cm")).replace("-", "-") if x.get("then") is not None else None, LABEL.get(x.get("state"), "Unknown"), world_gauge_url(p, x.get("title") or x["name"]) if x["name"] in keep else None))
     return out
 
 
@@ -291,6 +297,17 @@ def owed(r):
         out.append("flow_chart")
     if r.get("deciles"):
         out.append("world_history")
+    if (r.get("access") or {}).get("rows"):
+        out.append("access_points")
+    if (r.get("normals") or {}).get("temp"):
+        out.append("climate_normals")
+    if r.get("drought_map") and (datetime.date.today() - datetime.date(2000 + int(r["drought_map"][:2]), int(r["drought_map"][2:]), 1)).days <= 105:
+        out.append("drought_monitor")
+    if r.get("wt30") and hours_old(r["wt30"]["last"], datetime.datetime.now(datetime.timezone.utc)) <= 72:
+        out.append("water_temp_recent")
+    g = w.get("grid") or {}
+    if g.get("updated") and hours_old(g["updated"], datetime.datetime.now(datetime.timezone.utc)) <= HIDE_H["forecast_rain_totals"] and len([h for h in g.get("hours", []) if parse_t(h["t"]) >= datetime.datetime.now(datetime.timezone.utc)]) >= 24:
+        out.append("forecast_rain_totals")
     return out
 
 
@@ -310,7 +327,7 @@ def page(p, r, now, rows=(), keep=()):
     rec["feed"]["label_note"] = odd + rec["feed"]["label_note"]
     rec["feed"]["lake"] = p.get("lake")
     rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
-    rec["feed"]["along"] = along(p, r, list(rows), keep) if rows and not p.get("flat") else []  # a flat list is gauges on different rivers: never up or downstream
+    rec["feed"]["along"] = along(p, r, list(rows), keep) if rows else []
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})

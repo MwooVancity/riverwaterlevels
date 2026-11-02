@@ -1704,6 +1704,92 @@ def wx_fill(page, rows, old, ctx):
         except Exception as e:
             note("world-wx", "failed", e)
         r["wx"] = w
+        world_extras(page, r, old.get(r["name"]) or {}, ctx)
+
+
+ACCESS_LEFT = [5]  # Overpass gauges a run: public server, 2,627 Canadian gauges take a week the first time, then monthly
+
+
+def world_extras(page, r, prev, ctx):
+    """Blocks on slow clocks, each kept from the last run: access and normals monthly, drought with the monthly map, 30 days of water temperature daily. A failure keeps the old answer and the block says its age."""
+    canada = page.get("feed") == "eccc"
+    for k in ("access", "access_at", "normals", "normals_at", "drought", "drought_map", "wt30", "wt30_at"):
+        if k in prev:
+            r[k] = prev[k]
+    if due(r.get("access_at"), 720) and ACCESS_LEFT[0] > 0:
+        ACCESS_LEFT[0] -= 1
+        try:
+            r["access"], r["access_at"] = fetch_access(r["lat"], r["lon"]), now_iso()
+        except Exception as e:
+            note("world-access", "failed", e)
+    if due(r.get("normals_at"), 720):
+        try:
+            r["normals"], r["normals_at"] = (normals_canada if canada else normals_germany)(r), now_iso()
+        except Exception as e:
+            note("world-normals", "failed", e)
+    if canada:
+        try:
+            m = listing("ca-drought", CDM + "%d/" % datetime.date.today().year, drought_latest, 72)
+            if m and m["map"] != r.get("drought_map"):
+                r["drought"], r["drought_map"] = wx.drought_at(r["lat"], r["lon"], m["polys"]), m["map"]
+        except Exception as e:
+            note("world-drought", "failed", e)
+    elif "WT" in (r.get("also") or {}) and due(r.get("wt30_at"), 20):
+        try:
+            pts = http_json("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/WT/measurements.json?start=P30D" % urllib.parse.quote(r["name"]), {}, 30)
+            r["wt30"], r["wt30_at"] = {"low": min(p["value"] for p in pts), "high": max(p["value"] for p in pts), "first": pts[0]["timestamp"], "last": pts[-1]["timestamp"]} if pts else None, now_iso()
+        except Exception as e:
+            note("world-wtemp", "failed", e)
+
+
+CDM = "https://agriculture.canada.ca/atlas/data_donnees/canadianDroughtMonitor/data_donnees/geoJSON/areasofDrought/"
+
+
+def drought_latest(index):
+    """The newest monthly map in this year's folder, or last year's in January."""
+    names = re.findall(r'href="(cdm_(\d{4})_[^"]*\.zip)"', index.decode("utf-8", "ignore"))
+    folder = CDM + "%d/" % datetime.date.today().year
+    if not names:
+        folder = CDM + "%d/" % (datetime.date.today().year - 1)
+        names = re.findall(r'href="(cdm_(\d{4})_[^"]*\.zip)"', http_raw(folder).decode("utf-8", "ignore"))
+    name, stamp = max(names, key=lambda n: n[1])
+    return {"map": stamp, "polys": wx.drought_map(http_raw(folder + name, 120))}
+
+
+def normals_canada(r):
+    """The nearest station within about 50 km with a current normal for temperature and rain; one call a gauge a month."""
+    api = "https://api.weather.gc.ca/collections/climate-normals/items?f=json&limit=2000&CURRENT_FLAG=Y&bbox=%.3f,%.3f,%.3f,%.3f&NORMAL_ID=%%d&properties=CLIMATE_IDENTIFIER,STATION_NAME,MONTH,VALUE,PERIOD_BEGIN,PERIOD_END" % (r["lon"] - .7, r["lat"] - .5, r["lon"] + .7, r["lat"] + .5)
+    temp, rain = http_json(api % 1, {}, 30)["features"], http_json(api % 56, {}, 30)["features"]
+    both = {f["properties"]["CLIMATE_IDENTIFIER"] for f in temp} & {f["properties"]["CLIMATE_IDENTIFIER"] for f in rain}
+    spots = {f["properties"]["CLIMATE_IDENTIFIER"]: [f["geometry"]["coordinates"][1], f["geometry"]["coordinates"][0]] for f in temp if f["properties"]["CLIMATE_IDENTIFIER"] in both}
+    sid, away = wx.nearest(r["lat"], r["lon"], spots, 50)
+    if not sid:
+        return None
+    pick = lambda fs: {str(f["properties"]["MONTH"]): f["properties"]["VALUE"] for f in fs if f["properties"]["CLIMATE_IDENTIFIER"] == sid and f["properties"]["MONTH"] <= 12}
+    p = next(f["properties"] for f in temp if f["properties"]["CLIMATE_IDENTIFIER"] == sid)
+    t, m = pick(temp), pick(rain)
+    return {"place": p["STATION_NAME"].title(), "km": away, "period": "%s to %s" % (p["PERIOD_BEGIN"], p["PERIOD_END"]), "temp": t, "rain": m}
+
+
+def normals_table(blob):
+    """A DWD 1991-2020 multi-annual file: {station: [Jan..Dec]}; -999 or blank is None."""
+    out = {}
+    for line in blob.decode("latin1").splitlines()[1:]:
+        c = [x.strip() for x in line.split(";")]
+        if len(c) > 15:
+            out[c[0]] = [None if x in ("", "-999", "-999.0") else float(x) for x in c[3:15]]
+    return out
+
+
+def normals_germany(r):
+    b = "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/multi_annual/mean_91-20/"
+    rain, temp = listing("de-rain-normal", b + "Niederschlag_1991-2020.txt", normals_table, 8760), listing("de-temp-normal", b + "Temperatur_1991-2020.txt", normals_table, 8760)
+    st = listing("de-normal-stations", b + "Temperatur_1991-2020_Stationsliste.txt", lambda t: {c[0].strip(): [float(c[2]), float(c[3]), c[1].strip()] for c in (l.split(";") for l in t.decode("latin1").splitlines()[1:]) if len(c) > 3}, 8760)
+    sid, away = wx.nearest(r["lat"], r["lon"], {k: v for k, v in st.items() if k in rain and k in temp}, 50)
+    if not sid:
+        return None
+    months = lambda v: {str(i + 1): x for i, x in enumerate(v) if x is not None}
+    return {"place": st[sid][2], "km": away, "period": "1991 to 2020", "temp": months(temp[sid]), "rain": months(rain[sid])}
 
 
 def archive(page, rows):

@@ -688,7 +688,7 @@ def b_along(G):
     if not f.get("along"):
         return None
     rows = "".join(tr([w, ('<a href="%s">%s</a>' % (u, esc(n))) if u else esc(n), cm, c if c is not None else "–", lab], right=(2, 3)) for w, n, cm, c, lab, u in f["along"])
-    return block("along_river", "Along the river", "agency", table(["Direction", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
+    return block("along_river", "Other gauges nearby" if f["along"][0][0] == "Nearby" else "Along the river", "agency", table(["Where", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
 
 
 def b_world_forecast(G):
@@ -728,6 +728,41 @@ def b_world_flow(G):
         return None
     v = [p[1] for p in pts]
     return block("flow_chart", "Flow, last 7 days", "agency", ui.spark(v, 300, 60) + table(["Measure", "Flow"], "".join(tr([a, "%s m³/s" % fmt(b)], right=(1,)) for a, b in (("Latest, %s" % esc(tzl(parse_t(pts[-1][0]), G["zone"])), v[-1]), ("Highest", max(v)), ("Lowest", min(v)))), right=(1,)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
+
+
+def b_world_wt30(G):
+    """Germany keeps 30 days of water temperature: the range a swimmer or paddler has seen this month."""
+    f, w = G["feed"], G["feed"].get("wt30")
+    if not w or hours_old(w["last"], G["now"]) > 72:
+        return None
+    return block("water_temp_recent", "Water temperature, last 30 days", "agency", table(["Measure", "Temperature"], tr(["Lowest", "%.1f °C" % w["low"]], right=(1,)) + tr(["Highest", "%.1f °C" % w["high"]], right=(1,)), right=(1,)), "Source: %s, %s, from %s to %s." % (f["api"], f["name"], esc(w["first"][:10]), esc(w["last"][:10])), f["src"])
+
+
+def b_world_normals(G):
+    """The official climate normal for each month at the nearest climate station."""
+    f, n = G["feed"], G["feed"].get("normals")
+    if not n or not n.get("temp"):
+        return None
+    now = G["ldate"].month
+    rows = "".join(tr([("<b>%s</b>" if m == now else "%s") % datetime.date(2001, m, 1).strftime("%B"), "%.1f °C" % n["temp"][str(m)] if str(m) in n["temp"] else "–", "%.0f mm" % n["rain"][str(m)] if str(m) in n.get("rain", {}) else "–"], right=(1, 2)) for m in range(1, 13))
+    return block("climate_normals", "Climate normals by month", "agency", table(["Month", "Mean temperature", "Precipitation"], rows, right=(1, 2)), "Source: %s, climate normals %s, station %s, %d km from the gauge." % (f["normals_by"], esc(n["period"]), esc(n["place"]), n["km"]), f["normals_src"])
+
+
+DROUGHT_WORDS = ("D0 Abnormally Dry", "D1 Moderate Drought", "D2 Severe Drought", "D3 Extreme Drought", "D4 Exceptional Drought")
+
+
+def b_world_drought(G):
+    """The Canadian Drought Monitor class at the gauge, on the newest monthly map; hidden once the map is over 75 days old."""
+    f = G["feed"]
+    m = f.get("drought_map")
+    if not m:
+        return None
+    y, mo = 2000 + int(m[:2]), int(m[2:])
+    if (G["ldate"] - datetime.date(y, mo, 1)).days > 105:
+        return None
+    d = f.get("drought")
+    word = DROUGHT_WORDS[d] if d is not None else "Not in a mapped drought area"
+    return block("drought_monitor", "Canadian Drought Monitor", "agency", table(["Map", "At this gauge"], tr([datetime.date(y, mo, 1).strftime("%B %Y"), esc(word)]), right=()), "Source: Agriculture and Agri-Food Canada, Canadian Drought Monitor, monthly map.", "aafc")
 
 
 def b_world_history(G):

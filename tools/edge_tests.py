@@ -48,6 +48,18 @@ def run():
     assert world.canada_label(base, datetime.datetime(2026, 11, 2))[0] == "Normal", "an old datum made today read Low"
     assert "Agency flag on this reading: Ice" in world.to_rec({"feed": "eccc", "river": "X", "slug": "x"}, dict(base, flag="Ice"))["feed"]["label_note"], "an ice flag did not reach the page"
 
+    from lib import coverage, wx
+    square = [[1, [0, 2, 0, 2], [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]]], [3, [0.5, 1, 0.5, 1], [[[0.5, 0.5], [0.5, 1], [1, 1], [1, 0.5], [0.5, 0.5]]]]]
+    assert wx.drought_at(0.7, 0.7, square) == 3 and wx.drought_at(1.5, 1.5, square) == 1 and wx.drought_at(3, 3, square) is None, "drought class wrong"
+    assert world.metric("<td>2.3 mi</td>") == "<td>3.7 km</td>", "a decimal distance broke"
+    with tempfile.TemporaryDirectory() as d:
+        for i in range(20):
+            os.makedirs(os.path.join(d, "river", str(i)))
+            open(os.path.join(d, "river", str(i), "index.html"), "w").write('<div class="hero"><section data-g="now" class="card blk" data-f="x" id="%s"></section>' % ("a" if i < 5 else "b"))
+        got = coverage.scan(d, {"best": {"US": {"a": 0.9}}})
+        assert got["shares"]["US"]["blocks"]["a"] == 0.25 and "US a" in got["drops"][0], "a block vanishing across pages went unseen"
+        assert not coverage.scan(d, {"best": {"US": {"a": 0.25}}})["drops"], "a steady block alarmed"
+
     real = world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE
     p = {"slug": "x", "gauge_pages": ["01AB"], "river": "X"}
     try:

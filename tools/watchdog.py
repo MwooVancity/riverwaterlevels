@@ -39,6 +39,14 @@ def release_stall():
     return "no new gauges released for %d days, %d waiting" % (days, waiting) if days >= 3 and waiting else None
 
 
+def world_short(s):
+    """A line when a world page lacks a block its data allows, or a tenth of listed gauges are held back."""
+    w = s.get("world") or {}
+    gaps, held = w.get("gaps") or {}, (w.get("listed") or 0) - (w.get("shown") or 0)
+    if gaps or held * 10 > (w.get("listed") or 0):
+        return "pages missing blocks: %d gauges short, %d held of %s: %s" % (len(gaps), held, w.get("listed"), "; ".join("%s lacks %s" % (k, ", ".join(v)) for k, v in list(gaps.items())[:5]))
+
+
 def main():
     ok, bad, heal = [], [], []
     out_ = os.environ.get("GITHUB_OUTPUT")
@@ -56,6 +64,9 @@ def main():
         for k_, cap_, what_ in (("files", 100000 if os.environ.get("WORKERS_PAID") else 20000, "Cloudflare plan files"),):  # scale cliffs (PLAN.md factory audit): warn at 70%
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
+        (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
+        for c_ in (s.get("coverage") or {}).get("drops") or []:
+            bad.append("blocks vanished: %s" % c_)
         live = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
         on = set(s.get("by_gauge") or {})
         missing = sorted(live - on)
@@ -193,7 +204,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
@@ -210,6 +221,9 @@ if "--selftest" in sys.argv:
         assert "days, 1 waiting" in release_stall(), "a stalled release went unreported"
         open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
         assert release_stall() is None, "a fresh release was reported"
+        assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
+        assert "4 held" in world_short({"world": {"listed": 20, "shown": 16, "gaps": {}}}), "held gauges went unreported"
+        assert world_short({"world": {"listed": 40, "shown": 39, "gaps": {}}}) is None, "one held gauge alarmed"
     finally:
         open = real
     print("selftest OK")

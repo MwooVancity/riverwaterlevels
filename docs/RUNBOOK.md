@@ -8,6 +8,7 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
 ## Email: which ones need you
+"pages missing blocks" or "blocks vanished": a page shows less than its data allows. The site stays up; new world gauges wait. If it lasts over a day, the named feed changed shape and needs code.
 "Workers Paid is due" or "Cloudflare plan files": buy Workers Paid in Cloudflare ($5 a month), then in GitHub open Settings, Secrets and variables, Actions, Variables, and add WORKERS_PAID with value 1. Growth restarts by itself.
 "GitHub build key expires" or "build key rejected": in GitHub make a new fine-grained token with Actions read and write on this repo only, then put it in Cloudflare, Workers, riverwaterlevels, Settings, Variables and Secrets, as GH_DISPATCH_TOKEN. Until then the site still rebuilds, more slowly.
 "FAULT USGS now places this gauge at" in the watchdog log: the agency moved a station. Pull the page with `python -I tools/open_wave.py --pull <url>`.

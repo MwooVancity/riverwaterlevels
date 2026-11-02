@@ -419,6 +419,19 @@
     "world_pages"
    ],
    "read_on": "2026-11-02"
+  },
+  {
+   "id": "aafc",
+   "name": "Agriculture and Agri-Food Canada, Canadian Drought Monitor",
+   "status": "quoted",
+   "terms_url": "https://open.canada.ca/data/en/dataset/292646cd-619f-4200-afb1-8b2c52f984a2",
+   "summary": "Open Canada record lists the licence as 'Open Government Licence - Canada'. Monthly GeoJSON in EPSG:3857; classes D0 to D4 named on the AAFC page. Evidence: pages read 2026-11-02.",
+   "credit": "Contains information licensed under the Open Government Licence - Canada",
+   "blocks": [
+    "world_pages",
+    "drought_monitor"
+   ],
+   "read_on": "2026-11-02"
   }
  ]
 }
