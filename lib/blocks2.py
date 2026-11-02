@@ -85,7 +85,7 @@ def b_stage_chart(G):
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
-    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, ("%.2f %s (%.2f ft)" % (obs[-1][1], G["feed"]["unit"], obs[-1][1] / local)) if local != 1 else "%.2f ft" % obs[-1][1], esc(tzl(obs[-1][0], zone))], right=(1,))
+    rows = (tr(["Flood stages from", "NWS", esc(pn_)], right=(1,)) if pn_ else "") + tr(["Latest %s gage height" % who, ("%.*f %s (%.2f ft)" % (0 if G["feed"]["unit"] == "cm" else 2, obs[-1][1], G["feed"]["unit"], obs[-1][1] / local)) if local != 1 else "%.2f ft" % obs[-1][1], esc(tzl(obs[-1][0], zone))], right=(1,))
     cur = fc_cur(G, gap)  # flood stages and the forecast are NWS stages: measured against the stage on the NWS scale, as everywhere else
     if cur is None:
         cur = obs[-1][1]

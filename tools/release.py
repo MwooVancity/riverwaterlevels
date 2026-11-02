@@ -20,6 +20,8 @@ seen_ = {r["site"] for r in picks}
 picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and not r.get("gate") and r["site"] not in seen_),
                 key=lambda r: -float(r.get("score") or 0))  # after the owner's list: the scored queue, best first
 picks = picks[:n]
+for r in picks:
+    r["url"] = r.get("url") or (live_.get(r["site"]) or {}).get("url")  # picks.csv holds the order, waves.csv the address: a pick with no address once sent the whole day back
 if not picks:
     sys.exit("nothing to add: every gauge in %s already has a cache" % lst)
 print("adding %d gauges:" % len(picks))
@@ -121,4 +123,6 @@ if failed:
     if rc:
         sys.exit("rebuild failed (%d)" % rc)
 urls = [r["url"] for r in picks if r.get("url")]
+if not urls:
+    sys.exit("released nothing: every pick was sent back")  # a day with no new gauge must fail, never log every gate passed
 print("\nbuilt: %d new page(s). Now: push (deploys), python -I tools/open_wave.py %d --apply, push again." % (len(urls), len(urls)))
