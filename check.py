@@ -474,7 +474,7 @@ def check_dir(d):
                 if cp and os.path.exists(cp):
                     results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
                 stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
-                if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[1] is not None and r[9] is not None) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
+                if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
                     results[rel].append("says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics")
                 t = re.search(r"<title>(.*?)</title>", h)
                 titles[t.group(1) if t else ""].append(rel)
@@ -635,6 +635,8 @@ def selftest():
     from lib.common import interp_pct
     assert interp_pct([2, None, None, None, None, 56.0, None, None, None, None], 10) is None, "selftest: a median alone gave a percentile"
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
+    short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
+    assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
     import datetime as dt_, zlib
     from lib.common import week_due

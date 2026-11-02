@@ -24,7 +24,7 @@ Open global risks, each tied to the country that hits it: tidal gauges (England)
 Done 2026-11-02: own archive live, flow, Canada history table, emergency numbers. `COVER` next items left: Canada climate normals, drought, boat access, nearby gauges; Germany water temperature history, rain totals, climate normals, drought, locks and notices. `FROZEN` holds new gauges until those are done.
 Review 2026-11-02 left: chart axis in feet on world pages, flow and water temperature tiles, hub time column clipped, Basel Unknown, hourly table reads long, cruise reader needs shipping state (`stateNswHsw`), English agency pages for WSV.
 Truth guards 2026-11-02: `suspect`, alert canary, `truth_world` compares alerts and alarms at 01 and 13 UTC. Still open: US release needs a machine count of new gauges per day; station moves; datum skew; stale facts in code after 2026-11-20.
-2026-11-02: a stray colon in `watchdog.yml` stopped the watchdog about 2.5 hours; the dry run now fails on any workflow file that does not parse. Percentiles need a published 5th and 95th; 24 stats files cleaned of NaN.
+2026-11-02: a stray colon in `watchdog.yml` stopped the watchdog about 2.5 hours; the dry run now fails on any workflow file that does not parse. Percentiles need a published 10th and 90th, and "below 5th" needs a published 5th; 24 stats files cleaned of NaN.
 New country checklist: reading against the agency's page, time zone against the agency, alert coverage on a real active alert, unit and zero point named, terms read, water type labelled (river, lake, reservoir, tidal).
 
 ## Next steps (in order; full speed)
