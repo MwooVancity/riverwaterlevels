@@ -312,6 +312,27 @@ def b_attains(G):
                  "Source: EPA ATTAINS assessment units within about a quarter mile of the gauge, as reported by the state, fetched %s. Values are the state's assessment, quoted." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "epa")
 
 
+def flow_behind(G):
+    """(flow time, stage time, stage now, change in stage since the flow) when flow stopped at least 2 h before gage height, or None: a rating cannot follow a flood, so flow can end while the river keeps moving."""
+    sg = G.get("sg") or []
+    if G.get("offline") or not sg or (sg[-1][0] - G["lt"]).total_seconds() < 7200:
+        return None
+    then = [v for t, v in sg if t <= G["lt"]]
+    return G["lt"], sg[-1][0], sg[-1][1], sg[-1][1] - then[-1] if then else None
+
+
+def b_flow_behind(G):
+    """Top of the page when the flow number is older than the gage height beside it."""
+    b = flow_behind(G)
+    if not b:
+        return None
+    lt, st, now, up = b
+    move = "" if up is None else " That is %.2f ft %s than at the flow reading." % (abs(up), "higher" if up > 0 else "lower")
+    out = block("flow_behind", "Flow reading is behind the gauge height", "live", "<p>USGS's newest flow reading is from %s, %s old. Gage height is still reporting: %.2f ft at %s.%s Flow, the change in flow and the normal comparison on this page stop at that flow reading.</p>" % (esc(tzl(lt, G["zone"])), age_text(lt, G["now"]), now, esc(tzl(st, G["zone"])), move), "Source: USGS Water Data API.", "usgs", amber=True)
+    out["age_tag"] = "%s old" % age_text(lt, G["now"])
+    return out
+
+
 def b_offline(G):
     """Shown at the top of every tab when the newest USGS flow reading is more than 24 hours old (up to 30 days); beyond that the gauge is no longer rebuilt."""
     if not G.get("offline"):

@@ -8,6 +8,19 @@ from lib import world
 
 def run():
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
+    new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
+    rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])
+    assert {r["time"]: r["value"] for r in rows}["t1"] == "11000" and (add, fixed) == (1, 1), "a USGS correction to a reading we already had was dropped"
+    assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"
+    src = open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read()
+    assert "&last_modified=" in src[src.index("def fast_usgs"):src.index("SLOW_KEYS")], "the hourly fetch cannot see a correction to an older reading"
+    assert "g.f[0] !== m[3]" in open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read(), "the edge cannot correct a reading of the same time"
+    from lib import blocks2
+    t0 = datetime.datetime(2026, 11, 2, 16, tzinfo=datetime.timezone.utc)
+    G = {"lt": t0, "zone": datetime.timezone.utc, "now": t0 + datetime.timedelta(hours=7), "sg": [(t0, 11.51), (t0 + datetime.timedelta(hours=6), 12.58)]}
+    b = blocks2.b_flow_behind(G)
+    assert b and "1.07 ft higher" in b["body"] and "7 h" in b["body"], "flow ending in a flood was not said"
+    assert not blocks2.flow_behind(dict(G, sg=G["sg"][:1])), "a current flow was called behind"
     z = collect.eccc_zone
     on = {"PROV_TERR_STATE_LOC": "ON", "DATETIME_LST": "2026-11-02T10:00:00-05:00"}
     assert z(dict(on, DATETIME_LST="2026-11-02T10:00:00-06:00"), -94.5) == "America/Winnipeg", "Kenora kept Toronto time"

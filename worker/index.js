@@ -46,7 +46,7 @@ export default {
       const [m, L] = await Promise.all([sites(env).then((s) => s[url.pathname]), stored(env)]);
       const g = m && L && L.g && L.g[m[0]];
       // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
-      if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", L), url);
+      if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1]) || (Date.parse(g.f[1]) === Date.parse(m[1]) && g.f[0] !== m[3])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", L), url);
       if (res.status === 304) { // the browser holds the built copy but a newer reading exists: send the full page so it can be updated
         const h = new Headers(req.headers);
         h.delete("if-none-match");
@@ -67,20 +67,25 @@ let SITES = null; // url -> [site, built reading time, time zone], from the buil
 // queues it behind a running build. GH_DISPATCH_TOKEN can only start workflows on this repo; without it nothing happens.
 async function build(env, now) {
   if (!env.GH_DISPATCH_TOKEN || now.getUTCMinutes() >= 3) return;
+  await start(env, "watchdog.yml");
   const s = await (await env.ASSETS.fetch("https://riverwaterlevels.com/status.json")).json();
   if (now - Date.parse(s.built_at) < 40 * 60000) return;
-  const r = await fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/refresh.yml/dispatches", {
+  const r = await start(env, "refresh.yml");
+  await env.LIVE.put("dispatch", now.toISOString() + " " + r.status + " " + (r.headers.get("github-authentication-token-expiration") || "")); // 204 = GitHub accepted; one write an hour at most
+}
+
+function start(env, file) {
+  return fetch("https://api.github.com/repos/MwooVancity/riverwaterlevels/actions/workflows/" + file + "/dispatches", {
     method: "POST",
     headers: { authorization: "Bearer " + env.GH_DISPATCH_TOKEN, accept: "application/vnd.github+json", "user-agent": UA },
     body: JSON.stringify({ ref: "main" }),
   });
-  await env.LIVE.put("dispatch", now.toISOString() + " " + r.status + " " + (r.headers.get("github-authentication-token-expiration") || "")); // 204 = GitHub accepted; one write an hour at most
 }
 
 async function sites(env) {
   if (!SITES) {
     const list = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json(); // [[site, url, built iso, tz]]
-    SITES = Object.fromEntries(list.map((x) => [x[1], [x[0], x[2], x[3]]]));
+    SITES = Object.fromEntries(list.map((x) => [x[1], [x[0], x[2], x[3], x[4]]]));
   }
   return SITES;
 }

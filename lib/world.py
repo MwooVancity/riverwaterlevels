@@ -150,6 +150,7 @@ US_ONLY = "none: US federal product, no counterpart in this country's open feeds
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired, so no new gauges for that country (check.py)
     "b_offline": ("have", "have"),
+    "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
     "b_alerts": ("have", "have"), "b_stage_chart": ("have", "have"), "b_official_marks": ("have", "have"),
     "b_hourly": ("have", "have"), "b_weather": ("have", "have"), "b_air": ("have", "have"), "b_air_quality": ("have", "have"), "b_official_links": ("have", "have"),
     "b_flow_chart": ("have", "have"),

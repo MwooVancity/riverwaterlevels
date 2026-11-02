@@ -1360,13 +1360,27 @@ def fast_related(recs, h):
                 x["flow"], x["time"] = got[x["site"]]
 
 
+def merge_rows(old, new):
+    """USGS's newest word on each reading wins: (rows, new count, corrected count). A provisional value can change after we first saw it."""
+    rows = {(r["parameter_code"], r["time"]): r for r in old}
+    add = fixed = 0
+    for r in new:
+        k = (r["parameter_code"], r["time"])
+        if k not in rows:
+            add += 1
+        elif (rows[k].get("value"), rows[k].get("qualifier")) != (r.get("value"), r.get("qualifier")):
+            fixed += 1
+        rows[k] = r
+    return list(rows.values()), add, fixed
+
+
 def fast_usgs(sites, h):
-    """Every reading of the last 3 hours for every gauge, in bulk: 300 ids per call (URL stays ~5 KB) with next-link paging, so
+    """Every reading USGS wrote or corrected in the last 6 hours for every gauge, in bulk (a correction rewrites days of old readings: Animas 2026-11-02, 352 rows): 300 ids per call (URL stays ~5 KB) with next-link paging, so
     nothing is dropped past 10,000 rows. Rows in the same shape as fetch_usgs. One or two calls at today's size; it replaces the
     per-gauge fast_fill calls (2026-10-25 review: about one call per gauge per run, ~18,000/h at 9,099 gauges)."""
     out = {}
     for i in range(0, len(sites), 300):
-        url, pages = BASE + "continuous/items?monitoring_location_id=%s&parameter_code=%s&time=PT3H&limit=10000&skipGeometry=true&f=json" % (",".join("USGS-" + s for s in sites[i:i + 300]), CODES), 0
+        url, pages = BASE + "continuous/items?monitoring_location_id=%s&parameter_code=%s&time=P8D&last_modified=PT6H&limit=10000&skipGeometry=true&f=json" % (",".join("USGS-" + s for s in sites[i:i + 300]), CODES), 0
         while url and pages < 20:
             try:
                 d = thr_json(url, h, 120, gap=1.0)
@@ -1424,12 +1438,13 @@ def fast(inv, sites):
                 print("ok new gauge", s, "; ".join(log))
                 continue
             rec, log = (json.load(open(path)) if os.path.exists(path) else seed_record(s, inv, new.get(s))), []
-            have = {(r["parameter_code"], r["time"]) for r in rec["usgs"]["rows"]}
-            add = [r for r in new.get(s, []) if (r["parameter_code"], r["time"]) not in have]
             cutoff = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).isoformat()
-            rec["usgs"]["rows"] = [r for r in rec["usgs"]["rows"] + add if str(r["time"]) >= cutoff]
-            if add:
+            rows, add, fixed = merge_rows(rec["usgs"]["rows"], new.get(s, []))
+            rec["usgs"]["rows"] = [r for r in rows if str(r["time"]) >= cutoff]
+            if add or fixed:
                 rec["usgs"]["fetched_at"] = now_iso()
+            if fixed:
+                rec["_revised"] = now_iso()  # build.py rebuilds this page at once
             note("usgs", "ok" if s in new else "absent")
             srcs = [("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"], rec.get("wpc"), s))]
             if nwm_due(rec):

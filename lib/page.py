@@ -135,7 +135,7 @@ def tab_blocks(tab, G, pages):
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
         has_al = bool(live_alerts(G))
-        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
+        return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),

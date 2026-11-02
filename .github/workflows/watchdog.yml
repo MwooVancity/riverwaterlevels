@@ -63,7 +63,7 @@ jobs:
         run: |
           h=$((10#$(date -u +%H) % 12))
           if [ "$h" -ge 1 ] && [ "$h" -le 6 ]; then
-            sent=$(gh run list --workflow watchdog.yml --event schedule --status failure --created ">=$(date -u -d "-$h hours" +%FT%H:00:00Z)" --json databaseId --jq length || echo 0)
+            sent=$(gh run list --workflow watchdog.yml --status failure --created ">=$(date -u -d "-$h hours" +%FT%H:00:00Z)" --json databaseId --jq length || echo 0)
             if [ "$sent" = "0" ]; then echo "open=1" >> "$GITHUB_OUTPUT"; fi
           fi
       - name: Keep the schedules on (GitHub turns them off after 60 days with no commit; the daily release normally commits)

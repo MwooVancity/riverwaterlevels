@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
 from lib import coverage, render, directory, indexing, related, world
+from lib.blocks2 import flow_behind
 
 
 FILE_BUDGET = 95000 if os.environ.get("WORKERS_PAID") else 19000
@@ -95,7 +96,7 @@ def main():
 
     def sig(G):  # what the page was built from that changes between rolling rebuilds and must show at once
         al = sorted("%s|%s" % (a.get("event"), a.get("expires")) for a in (G["rec"].get("nws") or {}).get("alerts") or [])
-        return [((G["rec"].get("nwps") or {}).get("forecast") or {}).get("issued"), al]
+        return [((G["rec"].get("nwps") or {}).get("forecast") or {}).get("issued"), al, G["rec"].get("_revised"), bool(flow_behind(G))]
 
     def due(s, G):
         u = rows[s]["dashboard_url"].strip("/")
@@ -245,7 +246,7 @@ def main():
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
     json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built] + world_rows, open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     # the edge live layer (worker/index.js): which page is which gauge, the reading the page was built with, and its time zone
-    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"]] for r in built], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
+    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"], Gs[r["site"]]["lv"]] for r in built], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
