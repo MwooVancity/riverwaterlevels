@@ -94,7 +94,7 @@ def clock(d, tz, date=True):
 
 def tzl(dt, zone, date=True):
     d = dt.astimezone(zone)
-    return clock(d, d.strftime("%Z"), date)
+    return clock(d, "PT" if str(zone) == "America/Vancouver" else d.strftime("%Z"), date)  # BC's permanent UTC-7 is called Pacific Time, not MST
 
 
 def age_text(dt, now):

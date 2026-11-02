@@ -28,7 +28,11 @@ def inside(lat, lon, ring):
 
 
 def alerts_at(lat, lon, items):
-    return [{k: v for k, v in a.items() if k != "rings"} for a in items if any(inside(lat, lon, r) for r in a["rings"])]
+    out = {}
+    for a in items:
+        if any(inside(lat, lon, r) for r in a["rings"]):
+            out.setdefault((a.get("event"), a.get("headline")), {k: v for k, v in a.items() if k != "rings"})
+    return list(out.values())
 
 
 def en(o):
@@ -75,13 +79,13 @@ def canada_city(props, lat, lon):
         out["obs"] = {"station": str(st.get("code") or "").upper(), "name": st.get("value") or "", "ll": ll, "timestamp": cc["timestamp"], "temp_c": num((cc.get("temperature") or {}).get("value")), "wind_kmh": 0 if speed == "calm" else num(speed),
                       "wind_dir": num((w.get("bearing") or {}).get("value")), "gust_kmh": num((w.get("gust") or {}).get("value")), "pressure_pa": (lambda v: None if v is None else v * 1000)(num((cc.get("pressure") or {}).get("value")))}
     fg = p.get("forecastGroup") or {}
-    per = []
-    for f in fg.get("forecasts") or []:
+    per, start = [], datetime.datetime.fromisoformat(fg["timestamp"].replace("Z", "+00:00")) if fg.get("timestamp") else None
+    for n_, f in enumerate(fg.get("forecasts") or []):
         t = ((f.get("temperatures") or {}).get("temperature") or [{}])[0]
         wind = ((f.get("winds") or {}).get("periods") or [{}])[0]
         ab = f.get("abbreviatedForecast") or {}
         per.append({"name": (f.get("period") or {}).get("textForecastName") or "", "temperature": t.get("value"), "temperatureUnit": "C", "isDaytime": t.get("class") == "high", "shortForecast": ab.get("textSummary") or "", "detailedForecast": f.get("textSummary") or "",
-                    "pop": num((ab.get("pop") or {}).get("value")), "windSpeed": "%s km/h" % (wind.get("speed") or {}).get("value") if (wind.get("speed") or {}).get("value") is not None else "", "windDirection": wind.get("direction") or ""})
+                    "pop": num((ab.get("pop") or {}).get("value")), "windSpeed": "%s km/h" % (wind.get("speed") or {}).get("value") if (wind.get("speed") or {}).get("value") is not None else "", "windDirection": wind.get("direction") or "", "endTime": (start + datetime.timedelta(hours=12 * (n_ + 1) + 6)).isoformat() if start else None})
     if per and fg.get("timestamp"):
         out["periods"], out["forecast_updated"] = per, fg["timestamp"]
     hg = p.get("hourlyForecastGroup") or {}
@@ -104,9 +108,10 @@ def dwd_alerts(blob):
         if x.findtext("c:status", "", NS) != "Actual" or x.findtext("c:msgType", "", NS) == "Cancel":
             continue
         for i in x.findall("c:info", NS):
-            rings = [[tuple(float(v) for v in pt.split(",")) for pt in (a.text or "").split()] for a in i.findall("c:area/c:polygon", NS)]
-            out.append({"rings": [r for r in rings if len(r) > 2], "event": (i.findtext("c:event", "", NS) or "").capitalize(), "severity": i.findtext("c:severity", "Unknown", NS), "headline": " ".join(x for x in (i.findtext("c:headline", "", NS), i.findtext("c:description", "", NS)) if x)[:300],
-                        "areaDesc": i.findtext("c:area/c:areaDesc", "", NS), "ends": i.findtext("c:expires", None, NS), "expires": i.findtext("c:expires", None, NS)})
+            for area in i.findall("c:area", NS):  # one warning covers many counties: the page names the one holding this gauge
+                rings = [[tuple(float(v) for v in pt.split(",")) for pt in (a.text or "").split()] for a in area.findall("c:polygon", NS)]
+                out.append({"rings": [r for r in rings if len(r) > 2], "event": (i.findtext("c:event", "", NS) or "").capitalize(), "severity": i.findtext("c:severity", "Unknown", NS), "headline": " ".join(x for x in (i.findtext("c:headline", "", NS), i.findtext("c:description", "", NS)) if x)[:300],
+                            "areaDesc": area.findtext("c:areaDesc", "", NS), "ends": i.findtext("c:expires", None, NS), "expires": i.findtext("c:expires", None, NS)})
     return out
 
 
@@ -218,6 +223,8 @@ def demo():
     many = [{"properties": {"DATE": "%d-%02d-%02d" % (y, m, d), "LEVEL": float(d)}} for y in range(2000, 2012) for m in range(1, 13) for d in range(1, 29)]
     got = day_stats(many)
     assert got["days"]["03-05"][:3] == [5.0, 5.0, 5.0] and got["deciles"][0] == 1.0 and got["deciles"][10] == 28.0
+    two = [{"rings": [box], "event": "x", "headline": "h", "areaDesc": "here"}, {"rings": [box], "event": "x", "headline": "h", "areaDesc": "also"}, {"rings": [[(50, 50), (50, 60), (60, 60)]], "event": "x", "headline": "h", "areaDesc": "far"}]
+    assert [a["areaDesc"] for a in alerts_at(5, 5, two)] == ["here"], "one line per alert, named for the county that holds the gauge"
     arc = {}
     for v in (5, 9, 2):
         day_add(arc, "g", "2026-11-02", v)

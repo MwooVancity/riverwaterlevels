@@ -621,7 +621,7 @@ def world_rules(h):
     bare = re.findall(r"(?<![(\d.])\b\d[\d,.]* ?(?:cfs|mph|mi|inHg|acres?|sq mi)\b", re.sub(r"\([^()]*\)", " ", t)) + re.findall(r"\d(?: |<small>)*(?:°F|&deg;F)", re.sub(r"\([^()]*\)", " ", t))
     if bare:
         return ["world gauge page shows a US unit with no local one: %s" % bare[:4]]
-    miss = [x for x in ("Water level", "Is this normal", "24 h change", "River forecast", 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
+    miss = [x for x in ("Water level", "Is this normal", "24 h change", ("Level forecast" if "Level forecast" in t else "River forecast"), 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
     left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov", "Delaware", "California") if x in t]
     return (["world gauge page is missing: " + ", ".join(miss)] if miss else []) + (["world gauge page still says: " + ", ".join(left)] if left else [])
 

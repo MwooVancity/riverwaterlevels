@@ -49,12 +49,22 @@ def to_rec(page, r):
     else:
         label, note, marks = LABEL.get(r.get("state"), "Unknown"), "%s label, against this gauge's mean low and mean high water." % f["agency"], r.get("marks") or {}
     rows = [{"parameter_code": "00065", "time": t, "value": str(round(to_ft(v, f["unit"]), 3)), "unit_of_measure": "ft", "qualifier": None, "approval_status": "Provisional"} for t, v in r["series"]]
+    seen, kept = set(), {}
+    for k in ("HHW", "NNW") + tuple(m[0] for m in MARKS):  # the agency repeats a value under several marks: the record name wins
+        if k in marks and k not in kept and marks[k] not in seen:
+            seen.add(marks[k])
+            kept[k] = marks[k]
+    marks = kept
+    if marks.get("NNW") is not None and r["cm"] < marks["NNW"]:
+        note = "Below the lowest level on record, %s. " % fmt_level(marks["NNW"], f["unit"]) + note
+    elif marks.get("HHW") is not None and r["cm"] > marks["HHW"]:
+        note = "Above the highest level on record, %s. " % fmt_level(marks["HHW"], f["unit"]) + note
     wt = (r.get("also") or {}).get("WT")
     if wt and isinstance(wt[0], (int, float)):
         rows.append({"parameter_code": "00010", "time": r["time"], "value": str(wt[0]), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Provisional"})
     w = r.get("wx") or {}
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
-    links.append(("Weather forecast and radar (%s)" % f["wx"], w.get("city_url") or "https://%s/" % ("weather.gc.ca" if key == "eccc" else "www.dwd.de/EN/weather/weather_climate_local/")))
+    links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "nws": w, "rain": w.get("rain") or {},
             "feed": dict(f, label=label, label_note=note, marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
@@ -66,7 +76,7 @@ def to_row(page, r):
                 hub_url="/%s/" % page["slug"], hub_slug=page["slug"], _built=True, _hub=False, _single=True, _ll=(r["lat"], r["lon"]), _lv=None, _band="–")
 
 
-SWAP = (("The newest USGS flow reading", "The newest reading"), ("when USGS publishes", "when the agency publishes"), ("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
+SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active National Weather Service alerts were returned for this location.", "No active @WX@ weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed."), ("The newest USGS flow reading", "The newest reading"), ("when USGS publishes", "when the agency publishes"), ("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
         ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."))
@@ -90,7 +100,12 @@ def metric(h):
 def localize(h, feed, river, place, hub, flat=False):
     """The US builder's page, in this agency's words. A US word that survives here fails check.py world_rules, so nothing slips through."""
     for a, b in SWAP:
-        h = h.replace(a, b)
+        h = h.replace(a, b.replace("@WX@", feed["wx"]))
+    h = re.sub(r"Is this normal for [A-Z][a-z]+ \d+\?", "Is this normal?", h)
+    h = re.sub(r"<p>The [^<]*publishes no flood stages[^<]*</p>", "", h)
+    h = h.replace('<div class="legend">Wind </div>', "")
+    if feed.get("lake"):
+        h = h.replace("Weather at the river", "Weather at the lake").replace("<span>River forecast</span>", "<span>Level forecast</span>").replace(">River forecast<", ">Level forecast<")
     h = re.sub(r' \(<a href="https://www\.weather\.gov/safety/coldwater"[^>]*>[^<]*</a>\)', "", h)
     h = re.sub(r"<script>\(function\(\)\{var (?:m=document\.querySelector\('\[data-wxst\]'\)|b=document\.getElementById\('alerts'\))(?:(?!</script>).)*</script>", "", h, flags=re.S)  # those two refresh from the US weather service: never from a phone abroad
     h = re.sub(r" Credit: [^<]*?subject to copyright\.", "", h).replace(">Official NWS<", ">Official<")  # the US credit is a false statement about any other agency's data
@@ -109,7 +124,7 @@ def localize(h, feed, river, place, hub, flat=False):
     h = re.sub(r'<p class="cite">.*?</p>', "", h, flags=re.S)
     h = re.sub(r'<script type="application/ld\+json">(?:(?!</script>).)*"mainEntity".*?</script>', "", h, flags=re.S)
     h = re.sub(r"USGS gauge [^&<]*", "Gauge %s " % esc(feed["station"]), h)
-    h = re.sub(r'<p class="gaps">.*?</p>', "", h, flags=re.S)
+    h = re.sub(r'<p class="gaps">.*?</p>', '<p class="gaps">Not published for this gauge: %s.</p>' % ", ".join(feed["gaps"]) if feed.get("gaps") else "", h, flags=re.S)
     h = h.replace("<p>The National Weather Service publishes no flood stages for this gauge, so none are drawn.</p>", "")
     h = re.sub(r'<details[^>]*id="sources">.*?</details>', '<p class="src">Data: %s, %s. %s Readings can be revised by the agency. Not endorsed by the agency. Not for navigation or safety-of-life decisions.</p>' % (esc(feed["agency"]), esc(feed["api"]), esc(feed["wx_credit"])), h, flags=re.S)
     h = h.replace('class="hero hero2"', 'class="hero hero2" data-n="%s"' % esc(feed["station"]), 1)
@@ -120,7 +135,7 @@ def localize(h, feed, river, place, hub, flat=False):
 PROOFS = ("reading", "time", "alerts", "unit", "terms", "water")
 PROVED = {  # what a person or script saw on live data, one line each; a country with a gap fails check.py before any of its pages ship. An alert proof means a real live alert reached the code, not an empty list
     "pegelonline": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Kaub page 3:00 AM CET against feed timestamp +01:00, 2026-11-02", "alerts": "Kaub frost warning from the DWD zip reached the point test, Zurich none, 2026-11-02", "unit": "cm above gauge zero, PEGELONLINE", "terms": "DL-DE-Zero-2.0; DWD CC BY 4.0, read 2026-11-02", "water": "inland rivers and Lake Constance, no tidal gauge listed"},
-    "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish failed 2026-11-02 (MST), fixed by province and longitude, read again after deploy", "alerts": "453 live fog, wind and air quality alerts 2026-11-02; status words issued and continued, 0 reached pages until fixed", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
+    "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish 02:05Z feed against page; BC is permanent UTC-7 since 2026 (IANA 2026b), shown as PT", "alerts": "real fog advisory at Berens River hit the point test 2026-11-02; status words are issued and continued", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
 
 
 def proof_faults(feeds, proved):
@@ -263,7 +278,7 @@ def owed(r):
         out.append("air_quality")
     if fc_top({"fc": r.get("fc"), "zone": "UTC"}, datetime.datetime.now(datetime.timezone.utc)):
         out.append("river_forecast")
-    if r.get("marks") or r.get("months") or r.get("record"):
+    if any(k in (r.get("marks") or {}) for k, _ in MARKS) or r.get("months") or r.get("record"):
         out.append("official_marks")
     if r.get("also"):
         out.append("also_measured")
@@ -284,6 +299,8 @@ def page(p, r, now, rows=(), keep=()):
     if not ready(r):
         return None
     row, rec = to_row(p, r), to_rec(p, r)
+    rec["feed"]["lake"] = p.get("lake")
+    rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows and not p.get("flat") else []  # a flat list is gauges on different rivers: never up or downstream
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
@@ -291,5 +308,5 @@ def page(p, r, now, rows=(), keep=()):
     top = fc_top(rec["feed"], now)
     if top:
         html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast, %s. Federal Institute of Hydrology</small>" % esc(top[0])), html, count=1, flags=re.S)
-    html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. Height above the gauge's zero point, not water depth" % to_ft(r["cm"], rec["feed"]["unit"]), 1)
+    html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. %s" % (to_ft(r["cm"], rec["feed"]["unit"]), "On this gauge's own scale, often a height above sea level, not water depth" if rec["feed"]["src"] == "eccc" else "Height above the gauge's zero point, not water depth"), 1)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))

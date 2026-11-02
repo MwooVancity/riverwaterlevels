@@ -1628,7 +1628,7 @@ def wx_canada(r, w, ctx):
     aq = once(ctx, "ca-aq", lambda: {f["id"]: f["geometry"]["coordinates"][1::-1] + [f["properties"]["location_name_en"], f["properties"]["aqhi"], f["properties"]["observation_datetime"]] for f in http_json(api + "aqhi-observations-realtime/items?f=json&latest=true&limit=500", {}, 45)["features"]})
     if aq:
         i, d = wx.nearest(r["lat"], r["lon"], aq)
-        w["aq"] = {"value": "%.1f" % aq[i][3], "scale": "Air Quality Health Index, 1 to 10+", "place": aq[i][2], "km": d, "t": aq[i][4], "src": "Environment and Climate Change Canada"} if i else None
+        w["aq"] = {"value": "%.1f on 1 to 10+" % aq[i][3], "scale": "Air Quality Health Index, 1 to 10+", "place": aq[i][2], "km": d, "t": aq[i][4], "src": "Environment and Climate Change Canada"} if i else None
 
 
 def wx_germany(r, w, ctx):

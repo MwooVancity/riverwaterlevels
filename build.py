@@ -210,7 +210,7 @@ def main():
                 world_rows.append([(r.get("title") or "%s at %s" % (page["river"], r["name"].replace(" UP", "").title())), gp[0], round(r["lat"], 4), round(r["lon"], 4), "Canada" if page.get("feed") == "eccc" else "Germany Europe"])
             wp = directory.world_page(page, d, wnow, keep)
             if wp:
-                emit("/%s/" % page["slug"], wp)
+                emit("/%s/" % page["slug"], wp.replace("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page.").replace("-0.00 m", "0.00 m"))
         json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)
         os.makedirs(os.path.join(nxt, "archive"), exist_ok=True)
         for f in glob.glob(os.path.join(CACHE, "_archive-*.json")):

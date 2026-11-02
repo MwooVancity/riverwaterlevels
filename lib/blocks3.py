@@ -677,7 +677,7 @@ def b_also(G):
     f = G["feed"]
     words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
     rows = "".join(tr([words.get(k, esc(v[2])), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
-    return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s." % (f["api"], f["name"]), f["src"]) if rows else None
+    return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s, with the reading at %s." % (f["api"], f["name"], esc(G["obs"])), f["src"]) if rows else None
 
 
 def b_along(G):
@@ -698,7 +698,7 @@ def b_world_forecast(G):
     age = hours_old(c.get("at"), G["now"]) if c.get("at") else None
     if not pts or age is None or age > HIDE_H["river_forecast"]:
         return None
-    rows = "".join(tr([esc(tzl(parse_t(t), G["zone"])), "%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"])), "Estimate" if kind == "estimate" else "Forecast"], right=(1,)) for t, v, kind in pts[::6])
+    rows = "".join(tr([esc(tzl(parse_t(t), G["zone"])), "%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"])), "Estimate" if kind == "estimate" else "Forecast"], right=(1,)) for t, v, kind in [p for i, p in enumerate(pts) if i % 6 == 0 or p is max(pts, key=lambda x: x[1])])
     return block("river_forecast", "River forecast", "official", table(["Time", "Level", "Type"], rows, right=(1,)), "Source: Federal Institute of Hydrology (BfG) through %s, issued %s. Estimates are less certain than forecasts." % (f["api"], esc(tzl(parse_t(c["at"]), G["zone"]))), f["src"], amber=age)
 
 
