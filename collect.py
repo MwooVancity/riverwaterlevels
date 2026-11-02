@@ -1584,6 +1584,7 @@ def listing(name, url, parse, hours=168):
         return spots
     except Exception as e:
         note("world-wx", "failed", e)
+        print("world-wx failed", name, str(e)[:120])
         return d["spots"] if d else {}
 
 
@@ -1594,6 +1595,7 @@ def once(ctx, key, get):
             ctx[key] = get()
         except Exception as e:
             note("world-wx", "failed", e)
+            print("world-wx failed", key, str(e)[:120])
             ctx[key] = None
     return ctx[key]
 
@@ -1669,10 +1671,10 @@ def archive(page, rows):
             a = json.loads(http_raw("https://riverwaterlevels.com/archive/" + name, 30))
         except urllib.error.HTTPError as e:
             if e.code != 404:
-                return note("archive", "failed", e)
+                return print("archive failed", name, e)
             a = {}  # the first day of this file
         except Exception as e:
-            return note("archive", "failed", e)
+            return print("archive failed", name, str(e)[:120])
     for r in rows:
         if r.get("cm") is not None and r.get("time"):
             wx.day_add(a, r["name"], r["time"][:10], r["cm"])
