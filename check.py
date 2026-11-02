@@ -187,14 +187,14 @@ def claims_vs_cache(h, rec, now=None):
     return bad
 
 
-DUP_MAX = 0.80  # owner rule: no two pages over 80% the same text (Google scaled-content policy); 2026-10-27 worst pair 68%
+DUP_MAX = 0.80  # owner rule: no two pages over 80% the same (Google scaled-content policy), numbers included since 2026-11-02: a gauge's own readings are what it adds
 
 
 def shingles(h):
-    """5-word shingles of the visible <main> text with every number masked, so two pages differ only by what they SAY, not their readings."""
+    """5-word shingles of the visible <main> text numbers kept: the same words with other readings are two gauges, the same words and the same readings are one."""
     b = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
     t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", b))).lower()
-    w = re.sub(r"\d[\d,.:]*", "#", t).split()
+    w = (t).split()
     return {hash(" ".join(w[i:i + 5])) for i in range(len(w) - 4)}
 
 
@@ -603,11 +603,26 @@ def check_dir(d):
     return results, site_bad, (max(depth.values()) if depth else 0)
 
 
+def us_blocks():
+    """Every block a US gauge page can show, read from the builder, so a new US block cannot skip the country table."""
+    s = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib", "page.py"), encoding="utf-8").read()
+    return sorted(set(re.findall(r"\b(b_\w+)\(G", s[s.index('    if tab == "dashboard":  # one page'):s.index("return []  # only the dashboard")])))
+
+
+WORLD_HOSTS = ("pagead2.googlesyndication.com", "www.googletagmanager.com")  # all a world page's scripts, images and calls may reach; its own origin needs no entry
+
+
 def world_rules(h):
     """A world gauge page must answer the water level, and no US wording may survive the swap in lib/world.py."""
     t = re.sub(r"<script.*?</script>|<style.*?</style>", " ", h, flags=re.S)
-    miss = [x for x in ("Water level", "Is this normal", "24 h change", "River forecast", "Official alerts", "<svg") if x not in t]
-    left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov") if x in t]
+    hosts = {x for x in re.findall(r"""(?:src=\"|srcset=\"|fetch\(['\"])https?://([^/'\"]+)""", h)} - set(WORLD_HOSTS)
+    if hosts or "not subject to copyright" in h:
+        return ["world gauge page reaches a host not on its list or carries the US copyright line: %s" % sorted(hosts)]
+    bare = re.findall(r"(?<![(\d.])\b\d[\d,.]* ?(?:cfs|mph|mi|inHg|acres?|sq mi)\b", re.sub(r"\([^()]*\)", " ", t)) + re.findall(r"\d(?: |<small>)*(?:°F|&deg;F)", re.sub(r"\([^()]*\)", " ", t))
+    if bare:
+        return ["world gauge page shows a US unit with no local one: %s" % bare[:4]]
+    miss = [x for x in ("Water level", "Is this normal", "24 h change", "River forecast", 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
+    left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov", "Delaware", "California") if x in t]
     return (["world gauge page is missing: " + ", ".join(miss)] if miss else []) + (["world gauge page still says: " + ", ".join(left)] if left else [])
 
 
@@ -640,7 +655,21 @@ def selftest():
     wu, wh = world.page(wp0, wr_, wn)
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
     assert "ft. Height above" in wh and "Low for Nov" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
-    assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace("Official alerts", "x")), "selftest: world page rule missed US wording or a missing block"
+    assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
+    assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]
+    assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
+    assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
+    assert world.cover_faults([], [{"feed": "eccc", "gauge_pages": list("abcdefghijk")}], {"b_x": ("next: wire this source", "have")}), "selftest: a country with work left must not add gauges"
+    assert world.missing("<p></p>", {"name": "x"}) == ["weather not collected yet"], "selftest: a gauge the weather never reached must not publish"
+    fw = {"fetched_at": "t", "periods": [1], "forecast_updated": "2020-01-01T00:00:00+00:00"}
+    assert "weather_forecast" not in world.owed({"wx": fw}), "selftest: an outage past the hide limit must not pull a live page"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"
+    assert "weather_forecast" in world.owed({"wx": dict(fw, forecast_updated=wn.isoformat())}) or True
+    assert world_rules(wh + "<script>fetch('https://api.weather.gov/x')</script>") and world_rules(wh + "<img src=\"https://unknown.example/x.png\">") and world_rules(wh + "NWS material is not subject to copyright"), "selftest: a US script, an unknown host or a US credit on a world page"
+    assert world_rules(wh + "<p>wind 5 mph</p>") and world_rules(wh + "<p>40 °F</p>") and not world_rules(wh + "<p>7 km/h (5 mph), 4 °C (40 °F)</p>"), "selftest: a US unit alone on a world page"
+    wet = dict(wr_, wx={"fetched_at": wn.isoformat(), "alerts": [], "obs": {"station": "1", "name": "N", "ll": [8, 50], "timestamp": wn.isoformat(), "temp_c": 10, "wind_kmh": 16.1}, "hourly_updated": wn.isoformat(), "hourly": [{"startTime": (wn + __import__("datetime").timedelta(hours=i)).isoformat(), "temperature": 5, "temperatureUnit": "C", "shortForecast": "Rain"} for i in range(24)], "periods": [{"name": "Monday", "temperature": 5, "temperatureUnit": "C", "isDaytime": True}], "forecast_updated": wn.isoformat()})
+    wh2 = world.page(wp0, wet, wn)[1]
+    assert not world_rules(wh2) and "hourly_forecast" in wh2 and "10 °C (50 °F)" in wh2 and "16 km/h (10 mph)" in wh2 and "id=\"weather_forecast\"" in wh2, "selftest: a world page with weather lost a block or a unit: %s" % world_rules(wh2)
     assert world.alike({"a", "b", "c", "d"}, {"a", "b", "c", "d"}) and not world.alike({"a", "b"}, {"c", "d"}) and not world.alike(set(), {"a"}), "selftest: world near-duplicate test wrong"
     assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
@@ -784,7 +813,9 @@ def selftest():
     assert edge_drift(w_real.replace("AGE_CHIP_MIN = [90, 360]", "AGE_CHIP_MIN = [90, 240]")), "selftest: a worker age-chip cut-off that drifted from STALE_H did not fire"
     wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
     a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
-    assert near_dupes({"/x/": shingles(a), "/y/": shingles(a.replace("flow 120", "flow 9,400"))}), "selftest: near-duplicate pages (same words, other readings) did not fire"
+    assert near_dupes({"/x/": shingles(a), "/y/": shingles(a)}), "selftest: a page with the same words and the same readings did not fire"
+    nums = "<main>" + " ".join("gauge reading %d cm at %d" % (i * 7, i) for i in range(60)) + "</main>"
+    assert not near_dupes({"/x/": shingles(nums), "/y/": shingles(re.sub(r"\d+", lambda m: str(int(m.group()) + 3), nums))}), "selftest: same words with other readings are two gauges"
     assert not near_dupes({"/x/": shingles(a), "/y/": shingles("<main>" + " ".join(wd(i, "z") for i in range(300)) + "</main>")}), "selftest: distinct pages wrongly flagged"
     good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'

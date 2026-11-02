@@ -687,3 +687,31 @@ def b_along(G):
         return None
     rows = "".join(tr([w, ('<a href="%s">%s</a>' % (u, esc(n))) if u else esc(n), cm, c if c is not None else "–", lab], right=(2, 3)) for w, n, cm, c, lab, u in f["along"])
     return block("along_river", "Along the river", "agency", table(["Direction", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
+
+
+def b_world_forecast(G):
+    """The official river forecast where the agency publishes one: forecast and estimate kept apart, as it marks them."""
+    f = G["feed"]
+    c = f.get("fc") or {}
+    from lib.world import fmt_level, to_ft
+    pts = [p for p in c.get("pts") or [] if parse_t(p[0]) >= G["now"]]
+    age = hours_old(c.get("at"), G["now"]) if c.get("at") else None
+    if not pts or age is None or age > HIDE_H["river_forecast"]:
+        return None
+    rows = "".join(tr([esc(tzl(parse_t(t), G["zone"])), "%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"])), "Estimate" if kind == "estimate" else "Forecast"], right=(1,)) for t, v, kind in pts[::6])
+    return block("river_forecast", "River forecast", "official", table(["Time", "Level", "Type"], rows, right=(1,)), "Source: Federal Institute of Hydrology (BfG) through %s, issued %s. Estimates are less certain than forecasts." % (f["api"], esc(tzl(parse_t(c["at"]), G["zone"]))), f["src"], amber=age)
+
+
+def b_world_aq(G):
+    """Air quality at the nearest official station, in the agency's own index."""
+    f = G["feed"]
+    a = f.get("aq")
+    age = hours_old(a["t"], G["now"]) if a else None
+    if not a or age is None or age > HIDE_H["air_quality"]:
+        return None
+    return block("air_quality", "Air quality near the river", "official", table(["Station", "Index", "Distance"], tr([esc(a["place"]), esc(a["value"]), "%d km" % a["km"]], right=(1, 2)), right=(1, 2)), "Source: %s, %s, measured %s." % (esc(a["src"]), esc(a["scale"]), esc(tzl(parse_t(a["t"]), G["zone"]))), f["src"], amber=age)
+
+
+def b_world_links(G):
+    """Where to check this gauge at the agency itself."""
+    return block("official_links", "Official pages for this gauge", "agency", '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(u), esc(t)) for t, u in G["feed"]["links"]), "Source: links to the agencies that publish the data on this page; they open in a new tab.", G["feed"]["src"])

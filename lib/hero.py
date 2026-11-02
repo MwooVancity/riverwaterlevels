@@ -545,7 +545,7 @@ def storm_line(G):
             cur = None
     if cur is not None:
         runs.append(cur)
-    per = [p for p in n.get("periods") or [] if parse_t(p["startTime"]) < G["now"] + datetime.timedelta(hours=24) and parse_t(p.get("endTime") or p["startTime"]) > G["now"] and re.search(r"(?i)t-?storm|thunder", (p.get("shortForecast") or "") + " " + (p.get("detailedForecast") or ""))]
+    per = [p for p in n.get("periods") or [] if p.get("startTime") and parse_t(p["startTime"]) < G["now"] + datetime.timedelta(hours=24) and parse_t(p.get("endTime") or p["startTime"]) > G["now"] and re.search(r"(?i)t-?storm|thunder", (p.get("shortForecast") or "") + " " + (p.get("detailedForecast") or ""))]
     if not runs and per:  # full review: "not in the forecast wording" above "Tonight: Slight Chance T-storms"
         return '<p class="storm warn"><b>Thunderstorms in the forecast:</b> the NWS forecast for %s says %s.</p>' % (esc(per[0]["name"]), esc((per[0].get("shortForecast") or "thunderstorms possible").replace("T-storms", "thunderstorms")))
     if not runs:  # the forecast words name no thunderstorm; the hourly grid may still carry a small chance (hater 2026-10-27: "none" above "Thunder % 9 11")

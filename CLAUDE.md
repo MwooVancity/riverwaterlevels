@@ -31,7 +31,8 @@ A person at or near this river today, on a phone, with 30 seconds: to fish, padd
 - Every number has a unit, a time and a Source line. A block shows only if its `data/sources.json` row is `quoted` or `owner-permission`.
 - Four block states: valid, valid-empty (a sentence), unavailable ("Unknown", never "none"), stale (real age, marked old). `SAFETY_BLOCKS` failing keeps the previous page; other blocks hide alone and the gaps line names them.
 - Stale limits: flow 24 h "not reporting"; river forecast amber 24 h, hidden 72 h; weather obs 3 h/12 h; hourly forecast amber 12 h, hidden 72 h; alerts 3 h; rain 6 h; water temperature tile under 24 h. Ignore NWS Test/Administrative alerts.
-- `tools/truth_live.py` (US) and `tools/truth_world.py` check pages against live feeds. A sentence no source can check is deleted. A derived line needing a third fix is deleted. Over 80% shared text between pages fails the build.
+- `tools/truth_live.py` (US) and `tools/truth_world.py` check pages against live feeds. A sentence no source can check is deleted. A derived line needing a third fix is deleted. Over 80% shared text, numbers included, fails the build: a gauge's own readings are its own content (owner 2026-11-02).
+- World guarantee: `lib/world.py` `COVER` answers every US block per country (have, none: reason, next: source). A US block with no answer fails `check.py`; a country with a next item adds no gauges (`FROZEN`). `missing` holds a new gauge whose data is not on its page; an outage never pulls a live page. `world_rules` is an allowlist of hosts and units.
 
 ## System rules
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score. JS only refreshes numbers.

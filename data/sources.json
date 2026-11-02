@@ -389,12 +389,36 @@
    "name": "Environment and Climate Change Canada, Water Survey of Canada",
    "status": "quoted",
    "terms_url": "https://eccc-msc.github.io/open-data/licence/readme_en/",
-   "summary": "Worldwide royalty-free licence including commercial purposes; the Water Office disclaimer bars bundling and reselling the raw data and allows adding value. Read 2026-11-01.",
+   "summary": "Worldwide royalty-free licence including commercial purposes; the Water Office disclaimer bars bundling and reselling the raw data and allows adding value. Read 2026-11-01. Open licence also covers MSC weather, alerts and AQHI collections on api.weather.gc.ca.",
    "credit": "Data Source: Environment and Climate Change Canada",
    "blocks": [
     "world_pages"
    ],
    "read_on": "2026-11-01"
+  },
+  {
+   "id": "dwd",
+   "name": "Deutscher Wetterdienst (DWD)",
+   "status": "quoted",
+   "terms_url": "https://www.dwd.de/DE/service/rechtliche_hinweise/rechtliche_hinweise.html",
+   "summary": "Freely available geodata and high-value datasets, including all weather and climate information with a location, may be reused under CC BY 4.0 with a source note. Read 2026-11-02.",
+   "credit": "Deutscher Wetterdienst (DWD), CC BY 4.0",
+   "blocks": [
+    "world_pages"
+   ],
+   "read_on": "2026-11-02"
+  },
+  {
+   "id": "uba",
+   "name": "Umweltbundesamt (German Environment Agency)",
+   "status": "quoted",
+   "terms_url": "https://gdk.gdi-de.org/geonetwork/srv/api/records/18829865-f4b5-4ac4-80bd-9e0481ed50c1",
+   "summary": "Luftdaten API catalogue record names Datenlizenz Deutschland Namensnennung 2.0, no access limits; record is for API v4, v3 evidence indirect. Credit wording from the UBA interface description. Read 2026-11-02.",
+   "credit": "Umweltbundesamt mit Daten der Messnetze der Länder und des Bundes",
+   "blocks": [
+    "world_pages"
+   ],
+   "read_on": "2026-11-02"
   }
  ]
 }

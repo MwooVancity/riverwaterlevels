@@ -5,6 +5,8 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 import os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
+from lib import wx
+import zoneinfo
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
@@ -1528,6 +1530,9 @@ def states_of(sites):
 ECCC_ZONE = {"BC": "America/Vancouver", "AB": "America/Edmonton", "SK": "America/Regina", "MB": "America/Winnipeg", "ON": "America/Toronto", "QC": "America/Toronto", "NB": "America/Halifax", "NS": "America/Halifax", "PE": "America/Halifax", "NL": "America/St_Johns", "YT": "America/Whitehorse", "NT": "America/Edmonton", "NU": "America/Toronto"}
 
 
+ECCC_OFFSET = {"-8": "America/Vancouver", "-7": "America/Edmonton", "-6": "America/Winnipeg", "-5": "America/Toronto", "-4": "America/Halifax"}  # the station's own zone beats its province: eastern BC keeps Mountain time
+
+
 def fetch_eccc(sid, prev):
     """One Canadian gauge: 8 days of 5-minute level and flow, and monthly means once a week. Canada publishes no low or high label, so ours is a rank among past years, said as ours."""
     api = "https://api.weather.gc.ca/collections/"
@@ -1544,20 +1549,117 @@ def fetch_eccc(sid, prev):
             p = f["properties"]
             if p.get("MONTHLY_MEAN_LEVEL") is not None:
                 months.setdefault(p["DATE"][5:7], []).append(round(p["MONTHLY_MEAN_LEVEL"], 3))
+        peak = http_json(api + "hydrometric-annual-peaks/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"]
+        prev = dict(prev, offset=peak[0]["properties"].get("TIMEZONE_OFFSET") if peak else None)
+        years = [f["properties"] for f in http_json(api + "hydrometric-annual-statistics/items?f=json&STATION_NUMBER=%s&limit=400" % sid, {}, 30)["features"] if f["properties"].get("DATA_TYPE_EN") == "Water Level"]
+        tops, lows = [p["MAX_VALUE"] for p in years if p.get("MAX_VALUE") is not None], [p["MIN_VALUE"] for p in years if p.get("MIN_VALUE") is not None]
+        prev = dict(prev, record=dict({"HHW": round(max(tops), 3)} if tops else {}, **({"NNW": round(min(lows), 3)} if lows else {})), drainage=(http_json(api + "hydrometric-stations/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"] or [{"properties": {}}])[0]["properties"].get("DRAINAGE_AREA_GROSS"))
     last = pts[-1]
     geo = (live[0].get("geometry") or {}).get("coordinates") or [None, None]
     series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
     day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
-    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "zone": ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
+    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "offset": prev.get("offset"), "zone": ECCC_OFFSET.get(str(prev.get("offset"))) if last["PROV_TERR_STATE_LOC"] not in ("SK", "NL") and ECCC_OFFSET.get(str(prev.get("offset"))) else ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
-            "also": {"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}}
+            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "also": {"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}}
+
+
+def http_raw(url, timeout=45):
+    return urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com"}), timeout=timeout).read()
+
+
+def listing(name, url, parse, hours=168):
+    """A slow-changing station list, kept in cache/ a week: one call, never one per gauge."""
+    p = os.path.join(CACHE, "_%s.json" % name)
+    try:
+        d = json.load(open(p, encoding="utf-8"))
+        if not due(d["at"], hours):
+            return d["spots"]
+    except (OSError, ValueError, KeyError):
+        d = None
+    try:
+        spots = parse(http_raw(url))
+        json.dump({"at": now_iso(), "spots": spots}, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+        os.replace(p + ".tmp", p)
+        return spots
+    except Exception as e:
+        note("world-wx", "failed", e)
+        return d["spots"] if d else {}
+
+
+def once(ctx, key, get):
+    """One fetch per run per city, station or country, whatever the gauge count. A failure is remembered as None for this run and leaves the row's last answer and its old time."""
+    if key not in ctx:
+        try:
+            ctx[key] = get()
+        except Exception as e:
+            note("world-wx", "failed", e)
+            ctx[key] = None
+    return ctx[key]
+
+
+def wx_canada(r, w, ctx):
+    api = "https://api.weather.gc.ca/collections/"
+    al = once(ctx, "ca-alerts", lambda: wx.canada_alerts(http_json(api + "weather-alerts/items?f=json&lang=en&limit=5000", {}, 90)))
+    if al is not None:
+        w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al), now_iso()
+    cities = listing("ca-cities", api + "citypageweather-realtime/items?f=json&limit=2000&properties=identifier", lambda b: {f["id"]: f["geometry"]["coordinates"][1::-1] for f in json.loads(b)["features"]})
+    cid = wx.nearest(r["lat"], r["lon"], cities)[0]
+    w["no_weather"] = None if cid else "no weather city within %d km" % wx.NEAR_KM
+    if cid:
+        got = once(ctx, "city-" + cid, lambda: http_json(api + "citypageweather-realtime/items/%s?f=json&lang=en" % cid, {}, 30)["properties"])
+        if got:
+            w.update(wx.canada_city(got, r["lat"], r["lon"]), city_url=wx.en(got.get("url")))
+    aq = once(ctx, "ca-aq", lambda: {f["id"]: f["geometry"]["coordinates"][1::-1] + [f["properties"]["location_name_en"], f["properties"]["aqhi"], f["properties"]["observation_datetime"]] for f in http_json(api + "aqhi-observations-realtime/items?f=json&latest=true&limit=500", {}, 45)["features"]})
+    if aq:
+        i, d = wx.nearest(r["lat"], r["lon"], aq)
+        w["aq"] = {"value": "%.1f" % aq[i][3], "scale": "Air Quality Health Index, 1 to 10+", "place": aq[i][2], "km": d, "t": aq[i][4], "src": "Environment and Climate Change Canada"} if i else None
+
+
+def wx_germany(r, w, ctx):
+    b = "https://opendata.dwd.de/weather/"
+    cat = listing("de-stations", "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg?view=nasPublication&nn=16102", lambda t: wx.dwd_stations(t.decode("latin1")))
+    near = wx.nearest(r["lat"], r["lon"], cat, 40)[0]
+    if near and wx.german(near):  # DWD warns for Germany only: a gauge past its border gets no answer, never a false none
+        al = once(ctx, "de-alerts", lambda: wx.dwd_alerts(http_raw(b + "alerts/cap/DISTRICT_DWD_STAT/Z_CAP_C_EDZW_LATEST_PVW_STATUS_PREMIUMDWD_DISTRICT_EN.zip")))
+        if al is not None:
+            w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al), now_iso()
+    beob = listing("de-beob", b + "weather_reports/poi/", lambda t: re.findall(r'href="([^"]+)-BEOB\.csv"', t.decode("latin1")))
+    obs = wx.nearest(r["lat"], r["lon"], {k: v for k, v in cat.items() if k.ljust(5, "_") in beob or k in beob})[0]
+    w["no_weather"] = None if near else "no forecast point within 40 km"
+    if near:
+        got = once(ctx, "fc-" + near, lambda: wx.dwd_forecast(http_raw(b + "local_forecasts/mos/MOSMIX_L/single_stations/%s/kml/MOSMIX_L_LATEST_%s.kmz" % (near, near)), zoneinfo.ZoneInfo("Europe/Berlin")))
+        w.update(got or {})
+    if obs:
+        got = once(ctx, "obs-" + obs, lambda: wx.dwd_obs(http_raw(b + "weather_reports/poi/%s-BEOB.csv" % obs.ljust(5, "_")).decode("utf-8", "ignore"), obs, cat[obs]))
+        w.update(got or {})
+    day = datetime.date.today().isoformat()
+    aqs = listing("de-aq", "https://www.umweltbundesamt.de/api/air_data/v3/meta/json?lang=en&use=airquality&date_from=%s&time_from=1&date_to=%s&time_to=1" % (day, day), lambda t: {k: [float(v[8]), float(v[7]), v[2]] for k, v in json.loads(t)["stations"].items() if v[6] is None and v[7]})
+    i, d = wx.nearest(r["lat"], r["lon"], aqs, 30)
+    if i:
+        got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, day, day), {}, 30)["data"].get(i))
+        if got:
+            t = max(got)
+            w["aq"] = {"value": "%d of 0 to 4" % got[t][1], "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}
+
+
+def wx_fill(page, rows, old, ctx):
+    """Every gauge page's weather, alerts and air quality on its row, cached across runs: a dead source leaves the last answer and its real age, and the block goes Unknown or hides by the US limits."""
+    for r in rows:
+        if r["name"] not in (page.get("gauge_pages") or []) or r.get("lat") is None:
+            continue
+        w = dict((old.get(r["name"]) or {}).get("wx") or {})
+        try:
+            (wx_canada if page.get("feed") == "eccc" else wx_germany)(r, w, ctx)
+        except Exception as e:
+            note("world-wx", "failed", e)
+        r["wx"] = w
 
 
 def fetch_world():
     """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row;
     three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
-    base, miss = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", 0
+    base, miss, ctx = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", 0, {}
     if os.path.exists(os.path.join(CACHE, "_rhine.json")) and not os.path.exists(os.path.join(CACHE, "_river-rhine.json")):
         os.replace(os.path.join(CACHE, "_rhine.json"), os.path.join(CACHE, "_river-rhine.json"))
     for page in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8")):
@@ -1584,7 +1686,11 @@ def fetch_world():
                 day_ago = datetime.datetime.fromisoformat(cur["timestamp"]) - datetime.timedelta(days=1)
                 then = next((p["value"] for p in past if datetime.datetime.fromisoformat(p["timestamp"]) >= day_ago), None)
                 past = past[-672:]  # the table's line stays 7 days
-                rows.append({"name": name, "uuid": st["uuid"], "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
+                try:
+                    fc = http_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
+                except urllib.error.HTTPError:
+                    fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
+                rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
                              "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title()] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement")}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1
@@ -1595,6 +1701,7 @@ def fetch_world():
                 miss = 0
                 note("pegelonline", "ok")
         if rows:
+            wx_fill(page, rows, old, ctx)
             json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
 
