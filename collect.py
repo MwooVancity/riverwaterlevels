@@ -1633,13 +1633,13 @@ def wx_germany(r, w, ctx):
     if obs:
         got = once(ctx, "obs-" + obs, lambda: wx.dwd_obs(http_raw(b + "weather_reports/poi/%s-BEOB.csv" % obs.ljust(5, "_")).decode("utf-8", "ignore"), obs, cat[obs]))
         w.update(got or {})
-    day = datetime.date.today().isoformat()
+    day, back = datetime.date.today().isoformat(), (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
     aqs = listing("de-aq", "https://www.umweltbundesamt.de/api/air_data/v3/meta/json?lang=en&use=airquality&date_from=%s&time_from=1&date_to=%s&time_to=1" % (day, day), lambda t: {k: [float(v[8]), float(v[7]), v[2]] for k, v in json.loads(t)["stations"].items() if v[6] is None and v[7]})
     i, d = wx.nearest(r["lat"], r["lon"], aqs, 30)
     if i:
-        got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, day, day), {}, 30)["data"].get(i))
-        if got:
-            t = max(got)
+        got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, back, day), {}, 30)["data"].get(i))
+        if got and any(v[1] is not None for v in got.values()):
+            t = max(k for k, v in got.items() if v[1] is not None)
             w["aq"] = {"value": "%d of 0 to 4" % got[t][1], "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}
 
 
@@ -1654,6 +1654,30 @@ def wx_fill(page, rows, old, ctx):
         except Exception as e:
             note("world-wx", "failed", e)
         r["wx"] = w
+
+
+def archive(page, rows):
+    """Each river's daily low and high by year, kept by us because the agencies keep 30 days. Published beside the pages and read back when the cache is gone, so a lost cache loses no history.
+    ponytail: one file per river per year, about 25 bytes a gauge a day; a flat hub near 2,500 gauges nears Cloudflare's 25 MB a file, split it by province then."""
+    year = datetime.date.today().year
+    name = "archive-%s-%d.json" % (page["slug"], year)
+    p = os.path.join(CACHE, "_" + name)
+    try:
+        a = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        try:
+            a = json.loads(http_raw("https://riverwaterlevels.com/archive/" + name, 30))
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                return note("archive", "failed", e)
+            a = {}  # the first day of this file
+        except Exception as e:
+            return note("archive", "failed", e)
+    for r in rows:
+        if r.get("cm") is not None and r.get("time"):
+            wx.day_add(a, r["name"], r["time"][:10], r["cm"])
+    json.dump(a, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+    os.replace(p + ".tmp", p)
 
 
 def fetch_world():
@@ -1702,6 +1726,7 @@ def fetch_world():
                 note("pegelonline", "ok")
         if rows:
             wx_fill(page, rows, old, ctx)
+            archive(page, rows)
             json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
 

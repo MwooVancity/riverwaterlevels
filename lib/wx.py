@@ -190,9 +190,19 @@ def dwd_forecast(blob, zone):
     return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00")}
 
 
+def day_add(a, name, day, v):
+    """One reading into a gauge's daily low and high: {gauge: {date: [low, high]}}."""
+    lo, hi = a.setdefault(name, {}).get(day, [v, v])
+    a[name][day] = [min(lo, v), max(hi, v)]
+
+
 def demo():
     """Each guard fails without its line."""
     box = [(0, 0), (0, 10), (10, 10), (10, 0)]
+    arc = {}
+    for v in (5, 9, 2):
+        day_add(arc, "g", "2026-11-02", v)
+    assert arc == {"g": {"2026-11-02": [2, 9]}}, "a day keeps its low and its high"
     assert inside(5, 5, box) and not inside(15, 5, box) and not inside(5, -1, box)
     assert alerts_at(5, 5, [{"rings": [box], "event": "x"}]) == [{"event": "x"}] and alerts_at(50, 5, [{"rings": [box]}]) == []
     assert canada_alerts({"numberMatched": 2, "features": []}) is None, "a cut-short list must be unknown, never none"

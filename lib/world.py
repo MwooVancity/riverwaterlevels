@@ -170,7 +170,7 @@ def cover_faults(blocks, pages, cover=None):
     return out
 
 
-GATE = False  # on once every gauge has been through the weather collect in the cloud
+GATE = True
 ALIKE = 0.75  # check.py fails a site over 0.80; held back at 0.75 here, so a gauge whose text drifts skips itself and never blocks a deploy
 
 
@@ -249,6 +249,10 @@ def owed(r):
     for key, t, bid in (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
         if fresh(w, key, t, bid):
             out.append(bid)
+    if fresh(w, "aq", (w.get("aq") or {}).get("t"), "air_quality"):
+        out.append("air_quality")
+    if fc_top({"fc": r.get("fc"), "zone": "UTC"}, datetime.datetime.now(datetime.timezone.utc)):
+        out.append("river_forecast")
     if r.get("marks") or r.get("months") or r.get("record"):
         out.append("official_marks")
     if r.get("also"):

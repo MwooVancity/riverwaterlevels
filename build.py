@@ -2,7 +2,7 @@
 Writes dist_next/, then check.py and publish.py decide. A gauge whose critical data fails is skipped: its previous pages stay in dist/ (publish copies nothing from a failed build).
 Usage: python -I build.py [site ...]   (default: every cached gauge)
 """
-import os, sys, json, shutil, hashlib, datetime, collections
+import glob, os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
@@ -212,6 +212,9 @@ def main():
             if wp:
                 emit("/%s/" % page["slug"], wp)
         json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)
+        os.makedirs(os.path.join(nxt, "archive"), exist_ok=True)
+        for f in glob.glob(os.path.join(CACHE, "_archive-*.json")):
+            shutil.copy(f, os.path.join(nxt, "archive", os.path.basename(f)[1:]))
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
