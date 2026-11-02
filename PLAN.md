@@ -26,6 +26,7 @@ Review 2026-11-02 left: chart axis in feet on world pages, flow and water temper
 Truth guards 2026-11-02: `suspect`, alert canary, `truth_world` compares alerts and alarms at 01 and 13 UTC. Still open: US release needs a machine count of new gauges per day; station moves; datum skew; stale facts in code after 2026-11-20.
 2026-11-02: a stray colon in `watchdog.yml` stopped the watchdog about 2.5 hours; the dry run now fails on any workflow file that does not parse. Percentiles need a published 10th and 90th, and "below 5th" needs a published 5th; 24 stats files cleaned of NaN.
 Alarm 2026-11-02: GitHub ran only 9 of 22 alarm hours in 11 days, so the alarm now fires on the first run in 01-06 or 13-18 UTC, once per half day. Watchdog adds an empty commit after 45 quiet days. If GitHub itself stops, nothing emails: outside uptime monitor is owner-only.
+Fresh review 2026-11-02, 13 findings fixed: world age ticks, Canadian agency flags, side readings keep their time and die at 24 h, frozen DWD file reads Unknown, emergency line by country, Kenora and Labrador zones, carry at 5%, watchdog steps time-limited, live world pages never held, past archive years restored, three more alarms. Owner: Workers Paid before about 1,500 gauges, about 2026-12-26; alarm at 1,200.
 New country checklist: reading against the agency's page, time zone against the agency, alert coverage on a real active alert, unit and zero point named, terms read, water type labelled (river, lake, reservoir, tidal).
 
 ## Next steps (in order; full speed)

@@ -177,7 +177,9 @@ def main():
         stall = release_stall()
         if stall:
             bad.append(stall)
-    except (OSError, ValueError, KeyError) as e:
+        if 1200 <= get("/status.json").get("gauges", 0) < 1225:  # one day of emails, then quiet: the plan cannot be read from here
+            bad.append("Workers Paid is due before about 1,500 gauges: the free 10 ms CPU limit will start failing pages")
+    except (OSError, ValueError, KeyError, AttributeError) as e:
         bad.append("no new gauges released: release record unreadable (%s)" % str(e)[:60])
     print("SITE HEALTH %s: %d problem(s)" % (datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), len(bad)))
     for x in bad:
@@ -186,7 +188,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("no new gauges released", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare free plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:

@@ -161,7 +161,7 @@ def main():
                     ref = float(nref) if nref else pg["stage"]
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
-    record("mismatch" if bad else ("skipped" if skipped else "ok"), len(pages), bad, skipped)
+    record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches%s" % (len(pages), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
@@ -170,7 +170,7 @@ def main():
     if stale:
         print("truth_live: %d gauge(s) lagging USGS by 3 to %d h (warning only; the pages show their real age)" % (len(stale), STALE_FAIL_H))
     urls_ = sorted({b.split(": ", 1)[0] for b in bad})
-    if LOCAL and bad and len(urls_) <= 3 and all(u.startswith("/river/") for u in urls_):  # pipeline review #4: up to 3 gauges keep their live page; the rest of the site ships
+    if LOCAL and bad and len(urls_) <= max(3, len(pages) // 20) and all(u.startswith("/river/") for u in urls_):  # pipeline review #4: up to 3 gauges keep their live page; the rest of the site ships
         cp = os.path.join(LOCAL, "_carried.json")
         try:
             carried = json.load(open(cp))

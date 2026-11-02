@@ -2,6 +2,7 @@
 Each source is fetched independently; a failed source keeps its previous cached value (and old fetched_at), it never blanks the record.
 Usage: python -I collect.py [site ...]   (default: wave 0)
 """
+import email.utils
 import os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
@@ -1530,10 +1531,18 @@ def states_of(sites):
 ECCC_ZONE = {"BC": "America/Vancouver", "AB": "America/Edmonton", "SK": "America/Regina", "MB": "America/Winnipeg", "ON": "America/Toronto", "QC": "America/Toronto", "NB": "America/Halifax", "NS": "America/Halifax", "PE": "America/Halifax", "NL": "America/St_Johns", "YT": "America/Whitehorse", "NT": "America/Edmonton", "NU": "America/Toronto"}
 
 
+def eccc_zone(p, lon):
+    """Province zone, with the three that split: east BC, northwest Ontario (feed standard time -06:00), Labrador (-04:00)."""
+    prov, std = p["PROV_TERR_STATE_LOC"], (p.get("DATETIME_LST") or "")[-6:]
+    if prov == "BC" and (lon or -130) > -117.5:
+        return "America/Edmonton"
+    return {("ON", "-06:00"): "America/Winnipeg", ("NL", "-04:00"): "America/Halifax"}.get((prov, std)) or ECCC_ZONE.get(prov, "UTC")
+
+
 def fetch_eccc(sid, prev):
     """One Canadian gauge: 8 days of 5-minute level and flow, and monthly means once a week. Canada publishes no low or high label, so ours is a rank among past years, said as ours."""
     api = "https://api.weather.gc.ca/collections/"
-    live = http_json(api + "hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=2400&sortby=-DATETIME&properties=DATETIME,LEVEL,DISCHARGE,STATION_NAME,PROV_TERR_STATE_LOC" % sid, {}, 30)["features"]
+    live = http_json(api + "hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=2400&sortby=-DATETIME&properties=DATETIME,DATETIME_LST,LEVEL,LEVEL_SYMBOL_EN,DISCHARGE,STATION_NAME,PROV_TERR_STATE_LOC" % sid, {}, 30)["features"]
     pts = [f["properties"] for f in live if f["properties"].get("LEVEL") is not None][::-1]
     if not pts:
         raise RuntimeError("no Canadian readings")
@@ -1560,10 +1569,19 @@ def fetch_eccc(sid, prev):
     series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
     day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
-    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "zone": "America/Edmonton" if last["PROV_TERR_STATE_LOC"] == "BC" and (geo[0] or -130) > -117.5 else ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
+    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "flag": last.get("LEVEL_SYMBOL_EN"), "zone": eccc_zone(last, geo[0]), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
             "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
+
+
+def fresh_raw(url, hours, timeout=45):
+    """The file, or an error when its Last-Modified is older than the block's limit: a stuck feed must read Unknown, not none."""
+    r = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com"}), timeout=timeout)
+    age = datetime.datetime.now(datetime.timezone.utc) - email.utils.parsedate_to_datetime(r.headers["Last-Modified"])
+    if age.total_seconds() > hours * 3600:
+        raise RuntimeError("feed file %d h old" % (age.total_seconds() / 3600))
+    return r.read()
 
 
 def http_raw(url, timeout=45):
@@ -1635,8 +1653,9 @@ def wx_germany(r, w, ctx):
     b = "https://opendata.dwd.de/weather/"
     cat = listing("de-stations", "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg?view=nasPublication&nn=16102", lambda t: wx.dwd_stations(t.decode("latin1")))
     near = wx.nearest(r["lat"], r["lon"], cat, 40)[0]
+    w["abroad"] = not (near and wx.german(near))
     if near and wx.german(near):  # DWD warns for Germany only: a gauge past its border gets no answer, never a false none
-        al = once(ctx, "de-alerts", lambda: wx.dwd_alerts(http_raw(b + "alerts/cap/DISTRICT_DWD_STAT/Z_CAP_C_EDZW_LATEST_PVW_STATUS_PREMIUMDWD_DISTRICT_EN.zip")))
+        al = once(ctx, "de-alerts", lambda: wx.dwd_alerts(fresh_raw(b + "alerts/cap/DISTRICT_DWD_STAT/Z_CAP_C_EDZW_LATEST_PVW_STATUS_PREMIUMDWD_DISTRICT_EN.zip", 3)))
         if al is not None:
             w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al), now_iso()
     beob = listing("de-beob", b + "weather_reports/poi/", lambda t: re.findall(r'href="([^"]+)-BEOB\.csv"', t.decode("latin1")))
@@ -1675,6 +1694,16 @@ def archive(page, rows):
     """Each river's daily low and high by year, kept by us because the agencies keep 30 days. Published beside the pages and read back when the cache is gone, so a lost cache loses no history.
     ponytail: one file per river per year, about 25 bytes a gauge a day; a flat hub near 2,500 gauges nears Cloudflare's 25 MB a file, split it by province then."""
     year = datetime.date.today().year
+    for y in range(2026, year):
+        old = os.path.join(CACHE, "_archive-%s-%d.json" % (page["slug"], y))
+        if not os.path.exists(old):  # a lost cache must not drop past years from the next deploy
+            try:
+                open(old, "wb").write(http_raw("https://riverwaterlevels.com/archive/" + os.path.basename(old)[1:], 30))
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    open(old, "w").write("{}")
+            except Exception as e:
+                print("archive failed", old, str(e)[:120])
     name = "archive-%s-%d.json" % (page["slug"], year)
     p = os.path.join(CACHE, "_" + name)
     try:
@@ -1733,7 +1762,7 @@ def fetch_world():
                 except urllib.error.HTTPError:
                     fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
                 rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "ship": cur.get("stateNswHsw"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
-                             "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title()] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement")}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
+                             "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title(), t["currentMeasurement"]["timestamp"]] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement") and (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(t["currentMeasurement"]["timestamp"])).total_seconds() < 86400}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1
                 note("pegelonline", "failed", e)

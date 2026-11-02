@@ -59,14 +59,16 @@ def to_rec(page, r):
         note = "Below the lowest level on record, %s. " % fmt_level(marks["NNW"], f["unit"]) + note
     elif marks.get("HHW") is not None and r["cm"] > marks["HHW"]:
         note = "Above the highest level on record, %s. " % fmt_level(marks["HHW"], f["unit"]) + note
+    if r.get("flag"):
+        note = "Agency flag on this reading: %s. " % r["flag"] + note
     wt = (r.get("also") or {}).get("WT")
     if wt and isinstance(wt[0], (int, float)):
-        rows.append({"parameter_code": "00010", "time": r["time"], "value": str(wt[0]), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Provisional"})
+        rows.append({"parameter_code": "00010", "time": wt[3] if len(wt) > 3 else r["time"], "value": str(wt[0]), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Provisional"})
     w = r.get("wx") or {}
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
     links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -80,7 +82,7 @@ SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active N
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
         ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."))
-LIVE = """<script>(function(){var w=document.querySelector('.hero');if(!w||!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;
+LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');function tick(t){if(a){var m=Math.round((Date.now()-Date.parse(t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}}if(!w)return;tick(w.dataset.t);if(!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;tick(g[1]);
 var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}).catch(function(){})})();</script>"""
 
 
@@ -227,11 +229,12 @@ def choose(pages, now):
             if not got:
                 continue
             gone = missing(got[1], r) + core.BLOCK_ERRORS[broke:]  # a block that crashed is never a quiet gap
-            if gone and GATE:
+            live = os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist", world_gauge_url(p, r.get("title") or r["name"]).strip("/"), "index.html"))  # holds stop new gauges; an outage never pulls a page
+            if gone and GATE and not live:
                 print("world gauge held, page lacks what its data allows: %s %s" % (r["name"], ", ".join(gone)))
                 continue
             s = shingles(got[1])
-            if any(alike(s, o) for o in kept):
+            if not live and any(alike(s, o) for o in kept):
                 print("world gauge held, too like another page: %s" % r["name"])
                 continue
             kept.append(s)

@@ -20,7 +20,7 @@ permissions:
 jobs:
   watch:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,12 +40,14 @@ jobs:
           if [ "$busy" = "0" ]; then gh workflow run refresh.yml && echo "refresh dispatched"; else echo "a refresh is already queued or running ($busy)"; fi
       - name: Live numbers against USGS and NWS (log only)
         continue-on-error: true
+        timeout-minutes: 5
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_live.py
       - name: World gauge pages against their feed
         id: truth
         continue-on-error: true
+        timeout-minutes: 4
         run: python tools/truth_world.py
       - name: One alarm per half day (the first run in 01-06 or 13-18 UTC; GitHub skips most single hours)
         id: clock
