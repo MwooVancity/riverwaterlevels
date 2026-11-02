@@ -8,6 +8,9 @@ You get an email from GitHub ("Run failed" / "watchdog") when something is wrong
 3. A correction is logged in `docs/CORRECTIONS.md`.
 
 ## Email: which ones need you
+"feed dead": an agency stopped answering for over a day; its blocks say Unknown. Agencies come back; if it lasts a week the address changed and needs code.
+"data cache lost" or "collect shards failed": the next runs usually heal it. Act only if it repeats for a day: run "refresh" by hand in GitHub Actions.
+"Worker load unreadable": the Cloudflare key in GitHub needs the permission Account Analytics Read.
 "pages missing blocks" or "blocks vanished": a page shows less than its data allows. The site stays up; new world gauges wait. If it lasts over a day, the named feed changed shape and needs code.
 "Workers Paid is due" or "Cloudflare plan files": buy Workers Paid in Cloudflare ($5 a month), then in GitHub open Settings, Secrets and variables, Actions, Variables, and add WORKERS_PAID with value 1. Growth restarts by itself.
 "GitHub build key expires" or "build key rejected": in GitHub make a new fine-grained token with Actions read and write on this repo only, then put it in Cloudflare, Workers, riverwaterlevels, Settings, Variables and Secrets, as GH_DISPATCH_TOKEN. Until then the site still rebuilds, more slowly.

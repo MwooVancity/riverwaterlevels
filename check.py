@@ -920,6 +920,25 @@ def secret_scan(d):
 CARRY_MAX = 10  # floor; the real limit is max(10, 5% of gauge pages): more than that is a template fault and the whole release stops
 
 
+def keep_old_times(d, rels):
+    """A carried page is old: _built.json and live-sites.json must say so, or the 6 h alarm stays quiet and the Worker dates old content as new."""
+    try:
+        lp, bp = os.path.join(d, "live-sites.json"), os.path.join(d, "_built.json")
+        live, built = json.load(open(lp, encoding="utf-8")), json.load(open(bp, encoding="utf-8"))
+        old_live = {x[0]: x for x in json.load(open(os.path.join(ROOT, "dist", "live-sites.json"), encoding="utf-8"))}
+        old_built = json.load(open(os.path.join(ROOT, "dist", "_built.json"), encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return print("carried pages keep this build's times:", str(e)[:80])
+    urls = {r.replace("\\", "/").rsplit("index.html", 1)[0].strip("/") for r in rels}
+    for i, x in enumerate(live):
+        if x[1].strip("/") in urls and x[0] in old_live:
+            live[i] = old_live[x[0]]
+            if x[0] in old_built:
+                built[x[0]] = old_built[x[0]]
+    json.dump(live, open(lp, "w"), separators=(",", ":"))
+    json.dump(built, open(bp, "w"), separators=(",", ":"))
+
+
 def carry(d, fails):
     """Replace each failing gauge page with its live copy (dist/ when present, else the live site), so the other pages ship. True when every one was replaced."""
     import shutil, urllib.request
@@ -953,6 +972,7 @@ def main():
     if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) == "gauge") // 20) and all(kind_of(k) == "gauge" for k in fails):
         if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
+            keep_old_times(d, carried)
             json.dump(sorted({r.replace("\\", "/") for r in carried | done}), open(os.path.join(d, "_carried.json"), "w"))
             res, site_bad, maxd = check_dir(d)
             fails = {k: v for k, v in res.items() if v and k not in carried and k not in done}  # a carried page is the live one: it passed the checks of its own release

@@ -191,14 +191,14 @@ def main():
         for page in directory.world_pages():
             try:
                 d = json.load(open(os.path.join(CACHE, "_river-%s.json" % page["slug"]), encoding="utf-8"))
-            except OSError:
+            except (OSError, ValueError):  # lost or torn: counted as held below, never a quiet 404
                 continue
             if page.get("feed") == "eccc":
                 for r in d["rows"]:
                     r["state"] = world.canada_label(r, wnow)[0].lower()
             wpages.append((page, d))
         wkeep = world.choose(wpages, wnow)
-        wlisted = sum(len(p.get("gauge_pages") or []) for p, _ in wpages)
+        wlisted = sum(len(p.get("gauge_pages") or []) for p in directory.world_pages())
         for page, d in wpages:
             keep = wkeep[page["slug"]]
             for r in d["rows"]:
@@ -264,6 +264,12 @@ def main():
     if os.path.exists(sp_):
         st_ = json.load(open(sp_))
         st_["files"] = nfiles
+        for key, name in (("shards", "shards.json"), ("release_skip", "release-skip.txt")):
+            try:
+                st_[key] = open(os.path.join(ROOT, "state", name)).read().strip()
+            except OSError:
+                pass
+        st_["cache_lost"] = os.environ.get("CACHE_MATCHED") == ""
         st_["coverage"] = coverage.scan(nxt, json.load(open(os.path.join(ROOT, "dist", "status.json"))).get("coverage") if os.path.exists(os.path.join(ROOT, "dist", "status.json")) else None)
         json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:

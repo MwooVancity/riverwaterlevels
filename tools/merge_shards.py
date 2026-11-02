@@ -32,6 +32,8 @@ for i in range(n):
     if not os.path.isdir(os.path.join(sh, "cache")):
         failed.append(i)
         continue
+    if open(os.path.join(sh, "rc")).read().strip() != "0" if os.path.exists(os.path.join(sh, "rc")) else False:
+        failed.append(i)  # it crashed part way: what it wrote still merges
     for f in sorted(os.listdir(os.path.join(sh, "cache"))):
         src, dst = os.path.join(sh, "cache", f), os.path.join(cache, f)
         if f.startswith("state-"):
@@ -73,6 +75,10 @@ if sum_:
 print("merged %d files from %d of %d shards" % (copied, n - len(failed), n))
 if failed:
     print("SHARDS THAT FAILED (their gauges keep the old cache files): %s" % ", ".join(map(str, failed)))
+os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
+json.dump({"failed": failed, "of": n}, open(os.path.join(ROOT, "state", "shards.json"), "w"))
+if not copied:
+    sys.exit("no shard delivered anything: nothing fresh to publish, the live site stays")
 for x in diffs:
     print("NOTE " + x)
 print("source outcomes this run (failed / total):")

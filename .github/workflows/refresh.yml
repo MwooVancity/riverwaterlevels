@@ -23,7 +23,7 @@ jobs:
   # The switch: data/pipeline.json {"sharded": false} = the single job below, exactly as before; true = sharded.yml (N collect shards, one merge+build+deploy job).
   # If this tiny job fails, "sharded" is empty and the single job runs: the old path is the fail-safe.
   plan:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     outputs:
       sharded: ${{ steps.p.outputs.sharded }}
       shards: ${{ steps.p.outputs.shards }}
@@ -44,7 +44,7 @@ jobs:
   refresh:
     needs: plan
     if: ${{ !cancelled() && needs.plan.outputs.sharded != 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 150
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
@@ -70,6 +70,7 @@ jobs:
           restore-keys: |
             rwl-pages-
       - name: Restore the last data cache
+        id: datacache
         uses: actions/cache/restore@v6
         with:
           path: |
@@ -86,15 +87,18 @@ jobs:
         id: rel
         continue-on-error: true
         run: |
+          skip() { echo "release SKIPPED: $1"; echo "$1" > state/release-skip.txt; exit 0; }; rm -f state/release-skip.txt
           today=$(date -u +%F); last=$(cat data/last-release.txt 2>/dev/null || true)
           m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
           echo "last refresh took ${m} min; last release ${last:-never}"
-          if [ "${m:-0}" -gt 45 ]; then echo "release SKIPPED: refresh over 45 min"; exit 0; fi
+          if [ "${m:-0}" -gt 45 ]; then skip "the last refresh took ${m} min, over 45"; fi
           cap=${{ vars.WORKERS_PAID && 100000 || 20000 }}  # WORKERS_PAID: repo variable the owner sets after buying the plan
           lim=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; d=json.load(sys.stdin); f=d.get('files') or 0; c=int(sys.argv[1]); print('files %d of %d' % (f, c) if f > 0.7 * c else '')" "$cap" 2>/dev/null || true)
-          if [ -n "$lim" ]; then echo "release SKIPPED: a hard limit is over 70% ($lim)"; exit 0; fi  # grow no further until the owner acts
+          if [ -n "$lim" ]; then skip "a hard limit is over 70% ($lim)"; fi  # grow no further until the owner acts
           k=$(python -I tools/worker_load.py 2>/dev/null || true)
-          if [ -z "${{ vars.WORKERS_PAID }}" ] && [ "${k:-0}" -ge 10 ]; then echo "release SKIPPED: Cloudflare stopped the Worker $k times in 24 h"; exit 0; fi  # a stopped run is a reader's error page
+          if [ -z "${{ vars.WORKERS_PAID }}" ] && [ "${k:-0}" -ge 10 ]; then skip "Cloudflare stopped the Worker $k times in 24 h"; fi  # a stopped run is a reader's error page
+          rem=$(curl -sI --max-time 20 https://riverwaterlevels.com/live/00000000.json | tr -d '\r' | awk 'tolower($1)=="x-rwl-usgs-remaining:"{print int($2)}')
+          if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
@@ -103,6 +107,8 @@ jobs:
         run: git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/
       - name: Refresh (collect, build, check, publish, deploy, live check)
         continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
+        env:
+          CACHE_MATCHED: ${{ steps.datacache.outputs.cache-matched-key }}
         run: python refresh.py 2>&1 | tee refresh-out.log
       - name: Second try after a failed release (failing new gauges go back to the queue, or the whole release is undone; the site always updates)
         if: ${{ steps.rel.outputs.released == '1' }}
@@ -117,7 +123,9 @@ jobs:
         if: steps.rel.outputs.released == '1'
         continue-on-error: true
         run: |
-          if grep -q "refresh OK" refresh-out.log; then
+          if git diff --quiet data/waves.csv; then
+            echo "release DROPPED: every new gauge went back to the queue"
+          elif grep -q "refresh OK" refresh-out.log; then
             git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
             date -u +%F > data/last-release.txt; git add data/waves.csv data/index-allow.json data/last-release.txt legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
@@ -131,8 +139,8 @@ jobs:
         with:
           path: dist
           key: rwl-pages-${{ github.run_id }}
-      - name: Save the data cache
-        if: always()
+      - name: Save the data cache (a failed restore must not replace the good copy)
+        if: ${{ always() && steps.datacache.outputs.cache-matched-key != '' }}
         uses: actions/cache/save@v6
         with:
           path: |

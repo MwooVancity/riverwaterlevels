@@ -13,7 +13,7 @@ def get(u):
 def moved(rows):
     """US gauges whose USGS location sits over about 5 km from ours: a moved station is a wrong place. One call, 300 gauges a run, so every gauge within len/300 runs."""
     us = [(r[4].rsplit(" ", 1)[-1], r) for r in rows if str(r[4]).rsplit(" ", 1)[-1].isdigit()]
-    start = time.gmtime().tm_hour * 300 % max(1, len(us))
+    start = int(time.time() // 3600) * 300 % max(1, len(us))
     part = dict((us[start:] + us[:start])[:300])
     if not part:
         return 0
@@ -33,7 +33,7 @@ def check(row):
     if canada:
         sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
         live = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&sortby=-DATETIME&properties=LEVEL" % sid))["features"][0]["properties"]["LEVEL"]
-        ok = shown and abs(float(shown.group(1)) - live) <= 0.5
+        ok = not shown or abs(float(shown.group(1)) - live) <= 0.5  # "not reporting" is a true page
         print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
         near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&skipGeometry=true&properties=status_en&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
         live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled")]
@@ -43,21 +43,29 @@ def check(row):
         return int(not ok)
     name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
     cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
-    ok = shown and abs(int(shown.group(1)) - cur) <= 50
+    ok = not shown or abs(int(shown.group(1)) - cur) <= 50
     print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")
     return int(not ok)
 
 
 def main():
     bad = 0
-    every = json.loads(get("https://riverwaterlevels.com/gauges.json"))
+    try:
+        every = json.loads(get("https://riverwaterlevels.com/gauges.json"))
+    except Exception as e:  # the watchdog's own checks cover a dead site
+        print("no gauge list:", str(e)[:80])
+        return 0
+    begun = time.time()
     try:
         bad += moved(every)
     except Exception as e:
         print("station check skipped, no answer:", str(e)[:80])
     rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5])]
-    start = time.gmtime().tm_hour * BATCH % max(1, len(rows))
+    start = int(time.time() // 3600) * BATCH % max(1, len(rows))
     for row in (rows[start:] + rows[:start])[:BATCH]:  # ponytail: 40 a run so the 10-minute job holds at any page count; all pages take len/40 runs
+        if time.time() - begun > 180:  # a slow feed must not trip the step limit and read as a wrong number
+            print("stopped at the time limit")
+            break
         try:
             bad += check(row)
         except Exception as e:  # a feed down proves nothing about the page: the page says its own age, and only a real mismatch may email the owner

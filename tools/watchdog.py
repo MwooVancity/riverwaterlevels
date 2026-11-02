@@ -10,7 +10,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from lib.common import http_open
 from lib.source_list import UNIVERSAL
-from tools.worker_load import LIMIT, stopped
+from tools.worker_load import LIMIT, REQUESTS, load
 
 SITE = "https://riverwaterlevels.com"
 UA = {"User-Agent": "Mozilla/5.0 (rwl-doctor)"}
@@ -54,6 +54,7 @@ def main():
         s = get("/status.json")
     except Exception as e:
         print("DOCTOR: cannot read the live site's status.json (%s); asking for a refresh" % str(e)[:80])
+        bad.append("site unreachable: status.json did not answer")
         heal.append("refresh")
         s = None
     if s:
@@ -65,6 +66,14 @@ def main():
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
+        if s.get("cache_lost"):
+            bad.append("data cache lost: this build started empty; the good copy was not overwritten")
+        try:
+            sh_ = json.loads(s.get("shards") or "{}")
+            if 0 in sh_.get("failed", []) or len(sh_.get("failed", [])) * 4 >= sh_.get("of", 1):
+                bad.append("collect shards failed: %s of %s (shard 0 holds every world gauge)" % (sh_["failed"], sh_["of"]))
+        except ValueError:
+            pass
         for c_ in (s.get("coverage") or {}).get("drops") or []:
             bad.append("blocks vanished: %s" % c_)
         live = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
@@ -114,7 +123,7 @@ def main():
                 bad.append("source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n))
                 continue
             if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > 50:  # never worked, or a daily source silent for two days
-                bad.append("source %s has not worked for %s (last error: %s)" % (src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
+                bad.append("%s %s has not worked for %s (last error: %s)" % ("feed dead:" if (src in HOURLY or src in ("eccc", "pegelonline")) and (not last or hours_since(last) > 24) else "source", src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:
                 bad.append("source %s failed on %d of %d gauges in its last run (%s)" % (src, lr["failed"], n, v.get("last_error") or ""))
         ok.append("source health read (%s run, %s)" % (h.get("mode"), h.get("at", "")[:16]))
@@ -187,13 +196,18 @@ def main():
             else:
                 ok.append("Cloudflare deploy key: %s" % ("expires " + exp[:10] if exp else "no expiry date"))
         except Exception as e:
-            ok.append("Cloudflare deploy key expiry not readable (%s)" % str(e)[:50])
+            bad.append("Cloudflare deploy key expiry not readable (%s)" % str(e)[:50])
     try:
         stall = release_stall()
         if stall:
-            bad.append(stall)
-        cut = stopped()
-        if cut is not None:
+            bad.append(stall + (" (%s)" % s["release_skip"] if s and s.get("release_skip") else ""))
+        use = load()
+        if use is None and tok:
+            bad.append("Worker load unreadable: the Cloudflare key needs Account Analytics Read, or the CPU and request stops are off")
+        elif use:
+            cut = use["stopped"]
+            if use["requests"] >= REQUESTS and not os.environ.get("WORKERS_PAID"):
+                bad.append("Workers Paid is due: %s Worker requests in 24 h of the free 100,000, past it pages answer error 1027" % format(use["requests"], ","))
             (bad if cut >= LIMIT and not os.environ.get("WORKERS_PAID") else ok).append("Cloudflare stopped the Worker %d times in 24 h%s" % (cut, " (Workers Paid is due: readers got error pages; then set the GitHub variable WORKERS_PAID, RUNBOOK)" if cut >= LIMIT else ""))
     except (OSError, ValueError, KeyError, AttributeError) as e:
         bad.append("no new gauges released: release record unreadable (%s)" % str(e)[:60])
@@ -204,7 +218,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("site unreachable", "edge check failed", "edge stored copy", "cannot read", "world gauge readings", "feed dead", "Worker load unreadable", "data cache lost", "collect shards failed", "pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
