@@ -8,8 +8,8 @@ from lib.common import parse_t
 from lib.core import HIDE_H, hours_old
 from lib.directory import esc, world_gauge_url, world_slug
 
-FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and Shipping Administration (WSV)", "api": "PEGELONLINE", "unit": "cm", "zone": "Europe/Berlin", "src": "pegelonline", "wx": "DWD", "wx_site": "dwd.de", "wx_credit": "Weather and alerts: Deutscher Wetterdienst (DWD), CC BY 4.0, shortened and converted."},
-         "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."}}
+FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and Shipping Administration (WSV)", "api": "PEGELONLINE", "unit": "cm", "zone": "Europe/Berlin", "src": "pegelonline", "emergency": "Emergency in Germany: 112 fire and ambulance, 110 police.", "wx": "DWD", "wx_site": "dwd.de", "wx_credit": "Weather and alerts: Deutscher Wetterdienst (DWD), CC BY 4.0, shortened and converted."},
+         "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."}}
 LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 MARKS = (("HHW", "Highest on record"), ("HW", "Highest in the agency's latest 10-year period"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
          ("MW", "Average level"), ("MNW", "Mean low water"), ("GlW", "Equivalent low water (GlW)"), ("NW", "Lowest in the agency's latest 10-year period"), ("NNW", "Lowest on record"), ("MMAX", "Highest monthly mean for this month"), ("MAVG", "Average monthly mean for this month"), ("MMIN", "Lowest monthly mean for this month"))
@@ -56,7 +56,7 @@ def to_rec(page, r):
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
     links.append(("Weather forecast and radar (%s)" % f["wx"], w.get("city_url") or "https://%s/" % ("weather.gc.ca" if key == "eccc" else "www.dwd.de/EN/weather/weather_climate_local/")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, label=label, label_note=note, marks=marks, station=r["name"], fc=r.get("fc"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, label=label, label_note=note, marks=marks, station=r["name"], fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -96,7 +96,7 @@ def localize(h, feed, river, place, hub, flat=False):
     h = re.sub(r" Credit: [^<]*?subject to copyright\.", "", h).replace(">Official NWS<", ">Official<")  # the US credit is a false statement about any other agency's data
     h = h.replace("National Weather Service", feed["wx"]).replace("USGS sensor", "%s sensor" % feed["agency"]).replace("check weather.gov", "check " + feed["wx_site"]).replace("NWS RFC estimate", "Station rain total")
     h = h.replace("NWS forecast", "forecast").replace("NWS station", "Station").replace("NWS ", feed["wx"] + " ")
-    h = metric(h)
+    h = metric(h).replace("Government data, shown with", esc(feed["emergency"]) + " Government data, shown with", 1)
     credit = "Source: %s, %s" % (feed["api"], feed["name"])
     head = esc(place) if flat else "%s at %s" % (esc(river), esc(place))
     h = re.sub(r"Source: USGS Water Data API[^<]*", credit + ".", h)
@@ -123,27 +123,27 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_offline": ("have", "have"),
     "b_alerts": ("have", "have"), "b_stage_chart": ("have", "have"), "b_official_marks": ("have", "have"),
     "b_hourly": ("have", "have"), "b_weather": ("have", "have"), "b_air": ("have", "have"), "b_air_quality": ("have", "have"), "b_official_links": ("have", "have"),
-    "b_flow_chart": ("next: flow from hydrometric-realtime DISCHARGE as a chart", "next: Q measurements for the 94 stations that publish flow"),
-    "b_rate": ("next: rate of change once flow is a series", "next: rate of change once flow is a series"),
+    "b_flow_chart": ("have", "have"),
+    "b_rate": ("none: the 24 h change tile and the flow line carry it", "none: the 24 h change tile and the flow line carry it"),
     "b_rain": ("none: city pages carry no rain total; the SWOB record at Ottawa airport carried none on 2026-11-02", "have"),
     "b_river_forecast": ("none: river forecasts are provincial in Canada, with no national open feed", "have"),
     "b_quality": ("none: the Water Office real-time feed publishes level and flow only", "have"),
     "b_wtemp": ("none: the Water Office real-time feed publishes level and flow only", "next: water temperature history from WT measurements"),
     "b_qpf": ("none: city forecast text carries rain chance, no totals", "next: daily rain totals from MOSMIX RRdc"),
     "b_acis": ("next: climate-normals collection", "next: DWD climate normals, source not read"),
-    "b_month_chart": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_year_chart": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_multiyear": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_sustained": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_record": ("next: dates of record high and low from annual statistics", "none: record marks are shown in official marks"),
-    "b_flowdur": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_peaks": ("next: hydrometric-annual-peaks", "none: PEGELONLINE publishes marks, not annual peaks"),
-    "b_stage_years": ("next: hydrometric-annual-statistics by year", "none: PEGELONLINE publishes marks, not yearly values"),
-    "b_daily": ("next: hydrometric-daily-mean", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_month_chart": ("none: the history table carries this date against every year", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_year_chart": ("none: the history table lists each recent year", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_multiyear": ("have", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_sustained": ("none: US block reads flow percentiles, which Canada does not publish", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_record": ("have", "none: record marks are shown in official marks"),
+    "b_flowdur": ("have", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_peaks": ("have", "none: PEGELONLINE publishes marks, not annual peaks"),
+    "b_stage_years": ("have", "none: PEGELONLINE publishes marks, not yearly values"),
+    "b_daily": ("none: published daily means end over a year back; the chart and our archive cover recent days", "none: PEGELONLINE keeps 30 days and no history"),
     "b_drought": ("next: Canadian Drought Monitor, source not read", "next: DWD drought data, source not read"),
     "b_access": ("next: search for a national boat-access feed", "next: ELWIS locks and notices to skippers, source not read"),
     "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("next: nearby gauges from hydrometric-stations", "have"),
-    "b_about": ("next: datum, drainage and record length from hydrometric-stations", "next: agency and river km facts"),
+    "b_about": ("have", "have"),
     "b_map": ("none: the map service is USGS, US only; links open the agency map", "none: the map service is USGS, US only; links open the agency map"),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
@@ -257,6 +257,10 @@ def owed(r):
         out.append("official_marks")
     if r.get("also"):
         out.append("also_measured")
+    if len(r.get("flow") or []) >= 8:
+        out.append("flow_chart")
+    if r.get("deciles"):
+        out.append("world_history")
     return out
 
 

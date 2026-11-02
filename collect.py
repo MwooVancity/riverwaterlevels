@@ -1553,7 +1553,13 @@ def fetch_eccc(sid, prev):
         prev = dict(prev, offset=peak[0]["properties"].get("TIMEZONE_OFFSET") if peak else None)
         years = [f["properties"] for f in http_json(api + "hydrometric-annual-statistics/items?f=json&STATION_NUMBER=%s&limit=400" % sid, {}, 30)["features"] if f["properties"].get("DATA_TYPE_EN") == "Water Level"]
         tops, lows = [p["MAX_VALUE"] for p in years if p.get("MAX_VALUE") is not None], [p["MIN_VALUE"] for p in years if p.get("MIN_VALUE") is not None]
-        prev = dict(prev, record=dict({"HHW": round(max(tops), 3)} if tops else {}, **({"NNW": round(min(lows), 3)} if lows else {})), drainage=(http_json(api + "hydrometric-stations/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"] or [{"properties": {}}])[0]["properties"].get("DRAINAGE_AREA_GROSS"))
+        prev = dict(prev, years=[[int(p["IDENTIFIER"].split(".")[1]), round(p["MAX_VALUE"], 3), p.get("MAX_DATE"), round(p["MIN_VALUE"], 3), p.get("MIN_DATE")] for p in years if p.get("MAX_VALUE") is not None and p.get("MIN_VALUE") is not None][-15:], record=dict({"HHW": round(max(tops), 3)} if tops else {}, **({"NNW": round(min(lows), 3)} if lows else {})), drainage=(http_json(api + "hydrometric-stations/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"] or [{"properties": {}}])[0]["properties"].get("DRAINAGE_AREA_GROSS"))
+    if not prev.get("days") and HISTORY_LEFT[0] > 0:
+        HISTORY_LEFT[0] -= 1
+        try:
+            prev = dict(prev, **wx.day_stats(http_json(api + "hydrometric-daily-mean/items?f=json&STATION_NUMBER=%s&limit=60000&skipGeometry=true&properties=DATE,LEVEL" % sid, {}, 60)["features"]))
+        except Exception as e:
+            print("history failed", sid, str(e)[:100])
     last = pts[-1]
     geo = (live[0].get("geometry") or {}).get("coordinates") or [None, None]
     series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
@@ -1561,7 +1567,8 @@ def fetch_eccc(sid, prev):
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
     return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "offset": prev.get("offset"), "zone": ECCC_OFFSET.get(str(prev.get("offset"))) if last["PROV_TERR_STATE_LOC"] not in ("SK", "NL") and ECCC_OFFSET.get(str(prev.get("offset"))) else ECCC_ZONE.get(last["PROV_TERR_STATE_LOC"], "UTC"), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
-            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "also": {"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}}
+            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
+            "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
 
 
 def http_raw(url, timeout=45):
@@ -1569,7 +1576,18 @@ def http_raw(url, timeout=45):
 
 
 def listing(name, url, parse, hours=168):
-    """A slow-changing station list, kept in cache/ a week: one call, never one per gauge."""
+    """A slow-changing station list, kept in cache/ a week: one call, never one per gauge, and a failure is tried once a run."""
+    if name in LISTED:
+        return LISTED[name]
+    LISTED[name] = _listing(name, url, parse, hours)
+    return LISTED[name]
+
+
+LISTED = {}
+HISTORY_LEFT = [3]  # gauges a run may pull full daily history for: a Canadian gauge's past is 1.4 MB and 9 s, once ever, so 2,627 gauges take 37 days
+
+
+def _listing(name, url, parse, hours):
     p = os.path.join(CACHE, "_%s.json" % name)
     try:
         d = json.load(open(p, encoding="utf-8"))
@@ -1636,7 +1654,7 @@ def wx_germany(r, w, ctx):
         got = once(ctx, "obs-" + obs, lambda: wx.dwd_obs(http_raw(b + "weather_reports/poi/%s-BEOB.csv" % obs.ljust(5, "_")).decode("utf-8", "ignore"), obs, cat[obs]))
         w.update(got or {})
     day, back = datetime.date.today().isoformat(), (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
-    aqs = listing("de-aq", "https://www.umweltbundesamt.de/api/air_data/v3/meta/json?lang=en&use=airquality&date_from=%s&time_from=1&date_to=%s&time_to=1" % (day, day), lambda t: {k: [float(v[8]), float(v[7]), v[2]] for k, v in json.loads(t)["stations"].items() if v[6] is None and v[7]})
+    aqs = listing("de-aq", "https://www.umweltbundesamt.de/api/air_data/v3/meta/json?lang=en&use=airquality&date_from=%s&time_from=1&date_to=%s&time_to=1" % (back, back), lambda t: {k: [float(v[8]), float(v[7]), v[2]] for k, v in json.loads(t)["stations"].items() if v[6] is None and v[7]})
     i, d = wx.nearest(r["lat"], r["lon"], aqs, 30)
     if i:
         got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, back, day), {}, 30)["data"].get(i))
@@ -1712,11 +1730,14 @@ def fetch_world():
                 day_ago = datetime.datetime.fromisoformat(cur["timestamp"]) - datetime.timedelta(days=1)
                 then = next((p["value"] for p in past if datetime.datetime.fromisoformat(p["timestamp"]) >= day_ago), None)
                 past = past[-672:]  # the table's line stays 7 days
+                flow = []
+                if name in (page.get("gauge_pages") or []) and any(t["shortname"] == "Q" for t in st["timeseries"]):
+                    flow = [[p["timestamp"], p["value"]] for p in http_json(base + q + "/Q/measurements.json?start=P7D", {}, 30)[::8]]
                 try:
                     fc = http_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
                 except urllib.error.HTTPError:
                     fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
-                rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
+                rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
                              "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": {t["shortname"]: [t["currentMeasurement"]["value"], t.get("unit"), t["longname"].title()] for t in st["timeseries"] if t["shortname"] != "W" and t.get("currentMeasurement")}, **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1

@@ -715,3 +715,32 @@ def b_world_aq(G):
 def b_world_links(G):
     """Where to check this gauge at the agency itself."""
     return block("official_links", "Official pages for this gauge", "agency", '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(u), esc(t)) for t, u in G["feed"]["links"]), "Source: links to the agencies that publish the data on this page; they open in a new tab.", G["feed"]["src"])
+
+
+def b_world_flow(G):
+    """Flow over the last days, where the gauge publishes it."""
+    from lib import ui
+    f = G["feed"]
+    pts = f.get("flow") or []
+    if len(pts) < 8:
+        return None
+    v = [p[1] for p in pts]
+    return block("flow_chart", "Flow, last 7 days", "agency", ui.spark(v, 300, 60) + table(["Measure", "Flow"], "".join(tr([a, "%s m³/s" % fmt(b)], right=(1,)) for a, b in (("Latest, %s" % esc(tzl(parse_t(pts[-1][0]), G["zone"])), v[-1]), ("Highest", max(v)), ("Lowest", min(v)))), right=(1,)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
+
+
+def b_world_history(G):
+    """Today against every year on record: this calendar date, all days, and recent years."""
+    f = G["feed"]
+    if not f.get("deciles"):
+        return None
+    from lib.world import fmt_level
+    u, now = f["unit"], G["sg"][-1][1] * 0.3048
+    d = (f.get("days") or {}).get(G["ldate"].strftime("%m-%d"))
+    rows = tr(["Today", fmt_level(now, u)], right=(1,))
+    if d:
+        rows += "".join(tr(["%s, this date in %d years" % (a, d[3]), fmt_level(b, u)], right=(1,)) for a, b in (("Lowest", d[0]), ("Median", d[1]), ("Highest", d[2])))
+    share = 10 * sum(1 for x in f["deciles"][1:] if now >= x)
+    body = table(["Measure", "Level"], rows, right=(1,)) + '<p class="src">Today is above about %d%% of %d years of daily means.</p>' % (share, f.get("day_years") or 0)
+    if f.get("years"):
+        body += table(["Year", "Highest", "Date", "Lowest", "Date"], "".join(tr([str(y), fmt_level(hi, u), esc((hd or "")[:10]), fmt_level(lo, u), esc((ld or "")[:10])], right=(1, 3)) for y, hi, hd, lo, ld in reversed(f["years"])), right=(1, 3))
+    return block("world_history", "How today compares with past years", "agency", body, "Source: %s, %s, daily means and annual statistics. Our calculation from those records; published records end before this year." % (f["api"], f["name"]), f["src"])

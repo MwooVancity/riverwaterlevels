@@ -190,6 +190,20 @@ def dwd_forecast(blob, zone):
     return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00")}
 
 
+def day_stats(feats):
+    """A gauge's whole daily record into what a page needs: low, median and high for each calendar date, and the deciles of every day on record."""
+    by, every = {}, []
+    for f in feats:
+        p = f["properties"]
+        if p.get("LEVEL") is not None:
+            by.setdefault(p["DATE"][5:10], []).append(round(p["LEVEL"], 3))
+            every.append(p["LEVEL"])
+    if len(every) < 3650:
+        return {}
+    every.sort()
+    return {"days": {k: [min(v), sorted(v)[len(v) // 2], max(v), len(v)] for k, v in by.items() if len(v) >= 10}, "deciles": [round(every[i * (len(every) - 1) // 10], 3) for i in range(11)], "day_years": len(every) // 365}
+
+
 def day_add(a, name, day, v):
     """One reading into a gauge's daily low and high: {gauge: {date: [low, high]}}."""
     lo, hi = a.setdefault(name, {}).get(day, [v, v])
@@ -199,6 +213,11 @@ def day_add(a, name, day, v):
 def demo():
     """Each guard fails without its line."""
     box = [(0, 0), (0, 10), (10, 10), (10, 0)]
+    fake = [{"properties": {"DATE": "%d-06-01" % y, "LEVEL": float(y % 7)}} for y in range(1900, 1915)]
+    assert day_stats(fake) == {}, "under 10 years says nothing"
+    many = [{"properties": {"DATE": "%d-%02d-%02d" % (y, m, d), "LEVEL": float(d)}} for y in range(2000, 2012) for m in range(1, 13) for d in range(1, 29)]
+    got = day_stats(many)
+    assert got["days"]["03-05"][:3] == [5.0, 5.0, 5.0] and got["deciles"][0] == 1.0 and got["deciles"][10] == 28.0
     arc = {}
     for v in (5, 9, 2):
         day_add(arc, "g", "2026-11-02", v)
