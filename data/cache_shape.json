@@ -13,6 +13,7 @@
 "fema_zone": "iso",
 "fieldmeas": "iso",
 "floodfreq": "iso",
+"land": "iso",
 "meta": "iso",
 "multiyear": "iso",
 "near_wtemp": "iso",
