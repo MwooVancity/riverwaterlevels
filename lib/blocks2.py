@@ -317,7 +317,7 @@ def flow_behind(G):
     sg = G.get("sg") or []
     if G.get("offline") or not sg or (sg[-1][0] - G["lt"]).total_seconds() < 7200:
         return None
-    then = [v for t, v in sg if t <= G["lt"]]
+    then = [x[1] for x in sg if x[0] <= G["lt"]]
     return G["lt"], sg[-1][0], sg[-1][1], sg[-1][1] - then[-1] if then else None
 
 

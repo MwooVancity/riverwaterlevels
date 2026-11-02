@@ -17,7 +17,7 @@ def run():
     assert "g.f[0] !== m[3]" in open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read(), "the edge cannot correct a reading of the same time"
     from lib import blocks2
     t0 = datetime.datetime(2026, 11, 2, 16, tzinfo=datetime.timezone.utc)
-    G = {"lt": t0, "zone": datetime.timezone.utc, "now": t0 + datetime.timedelta(hours=7), "sg": [(t0, 11.51), (t0 + datetime.timedelta(hours=6), 12.58)]}
+    G = {"lt": t0, "zone": datetime.timezone.utc, "now": t0 + datetime.timedelta(hours=7), "sg": [(t0, 11.51, None), (t0 + datetime.timedelta(hours=6), 12.58, None)]}
     b = blocks2.b_flow_behind(G)
     assert b and "1.07 ft higher" in b["body"] and "7 h" in b["body"], "flow ending in a flood was not said"
     assert not blocks2.flow_behind(dict(G, sg=G["sg"][:1])), "a current flow was called behind"
