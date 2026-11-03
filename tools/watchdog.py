@@ -14,7 +14,7 @@ from tools.worker_load import LIMIT, REQUESTS, load
 
 SITE = "https://riverwaterlevels.com"
 UA = {"User-Agent": "Mozilla/5.0 (rwl-doctor)"}
-REBUILD_MIN = 60      # the hourly refresh missed once: ask for one
+REBUILD_MIN = 120     # the Worker rebuilds on the hour only when the last build is over 40 min old, so up to about 112 min apart is healthy (2026-11-03: 60 alarmed a healthy site)
 EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
 # a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
 HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
@@ -112,7 +112,7 @@ def main():
             n = lr.get("ok", 0) + lr.get("absent", 0) + lr.get("failed", 0)
             # 2026-10-29: 12 false "not working" lines. "nws.forecast"-style keys count only failures (success is counted under "nws"),
             # so they are judged on the latest run only; "full"-mode sources (flood zone, dam, rainfall frequency) are fetched once per gauge, never on a clock
-            if "." in src and lr.get("at", "")[:13] < (h.get("at") or "")[:13]:
+            if ("." in src or src == "gauge") and lr.get("at", "")[:13] < (h.get("at") or "")[:13]:
                 continue
             if lr.get("mode") == "full" and not lr.get("failed"):
                 continue
@@ -235,6 +235,7 @@ if "--selftest" in sys.argv:
         assert "days, 1 waiting" in release_stall(), "a stalled release went unreported"
         open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
         assert release_stall() is None, "a fresh release was reported"
+        assert REBUILD_MIN > 112, "a normal gap between rebuilds would alarm"
         assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
         assert "6 held" in world_short({"world": {"listed": 20, "shown": 14, "gaps": {}}}), "held gauges went unreported"
         assert world_short({"world": {"listed": 38, "shown": 33, "gaps": {}}}) is None, "today's expected holds alarmed"
