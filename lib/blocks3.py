@@ -779,16 +779,17 @@ def b_world_drought(G):
 def b_world_history(G):
     """Today against every year on record: this calendar date, all days, and recent years."""
     f = G["feed"]
-    if not f.get("deciles"):
+    if not f.get("deciles") and not f.get("days"):
         return None
     from lib.world import fmt_level
     u, now = f["unit"], G["sg"][-1][1] * 0.3048
     d = (f.get("days") or {}).get(G["ldate"].strftime("%m-%d"))
     rows = tr(["Today", fmt_level(now, u)], right=(1,))
     if d:
-        rows += "".join(tr(["%s, this date in %d years" % (a, d[3]), fmt_level(b, u)], right=(1,)) for a, b in (("Lowest", d[0]), ("Median", d[1]), ("Highest", d[2])))
-    share = 10 * sum(1 for x in f["deciles"][1:] if now >= x)
-    body = table(["Measure", "Level"], rows, right=(1,)) + '<p class="src">Today is above about %d%% of %d years of daily means.</p>' % (share, f.get("day_years") or 0)
+        rows += "".join(tr(["%s, this date in %d years" % (a, d[3]), fmt_level(b, u)], right=(1,)) for a, b in (("Lowest", d[0]), ("Median", d[1]), ("Highest", d[2])) if b is not None)  # England publishes daily lows and highs, no mean: no median
+    body = table(["Measure", "Level"], rows, right=(1,))
+    if f.get("deciles"):
+        body += '<p class="src">Today is above about %d%% of %d years of daily means.</p>' % (10 * sum(1 for x in f["deciles"][1:] if now >= x), f.get("day_years") or 0)
     if f.get("years"):
         body += table(["Year", "Highest", "Date", "Lowest", "Date"], "".join(tr([str(y), fmt_level(hi, u), esc((hd or "")[:10]), fmt_level(lo, u), esc((ld or "")[:10])], right=(1, 3)) for y, hi, hd, lo, ld in reversed(f["years"])), right=(1, 3))
-    return block("world_history", "How today compares with past years", "agency", body, "Source: %s, %s, daily means and annual statistics. Our calculation from those records; published records end before this year." % (f["api"], f["name"]), f["src"])
+    return block("world_history", "How today compares with past years", "agency", body, f.get("hist_line") or "Source: %s, %s, daily means and annual statistics. Our calculation from those records; published records end before this year." % (f["api"], f["name"]), f.get("hist_src") or f["src"])

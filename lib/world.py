@@ -12,7 +12,8 @@ from lib.directory import esc, world_gauge_url, world_slug
 FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and Shipping Administration (WSV)", "api": "PEGELONLINE", "unit": "cm", "zone": "Europe/Berlin", "src": "pegelonline", "emergency": "Emergency in Germany: 112 fire and ambulance, 110 police.", "wx": "DWD", "wx_site": "dwd.de", "wx_credit": "Weather and alerts: Deutscher Wetterdienst (DWD), CC BY 4.0, shortened and converted."},
          "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."},
          # England: the alerts block carries the agency's own flood warnings and alerts, so its words say flood, never weather; no weather feed (Met Office needs a key)
-         "ea": {"agency": "Environment Agency", "name": "Environment Agency (England)", "api": "Environment Agency real-time flood-monitoring API (Beta)", "unit": "m", "zone": "Europe/London", "src": "ea", "emergency": "Emergency in the UK: 999 or 112. Floodline: 0345 988 1188.",
+         "ea": {"agency": "Environment Agency", "name": "Environment Agency (England)", "api": "Environment Agency real-time flood-monitoring API (Beta)", "unit": "m", "zone": "Europe/London", "hist_src": "ea-hydrology",
+                "hist_line": "Source: Environment Agency Hydrology API, each day's lowest and highest level at this gauge (Good, Estimated and Unchecked days with complete data). Our calculation from those records; the year table ends before this year.", "src": "ea", "emergency": "Emergency in the UK: 999 or 112. Floodline: 0345 988 1188.",
                 "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts, and rain: Environment Agency. No weather is shown: Met Office data needs a key we do not hold.",
                 "flood_line": '<p class="gaps" data-flood><b>Flood warnings on this page are the Environment Agency\'s</b>, for warning areas that hold this gauge or lie within 150 m of it. Check <a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">all warnings in England on GOV.UK</a>.</p>',
                 "swap": (("No active Environment Agency weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed.", "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge or lies within 150 m of it."),
@@ -238,7 +239,6 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_heatmap": ("none: the feed has no hourly grid; the hourly table carries it", "none: covered by the hourly table"), "b_nwm": (US_ONLY, US_ONLY), "b_nwm_medium": (US_ONLY, US_ONLY), "b_noforecast": ("none: the river forecast tile says so", "none: the river forecast tile says so"),
     "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
 MET = "next: Met Office DataHub, a free key is an owner sign-up; terms not read"
-HYDRO = "next: Environment Agency Hydrology API daily levels and flows, open; not read"
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
@@ -251,7 +251,8 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_quality": "none: the flood-monitoring API measures level, flow, rainfall, temperature, wind and velocity only, all 7,439 measures read 2026-11-03",
     "b_wtemp": "next: water temperature at 2 of 7,439 measures in the same API, read 2026-11-03; not wired",
     "b_acis": "next: Met Office 1991-2020 climate averages per station; terms not read",
-    "b_month_chart": HYDRO, "b_year_chart": HYDRO, "b_multiyear": HYDRO, "b_daily": HYDRO, "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": NRFA, "b_floodfreq": NRFA,
+    "b_month_chart": "none: the history table carries this date against every year", "b_year_chart": "none: the history table lists each recent year", "b_multiyear": "have",
+    "b_daily": "none: the Hydrology API publishes each day's lowest and highest level, carried by the history table; no daily mean", "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": "have", "b_floodfreq": NRFA,
     "b_record": "none: the agency's highest and lowest on record, with dates, are in official marks",
     "b_drought": "next: Environment Agency drought status by area, in monthly water situation reports; no point dataset read",
     "b_related": "none: station records carry no upstream or downstream order, read 2026-11-03",
@@ -270,7 +271,7 @@ ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
 TODO = {MET: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", "next: needs the Met Office hourly forecast (b_hourly)": "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)",
         ENGLAND["b_acis"]: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
-        HYDRO: "past years' daily levels and flows (Environment Agency Hydrology API)", NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
+        NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
         ENGLAND["b_drought"]: "drought status (Environment Agency)", ENGLAND["b_flood_outlook"]: "five-day flood risk (Flood Forecasting Centre)", ENGLAND["b_samples"]: "water quality samples (Environment Agency)",
         ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
 
@@ -484,7 +485,7 @@ def owed(r):
         out.append("also_measured")
     if len(r.get("flow") or []) >= 8:
         out.append("flow_chart")
-    if r.get("deciles"):
+    if r.get("deciles") or r.get("days"):
         out.append("world_history")
     if (r.get("access") or {}).get("rows"):
         out.append("access_points")

@@ -365,6 +365,37 @@ def day_stats(feats):
     return {"days": {k: [min(v), sorted(v)[len(v) // 2], max(v), len(v)] for k, v in by.items() if len(v) >= 10}, "deciles": [round(every[i * (len(every) - 1) // 10], 3) for i in range(11)], "day_years": len(every) // 365}
 
 
+def ea_days(lows, highs, this_year):
+    """An English gauge's daily lowest and highest stage (EA Hydrology API rows) into each calendar date's lowest and highest across years, and each past year's
+    highest and lowest with dates. The agency publishes no daily mean, so there is no median. Suspect, Missing and incomplete days are left out; a date needs 10 years, a year 300 days."""
+    def clean(rows, pick):
+        out = {}
+        for r in rows:
+            if r.get("completeness") != "Complete" or r.get("quality") not in ("Good", "Estimated", "Unchecked"):
+                continue
+            try:
+                v = float(r["value"])
+            except (KeyError, TypeError, ValueError):
+                continue
+            out[r["date"]] = pick(v, out.get(r["date"], v))  # the agency repeats a date at times: its lowest low, its highest high
+        return out
+    lo, hi = clean(lows, min), clean(highs, max)
+    by = {}
+    for i, rows in enumerate((lo, hi)):
+        for d, v in rows.items():
+            by.setdefault(d[5:10], ([], []))[i].append(v)
+    days = {k: [round(min(a), 3), None, round(max(b), 3), min(len(a), len(b))] for k, (a, b) in by.items() if len(a) >= 10 and len(b) >= 10}
+    if not days:
+        return {}
+    years = []
+    for y in sorted({int(d[:4]) for d in lo} & {int(d[:4]) for d in hi}):
+        a, b = {d: v for d, v in lo.items() if d.startswith(str(y))}, {d: v for d, v in hi.items() if d.startswith(str(y))}
+        if y < this_year and len(a) >= 300 and len(b) >= 300:
+            hd, ld = max(b, key=b.get), min(a, key=a.get)
+            years.append([y, round(b[hd], 3), hd, round(a[ld], 3), ld])
+    return {"days": days, "years": years[-15:], "day_years": len({d[:4] for d in lo})}
+
+
 def day_add(a, name, day, v):
     """One reading into a gauge's daily low and high: {gauge: {date: [low, high]}}."""
     lo, hi = a.setdefault(name, {}).get(day, [v, v])

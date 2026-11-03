@@ -276,6 +276,17 @@ def england_page():
     day = {(now - datetime.timedelta(minutes=15 * i)).strftime("%Y-%m-%dT%H:%M:00Z"): 0.2 for i in range(100)}
     assert wx_mod.rain_total(day, 900)[0] == round(96 * 0.2, 1), "a 24 h total did not add exactly the 96 readings of its day"
     assert wx_mod.rain_total(dict(list(day.items())[:95]), 900)[0] is None and wx_mod.rain_total(dict(day, **{max(day): None}), 900)[0] is None and wx_mod.rain_total({}, 900)[0] is None, "a missing reading or no readings read as a total"
+    row = lambda d, v, c="Complete", q="Good": {"date": d, "value": str(v), "completeness": c, "quality": q}
+    lows = [row("%d-11-03" % y, 0.5 + y % 3) for y in range(2005, 2026)] + [row("2010-11-03", 0.1), row("2011-11-03", -9, q="Suspect"), row("2012-11-03", -9, c="Incomplete")] + [row((datetime.date(2020, 1, 1) + datetime.timedelta(i)).isoformat(), 0.7) for i in range(366)]
+    highs = [dict(x, value=str(float(x["value"]) + 1)) for x in lows if x["value"] != "-9"]
+    got = wx_mod.ea_days(lows, highs, 2026)
+    assert got["days"]["11-03"][:3] == [0.1, None, 3.5] and got["day_years"] == 21, "a suspect or incomplete day reached the record, a repeated date was not its lowest, or the count is wrong: %s" % got["days"]["11-03"]
+    assert [y[0] for y in got["years"]] == [2020] and got["years"][0][3] == 0.7, "a year with under 300 days, or this year, was listed"
+    assert wx_mod.ea_days(lows[:9], highs[:9], 2026) == {}, "under 10 years said something"
+    rh = dict(r, **got)
+    hh = world.page(p, rh, now)[1]
+    hist = sec(hh, "world_history")
+    assert "this date in 21 years" in hist and "Median" not in hist and "daily means" not in hist and "Hydrology API" in hist, "England history claims a median or daily means the agency does not publish, or lost its source: %s" % hist[:300]
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
     assert world.thin(h.replace('id="alerts"', 'id="x"')) == ["no alerts block"], "a page with no alerts block shipped"
     world.THIN.clear()

@@ -410,6 +410,19 @@
    "read_on": "2026-11-03"
   },
   {
+   "id": "ea-hydrology",
+   "name": "Environment Agency Hydrology API, England",
+   "status": "quoted",
+   "terms_url": "https://environment.data.gov.uk/hydrology/doc/reference",
+   "summary": "API reference, read 2026-11-03: 'All content is available under the Open Government Licence v3.0, except where otherwise stated'; every reply's meta says license OGL 3, publisher Environment Agency. OGL v3.0 allows commercial use with attribution. Readings carry quality (Good, Estimated, Suspect, Unchecked, Missing) and completeness flags; we keep complete days that are not Suspect or Missing. Soft limit 100,000 rows a call. Daily lowest and highest stage only: the API publishes no daily mean level.",
+   "credit": "Contains Environment Agency information licensed under the Open Government Licence v3.0",
+   "blocks": [
+    "world_history"
+   ],
+   "evidence": "curl 2026-11-03: /hydrology/id/stations.json?RLOIid=2102 (Colwick, wiskiID 4009, opened 1958) meta.license OGL 3; level-min-86400 and level-max-86400 readings 1964-12-30 to 2026-10-10, 22,571 rows; 15-minute level 2026-10-08 00:00 to 00:45 equal to the flood-monitoring stage 4009-level-stage-i-15_min-mASD to the mm (1.033, 1.037, 1.041, 1.041), so both are the same datum. Nothing from memory.",
+   "read_on": "2026-11-03"
+  },
+  {
    "id": "dwd",
    "name": "Deutscher Wetterdienst (DWD)",
    "status": "quoted",

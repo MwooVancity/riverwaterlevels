@@ -1625,6 +1625,32 @@ def ea_measures(st):
     return pick("level", "Stage", "mASD"), pick("flow", None, "m3/s"), False
 
 
+EA_HYD = "https://environment.data.gov.uk/hydrology/"
+
+
+def ea_history(rloi, sid):
+    """An English gauge's daily lowest and highest stage since it opened (Hydrology API, 2 CSV calls of about 4 MB). Shown only when the archive's 15-minute level equals
+    our live stage on the archive's last day (4 times within 5 mm): another datum would make every past level wrong. {} when there is no match, no archive or under 10 years."""
+    st = http_json(EA_HYD + "id/stations.json?RLOIid=%s" % urllib.parse.quote(rloi), {}, 30)["items"]
+    ms = [m.get("@id", "") for m in (st[0].get("measures") or [])] if len(st) == 1 else []
+    get = lambda end: next((m for m in ms if m.endswith(end)), None)
+    lo, hi, inst = get("-level-min-86400-m-qualified"), get("-level-max-86400-m-qualified"), get("-level-i-900-m-qualified")
+    if not (lo and hi and inst):
+        return {}
+    last = http_json(inst + "/readings.json?latest", {}, 30)["items"]
+    day = last[0]["date"] if last else None
+    arch = {i["dateTime"][:16]: i["value"] for i in http_json(inst + "/readings.json?date=%s&_limit=200" % day, {}, 30)["items"] if isinstance(i.get("value"), (int, float))} if day else {}
+    live = {i["dateTime"][:16]: i["value"] for i in http_json(EA + "id/stations/%s/readings?date=%s&parameter=level&_limit=500" % (urllib.parse.quote(sid), day), {}, 30)["items"]
+            if i.get("measure", "").endswith("-level-stage-i-15_min-mASD") and isinstance(i.get("value"), (int, float))} if day else {}
+    both = [t for t in arch if t in live]
+    if len(both) < 4 or any(abs(arch[t] - live[t]) > 0.005 for t in both):
+        print("EA history datum not proven", rloi, day, len(both))
+        return {}
+    import csv, io
+    rows = lambda m: list(csv.DictReader(io.StringIO(http_raw(m + "/readings.csv?_limit=200000", 120).decode("utf-8"))))
+    return wx.ea_days(rows(lo), rows(hi), datetime.date.today().year)
+
+
 def ea_name(st):
     s = lambda v: re.sub(r"\s+", " ", v).strip() if isinstance(v, str) else ""
     return ("%s at %s" % (s(st.get("riverName")), s(st.get("label")))) if s(st.get("riverName")) and s(st.get("label")) else s(st.get("label"))
@@ -1675,7 +1701,14 @@ def fetch_ea(sid, prev):
     for k, m in (("maxOnRecord", "HHW"), ("minOnRecord", "NNW"), ("highestRecent", "HREC")):
         if rec(k):
             marks[m], dates[m] = rec(k)["value"], rec(k)["dateTime"][:10]
-    return {"name": sid, "title": meta["title"], "km": 0, "lat": meta["lat"], "lon": meta["lon"], "unit": "m", "zone": "Europe/London", "rloi": meta["rloi"], "cm": v, "time": t, "then": then,
+    hist = {k: prev[k] for k in ("days", "years", "day_years", "hist_at") if prev.get(k)}
+    if meta.get("rloi") and due(prev.get("hist_at"), 2160) and HISTORY_LEFT[0] > 0:  # every 90 days: past years change only when the archive adds a month
+        HISTORY_LEFT[0] -= 1
+        try:
+            hist = dict(ea_history(meta["rloi"], sid), hist_at=now_iso())
+        except Exception as e:
+            print("EA history failed", sid, str(e)[:100])
+    return {"name": sid, "title": meta["title"], "km": 0, "lat": meta["lat"], "lon": meta["lon"], "unit": "m", "zone": "Europe/London", "rloi": meta["rloi"], **hist, "cm": v, "time": t, "then": then,
             "state": ("low" if v < lo else "high" if v > hi else "normal") if ok else None, "range": [lo, hi] if ok else None, "marks": marks, "mark_dates": dates, "series": series, "week": [p[1] for p in series[::96]], "flow": flow, "flow_bad": flow_bad,
             "also": {"Q": [flow[-1][1], "m³/s", "Flow", flow[-1][0]]} if flow and flow[-1][0] == t else {},  # the also table prints the level's time: a flow of another time stays in the flow chart only
             "ea": meta, "ea_at": prev.get("ea_at") or now_iso(), "full_at": now_iso() if full else prev.get("full_at")}
