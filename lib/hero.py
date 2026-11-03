@@ -227,17 +227,30 @@ def strip_dir_word(chip):
     return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
 
 
+def beyond(srow, v):
+    """('above 90th' or 'below 10th', caption) when the flow is past the highest or lowest percentile USGS publishes for this date and the 5th or 95th is not published; else None.
+    Bogachiel 2026-11-03: in flood, 95th not published, the page wrongly said no statistics existed."""
+    if not srow or v is None:
+        return None
+    if srow[8] is not None and v > srow[8]:
+        return "above 90th", "Above the 90th percentile (%s cfs), the highest USGS publishes for this date, from %d years." % (fmtc(srow[8]), srow[0])
+    if srow[2] is not None and v < srow[2]:
+        return "below 10th", "Below the 10th percentile (%s cfs), the lowest USGS publishes for this date, from %d years." % (fmtc(srow[2]), srow[0])
+    return None
+
+
 def hero(G, pages=None):
     from lib import ui
     c = b3.conditions(G, pages)
     p, srow = G["p"], G["srow"]
-    pv = ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)) if p is not None else "–"
+    out_ = beyond(srow, G["basis"]) if p is None else None
+    pv = ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)) if p is not None else out_[0] if out_ else "–"
     if p is not None and srow:
         pct_med = "%.0f%% of the median" % (G["basis"] / srow[5] * 100) if srow[5] else ""
         what = ("the trailing 24 h mean (%s cfs)" % fmtc(G["basis"])) if G["basis_mean"] else ("the %s reading" % tzl(G["lt"], G["zone"], date=False))
         cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], md(G["ldate"]))
     else:
-        pct_med, cap = "", "" if G["feed"] else "No percentile: no published statistics for this date."
+        pct_med, cap = "", "" if G["feed"] else out_[1] if out_ else "No percentile: no published statistics for this date."
     sg = G["sg"]
     stage_txt = ("%.2f" % sg[-1][1]) if sg else "–"
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
