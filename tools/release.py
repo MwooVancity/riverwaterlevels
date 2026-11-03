@@ -42,7 +42,9 @@ for w in ready:  # a feed missing a proof adds nothing; one with blocks not wire
         fits.append(w)
 ready = fits
 ready = ready[:max(0, WORLD_MAX - len(listed))]
-both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row (owner: not USA first)
+# money first (owner 2026-11-03): searches x ad rate per country. Guesses from PLAN.md until AdSense reports ours; US 1.0.
+RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
+both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
 if world_add:
