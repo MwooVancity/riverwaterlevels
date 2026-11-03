@@ -224,6 +224,9 @@ def main():
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
     if os.path.exists(hp):
         shutil.copy2(hp, os.path.join(nxt, "_health.json"))
+    pp = os.path.join(CACHE, "_ea-proof.json")  # England's alert proof (collect.py ea_probe), published so a lost cache reads it back
+    if os.path.exists(pp):
+        shutil.copy2(pp, os.path.join(nxt, "_proofs.json"))
     # Cloudflare counts every rule after the first dynamic one as dynamic, limit 100 (deploy refused 2026-11-01, site frozen 7 h), and one
     # rule per river would pass 2,000 static anyway, so rivers with a single gauge go to single-rivers.json and worker/index.js sends the 301
     redirects = ["/river/apple-river-wi/above-05341499-at-park-in-somerset/ /river/apple-river-wi/above-park-in-somerset/ 301", "/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]

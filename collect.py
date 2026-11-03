@@ -1693,6 +1693,44 @@ def wx_england(r, w, ctx):
     w["no_weather"] = "Met Office data needs a key we do not hold"
 
 
+def ea_probe(ctx, areas=20):
+    """England's alert proof, found by the run itself: the first warning in force whose area holds an English level station, by the same test the pages use.
+    Recorded once in cache/_ea-proof.json (build.py publishes it as /_proofs.json; read back from there when the cache is lost), then never asked again.
+    Costs the warning list call wx_england already makes, plus one station call per area in force until a proof is found, at most `areas` a run."""
+    p = os.path.join(CACHE, "_ea-proof.json")
+    if not os.path.exists(p):
+        try:
+            got = json.loads(http_raw("https://riverwaterlevels.com/_proofs.json", 30))
+            if isinstance(got, dict):
+                json.dump(got, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+        except Exception:  # a 404 is the normal state before any proof; the probe below looks again
+            pass
+    try:
+        if (json.load(open(p, encoding="utf-8")).get("ea") or {}).get("alerts"):
+            return
+    except (OSError, ValueError):
+        pass
+    al = once(ctx, "ea-alerts", ea_alert_list)  # None (cut short, a shape missing, a failure) and [] prove nothing
+    for a in (al or [])[:areas]:  # wx.ea_floods dropped level 4; wx.ea_proof checks the level again
+        b = [min(x[0] for x in a["boxes"]), max(x[1] for x in a["boxes"]), min(x[2] for x in a["boxes"]), max(x[3] for x in a["boxes"])]
+        lat, lon = (b[0] + b[1]) / 2, (b[2] + b[3]) / 2
+        reach = wx.km(lat, lon, b[1], b[3]) + 1  # every station the area can hold, and the 150 m beside it
+        try:
+            hit = wx.ea_proof([a], http_json(EA + "id/stations?parameter=level&lat=%.5f&long=%.5f&dist=%.1f" % (lat, lon, reach), {}, 60)["items"], EA_NEAR_M)
+        except Exception as e:
+            note("world-wx", "failed", e)
+            continue
+        if hit:
+            w, s = hit
+            at = now_iso()
+            rec = {"ea": {"alerts": "Environment Agency %s (level %s) for %s, area %s, held station %s %s by the point test plus %d m, seen %s" % (w["event"], w["level"], w["areaDesc"], w["id"], s["notation"], s.get("label") or "", EA_NEAR_M, at[:16]),
+                          "warning": w["id"], "area": w["areaDesc"], "level": w["level"], "station": s["notation"], "at": at}}
+            json.dump(rec, open(p + ".tmp", "w", encoding="utf-8"), ensure_ascii=False)
+            os.replace(p + ".tmp", p)
+            print("England alert proof recorded:", rec["ea"]["alerts"])
+            return
+
+
 def side_readings(series):
     """A station's other readings, each with its own time, gone after 24 h."""
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -1955,7 +1993,8 @@ def fetch_world():
     base, miss, ctx = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", 0, {}
     if os.path.exists(os.path.join(CACHE, "_rhine.json")) and not os.path.exists(os.path.join(CACHE, "_river-rhine.json")):
         os.replace(os.path.join(CACHE, "_rhine.json"), os.path.join(CACHE, "_river-rhine.json"))
-    for page in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8")):
+    pages = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))
+    for page in pages:
         path = os.path.join(CACHE, "_river-%s.json" % page["slug"])
         try:
             old = {r["name"]: r for r in json.load(open(path, encoding="utf-8"))["rows"]}
@@ -2001,6 +2040,11 @@ def fetch_world():
             archive(page, rows)
             json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
+    if any(p.get("feed") == "ea" for p in pages):
+        try:
+            ea_probe(ctx)
+        except Exception as e:  # the proof waits for the next run; nothing on a page depends on it
+            note("world-wx", "failed", e)
 
 
 def fetch_states(sites):

@@ -677,7 +677,7 @@ def selftest():
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
     assert "ft. Height above" in wh and "Low, WSV label" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
-    assert not world.proof_faults(world.listing(world_pages()), world.PROVED) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
+    assert not world.proof_faults(world.listing(world_pages()), world.proved(world_pages())) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"

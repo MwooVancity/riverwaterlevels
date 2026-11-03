@@ -50,6 +50,10 @@ if world_add:
         page = next(p for p in wpages if p["slug"] == w["page"])
         for k in ("stations", "gauge_pages"):
             page.setdefault(k, []).append(w["station"])
+        rec_ = _world.recorded(wpages).get(page.get("feed", "pegelonline"))
+        if rec_ and not page.get("proof") and not (_world.PROVED.get(page.get("feed", "pegelonline")) or {}).get("alerts"):
+            page["proof"] = rec_  # the proof that opened this country is committed with its first gauge: a lost cache can never relock it
+            print("  proof committed with it: %s" % str(rec_.get("alerts"))[:160])
         print("  world  %s  %s  (%s, tier %s)" % (w["station"], w["title"], w["keyword"], w["tier"]))
     if not dry:
         raw = open(wpp, encoding="utf-8", newline="").read()

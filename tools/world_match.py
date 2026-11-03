@@ -99,7 +99,7 @@ def england(rows, pages, seen, stations_of=None, flows=None, test=ea_test, river
     from lib import world
     room = world.room("ea", pages)
     if not room:
-        print("England: none added, %s" % ("; ".join(world.proof_faults(["ea"], world.PROVED)) or "FROZEN room used while COVER has next items"))
+        print("England: none added, %s" % ("; ".join(world.proof_faults(["ea"], world.proved(pages))) or "FROZEN room used while COVER has next items"))
         return [], []
     out, skip = [], []
     try:
@@ -201,6 +201,7 @@ if __name__ == "__main__":
         assert ea_pick("River X", est, {"C-q": 9}, lambda sid: (True, None))[0]["notation"] == "B", "a PICK line lost to the flow rule"
         never = lambda r: (_ for _ in ()).throw(AssertionError("an unproven feed reached the agency"))
         row = {"keyword": "river x level", "river": "River X", "tier": "500", "shared": "", "country": "GB"}
+        world.recorded = lambda pages: {}  # the fixture never reads a proof this laptop or the cloud recorded
         if world.proof_faults(["ea"], world.PROVED):  # England today: no proof of a live warning, so nothing may be added
             assert england([row], [], set(), stations_of=never, flows={}, rivers=set()) == ([], []), "a feed missing a proof added gauges"
         real = world.PROVED

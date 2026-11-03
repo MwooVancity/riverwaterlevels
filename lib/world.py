@@ -1,9 +1,10 @@
 """Gauges outside the US on the US page: a feed row becomes the record lib/hero.py reads (stage only, no flow), the US builder makes the page, this file only swaps agency words.
 One template, so every fix to the gauge page reaches these too. A new feed adds a FEEDS row and a fetch in collect.py."""
-import datetime, re
+import datetime, json, re
 from lib import render
 import os, zoneinfo
 from lib import core, ui, wx
+from lib import common
 from lib.common import parse_t
 from lib.core import HIDE_H, hours_old
 from lib.directory import esc, world_gauge_url, world_slug
@@ -162,12 +163,32 @@ PROVED = {  # what a person or script saw on live data, one line each; a country
     "pegelonline": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Kaub page 3:00 AM CET against feed timestamp +01:00, 2026-11-02", "alerts": "Kaub frost warning from the DWD zip reached the point test, Zurich none, 2026-11-02", "unit": "cm above gauge zero, PEGELONLINE", "terms": "DL-DE-Zero-2.0; DWD CC BY 4.0, read 2026-11-02", "water": "inland rivers and Lake Constance, no tidal gauge listed"},
     "ea": {"reading": "Colwick 1.049, Kingston 4.421, Ross-on-Wye 0.41 m built pages = API latest = GOV.UK station pages within one reading, 2026-11-03", "time": "API 02:45Z shown 2:45 AM GMT; BST and both 2026 clock changes rendered right by zoneinfo Europe/London",
            "alerts": "", "unit": "metres above the stage datum (mASD), the gauge's own zero, as GOV.UK shows it", "terms": "OGL v3.0 and the agency's attribution, API reference and licence read 2026-11-03",
-           "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty until a real level 1 to 3 warning reaches the point test: until then England adds no gauge (room) and fails no gate (listing)
+           "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty here: collect.py ea_probe records it when a real level 1 to 3 warning holds an English station (proved() reads it); until then England adds no gauge (room) and fails no gate (listing)
     "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish 02:05Z feed against page; BC is permanent UTC-7 since 2026 (IANA 2026b), shown as PT", "alerts": "real fog advisory at Berens River hit the point test 2026-11-02; status words are issued and continued", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
 
 
 def proof_faults(feeds, proved):
     return ["%s has no proof of %s" % (f, k) for f in feeds for k in PROOFS if len((proved.get(f) or {}).get(k) or "") < 10]
+
+
+def recorded(pages):
+    """Alert proofs a run saw on live data (collect.py ea_probe: cache/_ea-proof.json, published as /_proofs.json), or carried into data/world-pages.json by the release that listed
+    the country's first gauge, so a lost cache never relocks a country with live pages."""
+    out = {}
+    try:
+        out.update({k: v for k, v in json.load(open(os.path.join(common.CACHE, "_ea-proof.json"), encoding="utf-8")).items() if isinstance(v, dict)})
+    except (OSError, ValueError, AttributeError):
+        pass
+    for p in pages:
+        if isinstance(p.get("proof"), dict):
+            out[p.get("feed", "pegelonline")] = p["proof"]
+    return out
+
+
+def proved(pages):
+    """PROVED, with each alert proof a run recorded: what the release, the matcher and check.py read."""
+    rec = recorded(pages)
+    return {f: dict(v, alerts=v.get("alerts") or (rec.get(f) or {}).get("alerts") or "") for f, v in PROVED.items()}
 
 
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
@@ -261,7 +282,7 @@ def listing(pages):
 
 def room(feed, pages):
     """Gauges the release and the matcher may still add for a feed: none while a proof is missing, up to FROZEN while a block is not wired."""
-    if proof_faults([feed], PROVED):
+    if proof_faults([feed], proved(pages)):
         return 0
     n = sum(len(p.get("gauge_pages") or []) for p in pages if p.get("feed", "pegelonline") == feed)
     return max(0, FROZEN[feed] - n) if [b for b, row in COVER.items() if row[ORDER.index(feed)].startswith("next")] else 10 ** 6

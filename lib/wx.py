@@ -130,7 +130,26 @@ def ea_alerts(floods, rings):
         return None
     box = lambda r: [min(p[0] for p in r), max(p[0] for p in r), min(p[1] for p in r), max(p[1] for p in r)]  # ponytail: 2,421 gauges x 300 areas in force tests boxes, not every vertex
     return [{"rings": rings[f["floodAreaID"]], "boxes": [box(r) for r in rings[f["floodAreaID"]]], "event": f.get("severity") or "Flood warning", "severity": "Severity level %s, 1 is highest" % f.get("severityLevel", "not stated"), "cls": EA_CLS.get(f.get("severityLevel"), "unknown"),
-             "headline": (f.get("message") or "").strip()[:300], "areaDesc": f.get("description") or f.get("eaAreaName") or "", "ends": None, "expires": None} for f in floods]
+             "headline": (f.get("message") or "").strip()[:300], "areaDesc": f.get("description") or f.get("eaAreaName") or "", "ends": None, "expires": None, "id": f["floodAreaID"], "level": f.get("severityLevel")} for f in floods]
+
+
+def ea_station_ok(s):
+    """An active river level station in metres above its stage datum, with no tidal measure: the kind of gauge an English page shows."""
+    ms = s.get("measures") or []
+    ms = ms if isinstance(ms, list) else [ms]
+    return (str(s.get("status", "")).endswith("statusActive") and isinstance(s.get("lat"), (int, float)) and isinstance(s.get("long"), (int, float))
+            and not any(m.get("qualifier") == "Tidal Level" for m in ms) and any(m.get("qualifier") == "Stage" and m.get("unitName") == "mASD" for m in ms))
+
+
+def ea_proof(alerts, stations, within_m):
+    """(warning, station) for the first warning in force (level 1 to 3) whose area holds a station of the kind a page shows, by the pages' own rule; else None.
+    The alert proof England needs: a real warning reaching the point test. None, an empty list, level 4 or a station far off never prove it."""
+    for a in alerts or []:
+        if a.get("level") in (1, 2, 3):
+            for s in stations:
+                if ea_station_ok(s) and alerts_at(s["lat"], s["long"], [a], within_m):
+                    return a, s
+    return None
 
 
 def tidal(series):

@@ -193,14 +193,52 @@ def england(ago):
     unproven = dict(world.PROVED, ea={"reading": "seen on live data 2026-11-03"})
     assert world.listing(pages) == ["pegelonline"] and not world.proof_faults(world.listing(pages), unproven), "a country with no gauge page failed the proof gate"
     assert world.proof_faults(world.listing([dict(pages[0], gauge_pages=["4009"])]), unproven), "a country with a gauge page passed without every proof"
-    keep = world.PROVED
-    try:
-        world.PROVED = unproven
-        assert world.room("ea", pages) == 0, "a country without every proof had room to add gauges"
-        world.PROVED = dict(keep, ea={k: "seen on live data, fixture" for k in world.PROOFS})
-        assert world.room("ea", pages) == world.FROZEN["ea"] and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))]) == 0, "FROZEN did not cap a country with blocks not wired"
-    finally:
-        world.PROVED = keep
+    keep, cache = world.PROVED, (collect.CACHE, world.common.CACHE, collect.http_raw)
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            collect.CACHE = world.common.CACHE = d  # never this machine's or the cloud's own proof
+            collect.http_raw = lambda *a, **k: (_ for _ in ()).throw(collect.urllib.error.HTTPError("x", 404, "none yet", {}, None))
+            world.PROVED = unproven
+            assert world.room("ea", pages) == 0, "a country without every proof had room to add gauges"
+            world.PROVED = dict(keep, ea={k: "seen on live data, fixture" for k in world.PROOFS})
+            assert world.room("ea", pages) == world.FROZEN["ea"] and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))]) == 0, "FROZEN did not cap a country with blocks not wired"
+            world.PROVED = dict(keep, ea=dict(keep["ea"], alerts=""))
+            probe(warn, square, pages)
+            assert world.recorded([dict(pages[0], proof={"alerts": "carried by the release that listed the first gauge"})])["ea"] and not world.proof_faults(["ea"], world.proved([dict(pages[0], proof={"alerts": "carried by the release that listed the first gauge"})])), "a proof committed in world-pages.json was not read once the cache was lost"
+        finally:
+            world.PROVED = keep
+            collect.CACHE, world.common.CACHE, collect.http_raw = cache
+
+
+def probe(warn, square, pages):
+    """England's alert proof comes from a run, never a person: only a real warning in force (level 1 to 3), over an active non-tidal level station, with its area's shape."""
+    import os as os_
+    st = lambda **k: dict({"notation": "4009", "label": "Colwick", "lat": 52.95, "long": -1.08, "status": "x/statusActive", "measures": [{"qualifier": "Stage", "unitName": "mASD"}]}, **k)
+    real = collect.http_json
+    seen = os_.path.join(collect.CACHE, "_ea-proof.json")
+
+    def run(floods, stations, shape=square):
+        def get(url, *a, **k):
+            if "/polygon" in url:
+                if shape is None:
+                    raise OSError("no shape")
+                return shape
+            return {"items": stations} if "id/stations" in url else floods
+        collect.http_json = get
+        try:
+            collect.ea_probe({})
+        finally:
+            collect.http_json = real
+        return os_.path.exists(seen) and world.room("ea", pages) > 0
+    level = lambda n: {"meta": {}, "items": [dict(warn, severityLevel=n)]}
+    a2 = wx_mod.ea_alerts([warn], {"A": wx_mod.ea_rings(square)})[0]
+    assert wx_mod.ea_proof([a2], [st()], 150) and wx_mod.ea_proof([dict(a2, level=4)], [st()], 150) is None and wx_mod.ea_proof([], [st()], 150) is None and wx_mod.ea_proof(None, [st()], 150) is None, "a warning no longer in force, or no warning at all, proved England"
+    for why, floods, stations, shape in (("level 4", level(4), [st()], square), ("an empty list", {"meta": {}, "items": []}, [st()], square), ("a cut-short list", {"meta": {"limit": 1}, "items": [warn]}, [st()], square),
+                                         ("a missing shape", level(2), [st()], None), ("a tidal station", level(2), [st(measures=[{"qualifier": "Stage", "unitName": "mASD"}, {"qualifier": "Tidal Level", "unitName": "mAOD"}])], square),
+                                         ("a closed station", level(2), [st(status="x/statusClosed")], square), ("a station outside the area", level(2), [st(lat=51.5, long=-0.1)], square)):
+        assert not run(floods, stations, shape), "%s unlocked England" % why
+    assert run(level(2), [st()]), "a real level 2 warning over an active river station did not unlock England"
+    assert "level 2" in json.load(open(seen, encoding="utf-8"))["ea"]["alerts"] and "4009" in json.load(open(seen, encoding="utf-8"))["ea"]["alerts"], "the proof does not name its warning and station"
 
 
 if __name__ == "__main__":
