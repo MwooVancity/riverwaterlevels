@@ -6,7 +6,7 @@ Status and next steps: PLAN.md. This folder is its own project; calcscrape rules
 A false page is worse than no page; anything untrue is unhelpful. Every fact on a page is proven on live data from the agency, never from memory, a search result or fake fixtures alone. No proof: it does not ship or it says Unknown. Silence never reads as safe: a feed down, cut short, outside its area or parsed to nothing is Unknown. A wrong time, unit, place or gauge is a defect of the highest rank. Our calculations say they are ours. A reading that looks false is held (future time) or marked (stuck, jump). `lib/wx.py` `suspect`, `lib/world.py` `PROVED`, `COVER`, `missing`, `tools/truth_world.py`.
 
 ## HARD: edge case at scale (owner 2026-11-01)
-Every change states how it fails today AND at 14,000 pages (calls, CPU, URL length, file count, KV writes, run time, a dead feed) with the number where it breaks. Anything unattended must survive past 2026-11-20, when nobody can change code.
+Every change states how it fails today AND at 14,000 pages (calls, CPU, URL length, file count, KV writes, run time, a dead feed) with the number where it breaks. From 2026-11-20 Claude drops from Max to Pro (owner 2026-11-03): code still changes, on a much smaller budget, so anything unattended must run for weeks without a session and growth must not wait on one.
 
 ## Owner decisions (2026-11-01)
 1. Priorities: be helpful and make the owner the most money. Helpfulness decides what goes on a page; AdSense potential decides what gets built first.

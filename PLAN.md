@@ -2,7 +2,7 @@
 
 ## Goal
 The most useful page for a person deciding about this river today, anywhere (reader: CLAUDE.md). Objective: AdSense earnings from people helped.
-Scarce resource: Claude ends about 2026-11-20; after that nobody changes code, so everything must run alone.
+Scarce resource: Claude time. From 2026-11-20 the owner moves from Max to Pro (owner 2026-11-03): sessions continue but far fewer, so growth slows, never stops; everything must run alone between sessions, and the costly builds (world release, limits) belong before Nov 20.
 Bottleneck: AdSense approval, then readers. Earns $0 until approved; calcscrape and asmrregistry were rejected as low value content, so approval outranks page count.
 
 ## Numbers
