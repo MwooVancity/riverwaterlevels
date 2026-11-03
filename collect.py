@@ -1592,6 +1592,107 @@ def fetch_eccc(sid, prev):
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
 
 
+EA = "https://environment.data.gov.uk/flood-monitoring/"
+EA_NEAR_M = 150  # ponytail: a gauge sits in the channel and warning areas cover the banks; areas named for the gauge's own place lay 9 to 88 m off (Colwick, Kingston, 2026-11-03). A wider channel needs more.
+
+
+def ea_measures(st):
+    """(level, flow, tidal) for an Environment Agency station: the main stage in metres above the stage datum and flow in m³/s, each the measure with the newest reading.
+    A station with any tidal measure is tidal: a tide is never shown as a river level."""
+    ms = st.get("measures") or []
+    ms = ms if isinstance(ms, list) else [ms]
+    if any(m.get("qualifier") == "Tidal Level" for m in ms):
+        return None, None, True
+    live = sorted((m for m in ms if isinstance(m.get("latestReading"), dict)), key=lambda m: m["latestReading"].get("dateTime") or "", reverse=True)
+    pick = lambda p, q, u: next((m["notation"] for m in live if m.get("parameter") == p and (q is None or m.get("qualifier") == q) and m.get("unitName") == u), None)
+    return pick("level", "Stage", "mASD"), pick("flow", None, "m3/s"), False
+
+
+def ea_name(st):
+    s = lambda v: re.sub(r"\s+", " ", v).strip() if isinstance(v, str) else ""
+    return ("%s at %s" % (s(st.get("riverName")), s(st.get("label")))) if s(st.get("riverName")) and s(st.get("label")) else s(st.get("label"))
+
+
+def fetch_ea(sid, prev):
+    """One English gauge, about one call an hour: readings since the last one we hold (6 h overlap, the agency sends in batches), all 8 days once a day so a late correction lands,
+    and the station's measures and typical range once a week. The label is the agency's own typical range, as Check for flooding shows it. A tidal gauge is kept but never shown."""
+    prev = prev or {}
+    if prev.get("tidal"):
+        return prev  # sticky: a gauge once seen with the tide stays out, and costs no call
+    now = datetime.datetime.now(datetime.timezone.utc)
+    meta = prev.get("ea")
+    if not meta or due(prev.get("ea_at"), 168):
+        st = http_json(EA + "id/stations/" + urllib.parse.quote(sid), {}, 30)["items"]
+        lv, fl, tide = ea_measures(st)
+        sc = st.get("stageScale") if isinstance(st.get("stageScale"), dict) else {}
+        num = lambda v: v if isinstance(v, (int, float)) else None
+        meta = {"title": ea_name(st), "lat": num(st.get("lat")), "lon": num(st.get("long")), "rloi": st.get("RLOIid") if isinstance(st.get("RLOIid"), str) else None, "level": lv, "flow": fl, "tidal": tide, "wt": "-temperature-water-" in json.dumps(st.get("measures")),
+                "scale": {k: sc.get(k) for k in ("typicalRangeLow", "typicalRangeHigh", "maxOnRecord", "minOnRecord", "highestRecent")}}
+        prev = dict(prev, ea=meta, ea_at=now_iso())
+    if meta["tidal"]:
+        return dict(prev, name=sid, tidal=True)
+    if not meta["level"]:
+        raise RuntimeError("no river stage in metres above the stage datum with a reading")
+    full = not prev.get("series") or due(prev.get("full_at"), 24)
+    since = (now - datetime.timedelta(days=8)) if full else datetime.datetime.fromisoformat(prev["series"][-1][0].replace("Z", "+00:00")) - datetime.timedelta(hours=6)
+    got = http_json(EA + "id/stations/%s/readings?_sorted&_limit=10000&since=%s" % (urllib.parse.quote(sid), since.strftime("%Y-%m-%dT%H:%M:%SZ")), {}, 30)["items"]
+    keep = lambda old, m, days: sorted((t, v) for t, v in dict(([] if full else [tuple(p) for p in old or []]) + [(i["dateTime"], i["value"]) for i in got if i.get("measure", "").endswith("/" + m) and isinstance(i.get("value"), (int, float))]).items()
+                                       if datetime.datetime.fromisoformat(t.replace("Z", "+00:00")) >= now - datetime.timedelta(days=days))
+    series = [list(p) for p in keep(prev.get("series"), meta["level"], 8)]
+    if not series:
+        raise RuntimeError("no level readings in 8 days")
+    flow = [list(p) for p in keep(prev.get("flow"), meta["flow"], 7)] if meta["flow"] else []
+    flow_bad = any(p[1] < 0 for p in flow)  # Kingston 2026-11-03: -66 to 58 m³/s in a week of 2 to 9; a river flow below zero is a fault or another quantity, so none is shown
+    flow = [] if flow_bad else flow
+    if len(series) >= 192 and wx.tidal(series):
+        print("tidal, kept off the site:", sid)
+        return dict(prev, name=sid, tidal=True)
+    t, v = series[-1]
+    day_ago = datetime.datetime.fromisoformat(t.replace("Z", "+00:00")) - datetime.timedelta(days=1)
+    then = next((p[1] for p in series if datetime.datetime.fromisoformat(p[0].replace("Z", "+00:00")) >= day_ago), None)
+    sc = meta["scale"]
+    lo, hi = sc.get("typicalRangeLow"), sc.get("typicalRangeHigh")
+    ok = isinstance(lo, (int, float)) and isinstance(hi, (int, float)) and lo < hi
+    rec = lambda k: sc[k] if isinstance(sc.get(k), dict) and isinstance(sc[k].get("value"), (int, float)) and sc[k].get("dateTime") else None  # a record with no date is not shown
+    marks, dates = dict({"TRL": lo, "TRH": hi} if ok else {}), {}
+    for k, m in (("maxOnRecord", "HHW"), ("minOnRecord", "NNW"), ("highestRecent", "HREC")):
+        if rec(k):
+            marks[m], dates[m] = rec(k)["value"], rec(k)["dateTime"][:10]
+    return {"name": sid, "title": meta["title"], "km": 0, "lat": meta["lat"], "lon": meta["lon"], "unit": "m", "zone": "Europe/London", "rloi": meta["rloi"], "cm": v, "time": t, "then": then,
+            "state": ("low" if v < lo else "high" if v > hi else "normal") if ok else None, "range": [lo, hi] if ok else None, "marks": marks, "mark_dates": dates, "series": series, "week": [p[1] for p in series[::96]], "flow": flow, "flow_bad": flow_bad,
+            "also": {"Q": [flow[-1][1], "m³/s", "Flow", flow[-1][0]]} if flow and flow[-1][0] == t else {},  # the also table prints the level's time: a flow of another time stays in the flow chart only
+            "ea": meta, "ea_at": prev.get("ea_at") or now_iso(), "full_at": now_iso() if full else prev.get("full_at")}
+
+
+def ea_alert_list():
+    """Every Environment Agency flood warning and alert in force, with its area shape: one call, plus one per area newly in force. Shapes of areas still in force are kept
+    in cache/_ea-areas.json across runs; an area that leaves force drops out, so the file holds at most what is in force now. None (Unknown) when any part fails."""
+    floods = wx.ea_floods(http_json(EA + "id/floods", {}, 60))
+    if floods is None:
+        raise RuntimeError("flood warning list cut short")
+    p = os.path.join(CACHE, "_ea-areas.json")
+    try:
+        old = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        old = {}
+    rings = {}
+    for f in floods:
+        code = f["floodAreaID"]
+        if code not in rings:
+            rings[code] = old.get(code) or wx.ea_rings(http_json(EA + "id/floodAreas/%s/polygon" % urllib.parse.quote(code), {}, 60))
+    json.dump(rings, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+    os.replace(p + ".tmp", p)
+    return wx.ea_alerts(floods, rings)
+
+
+def wx_england(r, w, ctx):
+    """Flood warnings by point test against each area in force. No weather: the Met Office needs a key, so those blocks stay off and the gaps line says why."""
+    al = once(ctx, "ea-alerts", ea_alert_list)
+    if al is not None:
+        w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al, EA_NEAR_M), now_iso()
+    w["no_weather"] = "Met Office data needs a key we do not hold"
+
+
 def side_readings(series):
     """A station's other readings, each with its own time, gone after 24 h."""
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -1713,11 +1814,11 @@ def wx_germany(r, w, ctx):
 def wx_fill(page, rows, old, ctx):
     """Every gauge page's weather, alerts and air quality on its row, cached across runs: a dead source leaves the last answer and its real age, and the block goes Unknown or hides by the US limits."""
     for r in rows:
-        if r["name"] not in (page.get("gauge_pages") or []) or r.get("lat") is None:
+        if r["name"] not in (page.get("gauge_pages") or []) or r.get("lat") is None or r.get("tidal"):
             continue
         w = dict((old.get(r["name"]) or {}).get("wx") or {})
         try:
-            (wx_canada if page.get("feed") == "eccc" else wx_germany)(r, w, ctx)
+            {"eccc": wx_canada, "ea": wx_england}.get(page.get("feed"), wx_germany)(r, w, ctx)
         except Exception as e:
             note("world-wx", "failed", e)
         r["wx"] = w
@@ -1740,7 +1841,9 @@ def world_extras(page, r, prev, ctx):
             note("world-access", "ok")
         except Exception as e:
             note("world-access", "failed", e)
-    if due(r.get("normals_at"), 720) or (canada and (r.get("normals") or {}).get("v") != 2):
+    if page.get("feed") == "ea":
+        pass  # England: climate normals are a next item in lib/world.py COVER (Met Office), never a German station
+    elif due(r.get("normals_at"), 720) or (canada and (r.get("normals") or {}).get("v") != 2):
         try:
             r["normals"], r["normals_at"] = (normals_canada if canada else normals_germany)(r), now_iso()
             note("world-normals", "ok")
@@ -1840,7 +1943,7 @@ def archive(page, rows):
         except Exception as e:
             return print("archive failed", name, str(e)[:120])
     for r in rows:
-        if r.get("cm") is not None and r.get("time"):
+        if r.get("cm") is not None and r.get("time") and not r.get("tidal"):
             wx.day_add(a, r["name"], r["time"][:10], r["cm"])
     json.dump(a, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
     os.replace(p + ".tmp", p)
@@ -1864,10 +1967,10 @@ def fetch_world():
             try:
                 if miss >= 3:
                     raise RuntimeError("feed down this run")
-                if page.get("feed") == "eccc":
-                    rows.append(fetch_eccc(name, old.get(name)))
+                if page.get("feed") in ("eccc", "ea"):
+                    rows.append((fetch_eccc if page["feed"] == "eccc" else fetch_ea)(name, old.get(name)))
                     miss = 0
-                    note("eccc", "ok")
+                    note(page["feed"], "ok")
                     continue
                 st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
@@ -1887,7 +1990,7 @@ def fetch_world():
                              "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": side_readings(st["timeseries"]), **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
                 miss += 1
-                note("pegelonline", "failed", e)
+                note(page.get("feed", "pegelonline"), "failed", e)
                 if name in old:
                     rows.append(old[name])
             else:

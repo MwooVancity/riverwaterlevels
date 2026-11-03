@@ -33,6 +33,14 @@ wpages = _json.load(open(wpp, encoding="utf-8"))
 listed = {s for p in wpages for s in p.get("gauge_pages") or []}
 wr = os.path.join(ROOT, "data", "world-ready.csv")
 ready = [w for w in csv.DictReader(open(wr, encoding="utf-8")) if w["station"] not in listed] if os.path.exists(wr) else []
+from lib import world as _world
+room_, fits = {}, []
+for w in ready:  # a feed missing a proof adds nothing; one with blocks not wired stops at FROZEN, so check.py never meets a country past its limit
+    room_.setdefault(w["feed"], _world.room(w["feed"], wpages))
+    if room_[w["feed"]] > 0:
+        room_[w["feed"]] -= 1
+        fits.append(w)
+ready = fits
 ready = ready[:max(0, WORLD_MAX - len(listed))]
 both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row (owner: not USA first)
 world_add = [x[3] for x in both if x[1] == 0]

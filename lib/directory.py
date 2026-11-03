@@ -287,17 +287,19 @@ def prose_page(title, url, html_body, desc):
 
 
 WSV_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
+HUB_SRC = {"eccc": "Label: our calculation, today's level against past monthly means; Canada publishes no normal range. Source: Water Survey of Canada, Environment and Climate Change Canada,",
+           "pegelonline": "WSV label: compares the reading with this gauge's mean low water and mean high water marks. River km is the agency's own. Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV),",
+           "ea": "Label: the Environment Agency's own, against each gauge's normal range. This uses Environment Agency flood and river level data from the real-time data API (Beta), Open Government Licence v3.0. Source: Environment Agency,"}
 
 
 def world_page(page, d, now, linked=None):
     """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict. None without data."""
-    rows = (d or {}).get("rows") or []
+    rows = [r for r in (d or {}).get("rows") or [] if not r.get("tidal")]  # a tidal gauge is never listed as a river level
     if not rows:
         return None
-    canada = page.get("feed") == "eccc"
     trs = ""
     for r in rows:
-        t = datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00"))
+        t =datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00"))
         zone = zoneinfo.ZoneInfo(r.get("zone", "Europe/Berlin"))
         old = (now - t).total_seconds() > 24 * 3600
         cm = "Not reporting" if old else '<span style="white-space:nowrap">%s</span><div class="src">%.1f ft</div>' % (world_level(r["cm"], r), world_ft(r["cm"], r))
@@ -312,7 +314,7 @@ def world_page(page, d, now, linked=None):
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Label</th>'
             '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">%s fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, ("Label: our calculation, today's level against past monthly means; Canada publishes no normal range. Source: Water Survey of Canada, Environment and Climate Change Canada," if canada else "WSV label: compares the reading with this gauge\'s mean low water and mean high water marks. River km is the agency\'s own. Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV),"), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
+            '<p class="src">%s fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
     n = len(rows)
     return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)
 

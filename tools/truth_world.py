@@ -26,10 +26,31 @@ def moved(rows):
     return bad
 
 
+def england(row, page):
+    """An English page against the Environment Agency: the stage now, and warnings by the agency's own map filter (areas within 10 m of the gauge), a path our point test never uses."""
+    sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
+    items = json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/stations/%s/readings?latest&parameter=level" % urllib.parse.quote(sid)))["items"]
+    live = next((i["value"] for i in items if i.get("measure", "").endswith("-level-stage-i-15_min-mASD")), None)
+    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.5  # no live stage proves nothing; "not reporting" is a true page
+    print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
+    near = [f for f in json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/floods?lat=%.6f&long=%.6f&dist=0.01" % (row[2], row[3])))["items"] if f.get("severityLevel") in (1, 2, 3)]
+    if near and "No flood warnings in force" in page:  # the agency's filter is wide (an area 1.3 km off Colwick came back, 2026-11-03): only an area the page's own rule covers is a fault
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        import collect
+        from lib import wx
+        near = [f for f in near if wx.alerts_at(row[2], row[3], [{"rings": wx.ea_rings(json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/floodAreas/%s/polygon" % f["floodAreaID"])))}], collect.EA_NEAR_M)]
+    if near and "No flood warnings in force" in page:
+        print(row[1], "FAULT page says no flood warnings, agency has", len(near))
+        return 2 - bool(ok)
+    return int(not ok)
+
+
 def check(row):
     """Faults on one world page."""
     canada = "Canada" in str(row[4:5])
     page = get("https://riverwaterlevels.com" + row[1])
+    if "England" in str(row[4:5]):
+        return england(row, page)
     if canada:
         sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
         live = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&sortby=-DATETIME&properties=LEVEL" % sid))["features"][0]["properties"]["LEVEL"]
@@ -105,7 +126,7 @@ def main():
         bad += moved(every)
     except Exception as e:
         print("station check skipped, no answer:", str(e)[:80])
-    rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5])]
+    rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5])]
     start = int(time.time() // 3600) * BATCH % max(1, len(rows))
     for row in (rows[start:] + rows[:start])[:BATCH]:  # ponytail: 40 a run so the 10-minute job holds at any page count; all pages take len/40 runs
         if time.time() - begun > 180:  # a slow feed must not trip the step limit and read as a wrong number
@@ -125,6 +146,15 @@ def selftest():
     assert main() == 0, "a dead feed counted as a fault"
     get = lambda u: '[[0, "/x/", 1, 2, "Canada"]]' if "gauges.json" in u else '<i data-n="A"></i><b data-live="stage">9.0' if "/x/" in u else '{"features": [{"properties": {"LEVEL": 1.0}}]}'
     assert main() == 1, "a wrong number passed"
+    en = [0, "/e/", 52.95, -1.08, "England UK"]
+    get = lambda u: '<i data-n="4009"></i><b data-live="stage">3.05</b>' if "/e/" in u else '{"items": [{"measure": "x/4009-level-stage-i-15_min-mASD", "value": 1.05}]}' if "readings" in u else '{"items": []}'
+    assert check(en) == 1, "a wrong English level passed"
+    poly = lambda lat: '{"type": "Polygon", "coordinates": [[[-1.1, %s], [-1.0, %s], [-1.0, %s], [-1.1, %s], [-1.1, %s]]]}' % (lat, lat, lat + 1, lat + 1, lat)
+    for lat, faults in ((52.9, 1), (53.5, 0)):
+        get = lambda u: '<i data-n="4009"></i><b data-live="stage">1.05</b> No flood warnings in force' if "/e/" in u else '{"items": [{"measure": "x/4009-level-stage-i-15_min-mASD", "value": 1.07}]}' if "readings" in u else poly(lat) if "polygon" in u else '{"items": [{"severityLevel": 2, "floodAreaID": "A"}]}'
+        assert check(en) == faults, "a page saying no warnings beside a live agency warning passed, or an area far off by the agency's wide filter alarmed"
+    get = lambda u: '<i data-n="4009"></i><b data-live="stage">1.05</b> No flood warnings in force' if "/e/" in u else '{"items": [{"measure": "x/4009-level-stage-i-15_min-mASD", "value": 1.07}]}' if "readings" in u else '{"items": [{"severityLevel": 4}]}'
+    assert check(en) == 0, "a true English page failed, or a warning no longer in force counted"
     assert drought_gap("Not in a mapped drought area", "2") == 3 and drought_gap("D2 Severe Drought", "1") == 1 and drought_gap("Not in a mapped", "NoData") == 0, "drought comparison wrong"
     get = lambda u: '{"features": [{"properties": {"STATION_NAME": "SEYMOUR FALLS", "VALUE": 9.9, "YEAR_COUNT_NORMAL_PERIOD": 1}}]}'
     assert canada_blocks([0, "/x/", 49.0, -123.0], '<section id="climate_normals">station Seymour Falls, 9 km January 9.9 °C</section>') == 1, "a one-year normal passed"

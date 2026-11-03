@@ -668,7 +668,8 @@ def b_official_marks(G):
     from lib.world import MARKS, fmt_level, to_ft
     u = f["unit"]
     now = G["sg"][-1][1] * (30.48 if u == "cm" else 0.3048)
-    rows = "".join(tr([lab, "%s (%.1f ft)" % (fmt_level(f["marks"][k], u), to_ft(f["marks"][k], u)), ("%+.0f cm" if u == "cm" else "%+.2f m") % (now - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
+    when = f.get("mark_dates") or {}
+    rows = "".join(tr([lab + ((", %s" % esc(fdate(when[k]))) if when.get(k) else ""), "%s (%.1f ft)" % (fmt_level(f["marks"][k], u), to_ft(f["marks"][k], u)), ("%+.0f cm" if u == "cm" else "%+.2f m") % (now - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
     return block("official_marks", "How today compares", "agency", table(["Mark", "Level", "Today against it"], rows, right=(1, 2)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
 
 

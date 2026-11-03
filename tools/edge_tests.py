@@ -113,6 +113,8 @@ def run():
     finally:
         world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE = real
 
+    england(ago)
+
     class Later(datetime.date):
         @classmethod
         def today(cls):
@@ -131,6 +133,74 @@ def run():
             assert json.load(open(os.path.join(d, "_archive-rhine-2027.json"))) == {}, "a year never archived did not stay empty"
         finally:
             collect.CACHE, collect.http_raw, collect.datetime = keep
+
+
+def england(ago):
+    """England (feed ea): a tide never reads as a river, a cut-short warning list is Unknown, the label is the agency's normal range, a warning reaches only gauges inside its area,
+    and a country without every proof adds no gauge and fails no gate."""
+    import math
+    stamp = lambda m: (ago(minutes=m)).strftime("%Y-%m-%dT%H:%M:00Z")
+    tide = [[stamp(15 * i), 2 + 1.5 * math.sin(2 * math.pi * i * 15 / 745)] for i in range(700, -1, -1)]
+    river = [[stamp(15 * i), 1 + 0.001 * (700 - i) + 0.02 * math.sin(i)] for i in range(700, -1, -1)]
+    assert wx_mod.tidal(tide) is True and wx_mod.tidal(river) is False and wx_mod.tidal(river[:50]) is None, "a tide read as a river, or a river as a tide"
+    stage = {"parameter": "level", "qualifier": "Stage", "unitName": "mASD", "notation": "S-level-stage-i-15_min-mASD", "latestReading": {"dateTime": stamp(0)}}
+    station = lambda ms, lo=1.0, hi=3.0: {"items": {"label": "Colwick", "riverName": "River Trent", "lat": 52.95, "long": -1.08, "RLOIid": "2102", "measures": ms,
+                                                    "stageScale": {"typicalRangeLow": lo, "typicalRangeHigh": hi, "maxOnRecord": {"value": 5.5, "dateTime": "2000-11-08T12:30:00"}, "minOnRecord": {"value": 0.7}}}}
+    asked = []
+
+    def fake(series, ms):
+        def get(url, *a, **k):
+            asked.append(url)
+            if "/readings" in url:
+                return {"items": [{"measure": "x/" + stage["notation"], "dateTime": t, "value": v} for t, v in series[::-1]]}
+            return station(ms)
+        return get
+    real = collect.http_json
+    try:
+        collect.http_json = fake(river, [stage, {"qualifier": "Tidal Level", "unitName": "mAOD", "parameter": "level"}])
+        got = collect.fetch_ea("S", None)
+        assert got.get("tidal") and not any("/readings" in u for u in asked), "a station with a tidal measure was read as a river"
+        collect.http_json = fake(tide, [stage])
+        assert collect.fetch_ea("S", None).get("tidal") and not world.ready(collect.fetch_ea("S", {"tidal": True})), "a level that moves with the tide reached a page"
+        for v, word in ((0.5, "low"), (2.0, "normal"), (3.5, "high")):
+            collect.http_json = fake(river[:-1] + [[river[-1][0], v]], [stage])
+            got = collect.fetch_ea("S", None)
+            assert got["state"] == word and got["marks"] == {"TRL": 1.0, "TRH": 3.0, "HHW": 5.5} and got["mark_dates"] == {"HHW": "2000-11-08"}, "label or marks not the agency's normal range and dated records: %s" % got["state"]
+        assert "Environment Agency label, against its normal range for this gauge, 1.00 m to 3.00 m" in world.to_rec({"feed": "ea", "river": "England", "slug": "england"}, got)["feed"]["label_note"], "the label note does not say whose range"
+    finally:
+        collect.http_json = real
+    square = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[-2, 52], [0, 52], [0, 54], [-2, 54], [-2, 52]]]}}]}
+    warn = {"floodAreaID": "A", "severityLevel": 2, "severity": "Flood warning", "description": "River Trent at Colwick", "message": "Flooding is expected."}
+    floods = wx_mod.ea_floods({"meta": {}, "items": [warn, dict(warn, floodAreaID="B", severityLevel=4)]})
+    assert [f["floodAreaID"] for f in floods] == ["A"], "a warning no longer in force was kept"
+    al = wx_mod.ea_alerts(floods, {"A": wx_mod.ea_rings(square)})
+    assert [a["event"] for a in wx_mod.alerts_at(52.95, -1.08, al)] == ["Flood warning"] and wx_mod.alerts_at(51.5, -0.1, al) == [], "a warning missed the gauge inside its area, or reached one outside"
+    tri = wx_mod.ea_alerts(floods, {"A": [[(52, -2), (54, -2), (54, 0)]]})
+    assert wx_mod.alerts_at(53.9, -1.9, tri, collect.EA_NEAR_M) and not wx_mod.alerts_at(52.2, -0.2, tri, collect.EA_NEAR_M), "a gauge inside the area's box but 20 km outside its shape got the warning"
+    bank = wx_mod.ea_alerts(floods, {"A": [[(52.9530, -1.0790), (52.9530, -1.0780), (52.9540, -1.0780), (52.9540, -1.0790)]]})  # a bank area 33 m north of the gauge, the channel left out
+    assert wx_mod.alerts_at(52.9527, -1.0785, bank, collect.EA_NEAR_M) and not wx_mod.alerts_at(52.9527, -1.0785, bank) and not wx_mod.alerts_at(52.9400, -1.0785, bank, collect.EA_NEAR_M), "a warning for the bank missed the gauge in the channel, or reached one 1.4 km off"
+    assert all(("within %d m" % collect.EA_NEAR_M) in t for t in (world.FEEDS["ea"]["flood_line"], dict(world.FEEDS["ea"]["swap"])["Source: Environment Agency alerts for the gauge location"])), "the page states another distance than the code tests"
+    assert wx_mod.ea_floods({"meta": {"limit": 2}, "items": [warn, warn]}) is None and wx_mod.ea_floods({"meta": {}}) is None, "a cut-short warning list read as complete"
+    assert wx_mod.ea_alerts(floods, {}) is None, "a warning area with no shape read as no warning"
+    w = {"alerts": [{"event": "old"}], "fetched_at": "2026-11-01T00:00:00+00:00"}
+    try:
+        collect.http_json = lambda *a, **k: {"meta": {"limit": 500}, "items": [warn] * 500}
+        collect.wx_england({"lat": 52.95, "lon": -1.08}, w, {})
+    finally:
+        collect.http_json = real
+    assert w["fetched_at"] == "2026-11-01T00:00:00+00:00" and w["no_weather"], "a cut-short list refreshed the alert time, so the page could say none"
+    pages = [{"slug": "england", "feed": "ea", "gauge_pages": []}, {"slug": "rhine", "gauge_pages": ["KAUB"]}]
+    unproven = dict(world.PROVED, ea={"reading": "seen on live data 2026-11-03"})
+    assert world.listing(pages) == ["pegelonline"] and not world.proof_faults(world.listing(pages), unproven), "a country with no gauge page failed the proof gate"
+    assert world.proof_faults(world.listing([dict(pages[0], gauge_pages=["4009"])]), unproven), "a country with a gauge page passed without every proof"
+    keep = world.PROVED
+    try:
+        world.PROVED = unproven
+        assert world.room("ea", pages) == 0, "a country without every proof had room to add gauges"
+        world.PROVED = dict(keep, ea={k: "seen on live data, fixture" for k in world.PROOFS})
+        assert world.room("ea", pages) == world.FROZEN["ea"] and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))]) == 0, "FROZEN did not cap a country with blocks not wired"
+    finally:
+        world.PROVED = keep
 
 
 if __name__ == "__main__":

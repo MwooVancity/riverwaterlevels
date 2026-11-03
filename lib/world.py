@@ -9,16 +9,24 @@ from lib.core import HIDE_H, hours_old
 from lib.directory import esc, world_gauge_url, world_slug
 
 FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and Shipping Administration (WSV)", "api": "PEGELONLINE", "unit": "cm", "zone": "Europe/Berlin", "src": "pegelonline", "emergency": "Emergency in Germany: 112 fire and ambulance, 110 police.", "wx": "DWD", "wx_site": "dwd.de", "wx_credit": "Weather and alerts: Deutscher Wetterdienst (DWD), CC BY 4.0, shortened and converted."},
-         "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."}}
+         "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."},
+         # England: the alerts block carries the agency's own flood warnings and alerts, so its words say flood, never weather; no weather feed (Met Office needs a key)
+         "ea": {"agency": "Environment Agency", "name": "Environment Agency (England)", "api": "Environment Agency real-time flood-monitoring API (Beta)", "unit": "m", "zone": "Europe/London", "src": "ea", "emergency": "Emergency in the UK: 999 or 112. Floodline: 0345 988 1188.",
+                "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts: Environment Agency. No weather is shown: Met Office data needs a key we do not hold.",
+                "flood_line": '<p class="gaps" data-flood><b>Flood warnings on this page are the Environment Agency\'s</b>, for warning areas that hold this gauge or lie within 150 m of it. Check <a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">all warnings in England on GOV.UK</a>.</p>',
+                "swap": (("No active Environment Agency weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed.", "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge or lies within 150 m of it."),
+                         ("No active Environment Agency weather alerts", "No flood warnings in force"), ("<h2>Weather alerts", "<h2>Flood warnings and alerts"), ("Link to Weather alerts", "Link to Flood warnings and alerts"), ("Environment Agency message valid until not stated", "No end time stated by the Environment Agency"),
+                         ("<span>River forecast</span><b>Not issued</b><small>No river forecast is shown for this gauge.</small>", "<span>River forecast</span><b>Not shown</b><small>GOV.UK Check for flooding shows an agency forecast at some stations.</small>"),
+                         ("Source: Environment Agency alerts for the gauge location", "Source: Environment Agency flood warnings and alerts in force, for warning areas that hold the gauge or lie within 150 m of it, from each area's map"))}}
 LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
-MARKS = (("HHW", "Highest on record"), ("HW", "Agency reference high (HW)"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
+MARKS = (("HHW", "Highest on record"), ("HREC", "Highest in recent years (agency: typically the last 5 years)"), ("TRH", "Top of normal range (Environment Agency)"), ("TRL", "Bottom of normal range (Environment Agency)"), ("HW", "Agency reference high (HW)"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
          ("MW", "Average level"), ("MNW", "Mean low water"), ("GlW", "Equivalent low water (GlW)"), ("NW", "Agency reference low (NW)"), ("NNW", "Lowest on record"), ("MMAX", "Highest monthly mean for this month"), ("MAVG", "Average monthly mean for this month"), ("MMIN", "Lowest monthly mean for this month"))
 ROW = {"name_confidence": "high", "nws_lid": "", "place_final": "", "raw_name": "", "score": "0", "wave": "", "years_record": "0", "drainage_sqmi": "0"}
 
 
 def ready(r):
     """The ship test: a real recent reading with its time. The series draws the chart; marks are shown when the agency has them."""
-    return r.get("cm") is not None and bool(r.get("time")) and r.get("lat") is not None and r.get("lon") is not None and len(r.get("series") or []) >= 8
+    return not r.get("tidal") and r.get("cm") is not None and bool(r.get("time")) and r.get("lat") is not None and r.get("lon") is not None and len(r.get("series") or []) >= 8
 
 
 def to_ft(v, unit):
@@ -47,6 +55,10 @@ def to_rec(page, r):
     if key == "eccc":
         label, note, marks = canada_label(r, datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00")))
         marks = dict(marks, **(r.get("record") or {}))
+    elif key == "ea":
+        rng = r.get("range")
+        label, marks = LABEL.get(r.get("state"), "Unknown"), r.get("marks") or {}
+        note = ("Environment Agency label, against its normal range for this gauge, %s to %s: on record, the level was above the bottom 95%% of the time and above the top 5%% of the time." %(fmt_level(rng[0], "m"), fmt_level(rng[1], "m"))) if rng else "The Environment Agency publishes no normal range for this gauge."
     else:
         label, note, marks = LABEL.get(r.get("state"), "Unknown"), "%s label, against this gauge's mean low and mean high water." % f["agency"], r.get("marks") or {}
     rows = [{"parameter_code": "00065", "time": t, "value": str(round(to_ft(v, f["unit"]), 3)), "unit_of_measure": "ft", "qualifier": None, "approval_status": "Provisional"} for t, v in r["series"]]
@@ -66,10 +78,14 @@ def to_rec(page, r):
     if wt and isinstance(wt[0], (int, float)):
         rows.append({"parameter_code": "00010", "time": wt[3] if len(wt) > 3 else r["time"], "value": str(wt[0]), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Provisional"})
     w = r.get("wx") or {}
-    links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
-    links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
+    if key == "ea":
+        links = ([("Official station page (Environment Agency, GOV.UK Check for flooding)", "https://check-for-flooding.service.gov.uk/station/%s" % r["rloi"])] if r.get("rloi") else []) + [
+            ("Flood warnings and alerts in force in England (GOV.UK)", "https://check-for-flooding.service.gov.uk/alerts-and-warnings"), ("Sign up for free flood warnings by phone, text or email (GOV.UK)", "https://www.gov.uk/sign-up-for-flood-warnings")]
+    else:
+        links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
+        links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -134,14 +150,19 @@ def localize(h, feed, river, place, hub, flat=False):
     h = h.replace('class="hero hero2"', 'class="hero hero2" data-n="%s"' % esc(feed["station"]), 1)
     h = re.sub(r'<script type="application/ld\+json">(?:(?!</script>).)*"BreadcrumbList".*?</script>', lambda m: render.crumb_ld([("Home", "/"), (river, hub), (place, None)]), h, flags=re.S)
     h = h.replace("Not endorsed by the agency.", TERMS[feed["src"]] + " Not endorsed by the agency.", 1)
-    h = h.replace('<section data-g="now"', '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p><section data-g="now"' % feed["flood"], 1)
+    h = h.replace('<section data-g="now"', (feed.get("flood_line") or '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p>' % feed["flood"]) + ('<p class="gaps">Not on this page yet: %s.</p>' % ", ".join(feed["later"]) if feed.get("later") else "") + '<section data-g="now"', 1)
     h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE.replace("@N@", feed["station"]).replace("@Z@", feed["zone"]).replace("@D@", "2" if feed["unit"] == "m" else "0"), h, flags=re.S)
+    for a, b in feed.get("swap") or ():  # last: the country's own words over the general ones
+        h = h.replace(a, b)
     return h
 
 
 PROOFS = ("reading", "time", "alerts", "unit", "terms", "water")
 PROVED = {  # what a person or script saw on live data, one line each; a country with a gap fails check.py before any of its pages ship. An alert proof means a real live alert reached the code, not an empty list
     "pegelonline": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Kaub page 3:00 AM CET against feed timestamp +01:00, 2026-11-02", "alerts": "Kaub frost warning from the DWD zip reached the point test, Zurich none, 2026-11-02", "unit": "cm above gauge zero, PEGELONLINE", "terms": "DL-DE-Zero-2.0; DWD CC BY 4.0, read 2026-11-02", "water": "inland rivers and Lake Constance, no tidal gauge listed"},
+    "ea": {"reading": "Colwick 1.049, Kingston 4.421, Ross-on-Wye 0.41 m built pages = API latest = GOV.UK station pages within one reading, 2026-11-03", "time": "API 02:45Z shown 2:45 AM GMT; BST and both 2026 clock changes rendered right by zoneinfo Europe/London",
+           "alerts": "", "unit": "metres above the stage datum (mASD), the gauge's own zero, as GOV.UK shows it", "terms": "OGL v3.0 and the agency's attribution, API reference and licence read 2026-11-03",
+           "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty until a real level 1 to 3 warning reaches the point test: until then England adds no gauge (room) and fails no gate (listing)
     "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish 02:05Z feed against page; BC is permanent UTC-7 since 2026 (IANA 2026b), shown as PT", "alerts": "real fog advisory at Berens River hit the point test 2026-11-02; status words are issued and continued", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
 
 
@@ -186,21 +207,64 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_field_meas": (NO_GAUGE, NO_GAUGE), "b_rating": (NO_GAUGE, NO_GAUGE), "b_samples": (NO_GAUGE, NO_GAUGE), "b_attains": (US_ONLY, US_ONLY), "b_streamcat": (US_ONLY, US_ONLY), "b_land": (US_ONLY, US_ONLY),
     "b_heatmap": ("none: the feed has no hourly grid; the hourly table carries it", "none: covered by the hourly table"), "b_nwm": (US_ONLY, US_ONLY), "b_nwm_medium": (US_ONLY, US_ONLY), "b_noforecast": ("none: the river forecast tile says so", "none: the river forecast tile says so"),
     "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
-FROZEN = {"eccc": 5, "pegelonline": 33}  # gauge pages each country may list while it still has a next item; finishing them is what opens the queue
+MET = "next: Met Office DataHub, a free key is an owner sign-up; terms not read"
+HYDRO = "next: Environment Agency Hydrology API daily levels and flows, open; not read"
+NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
+IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
+ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
+    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
+    "b_hourly": MET, "b_weather": MET, "b_air": MET, "b_qpf": MET, "b_radar": MET, "b_heatmap": "next: needs the Met Office hourly forecast (b_hourly)",
+    "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
+    "b_rate": COVER["b_rate"][0],
+    "b_rain": "next: Environment Agency rain gauges in the same API, 1,153 rainfall measures seen 2026-11-03; not wired",
+    "b_river_forecast": "next: GOV.UK Check for flooding shows an agency model forecast at some stations (Colwick 2026-11-03); no open feed read",
+    "b_quality": "none: the flood-monitoring API measures level, flow, rainfall, temperature, wind and velocity only, all 7,439 measures read 2026-11-03",
+    "b_wtemp": "next: water temperature at 2 of 7,439 measures in the same API, read 2026-11-03; not wired",
+    "b_acis": "next: Met Office 1991-2020 climate averages per station; terms not read",
+    "b_month_chart": HYDRO, "b_year_chart": HYDRO, "b_multiyear": HYDRO, "b_daily": HYDRO, "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": NRFA, "b_floodfreq": NRFA,
+    "b_record": "none: the agency's highest and lowest on record, with dates, are in official marks",
+    "b_drought": "next: Environment Agency drought status by area, in monthly water situation reports; no point dataset read",
+    "b_related": "none: station records carry no upstream or downstream order, read 2026-11-03",
+    "b_map": COVER["b_map"][0], "b_flood_stages": IMPACT, "b_impacts": IMPACT,
+    "b_low_water": "none: the agency publishes no low-water threshold; the bottom of its normal range is in official marks",
+    "b_camera": "none: the agency's open API reference lists no camera, read 2026-11-03", "b_snotel": "none: the agency's 7,439 measures include no snow, read 2026-11-03",
+    "b_tides": "none: tidal gauges are kept off the site; a tide is never shown as a river level",
+    "b_crests": "none: the agency's highest on record and highest recent level are in official marks",
+    "b_flood_outlook": "next: Flood Forecasting Centre five-day flood risk on GOV.UK; no open feed read",
+    "b_field_meas": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_rating": "none: the flood-monitoring API reference lists no rating curves, read 2026-11-03",
+    "b_samples": "next: Environment Agency Water Quality Archive sampling points, open; not read", "b_attains": "next: Environment Agency Catchment Data Explorer water body status, open; not read",
+    "b_land": "next: UKCEH Land Cover Map; licence not read", "b_noforecast": COVER["b_noforecast"][0],
+    "b_streamcat": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY}
+COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
+ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
+FROZEN = {"eccc": 5, "pegelonline": 33, "ea": 20}  # gauge pages each country may list while it still has a next item; finishing them is what opens the queue
 
 
 def cover_faults(blocks, pages, cover=None):
-    """The guarantee: every US block is answered for every country, and a country with work left adds no gauges."""
+    """The guarantee: every US block is answered for every country, and a country with work left adds no gauges. A shorter row in a test table covers the first countries of ORDER."""
     cover = COVER if cover is None else cover
     out = ["no country answer for US block %s" % b for b in blocks if b not in cover]
     for b, row in cover.items():
         out += ["%s: an answer must be have, next: or none: with its reason" % b for v in row if v != "have" and not (v[:6] in ("none: ", "next: ") and len(v) > 12)]
-    for i, feed in enumerate(FEEDS if len(next(iter(cover.values()))) == len(FEEDS) else ()):
-        left = [b for b, row in cover.items() if row[("eccc", "pegelonline").index(feed)].startswith("next")]
+    for feed in ORDER:
+        left = [b for b, row in cover.items() if ORDER.index(feed) < len(row) and row[ORDER.index(feed)].startswith("next")]
         n = sum(len(p.get("gauge_pages") or []) for p in pages if p.get("feed", "pegelonline") == feed)
         if left and n > FROZEN[feed]:
             out.append("%s lists %d gauges, more than %d, with %d blocks not wired: %s" % (feed, n, FROZEN[feed], len(left), ", ".join(left[:5])))
     return out
+
+
+def listing(pages):
+    """Feeds with at least one gauge page: only these must hold every proof, so a country being built can never fail a gate."""
+    return sorted({p.get("feed", "pegelonline") for p in pages if p.get("gauge_pages")})
+
+
+def room(feed, pages):
+    """Gauges the release and the matcher may still add for a feed: none while a proof is missing, up to FROZEN while a block is not wired."""
+    if proof_faults([feed], PROVED):
+        return 0
+    n = sum(len(p.get("gauge_pages") or []) for p in pages if p.get("feed", "pegelonline") == feed)
+    return max(0, FROZEN[feed] - n) if [b for b, row in COVER.items() if row[ORDER.index(feed)].startswith("next")] else 10 ** 6
 
 
 GATE = True
@@ -218,9 +282,11 @@ def alike(a, b):
     return bool(a and b) and len(a & b) / len(a | b) > ALIKE
 
 
-FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/services/water-overview/quantity/floods/forecasting-centres.html">provincial flood forecasting centres</a>', "pegelonline": '<a href="https://www.hochwasserzentralen.de/">German state flood portal</a>', "abroad": "local flood authority"}
+FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/services/water-overview/quantity/floods/forecasting-centres.html">provincial flood forecasting centres</a>', "pegelonline": '<a href="https://www.hochwasserzentralen.de/">German state flood portal</a>',
+         "ea": '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">Environment Agency flood warnings on GOV.UK</a>', "abroad": "local flood authority"}
 TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">ECCC data</a>, <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.',
-         "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.'}
+         "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.',
+         "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
 GAPS = {}  # gauge -> blocks its data allows and its page lacks, live or held; build.py writes it to status.json and the watchdog alarms
 
 
@@ -260,7 +326,7 @@ def along(p, r, rows, keep=()):
     names = [x["name"] for x in rows]
     i = names.index(r["name"])
     out = []
-    near = sorted((x for x in rows if x is not r and x.get("lat") is not None and x.get("cm") is not None and wx.km(r["lat"], r["lon"], x["lat"], x["lon"]) <= 100), key=lambda x: wx.km(r["lat"], r["lon"], x["lat"], x["lon"]))[:4] if p.get("flat") else rows[max(0, i - 2):i] + rows[i + 1:i + 3]
+    near = sorted((x for x in rows if x is not r and not x.get("tidal") and x.get("lat") is not None and x.get("cm") is not None and wx.km(r["lat"], r["lon"], x["lat"], x["lon"]) <= 100), key=lambda x: wx.km(r["lat"], r["lon"], x["lat"], x["lon"]))[:4] if p.get("flat") else rows[max(0, i - 2):i] + rows[i + 1:i + 3]
     for x in near:
         out.append(("Nearby" if p.get("flat") else "Upstream" if names.index(x["name"]) < i else "Downstream", x.get("title") or x["name"].replace(" UP", "").title(), fmt_level(x["cm"], x.get("unit", "cm")), fmt_level(x["cm"] - x["then"], x.get("unit", "cm")).replace("-", "-") if x.get("then") is not None else None, LABEL.get(x.get("state"), "Unknown"), world_gauge_url(p, x.get("title") or x["name"]) if x["name"] in keep else None))
     return out
@@ -334,6 +400,11 @@ def page(p, r, now, rows=(), keep=()):
     rec["feed"]["label_note"] = odd + rec["feed"]["label_note"]
     rec["feed"]["lake"] = p.get("lake")
     rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
+    if p.get("feed") == "ea":  # England publishes rain gauges and some forecasts we do not show yet: never "not published"
+        wt = (r.get("ea") or {}).get("wt")
+        rec["feed"]["gaps"] = [w for w, have in (("water temperature", wt), ("flow", (r.get("ea") or {}).get("flow"))) if not have]
+        rec["feed"]["later"] = ["rain gauge totals (Environment Agency, not yet connected)", "weather (Met Office data needs a key we do not hold)", "river forecast (GOV.UK Check for flooding shows one at some stations)"] + (
+            ["water temperature (published for this gauge, not yet connected)"] if wt else []) + (["flow (the agency's last 7 days include values below zero, so none is shown)"] if r.get("flow_bad") else [])
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows else []
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)

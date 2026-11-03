@@ -51,11 +51,24 @@ def inside(lat, lon, ring):
     return hit
 
 
-def alerts_at(lat, lon, items):
-    out = {}
+def edge_m(lat, lon, ring):
+    """Metres from a point to the nearest edge of a ring, flat-earth: good to a few metres at a few hundred."""
+    k, best = 111320 * math.cos(math.radians(lat)), float("inf")
+    for (y1, x1), (y2, x2) in zip(ring, ring[1:] + ring[:1]):
+        ax, ay, bx, by = (x1 - lon) * k, (y1 - lat) * 110540, (x2 - lon) * k, (y2 - lat) * 110540
+        dx, dy = bx - ax, by - ay
+        t = max(0, min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy))) if dx or dy else 0
+        best = min(best, math.hypot(ax + t * dx, ay + t * dy))
+    return best
+
+
+def alerts_at(lat, lon, items, within_m=0):
+    """Alerts whose area holds the point, or, with within_m, comes that close: a gauge stands in the channel and English warning areas cover the land beside it."""
+    out, pad = {}, within_m / 60000  # degrees, wide on purpose: the box only skips what is surely far
     for a in items:
-        if any(inside(lat, lon, r) for r in a["rings"]):
-            out.setdefault((a.get("event"), a.get("headline")), {k: v for k, v in a.items() if k != "rings"})
+        boxes = a.get("boxes") or [None] * len(a["rings"])
+        if any((b is None or b[0] - pad <= lat <= b[1] + pad and b[2] - pad <= lon <= b[3] + pad) and (inside(lat, lon, r) or (within_m and edge_m(lat, lon, r) <= within_m)) for r, b in zip(a["rings"], boxes)):
+            out.setdefault((a.get("event"), a.get("headline")), {k: v for k, v in a.items() if k not in ("rings", "boxes")})
     return list(out.values())
 
 
@@ -87,6 +100,59 @@ def canada_alerts(d):
         out.append({"rings": [[(y, x) for x, y, *_ in poly[0]] for poly in polys], "event": (p.get("alert_name_en") or "").capitalize(), "severity": {"yellow": "Moderate", "orange": "Severe", "red": "Extreme"}.get((p.get("risk_colour_en") or "").lower(), "Unknown"),
                     "headline": (p.get("alert_text_en") or "").split("\n\n")[0][:300], "areaDesc": p.get("feature_name_en") or "", "ends": p.get("event_end_datetime"), "expires": p.get("expiration_datetime")})
     return None if out and not any(a["rings"] for a in out) else out  # alerts with no usable shapes reach nobody: unknown, never none
+
+
+EA_CLS = {1: "extreme", 2: "severe", 3: "moderate"}  # the card colour only; the words are the agency's
+
+
+def ea_floods(d):
+    """Environment Agency warnings in force (levels 1 to 3), or None when the reply is cut short or not a list: a partial list must never read as 'no warnings'.
+    Level 4 is 'no longer in force' and drops; a level we have not seen shows, never hides."""
+    items, lim = d.get("items"), (d.get("meta") or {}).get("limit")
+    if not isinstance(items, list) or (lim and len(items) >= lim):
+        return None
+    return [i for i in items if i.get("severityLevel") != 4 and i.get("floodAreaID")]
+
+
+def ea_rings(geo):
+    """A flood area's GeoJSON into outer rings [(lat, lon), ...]. ponytail: holes are ignored, so a gauge inside a hole is shown the warning; a missed warning is the worse error."""
+    out = []
+    for f in geo.get("features") or [geo]:
+        g = f.get("geometry") or f
+        for poly in ([g["coordinates"]] if g.get("type") == "Polygon" else g.get("coordinates") or [] if g.get("type") == "MultiPolygon" else []):
+            out.append([(p[1], p[0]) for p in poly[0]])
+    return out
+
+
+def ea_alerts(floods, rings):
+    """Warnings in force with their shapes, as alerts_at reads them; rings is {area id: rings}. One area with no shape makes the whole answer unknown."""
+    if floods is None or any(not rings.get(f["floodAreaID"]) for f in floods):
+        return None
+    box = lambda r: [min(p[0] for p in r), max(p[0] for p in r), min(p[1] for p in r), max(p[1] for p in r)]  # ponytail: 2,421 gauges x 300 areas in force tests boxes, not every vertex
+    return [{"rings": rings[f["floodAreaID"]], "boxes": [box(r) for r in rings[f["floodAreaID"]]], "event": f.get("severity") or "Flood warning", "severity": "Severity level %s, 1 is highest" % f.get("severityLevel", "not stated"), "cls": EA_CLS.get(f.get("severityLevel"), "unknown"),
+             "headline": (f.get("message") or "").strip()[:300], "areaDesc": f.get("description") or f.get("eaAreaName") or "", "ends": None, "expires": None} for f in floods]
+
+
+def tidal(series):
+    """True when the level rises and falls with the tide: its 15-minute steps repeat every 12.4 h and reverse at half that. A river stage does neither.
+    Measured 2026-11-03 on 8 days: Gainsborough and Carlton on Trent (tidal) 0.77 and 0.81 at 12.4 h; Colwick, Kingston, Ross-on-Wye at most 0.5, with a larger 6 h value. None: too few readings to say."""
+    v = {int(datetime.datetime.fromisoformat(t.replace("Z", "+00:00")).timestamp() // 60): x for t, x in series}
+    d = {m: v[m + 15] - v[m] for m in v if m + 15 in v}
+
+    def r(lags):
+        best = None
+        for lag in lags:
+            pairs = [(d[m], d[m + lag * 15]) for m in d if m + lag * 15 in d]
+            if len(pairs) < 150:
+                continue
+            a, b = zip(*pairs)
+            ma, mb = sum(a) / len(a), sum(b) / len(b)
+            sa, sb = sum((x - ma) ** 2 for x in a) ** .5, sum((y - mb) ** 2 for y in b) ** .5
+            c = sum((x - ma) * (y - mb) for x, y in pairs) / (sa * sb) if sa and sb else 0
+            best = c if best is None else max(best, c)
+        return best
+    tide, half = r(range(48, 52)), r(range(24, 26))
+    return None if tide is None or half is None else tide >= 0.6 and tide - half >= 0.5
 
 
 def canada_city(props, lat, lon):

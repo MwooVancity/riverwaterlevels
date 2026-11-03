@@ -14,7 +14,7 @@ def scan(root, old=None):
         h = open(p, encoding="utf-8", errors="ignore").read()
         if 'class="hero hero2' not in h:
             continue
-        c = "US" if "/river/" in p.replace("\\", "/") else "Canada" if "/canada/" in p.replace("\\", "/") else "Germany"
+        c = "US" if "/river/" in p.replace("\\", "/") else "Canada" if "/canada/" in p.replace("\\", "/") else "England" if "/england/" in p.replace("\\", "/") else "Germany"
         d = seen.setdefault(c, {"pages": 0, "blocks": {}})
         d["pages"] += 1
         for b in set(re.findall(r'<section [^>]*class="card blk"[^>]*id="(\w+)"', h)):
