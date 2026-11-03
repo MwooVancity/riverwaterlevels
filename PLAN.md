@@ -46,7 +46,7 @@ One session per stage. Each batch: `check`, dry run, main, read live, update her
 2. Nov 5-7: match foreign queue rows to agency station lists in `tools/world_queue.py`; ambiguous stays not ready; 15-row sample.
 3. Nov 7: one ranking, tier x country rate x can show ads.
 4. Nov 7-11: unattended world release: `world-pages.json` generated from the queue, `release.py` picks world gauges inside the 25 a day, per-gauge holds back to the queue, wrong-gauge guard, feed-driven `fetch_world` and `pollWorld`, daily count split US and world. Dry run, 5 a day, then 25.
-5. Nov 11-12: limits: world past 150; check and `truth_live` on rebuilt pages only, batched NWS calls, or the 45-minute brake stops growth near 2,200 to 3,700 gauges (extrapolated); one national USGS query before about 7,850 gauges.
+5. Nov 11-12: limits: world past 150; one national USGS query before about 7,850 gauges. Measured 2026-11-03 at 164 gauges: build, check and deploy 35 s; a shard collects 8 gauges in 40-50 s (about 5.5 s a gauge, NWS forecast and rain the biggest), so the 45-minute brake sits near 9,800 gauges, not 2,200. A National Water Model outage made one run 354 s (20 s an empty call); `NWM_EMPTY` now stops it after 3 empty answers. Next measure: a model-due run with the service healthy.
 6. Nov 12-14: England as data, no custom code.
 7. Nov 14-16: trim CLAUDE.md, runbook for an owner with no Claude, `/code-review high`, fresh website audit.
 Nov 17-20 spare. Short of time, cut England first, then past-150 limits, then `none` answers. Never stage 4 or truth guards. Done means three days with no session open: site grows, no false alarm.

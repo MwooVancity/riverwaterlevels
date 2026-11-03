@@ -42,7 +42,11 @@ def run():
     from lib.hero import beyond
     row = [13, None, 398.2, None, 624.0, 1470.0, 2525.0, None, 4516.0, None]
     assert beyond(row, 9000)[0] == "above 90th" and "4,520 cfs" in beyond(row, 9000)[1] and beyond(row, 100)[0] == "below 10th" and beyond(row, 1000) is None, "a flood past the published percentiles read as no statistics"
-    assert collect.nwm_due({}), "a gauge with no model forecast must be due"
+    import check as check_
+    pg = lambda t: '<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t
+    assert not [b for b in check_.check_html(pg("Walla Walla River | Ro Ro Anlage"), "x") if "doubled" in b], "a real place name with a doubled word failed the page"
+    assert [b for b in check_.check_html(pg("Wis Wis campground"), "x") if "doubled" in b], "a doubled word typo passed"
+    assert collect.nwm_due({}),"a gauge with no model forecast must be due"
     collect.NWM_EMPTY[0] = 3
     assert not collect.nwm_due({}), "an empty model service kept being called every gauge, stretching the run"
     collect.NWM_EMPTY[0] = 0
