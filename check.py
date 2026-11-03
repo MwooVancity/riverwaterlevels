@@ -681,7 +681,7 @@ def selftest():
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
-    assert world.cover_faults([], [{"feed": "eccc", "gauge_pages": list("abcdefghijk")}], {"b_x": ("next: wire this source", "have")}), "selftest: a country with work left must not add gauges"
+    assert world.cover_faults([], [], {"b_x": ("next: wire this source, words missing", "have")}) and not [f for f in world.cover_faults([], [{"feed": "ea", "gauge_pages": list(range(500))}]) if "lists" in f], "selftest: a next item with no reader words passed, or a country cap is back"
     assert "weather not collected yet" in world.missing("<p></p>", {"name": "x"}), "selftest: a gauge the weather never reached must not publish"
     fw = {"fetched_at": "t", "periods": [1], "forecast_updated": "2020-01-01T00:00:00+00:00"}
     assert "weather_forecast" not in world.owed({"wx": fw}), "selftest: an outage past the hide limit must not pull a live page"
@@ -693,6 +693,7 @@ def selftest():
     wh2 = world.page(wp0, dict(wet, flow=[["2026-11-01T1%d:00:00+00:00" % i, 100.0 + i] for i in range(9)], deciles=[float(i) for i in range(11)], day_years=50, years=[[2024, 3.0, "2024-05-01", 1.0, "2024-09-01"]]), wn)[1]
     assert 'id="flow_chart"' in wh2 and 'id="world_history"' in wh2 and "Emergency in Germany" in wh2, "selftest: a world page lost flow, history or the emergency number"
     assert not world_rules(wh2) and "hourly_forecast" in wh2 and "10 °C (50 °F)" in wh2 and "16 km/h (10 mph)" in wh2 and "id=\"weather_forecast\"" in wh2, "selftest: a world page with weather lost a block or a unit: %s" % world_rules(wh2)
+    assert world.thin(wh) and not world.thin(wh2), "selftest: thin floor: a level-and-chart page passed (%s) or a full page was held (%s)" % (world.thin_stats(wh), world.thin(wh2))
     assert world.alike({"a", "b", "c", "d"}, {"a", "b", "c", "d"}) and not world.alike({"a", "b"}, {"c", "d"}) and not world.alike(set(), {"a"}), "selftest: world near-duplicate test wrong"
     assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"

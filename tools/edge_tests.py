@@ -126,6 +126,7 @@ def run():
         world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE = real
 
     england(ago)
+    england_page()
 
     class Later(datetime.date):
         @classmethod
@@ -211,15 +212,58 @@ def england(ago):
             collect.CACHE = world.common.CACHE = d  # never this machine's or the cloud's own proof
             collect.http_raw = lambda *a, **k: (_ for _ in ()).throw(collect.urllib.error.HTTPError("x", 404, "none yet", {}, None))
             world.PROVED = unproven
-            assert world.room("ea", pages) == 0, "a country without every proof had room to add gauges"
+            assert world.room("ea", pages, {}) == 0, "a country without every proof had room to add gauges"
+            no_alert = {k: "seen on live data, fixture" for k in world.PROOFS if k != "alerts"}
+            assert not world.proof_faults(["ea"], {"ea": no_alert}) and world.proof_faults(["eccc"], {"eccc": no_alert}), "England needed an alert proof to ship, or another country shipped without one"
             world.PROVED = dict(keep, ea={k: "seen on live data, fixture" for k in world.PROOFS})
-            assert world.room("ea", pages) == world.FROZEN["ea"] and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))]) == 0, "FROZEN did not cap a country with blocks not wired"
+            assert world.room("ea", pages, {}) > 0 and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))], {}) > 0, "a country cap is back"
+            assert world.room("ea", [dict(pages[0], gauge_pages=["4009"])], {"4009": ["thin"]}) == 0 and world.room("ea", pages, None) == 0, "a country whose every page is thin, or an unread live status, still added gauges"
             world.PROVED = dict(keep, ea=dict(keep["ea"], alerts=""))
             probe(warn, square, pages)
             assert world.recorded([dict(pages[0], proof={"alerts": "carried by the release that listed the first gauge"})])["ea"] and not world.proof_faults(["ea"], world.proved([dict(pages[0], proof={"alerts": "carried by the release that listed the first gauge"})])), "a proof committed in world-pages.json was not read once the cache was lost"
         finally:
             world.PROVED = keep
             collect.CACHE, world.common.CACHE, collect.http_raw = cache
+
+
+def england_page():
+    """An England page before and after a live warning proves the point test, the rain tile in its four states, and the thin floor (owner 2026-11-03)."""
+    import re as re_
+    now = datetime.datetime.now(datetime.timezone.utc)
+    iso = lambda m: (now - datetime.timedelta(minutes=m)).strftime("%Y-%m-%dT%H:%M:00Z")
+    r = {"name": "4009", "title": "River Trent at Colwick", "lat": 52.95, "lon": -1.08, "unit": "m", "zone": "Europe/London", "cm": 1.2, "time": iso(5), "then": 1.1, "state": "normal", "range": [0.5, 2.0], "marks": {"TRL": 0.5, "TRH": 2.0},
+         "series": [[iso(5 + 15 * i), 1.2 - 0.001 * i] for i in range(200, -1, -1)], "ea": {"flow": None}, "wx": {"fetched_at": now.isoformat(), "alerts": [], "no_weather": "Met Office data needs a key we do not hold"}}
+    p = {"slug": "fixture-england", "river": "England", "flat": True, "feed": "ea"}
+    sec = lambda h, i: re_.sub(r"<[^>]+>", " ", re_.search(r'<section[^>]*id="%s".*?</section>' % i, h, re_.S).group(0))
+    tile = lambda h: re_.sub(r"<[^>]+>", " ", re_.search(r'<div class="tile rain[^"]*">.*?</div>', h, re_.S).group(0))
+    keep = (collect.CACHE, world.common.CACHE)
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            collect.CACHE = world.common.CACHE = d  # no proof on file: never this machine's or the cloud's
+            h = world.page(p, r, now)[1]
+            al = sec(h, "alerts")
+            assert "Unknown" in al and "check-for-flooding.service.gov.uk/alerts-and-warnings" in h.split('id="alerts"', 1)[1].split("</section>", 1)[0], "an unproven England alert block is not Unknown with the GOV.UK link"
+            assert not re_.search(r"No (active |Environment Agency )?flood warning|No flood warnings in force|No active|could not be loaded|were returned", re_.sub(r"<[^>]+>", " ", h)), "an unproven England page said there are no warnings, or that alerts failed to load"
+            assert "Flood warnings: Unknown on this page" in h and "within 150 m" not in h, "the flood line claims a check that is not proven"
+            h2 = world.page(dict(p, proof={"alerts": "Environment Agency Flood warning (level 2), fixture"}), r, now)[1]
+            assert "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge" in h2 and "Flood warnings: Unknown" not in h2, "a proven England page lost its normal alert answer"
+        finally:
+            collect.CACHE, world.common.CACHE = keep
+    assert "Unknown" in tile(h) and "No Environment Agency rain gauge read" in tile(h), "rain never collected did not say Unknown"
+    for g, want in (({"station": "E7050", "km": 3.24, "mm": 4.6, "to": iso(30)}, ("4.6 mm", "E7050, 3.2 km away", "24 h to")),
+                    ({"station": "E7050", "km": 3.2, "mm": 0.0, "to": iso(30)}, ("0.0 mm",)),
+                    ({"station": "E7050", "km": 3.2, "mm": 4.6, "to": iso(8 * 60)}, ("Unknown", "Old value: 4.6 mm")),
+                    ({"station": "E7050", "km": 3.2, "mm": None, "why": "90 of the 96 readings of the 24 h to its last one"}, ("Unknown", "90 of the 96")),
+                    ({"why": "No Environment Agency rain gauge within 15 km"}, ("Unknown", "within 15 km"))):
+        t = tile(world.page(p, dict(r, wx=dict(r["wx"], ea_rain=g)), now)[1])
+        assert all(w in re_.sub(r"\s+", " ", t) for w in want) and ("Unknown" in want or "Unknown" not in t), "rain tile wrong for %s: %s" % (g, t[:200])
+    day = {(now - datetime.timedelta(minutes=15 * i)).strftime("%Y-%m-%dT%H:%M:00Z"): 0.2 for i in range(100)}
+    assert wx_mod.rain_total(day, 900)[0] == round(96 * 0.2, 1), "a 24 h total did not add exactly the 96 readings of its day"
+    assert wx_mod.rain_total(dict(list(day.items())[:95]), 900)[0] is None and wx_mod.rain_total(dict(day, **{max(day): None}), 900)[0] is None and wx_mod.rain_total({}, 900)[0] is None, "a missing reading or no readings read as a total"
+    assert world.thin(h) and any("reader blocks" in x for x in world.thin(h)), "an England page with level, chart and no weather passed the thin floor"
+    world.THIN.clear()
+    assert world.choose([(p | {"gauge_pages": ["4009"]}, {"rows": [r]})], now) == {"fixture-england": set()} and "4009" in world.THIN, "choose shipped a thin page"
+    world.THIN.clear()
 
 
 def probe(warn, square, pages):
@@ -241,7 +285,7 @@ def probe(warn, square, pages):
             collect.ea_probe({})
         finally:
             collect.http_json = real
-        return os_.path.exists(seen) and world.room("ea", pages) > 0
+        return os_.path.exists(seen) and world.alerts_proven(pages[0])
     level = lambda n: {"meta": {}, "items": [dict(warn, severityLevel=n)]}
     a2 = wx_mod.ea_alerts([warn], {"A": wx_mod.ea_rings(square)})[0]
     assert wx_mod.ea_proof([a2], [st()], 150) and wx_mod.ea_proof([dict(a2, level=4)], [st()], 150) is None and wx_mod.ea_proof([], [st()], 150) is None and wx_mod.ea_proof(None, [st()], 150) is None, "a warning no longer in force, or no warning at all, proved England"

@@ -42,9 +42,15 @@ def release_stall():
 def world_short(s):
     """A line when a world page lacks a block its data allows, or a quarter of listed gauges are held back (5 of 38 today: 4 Austrian gauges with no coordinates, 1 near-duplicate)."""
     w = s.get("world") or {}
-    gaps, held = w.get("gaps") or {}, (w.get("listed") or 0) - (w.get("shown") or 0)
-    if gaps or held * 4 > (w.get("listed") or 0):
+    thin = len(w.get("thin") or {})  # held under the floor of lib/world.py thin: expected while a country lacks sources, named in the ok line, never an alarm
+    gaps, held = w.get("gaps") or {}, (w.get("listed") or 0) - (w.get("shown") or 0) - thin
+    if gaps or held * 4 > (w.get("listed") or 0) - thin:
         return "pages missing blocks: %d gauges short, %d held of %s: %s" % (len(gaps), held, w.get("listed"), "; ".join("%s lacks %s" % (k, ", ".join(v)) for k, v in list(gaps.items())[:5]))
+
+
+def world_thin(s):
+    t = (s.get("world") or {}).get("thin") or {}
+    return "%d world gauges held as thin pages (under the floor): %s" % (len(t), "; ".join("%s: %s" % (k, ", ".join(v)) for k, v in list(t.items())[:3])) if t else None
 
 
 def main():
@@ -66,6 +72,8 @@ def main():
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
+        if world_thin(s):
+            ok.append(world_thin(s))
         if s.get("cache_lost"):
             bad.append("data cache lost: this build started empty; the good copy was not overwritten")
         try:
@@ -239,6 +247,8 @@ if "--selftest" in sys.argv:
         assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
         assert "6 held" in world_short({"world": {"listed": 20, "shown": 14, "gaps": {}}}), "held gauges went unreported"
         assert world_short({"world": {"listed": 38, "shown": 33, "gaps": {}}}) is None, "today's expected holds alarmed"
+        th = {"world": {"listed": 30, "shown": 20, "gaps": {}, "thin": {str(i): ["4 reader blocks"] for i in range(10)}}}
+        assert world_short(th) is None and "10 world gauges held as thin" in world_thin(th), "thin holds alarmed, or went unnamed"
     finally:
         open = real
     print("selftest OK")

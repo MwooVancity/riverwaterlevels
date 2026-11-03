@@ -13,7 +13,7 @@ FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and 
          "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."},
          # England: the alerts block carries the agency's own flood warnings and alerts, so its words say flood, never weather; no weather feed (Met Office needs a key)
          "ea": {"agency": "Environment Agency", "name": "Environment Agency (England)", "api": "Environment Agency real-time flood-monitoring API (Beta)", "unit": "m", "zone": "Europe/London", "src": "ea", "emergency": "Emergency in the UK: 999 or 112. Floodline: 0345 988 1188.",
-                "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts: Environment Agency. No weather is shown: Met Office data needs a key we do not hold.",
+                "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts, and rain: Environment Agency. No weather is shown: Met Office data needs a key we do not hold.",
                 "flood_line": '<p class="gaps" data-flood><b>Flood warnings on this page are the Environment Agency\'s</b>, for warning areas that hold this gauge or lie within 150 m of it. Check <a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">all warnings in England on GOV.UK</a>.</p>',
                 "swap": (("No active Environment Agency weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed.", "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge or lies within 150 m of it."),
                          ("No active Environment Agency weather alerts", "No flood warnings in force"), ("<h2>Weather alerts", "<h2>Flood warnings and alerts"), ("Link to Weather alerts", "Link to Flood warnings and alerts"), ("Environment Agency message valid until not stated", "No end time stated by the Environment Agency"),
@@ -85,7 +85,7 @@ def to_rec(page, r):
     else:
         links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
         links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
-    return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": w.get("rain") or {},
+    return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": {} if key == "ea" else w.get("rain") or {},  # England's rain tile is drawn in mm by ea_rain_tile, never through inches
             "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
@@ -163,12 +163,20 @@ PROVED = {  # what a person or script saw on live data, one line each; a country
     "pegelonline": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Kaub page 3:00 AM CET against feed timestamp +01:00, 2026-11-02", "alerts": "Kaub frost warning from the DWD zip reached the point test, Zurich none, 2026-11-02", "unit": "cm above gauge zero, PEGELONLINE", "terms": "DL-DE-Zero-2.0; DWD CC BY 4.0, read 2026-11-02", "water": "inland rivers and Lake Constance, no tidal gauge listed"},
     "ea": {"reading": "Colwick 1.049, Kingston 4.421, Ross-on-Wye 0.41 m built pages = API latest = GOV.UK station pages within one reading, 2026-11-03", "time": "API 02:45Z shown 2:45 AM GMT; BST and both 2026 clock changes rendered right by zoneinfo Europe/London",
            "alerts": "", "unit": "metres above the stage datum (mASD), the gauge's own zero, as GOV.UK shows it", "terms": "OGL v3.0 and the agency's attribution, API reference and licence read 2026-11-03",
-           "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty here: collect.py ea_probe records it when a real level 1 to 3 warning holds an English station (proved() reads it); until then England adds no gauge (room) and fails no gate (listing)
+           "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty here: collect.py ea_probe records it when a real level 1 to 3 warning holds an English station (proved() reads it); until then England pages say Unknown (UNKNOWN_UNTIL_PROVEN), never none
     "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish 02:05Z feed against page; BC is permanent UTC-7 since 2026 (IANA 2026b), shown as PT", "alerts": "real fog advisory at Berens River hit the point test 2026-11-02; status words are issued and continued", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
 
 
+UNKNOWN_UNTIL_PROVEN = ("ea",)  # owner 2026-11-03: England ships before a live warning proves the point test; until then its alert block says Unknown with the GOV.UK link (page below), never none
+
+
 def proof_faults(feeds, proved):
-    return ["%s has no proof of %s" % (f, k) for f in feeds for k in PROOFS if len((proved.get(f) or {}).get(k) or "") < 10]
+    return ["%s has no proof of %s" % (f, k) for f in feeds for k in PROOFS if len((proved.get(f) or {}).get(k) or "") < 10 and not (k == "alerts" and f in UNKNOWN_UNTIL_PROVEN)]
+
+
+def alerts_proven(p):
+    """True once a real live alert reached this feed's point test (PROVED, collect.py ea_probe, or the proof committed with the first gauge)."""
+    return len((proved([p]).get(p.get("feed", "pegelonline")) or {}).get("alerts") or "") >= 10
 
 
 def recorded(pages):
@@ -194,7 +202,7 @@ def proved(pages):
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
-COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired, so no new gauges for that country (check.py)
+COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
     "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
     "b_alerts": ("have", "have"), "b_stage_chart": ("have", "have"), "b_official_marks": ("have", "have"),
@@ -238,7 +246,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_hourly": MET, "b_weather": MET, "b_air": MET, "b_qpf": MET, "b_radar": MET, "b_heatmap": "next: needs the Met Office hourly forecast (b_hourly)",
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": COVER["b_rate"][0],
-    "b_rain": "next: Environment Agency rain gauges in the same API, 1,153 rainfall measures seen 2026-11-03; not wired",
+    "b_rain": "have",  # the rain tile: 24 h total of the nearest EA rain gauge within 15 km (collect.py ea_rain, lib/world.py ea_rain_tile)
     "b_river_forecast": "next: GOV.UK Check for flooding shows an agency model forecast at some stations (Colwick 2026-11-03); no open feed read",
     "b_quality": "none: the flood-monitoring API measures level, flow, rainfall, temperature, wind and velocity only, all 7,439 measures read 2026-11-03",
     "b_wtemp": "next: water temperature at 2 of 7,439 measures in the same API, read 2026-11-03; not wired",
@@ -259,20 +267,27 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
-FROZEN = {"eccc": 5, "pegelonline": 33, "ea": 20}  # gauge pages each country may list while it still has a next item; finishing them is what opens the queue
+TODO = {MET: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", "next: needs the Met Office hourly forecast (b_hourly)": "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)",
+        ENGLAND["b_acis"]: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
+        ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
+        HYDRO: "past years' daily levels and flows (Environment Agency Hydrology API)", NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
+        ENGLAND["b_drought"]: "drought status (Environment Agency)", ENGLAND["b_flood_outlook"]: "five-day flood risk (Flood Forecasting Centre)", ENGLAND["b_samples"]: "water quality samples (Environment Agency)",
+        ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
+
+
+def todo(feed):
+    """What a country's pages lack and an open source could fill: each COVER next item in reader words, once. The page's gaps line names them; they never stop a gauge (owner 2026-11-03)."""
+    col = ORDER.index(feed)
+    return list(dict.fromkeys(TODO[row[col]] for row in COVER.values() if row[col].startswith("next")))
 
 
 def cover_faults(blocks, pages, cover=None):
-    """The guarantee: every US block is answered for every country, and a country with work left adds no gauges. A shorter row in a test table covers the first countries of ORDER."""
+    """The guarantee: every US block is answered for every country, and every next item has the reader words the gaps line prints. A shorter row in a test table covers the first countries of ORDER."""
     cover = COVER if cover is None else cover
     out = ["no country answer for US block %s" % b for b in blocks if b not in cover]
     for b, row in cover.items():
         out += ["%s: an answer must be have, next: or none: with its reason" % b for v in row if v != "have" and not (v[:6] in ("none: ", "next: ") and len(v) > 12)]
-    for feed in ORDER:
-        left = [b for b, row in cover.items() if ORDER.index(feed) < len(row) and row[ORDER.index(feed)].startswith("next")]
-        n = sum(len(p.get("gauge_pages") or []) for p in pages if p.get("feed", "pegelonline") == feed)
-        if left and n > FROZEN[feed]:
-            out.append("%s lists %d gauges, more than %d, with %d blocks not wired: %s" % (feed, n, FROZEN[feed], len(left), ", ".join(left[:5])))
+        out += ["%s: a next item with no reader words in TODO, so the gaps line could not name it" % b for v in row if v.startswith("next: ") and v not in TODO]
     return out
 
 
@@ -281,12 +296,24 @@ def listing(pages):
     return sorted({p.get("feed", "pegelonline") for p in pages if p.get("gauge_pages")})
 
 
-def room(feed, pages):
-    """Gauges the release and the matcher may still add for a feed: none while a proof is missing, up to FROZEN while a block is not wired."""
-    if proof_faults([feed], proved(pages)):
+def live_thin():
+    """The gauges the live build held as thin (status.json world.thin), or None when the site does not answer: then no world gauge is added this run."""
+    import urllib.request
+    try:
+        s = json.load(urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com/status.json", headers={"User-Agent": "riverwaterlevels.com"}), timeout=30))
+        return (s.get("world") or {}).get("thin") or {}
+    except Exception as e:
+        print("live status.json unread, no world gauge added:", str(e)[:80])
+        return None
+
+
+def room(feed, pages, thin=None):
+    """Gauges the release and the matcher may still add for a feed: none while a proof is missing; none while every gauge the feed lists was held as thin
+    (status.json world.thin), so a country whose pages cannot reach the floor spends one daily slot, not 25 a day; none when that list could not be read (thin None)."""
+    if proof_faults([feed], proved(pages)) or thin is None:
         return 0
-    n = sum(len(p.get("gauge_pages") or []) for p in pages if p.get("feed", "pegelonline") == feed)
-    return max(0, FROZEN[feed] - n) if [b for b, row in COVER.items() if row[ORDER.index(feed)].startswith("next")] else 10 ** 6
+    have = [n for p in pages if p.get("feed", "pegelonline") == feed for n in p.get("gauge_pages") or []]
+    return 0 if have and all(n in thin for n in have) else 10 ** 6
 
 
 GATE = True
@@ -308,8 +335,68 @@ FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/s
          "ea": '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">Environment Agency flood warnings on GOV.UK</a>', "abroad": "local flood authority"}
 TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">ECCC data</a>, <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.',
          "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.',
-         "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
+         "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). This uses Environment Agency rainfall data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
+EA_LINK = '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">flood warnings and alerts in force in England on GOV.UK</a>'
+EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> Our check of Environment Agency warning areas against this gauge has not yet been seen working on a real warning, so it shows none here. See %s.</p>' % EA_LINK
+EA_UNPROVEN = (("<p>Alerts could not be loaded at the last fetch.</p>", "<p>Unknown. This page does not show Environment Agency flood warnings yet: our check of warning areas against this gauge has not been seen working on a real warning. See %s. This is not a statement that conditions are safe.</p>" % EA_LINK),
+               ("Source: Environment Agency alerts for the gauge location, fetched time not stated.", "Source: none read onto this page; the Environment Agency publishes warnings on GOV.UK Check for flooding."),
+               ("No official alert feed is connected for this gauge. Check local authorities.", "Not shown here yet. See %s." % EA_LINK))
+
+
+def ea_rain_tile(g, now, zone):
+    """Rain, last 24 h, from the nearest Environment Agency rain gauge (collect.py ea_rain): its own total in mm, its station, distance and end time.
+    Four states: a total (0.0 mm is a measured total), Unknown and old past 6 h, Unknown with the reason when no station near reported every period, Unknown when never collected."""
+    z = zoneinfo.ZoneInfo(zone)
+    if not g or not g.get("station"):
+        return ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", "<small>%s.</small>" % esc((g or {}).get("why") or "No Environment Agency rain gauge read for this gauge yet"))
+    where = "Environment Agency rain gauge %s, %.1f km away" % (esc(g["station"]), g["km"])
+    if g.get("mm") is None:
+        return ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", "<small>%s: %s.</small>" % (where, esc(g.get("why") or "no complete 24 h total")))
+    age = hours_old(g["to"], now)
+    to = esc(core.tzl(parse_t(g["to"]), z))
+    if age is None or age > core.stale_after("rain_totals"):
+        return ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", '<small>Last total %s ago.</small><small class="old">Old value: %.1f mm, %s, to %s</small>' % (esc(core.age_words(parse_t(g["to"]), now)), g["mm"], where, to))
+    return ui.tile("rain", "drop", "Rain, last 24 h", "%.1f <small>mm</small>" % g["mm"], '<small data-h="%.1f">%s, 24 h to %s</small>' % (age, where, to))
+
+
 GAPS = {}  # gauge -> blocks its data allows and its page lacks, live or held; build.py writes it to status.json and the watchdog alarms
+THIN = {}  # gauge -> why its new page is under the floor (thin); build.py writes it to status.json world.thin, the watchdog names the count, release.py reads it back
+
+
+META = ("official_links", "about_gauge", "gauge_map", "offline")  # links and page facts, not a reading a reader can use
+HISTORY = ("world_history", "official_marks", "record_comparison", "flow_duration", "sustained_flow", "month_chart", "year_chart", "multiyear", "daily_readings", "annual_peaks")
+WEATHER = ("hourly_forecast", "weather_forecast", "air_obs", "rain_totals", "forecast_rain_totals", "hourly_heatmap")
+FLOOR = 8  # measured on every live page 2026-11-03 (PLAN.md): blocks with data US median 35 (min 24), Canada min 11, Germany min 9; main-text words Canada min 1,413, Germany min 1,377.
+# The US median is out of reach abroad: about 21 of its 35 blocks are US federal products COVER answers none for. So the floor sits one block under the thinnest live world page.
+# Words are measured, not gated: most are template text, so a word count would pass padding and fail a short true page.
+
+
+def thin_stats(h):
+    """The thinness floor's measure of one built page: reader blocks with real data (valid or valid-empty; Unknown and could-not-load do not count), main-text words,
+    and the must-haves a world page needs: a reading with time and unit, the alerts block, history or a normal label, and weather or rain with a value."""
+    secs = re.findall(r'<section[^>]*\bclass="card blk[^"]*"[^>]*\bid="([^"]+)"[^>]*>(.*?)</section>', h, re.S)
+    text = lambda x: re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", x)))
+    real = [i for i, body in secs if i not in META and not re.search(r"\bUnknown\b|could not be loaded", text(body)[:400])]
+    tiles = dict(re.findall(r'<div class="tile [^"]*"><i class="ic">.*?</i><span>([^<]+)</span><b>(.*?)</b>', h, re.S))
+    val = lambda k: k in tiles and bool(re.search(r"\d", re.sub(r"<[^>]+>", "", tiles[k]))) and "Unknown" not in tiles[k]
+    main = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
+    words = len(text(re.sub(r"(?is)<(nav|footer|header)\b.*?</\1>", " ", main)).split())
+    faults = []
+    if not (re.search(r'class="hero[^"]*"[^>]*data-t="[^"]+"', h) and any(val(k) for k in ("Water level", "Gage height", "Flow", "Lake level"))):
+        faults.append("no reading with its time and unit")
+    if 'id="alerts"' not in h:
+        faults.append("no alerts block")
+    if not (any(i in real for i in HISTORY) or (tiles.get("Is this normal?") and "Unknown" not in tiles["Is this normal?"])):
+        faults.append("no history and no normal label")
+    if not (any(i in real for i in WEATHER) or val("Rain, last 24 h") or val("Air temperature")):
+        faults.append("no weather and no rain with a value")
+    return {"blocks": len(real), "words": words, "faults": faults}
+
+
+def thin(h):
+    """Why a world page is too thin to ship, or [] (the floor above)."""
+    s = thin_stats(h)
+    return s["faults"] + (["%d reader blocks with data, under the floor of %d" % (s["blocks"], FLOOR)] if s["blocks"] < FLOOR else [])
 
 
 def choose(pages, now):
@@ -333,6 +420,11 @@ def choose(pages, now):
             live = os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist", world_gauge_url(p, r.get("title") or r["name"]).strip("/"), "index.html"))  # holds stop new gauges; an outage never pulls a page
             if gone and GATE and not live:
                 print("world gauge held, page lacks what its data allows: %s %s" % (r["name"], ", ".join(gone)))
+                continue
+            short = [] if live else thin(got[1])  # the per-page floor that replaced the country cap (owner 2026-11-03): a thin page is held, never shipped and never noindexed
+            if short:
+                THIN[r["name"]] = short
+                print("world gauge held, thin page: %s %s" % (r["name"], "; ".join(short)))
                 continue
             s = shingles(got[1])
             if not live and any(alike(s, o) for o in kept):
@@ -422,11 +514,15 @@ def page(p, r, now, rows=(), keep=()):
     rec["feed"]["label_note"] = odd + rec["feed"]["label_note"]
     rec["feed"]["lake"] = p.get("lake")
     rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
-    if p.get("feed") == "ea":  # England publishes rain gauges and some forecasts we do not show yet: never "not published"
+    rec["feed"]["later"] = todo(p.get("feed", "pegelonline"))  # every COVER next item, named for the reader: a to-do, never a cap
+    if p.get("feed") == "ea":  # England publishes some forecasts we do not show yet: never "not published"
         wt = (r.get("ea") or {}).get("wt")
         rec["feed"]["gaps"] = [w for w, have in (("water temperature", wt), ("flow", (r.get("ea") or {}).get("flow"))) if not have]
-        rec["feed"]["later"] = ["rain gauge totals (Environment Agency, not yet connected)", "weather (Met Office data needs a key we do not hold)", "river forecast (GOV.UK Check for flooding shows one at some stations)"] + (
-            ["water temperature (published for this gauge, not yet connected)"] if wt else []) + (["flow (the agency's last 7 days include values below zero, so none is shown)"] if r.get("flow_bad") else [])
+        rec["feed"]["later"] += ["flow (the agency's last 7 days include values below zero, so none is shown)"] if r.get("flow_bad") else []
+        if not alerts_proven(p):  # owner 2026-11-03: until a live warning proves the point test, Unknown with the GOV.UK link; an empty list must never read as no warnings
+            rec["nws"] = dict(rec["nws"], alerts=None, fetched_at=None)
+            rec["feed"]["flood_line"], rec["feed"]["swap"] = EA_UNPROVEN_LINE, EA_UNPROVEN + FEEDS["ea"]["swap"]
+            rec["feed"]["wx_credit"] = "Rain: Environment Agency. No weather is shown: Met Office data needs a key we do not hold."
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows else []
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
@@ -434,5 +530,7 @@ def page(p, r, now, rows=(), keep=()):
     top = fc_top(rec["feed"], now)
     if top:
         html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast, %s. Federal Institute of Hydrology</small>" % esc(top[0])), html, count=1, flags=re.S)
-    html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. %s" % (to_ft(r["cm"], rec["feed"]["unit"]), "On this gauge's own scale, often a height above sea level, not water depth" if rec["feed"]["src"] == "eccc" else "Height above the gauge's zero point, not water depth"), 1)
+    if p.get("feed") == "ea":
+        html = html.replace('<div class="tile sun', ea_rain_tile((r.get("wx") or {}).get("ea_rain"), now, rec["feed"]["zone"]) + '<div class="tile sun', 1)
+    html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. %s" %(to_ft(r["cm"], rec["feed"]["unit"]), "On this gauge's own scale, often a height above sea level, not water depth" if rec["feed"]["src"] == "eccc" else "Height above the gauge's zero point, not water depth"), 1)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))

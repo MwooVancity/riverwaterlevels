@@ -152,6 +152,35 @@ def ea_proof(alerts, stations, within_m):
     return None
 
 
+def ea_rain_stations(raw):
+    """{station: [lat, lon, name, [[measure, period s], ...]]} from the EA rainfall station list: only measures that are mm totals per 15 min or per hour (notation '-t-')."""
+    out = {}
+    for s in json.loads(raw)["items"]:
+        ms = s.get("measures") or []
+        ms = [[m["@id"].rsplit("/", 1)[-1], m["period"]] for m in (ms if isinstance(ms, list) else [ms]) if isinstance(m, dict) and m.get("parameter") == "rainfall" and m.get("unitName") == "mm"
+              and m.get("period") in (900, 3600) and "-t-" in m.get("@id", "")]
+        if ms and isinstance(s.get("lat"), (int, float)) and isinstance(s.get("long"), (int, float)):
+            out[s["notation"]] = [s["lat"], s["long"], s.get("label") if isinstance(s.get("label"), str) else "", ms]
+    if len(out) < 500:
+        raise ValueError("rain station list cut short (%d)" % len(out))
+    return out
+
+
+def rain_total(series, period):
+    """(mm, end time) of the 24 h ending at a measure's newest reading, or (None, reason). Every period must be there with a value: a missing one is Unknown, never 0."""
+    if not series:
+        return None, "no reading in the last day"
+    last = max(series)
+    end = datetime.datetime.fromisoformat(last.replace("Z", "+00:00"))
+    win = [v for t, v in series.items() if 0 <= (end - datetime.datetime.fromisoformat(t.replace("Z", "+00:00"))).total_seconds() < 86400]
+    need = 86400 // period
+    if len(win) < need:
+        return None, "%d of the %d readings of the 24 h to its last one" % (len(win), need)
+    if any(not isinstance(v, (int, float)) or v < 0 for v in win):
+        return None, "a reading of the last 24 h has no value"
+    return round(sum(win), 1), last
+
+
 def tidal(series):
     """True when the level rises and falls with the tide: its 15-minute steps repeat every 12.4 h and reverse at half that. A river stage does neither.
     Measured 2026-11-03 on 8 days: Gainsborough and Carlton on Trent (tidal) 0.77 and 0.81 at 12.4 h; Colwick, Kingston, Ross-on-Wye at most 0.5, with a larger 6 h value. None: too few readings to say."""

@@ -35,8 +35,9 @@ wr = os.path.join(ROOT, "data", "world-ready.csv")
 ready = [w for w in csv.DictReader(open(wr, encoding="utf-8")) if w["station"] not in listed] if os.path.exists(wr) else []
 from lib import world as _world
 room_, fits = {}, []
-for w in ready:  # a feed missing a proof adds nothing; one with blocks not wired stops at FROZEN, so check.py never meets a country past its limit
-    room_.setdefault(w["feed"], _world.room(w["feed"], wpages))
+thin_ = _world.live_thin()
+for w in ready:  # a feed missing a proof adds nothing; a feed whose every listed gauge was held thin adds nothing (lib/world.py room), so thin pages never eat the 25 a day
+    room_.setdefault(w["feed"], _world.room(w["feed"], wpages, thin_))
     if room_[w["feed"]] > 0:
         room_[w["feed"]] -= 1
         fits.append(w)

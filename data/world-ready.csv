@@ -1,13 +1,39 @@
 tier,keyword,feed,station,title,page
 50,niagara river water level,eccc,02HA013,Niagara River at Fort Erie,canada
+50,cedar river water level,eccc,05QE008,Cedar River below Wabaskang Lake,canada
 50,cheakamus river water level,eccc,08GA043,Cheakamus River near Brackendale,canada
+50,current river water level,eccc,02AB021,Current River at Stepstone,canada
+50,eagle river flow,eccc,09FB002,Eagle River at Dempster Highway Bridge,canada
 50,ganaraska river water level,eccc,02HD012,Ganaraska River above Dale,canada
+50,grand river water level,eccc,02GB001,Grand River at Brantford,canada
 50,kicking horse river water level,eccc,08NA006,Kicking Horse River at Golden,canada
 50,kitimat river water level,eccc,08FF001,Kitimat River below Hirsch Creek,canada
+50,meadow river water level,eccc,06AD010,Meadow River below Meadow Lake,canada
 50,nechako river water level,eccc,08JC002,Nechako River at Isle Pierre,canada
 50,restigouche river water level,eccc,01BJ007,Restigouche River above Rafting Ground Brook,canada
 50,saugeen river water level,eccc,02FC001,Saugeen River near Port Elgin,canada
 50,shuswap river water level,eccc,08LC002,Shuswap River near Enderby,canada
 50,skeena river water level,eccc,08EF001,Skeena River at Usk,canada
+50,snake river water level,eccc,10MB003,Snake River near The Mouth,canada
 50,stave river water level,eccc,08MH147,Stave River above Stave Lake,canada
+50,vermilion river flow,eccc,05EE007,Vermilion River near Marwayne,canada
 50,yakoun river water level,eccc,08OA002,Yakoun River near Port Clements,canada
+5000,river trent level,ea,4009,River Trent at Colwick,england
+500,river ryton level,ea,4091,River Ryton at Blyth,england
+500,river teme level,ea,2029,River Teme at Knightsford Bridge,england
+500,river thames level,ea,0569TH,River Thames at Hannington Bridge,england
+500,river ancholme level,ea,E2790,River Ancholme at Brigg,england
+500,river swale level,ea,L2312,River Swale at Park Bridge,england
+500,river witham level,ea,E1191,River Witham at Kirkstead Bridge,england
+50,river severn level,ea,2195,River Severn at Sharpness,england
+50,river isle level,ea,52153,River Isle at Midelney,england
+50,river amber level,ea,4048,River Amber at Wingfield Park,england
+50,river chelmer level,ea,E22843,River Chelmer at Churchend,england
+50,river corve level,ea,2169,River Corve at Ludlow Corve,england
+50,river eau level,ea,4064,River Eau at Scotter,england
+50,river ecclesbourne level,ea,4055,River Ecclesbourne at Duffield,england
+50,river idle level,ea,4015,River Idle at Mattersey,england
+50,river nene level,ea,E1946,River Nene at Kislingbury,england
+50,river pont level,ea,022013,River Pont at Callerton Lane,england
+50,rib river water level,ea,4980TH,River Rib at Wadesmill,england
+50,river uck level,ea,E8190,River Uck at Buxted,england

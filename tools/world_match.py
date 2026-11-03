@@ -1,9 +1,10 @@
 """Match world queue rows to a real agency station, strictly, so the release can publish them. Run: python -I tools/world_match.py
-Writes data/world-ready.csv (tier, keyword, feed, station, title, page). Canada: one bulk ECCC station list call. England: ea_pick below, and only while lib/world.py room("ea") allows.
+Writes data/world-ready.csv (tier, keyword, feed, station, title, page). Canada: one bulk ECCC station list call. England: ea_pick below, and only while lib/world.py room("ea") allows (a proof is on file and not every listed English gauge was held thin).
 Rules (a wrong gauge is the worst defect, so anything unsure is skipped and printed with its reason):
 - the station name must be "<RIVER> AT|NEAR|ABOVE|BELOW ..." (canals, drains and diversions never match);
 - a bracketed qualifier must be a province, or a word found in the station name; with no qualifier the stations must sit in one province;
-- a keyword a US gauge also targets is skipped (the searcher may mean the US river);
+- a keyword a US gauge also targets is skipped, unless the row itself is Canadian: its bracket names a province or Canada, or Canada is its only country
+  (owner 2026-11-03); the page then names the Canadian station and its province, which is true whoever searched;
 - of what is left, the largest drainage area: the main stem, one gauge per river.
 ponytail: largest drainage can pick a remote mouth gauge over a city one (Bow River near the mouth, not Calgary); add a per-river pick list if readers ask."""
 import csv, datetime, json, os, re, sys, urllib.parse, urllib.request
@@ -19,16 +20,24 @@ def pick(river, stations):
     m = re.match(r"^(.*?)\s*(?:\((.*)\))?$", river.strip())
     base, qual = m.group(1).upper().replace("ST. ", "ST. "), (m.group(2) or "").lower()
     hits = [s for s in stations if re.match(r"^%s (AT|NEAR|ABOVE|BELOW) " % re.escape(base), s["STATION_NAME"])]
-    if qual:
+    if qual and qual != "canada":
         if qual in PROV:
             hits = [s for s in hits if s["PROV_TERR_STATE_LOC"] == PROV[qual]]
         else:
             hits = [s for s in hits if qual.upper() in s["STATION_NAME"]]
-    elif len({s["PROV_TERR_STATE_LOC"] for s in hits}) > 1:
-        return None, "same name in %d provinces" % len({s["PROV_TERR_STATE_LOC"] for s in hits})
+    hits = [s for s in hits if s["PROV_TERR_STATE_LOC"] in PROV.values()]  # the station must sit in a province or territory (the list also carries border stations)
+    if not qual or qual == "canada":
+        if len({s["PROV_TERR_STATE_LOC"] for s in hits}) > 1:
+            return None, "same name in %d provinces" % len({s["PROV_TERR_STATE_LOC"] for s in hits})
     if not hits:
         return None, "no real-time station named for it"
     return max(hits, key=lambda s: s.get("DRAINAGE_AREA_GROSS") or 0), None
+
+
+def canadian(r):
+    """The queue row is about a Canadian river by its own words: a bracket that names a province, territory or Canada, or Canada as its only country."""
+    q = re.search(r"\(([^()]*)\)\s*$", r["river"])
+    return (q.group(1).strip().lower() in PROV or q.group(1).strip().lower() == "canada") if q else r["country"] == "CA"
 
 
 def title(name):
@@ -93,13 +102,13 @@ def ea_pick(river, stations, flows, test):
     return None, "no station passed: " + "; ".join(why)
 
 
-def england(rows, pages, seen, stations_of=None, flows=None, test=ea_test, rivers=None):
-    """Ready rows for England from queue rows whose country includes GB, or none at all while the feed lacks a proof or has used its FROZEN room. Prints every skip."""
+def england(rows, pages, seen, stations_of=None, flows=None, test=ea_test, rivers=None, thin="live"):
+    """Ready rows for England from queue rows whose country includes GB, or none at all while the feed lacks a proof, every listed English gauge was held thin, or the live status is unread. Prints every skip."""
     sys.path.insert(0, ROOT)
     from lib import world
-    room = world.room("ea", pages)
+    room = world.room("ea", pages, world.live_thin() if thin == "live" else thin)
     if not room:
-        print("England: none added, %s" % ("; ".join(world.proof_faults(["ea"], world.proved(pages))) or "FROZEN room used while COVER has next items"))
+        print("England: none added, %s" % ("; ".join(world.proof_faults(["ea"], world.proved(pages))) or "every listed English gauge is held as a thin page, or the live status is unread"))
         return [], []
     out, skip = [], []
     try:
@@ -148,7 +157,7 @@ def main(stations=None, seen=None):
             gb.append(r)
         if r["ready"] == "yes" or "CA" not in r["country"].split("|") or r["tier"] == "0":
             continue
-        if r["shared"] or "US" in r["country"].split("|"):
+        if (r["shared"] or "US" in r["country"].split("|")) and not canadian(r):
             skip.append((r["keyword"], "a US gauge shares this keyword"))
             continue
         s, why = pick(r["river"], stations)
@@ -186,6 +195,10 @@ if __name__ == "__main__":
         assert pick("James River (Alberta)", st)[0]["STATION_NUMBER"] == "6", "a qualified river missed"
         assert pick("James River (Manitoba)", st)[0] is None, "a station of another river matched by a word in its name"
         assert pick("Salmon River (Langley)", st)[0] is None, "a river with no station matched"
+        assert pick("Red River (Canada)", st)[0]["STATION_NUMBER"] == "7" and pick("Red River", st + [{"STATION_NUMBER": "8", "STATION_NAME": "RED RIVER AT EMERSON", "PROV_TERR_STATE_LOC": "ND", "DRAINAGE_AREA_GROSS": 99}])[0]["STATION_NUMBER"] == "7", "a Canada bracket missed, or a station outside the provinces won"
+        row_ = lambda river, country="CA": {"river": river, "country": country}
+        assert canadian(row_("James River (Alberta)", "CA|US")) and canadian(row_("Ottawa River")) and canadian(row_("Salt River (Canada)", "AU|CA")), "a clearly Canadian row was not seen as Canadian"
+        assert not canadian(row_("White River (Jamaica)", "CA|JM")) and not canadian(row_("Bow River", "AU|CA")) and not canadian(row_("Salmon River (Langley)")), "a row that is not clearly Canadian passed"
         sys.path.insert(0, ROOT)
         from lib import world
         stg = {"qualifier": "Stage", "unitName": "mASD", "parameter": "level"}
@@ -203,13 +216,15 @@ if __name__ == "__main__":
         row = {"keyword": "river x level", "river": "River X", "tier": "500", "shared": "", "country": "GB"}
         world.recorded = lambda pages: {}  # the fixture never reads a proof this laptop or the cloud recorded
         if world.proof_faults(["ea"], world.PROVED):  # England today: no proof of a live warning, so nothing may be added
-            assert england([row], [], set(), stations_of=never, flows={}, rivers=set()) == ([], []), "a feed missing a proof added gauges"
+            assert england([row], [], set(), stations_of=never, flows={}, rivers=set(), thin={}) == ([], []), "a feed missing a proof added gauges"
         real = world.PROVED
         try:
             world.PROVED = dict(real, ea={k: "seen on live data, fixture" for k in world.PROOFS})
-            got = england([row], [], set(), stations_of=lambda r: est, flows=flows, test=lambda sid: (True, None), rivers=set())[0]
+            got = england([row], [], set(), stations_of=lambda r: est, flows=flows, test=lambda sid: (True, None), rivers=set(), thin={})[0]
             assert [g["station"] for g in got] == ["B"], "a proven feed added nothing"
-            assert england([row], [{"feed": "ea", "gauge_pages": list(range(world.FROZEN["ea"]))}], set(), stations_of=never, flows={}, rivers=set()) == ([], []), "a feed past FROZEN added gauges"
+            assert england([row], [{"feed": "ea", "gauge_pages": ["4009"]}], set(), stations_of=never, flows={}, rivers=set(), thin={"4009": ["5 reader blocks"]}) == ([], []), "a feed whose every page was held thin added gauges"
+            assert england([row], [], set(), stations_of=never, flows={}, rivers=set(), thin=None) == ([], []), "gauges were added with the live status unread"
+            assert len(england([row], [{"feed": "ea", "gauge_pages": list(range(25))}], set(), stations_of=lambda r: est, flows=flows, test=lambda sid: (True, None), rivers=set(), thin={})[0]) == 1, "a country cap is back: 25 listed gauges stopped the next"
         finally:
             world.PROVED = real
         print("selftest OK")

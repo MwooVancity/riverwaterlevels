@@ -1601,6 +1601,7 @@ def fetch_eccc(sid, prev):
 
 
 EA = "https://environment.data.gov.uk/flood-monitoring/"
+EA_RAIN_KM = 15  # ponytail: 1,044 EA rain stations across England (live 2026-11-03) sit about 11 km apart; past 15 km a gauge says little about rain on this reach. Wider for hill rivers if readers ask
 EA_NEAR_M = 150  # ponytail: a gauge sits in the channel and warning areas cover the banks; areas named for the gauge's own place lay 9 to 88 m off (Colwick, Kingston, 2026-11-03). A wider channel needs more.
 
 
@@ -1694,11 +1695,77 @@ def ea_alert_list():
 
 
 def wx_england(r, w, ctx):
-    """Flood warnings by point test against each area in force. No weather: the Met Office needs a key, so those blocks stay off and the gaps line says why."""
+    """Flood warnings by point test against each area in force, and rain from the nearest EA rain gauge. No weather: the Met Office needs a key, so those blocks stay off and the gaps line says why."""
     al = once(ctx, "ea-alerts", ea_alert_list)
     if al is not None:
         w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al, EA_NEAR_M), now_iso()
     w["no_weather"] = "Met Office data needs a key we do not hold"
+    ea_rain(r, w, ctx)
+
+
+def ea_rain_store():
+    """Every EA rainfall reading of the last 26 h, kept in cache/_ea-rain.json: one bulk call a run (the newest 10,000 readings of all rain gauges, about 2.7 h, 3.5 MB,
+    3 to 45 s measured 2026-11-03), never one call per station (the API reference asks for bulk calls). Runs up to 2.7 h apart leave no hole; a longer gap leaves one,
+    and ea_rain fills it for the stations pages use, RAIN_FILL a run. The file stays near 3 MB whatever the page count."""
+    p = os.path.join(CACHE, "_ea-rain.json")
+    try:
+        old = json.load(open(p, encoding="utf-8")).get("r") or {}
+    except (OSError, ValueError, AttributeError):
+        old = {}
+    got = http_json(EA + "data/readings?parameter=rainfall&_sorted&_limit=10000", {}, 120)["items"]
+    if len(got) < 5000:
+        raise RuntimeError("rain readings cut short (%d)" % len(got))
+    cut = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=26)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    keep = {m: {t: v for t, v in s.items() if t >= cut} for m, s in old.items()}
+    for i in got:
+        if isinstance(i.get("dateTime"), str) and i["dateTime"] >= cut:
+            keep.setdefault(i["measure"].rsplit("/", 1)[-1], {})[i["dateTime"]] = i.get("value") if isinstance(i.get("value"), (int, float)) else None
+    keep = {m: s for m, s in keep.items() if s}
+    ea_rain_save(keep)
+    return keep
+
+
+def ea_rain_save(keep):
+    p = os.path.join(CACHE, "_ea-rain.json")
+    json.dump({"at": now_iso(), "r": keep}, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+    os.replace(p + ".tmp", p)
+
+
+RAIN_FILL = [20]  # ponytail: per-station calls a run to fill a hole (first run, a missed run) for a station a page uses; at about 700 stations for 2,421 English gauges a full refill takes 35 h
+
+
+def ea_rain(r, w, ctx):
+    """w["ea_rain"]: the 24 h total of the nearest EA rain gauge within EA_RAIN_KM that has every reading, with its station, distance and end time;
+    else the nearest one's reason. A failed list or store keeps the last answer, which ages into Unknown on the page."""
+    store = once(ctx, "ea-rain", ea_rain_store)
+    st = listing("ea-rain-stations", EA + "id/stations?parameter=rainfall&_limit=10000", wx.ea_rain_stations) if store is not None else None
+    if not st:
+        return
+    near = sorted((wx.km(r["lat"], r["lon"], s[0], s[1]), k) for k, s in st.items() if abs(s[0] - r["lat"]) < 0.3)
+    near = [(d, k) for d, k in near if d <= EA_RAIN_KM]
+    if not near:
+        w["ea_rain"] = {"why": "No Environment Agency rain gauge within %d km" % EA_RAIN_KM}
+        return
+    first = None
+    for d, k in near:
+        name = k if st[k][2] in ("", "Rainfall station") else "%s (%s)" % (st[k][2], k)
+        for m, per in st[k][3]:
+            mm, end = wx.rain_total(store.get(m) or {}, per)
+            if mm is None and first is None and RAIN_FILL[0] > 0:  # the nearest station only: a hole in our store, not the agency's, is filled from its own readings
+                RAIN_FILL[0] -= 1
+                try:
+                    since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=26)).strftime("%Y-%m-%dT%H:%M:%SZ")
+                    for i in http_json(EA + "id/measures/%s/readings?_sorted&_limit=200&since=%s" % (urllib.parse.quote(m), since), {}, 30)["items"]:
+                        store.setdefault(m, {})[i["dateTime"]] = i.get("value") if isinstance(i.get("value"), (int, float)) else None
+                    ctx["ea-rain-filled"] = True
+                    mm, end = wx.rain_total(store.get(m) or {}, per)
+                except Exception as e:
+                    note("world-wx", "failed", e)
+            if mm is not None:
+                w["ea_rain"] = {"station": name, "km": round(d, 1), "mm": mm, "to": end}
+                return
+            first = first or {"station": name, "km": round(d, 1), "mm": None, "why": end}
+    w["ea_rain"] = first
 
 
 def ea_probe(ctx, areas=20):
@@ -2048,6 +2115,8 @@ def fetch_world():
             archive(page, rows)
             json.dump({"fetched_at": now_iso(), "rows": rows}, open(path + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
             os.replace(path + ".tmp", path)
+    if ctx.get("ea-rain-filled") and ctx.get("ea-rain"):
+        ea_rain_save(ctx["ea-rain"])
     if any(p.get("feed") == "ea" for p in pages):
         try:
             ea_probe(ctx)
