@@ -192,6 +192,7 @@ def proved(pages):
 
 
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
+NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired, so no new gauges for that country (check.py)
     "b_offline": ("have", "have"),
@@ -255,7 +256,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_field_meas": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_rating": "none: the flood-monitoring API reference lists no rating curves, read 2026-11-03",
     "b_samples": "next: Environment Agency Water Quality Archive sampling points, open; not read", "b_attains": "next: Environment Agency Catchment Data Explorer water body status, open; not read",
     "b_land": "next: UKCEH Land Cover Map; licence not read", "b_noforecast": COVER["b_noforecast"][0],
-    "b_streamcat": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY}
+    "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
 FROZEN = {"eccc": 5, "pegelonline": 33, "ea": 20}  # gauge pages each country may list while it still has a next item; finishing them is what opens the queue
