@@ -13,6 +13,8 @@ def run():
     rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])
     assert {r["time"]: r["value"] for r in rows}["t1"] == "11000" and (add, fixed) == (1, 1), "a USGS correction to a reading we already had was dropped"
     assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"
+    late = dict(new, time="t3", value="12400")  # Animas 2026-11-03: latest-continuous kept 12,400 at a time the continuous series no longer had
+    assert [r["value"] for r in collect.add_latest([new], [late, dict(new, value="99")])] == ["11000", "12400"], "the page lacks the latest reading the edge shows, or a latest value overrode a continuous correction"
     src = open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read()
     assert "&last_modified=" in src[src.index("def fast_usgs"):src.index("SLOW_KEYS")], "the hourly fetch cannot see a correction to an older reading"
     assert "g.f[0] !== m[3]" in open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read(), "the edge cannot correct a reading of the same time"
@@ -47,6 +49,18 @@ def run():
     assert not [b for b in check_.check_html(pg("Walla Walla River | Ro Ro Anlage"), "x") if "doubled" in b], "a real place name with a doubled word failed the page"
     assert [b for b in check_.check_html(pg("Wis Wis campground"), "x") if "doubled" in b], "a doubled word typo passed"
     assert check_.kind_of("danube/pfelling/index.html") in check_.CARRYABLE and check_.kind_of("river/x/y/index.html") in check_.CARRYABLE, "a failing world or gauge page stops the whole deploy instead of keeping its live copy"
+    with tempfile.TemporaryDirectory() as t:
+        nd, od = os.path.join(t, "next"), os.path.join(t, "dist")
+        for p_, b_ in ((nd, {"/rhine/kaub/": {"at": "new"}, "/rhine/maxau/": {"at": "new"}}), (od, {"/rhine/kaub/": {"at": "old"}, "/rhine/maxau/": {"at": "old"}})):
+            os.makedirs(p_)
+            json.dump([], open(os.path.join(p_, "live-sites.json"), "w"))
+            json.dump(b_, open(os.path.join(p_, "_built.json"), "w"))
+        keep_root, check_.ROOT = check_.ROOT, t
+        try:
+            check_.keep_old_times(nd, ["rhine/kaub/index.html"])
+        finally:
+            check_.ROOT = keep_root
+        assert json.load(open(os.path.join(nd, "_built.json"))) == {"/rhine/kaub/": {"at": "old"}, "/rhine/maxau/": {"at": "new"}}, "a carried world page read as just built, so the 6 h alarm never sees it"
     assert collect.nwm_due({}),"a gauge with no model forecast must be due"
     collect.NWM_EMPTY[0] = 3
     assert not collect.nwm_due({}), "an empty model service kept being called every gauge, stretching the run"

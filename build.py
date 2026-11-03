@@ -165,7 +165,6 @@ def main():
     report["block_errors"] = render.BLOCK_ERRORS[:50]
     if render.BLOCK_ERRORS:
         print("BLOCKS HIDDEN BY THE GUARD (%d): %s" % (len(render.BLOCK_ERRORS), "; ".join(render.BLOCK_ERRORS[:5])))
-    json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
     if live_copies:
         json.dump(live_copies, open(os.path.join(nxt, "_carried.json"), "w"))
     print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
@@ -207,6 +206,7 @@ def main():
                     continue
                 gp = world.page(page, r, wnow, d["rows"], keep)
                 emit(gp[0], gp[1])
+                built_map[gp[0]] = {"at": iso(now)}  # keyed by URL: check.py keep_old_times keeps a carried world page's old time, so the watchdog's 6 h alarm sees it
                 if r.get("uuid"):
                     world_ids.append(r["uuid"])
                 world_rows.append([(r.get("title") or "%s at %s" % (page["river"], r["name"].replace(" UP", "").title())), gp[0], round(r["lat"], 4), round(r["lon"], 4), {"eccc": "Canada", "ea": "England UK"}.get(page.get("feed"), "Germany Europe")])
@@ -221,6 +221,7 @@ def main():
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
                    "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "world": {"listed": wlisted, "shown": sum(len(v) for v in wkeep.values()), "gaps": {k: v[:6] for k, v in list(world.GAPS.items())[:40]}, "thin": {k: v[:3] for k, v in list(world.THIN.items())[:400]}}, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
+    json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
     if os.path.exists(hp):
         shutil.copy2(hp, os.path.join(nxt, "_health.json"))

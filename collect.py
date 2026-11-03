@@ -1383,13 +1383,19 @@ def merge_rows(old, new):
     return list(rows.values()), add, fixed
 
 
-def fast_usgs(sites, h):
+def add_latest(rows, latest):
+    """The reading the edge shows (latest-continuous) joins the page's series when the series lacks that time; a continuous row of the same time wins."""
+    have = {(r["parameter_code"], r["time"]) for r in rows}
+    return rows + [r for r in latest if (r["parameter_code"], r["time"]) not in have]
+
+
+def fast_usgs(sites, h, q="continuous/items?time=P8D&last_modified=PT6H&parameter_code=" + CODES):
     """Every reading USGS wrote or corrected in the last 6 hours for every gauge, in bulk (a correction rewrites days of old readings: Animas 2026-11-02, 352 rows): 300 ids per call (URL stays ~5 KB) with next-link paging, so
     nothing is dropped past 10,000 rows. Rows in the same shape as fetch_usgs. One or two calls at today's size; it replaces the
     per-gauge fast_fill calls (2026-10-25 review: about one call per gauge per run, ~18,000/h at 9,099 gauges)."""
     out = {}
     for i in range(0, len(sites), 300):
-        url, pages = BASE + "continuous/items?monitoring_location_id=%s&parameter_code=%s&time=P8D&last_modified=PT6H&limit=10000&skipGeometry=true&f=json" % (",".join("USGS-" + s for s in sites[i:i + 300]), CODES), 0
+        url, pages = BASE + q + "&monitoring_location_id=%s&limit=10000&skipGeometry=true&f=json" % ",".join("USGS-" + s for s in sites[i:i + 300]), 0
         while url and pages < 20:
             try:
                 d = thr_json(url, h, 120, gap=1.0)
@@ -1429,6 +1435,7 @@ def fast(inv, sites):
         print("FAIL usgs bulk", str(e)[:100])
         note("usgs", "failed", e)
         new = {}
+    latest = fast_usgs(sites, h, "latest-continuous/items?parameter_code=00060,00065")  # what the Worker shows; 1 call per 300 gauges (47/h at 14,000)
     _tick("phase usgs bulk", _time.time() - t_phase)
     t_phase = _time.time()
     for s in sites:
@@ -1472,6 +1479,7 @@ def fast(inv, sites):
                 except Exception as e:
                     log.append("usgs_full FAILED (%s), kept previous" % str(e)[:60])
                     note("usgs_full", "failed", e)
+            rec["usgs"]["rows"] = add_latest(rec["usgs"]["rows"], [r for r in latest.get(s, []) if str(r["time"]) >= cutoff])  # the service returns decades-old values for dead sensors
             if daily_due(stamp.get("related_list")) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
                 stamp["related_list"] = now_iso()
             sp = os.path.join(LEGACY, "stats", s + ".json")

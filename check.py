@@ -941,6 +941,8 @@ def keep_old_times(d, rels):
             live[i] = old_live[x[0]]
             if x[0] in old_built:
                 built[x[0]] = old_built[x[0]]
+    for k in [k for k in built if k.startswith("/") and k.strip("/") in urls and k in old_built]:  # world pages are keyed by URL (build.py)
+        built[k] = old_built[k]
     json.dump(live, open(lp, "w"), separators=(",", ":"))
     json.dump(built, open(bp, "w"), separators=(",", ":"))
 
