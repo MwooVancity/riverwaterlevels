@@ -4,6 +4,7 @@ import glob, os, re
 
 MIN_PAGES = 20  # a share over fewer pages moves with one gauge
 DROP = 0.7  # under 70% of a block's best share ever
+CORE = 0.5  # only a block once on half the pages or more: blocks that show only when the river or weather calls for them swing every day (NWM guidance 18% to 8%, 2026-11-03)
 
 
 def scan(root, old=None):
@@ -24,7 +25,7 @@ def scan(root, old=None):
         if d["pages"] < MIN_PAGES:
             continue
         for b, was in (best.get(c) or {}).items():
-            if shares[c]["blocks"].get(b, 0) < DROP * was:
+            if was >= CORE and shares[c]["blocks"].get(b, 0) < DROP * was:
                 drops.append("%s %s on %.0f%% of pages, was %.0f%%" % (c, b, 100 * shares[c]["blocks"].get(b, 0), 100 * was))
         best[c] = {b: max(shares[c]["blocks"].get(b, 0), (best.get(c) or {}).get(b, 0)) for b in set(shares[c]["blocks"]) | set(best.get(c) or {})}
     return {"shares": shares, "best": best, "drops": drops[:12]}

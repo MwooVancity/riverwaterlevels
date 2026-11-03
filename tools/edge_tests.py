@@ -90,6 +90,7 @@ def run():
         got = coverage.scan(d, {"best": {"US": {"a": 0.9}}})
         assert got["shares"]["US"]["blocks"]["a"] == 0.25 and "US a" in got["drops"][0], "a block vanishing across pages went unseen"
         assert not coverage.scan(d, {"best": {"US": {"a": 0.25}}})["drops"], "a steady block alarmed"
+        assert not coverage.scan(d, {"best": {"US": {"a": 0.4}}})["drops"], "a block that comes and goes with the weather alarmed"
 
     far = dict(base, name="F", lat=60.0, then=1.0)
     near = dict(base, name="N", lat=50.3, then=1.0)
