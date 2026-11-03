@@ -94,6 +94,8 @@ def run():
     got = world.along({"flat": True, "feed": "eccc", "slug": "x"}, base, [base, far, near])
     assert [g[1] for g in got] == ["N"] and got[0][0] == "Nearby", "a far gauge read as nearby"
 
+    assert "flood warning note" in world.missing("<html>", {"wx": {"no_weather": True}, "marks": {}}), "a world page without the flood line passed"
+
     real = world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE
     p = {"slug": "x", "gauge_pages": ["01AB"], "river": "X"}
     try:

@@ -69,7 +69,7 @@ def to_rec(page, r):
     links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
     links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": w.get("rain") or {},
-            "feed": dict(f, emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -134,6 +134,7 @@ def localize(h, feed, river, place, hub, flat=False):
     h = h.replace('class="hero hero2"', 'class="hero hero2" data-n="%s"' % esc(feed["station"]), 1)
     h = re.sub(r'<script type="application/ld\+json">(?:(?!</script>).)*"BreadcrumbList".*?</script>', lambda m: render.crumb_ld([("Home", "/"), (river, hub), (place, None)]), h, flags=re.S)
     h = h.replace("Not endorsed by the agency.", TERMS[feed["src"]] + " Not endorsed by the agency.", 1)
+    h = h.replace('<section data-g="now"', '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p><section data-g="now"' % feed["flood"], 1)
     h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE.replace("@N@", feed["station"]).replace("@Z@", feed["zone"]).replace("@D@", "2" if feed["unit"] == "m" else "0"), h, flags=re.S)
     return h
 
@@ -217,6 +218,7 @@ def alike(a, b):
     return bool(a and b) and len(a & b) / len(a | b) > ALIKE
 
 
+FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/services/water-overview/quantity/floods/forecasting-centres.html">provincial flood forecasting centres</a>', "pegelonline": '<a href="https://www.hochwasserzentralen.de/">German state flood portal</a>', "abroad": "local flood authority"}
 TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">ECCC data</a>, <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.',
          "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.'}
 GAPS = {}  # gauge -> blocks its data allows and its page lacks, live or held; build.py writes it to status.json and the watchdog alarms
@@ -318,7 +320,7 @@ def owed(r):
 
 def missing(h, r):
     """What this page owes and does not show. Any entry holds a new gauge back; this is the rule that says a world page got everything its data allows."""
-    return [b for b in owed(r) if 'id="%s"' % b not in h]
+    return [b for b in owed(r) if 'id="%s"' % b not in h] + ([] if "data-flood" in h else ["flood warning note"])
 
 
 def page(p, r, now, rows=(), keep=()):

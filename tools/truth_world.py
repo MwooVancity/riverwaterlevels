@@ -40,12 +40,57 @@ def check(row):
         if live_al and "No active Environment Canada" in page:
             print(row[1], "FAULT page says no alerts, agency has", len(live_al))
             return 2 - bool(ok)
-        return int(not ok)
+        return int(not ok) + canada_blocks(row, page)
     name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
     cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
     ok = not shown or abs(int(shown.group(1)) - cur) <= 50
     print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")
-    return int(not ok)
+    return int(not ok) + wt_block(name, page, row)
+
+
+def block_text(page, bid):
+    m = re.search(r'id="%s".*?</section>' % bid, page, re.S)
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", m.group(0))) if m else ""
+
+
+def drought_gap(word, pixel):
+    """Classes between the page and AAFC's raster, on a scale where no drought is -1. The raster is a coarser copy, so one class apart at an edge is normal."""
+    d = re.search(r"\bD(\d)\b", word)
+    return abs((int(d.group(1)) if d else -1) - (int(pixel) if str(pixel).isdigit() else -1))
+
+
+def canada_blocks(row, page):
+    """Drought against AAFC's raster service, a path our polygon code never touches, once the month's map is out; the January normal against ECCC, which must rest on at least 15 years."""
+    bad = 0
+    word = block_text(page, "drought_monitor")
+    if word and time.gmtime().tm_mday >= 15:
+        q = urllib.parse.quote(json.dumps({"x": row[3], "y": row[2], "spatialReference": {"wkid": 4326}}))
+        v = json.loads(get("https://www.agr.gc.ca/imagery-images/rest/services/canadian_drought_monitor/ImageServer/identify?geometryType=esriGeometryPoint&returnGeometry=false&returnCatalogItems=false&f=json&geometry=" + q))["value"]
+        if drought_gap(word, v) >= 2:
+            print(row[1], "FAULT drought on the page differs from AAFC raster value", v)
+            bad += 1
+    txt = block_text(page, "climate_normals")
+    m = re.search(r"station (.+?), \d+ km", txt)
+    j = re.search(r"January (-?[\d.]+) ", txt)
+    if m and j:
+        rows = json.loads(get("https://api.weather.gc.ca/collections/climate-normals/items?f=json&limit=500&CURRENT_FLAG=Y&NORMAL_ID=1&MONTH=1&skipGeometry=true&properties=STATION_NAME,VALUE,YEAR_COUNT_NORMAL_PERIOD&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .7, row[2] - .5, row[3] + .7, row[2] + .5)))["features"]
+        hit = [f["properties"] for f in rows if f["properties"]["STATION_NAME"].title() == m.group(1)]
+        if hit and (abs(hit[0]["VALUE"] - float(j.group(1))) > 0.06 or (hit[0]["YEAR_COUNT_NORMAL_PERIOD"] or 0) < 15):
+            print(row[1], "FAULT normal differs from ECCC or rests on too few years:", hit[0])
+            bad += 1
+    return bad
+
+
+def wt_block(name, page, row):
+    """The 30-day water temperature range against PEGELONLINE; the page may lag a day, so 1.5 degrees is allowed."""
+    m = re.search(r"Lowest (-?[\d.]+) °C Highest (-?[\d.]+) °C", block_text(page, "water_temp_recent"))
+    if not m:
+        return 0
+    pts = [p["value"] for p in json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/WT/measurements.json?start=P30D" % urllib.parse.quote(name)))]
+    if pts and (abs(min(pts) - float(m.group(1))) > 1.5 or abs(max(pts) - float(m.group(2))) > 1.5):
+        print(row[1], "FAULT water temperature range differs from the feed", min(pts), max(pts))
+        return 1
+    return 0
 
 
 def main():
@@ -80,6 +125,11 @@ def selftest():
     assert main() == 0, "a dead feed counted as a fault"
     get = lambda u: '[[0, "/x/", 1, 2, "Canada"]]' if "gauges.json" in u else '<i data-n="A"></i><b data-live="stage">9.0' if "/x/" in u else '{"features": [{"properties": {"LEVEL": 1.0}}]}'
     assert main() == 1, "a wrong number passed"
+    assert drought_gap("Not in a mapped drought area", "2") == 3 and drought_gap("D2 Severe Drought", "1") == 1 and drought_gap("Not in a mapped", "NoData") == 0, "drought comparison wrong"
+    get = lambda u: '{"features": [{"properties": {"STATION_NAME": "SEYMOUR FALLS", "VALUE": 9.9, "YEAR_COUNT_NORMAL_PERIOD": 1}}]}'
+    assert canada_blocks([0, "/x/", 49.0, -123.0], '<section id="climate_normals">station Seymour Falls, 9 km January 9.9 °C</section>') == 1, "a one-year normal passed"
+    get = lambda u: '[{"value": 5.0}, {"value": 20.0}]'
+    assert wt_block("X", '<section id="water_temp_recent">Lowest 5.0 °C Highest 9.0 °C</section>', [0, "/x/"]) == 1, "a wrong water temperature range passed"
     get = lambda u: '{"features": [{"properties": {"monitoring_location_number": "01"}, "geometry": {"coordinates": [-72.0, 40.0]}}]}'
     assert moved([["n", "/u/", 40.0, -72.0, "Ohio OH 01"]]) == 0, "a gauge in place was called moved"
     assert moved([["n", "/u/", 41.0, -72.0, "Ohio OH 01"]]) == 1, "a moved gauge passed"

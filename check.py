@@ -682,7 +682,7 @@ def selftest():
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
     assert world.cover_faults([], [{"feed": "eccc", "gauge_pages": list("abcdefghijk")}], {"b_x": ("next: wire this source", "have")}), "selftest: a country with work left must not add gauges"
-    assert world.missing("<p></p>", {"name": "x"}) == ["weather not collected yet"], "selftest: a gauge the weather never reached must not publish"
+    assert "weather not collected yet" in world.missing("<p></p>", {"name": "x"}), "selftest: a gauge the weather never reached must not publish"
     fw = {"fetched_at": "t", "periods": [1], "forecast_updated": "2020-01-01T00:00:00+00:00"}
     assert "weather_forecast" not in world.owed({"wx": fw}), "selftest: an outage past the hide limit must not pull a live page"
     assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"

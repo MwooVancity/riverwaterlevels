@@ -1498,6 +1498,7 @@ def fast(inv, sites):
     _tick("phase state hubs", _time.time() - t_phase)
     if not any(a.startswith("--shard=") and not a.startswith("--shard=0/") for a in sys.argv):
         fetch_world()
+        write_health("run", len(sites))  # world feeds run last: without this no alarm could see them
 
 
 STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
@@ -1736,11 +1737,13 @@ def world_extras(page, r, prev, ctx):
         ACCESS_LEFT[0] -= 1
         try:
             r["access"], r["access_at"] = fetch_access(r["lat"], r["lon"]), now_iso()
+            note("world-access", "ok")
         except Exception as e:
             note("world-access", "failed", e)
     if due(r.get("normals_at"), 720) or (canada and (r.get("normals") or {}).get("v") != 2):
         try:
             r["normals"], r["normals_at"] = (normals_canada if canada else normals_germany)(r), now_iso()
+            note("world-normals", "ok")
         except Exception as e:
             note("world-normals", "failed", e)
     if canada:
