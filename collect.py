@@ -1708,6 +1708,7 @@ def fetch_ea(sid, prev):
             hist = dict(ea_history(meta["rloi"], sid), hist_at=now_iso())
         except Exception as e:
             print("EA history failed", sid, str(e)[:100])
+            hist["hist_at"] = iso(datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=2160 - 168))  # retry in 7 days, not every run: a dead archive must not eat the shared history slots
     return {"name": sid, "title": meta["title"], "km": 0, "lat": meta["lat"], "lon": meta["lon"], "unit": "m", "zone": "Europe/London", "rloi": meta["rloi"], **hist, "cm": v, "time": t, "then": then,
             "state": ("low" if v < lo else "high" if v > hi else "normal") if ok else None, "range": [lo, hi] if ok else None, "marks": marks, "mark_dates": dates, "series": series, "week": [p[1] for p in series[::96]], "flow": flow, "flow_bad": flow_bad,
             "also": {"Q": [flow[-1][1], "m³/s", "Flow", flow[-1][0]]} if flow and flow[-1][0] == t else {},  # the also table prints the level's time: a flow of another time stays in the flow chart only
