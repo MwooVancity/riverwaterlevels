@@ -18,6 +18,9 @@ FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "s
 WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
+CARRYABLE = ("gauge", "world")  # a failing page of these kinds keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h)
+
+
 def kind_of(rel):
     parts = rel.replace("\\", "/").split("/")
     if rel == "index.html":
@@ -972,7 +975,7 @@ def main():
     except (OSError, ValueError):
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
-    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) == "gauge") // 20) and all(kind_of(k) == "gauge" for k in fails):
+    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) in CARRYABLE) // 20) and all(kind_of(k) in CARRYABLE for k in fails):
         if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
             keep_old_times(d, carried)

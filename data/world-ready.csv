@@ -21,11 +21,11 @@ tier,keyword,feed,station,title,page
 5000,river trent level,ea,4009,River Trent at Colwick,england
 500,river ryton level,ea,4091,River Ryton at Blyth,england
 500,river teme level,ea,2029,River Teme at Knightsford Bridge,england
-500,river thames level,ea,0569TH,River Thames at Hannington Bridge,england
+500,river thames level,ea,3400TH,River Thames at Kingston,england
 500,river ancholme level,ea,E2790,River Ancholme at Brigg,england
 500,river swale level,ea,L2312,River Swale at Park Bridge,england
 500,river witham level,ea,E1191,River Witham at Kirkstead Bridge,england
-50,river severn level,ea,2195,River Severn at Sharpness,england
+50,river severn level,ea,2077,River Severn at Welsh Bridge,england
 50,river isle level,ea,52153,River Isle at Midelney,england
 50,river amber level,ea,4048,River Amber at Wingfield Park,england
 50,river chelmer level,ea,E22843,River Chelmer at Churchend,england
@@ -36,4 +36,5 @@ tier,keyword,feed,station,title,page
 50,river nene level,ea,E1946,River Nene at Kislingbury,england
 50,river pont level,ea,022013,River Pont at Callerton Lane,england
 50,rib river water level,ea,4980TH,River Rib at Wadesmill,england
+50,river soar level,ea,4082,River Soar at Littlethorpe,england
 50,river uck level,ea,E8190,River Uck at Buxted,england

@@ -46,6 +46,7 @@ def run():
     pg = lambda t: '<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t
     assert not [b for b in check_.check_html(pg("Walla Walla River | Ro Ro Anlage"), "x") if "doubled" in b], "a real place name with a doubled word failed the page"
     assert [b for b in check_.check_html(pg("Wis Wis campground"), "x") if "doubled" in b], "a doubled word typo passed"
+    assert check_.kind_of("danube/pfelling/index.html") in check_.CARRYABLE and check_.kind_of("river/x/y/index.html") in check_.CARRYABLE, "a failing world or gauge page stops the whole deploy instead of keeping its live copy"
     assert collect.nwm_due({}),"a gauge with no model forecast must be due"
     collect.NWM_EMPTY[0] = 3
     assert not collect.nwm_due({}), "an empty model service kept being called every gauge, stretching the run"

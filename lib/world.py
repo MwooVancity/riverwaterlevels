@@ -366,7 +366,8 @@ THIN = {}  # gauge -> why its new page is under the floor (thin); build.py write
 META = ("official_links", "about_gauge", "gauge_map", "offline")  # links and page facts, not a reading a reader can use
 HISTORY = ("world_history", "official_marks", "record_comparison", "flow_duration", "sustained_flow", "month_chart", "year_chart", "multiyear", "daily_readings", "annual_peaks")
 WEATHER = ("hourly_forecast", "weather_forecast", "air_obs", "rain_totals", "forecast_rain_totals", "hourly_heatmap")
-FLOOR = 8  # measured on every live page 2026-11-03 (PLAN.md): blocks with data US median 35 (min 24), Canada min 11, Germany min 9; main-text words Canada min 1,413, Germany min 1,377.
+FLOOR = 3  # owner 2026-11-03: "if we don't have the data, nobody does". The floor is the agency's own page (level chart, its marks, one more), and the must-haves below add
+# a reading, the alerts block, history or a normal label, and rain or weather with a value: a page with all of that carries more than the agency's page. Was 8, measured on every live page 2026-11-03 (PLAN.md): blocks with data US median 35 (min 24), Canada min 11, Germany min 9; main-text words Canada min 1,413, Germany min 1,377.
 # The US median is out of reach abroad: about 21 of its 35 blocks are US federal products COVER answers none for. So the floor sits one block under the thinnest live world page.
 # Words are measured, not gated: most are template text, so a word count would pass padding and fail a short true page.
 

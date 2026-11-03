@@ -54,7 +54,7 @@ def covered(slug="canada", country="Canada"):
 
 
 EA = "https://environment.data.gov.uk/flood-monitoring/"
-PICK = {"River Trent": "4009"}  # ponytail: Colwick, the Nottingham gauge, the largest city on the Trent, where the rule below would pick a smaller town. One hand line per famous river; each still passes every test.
+PICK = {"River Trent": "4009", "River Thames": "3400TH", "River Severn": "2077"}  # Kingston (above Teddington Lock) and Shrewsbury Welsh Bridge; the rule picked Hannington Bridge and tidal Sharpness (2026-11-03)  # ponytail: Colwick, the Nottingham gauge, the largest city on the Trent, where the rule below would pick a smaller town. One hand line per famous river; each still passes every test.
 
 
 def ea_get(path, timeout=60):
