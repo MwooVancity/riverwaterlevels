@@ -13,7 +13,7 @@ Every change states how it fails today AND at 14,000 pages (calls, CPU, URL leng
 2. One standard for every river or lake in any country: same gauge page, block states, gates. A source a country lacks shows "Not issued" or "Unknown", never a blank or a lighter template. Summary tables are hubs, never the standard page.
 3. Ship test: does it answer the water level? A real recent reading with unit, time and source ships, marks or no marks, and says what is missing. Block only what is wrong: no reading, no time, unit unknown, never reported, near-duplicate, or not a river or lake.
 4. World queue at full speed. Global rivers and non-US lakes are first priority for build time. Never wait on traffic numbers; Search Console reorders, never pauses. Official feed and reuse terms read from the agency stay required. Never bulk-publish.
-5. Publish order by AdSense potential: search tier x country ad rate; US lakes stay out (Lakebrief); cruise rivers first for build time.
+5. HARD (owner 2026-11-03): highest search volume first, any country (US, Canada, UK or wherever a feed passes), one ranking for all; money first. US lakes stay out (Lakebrief).
 6. Reviews are `/code-review high`, never ultra.
 7. AdSense: site is under review ("Getting ready"), earns $0 until approved; sibling sites rejected for low value content. Consent message published since 2026-10-23; consent follows the visitor's location, so all indexable pages carry the same tags.
 

@@ -32,6 +32,8 @@ Stage 1 2026-11-02: COVER clear, `FROZEN` no longer limits either country; Germa
 Animas miss 2026-11-02: USGS corrected 10,500 to 11,000 cfs at 21:41 UTC; `fast()` kept the first value and its 3 h window could not see older corrections, so a page stayed wrong up to a day. Now the hourly fetch reads by last-modified over 6 h, the newest USGS word wins, a correction rebuilds its page, the edge swaps same-time corrections, and flow ending before gage height shows a block at the top. Worker starts the watchdog hourly because GitHub's schedule left an 11 h 53 min gap; accepted gap now 2 h.
 New country checklist: reading against the agency's page, time zone against the agency, alert coverage on a real active alert, unit and zero point named, terms read, water type labelled (river, lake, reservoir, tidal).
 
+HARD rule (owner 2026-11-03): highest search volume first, any country, one ranking; make money fastest. England moves up: River Trent 5,000 a month and 17 English rivers at 500 lead the world queue. Canada added by hand 2026-11-03: James River near Sundre, Mississippi River at Appleton, Chilliwack River at Vedder Crossing; St. Lawrence and St. Croix (NS) have no matching real-time station, skipped, never guessed.
+
 ## Road to autopilot (approved 2026-11-02; this order wins over the numbers below)
 One session per stage. Each batch: `check`, dry run, main, read live, update here.
 1. Nov 3-5: clear every `COVER` `next:` item or answer `none: reason` until `FROZEN` is empty.
