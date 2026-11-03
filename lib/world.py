@@ -366,8 +366,7 @@ THIN = {}  # gauge -> why its new page is under the floor (thin); build.py write
 META = ("official_links", "about_gauge", "gauge_map", "offline")  # links and page facts, not a reading a reader can use
 HISTORY = ("world_history", "official_marks", "record_comparison", "flow_duration", "sustained_flow", "month_chart", "year_chart", "multiyear", "daily_readings", "annual_peaks")
 WEATHER = ("hourly_forecast", "weather_forecast", "air_obs", "rain_totals", "forecast_rain_totals", "hourly_heatmap")
-FLOOR = 3  # owner 2026-11-03: "if we don't have the data, nobody does". The floor is the agency's own page (level chart, its marks, one more), and the must-haves below add
-# a reading, the alerts block, history or a normal label, and rain or weather with a value: a page with all of that carries more than the agency's page. Was 8, measured on every live page 2026-11-03 (PLAN.md): blocks with data US median 35 (min 24), Canada min 11, Germany min 9; main-text words Canada min 1,413, Germany min 1,377.
+# No block-count floor (owner 2026-11-03: "the minimum is everything we can do for that page"). Measured for the record on every live page 2026-11-03 (PLAN.md): blocks with data US median 35 (min 24), Canada min 11, Germany min 9; main-text words Canada min 1,413, Germany min 1,377.
 # The US median is out of reach abroad: about 21 of its 35 blocks are US federal products COVER answers none for. So the floor sits one block under the thinnest live world page.
 # Words are measured, not gated: most are template text, so a word count would pass padding and fail a short true page.
 
@@ -395,9 +394,9 @@ def thin_stats(h):
 
 
 def thin(h):
-    """Why a world page is too thin to ship, or [] (the floor above)."""
-    s = thin_stats(h)
-    return s["faults"] + (["%d reader blocks with data, under the floor of %d" % (s["blocks"], FLOOR)] if s["blocks"] < FLOOR else [])
+    """Why a world page cannot ship, or []. Owner 2026-11-03: no block count; a page carries everything its data allows (`missing` holds one that does not),
+    and only the ship test holds it here: a reading with time and unit, and the alerts block. History and weather are counted in thin_stats, never a hold."""
+    return [f for f in thin_stats(h)["faults"] if f in ("no reading with its time and unit", "no alerts block")]
 
 
 def choose(pages, now):

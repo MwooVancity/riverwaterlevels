@@ -261,9 +261,8 @@ def england_page():
     day = {(now - datetime.timedelta(minutes=15 * i)).strftime("%Y-%m-%dT%H:%M:00Z"): 0.2 for i in range(100)}
     assert wx_mod.rain_total(day, 900)[0] == round(96 * 0.2, 1), "a 24 h total did not add exactly the 96 readings of its day"
     assert wx_mod.rain_total(dict(list(day.items())[:95]), 900)[0] is None and wx_mod.rain_total(dict(day, **{max(day): None}), 900)[0] is None and wx_mod.rain_total({}, 900)[0] is None, "a missing reading or no readings read as a total"
-    assert world.thin(h) and any("reader blocks" in x for x in world.thin(h)), "an England page with level, chart and no weather passed the thin floor"
-    world.THIN.clear()
-    assert world.choose([(p | {"gauge_pages": ["4009"]}, {"rows": [r]})], now) == {"fixture-england": set()} and "4009" in world.THIN, "choose shipped a thin page"
+    assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
+    assert world.thin(h.replace('id="alerts"', 'id="x"')) == ["no alerts block"], "a page with no alerts block shipped"
     world.THIN.clear()
 
 

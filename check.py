@@ -696,7 +696,7 @@ def selftest():
     wh2 = world.page(wp0, dict(wet, flow=[["2026-11-01T1%d:00:00+00:00" % i, 100.0 + i] for i in range(9)], deciles=[float(i) for i in range(11)], day_years=50, years=[[2024, 3.0, "2024-05-01", 1.0, "2024-09-01"]]), wn)[1]
     assert 'id="flow_chart"' in wh2 and 'id="world_history"' in wh2 and "Emergency in Germany" in wh2, "selftest: a world page lost flow, history or the emergency number"
     assert not world_rules(wh2) and "hourly_forecast" in wh2 and "10 °C (50 °F)" in wh2 and "16 km/h (10 mph)" in wh2 and "id=\"weather_forecast\"" in wh2, "selftest: a world page with weather lost a block or a unit: %s" % world_rules(wh2)
-    assert world.thin(wh) and not world.thin(wh2), "selftest: thin floor: a level-and-chart page passed (%s) or a full page was held (%s)" % (world.thin_stats(wh), world.thin(wh2))
+    assert not world.thin(wh) and not world.thin(wh2) and world.thin(wh.replace('id="alerts"', 'id="x"')), "selftest: ship test: a page with a reading and alerts was held (%s), or one with no alerts block shipped" % world.thin(wh)
     assert world.alike({"a", "b", "c", "d"}, {"a", "b", "c", "d"}) and not world.alike({"a", "b"}, {"c", "d"}) and not world.alike(set(), {"a"}), "selftest: world near-duplicate test wrong"
     assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
