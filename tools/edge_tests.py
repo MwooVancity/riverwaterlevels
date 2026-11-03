@@ -94,13 +94,16 @@ def run():
     got = world.along({"flat": True, "feed": "eccc", "slug": "x"}, base, [base, far, near])
     assert [g[1] for g in got] == ["N"] and got[0][0] == "Nearby", "a far gauge read as nearby"
 
-    assert "flood warning note" in world.missing("<html>", {"wx": {"no_weather": True}, "marks": {}}), "a world page without the flood line passed"
 
     real = world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE
     p = {"slug": "x", "gauge_pages": ["01AB"], "river": "X"}
     try:
         world.page, world.missing, world.shingles, world.alike, world.GATE = lambda *a, **k: ("/u/", "<html>"), lambda h, r: ["alerts"], lambda h: set(), lambda a, b: True, True
         world.os.path.exists = lambda q: False
+        world.missing, world.GAPS = lambda h, r: [], {}
+        world.choose([(p, {"rows": [base]})], None)
+        assert world.GAPS.get("01AB") == ["flood warning note"], "a world page without the flood line passed"
+        world.missing = lambda h, r: ["alerts"]
         assert world.choose([(p, {"rows": [base]})], None)["x"] == set(), "a new gauge with a gap was not held"
         world.os.path.exists = lambda q: True
         assert world.choose([(p, {"rows": [base]})], None)["x"] == {"01AB"}, "an outage pulled a live page"

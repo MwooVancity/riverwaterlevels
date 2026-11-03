@@ -239,7 +239,7 @@ def choose(pages, now):
                 continue
             if not got:
                 continue
-            gone = missing(got[1], r) + core.BLOCK_ERRORS[broke:]  # a block that crashed is never a quiet gap
+            gone = missing(got[1], r) + ([] if "data-flood" in got[1] else ["flood warning note"]) + core.BLOCK_ERRORS[broke:]  # a block that crashed is never a quiet gap
             if gone:
                 GAPS[r["name"]] = gone
             live = os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist", world_gauge_url(p, r.get("title") or r["name"]).strip("/"), "index.html"))  # holds stop new gauges; an outage never pulls a page
@@ -320,7 +320,7 @@ def owed(r):
 
 def missing(h, r):
     """What this page owes and does not show. Any entry holds a new gauge back; this is the rule that says a world page got everything its data allows."""
-    return [b for b in owed(r) if 'id="%s"' % b not in h] + ([] if "data-flood" in h else ["flood warning note"])
+    return [b for b in owed(r) if 'id="%s"' % b not in h]
 
 
 def page(p, r, now, rows=(), keep=()):
