@@ -19,10 +19,40 @@ picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["
 seen_ = {r["site"] for r in picks}
 picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and not r.get("gate") and r["site"] not in seen_),
                 key=lambda r: -float(r.get("score") or 0))  # after the owner's list: the scored queue, best first
-picks = picks[:n]
+# one ranking (owner 2026-11-03, HARD): highest search tier first, any country. US rows get their tier from the queue; world rows come
+# matched to a real station by tools/world_match.py. A world gauge is a data row in data/world-pages.json; the refresh collects and builds
+# it, and lib/world.py choose holds any page that fails, so nothing unproven ships.
+WORLD_MAX = 400  # ponytail: world feeds are fetched one gauge at a time on shard 0; past about 500 that job nears its hour. Split the world fetch first.
+import json as _json
+q_ = list(csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), encoding="utf-8")))
+per_ = __import__("collections").Counter(r["keyword"] for r in q_)
+share = lambda t, k: int(t or 0) / max(1, per_[k])  # gauges that share one keyword split its searches: four White River gauges get 125 each, not 500
+tier_ = {r["gauge"]: share(r["tier"], r["keyword"]) for r in q_ if r["gauge"]}
+wpp = os.path.join(ROOT, "data", "world-pages.json")
+wpages = _json.load(open(wpp, encoding="utf-8"))
+listed = {s for p in wpages for s in p.get("gauge_pages") or []}
+wr = os.path.join(ROOT, "data", "world-ready.csv")
+ready = [w for w in csv.DictReader(open(wr, encoding="utf-8")) if w["station"] not in listed] if os.path.exists(wr) else []
+ready = ready[:max(0, WORLD_MAX - len(listed))]
+both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row (owner: not USA first)
+world_add = [x[3] for x in both if x[1] == 0]
+picks = [x[3] for x in both if x[1] == 1]
+if world_add:
+    for w in world_add:
+        page = next(p for p in wpages if p["slug"] == w["page"])
+        for k in ("stations", "gauge_pages"):
+            page.setdefault(k, []).append(w["station"])
+        print("  world  %s  %s  (%s, tier %s)" % (w["station"], w["title"], w["keyword"], w["tier"]))
+    if not dry:
+        raw = open(wpp, encoding="utf-8", newline="").read()
+        nl_ = "\r\n" if "\r\n" in raw else "\n"
+        open(wpp, "w", encoding="utf-8", newline="").write("[" + nl_ + ("," + nl_).join(" " + _json.dumps(x, ensure_ascii=False) for x in wpages) + nl_ + "]" + nl_)
+    print("world gauges added: %d (the refresh collects and builds them; a page that fails is held, never shown)" % len(world_add))
+    if not picks:
+        sys.exit(0)
 for r in picks:
     r["url"] = r.get("url") or (live_.get(r["site"]) or {}).get("url")  # picks.csv holds the order, waves.csv the address: a pick with no address once sent the whole day back
-if not picks:
+if not picks and not world_add:
     sys.exit("nothing to add: every gauge in %s already has a cache" % lst)
 print("adding %d gauges:" % len(picks))
 for r in picks:

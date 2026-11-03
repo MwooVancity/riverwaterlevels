@@ -140,11 +140,12 @@ jobs:
           rem=$(curl -sI --max-time 20 https://riverwaterlevels.com/live/00000000.json | tr -d '\r' | awk 'tolower($1)=="x-rwl-usgs-remaining:"{print int($2)}')
           if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
+            python -I tools/world_match.py | head -3 || true
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
         if: steps.rel.outputs.released != '1'
-        run: git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/
+        run: git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
       - name: Refresh (build, check, publish, deploy; live=false stops after the gates)
         continue-on-error: true  # same as refresh.yml: publish.py refuses a broken build; health is on /status and in this log
         run: |
@@ -155,18 +156,18 @@ jobs:
         run: |
           if ! grep -q "refresh OK" refresh-out.log; then
             rm -rf dist  # a failed deploy already published here: pages carried from it link to gauges this try takes back
-            python -I tools/quarantine.py || { git checkout -- data/waves.csv data/index-allow.json legacy/ && git clean -fdq legacy/; }
+            python -I tools/quarantine.py || { git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/; }
             python refresh.py --no-collect 2>&1 | tee refresh-out.log
           fi
       - name: Keep the day's new gauges only if the refresh passed
         if: ${{ inputs.live && steps.rel.outputs.released == '1' }}
         continue-on-error: true
         run: |
-          if git diff --quiet data/waves.csv; then
+          if git diff --quiet data/waves.csv data/world-pages.json; then
             echo "release DROPPED: every new gauge went back to the queue"
           elif grep -q "refresh OK" refresh-out.log; then
             git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
-            date -u +%F > data/last-release.txt; git add data/waves.csv data/index-allow.json data/last-release.txt legacy/
+            date -u +%F > data/last-release.txt; git add data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase -q origin main && git push origin HEAD:main && echo "release committed"
           else

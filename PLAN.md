@@ -34,6 +34,8 @@ New country checklist: reading against the agency's page, time zone against the 
 
 HARD rule (owner 2026-11-03): highest search volume first, any country, one ranking; make money fastest. England moves up: River Trent 5,000 a month and 17 English rivers at 500 lead the world queue. Canada added by hand 2026-11-03: James River near Sundre, Mississippi River at Appleton, Chilliwack River at Vedder Crossing; St. Lawrence and St. Croix (NS) have no matching real-time station, skipped, never guessed.
 
+Stage 4 start 2026-11-03: `tools/world_match.py` matches Canadian queue rows to ECCC stations (strict: river name pattern, province, one province or skip, keyword not shared with a US gauge, largest drainage, one gauge per river); first run 12 ready, 50 skipped with reasons. `tools/release.py` sorts US and world by search tier in one list, world gauges become data rows, capped at 400 world gauges (shard 0 time). With today's tiers, 581 US gauges at 500 or more come before the first Canadian 50; England (Trent 5,000) is the volume lever.
+
 ## Road to autopilot (approved 2026-11-02; this order wins over the numbers below)
 One session per stage. Each batch: `check`, dry run, main, read live, update here.
 1. Nov 3-5: clear every `COVER` `next:` item or answer `none: reason` until `FROZEN` is empty.
