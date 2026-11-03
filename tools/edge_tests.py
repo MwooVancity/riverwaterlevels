@@ -42,6 +42,10 @@ def run():
     from lib.hero import beyond
     row = [13, None, 398.2, None, 624.0, 1470.0, 2525.0, None, 4516.0, None]
     assert beyond(row, 9000)[0] == "above 90th" and "4,520 cfs" in beyond(row, 9000)[1] and beyond(row, 100)[0] == "below 10th" and beyond(row, 1000) is None, "a flood past the published percentiles read as no statistics"
+    assert collect.nwm_due({}), "a gauge with no model forecast must be due"
+    collect.NWM_EMPTY[0] = 3
+    assert not collect.nwm_due({}), "an empty model service kept being called every gauge, stretching the run"
+    collect.NWM_EMPTY[0] = 0
     z = collect.eccc_zone
     on = {"PROV_TERR_STATE_LOC": "ON", "DATETIME_LST": "2026-11-02T10:00:00-05:00"}
     assert z(dict(on, DATETIME_LST="2026-11-02T10:00:00-06:00"), -94.5) == "America/Winnipeg", "Kenora kept Toronto time"

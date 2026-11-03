@@ -644,6 +644,9 @@ def fetch_year(site, h):
     return {"fetched_at": now_iso(), "rows": r[-366:]} if len(r) > 300 else None
 
 
+NWM_EMPTY = [0]  # empty National Water Model answers this run (nwm_due)
+
+
 def fetch_nwm(site, prev=None):
     d = http_json("https://api.water.usgs.gov/nldi/linked-data/nwissite/USGS-%s?f=json" % site)
     comid = d["features"][0]["properties"].get("comid")
@@ -651,7 +654,9 @@ def fetch_nwm(site, prev=None):
         return {"fetched_at": now_iso(), "comid": None}
     j = thr_json(NWPS + "reaches/%s/streamflow?series=short_range" % comid, NWPS_H)
     s = (j.get("shortRange") or {}).get("series") or {}
-    pts = [{"t": p.get("validTime"), "flow": p.get("flow")} for p in (s.get("data") or []) if isinstance(p.get("flow"), (int, float)) and p["flow"] >= 0]
+    if not s.get("data"):
+        NWM_EMPTY[0] += 1
+    pts =[{"t": p.get("validTime"), "flow": p.get("flow")} for p in (s.get("data") or []) if isinstance(p.get("flow"), (int, float)) and p["flow"] >= 0]
     out = {"fetched_at": now_iso(), "comid": comid, "reference_time": s.get("referenceTime"), "points": pts[:60]}
     try:
         m = thr_json(NWPS + "reaches/%s/streamflow?series=medium_range" % comid, NWPS_H)
@@ -1162,7 +1167,10 @@ def due(ts, hours):
 
 def nwm_due(rec):
     """Every gauge gets the model's days 1 to 10 (2026-10-26: it was fetched only where NWS issues no forecast, hiding days 4 to 10).
-    The model reruns every 6 h; fetch at most every 3 h."""
+    The model reruns every 6 h; fetch at most every 3 h. After 3 empty answers in one run the service is out (2026-11-03: 20 s a call, empty,
+    296 of 354 s of a shard): the rest wait for the next run, keeping what they have, so an outage never stretches a run toward the 45-minute brake."""
+    if NWM_EMPTY[0] >= 3:
+        return False
     try:
         return (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(rec["nwm"]["fetched_at"])).total_seconds() > 3 * 3600
     except (KeyError, TypeError, ValueError):
