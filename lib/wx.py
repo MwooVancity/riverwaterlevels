@@ -164,7 +164,8 @@ def dwd_obs(text, sid, spot):
     if not data:
         return {}
     col = lambda r, k: num(r[head.index(k)]) if k in head else None
-    r, when = data[0], lambda r: datetime.datetime.strptime(r[0] + " " + r[1], "%d.%m.%y %H:%M").replace(tzinfo=UTC)
+    when = lambda r: datetime.datetime.strptime(r[0] + " " + r[1], "%d.%m.%y %H:%M").replace(tzinfo=UTC)
+    r = next((x for x in data if col(x, "dry_bulb_temperature_at_2_meter_above_ground") is not None), data[0])  # the newest row can be all "---" (Geisenheim 02:00, 2026-11-03)
     vis, hpa = col(r, "horizontal_visibility"), col(r, "pressure_reduced_to_mean_sea_level")
     out = {"obs": {"station": sid, "name": spot[2], "ll": [spot[1], spot[0]], "timestamp": when(r).isoformat(), "temp_c": col(r, "dry_bulb_temperature_at_2_meter_above_ground"), "wind_kmh": col(r, "mean_wind_speed_during last_10_min_at_10_meters_above_ground"),
                    "wind_dir": col(r, "mean_wind_direction_during_last_10 min_at_10_meters_above_ground"), "gust_kmh": col(r, "maximum_wind_speed_last_hour"), "pressure_pa": None if hpa is None else hpa * 100, "visibility_m": None if vis is None else vis * 1000}}

@@ -37,6 +37,8 @@ def run():
         assert collect.normals_canada(near)["temp"]["10"] == 1.0, "a real normal was refused"
     finally:
         collect.http_json = real_json
+    beob = "\n".join(["surface observations;Parameter description;dry_bulb_temperature_at_2_meter_above_ground", "10628;Unit;C", "Datum;Uhrzeit;Temperatur", "03.11.26;02:00;---", "03.11.26;01:00;7,2"])
+    assert wx_mod.dwd_obs(beob, "10628", [50, 8, "X"])["obs"]["temp_c"] == 7.2, "an empty newest DWD row hid the station's weather"
     z = collect.eccc_zone
     on = {"PROV_TERR_STATE_LOC": "ON", "DATETIME_LST": "2026-11-02T10:00:00-05:00"}
     assert z(dict(on, DATETIME_LST="2026-11-02T10:00:00-06:00"), -94.5) == "America/Winnipeg", "Kenora kept Toronto time"

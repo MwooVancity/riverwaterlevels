@@ -123,7 +123,7 @@ def main():
                 bad.append("source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n))
                 continue
             if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > 50:  # never worked, or a daily source silent for two days
-                bad.append("%s %s has not worked for %s (last error: %s)" % ("feed dead:" if (src in HOURLY or src in ("eccc", "pegelonline", "world-wx")) and (not last or hours_since(last) > 24) else "source", src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
+                bad.append("%s %s has not worked for %s (last error: %s)" % ("feed dead:" if (src in HOURLY or src in ("eccc", "pegelonline")) and (not last or hours_since(last) > 24) else "source", src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:
                 bad.append("source %s failed on %d of %d gauges in its last run (%s)" % (src, lr["failed"], n, v.get("last_error") or ""))
         ok.append("source health read (%s run, %s)" % (h.get("mode"), h.get("at", "")[:16]))
