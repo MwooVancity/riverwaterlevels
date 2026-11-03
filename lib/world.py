@@ -337,9 +337,9 @@ TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/r
          "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.',
          "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). This uses Environment Agency rainfall data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
 EA_LINK = '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">flood warnings and alerts in force in England on GOV.UK</a>'
-EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> Our check of Environment Agency warning areas against this gauge has not yet been seen working on a real warning, so it shows none here. See %s.</p>' % EA_LINK
+EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> Our check of Environment Agency warning areas against this gauge has not yet been seen working on a real warning, so this page cannot tell you. See %s.</p>' % EA_LINK
 EA_UNPROVEN = (("<p>Alerts could not be loaded at the last fetch.</p>", "<p>Unknown. This page does not show Environment Agency flood warnings yet: our check of warning areas against this gauge has not been seen working on a real warning. See %s. This is not a statement that conditions are safe.</p>" % EA_LINK),
-               ("Source: Environment Agency alerts for the gauge location, fetched time not stated.", "Source: none read onto this page; the Environment Agency publishes warnings on GOV.UK Check for flooding."),
+               ("Source: Environment Agency alerts for the gauge location, fetched time not stated.", "Source: not read onto this page yet; the Environment Agency publishes warnings on GOV.UK Check for flooding."),
                ("No official alert feed is connected for this gauge. Check local authorities.", "Not shown here yet. See %s." % EA_LINK))
 
 
@@ -419,6 +419,7 @@ def choose(pages, now):
                 GAPS[r["name"]] = gone
             live = os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dist", world_gauge_url(p, r.get("title") or r["name"]).strip("/"), "index.html"))  # holds stop new gauges; an outage never pulls a page
             if gone and GATE and not live:
+                THIN[r["name"]] = gone  # every hold of a new page counts in room(), so held pages never keep spending the daily slots (review 2026-11-03)
                 print("world gauge held, page lacks what its data allows: %s %s" % (r["name"], ", ".join(gone)))
                 continue
             short = [] if live else thin(got[1])  # the per-page floor that replaced the country cap (owner 2026-11-03): a thin page is held, never shipped and never noindexed
@@ -428,6 +429,7 @@ def choose(pages, now):
                 continue
             s = shingles(got[1])
             if not live and any(alike(s, o) for o in kept):
+                THIN[r["name"]] = ["too like another page"]
                 print("world gauge held, too like another page: %s" % r["name"])
                 continue
             kept.append(s)

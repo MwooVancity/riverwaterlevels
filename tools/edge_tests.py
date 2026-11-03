@@ -245,7 +245,8 @@ def england_page():
             al = sec(h, "alerts")
             assert "Unknown" in al and "check-for-flooding.service.gov.uk/alerts-and-warnings" in h.split('id="alerts"', 1)[1].split("</section>", 1)[0], "an unproven England alert block is not Unknown with the GOV.UK link"
             assert not re_.search(r"No (active |Environment Agency )?flood warning|No flood warnings in force|No active|could not be loaded|were returned", re_.sub(r"<[^>]+>", " ", h)), "an unproven England page said there are no warnings, or that alerts failed to load"
-            assert "Flood warnings: Unknown on this page" in h and "within 150 m" not in h, "the flood line claims a check that is not proven"
+            assert not re_.search(r"\bnone\b", re_.sub(r"<[^>]+>", " ", world.EA_UNPROVEN_LINE + "".join(b for _, b in world.EA_UNPROVEN)), re_.I), "unproven England warning text says none, read as no warnings"
+            assert "Flood warnings: Unknown on this page" in h and "within 150 m" not in h,"the flood line claims a check that is not proven"
             h2 = world.page(dict(p, proof={"alerts": "Environment Agency Flood warning (level 2), fixture"}), r, now)[1]
             assert "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge" in h2 and "Flood warnings: Unknown" not in h2, "a proven England page lost its normal alert answer"
         finally:
