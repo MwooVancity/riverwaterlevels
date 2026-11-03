@@ -4,7 +4,7 @@ import glob, os, re
 
 MIN_PAGES = 20  # a share over fewer pages moves with one gauge
 DROP = 0.7  # under 70% of a block's best share ever
-CORE = 0.5  # only a block once on half the pages or more: blocks that show only when the river or weather calls for them swing every day (NWM guidance 18% to 8%, 2026-11-03)
+CORE = 0.9  # only a block once on nearly every page (German alerts went 57% to 14% as warnings ended, 2026-11-03): blocks that show only when the river or weather calls for them swing every day (NWM guidance 18% to 8%, 2026-11-03)
 
 
 def scan(root, old=None):
