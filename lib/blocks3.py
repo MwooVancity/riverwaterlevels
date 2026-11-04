@@ -697,7 +697,7 @@ def b_world_about(G):
     f = G["feed"]
     if len(f.get("about") or ()) < 2:
         return None
-    return block("about_gauge", "About this gauge", "agency", table(["Fact", "Value"], "".join(tr([esc(k), esc(v)]) for k, v in f["about"])), "Source: %s station record, %s." % (esc(f["api"]), esc(f["name"])), f["src"])
+    return block("about_gauge", "About this gauge", "agency", table(["Fact", "Value"], "".join(tr([esc(k), ('<a href="https://www.openstreetmap.org/?mlat=%s&amp;mlon=%s#map=14/%s/%s" rel="noopener" target="_blank">%s, on OpenStreetMap</a>' % (tuple(v.split(", ")) * 2 + (esc(v),))) if k == "Coordinates" else esc(v)]) for k, v in f["about"])), "Source: %s station record, %s." % (esc(f["api"]), esc(f["name"])), f["src"])
 
 
 def b_world_rate(G):

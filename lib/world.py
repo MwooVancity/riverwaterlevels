@@ -218,6 +218,7 @@ def proved(pages):
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
+MAP = "none: no open map we may embed was read; the coordinates in About this gauge open OpenStreetMap at the gauge, and the official links open the agency map"
 HYDAT = "next: Water Office annual peaks and flow statistics (hydrometric-annual-peaks, same API, 144 records at Britannia read live 2026-11-04); not wired"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
@@ -245,7 +246,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_access": ("have", "have"),
     "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
     "b_about": ("have", "have"),
-    "b_map": ("none: the map service is USGS, US only; links open the agency map", "none: the map service is USGS, US only; links open the agency map"),
+    "b_map": (MAP, MAP),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
     "b_low_water": ("none: no national low-water thresholds", "none: mean low water is in official marks"),
