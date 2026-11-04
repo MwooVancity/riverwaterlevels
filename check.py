@@ -4,7 +4,7 @@ Site: unique titles, every internal link resolves, sitemap equals page set, tab/
 Exit 1 if anything fails.
 """
 import glob
-import os, re, sys, json, collections, gzip, hashlib, html
+import os, re, sys, json, collections, gzip, hashlib, html, datetime
 MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
@@ -192,6 +192,16 @@ def claims_vs_cache(h, rec, now=None):
     if (rec.get("tides") or {}).get("rows") and "tide predictions (no NOAA station" in h:
         bad.append("gaps line says no tide station while the cache holds NOAA tide predictions")
     return bad
+
+
+def world_claims(h, rows):
+    """A world page's level against the cached row it was built from, when both hold the same reading time: a unit or conversion slip, or another station's number, is a defect of the highest rank (owner 2026-11-02). Exact to the shown rounding; no network, so a river moving during the run never blocks."""
+    n, v = re.search(r'class="hero[^"]*" data-n="([^"]+)" data-t="([^"]+)"', h), re.search(r'data-live="stage">(-?[\d.,]+)', h)
+    r = next((x for x in rows if n and x.get("name") == n.group(1)), None)
+    if not v or not r or r.get("cm") is None or not r.get("time") or datetime.datetime.fromisoformat(n.group(2)) != datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00")):
+        return []
+    shown, tol = float(v.group(1).replace(",", "")), (0.006 if r.get("unit") == "m" else 0.6)
+    return [] if abs(shown - r["cm"]) <= tol else ["level on the page %s, the cached reading it was built from %s %s at the same time: a unit, conversion or station slip" % (v.group(1), r["cm"], r.get("unit") or "cm")]
 
 
 DUP_MAX = 0.80  # owner rule: no two pages over 80% the same (Google scaled-content policy), numbers included since 2026-11-02: a gauge's own readings are what it adds
@@ -466,7 +476,7 @@ def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     results, titles, links_of, n_links, rel_of, noindex_of, vis_of = {}, collections.defaultdict(list), {}, {}, {}, {}, {}
-    gauge_sh = {}
+    gauge_sh, world_rows = {}, {}
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith(".html") and f != "404.html":
@@ -480,6 +490,12 @@ def check_dir(d):
                 cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
                 if cp and os.path.exists(cp):
                     results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
+                if kind_of(rel) == "world":
+                    slug = rel.replace("\\", "/").split("/")[0]
+                    if slug not in world_rows:
+                        wp = os.path.join(ROOT, "cache", "_river-%s.json" % slug)
+                        world_rows[slug] = json.load(open(wp, encoding="utf-8")).get("rows", []) if os.path.exists(wp) else []
+                    results[rel] += world_claims(h, world_rows[slug])
                 results[rel] += ad_gaps(rel, h)
                 stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
                 if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
@@ -680,6 +696,9 @@ def selftest():
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
+    wr = [{"name": "KAUB", "cm": 23.0, "time": "2026-11-04T15:45:00+01:00"}]
+    wh = lambda shown, t="2026-11-04T15:45:00+01:00": '<div class="hero hero2" data-n="KAUB" data-t="%s"><span data-live="stage">%s</span>' % (t, shown)
+    assert world_claims(wh("230"), wr) and not world_claims(wh("23"), wr) and not world_claims(wh("230", "2026-11-04T15:30:00+01:00"), wr) and world_claims(wh("0.23"), [dict(wr[0], unit="m", cm=2.3)]), "selftest: a world level 10 times its cached reading passed, or an older carried page failed"
     assert file_limit(19001) and not file_limit(19000), "selftest: the Cloudflare 20,000-file limit did not fire"
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
     import datetime as dt_, zlib
