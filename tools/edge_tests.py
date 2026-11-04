@@ -1,5 +1,5 @@
 """Fixtures for paths only a rare real event reaches: an ice flag, a frozen feed, an outage over a live page, a lost cache in a new year. Run by check.py --selftest."""
-import datetime, email.utils, json, os, sys, tempfile, types
+import datetime, email.utils, json, os, sys, tempfile, types, zoneinfo
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import collect
@@ -283,10 +283,23 @@ def england_page():
     assert got["days"]["11-03"][:3] == [0.1, None, 3.5] and got["day_years"] == 21, "a suspect or incomplete day reached the record, a repeated date was not its lowest, or the count is wrong: %s" % got["days"]["11-03"]
     assert [y[0] for y in got["years"]] == [2020] and got["years"][0][3] == 0.7, "a year with under 300 days, or this year, was listed"
     assert wx_mod.ea_days(lows[:9], highs[:9], 2026) == {}, "under 10 years said something"
-    rh = dict(r, **got)
-    hh = world.page(p, rh, now)[1]
+    rh = dict(r, **dict(got, days={now.astimezone(zoneinfo.ZoneInfo("Europe/London")).strftime("%m-%d"): got["days"]["11-03"]}))  # the block reads today's date: the fixture's 11-03 moved to today
+    hh =world.page(p, rh, now)[1]
     hist = sec(hh, "world_history")
     assert "this date in 21 years" in hist and "Median" not in hist and "daily means" not in hist and "Hydrology API" in hist, "England history claims a median or daily means the agency does not publish, or lost its source: %s" % hist[:300]
+    z = lambda m: (now + datetime.timedelta(hours=m)).strftime("%Y-%m-%dT%H:00Z")
+    geo = lambda run, ts: {"features": [{"properties": {"modelRunDate": run, "timeSeries": ts}}]}
+    hourly = geo(z(-1), [{"time": z(i), "screenTemperature": 9.4, "probOfPrecipitation": 40, "windSpeed10m": 5.0, "windDirectionFrom10m": 270} for i in range(30)] + [{"time": z(31)}])
+    daily = geo(z(-1), [{"time": (now + datetime.timedelta(days=i)).strftime("%Y-%m-%dT00:00Z"), "dayMaxScreenTemperature": 12.6, "nightMinScreenTemperature": 3.2, "dayProbabilityOfPrecipitation": 20} for i in range(7)])
+    met = wx_mod.met_forecast(hourly, daily, zoneinfo.ZoneInfo("Europe/London"))
+    assert len(met["hourly"]) == 30 and met["hourly"][0]["windSpeed"] == "18 km/h" and met["hourly"][0]["windDirection"] == "W" and met["hourly"][0]["shortForecast"] == "", "Met Office hourly parse wrong, or it guessed sky words: %s" % met["hourly"][0]
+    assert len(met["periods"]) == 14 and met["periods"][0]["temperature"] == 13 and met["periods"][1]["name"].endswith(" night"), "Met Office daily parse wrong"
+    assert wx_mod.met_forecast(geo(z(-1), [{"time": z(1)}]), {}, zoneinfo.ZoneInfo("Europe/London")) == {}, "a forecast with no rows gave a time that would date old rows as new"
+    hm = world.page(p, dict(rh, wx=dict(r["wx"], no_weather=None, **met)), now)[1]
+    for b in ("hourly_forecast", "weather_forecast"):
+        s = sec(hm, b)
+        assert "Met Office" in s and "Environment Agency" not in s, "England weather is not credited to the Met Office: %s" % [x[max(0, x.find("Environment Agency") - 150):][:300] for x in [s]]
+    assert "Powered by Met Office data" in re_.sub(r"<[^>]+>", " ", hm), "the Met Office attribution is missing"
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
     assert world.thin(h.replace('id="alerts"', 'id="x"')) == ["no alerts block"], "a page with no alerts block shipped"
     world.THIN.clear()

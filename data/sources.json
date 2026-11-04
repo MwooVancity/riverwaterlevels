@@ -458,6 +458,20 @@
     "drought_monitor"
    ],
    "read_on": "2026-11-02"
+  },
+  {
+   "id": "met-office-spot",
+   "name": "Met Office Weather DataHub, Global Spot site-specific forecast (England pages)",
+   "status": "quoted",
+   "terms_url": "https://datahub.metoffice.gov.uk/support/faqs",
+   "summary": "DataHub FAQ, read 2026-11-03: products are made available 'under a perpetual, worldwide, non-exclusive, non-transferable licence to download, use, copy, publish, distribute, transmit, adapt and exploit' them in your application; users must include the attribution 'Powered by Met Office data'; commercial use: 'Yes. Subject to the terms of the licence granted to you.' Free plan: 360 calls a day, reset 00:00 UTC; we cap at 300 (collect.py MET_DAY). Owner subscribed and added the key as GitHub secret METOFFICE_SITE_KEY on 2026-11-03.",
+   "credit": "Powered by Met Office data",
+   "blocks": [
+    "hourly_forecast",
+    "weather_forecast"
+   ],
+   "evidence": "curl 2026-11-03 of datahub.metoffice.gov.uk/support/faqs (licence, attribution, commercial use, 360 calls a day). Field names (screenTemperature, probOfPrecipitation, windSpeed10m, windDirectionFrom10m, dayMaxScreenTemperature, nightMinScreenTemperature) from WebSearch of user integrations, to be proven by the first live run's 'met ... fields' log line; a field not found is left out, never guessed. Significant weather code table not read: no sky words shown.",
+   "read_on": "2026-11-03"
   }
  ]
 }

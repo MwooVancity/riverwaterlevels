@@ -538,7 +538,7 @@ def storm_line(G):
     n = G["rec"].get("nws") or {}
     hr = n.get("hourly") or []
     age = hours_old(n.get("hourly_updated"), G["now"]) if n.get("hourly_updated") else None
-    if not hr or age is None:
+    if not hr or age is None or not any(p.get("shortForecast") for p in hr):  # no sky words (Met Office until its code table is read): a "none" would be a guess
         return ""
     if age > stale_after("hourly_forecast"):
         return '<p class="storm warn">Thunderstorm outlook: the NWS hourly forecast for this location is %d h old; check weather.gov for the current thunderstorm risk before going on the water.</p>' % age

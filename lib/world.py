@@ -11,10 +11,10 @@ from lib.directory import esc, world_gauge_url, world_slug
 
 FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and Shipping Administration (WSV)", "api": "PEGELONLINE", "unit": "cm", "zone": "Europe/Berlin", "src": "pegelonline", "emergency": "Emergency in Germany: 112 fire and ambulance, 110 police.", "wx": "DWD", "wx_site": "dwd.de", "wx_credit": "Weather and alerts: Deutscher Wetterdienst (DWD), CC BY 4.0, shortened and converted."},
          "eccc": {"agency": "ECCC", "name": "Environment and Climate Change Canada", "api": "Water Survey of Canada", "unit": "m", "zone": "America/Toronto", "src": "eccc", "emergency": "Emergency in Canada: 911 where available.", "wx": "Environment Canada", "wx_site": "weather.gc.ca", "wx_credit": "Weather and alerts: Environment and Climate Change Canada."},
-         # England: the alerts block carries the agency's own flood warnings and alerts, so its words say flood, never weather; no weather feed (Met Office needs a key)
+         # England: the alerts block carries the agency's own flood warnings and alerts, so its words say flood, never weather; the weather forecast is the Met Office's (page() names it)
          "ea": {"agency": "Environment Agency", "name": "Environment Agency (England)", "api": "Environment Agency real-time flood-monitoring API (Beta)", "unit": "m", "zone": "Europe/London", "hist_src": "ea-hydrology",
                 "hist_line": "Source: Environment Agency Hydrology API, each day's lowest and highest level at this gauge (Good, Estimated and Unchecked days with complete data). Our calculation from those records; the year table ends before this year.", "src": "ea", "emergency": "Emergency in the UK: 999 or 112. Floodline: 0345 988 1188.",
-                "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts, and rain: Environment Agency. No weather is shown: Met Office data needs a key we do not hold.",
+                "wx": "Environment Agency", "wx_site": "GOV.UK Check for flooding", "wx_credit": "Flood warnings and alerts, and rain: Environment Agency. Weather forecast: Met Office Global Spot, Powered by Met Office data.",
                 "flood_line": '<p class="gaps" data-flood><b>Flood warnings on this page are the Environment Agency\'s</b>, for warning areas that hold this gauge or lie within 150 m of it. Check <a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">all warnings in England on GOV.UK</a>.</p>',
                 "swap": (("No active Environment Agency weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed.", "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge or lies within 150 m of it."),
                          ("No active Environment Agency weather alerts", "No flood warnings in force"), ("<h2>Weather alerts", "<h2>Flood warnings and alerts"), ("Link to Weather alerts", "Link to Flood warnings and alerts"), ("Environment Agency message valid until not stated", "No end time stated by the Environment Agency"),
@@ -238,12 +238,13 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_field_meas": (NO_GAUGE, NO_GAUGE), "b_rating": (NO_GAUGE, NO_GAUGE), "b_samples": (NO_GAUGE, NO_GAUGE), "b_attains": (US_ONLY, US_ONLY), "b_streamcat": (US_ONLY, US_ONLY), "b_land": (US_ONLY, US_ONLY),
     "b_heatmap": ("none: the feed has no hourly grid; the hourly table carries it", "none: covered by the hourly table"), "b_nwm": (US_ONLY, US_ONLY), "b_nwm_medium": (US_ONLY, US_ONLY), "b_noforecast": ("none: the river forecast tile says so", "none: the river forecast tile says so"),
     "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
-MET = "next: Met Office DataHub, a free key is an owner sign-up; terms not read"
+MET = "next: Met Office Global Spot rain amounts and map images, same key; fields not proven live"
+MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (owner sign-up)"
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
     "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
-    "b_hourly": MET, "b_weather": MET, "b_air": MET, "b_qpf": MET, "b_radar": MET, "b_heatmap": "next: needs the Met Office hourly forecast (b_hourly)",
+    "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": COVER["b_rate"][0],
     "b_rain": "have",  # the rain tile: 24 h total of the nearest EA rain gauge within 15 km (collect.py ea_rain, lib/world.py ea_rain_tile)
@@ -268,8 +269,8 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
-TODO = {MET: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", "next: needs the Met Office hourly forecast (b_hourly)": "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)",
-        ENGLAND["b_acis"]: "weather, rain forecast and climate averages (Met Office data needs a key we do not hold)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
+TODO = {MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
+        ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
         NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
         ENGLAND["b_drought"]: "drought status (Environment Agency)", ENGLAND["b_flood_outlook"]: "five-day flood risk (Flood Forecasting Centre)", ENGLAND["b_samples"]: "water quality samples (Environment Agency)",
@@ -525,7 +526,7 @@ def page(p, r, now, rows=(), keep=()):
         if not alerts_proven(p):  # owner 2026-11-03: until a live warning proves the point test, Unknown with the GOV.UK link; an empty list must never read as no warnings
             rec["nws"] = dict(rec["nws"], alerts=None, fetched_at=None)
             rec["feed"]["flood_line"], rec["feed"]["swap"] = EA_UNPROVEN_LINE, EA_UNPROVEN + FEEDS["ea"]["swap"]
-            rec["feed"]["wx_credit"] = "Rain: Environment Agency. No weather is shown: Met Office data needs a key we do not hold."
+            rec["feed"]["wx_credit"] = "Rain: Environment Agency. Weather forecast: Met Office Global Spot, Powered by Met Office data."
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows else []
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
@@ -533,7 +534,8 @@ def page(p, r, now, rows=(), keep=()):
     top = fc_top(rec["feed"], now)
     if top:
         html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast, %s. Federal Institute of Hydrology</small>" % esc(top[0])), html, count=1, flags=re.S)
-    if p.get("feed") == "ea":
+    if p.get("feed") == "ea":  # the weather is the Met Office's, never the Environment Agency's (localize names feed["wx"] for every NWS word)
+        html = html.replace("Source: National Weather Service hourly point forecast", "Source: Met Office Global Spot hourly forecast for the gauge location, Powered by Met Office data").replace("Source: National Weather Service point forecast", "Source: Met Office Global Spot daily forecast for the gauge location, Powered by Met Office data")
         html = html.replace('<div class="tile sun', ea_rain_tile((r.get("wx") or {}).get("ea_rain"), now, rec["feed"]["zone"]) + '<div class="tile sun', 1)
     html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. %s" %(to_ft(r["cm"], rec["feed"]["unit"]), "On this gauge's own scale, often a height above sea level, not water depth" if rec["feed"]["src"] == "eccc" else "Height above the gauge's zero point, not water depth"), 1)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))

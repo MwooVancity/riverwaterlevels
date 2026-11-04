@@ -1737,12 +1737,51 @@ def ea_alert_list():
 
 
 def wx_england(r, w, ctx):
-    """Flood warnings by point test against each area in force, and rain from the nearest EA rain gauge. No weather: the Met Office needs a key, so those blocks stay off and the gaps line says why."""
+    """Flood warnings by point test against each area in force, rain from the nearest EA rain gauge, and the Met Office forecast at the gauge."""
     al = once(ctx, "ea-alerts", ea_alert_list)
     if al is not None:
         w["alerts"], w["fetched_at"] = wx.alerts_at(r["lat"], r["lon"], al, EA_NEAR_M), now_iso()
-    w["no_weather"] = "Met Office data needs a key we do not hold"
+    try:
+        met(r, w)
+    except Exception as e:
+        note("met-office", "failed", e)
+    w["no_weather"] = None if w.get("hourly") or w.get("periods") else "no Met Office forecast collected yet"
     ea_rain(r, w, ctx)
+
+
+MET = "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/"
+MET_DAY = 300  # calls a day; the free plan stops at 360 (FAQ read 2026-11-03), 60 spare
+
+
+def met(r, w):
+    """Met Office Global Spot, hourly and daily: 2 calls a gauge. Each gauge waits max(3 h, 24 h x 2 x gauges / MET_DAY) between calls, so the day's calls fit the plan
+    at any count: hourly turns amber past 75 English gauges (12 h), the daily cards hide past 300 (48 h), the hourly past 450 (72 h). The ledger counts a call before it is made."""
+    key = os.environ.get("METOFFICE_SITE_KEY")
+    if not key:
+        return
+    p = os.path.join(CACHE, "_ea-met.json")  # the _ea- prefix: a collect shard carries it back (sharded.yml)
+    try:
+        led = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        led = {}
+    day = datetime.datetime.now(datetime.timezone.utc).date().isoformat()
+    if led.get("day") != day:  # the plan resets at 00:00 UTC; a gauge unseen for a week leaves the count
+        led = {"day": day, "n": 0, "last": {k: v for k, v in (led.get("last") or {}).items() if v and not due(v, 168)}}
+    last = led["last"]
+    last.setdefault(r["name"], None)
+    if not due(last[r["name"]], max(3, 24 * 2 * len(last) / MET_DAY)) or led["n"] + 2 > MET_DAY:
+        json.dump(led, open(p, "w", encoding="utf-8"))
+        return
+    led["n"] += 2
+    last[r["name"]] = now_iso()
+    json.dump(led, open(p, "w", encoding="utf-8"))
+    q = "?latitude=%.4f&longitude=%.4f&includeLocationName=true" % (r["lat"], r["lon"])
+    hd = {"apikey": key, "accept": "application/json", "User-Agent": "riverwaterlevels.com"}
+    hourly, daily = http_json(MET + "hourly" + q, hd, 30), http_json(MET + "daily" + q, hd, 30)
+    got = wx.met_forecast(hourly, daily, zoneinfo.ZoneInfo("Europe/London"))
+    keys = lambda j: sorted(((((j or {}).get("features") or [{}])[0].get("properties") or {}).get("timeSeries") or [{}])[0])
+    print("met", r["name"], "hourly", len(got.get("hourly") or []), "periods", len(got.get("periods") or []), "hourly fields", keys(hourly), "daily fields", keys(daily))  # the live proof of the field names
+    w.update(got)
 
 
 def ea_rain_store():

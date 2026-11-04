@@ -33,6 +33,7 @@ jobs:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
       RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
       AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
+      METOFFICE_SITE_KEY: ${{ secrets.METOFFICE_SITE_KEY }}  # England weather, collect shard 0 only
       COLLECT_NEXT: "1"
     steps:
       - uses: actions/checkout@v7

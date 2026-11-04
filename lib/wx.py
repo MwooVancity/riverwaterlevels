@@ -336,6 +336,36 @@ def dwd_forecast(blob, zone):
     return {"hourly": hours[:48], "hourly_updated": issued.group(1).replace(".000Z", "+00:00"), "periods": periods, "forecast_updated": issued.group(1).replace(".000Z", "+00:00"), "rain_days": {"updated": issued.group(1), "days": [[when.isoformat(), rain[k]] for k, when in enumerate(times) if rain[k] is not None]}}
 
 
+def met_forecast(hourly, daily, zone):
+    """Met Office Global Spot (DataHub site-specific, GeoJSON) into the rows the weather blocks read. Wind m/s, temperature °C.
+    No sky words: the significant weather code table is not read from the Met Office yet. A field we do not find stays out, never guessed."""
+    props = lambda j: (((j or {}).get("features") or [{}])[0] or {}).get("properties") or {}
+    n = lambda v: v if isinstance(v, (int, float)) else None
+    at = lambda s: datetime.datetime.fromisoformat(s.replace("Z", "+00:00"))
+    kmh = lambda v: "" if n(v) is None else "%d km/h" % round(v * 3.6)
+    way = lambda v: "" if n(v) is None else COMPASS[int((v % 360) / 45 + 0.5) % 8]
+    h, d = props(hourly), props(daily)
+    out = {}
+    if h.get("modelRunDate"):
+        out["hourly"] = [{"startTime": at(x["time"]).isoformat(), "temperature": round(x["screenTemperature"]), "temperatureUnit": "C", "pop": n(x.get("probOfPrecipitation")), "shortForecast": "",
+                          "windSpeed": kmh(x.get("windSpeed10m")), "windDirection": way(x.get("windDirectionFrom10m"))} for x in h.get("timeSeries") or [] if x.get("time") and n(x.get("screenTemperature")) is not None][:48]
+        out["hourly_updated"] = at(h["modelRunDate"]).isoformat()
+    if d.get("modelRunDate"):
+        periods = []
+        for x in d.get("timeSeries") or []:
+            day = at(x["time"]).astimezone(zone).date() if x.get("time") else None
+            for night, t, p, ws, wd in ((False, "dayMaxScreenTemperature", "dayProbabilityOfPrecipitation", "midday10MWindSpeed", "midday10MWindDirection"), (True, "nightMinScreenTemperature", "nightProbabilityOfPrecipitation", "midnight10MWindSpeed", "midnight10MWindDirection")):
+                if day and n(x.get(t)) is not None:
+                    end = datetime.datetime.combine(day + datetime.timedelta(days=1 if night else 0), datetime.time(6 if night else 18), zone)
+                    periods.append({"name": day.strftime("%A") + (" night" if night else ""), "temperature": round(x[t]), "temperatureUnit": "C", "isDaytime": not night, "shortForecast": "", "pop": n(x.get(p)),
+                                    "windSpeed": kmh(x.get(ws)), "windDirection": way(x.get(wd)), "endTime": end.astimezone(UTC).isoformat()})
+        out["periods"], out["forecast_updated"] = periods[:14], at(d["modelRunDate"]).isoformat()
+    for rows, t in (("hourly", "hourly_updated"), ("periods", "forecast_updated")):
+        if not out.get(rows):  # a time with no rows would date the last run's rows as new
+            out.pop(rows, None), out.pop(t, None)
+    return out
+
+
 def suspect(series, unit, now):
     """(hold, note) for a reading that may be false, from its own series. A time in the future is wrong, so it holds; a flat week or a jump in one step may be real, so the page says so and shows it."""
     if not series:
