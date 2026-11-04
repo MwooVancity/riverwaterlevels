@@ -116,6 +116,24 @@ E. The forcing guard. These are its own edge cases, adversarial:
 
 F. Pipeline gaps from the two reviews (see the sections below): URL collision, Canada time zones, phone refresh mixing numbers, truth_world before deploy, per-feed failure counter, world supply from station lists, held gauges returned, world URLs through open_wave, world hubs (fixed), first-day cap (fixed).
 
+## 2026-11-04 afternoon batch
+Done (on check, dry run "refresh OK" 6a68ebb): forcing guard `world.promise_faults` (a COVER have no rule enforces fails selftest); false haves (about, nearby, Canada yearly peaks/flow stats, England yearly values) are now next items on the gaps line; owed() demands the rain tile and along-the-river strip. Met Office proven live on River Trent at Colwick (hourly + 7-day, "Powered by Met Office data"). Committed, deploying: no blank Sky column (74c52e3); status page lists 300 oldest gauges (broke the deploy near 600 gauges) and home anchors name their state, "1 gauges" banned (10197d6).
+
+Internal links, live crawl of 285 pages: world pages have 1-5 inbound links (US median 8), 4 link only home/hub/disclaimer; US and world never link each other (fix = nearby block, border rivers). Scale: state and country hubs 700 links (CA/TX near 5-6k US gauges, England near 650); Cloudflare 20,000 files at about 6,500 gauges (3 files each: page, embed, data.json), no check yet; near_dupes O(n^2) about 2,000 pages. Unmeasured: KV writes/day, Actions minutes, build time per page.
+
+UI review (light, live, 3 pages, 2026-11-04), worst first, open:
+1. World hourly forecast is 24 stacked phone cards; US uses a compact 3-hour table. Give world the same table.
+2. England: "Unknown" alerts said 4 times plus a 90-word "Not on this page yet" list above the data; shorten, move below.
+3. England/Rhine "Is this normal" bar has no marker; England line "above the bottom 95% ... and above the top 5%" contradicts itself.
+4. England tiles "River forecast: Not shown" and "Alerts: Unknown" full width, no reason.
+5. Rhine "Also measured" says agency label Normal while headline says Low.
+6. Unit style differs between tiles; lone "M" after 1.05 reads as million.
+7. "260 cm (2.5 / ft)" breaks inside the unit on phone; long compare labels wrap 4 lines.
+8. Along-the-river is cards beside tables; Rhine weather alerts paragraph sits outside a card; air quality "INDEX 0 of 0 to 4" unreadable.
+9. Rhine observed time "GMT+1" beside "CET".
+10. Ragged half-width tiles on phone (all pages); England jump pills missing; world desktop first row stops at 940 px.
+11. Footer "·" dangles at line ends; England credit sentence repeated.
+
 ## Live block audit, 2026-11-04 02 UTC (script, every gauge page in the sitemap: 162 US, 37 world)
 Blocks with data, US / world:
 - rate_of_change 157/0

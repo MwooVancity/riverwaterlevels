@@ -16,8 +16,8 @@ const REMOTE = LIVE || !!BASE_ARG;
 const BASE = BASE_ARG || (LIVE ? 'https://riverwaterlevels.com' : 'http://localhost:8123');
 const live = REMOTE ? await (await fetch(BASE + '/live-sites.json')).json() : JSON.parse(fs.readFileSync(path.join(DIST, 'live-sites.json'), 'utf8')); // [[site, url, built, tz]]
 const want = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const pages = live.filter(([s]) => !want.length || want.includes(s));
-for (const w of want) if (!live.some(([s]) => s === w)) console.log('NOT SHOT', w, ': not in live-sites.json of this build (mark it live and build first)');
+const pages = live.filter(([s]) => !want.length || want.includes(s)).concat(want.filter((w) => w.startsWith('/')).map((u) => [u.split('/').filter(Boolean).join('-'), u])); // a path (a world page, never in live-sites.json) is shot by its address
+for (const w of want.filter((w) => !w.startsWith('/'))) if (!live.some(([s]) => s === w)) console.log('NOT SHOT', w, ': not in live-sites.json of this build (mark it live and build first)');
 const CODE = (await import('node:child_process')).execFileSync(process.platform === 'win32' ? 'python' : 'python3', ['-I', '-c', 'import sys; sys.path.insert(0, sys.argv[1]); from lib.common import template_hash; print(template_hash())', ROOT]).toString().trim();
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.ico': 'image/x-icon' };
 const server = http.createServer((req, res) => {
