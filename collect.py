@@ -1592,7 +1592,7 @@ def fetch_eccc(sid, prev):
         raise RuntimeError("no Canadian readings")
     prev = prev or {}
     months = prev.get("months")
-    if not months or due(prev.get("months_at"), 168):
+    if not months or due(prev.get("months_at"), 168) or "peaks" not in prev:  # "peaks" added 2026-11-04: one early refresh per gauge
         hist = http_json(api + "hydrometric-monthly-mean/items?f=json&STATION_NUMBER=%s&limit=1500" % sid, {}, 30)["features"]
         months = {}
         for f in sorted(hist, key=lambda f: f["properties"]["DATE"]):
@@ -1601,6 +1601,12 @@ def fetch_eccc(sid, prev):
                 months.setdefault(p["DATE"][5:7], []).append(round(p["MONTHLY_MEAN_LEVEL"], 3))
         years = [f["properties"] for f in http_json(api + "hydrometric-annual-statistics/items?f=json&STATION_NUMBER=%s&limit=400" % sid, {}, 30)["features"] if f["properties"].get("DATA_TYPE_EN") == "Water Level"]
         tops, lows = [p["MAX_VALUE"] for p in years if p.get("MAX_VALUE") is not None], [p["MIN_VALUE"] for p in years if p.get("MIN_VALUE") is not None]
+        try:  # instantaneous yearly peaks (HYDAT); flagged peaks (ice B, estimated E, partial A) are left out, never shown as plain values
+            prev = dict(prev, peaks=sorted([int(p["IDENTIFIER"].split(".")[1]), round(p["PEAK"], 3), (p.get("DATE") or "")[:10]] for p in (f["properties"] for f in http_json(api + "hydrometric-annual-peaks/items?f=json&STATION_NUMBER=%s&limit=500" % sid, {}, 30)["features"])
+                                         if p.get("DATA_TYPE_EN") == "Water Level" and p.get("PEAK_CODE_EN") == "Maximum" and p.get("PEAK") is not None and not p.get("SYMBOL_EN"))[-15:])
+        except Exception as e:
+            print("annual peaks failed", sid, str(e)[:100])
+            prev = dict(prev, peaks=prev.get("peaks") or [])  # keep the last good list; [] stops a retry every run until the weekly refresh
         prev = dict(prev, years=[[int(p["IDENTIFIER"].split(".")[1]), round(p["MAX_VALUE"], 3), p.get("MAX_DATE"), round(p["MIN_VALUE"], 3), p.get("MIN_DATE")] for p in years if p.get("MAX_VALUE") is not None and p.get("MIN_VALUE") is not None][-15:], record=dict({"HHW": round(max(tops), 3)} if tops else {}, **({"NNW": round(min(lows), 3)} if lows else {})), drainage=(http_json(api + "hydrometric-stations/items?f=json&STATION_NUMBER=%s&limit=1" % sid, {}, 30)["features"] or [{"properties": {}}])[0]["properties"].get("DRAINAGE_AREA_GROSS"))
     if not prev.get("days") and HISTORY_LEFT[0] > 0:
         HISTORY_LEFT[0] -= 1
@@ -1615,7 +1621,7 @@ def fetch_eccc(sid, prev):
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
     return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "flag": last.get("LEVEL_SYMBOL_EN"), "zone": eccc_zone(last, geo[0], geo[1]), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
-            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
+            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "peaks": prev.get("peaks"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
 
 

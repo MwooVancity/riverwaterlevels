@@ -314,6 +314,9 @@ def england_page():
     rt = sec(hn, "rate_of_change") if 'id="rate_of_change"' in hn else ""
     assert "Last 1 h" in rt and "Last 24 h" in rt and "Highest in 7 days" in rt and "our arithmetic" in rt and " ft" not in rt, "a world page has no rate of change, or it shows feet as the level (0 of 37 live, 2026-11-04)"
     assert 'id="world_history"' in hy and "2020" in sec(hy, "world_history"), "yearly highs and lows hid because the gauge has no daily history (6 of 8 Canadian pages, 2026-11-04)"
+    rp = dict(rh, peaks=[[2023, 1.234, "2023-04-18"], [2024, 2.5, "2024-04-02"]])
+    hp = world.page(p, rp, now)[1]
+    assert 'id="annual_peaks"' in hp and "2024-04-02" in sec(hp, "annual_peaks") and "annual_peaks" not in world.missing(hp, rp) and "annual_peaks" in world.missing(hp.replace('id="annual_peaks"', 'id="x"'), rp), "Canada's yearly peaks are cached but not on the page, or a page without them ships (COVER b_peaks have)"
     assert "openstreetmap.org/?mlat=" in hn and 'id="about_gauge"' in hn and "Station number" in sec(hn, "about_gauge"), "a world page has no About this gauge block (0 of 37 live, 2026-11-04)"
     assert 'id="nearby_gauges"' in hn and 'href="/england/river-leen-at-bulwell/"' in hn and "nearby_gauges" not in world.missing(hn, rh), "a world page with a gauge 2 km away shows no nearby gauges (0 of 37 live, 2026-11-04)"
     assert '<nav class="jump"' in hh and 'href="#world_history"' in hh, "an England page has no jump links while US and German pages do (UI review 2026-11-04)"

@@ -88,7 +88,7 @@ def to_rec(page, r):
         links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
         links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": {} if key == "ea" else w.get("rain") or {},  # England's rain tile is drawn in mm by ea_rain_tile, never through inches
-            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), peaks=r.get("peaks"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -207,7 +207,7 @@ US_ONLY = "none: US federal product, no counterpart in this country's open feeds
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
 MAP = "none: no open map we may embed was read; the coordinates in About this gauge open OpenStreetMap at the gauge, and the official links open the agency map"
-HYDAT = "next: Water Office annual peaks and flow statistics (hydrometric-annual-peaks, same API, 144 records at Britannia read live 2026-11-04); not wired"
+HYDAT = "next: Water Office flow statistics (HYDAT daily flows, same API); not wired"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
     "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
@@ -227,7 +227,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_sustained": ("none: US block reads flow percentiles, which Canada does not publish", "none: PEGELONLINE keeps 30 days and no history"),
     "b_record": ("have", "none: record marks are shown in official marks"),
     "b_flowdur": (HYDAT, "none: PEGELONLINE keeps 30 days and no history"),
-    "b_peaks": (HYDAT, "none: PEGELONLINE publishes marks, not annual peaks"),
+    "b_peaks": ("have", "none: PEGELONLINE publishes marks, not annual peaks"),
     "b_stage_years": ("have", "none: PEGELONLINE publishes marks, not yearly values"),
     "b_daily": ("none: published daily means end over a year back; the chart and our archive cover recent days", "none: PEGELONLINE keeps 30 days and no history"),
     "b_drought": ("have", "none: DWD publishes crop soil moisture and a climate index, no drought class for a place"),
@@ -274,7 +274,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
-TODO = {HYDAT: "yearly peaks and flow statistics (Water Survey of Canada archive)",
+TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)",
         MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
@@ -538,12 +538,10 @@ def owed(r):
         return ["weather not collected yet"]
     rain = r.get("ea") is not None or ((w.get("rain") or {}).get("inches") or {}).get("last_24h") is not None  # England's tile has four states and always shows; elsewhere a total shows its tile, fresh or marked old. Canada has none (live 2026-11-04: 14 pages named for a tile they could not have)
     out = ["alerts", "official_links", "stage_chart"] + (['class="tile rain'] if rain else []) + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge"]
-    if w.get("no_weather"):
-        return out
-    for key, t, bid in (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
+    for key, t, bid in () if w.get("no_weather") else (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
         if fresh(w, key, t, bid):
             out.append(bid)
-    if fresh(w, "aq", (w.get("aq") or {}).get("t"), "air_quality"):
+    if not w.get("no_weather") and fresh(w, "aq", (w.get("aq") or {}).get("t"), "air_quality"):
         out.append("air_quality")
     if fc_top({"fc": r.get("fc"), "zone": "UTC"}, datetime.datetime.now(datetime.timezone.utc)):
         out.append("river_forecast")
@@ -557,6 +555,8 @@ def owed(r):
         out.append("rate_of_change")
     if r.get("deciles") or r.get("days") or r.get("years"):
         out.append("world_history")
+    if r.get("peaks"):
+        out.append("annual_peaks")
     if (r.get("access") or {}).get("rows"):
         out.append("access_points")
     if (r.get("normals") or {}).get("temp"):

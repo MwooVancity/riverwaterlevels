@@ -836,3 +836,14 @@ def b_world_history(G):
     if f.get("years"):
         body += table(["Year", "Highest", "Date", "Lowest", "Date"], "".join(tr([str(y), fmt_level(hi, u), esc((hd or "")[:10]), fmt_level(lo, u), esc((ld or "")[:10])], right=(1, 3)) for y, hi, hd, lo, ld in reversed(f["years"])), right=(1, 3))
     return block("world_history", "How today compares with past years", "agency", body, f.get("hist_line") or "Source: %s, %s, daily means and annual statistics. Our calculation from those records; published records end before this year." % (f["api"], f["name"]), f.get("hist_src") or f["src"])
+
+
+def b_world_peaks(G):
+    """Canada's yearly instantaneous peak level (HYDAT annual peaks): the US annual_peaks question, answered from the agency's own archive."""
+    f = G["feed"]
+    if not f.get("peaks"):
+        return None
+    from lib.world import fmt_level
+    rows = "".join(tr([str(y), fmt_level(v, f["unit"]), esc(d)], right=(1,)) for y, v, d in reversed(f["peaks"]))
+    return block("annual_peaks", "Highest level each year", "agency", table(["Year", "Peak level", "Date"], rows, right=(1,)),
+                 "Source: %s, %s, annual instantaneous peaks (HYDAT), last %d years on file; peaks the agency marks with a data symbol are left out." % (f["api"], f["name"], len(f["peaks"])), f["src"])
