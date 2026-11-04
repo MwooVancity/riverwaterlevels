@@ -315,7 +315,9 @@ def room(feed, pages, thin=None):
     if proof_faults([feed], proved(pages)) or thin is None:
         return 0
     have = [n for p in pages if p.get("feed", "pegelonline") == feed for n in p.get("gauge_pages") or []]
-    return 0 if have and all(n in thin for n in have) else 10 ** 6
+    if not have:  # a country with no page yet opens 2 a day, so its first pages are read live before the rest follow (review 2026-11-04)
+        return 2
+    return 0 if all(n in thin for n in have) else 10 ** 6
 
 
 GATE = True

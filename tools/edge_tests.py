@@ -231,6 +231,7 @@ def england(ago):
             no_alert = {k: "seen on live data, fixture" for k in world.PROOFS if k != "alerts"}
             assert not world.proof_faults(["ea"], {"ea": no_alert}) and world.proof_faults(["eccc"], {"eccc": no_alert}), "England needed an alert proof to ship, or another country shipped without one"
             world.PROVED = dict(keep, ea={k: "seen on live data, fixture" for k in world.PROOFS})
+            assert world.room("ea", [dict(pages[0], gauge_pages=[])], {}) == 2, "a country with no page yet opened more than 2 a day"
             assert world.room("ea", pages, {}) > 0 and world.room("ea", [dict(pages[0], gauge_pages=list(range(25)))], {}) > 0, "a country cap is back"
             assert world.room("ea", [dict(pages[0], gauge_pages=["4009"])], {"4009": ["thin"]}) == 0 and world.room("ea", pages, None) == 0, "a country whose every page is thin, or an unread live status, still added gauges"
             world.PROVED = dict(keep, ea=dict(keep["ea"], alerts=""))
