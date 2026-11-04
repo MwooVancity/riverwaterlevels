@@ -317,8 +317,9 @@ def crumb_ld(items):
     return '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": els}, separators=(",", ":")).replace("</", "<" + chr(92) + "/")
 
 
-JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("river_forecast", "River forecast"), ("hourly_heatmap", "Hourly forecast"), ("month_chart", "30 days"), ("multi_year", "Earlier years"),
-        ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Upstream and downstream"), ("nearby_gauges", "Nearby gauges"), ("about_gauge", "About"))
+JUMP = (("alerts", "Alerts"), ("flow_chart", "7 days"), ("stage_chart", "Gage height"), ("official_marks", "Official marks"), ("river_forecast", "River forecast"), ("hourly_heatmap", "Hourly forecast"), ("hourly_forecast", "Hourly forecast"),
+        ("weather_forecast", "7-day weather"), ("month_chart", "30 days"), ("multi_year", "Earlier years"), ("world_history", "Earlier years"),
+        ("record_comparison", "Record"), ("annual_peaks", "Flood record"), ("related_gauges", "Upstream and downstream"), ("along_river", "Along the river"), ("nearby_gauges", "Nearby gauges"), ("about_gauge", "About"))  # world ids too: England had no jump links (UI review 2026-11-04)
 
 
 CHART_RANGES = (("flow_chart", "7 days"), ("month_chart", "30 days"), ("year_chart", "12 months"), ("multi_year", "Earlier years"))
