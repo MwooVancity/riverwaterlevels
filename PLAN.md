@@ -121,6 +121,14 @@ Done (on check, dry run "refresh OK" 6a68ebb): forcing guard `world.promise_faul
 
 Internal links, live crawl of 285 pages: world pages have 1-5 inbound links (US median 8), 4 link only home/hub/disclaimer; US and world never link each other (fix = nearby block, border rivers). Scale: state and country hubs 700 links (CA/TX near 5-6k US gauges, England near 650); Cloudflare 20,000 files at about 6,500 gauges (3 files each: page, embed, data.json), no check yet; near_dupes O(n^2) about 2,000 pages. Unmeasured: KV writes/day, Actions minutes, build time per page.
 
+Scale, measured 2026-11-04 (221 gauges live):
+- Cloudflare files: 3 per gauge, refused past 20,000 (about 6,500 gauges). check.py `file_limit` now warns at 15,000 files and fails at 19,000. Fix before then: drop the embed copies (about 10,000 gauges), then serve data.json from the Worker.
+- KV writes: at most 480 + 96 + 24 a day; one key, so they do not grow with gauges. Shared with asmrregistry: their writes not counted here.
+- Worker: every visitor's request parses the whole "live" key (worker line 94). About 70 bytes a gauge, so 1 MB at 14,000; CPU limit 10 ms, likely over near 10,000 gauges (then numbers stop refreshing; the page stays). The cron makes 1 USGS call per 300 gauges; the Worker's 50-subrequest cap hits about 14,000. Both already marked ponytail in the code at 1,500.
+- GitHub: public repo, so Actions minutes are free. Cache 6.3 GB of 10 GB (465 entries, 24 saves a day, about 35 MB data cache at 221 gauges). LRU eviction keeps the newest. About 160 KB a gauge, so 1 GB a save near 6,000 gauges: restore and save time grows every run.
+- Run time: hourly refresh 8 to 25 min; the 11 UTC release run took 42 min (45-min brake). Measure where the release run spends its time before the next country.
+- near_dupes all pairs: about 2,000 pages hits the 45-min brake. A bottom-k shortcut would miss template pages that differ only in readings, so it needs MinHash with banding and a fixture of two pages differing only in numbers.
+
 UI review (light, live, 3 pages, 2026-11-04), worst first, open:
 1. World hourly forecast is 24 stacked phone cards; US uses a compact 3-hour table. Give world the same table.
 2. England: "Unknown" alerts said 4 times plus a 90-word "Not on this page yet" list above the data; shorten, move below.

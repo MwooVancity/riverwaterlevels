@@ -2002,7 +2002,7 @@ def wx_germany(r, w, ctx):
         got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, back, day), {}, 30)["data"].get(i))
         if got and any(v[1] is not None for v in got.values()):
             t = max(k for k, v in got.items() if v[1] is not None)
-            w["aq"] = {"value": "%d of 0 to 4" % got[t][1], "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}
+            w["aq"] = {"value": "%d, on the agency's scale from 0 (very good) to 4 (very bad)" % got[t][1],  # "0 of 0 to 4" was unreadable (UI review 2026-11-04) "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}
 
 
 def wx_fill(page, rows, old, ctx):

@@ -520,6 +520,7 @@ def check_dir(d):
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
         site_bad += redirect_limit(len(redirects))
+    site_bad += file_limit(sum(len(f) for _, _, f in os.walk(d)))
     sp = os.path.join(d, "single-rivers.json")
     if os.path.exists(sp):
         redirects.update(json.load(open(sp, encoding="utf-8")))
@@ -647,6 +648,13 @@ def world_rules(h):
     return (["world gauge page is missing: " + ", ".join(miss)] if miss else []) + (["world gauge page still says: " + ", ".join(left)] if left else [])
 
 
+def file_limit(n):
+    """Cloudflare takes at most 20,000 files per deploy and refuses the rest: the live site freezes (each gauge is 3 files: page, embed copy, data.json, so about 6,500 gauges). Fail at 19,000 with the reason; warn from 15,000 so the fix lands first."""
+    if n > 15000:
+        print("WARNING: %d files in the deploy; Cloudflare refuses past 20,000. Drop the embed copies or move data.json to the Worker before 19,000." % n)
+    return ["%d files in the deploy (Cloudflare refuses past 20,000; this check fails at 19,000): drop the embed copies or serve data.json from the Worker" % n] if n > 19000 else []
+
+
 def redirect_limit(n):
     """Cloudflare refuses the whole deploy past 100 rules once one is dynamic; the build passes and the live site freezes (2026-11-01)."""
     return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
@@ -671,6 +679,7 @@ def selftest():
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
+    assert file_limit(19001) and not file_limit(19000), "selftest: the Cloudflare 20,000-file limit did not fire"
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
     import datetime as dt_, zlib
     from lib.common import week_due
