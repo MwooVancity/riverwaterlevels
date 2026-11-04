@@ -692,6 +692,14 @@ def b_along(G):
     return block("along_river", "Other gauges nearby" if f["along"][0][0] == "Nearby" else "Along the river", "agency", table(["Where", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
 
 
+def b_world_about(G):
+    """Station facts from the agency's own record: number, its name for the gauge, river kilometre, record length, position."""
+    f = G["feed"]
+    if len(f.get("about") or ()) < 2:
+        return None
+    return block("about_gauge", "About this gauge", "agency", table(["Fact", "Value"], "".join(tr([esc(k), esc(v)]) for k, v in f["about"])), "Source: %s station record, %s." % (esc(f["api"]), esc(f["name"])), f["src"])
+
+
 def b_world_near(G):
     """Up to five gauges on other rivers within 100 km, nearest first, each with its latest reading and a link: a reader whose river is quiet checks the next one over (the US page has had this since 2026-10-21)."""
     f = G["feed"]

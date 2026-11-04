@@ -717,20 +717,20 @@ def selftest():
     assert not world.promise_faults(ids), "selftest: forcing guard: %s" % world.promise_faults(ids)[:3]
     real = world.COVER
     try:
-        world.COVER = dict(real, b_about=("have",) * len(world.ORDER))
-        assert any("b_about" in f for f in world.promise_faults(ids)), "selftest: a have that no page is forced to show (about_gauge, 0 of 37 live 2026-11-04) passed"
+        world.COVER = dict(real, b_camera=("have",) * len(world.ORDER))
+        assert any("b_camera" in f for f in world.promise_faults(ids)), "selftest: a have that no page is forced to show passed (about_gauge read have while 0 of 37 live pages showed it, 2026-11-04)"
     finally:
         world.COVER = real
     fw = {"fetched_at": "x", "no_weather": "far"}
-    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": fw, "_along": True}) == ['class="tile rain', "along_river"], "selftest: a world page without its rain tile or along-the-river strip passed"
-    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river"', {"wx": fw, "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": fw, "_along": True}) == ['class="tile rain', "along_river", "about_gauge"], "selftest: a world page without its rain tile or along-the-river strip passed"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river" id="about_gauge"', {"wx": fw, "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
     assert world.cover_faults([], [], {"b_x": ("next: wire this source, words missing", "have")}) and not [f for f in world.cover_faults([], [{"feed": "ea", "gauge_pages": list(range(500))}]) if "lists" in f], "selftest: a next item with no reader words passed, or a country cap is back"
     assert "weather not collected yet" in world.missing("<p></p>", {"name": "x"}), "selftest: a gauge the weather never reached must not publish"
     fw = {"fetched_at": "t", "periods": [1], "forecast_updated": "2020-01-01T00:00:00+00:00"}
     assert "weather_forecast" not in world.owed({"wx": fw}), "selftest: an outage past the hide limit must not pull a live page"
-    assert world.missing('id="alerts" id="official_links" id="stage_chart" class="tile rain"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart" class="tile rain" id="about_gauge"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"
     assert "weather_forecast" in world.owed({"wx": dict(fw, forecast_updated=wn.isoformat())}) or True
     assert world_rules(wh + "<script>fetch('https://api.weather.gov/x')</script>") and world_rules(wh + "<img src=\"https://unknown.example/x.png\">") and world_rules(wh + "NWS material is not subject to copyright"), "selftest: a US script, an unknown host or a US credit on a world page"
     assert world_rules(wh + "<p>wind 5 mph</p>") and world_rules(wh + "<p>40 °F</p>") and not world_rules(wh + "<p>7 km/h (5 mph), 4 °C (40 °F)</p>"), "selftest: a US unit alone on a world page"

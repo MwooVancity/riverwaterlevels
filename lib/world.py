@@ -218,7 +218,6 @@ def proved(pages):
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
-ABOUT = "next: station facts we already collect (agency id, coordinates, gauge zero, record span), not yet a block"  # live 0 of 37 world pages, 2026-11-04
 HYDAT = "next: Water Survey of Canada archive (HYDAT) yearly extremes and daily flows; not wired"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
@@ -245,7 +244,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_drought": ("have", "none: DWD publishes crop soil moisture and a climate index, no drought class for a place"),
     "b_access": ("have", "have"),
     "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
-    "b_about": (ABOUT, ABOUT),
+    "b_about": ("have", "have"),
     "b_map": ("none: the map service is USGS, US only; links open the agency map", "none: the map service is USGS, US only; links open the agency map"),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
@@ -260,7 +259,7 @@ MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (own
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
-    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": ABOUT,
+    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": COVER["b_rate"][0],
@@ -286,7 +285,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
-TODO = {ABOUT: "about this gauge (station facts)", HYDAT: "yearly peaks and flow statistics (Water Survey of Canada archive)",
+TODO = {HYDAT: "yearly peaks and flow statistics (Water Survey of Canada archive)",
         MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
@@ -512,7 +511,7 @@ def owed(r):
     w = r.get("wx")
     if not w or (not w.get("fetched_at") and not w.get("periods")):
         return ["weather not collected yet"]
-    out = ["alerts", "official_links", "stage_chart", 'class="tile rain'] + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else [])
+    out = ["alerts", "official_links", "stage_chart", 'class="tile rain'] + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge"]
     if w.get("no_weather"):
         return out
     for key, t, bid in (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
@@ -593,6 +592,14 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     own = world_gauge_url(p, r.get("title") or r["name"])
     rec["feed"]["near"] = near(r, idx, {own} | {x[5] for x in rec["feed"]["along"] if x[5]}) if idx and r.get("lat") is not None else []
     r["_near"] = bool(rec["feed"]["near"])
+    feed_key = p.get("feed", "pegelonline")
+    rec["feed"]["about"] = [(k, v) for k, v in (
+        ("Agency", rec["feed"]["name"]),
+        ("Station number", r.get("number") or r["name"]),
+        ("Station name in the agency's list", r["name"] if feed_key == "pegelonline" else r.get("title")),
+        ("River kilometre (the marker on the bank)", ("%.2f" % r["km"]) if feed_key == "pegelonline" and isinstance(r.get("km"), (int, float)) and r["km"] > 0 else None),
+        ("Years of daily values on record", str(r["day_years"]) if r.get("day_years") else None),
+        ("Coordinates", "%.4f, %.4f" % (r["lat"], r["lon"]) if r.get("lat") is not None else None)) if v]  # every fact read from the agency's station record in this run's cache, never typed
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
