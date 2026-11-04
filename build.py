@@ -186,7 +186,7 @@ def main():
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
-        world_rows, world_ids = [], []
+        world_rows = []
         wnow, wpages = datetime.datetime.now(datetime.timezone.utc), []
         for page in directory.world_pages():
             try:
@@ -208,13 +208,10 @@ def main():
                 gp = world.page(page, r, wnow, d["rows"], keep, near)
                 emit(gp[0], gp[1])
                 built_map[gp[0]] = {"at": iso(now)}  # keyed by URL: check.py keep_old_times keeps a carried world page's old time, so the watchdog's 6 h alarm sees it
-                if r.get("uuid"):
-                    world_ids.append(r["uuid"])
                 world_rows.append([(r.get("title") or "%s at %s" % (page["river"], r["name"].replace(" UP", "").title())), gp[0], round(r["lat"], 4), round(r["lon"], 4), {"eccc": "Canada", "ea": "England UK"}.get(page.get("feed"), "Germany Europe")])
             wp = directory.world_page(page, d, wnow, keep)
             if wp:
                 emit("/%s/" % page["slug"], wp.replace("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page.").replace("-0.00 m", "0.00 m"))
-        json.dump(world_ids, open(os.path.join(nxt, "world-sites.json"), "w", encoding="utf-8"), ensure_ascii=False)
         os.makedirs(os.path.join(nxt, "archive"), exist_ok=True)
         for f in glob.glob(os.path.join(CACHE, "_archive-*.json")):
             shutil.copy(f, os.path.join(nxt, "archive", os.path.basename(f)[1:]))

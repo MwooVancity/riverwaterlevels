@@ -102,8 +102,7 @@ SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active N
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
         ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("within about 15 miles of the gauge", "within about 25 km of the gauge"), (' <a href="#gauge_map">Map of the gauge location</a>', ""))
-LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');function tick(t){if(a){var m=Math.round((Date.now()-Date.parse(t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}}if(!w)return;tick(w.dataset.t);if(!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;tick(g[1]);
-var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).replace(/GMT[+-]\\d+(:\\d\\d)?/,function(m){return @M@[m]||m})}).catch(function(){})})();</script>"""
+LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');if(!w||!a)return;var m=Math.round((Date.now()-Date.parse(w.dataset.t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'})();</script>"""  # the age only: a swapped level beside the build's feet, change and label mixed two times on one page (review 2026-11-04); world pages rebuild every hour
 
 
 def metric(h):
@@ -117,17 +116,6 @@ def metric(h):
     h = re.sub(r"([\d.]+) inHg", lambda m: "%.0f hPa" % (float(m.group(1)) * 33.864), h)
     h = re.sub(r"(\d+\.\d\d) <small>in</small>", lambda m: "%.1f <small>mm</small>" % (float(m.group(1)) * 25.4), h)
     return re.sub(r"(\d+\.\d\d) in(?=[,<])", lambda m: "%.1f mm" % (float(m.group(1)) * 25.4), h)
-
-
-def zone_names(zone):
-    """{"GMT+1": "CET", ...}: the browser's en-US names for a European zone are offsets, the build's are abbreviations; the refreshed time must read like the rest of the page (Kaub showed GMT+1 beside CET, 2026-11-04)."""
-    out = {}
-    for m in (1, 7):
-        d = datetime.datetime(2026, m, 15, 12, tzinfo=zoneinfo.ZoneInfo(zone))
-        h, mins = divmod(int(d.utcoffset().total_seconds() // 60), 60)
-        if not d.tzname().startswith(("+", "-", "GMT")) and (h or mins):
-            out["GMT%+d%s" % (h, ":%02d" % mins if mins else "")] = d.tzname()
-    return out
 
 
 def localize(h, feed, river, place, hub, flat=False):
@@ -167,7 +155,7 @@ def localize(h, feed, river, place, hub, flat=False):
     later = '<p class="gaps">Not on this page yet: %s.</p>' % ", ".join(feed["later"]) if feed.get("later") else ""
     h = h.replace('<section data-g="now"', (feed.get("flood_line") or '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p>' % feed["flood"]) + ("" if 'id="official_links"' in h else later) + '<section data-g="now"', 1)
     h = re.sub(r'(<section[^>]*id="official_links")', lambda m: later + m.group(1), h, count=1)  # the to-do list sits after the data, by the agency links, never above the reading
-    h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE.replace("@N@", feed["station"]).replace("@Z@", feed["zone"]).replace("@M@", json.dumps(zone_names(feed["zone"]))).replace("@D@", "2" if feed["unit"] == "m" else "0"), h, flags=re.S)
+    h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE, h, flags=re.S)
     h = re.sub(r"(\d) (cm|m) \((-?[\d.,]+) ft\)", "\\1\u00a0\\2 (\\3\u00a0ft)", h)  # a level and its feet never break apart on a phone, "260 cm (2.5 / ft)" (UI review 2026-11-04)
     for a, b in feed.get("swap") or ():  # last: the country's own words over the general ones
         h = h.replace(a, b)

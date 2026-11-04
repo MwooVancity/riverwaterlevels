@@ -312,7 +312,7 @@ def england_page():
     assert 'id="nearby_gauges"' in hn and 'href="/england/river-leen-at-bulwell/"' in hn and "nearby_gauges" not in world.missing(hn, rh), "a world page with a gauge 2 km away shows no nearby gauges (0 of 37 live, 2026-11-04)"
     assert '<nav class="jump"' in hh and 'href="#world_history"' in hh, "an England page has no jump links while US and German pages do (UI review 2026-11-04)"
     assert " ft)" in hh and " ft)" not in hh, "a level and its feet can break across lines on a phone, '260 cm (2.5 / ft)' (UI review 2026-11-04)"
-    assert world.zone_names("Europe/Berlin") == {"GMT+1": "CET", "GMT+2": "CEST"} and world.zone_names("Europe/London") == {"GMT+1": "BST"} and "@M@" in world.LIVE, "the refreshed reading time says GMT+1 where the page says CET (Kaub 2026-11-04)"
+    assert "fetch(" not in world.LIVE and "data-live=stage" not in world.LIVE, "the world page swaps its level in the browser while its feet, change and label stay from the build (review 2026-11-04)"
     assert 'class="rb"' not in hh and "bottom 95%" not in hh, "an empty Lower-Typical-Higher scale with no marker, or the self-contradicting England range sentence, is back (UI review 2026-11-04)"
     assert hh.find("Not on this page yet") > hh.find('id="world_history"') > 0 and hh.count("Unknown on this page") <= 1, "the to-do list sits above the readings, or England repeats its Unknown flood line"
     assert "this date in 21 years" in hist and "Median" not in hist and "daily means" not in hist and "Hydrology API" in hist, "England history claims a median or daily means the agency does not publish, or lost its source: %s" % hist[:300]

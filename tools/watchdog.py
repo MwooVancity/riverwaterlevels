@@ -88,13 +88,6 @@ def main():
         on = set(s.get("by_gauge") or {})
         missing = sorted(live - on)
         (bad if missing else ok).append("%d of %d live gauges on the site%s" % (len(live & on), len(live), (" (missing: %s)" % " ".join(missing[:12])) if missing else ""))
-        try:  # gauges outside the US: the Worker's copy must keep moving
-            wl = get("/live/world.json")
-            if wl.get("t"):
-                wh = hours_since(wl["t"])
-                (bad if wh > 3 else ok).append("world gauge readings last changed %.1f h ago" % wh)
-        except Exception:
-            pass
         try:  # rolling rebuild (build.py ROLL_H 2): a page that stopped being rebuilt shows here, never silently
             bm = get("/_built.json")
             old_ = sorted((hours_since(v["at"]), k) for k, v in bm.items() if v.get("at"))[-3:]
