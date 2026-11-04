@@ -2157,7 +2157,7 @@ def archive(page, rows):
 def fetch_world():
     """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row;
     three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
-    base, miss, ctx = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", 0, {}
+    base, miss, ctx = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", {}, {}  # failures in a row per feed: a dead PEGELONLINE once skipped Canada and England too (review 2026-11-04)
     if os.path.exists(os.path.join(CACHE, "_rhine.json")) and not os.path.exists(os.path.join(CACHE, "_river-rhine.json")):
         os.replace(os.path.join(CACHE, "_rhine.json"), os.path.join(CACHE, "_river-rhine.json"))
     pages = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))
@@ -2171,36 +2171,37 @@ def fetch_world():
         for name in page["stations"]:
             q = urllib.parse.quote(name)
             try:
-                if miss >= 3:
+                feed = page.get("feed", "pegelonline")
+                if miss.get(feed, 0) >= 3:
                     raise RuntimeError("feed down this run")
                 if page.get("feed") in ("eccc", "ea"):
                     rows.append((fetch_eccc if page["feed"] == "eccc" else fetch_ea)(name, old.get(name)))
-                    miss = 0
+                    miss[feed] = 0
                     note(page["feed"], "ok")
                     continue
-                st = http_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
+                st = retry_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
                 cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
-                past = http_json(base + q + "/W/measurements.json?start=P8D", {}, 30)
+                past = retry_json(base + q + "/W/measurements.json?start=P8D", {}, 30)
                 day_ago = datetime.datetime.fromisoformat(cur["timestamp"]) - datetime.timedelta(days=1)
                 then = next((p["value"] for p in past if datetime.datetime.fromisoformat(p["timestamp"]) >= day_ago), None)
                 past = past[-672:]  # the table's line stays 7 days
                 flow = []
                 if name in (page.get("gauge_pages") or []) and any(t["shortname"] == "Q" for t in st["timeseries"]):
-                    flow = [[p["timestamp"], p["value"]] for p in http_json(base + q + "/Q/measurements.json?start=P7D", {}, 30)[::8]]
+                    flow = [[p["timestamp"], p["value"]] for p in retry_json(base + q + "/Q/measurements.json?start=P7D", {}, 30)[::8]]
                 try:
-                    fc = http_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
+                    fc = retry_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
                 except urllib.error.HTTPError:
                     fc = []  # the Federal Institute of Hydrology forecasts a few gauges; the rest answer 404
                 rows.append({"name": name, "uuid": st["uuid"], "number": st.get("number"), "flow": flow, "ship": cur.get("stateNswHsw"), "fc": {"at": fc[0]["initialized"], "pts": [[p["timestamp"], p["value"], p["type"]] for p in fc]} if fc else None, "km": st["km"], "lat": st.get("latitude"), "lon": st.get("longitude"), "cm": cur["value"], "time": cur["timestamp"], "state": cur.get("stateMnwMhw"), "then": then,
                              "glw": marks.get("GlW"), "nnw": marks.get("NNW"), "mw": marks.get("MW"), "week": [p["value"] for p in past[::8]], "marks": marks, "also": side_readings(st["timeseries"]), **({"series": [[p["timestamp"], p["value"]] for p in past]} if name in (page.get("gauge_pages") or []) else {})})
             except Exception as e:
-                miss += 1
+                miss[feed] = miss.get(feed, 0) + 1
                 note(page.get("feed", "pegelonline"), "failed", e)
                 if name in old:
                     rows.append(old[name])
             else:
-                miss = 0
+                miss[feed] = 0
                 note("pegelonline", "ok")
         if rows:
             wx_fill(page, rows, old, ctx)
