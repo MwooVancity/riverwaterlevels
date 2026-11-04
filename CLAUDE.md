@@ -60,7 +60,7 @@ A person at or near this river today, on a phone, with 30 seconds: to fish, padd
 ## Every change
 1. One batch through script files; `python -I gates.py` once.
 2. Commit explicit paths, push branch `check`; `dryrun.yml` runs itself. Read "refresh OK", then push main in a separate step. A push to main is a deploy.
-3. Read the live page. Update PLAN.md with the proof.
+3. Read the live page and status.json `world.gaps`/`thin` (a new rule can pass every fixture and still name live pages). Update PLAN.md with the proof.
 
 Failures seen: laptop data differs from cloud data (only the dry run proves); one rule in several places (grep first, `truth_tests.py` included); a file only on the laptop (`git ls-files` every input); old data shown as now (render with the clock shifted 2 days).
 
