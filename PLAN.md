@@ -56,6 +56,20 @@ Fixed same night: a country with no live page opens 2 a day (`world.room`), not 
 3. One-liners: `fetch_world` shares one failure counter across feeds (3 PEGELONLINE failures skip Canada and England, blamed on the wrong agency): count per feed. `release.py` lacks open_wave's 10-year rule: 540 of 7,445 US picks would ship and stay noindexed (11194152, 05341498 already). World URLs bypass `open_wave` (indexable on first build).
 Later: Canadian rows sharing a US keyword (Cedar, Grand, Snake, Vermilion) take US searches; Worker CPU 8.9 ms p99 of 10 at 142 gauges (Workers Paid, owner); GitHub cache about 1.5 GB at 9,100 gauges vs 10 GB (one fixed key; a lost cache resets the Met Office ledger); shard 0 fetches world gauges one at a time (about 35 min at 400); `world_match.py | head -3 || true` hides matcher errors; `tools/quarter/` keyword refresh is manual.
 
+## US vs world parity audit, 2026-11-04 (second read-only agent, 17 stages, code checked)
+Fixed same night: country and river hubs had the 60-link budget of a prose page, so the 46th gauge on /canada/ (23 links live) would refuse every deploy; now kind "country", budget 700, carryable.
+World gaps still open, worst first:
+1. Two world gauges whose titles slug alike share one URL; the second overwrites the first (build.py about 207).
+2. Canada zone is America/Toronto for every province: Nunavut 1-2 h off, east Quebec 1 h. Take the offset from the feed.
+3. Phone refresh swaps only the cm number: feet line, 24 h change and label stay from the build with no note; keyed by name, Moselle names mixed case may never refresh. `pollWorld` reads PEGELONLINE only (Canada and England never refresh between builds); one URL for all ids, about 400 gauges at 16 KB.
+4. truth_world.py runs after deploy only, tolerance 0.5 m (a m/ft slip under 0.23 m passes), no time check, 40 pages a run. Move into GATE_2 on dist_next, about 0.05 m, check reading time.
+5. No world claims-vs-cache, rank_checks, hater_rules, truth_tests or break_blocks case.
+6. Lost dist/ cache: `choose` treats live pages as new and a gap pulls them; lost `_river-<slug>.json` drops that river's pages and hub, alarm only past a quarter of world gauges. Add world URLs to failed_urls.
+7. WORLD_MAX 400 counts held gauges. A day where every US pick fails exits 1 and drops the world adds. World fetch has no retry or 429 wait (`retry_json`).
+8. Watchdog: world pages rebuild every run, so the 6 h alarm misses a weeks-old reading; one dead station never alarms; outside links unchecked. A dead or renamed station keeps its last row forever. `open_wave --pull` cannot pull a world page.
+Not checked: corrections, PEGELONLINE name casing and URL limit, world "not reporting" age.
+Next: the mechanical parity script (owner approved 2026-11-04): list every US/world branch and every check that skips world pages; build one German, Canadian and English page and run every US check on it; render world pages with the clock shifted 2 days and across a clock change; feed each world source empty, cut short and failing and prove only its country goes Unknown.
+
 ## Road to autopilot (approved 2026-11-02; this order wins over the numbers below)
 One session per stage. Each batch: `check`, dry run, main, read live, update here.
 1. Done 2026-11-03: `FROZEN` cut; next items are page to-dos; the thin floor decides per page.
