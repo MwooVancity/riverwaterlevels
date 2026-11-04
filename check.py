@@ -11,14 +11,14 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 60, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
-FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
+BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 60, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
+FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
 
 
 WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
-CARRYABLE = ("gauge", "world")  # a failing page of these kinds keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h)
+CARRYABLE = ("gauge", "world", "country")  # a failing page of these kinds keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h)
 
 
 def kind_of(rel):
@@ -31,6 +31,8 @@ def kind_of(rel):
         return "status"
     if parts[0] in WORLD and len(parts) == 3:
         return "world"
+    if parts[0] in WORLD:  # a country or river hub links every gauge it lists: the state budget, never the 60 of a prose page (at 60 the 46th gauge refused every deploy, review 2026-11-04)
+        return "country"
     if parts[0] == "river":
         return "hub" if len(parts) == 3 else "gauge"
     return "trust"
@@ -118,7 +120,7 @@ def check_html(h, rel):
             bad.append("block %s has an empty table" % sid)
     if len(re.findall(r"<h1>", body)) != 1:
         bad.append("not exactly one h1")
-    bad += ui_checks(body, plain=kind_of(rel) != "trust")
+    bad += ui_checks(body, plain=kind_of(rel) not in ("trust", "country"))
     for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S):
         try:
             j = json.loads(ld)
@@ -701,7 +703,7 @@ def selftest():
     assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
     assert world.page(wp0, dict(wr_, marks={}), wn), "selftest: a gauge with a reading but no marks must still ship"
-    assert world_gauge_url(wp0, "KÖLN") == "/rhine/koeln/" and kind_of("rhine/kaub/index.html") == "world" and kind_of("rhine/index.html") == "trust", "selftest: world gauge address or kind"
+    assert world_gauge_url(wp0, "KÖLN") == "/rhine/koeln/" and kind_of("rhine/kaub/index.html") == "world" and kind_of("rhine/index.html") == "country" and BUDGET["country"] >= 700, "selftest: world gauge address or kind"
     assert world_page(wp0, None, rn) is None and world_page(wp0, {"rows": []}, rn) is None, "selftest: a Rhine page without data"
     from lib.hero import fast_change
     assert fast_change("6 h", 30, 1000) and fast_change("6 h", -40, 600), "selftest: a fast change was not called fast"
