@@ -218,7 +218,7 @@ def proved(pages):
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
-HYDAT = "next: Water Survey of Canada archive (HYDAT) yearly extremes and daily flows; not wired"
+HYDAT = "next: Water Office annual peaks and flow statistics (hydrometric-annual-peaks, same API, 144 records at Britannia read live 2026-11-04); not wired"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
     "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
@@ -239,7 +239,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_record": ("have", "none: record marks are shown in official marks"),
     "b_flowdur": (HYDAT, "none: PEGELONLINE keeps 30 days and no history"),
     "b_peaks": (HYDAT, "none: PEGELONLINE publishes marks, not annual peaks"),
-    "b_stage_years": (HYDAT, "none: PEGELONLINE publishes marks, not yearly values"),
+    "b_stage_years": ("have", "none: PEGELONLINE publishes marks, not yearly values"),
     "b_daily": ("none: published daily means end over a year back; the chart and our archive cover recent days", "none: PEGELONLINE keeps 30 days and no history"),
     "b_drought": ("have", "none: DWD publishes crop soil moisture and a climate index, no drought class for a place"),
     "b_access": ("have", "have"),
@@ -294,7 +294,7 @@ TODO = {HYDAT: "yearly peaks and flow statistics (Water Survey of Canada archive
         ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
 
 
-SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain'}  # the world block that answers the US block's question, reviewed once 2026-11-04
+SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_stage_years": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain'}  # the world block that answers the US block's question, reviewed once 2026-11-04
 ONLY_WHEN = {"b_offline": "shows only while the gauge is not reporting"}  # a have that is a state, not a block a page always owes
 
 
@@ -527,7 +527,7 @@ def owed(r):
         out.append("also_measured")
     if len(r.get("flow") or []) >= 8:
         out.append("flow_chart")
-    if r.get("deciles") or r.get("days"):
+    if r.get("deciles") or r.get("days") or r.get("years"):
         out.append("world_history")
     if (r.get("access") or {}).get("rows"):
         out.append("access_points")

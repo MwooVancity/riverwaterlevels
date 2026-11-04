@@ -299,6 +299,8 @@ def england_page():
     idx = {(52, -2): [(52.96, -1.10, "River Leen at Bulwell", "/england/river-leen-at-bulwell/", "1.00 m", "Normal")], (53, -2): [(53.9, -1.5, "Far River", "/england/far/", "2.00 m", "High")]}
     assert [x[1] for x in world.near({"lat": 52.95, "lon": -1.08}, idx, set())] == ["River Leen at Bulwell"] and not world.near({"lat": 52.95, "lon": -1.08}, idx, {"/england/river-leen-at-bulwell/"}), "nearby gauges: the one 2 km away is missing, the one over 100 km away shows, or a skipped page shows"
     hn = world.page(p, rh, now, (), (), idx)[1]
+    hy = world.page(p, dict(rh, days=None, deciles=None), now)[1]
+    assert 'id="world_history"' in hy and "2020" in sec(hy, "world_history"), "yearly highs and lows hid because the gauge has no daily history (6 of 8 Canadian pages, 2026-11-04)"
     assert 'id="about_gauge"' in hn and "Station number" in sec(hn, "about_gauge"), "a world page has no About this gauge block (0 of 37 live, 2026-11-04)"
     assert 'id="nearby_gauges"' in hn and 'href="/england/river-leen-at-bulwell/"' in hn and "nearby_gauges" not in world.missing(hn, rh), "a world page with a gauge 2 km away shows no nearby gauges (0 of 37 live, 2026-11-04)"
     assert '<nav class="jump"' in hh and 'href="#world_history"' in hh, "an England page has no jump links while US and German pages do (UI review 2026-11-04)"

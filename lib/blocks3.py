@@ -796,7 +796,7 @@ def b_world_drought(G):
 def b_world_history(G):
     """Today against every year on record: this calendar date, all days, and recent years."""
     f = G["feed"]
-    if not f.get("deciles") and not f.get("days"):
+    if not f.get("deciles") and not f.get("days") and not f.get("years"):  # Canada's yearly highs and lows stand alone: 6 of 8 Canadian pages hid them for want of daily history (2026-11-04)
         return None
     from lib.world import fmt_level
     u, now = f["unit"], G["sg"][-1][1] * 0.3048
