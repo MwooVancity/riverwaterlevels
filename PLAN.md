@@ -56,6 +56,28 @@ Fixed same night: a country with no live page opens 2 a day (`world.room`), not 
 3. One-liners: `fetch_world` shares one failure counter across feeds (3 PEGELONLINE failures skip Canada and England, blamed on the wrong agency): count per feed. `release.py` lacks open_wave's 10-year rule: 540 of 7,445 US picks would ship and stay noindexed (11194152, 05341498 already). World URLs bypass `open_wave` (indexable on first build).
 Later: Canadian rows sharing a US keyword (Cedar, Grand, Snake, Vermilion) take US searches; Worker CPU 8.9 ms p99 of 10 at 142 gauges (Workers Paid, owner); GitHub cache about 1.5 GB at 9,100 gauges vs 10 GB (one fixed key; a lost cache resets the Met Office ledger); shard 0 fetches world gauges one at a time (about 35 min at 400); `world_match.py | head -3 || true` hides matcher errors; `tools/quarter/` keyword refresh is manual.
 
+## Live block audit, 2026-11-04 02 UTC (script, every gauge page in the sitemap: 162 US, 37 world)
+Blocks with data, US / world:
+- rate_of_change 157/0
+- gauge_map 162/0
+- nearby_gauges 162/0 (world along_river 17/37)
+- about_gauge 162/0
+- record_comparison 161/0 (world official_marks 36/37)
+- world_history 2/37 world
+- flow_chart 162/23
+- river_forecast 99/8
+- drought 160/8
+- camera 29/0
+- hourly_forecast 0/162 US: check, likely a different US block id; not proven a gap.
+
+Most US-only rows are federal products with no foreign twin (cpc, wpc, nwm, radar, snowpack, tides). The world gaps the page's own data could fill: rate of change, gauge map, about this gauge, nearby gauges, and history for Germany and Canada.
+
+Research report `reports/River page tool gaps.md`, also read by ChatGPT. Build order agreed after the debate:
+1. Charts readable by touch.
+2. A WaterAlert link for this exact gauge, once the URL is verified.
+3. England impact levels; feed and terms first.
+4. A coverage study of agency activity limits on 100 top gauges before building any.
+
 ## US vs world parity audit, 2026-11-04 (second read-only agent, 17 stages, code checked)
 Fixed same night: country and river hubs had the 60-link budget of a prose page, so the 46th gauge on /canada/ (23 links live) would refuse every deploy; now kind "country", budget 700, carryable.
 World gaps still open, worst first:
