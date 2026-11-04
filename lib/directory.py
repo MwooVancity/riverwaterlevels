@@ -159,8 +159,9 @@ def home(built, Gs):
             items += '<a class="item" href="%s" data-s="%s" data-large="%s" data-fc="%s" data-wq="%s"><span>%s<small>%s</small></span><span>&rarr;</span></a>' % (href, esc((rv + " " + STATE_NAMES.get(st, st) + " " + " ".join(x["place"] for x in g)).lower().replace("st. ", "saint ")), large, fc, wq, esc(rv), item_line(g, Gs))
         secs += '<section class="st"><div class="stateh"><h2>%s</h2><a href="/rivers/%s/">View state &rarr;</a></div><div class="cols">%s</div></section>' % (STATE_NAMES.get(st, st), st.lower(), items)
     if len(built) > 150:
-        secs = "".join('<section class="st"><div class="stateh"><h2>%s</h2><a href="/rivers/%s/">View all %d gauges &rarr;</a></div></section>' % (
-            STATE_NAMES.get(st, st), st.lower(), sum(len(v) for v in by_state[st].values())) for st in sorted(by_state, key=lambda s: STATE_NAMES.get(s, s)))
+        n_of = lambda st: sum(len(v) for v in by_state[st].values())
+        secs = "".join('<section class="st"><div class="stateh"><h2>%s</h2><a href="/rivers/%s/">%s &rarr;</a></div></section>' % (  # the anchor names its state: "View all 1 gauges" read the same for 37 targets (crawl 2026-11-04)
+            STATE_NAMES.get(st, st), st.lower(), ("All %d %s gauges" % (n_of(st), STATE_NAMES.get(st, st))) if n_of(st) > 1 else "The %s gauge" % STATE_NAMES.get(st, st)) for st in sorted(by_state, key=lambda s: STATE_NAMES.get(s, s)))
     tools = ('<div class="search"><input id="q" type="search" placeholder="Search rivers, places or states" aria-label="Search rivers, places or states"><span class="sub" id="gcount" style="margin:0">%d gauges</span></div>'
              '<p id="nomatch" class="sub" hidden>No rivers match that search.</p><div class="pills" aria-label="Filters"><button type="button" class="pill" data-f="large">Large rivers</button>'
              '<button type="button" class="pill" data-f="fc">Has river forecast</button><button type="button" class="pill" data-f="wq">Has water quality sensors</button></div>%s' % (len(built), jump))
@@ -327,16 +328,19 @@ def world_gauge_url(page, name):
     return "/%s/%s/" % (page["slug"], world_slug(name))
 
 
+STATUS_ROWS = 300
+
+
 def status_page(built, Gs, built_at):
     """Data freshness for every gauge on the site: the page a reader or the watchdog opens to see whether the numbers are current."""
-    trs = ""
-    for r in sorted(built, key=lambda r: -Gs[r["site"]]["age_min"]):
+    trs, rows = "", sorted(built, key=lambda r: -Gs[r["site"]]["age_min"])
+    for r in rows[:STATUS_ROWS]:  # oldest first, so the rows cut are the freshest; at 14,000 gauges every row was 2 MB and 14,000 links (stopped the deploy near 600)
         m = Gs[r["site"]]["age_min"]
         cls = age_chip(m)
         trs += '<tr><td><a href="%s">%s</a></td><td>%s</td><td class="r"><span class="ab %s">%s</span></td></tr>' % (r["dashboard_url"], esc(river_at(r["river"], r["place"]) + ", " + r["state"]), esc(r["site"]), cls, ("%d min" % m) if m < 180 else ("%d h" % round(m / 60)))
     built_at = tzl(datetime.datetime.fromisoformat(built_at), datetime.timezone.utc)
     body = ('<p>Site built %s. Age is the time since the newest USGS flow reading at each gauge when the page was built; pages also re-check USGS in the reader\'s browser. Green: newest reading under %d minutes old; amber: under %d hours; red: older. Machine-readable: <a href="/status.json">status.json</a>.</p>'
-            '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>' % (esc(built_at), STALE_H["chip_fresh"] * 60, STALE_H["chip_ageing"], trs))
+            '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col">USGS site</th><th scope="col" class="r">Newest reading is</th></tr></thead><tbody>%s</tbody></table></div>%s' % (esc(built_at), STALE_H["chip_fresh"] * 60, STALE_H["chip_ageing"], trs, ("<p>%d more gauges, each with a newer reading than every gauge above; all are in status.json.</p>" % (len(rows) - STATUS_ROWS)) if len(rows) > STATUS_ROWS else ""))
     return prose_page("Data status", "/status/", body, "Age of the newest USGS reading at every gauge on River Water Levels, as of the last build.")
 
 

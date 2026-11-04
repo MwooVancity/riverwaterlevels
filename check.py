@@ -9,7 +9,8 @@ MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 
-BANNED = [r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
+BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "View all 1 gauges" on the live home page (crawl 2026-11-04)
+          r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 60, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac
@@ -696,6 +697,12 @@ def selftest():
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
     assert not world.proof_faults(world.listing(world_pages()), world.proved(world_pages())) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]
+    one = lambda t: [b for b in check_html('<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t, "x") if "banned" in b and "gauges" in b + t]
+    assert one("View all 1 gauges") and not one("All 21 gauges, 1.5 days, 11 gauges"), "selftest: a singular count with a plural noun passed, or a real plural failed"
+    from lib import directory as dir_
+    big = [{"site": str(i), "dashboard_url": "/river/x/%d/" % i, "river": "X River", "place": "P%d" % i, "state": "ZZ"} for i in range(700)]
+    st = dir_.status_page(big, {str(i): {"age_min": i} for i in range(700)}, "2026-11-04T00:00:00+00:00")
+    assert st.count('href="/river/x/') == dir_.STATUS_ROWS and 'href="/river/x/699/"' in st and "400 more gauges" in st, "selftest: the status page links every gauge, so near 600 gauges its link budget stopped the whole deploy"
     ids = block_ids()
     assert ids.get("b_about") == "about_gauge" and ids.get("b_rate") == "rate_of_change", "selftest: block id map"
     assert not world.promise_faults(ids), "selftest: forcing guard: %s" % world.promise_faults(ids)[:3]
