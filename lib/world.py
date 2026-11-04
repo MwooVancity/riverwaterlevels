@@ -1,5 +1,6 @@
 """Gauges outside the US on the US page: a feed row becomes the record lib/hero.py reads (stage only, no flow), the US builder makes the page, this file only swaps agency words.
 One template, so every fix to the gauge page reaches these too. A new feed adds a FEEDS row and a fetch in collect.py."""
+import inspect
 import datetime, json, re
 from lib import render
 import os, zoneinfo
@@ -203,6 +204,9 @@ def proved(pages):
 US_ONLY = "none: US federal product, no counterpart in this country's open feeds"
 NOT_CHECKED = "next: an English counterpart was not checked (2026-11-03)"
 NO_GAUGE = "none: the agency publishes no such record for its gauges"
+ABOUT = "next: station facts we already collect (agency id, coordinates, gauge zero, record span), not yet a block"  # live 0 of 37 world pages, 2026-11-04
+NEARBY = "next: gauges on other rivers near this one, from the lists we hold; the along-the-river strip covers this river only"
+HYDAT = "next: Water Survey of Canada archive (HYDAT) yearly extremes and daily flows; not wired"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
     "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
@@ -221,14 +225,14 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_multiyear": ("have", "none: PEGELONLINE keeps 30 days and no history"),
     "b_sustained": ("none: US block reads flow percentiles, which Canada does not publish", "none: PEGELONLINE keeps 30 days and no history"),
     "b_record": ("have", "none: record marks are shown in official marks"),
-    "b_flowdur": ("have", "none: PEGELONLINE keeps 30 days and no history"),
-    "b_peaks": ("have", "none: PEGELONLINE publishes marks, not annual peaks"),
-    "b_stage_years": ("have", "none: PEGELONLINE publishes marks, not yearly values"),
+    "b_flowdur": (HYDAT, "none: PEGELONLINE keeps 30 days and no history"),
+    "b_peaks": (HYDAT, "none: PEGELONLINE publishes marks, not annual peaks"),
+    "b_stage_years": (HYDAT, "none: PEGELONLINE publishes marks, not yearly values"),
     "b_daily": ("none: published daily means end over a year back; the chart and our archive cover recent days", "none: PEGELONLINE keeps 30 days and no history"),
     "b_drought": ("have", "none: DWD publishes crop soil moisture and a climate index, no drought class for a place"),
     "b_access": ("have", "have"),
-    "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
-    "b_about": ("have", "have"),
+    "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": (NEARBY, NEARBY),
+    "b_about": (ABOUT, ABOUT),
     "b_map": ("none: the map service is USGS, US only; links open the agency map", "none: the map service is USGS, US only; links open the agency map"),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
@@ -243,7 +247,7 @@ MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (own
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
-    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
+    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": NEARBY, "b_about": ABOUT,
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": COVER["b_rate"][0],
@@ -253,7 +257,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_wtemp": "next: water temperature at 2 of 7,439 measures in the same API, read 2026-11-03; not wired",
     "b_acis": "next: Met Office 1991-2020 climate averages per station; terms not read",
     "b_month_chart": "none: the history table carries this date against every year", "b_year_chart": "none: the history table lists each recent year", "b_multiyear": "have",
-    "b_daily": "none: the Hydrology API publishes each day's lowest and highest level, carried by the history table; no daily mean", "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": "have", "b_floodfreq": NRFA,
+    "b_daily": "none: the Hydrology API publishes each day's lowest and highest level, carried by the history table; no daily mean", "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": NRFA, "b_floodfreq": NRFA,
     "b_record": "none: the agency's highest and lowest on record, with dates, are in official marks",
     "b_drought": "next: Environment Agency drought status by area, in monthly water situation reports; no point dataset read",
     "b_related": "none: station records carry no upstream or downstream order, read 2026-11-03",
@@ -269,12 +273,35 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
-TODO = {MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
+TODO = {ABOUT: "about this gauge (station facts)", NEARBY: "nearby gauges on other rivers", HYDAT: "yearly peaks and flow statistics (Water Survey of Canada archive)",
+        MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",
         NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
         ENGLAND["b_drought"]: "drought status (Environment Agency)", ENGLAND["b_flood_outlook"]: "five-day flood risk (Flood Forecasting Centre)", ENGLAND["b_samples"]: "water quality samples (Environment Agency)",
         ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
+
+
+SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain'}  # the world block that answers the US block's question, reviewed once 2026-11-04
+ONLY_WHEN = {"b_offline": "shows only while the gauge is not reporting"}  # a have that is a state, not a block a page always owes
+
+
+def marker(b, ids):
+    """What a page carries when it shows US block b: its own section id (read from the b_ function by check.py) or the world block that answers it."""
+    m = SHOWN_AS.get(b) or ids[b]
+    return m if m.startswith("class=") else 'id="%s"' % m
+
+
+def promise_faults(ids):
+    """The forcing guard (owner 2026-11-04): every have in COVER must be a block owed() demands, so missing() holds or names any page without it. A have nothing enforces is how about_gauge read have while 0 of 37 pages showed it."""
+    src = inspect.getsource(owed)
+    out = []
+    for b, row in COVER.items():
+        for feed, v in zip(ORDER, row):
+            m = marker(b, ids)
+            if v == "have" and b not in ONLY_WHEN and (m if m.startswith("class=") else '"%s"' % m[4:-1]) not in src:
+                out.append("%s %s: COVER says have and owed() never demands %s, so no page is held or named without it" % (feed, b, marker(b, ids)))
+    return out
 
 
 def todo(feed):
@@ -472,7 +499,7 @@ def owed(r):
     w = r.get("wx")
     if not w or (not w.get("fetched_at") and not w.get("periods")):
         return ["weather not collected yet"]
-    out = ["alerts", "official_links", "stage_chart"]
+    out = ["alerts", "official_links", "stage_chart", 'class="tile rain'] + (["along_river"] if r.get("_along") else [])
     if w.get("no_weather"):
         return out
     for key, t, bid in (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
@@ -506,7 +533,7 @@ def owed(r):
 
 def missing(h, r):
     """What this page owes and does not show. Any entry holds a new gauge back; this is the rule that says a world page got everything its data allows."""
-    return [b for b in owed(r) if 'id="%s"' % b not in h]
+    return [b for b in owed(r) if (b if b.startswith("class=") else 'id="%s"' % b) not in h]
 
 
 def page(p, r, now, rows=(), keep=()):
@@ -530,6 +557,7 @@ def page(p, r, now, rows=(), keep=()):
             rec["feed"]["flood_line"], rec["feed"]["swap"] = EA_UNPROVEN_LINE, EA_UNPROVEN + FEEDS["ea"]["swap"]
             rec["feed"]["wx_credit"] = "Rain: Environment Agency. Weather forecast: Met Office Global Spot, Powered by Met Office data."
     rec["feed"]["along"] = along(p, r, list(rows), keep) if rows else []
+    r["_along"] = bool(rec["feed"]["along"])  # owed() then demands the strip
     rec["feed"]["also"] = r.get("also") or {}
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
