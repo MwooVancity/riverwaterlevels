@@ -15,6 +15,8 @@ def run():
     assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"
     late = dict(new, time="t3", value="12400")  # Animas 2026-11-03: latest-continuous kept 12,400 at a time the continuous series no longer had
     assert [r["value"] for r in collect.add_latest([new], [late, dict(new, value="99")])] == ["11000", "12400"], "the page lacks the latest reading the edge shows, or a latest value overrode a continuous correction"
+    z = lambda prov, std, lon=-70, lat=55: collect.eccc_zone({"PROV_TERR_STATE_LOC": prov, "DATETIME_LST": "2026-01-01T00:00:00" + std}, lon, lat)
+    assert (z("NU", "-05:00"), z("NU", "-06:00"), z("NU", "-07:00"), z("QC", "-04:00", -60, 51), z("QC", "-04:00", -61.8, 47.4), z("QC", "-05:00"), z("SK", "-07:00")) == ("America/Iqaluit", "America/Rankin_Inlet", "America/Cambridge_Bay", "America/Blanc-Sablon", "America/Halifax", "America/Toronto", "America/Edmonton"), "a Canadian station in a split province read the wrong time zone (Nunavut read Toronto, 2026-11-04)"
     calls, rec_, log_ = [], {"access": "old"}, []
     def dead():
         calls.append(1)

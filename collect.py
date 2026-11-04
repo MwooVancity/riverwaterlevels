@@ -1573,12 +1573,14 @@ def states_of(sites):
 ECCC_ZONE = {"BC": "America/Vancouver", "AB": "America/Edmonton", "SK": "America/Regina", "MB": "America/Winnipeg", "ON": "America/Toronto", "QC": "America/Toronto", "NB": "America/Halifax", "NS": "America/Halifax", "PE": "America/Halifax", "NL": "America/St_Johns", "YT": "America/Whitehorse", "NT": "America/Edmonton", "NU": "America/Toronto"}
 
 
-def eccc_zone(p, lon):
-    """Province zone, with the three that split: east BC, northwest Ontario (feed standard time -06:00), Labrador (-04:00)."""
+def eccc_zone(p, lon, lat=None):
+    """Province zone, split where a province spans zones by the station's standard offset in the feed: east BC, northwest Ontario, Labrador, Nunavut's three, Quebec east of 63 W
+    (Lower North Shore, no daylight time) and the Magdalen Islands (Atlantic with daylight time, south of 48 N), west Saskatchewan (Lloydminster). Review 2026-11-04: Nunavut read Toronto."""
     prov, std = p["PROV_TERR_STATE_LOC"], (p.get("DATETIME_LST") or "")[-6:]
     if prov == "BC" and (lon or -130) > -117.5:
         return "America/Edmonton"
-    return {("ON", "-06:00"): "America/Winnipeg", ("NL", "-04:00"): "America/Halifax"}.get((prov, std)) or ECCC_ZONE.get(prov, "UTC")
+    return {("ON", "-06:00"): "America/Winnipeg", ("NL", "-04:00"): "America/Halifax", ("NU", "-05:00"): "America/Iqaluit", ("NU", "-06:00"): "America/Rankin_Inlet", ("NU", "-07:00"): "America/Cambridge_Bay",
+            ("QC", "-04:00"): "America/Blanc-Sablon" if (lat or 0) >= 48 else "America/Halifax", ("SK", "-07:00"): "America/Edmonton"}.get((prov, std)) or ECCC_ZONE.get(prov, "UTC")
 
 
 def fetch_eccc(sid, prev):
@@ -1611,7 +1613,7 @@ def fetch_eccc(sid, prev):
     series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
     day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
-    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "flag": last.get("LEVEL_SYMBOL_EN"), "zone": eccc_zone(last, geo[0]), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
+    return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "flag": last.get("LEVEL_SYMBOL_EN"), "zone": eccc_zone(last, geo[0], geo[1]), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
             "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
