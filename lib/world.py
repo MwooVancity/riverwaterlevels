@@ -445,7 +445,7 @@ def thin(h):
 
 def choose(pages, now):
     """Names per page that may publish: first pass over every gauge, a page too like one already kept waits. ponytail: all pairs, fine to about 3,000 world gauges; past that compare within a feed."""
-    kept, names = [], {}
+    kept, names, urls = [], {}, set()
     for p, d in pages:
         names[p["slug"]] = set()
         order = p.get("gauge_pages") or []  # the list's order is priority: a famous gauge wins over a quiet one
@@ -476,6 +476,11 @@ def choose(pages, now):
                 THIN[r["name"]] = ["too like another page"]
                 print("world gauge held, too like another page: %s" % r["name"])
                 continue
+            if got[0] in urls:  # two titles that slug alike: the second would overwrite the first page (review 2026-11-04); the list order decides, the second waits
+                THIN[r["name"]] = ["same address as another gauge: %s" % got[0]]
+                print("world gauge held, same address as another gauge: %s %s" % (r["name"], got[0]))
+                continue
+            urls.add(got[0])
             kept.append(s)
             names[p["slug"]].add(r["name"])
     return names

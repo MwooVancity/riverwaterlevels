@@ -146,6 +146,9 @@ def run():
         assert world.choose([(p, {"rows": [base]})], None)["x"] == set(), "a new gauge with a gap was not held"
         world.os.path.exists = lambda q: True
         assert world.choose([(p, {"rows": [base]})], None)["x"] == {"01AB"}, "an outage pulled a live page"
+        world.missing, world.alike, world.page = lambda h, r: [], lambda a, b: False, lambda *a, **k: ("/u/", "<html data-flood>")
+        two = dict(p, gauge_pages=["01AB", "02CD"])
+        assert world.choose([(two, {"rows": [base, dict(base, name="02CD")]})], None)["x"] == {"01AB"} and "same address" in world.THIN["02CD"][0], "two gauges whose titles slug alike both published to one address"
     finally:
         world.page, world.missing, world.shingles, world.alike, world.os.path.exists, world.GATE = real
 
