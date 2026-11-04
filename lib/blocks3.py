@@ -669,7 +669,7 @@ def b_official_marks(G):
     u = f["unit"]
     now = G["sg"][-1][1] * (30.48 if u == "cm" else 0.3048)
     when = f.get("mark_dates") or {}
-    rows = "".join(tr([lab + ((", %s" % esc(fdate(when[k]))) if when.get(k) else ""), "%s (%.1f ft)" % (fmt_level(f["marks"][k], u), to_ft(f["marks"][k], u)), ("%+.0f cm" if u == "cm" else "%+.2f m") % (now - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
+    rows = "".join(tr([lab + ((", %s" % esc(fdate(when[k]))) if when.get(k) else ""), ("%s (%.1f ft)" % (fmt_level(f["marks"][k], u), to_ft(f["marks"][k], u))).replace(" ", " "), ("%+.0f cm" if u == "cm" else "%+.2f m") % (now - f["marks"][k])], right=(1, 2)) for k, lab in sorted(MARKS, key=lambda m: -(f["marks"].get(m[0]) or 0)) if f["marks"].get(k) is not None)
     return block("official_marks", "How today compares", "agency", table(["Mark", "Level", "Today against it"], rows, right=(1, 2)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
 
 
@@ -679,7 +679,7 @@ def b_also(G):
     words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
     rows = "".join(tr([words.get(k, esc(v[2])), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
     if f.get("ship") in ("low", "normal", "high"):
-        rows += tr(["Shipping level, agency label (not a sailing decision)", f["ship"].capitalize()], right=(1,))
+        rows += tr(["Against the agency's lowest and highest shipping levels (not a sailing decision)", {"low": "Below the lowest", "normal": "Between them", "high": "Above the highest"}[f["ship"]]], right=(1,))  # "Normal" here sat beside a headline "Low" against mean low water (UI review 2026-11-04)
     return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s, with the reading at %s." % (f["api"], f["name"], esc(G["obs"])), f["src"]) if rows else None
 
 
@@ -701,7 +701,7 @@ def b_world_forecast(G):
     age = hours_old(c.get("at"), G["now"]) if c.get("at") else None
     if not pts or age is None or age > HIDE_H["river_forecast"]:
         return None
-    rows = "".join(tr([esc(tzl(parse_t(t), G["zone"])), "%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"])), "Estimate" if kind == "estimate" else "Forecast"], right=(1,)) for t, v, kind in [p for i, p in enumerate(pts) if i % 6 == 0 or p is max(pts, key=lambda x: x[1])])
+    rows = "".join(tr([esc(tzl(parse_t(t), G["zone"])), ("%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"]))).replace(" ", " "), "Estimate" if kind == "estimate" else "Forecast"], right=(1,)) for t, v, kind in [p for i, p in enumerate(pts) if i % 6 == 0 or p is max(pts, key=lambda x: x[1])])
     return block("river_forecast", "River forecast", "official", table(["Time", "Level", "Type"], rows, right=(1,)), "Source: Federal Institute of Hydrology (BfG) through %s, issued %s. Estimates are less certain than forecasts." % (f["api"], esc(tzl(parse_t(c["at"]), G["zone"]))), f["src"], amber=age)
 
 

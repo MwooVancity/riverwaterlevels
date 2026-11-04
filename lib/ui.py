@@ -57,7 +57,9 @@ def dial(p):
 
 def rangebar(p):
     """Slim horizontal scale replacing the dial: below the 25th percentile amber, 25th to 75th blue, above the 75th purple (the dial's colours); the marker sits at the percentile (-1 below the 5th, 101 above the 95th, None unknown)."""
-    pos = "" if p is None else '<i class="rbm" style="left:%.1f%%"></i>' % (0.0 if p == -1 else 100.0 if p == 101 else max(0.0, min(100.0, float(p))))
+    if p is None:  # an empty scale with no marker read as broken (UI review 2026-11-04, every world page)
+        return ""
+    pos = '<i class="rbm" style="left:%.1f%%"></i>' % (0.0 if p == -1 else 100.0 if p == 101 else max(0.0, min(100.0, float(p))))
     return ('<div class="rb" role="img" aria-label="%s"><span class="rba"></span><span class="rbb"></span><span class="rbp"></span>%s</div>'
             '<div class="rbl" aria-hidden="true"><span>Lower</span><span>Typical</span><span>Higher</span></div>' % (
                 "Position among past years for this date, from lower to higher" if p is not None else "No comparison with past years available", pos))

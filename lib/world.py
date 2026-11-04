@@ -61,7 +61,7 @@ def to_rec(page, r):
     elif key == "ea":
         rng = r.get("range")
         label, marks = LABEL.get(r.get("state"), "Unknown"), r.get("marks") or {}
-        note = ("Environment Agency label, against its normal range for this gauge, %s to %s: on record, the level was above the bottom 95%% of the time and above the top 5%% of the time." %(fmt_level(rng[0], "m"), fmt_level(rng[1], "m"))) if rng else "The Environment Agency publishes no normal range for this gauge."
+        note = ("Environment Agency label, against its normal range for this gauge, %s to %s: on record, the level is above %s about 95%% of the time and above %s about 5%% of the time." %(fmt_level(rng[0], "m"), fmt_level(rng[1], "m"), fmt_level(rng[0], "m"), fmt_level(rng[1], "m"))) if rng else "The Environment Agency publishes no normal range for this gauge."
     else:
         label, note, marks = LABEL.get(r.get("state"), "Unknown"), "%s label, against this gauge's mean low and mean high water." % f["agency"], r.get("marks") or {}
     rows = [{"parameter_code": "00065", "time": t, "value": str(round(to_ft(v, f["unit"]), 3)), "unit_of_measure": "ft", "qualifier": None, "approval_status": "Provisional"} for t, v in r["series"]]
@@ -103,7 +103,7 @@ SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active N
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
         ('<span>River forecast</span><b>Not linked</b>', '<span>River forecast</span><b>Not issued</b>'), ("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page."), ("within about 15 miles of the gauge", "within about 25 km of the gauge"), (' <a href="#gauge_map">Map of the gauge location</a>', ""))
 LIVE = """<script>(function(){var w=document.querySelector('.hero'),a=document.querySelector('[data-live=age]');function tick(t){if(a){var m=Math.round((Date.now()-Date.parse(t))/60000);a.textContent=m<180?m+' min':m<2880?Math.round(m/60)+' h':Math.round(m/1440)+' d'}}if(!w)return;tick(w.dataset.t);if(!window.fetch)return;fetch('/live/world.json').then(function(r){return r.json()}).then(function(j){var g=(j.g||{})['@N@'];if(!g||Date.parse(g[1])<=Date.parse(w.dataset.t))return;tick(g[1]);
-var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'})}).catch(function(){})})();</script>"""
+var e=document.querySelector('[data-live=stage]');if(e)e.textContent=g[0].toFixed(@D@);e=document.querySelector('[data-live=obs]');if(e)e.textContent=new Date(g[1]).toLocaleString('en-US',{timeZone:'@Z@',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).replace(/GMT[+-]\\d+(:\\d\\d)?/,function(m){return @M@[m]||m})}).catch(function(){})})();</script>"""
 
 
 def metric(h):
@@ -117,6 +117,17 @@ def metric(h):
     h = re.sub(r"([\d.]+) inHg", lambda m: "%.0f hPa" % (float(m.group(1)) * 33.864), h)
     h = re.sub(r"(\d+\.\d\d) <small>in</small>", lambda m: "%.1f <small>mm</small>" % (float(m.group(1)) * 25.4), h)
     return re.sub(r"(\d+\.\d\d) in(?=[,<])", lambda m: "%.1f mm" % (float(m.group(1)) * 25.4), h)
+
+
+def zone_names(zone):
+    """{"GMT+1": "CET", ...}: the browser's en-US names for a European zone are offsets, the build's are abbreviations; the refreshed time must read like the rest of the page (Kaub showed GMT+1 beside CET, 2026-11-04)."""
+    out = {}
+    for m in (1, 7):
+        d = datetime.datetime(2026, m, 15, 12, tzinfo=zoneinfo.ZoneInfo(zone))
+        h, mins = divmod(int(d.utcoffset().total_seconds() // 60), 60)
+        if not d.tzname().startswith(("+", "-", "GMT")) and (h or mins):
+            out["GMT%+d%s" % (h, ":%02d" % mins if mins else "")] = d.tzname()
+    return out
 
 
 def localize(h, feed, river, place, hub, flat=False):
@@ -153,8 +164,11 @@ def localize(h, feed, river, place, hub, flat=False):
     h = h.replace('class="hero hero2"', 'class="hero hero2" data-n="%s"' % esc(feed["station"]), 1)
     h = re.sub(r'<script type="application/ld\+json">(?:(?!</script>).)*"BreadcrumbList".*?</script>', lambda m: render.crumb_ld([("Home", "/"), (river, hub), (place, None)]), h, flags=re.S)
     h = h.replace("Not endorsed by the agency.", TERMS[feed["src"]] + " Not endorsed by the agency.", 1)
-    h = h.replace('<section data-g="now"', (feed.get("flood_line") or '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p>' % feed["flood"]) + ('<p class="gaps">Not on this page yet: %s.</p>' % ", ".join(feed["later"]) if feed.get("later") else "") + '<section data-g="now"', 1)
-    h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE.replace("@N@", feed["station"]).replace("@Z@", feed["zone"]).replace("@D@", "2" if feed["unit"] == "m" else "0"), h, flags=re.S)
+    later = '<p class="gaps">Not on this page yet: %s.</p>' % ", ".join(feed["later"]) if feed.get("later") else ""
+    h = h.replace('<section data-g="now"', (feed.get("flood_line") or '<p class="gaps" data-flood><b>River flood warnings are not on this page.</b> Check the %s.</p>' % feed["flood"]) + ("" if 'id="official_links"' in h else later) + '<section data-g="now"', 1)
+    h = re.sub(r'(<section[^>]*id="official_links")', lambda m: later + m.group(1), h, count=1)  # the to-do list sits after the data, by the agency links, never above the reading
+    h = re.sub(r'<script>\(function\(\)\{var ID="USGS-.*?</script>', lambda m: LIVE.replace("@N@", feed["station"]).replace("@Z@", feed["zone"]).replace("@M@", json.dumps(zone_names(feed["zone"]))).replace("@D@", "2" if feed["unit"] == "m" else "0"), h, flags=re.S)
+    h = re.sub(r"(\d) (cm|m) \((-?[\d.,]+) ft\)", "\\1\u00a0\\2 (\\3\u00a0ft)", h)  # a level and its feet never break apart on a phone, "260 cm (2.5 / ft)" (UI review 2026-11-04)
     for a, b in feed.get("swap") or ():  # last: the country's own words over the general ones
         h = h.replace(a, b)
     return h
@@ -368,7 +382,7 @@ TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/r
          "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.',
          "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). This uses Environment Agency rainfall data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
 EA_LINK = '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">flood warnings and alerts in force in England on GOV.UK</a>'
-EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> Our check of Environment Agency warning areas against this gauge has not yet been seen working on a real warning, so this page cannot tell you. See %s.</p>' % EA_LINK
+EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> See %s.</p>' % EA_LINK  # the why is in the alerts block; four long Unknowns above the data read unfinished (UI review 2026-11-04)
 EA_UNPROVEN = (("<p>Alerts could not be loaded at the last fetch.</p>", "<p>Unknown. This page does not show Environment Agency flood warnings yet: our check of warning areas against this gauge has not been seen working on a real warning. See %s. This is not a statement that conditions are safe.</p>" % EA_LINK),
                ("Source: Environment Agency alerts for the gauge location, fetched time not stated.", "Source: not read onto this page yet; the Environment Agency publishes warnings on GOV.UK Check for flooding."),
                ("No official alert feed is connected for this gauge. Check local authorities.", "Not shown here yet. See %s." % EA_LINK))

@@ -287,6 +287,10 @@ def england_page():
     rh = dict(r, **dict(got, days={now.astimezone(zoneinfo.ZoneInfo("Europe/London")).strftime("%m-%d"): got["days"]["11-03"]}))  # the block reads today's date: the fixture's 11-03 moved to today
     hh =world.page(p, rh, now)[1]
     hist = sec(hh, "world_history")
+    assert " ft)" in hh and " ft)" not in hh, "a level and its feet can break across lines on a phone, '260 cm (2.5 / ft)' (UI review 2026-11-04)"
+    assert world.zone_names("Europe/Berlin") == {"GMT+1": "CET", "GMT+2": "CEST"} and world.zone_names("Europe/London") == {"GMT+1": "BST"} and "@M@" in world.LIVE, "the refreshed reading time says GMT+1 where the page says CET (Kaub 2026-11-04)"
+    assert 'class="rb"' not in hh and "bottom 95%" not in hh, "an empty Lower-Typical-Higher scale with no marker, or the self-contradicting England range sentence, is back (UI review 2026-11-04)"
+    assert hh.find("Not on this page yet") > hh.find('id="world_history"') > 0 and hh.count("Unknown on this page") <= 1, "the to-do list sits above the readings, or England repeats its Unknown flood line"
     assert "this date in 21 years" in hist and "Median" not in hist and "daily means" not in hist and "Hydrology API" in hist, "England history claims a median or daily means the agency does not publish, or lost its source: %s" % hist[:300]
     z = lambda m: (now + datetime.timedelta(hours=m)).strftime("%Y-%m-%dT%H:00Z")
     geo = lambda run, ts: {"features": [{"properties": {"modelRunDate": run, "timeSeries": ts}}]}
@@ -301,6 +305,7 @@ def england_page():
         s = sec(hm, b)
         assert "Met Office" in s and "Environment Agency" not in s, "England weather is not credited to the Met Office: %s" % [x[max(0, x.find("Environment Agency") - 150):][:300] for x in [s]]
     assert "Powered by Met Office data" in re_.sub(r"<[^>]+>", " ", hm), "the Met Office attribution is missing"
+    assert re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0).count('data-l="Hour"') == 8, "the hourly table is not 8 rows at 3-hour steps; 24 rows were 4 phone screens (UI review 2026-11-04)"
     assert 'data-l="Sky"' not in re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0), "a Sky column with no sky words showed blank on every row (live Colwick 2026-11-04)"
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
     assert world.thin(h.replace('id="alerts"', 'id="x"')) == ["no alerts block"], "a page with no alerts block shipped"

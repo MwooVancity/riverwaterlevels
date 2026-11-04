@@ -165,8 +165,8 @@ def embed_page(G, pages):
 
 
 def footer():
-    return ('<footer><span>%s &middot; Data: USGS, NOAA, NWS.</span><span><a href="/about/">About</a> &middot; <a href="/data-sources/">Data sources</a> &middot; <a href="/disclaimer/">Disclaimer</a> &middot; '
-            '<a href="/faq/">FAQ</a> &middot; <a href="/methodology/">Methodology</a> &middot; <a href="/privacy/">Privacy</a> &middot; <a href="/glossary/">Glossary</a> &middot; <a href="/status/">Data status</a> &middot; <a href="/embed/">Add to your site</a></span></footer>' % esc(BRAND))
+    return ('<footer><span>%s &middot; Data: USGS, NOAA, NWS.</span><span><a href="/about/">About</a><a href="/data-sources/">Data sources</a><a href="/disclaimer/">Disclaimer</a>'
+            '<a href="/faq/">FAQ</a><a href="/methodology/">Methodology</a><a href="/privacy/">Privacy</a><a href="/glossary/">Glossary</a><a href="/status/">Data status</a><a href="/embed/">Add to your site</a></span></footer>' % esc(BRAND))
 
 
 def og_tags(title, desc, url):
