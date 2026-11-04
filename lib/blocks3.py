@@ -692,6 +692,15 @@ def b_along(G):
     return block("along_river", "Other gauges nearby" if f["along"][0][0] == "Nearby" else "Along the river", "agency", table(["Where", "Gauge", "Level", "24 h change", "Label"], rows, right=(2, 3)), "Source: %s, %s." % (f["api"], f["name"]), f["src"])
 
 
+def b_world_near(G):
+    """Up to five gauges on other rivers within 100 km, nearest first, each with its latest reading and a link: a reader whose river is quiet checks the next one over (the US page has had this since 2026-10-21)."""
+    f = G["feed"]
+    if not f.get("near"):
+        return None
+    rows = "".join(tr(['<a href="%s">%s</a>' % (u, esc(n)), "%d km" % k, lev or "–", lab], right=(1, 2)) for k, n, u, lev, lab in f["near"])
+    return block("nearby_gauges", "Nearby gauges on other rivers", "agency", table(["Gauge", "Distance", "Level", "Label"], rows, right=(1, 2)), "Source: each gauge's agency, latest reading as on that gauge's page; distance in a straight line.", f["src"])
+
+
 def b_world_forecast(G):
     """The official river forecast where the agency publishes one: forecast and estimate kept apart, as it marks them."""
     f = G["feed"]

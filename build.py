@@ -199,12 +199,13 @@ def main():
             wpages.append((page, d))
         wkeep = world.choose(wpages, wnow)
         wlisted = sum(len(p.get("gauge_pages") or []) for p in directory.world_pages())
+        near = world.near_index(wpages, wkeep)
         for page, d in wpages:
             keep = wkeep[page["slug"]]
             for r in d["rows"]:
                 if r["name"] not in keep:
                     continue
-                gp = world.page(page, r, wnow, d["rows"], keep)
+                gp = world.page(page, r, wnow, d["rows"], keep, near)
                 emit(gp[0], gp[1])
                 built_map[gp[0]] = {"at": iso(now)}  # keyed by URL: check.py keep_old_times keeps a carried world page's old time, so the watchdog's 6 h alarm sees it
                 if r.get("uuid"):
