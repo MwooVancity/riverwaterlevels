@@ -15,6 +15,7 @@ def load(root):
     if os.path.exists(p):
         cfg.update(json.load(open(p, encoding="utf-8")))
     cfg["allow"] = set(cfg.get("allow") or [])
+    cfg["pulled"] = set(cfg.get("pulled") or [])  # any page pulled by hand (open_wave --pull): world pages are site pages, so the allow list alone could not pull one
     if os.environ.get("RWL_NOINDEX"):  # preview builds (preview.yml): every page noindex
         cfg["open"] = False
     return cfg
@@ -22,6 +23,8 @@ def load(root):
 
 def indexable(url, cfg):
     if not cfg["open"] or url.startswith("/embed/river/") or url == "/status/":  # embed panels are framed copies of the gauge page; /status/ is an operations page
+        return False
+    if url in cfg.get("pulled", ()):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]

@@ -19,6 +19,7 @@ def main():
     if "--pull" in sys.argv:
         gone = [a for a in sys.argv[sys.argv.index("--pull") + 1:]]
         cfg["allow"] = [u for u in cfg["allow"] if u not in gone]
+        cfg["pulled"] = sorted(set(cfg.get("pulled") or []) | {u for u in gone if not u.startswith("/river/")})  # a world page is not on the allow list: it is pulled by name
         json.dump(cfg, open(IX, "w", encoding="utf-8"), indent=1)
         print("pulled %d page(s); %d remain allowed. Deploy to take effect." % (len(gone), len(cfg["allow"])))
         return

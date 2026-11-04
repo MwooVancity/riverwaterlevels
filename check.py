@@ -699,6 +699,8 @@ def selftest():
     wr = [{"name": "KAUB", "cm": 23.0, "time": "2026-11-04T15:45:00+01:00"}]
     wh = lambda shown, t="2026-11-04T15:45:00+01:00": '<div class="hero hero2" data-n="KAUB" data-t="%s"><span data-live="stage">%s</span>' % (t, shown)
     assert world_claims(wh("230"), wr) and not world_claims(wh("23"), wr) and not world_claims(wh("230", "2026-11-04T15:30:00+01:00"), wr) and world_claims(wh("0.23"), [dict(wr[0], unit="m", cm=2.3)]), "selftest: a world level 10 times its cached reading passed, or an older carried page failed"
+    from lib import indexing as ix_
+    assert not ix_.indexable("/rhine/kaub/", {"open": True, "site_pages": True, "allow": set(), "pulled": {"/rhine/kaub/"}}) and ix_.indexable("/rhine/maxau/", {"open": True, "site_pages": True, "allow": set(), "pulled": {"/rhine/kaub/"}}), "selftest: a pulled world page stayed indexable"
     assert file_limit(19001) and not file_limit(19000), "selftest: the Cloudflare 20,000-file limit did not fire"
     assert redirect_limit(101) and not redirect_limit(100), "selftest: the _redirects limit did not fire"
     import datetime as dt_, zlib
