@@ -56,6 +56,66 @@ Fixed same night: a country with no live page opens 2 a day (`world.room`), not 
 3. One-liners: `fetch_world` shares one failure counter across feeds (3 PEGELONLINE failures skip Canada and England, blamed on the wrong agency): count per feed. `release.py` lacks open_wave's 10-year rule: 540 of 7,445 US picks would ship and stay noindexed (11194152, 05341498 already). World URLs bypass `open_wave` (indexable on first build).
 Later: Canadian rows sharing a US keyword (Cedar, Grand, Snake, Vermilion) take US searches; Worker CPU 8.9 ms p99 of 10 at 142 gauges (Workers Paid, owner); GitHub cache about 1.5 GB at 9,100 gauges vs 10 GB (one fixed key; a lost cache resets the Met Office ledger); shard 0 fetches world gauges one at a time (about 35 min at 400); `world_match.py | head -3 || true` hides matcher errors; `tools/quarter/` keyword refresh is manual.
 
+## World to US level: full matrix, 2026-11-04 (machine-made)
+Made by a script, not by people spotting gaps. For every block on live US pages: its b_* function, COVER per feed, and how many of 37 world pages show it with data. The owner's rule is that nothing gets missed, so the list comes from the code and the live site.
+
+A. COVER says "have" but the page does not show it. These are broken promises: fix the cause, then enforce.
+1. about_gauge: all three countries, live 0/37.
+2. nearby_gauges: all three, live 0/37.
+3. county_station_rain (b_acis): Canada and Germany, live 0/37. They show climate_normals 37/37 instead; declare that as the substitute or fix it.
+4. annual_peaks (b_peaks): Canada, live 0.
+5. flood_stage_years: Canada and England, live 0.
+6. flow_duration: Canada, live 0.
+7. record_comparison: Canada, live 0.
+8. quality_sensors: Germany, live 0 (also_measured 33/37 may carry it: declare it).
+9. rain_totals: Germany and England, live 0.
+10. water_temp_months: Germany, live 0 (water_temp_recent 8/37).
+11. related_gauges: Germany, live 0 (along_river 17/37).
+12. flow_chart: all three, live 23/37. Name which gauges have flow but no chart.
+
+B. "none:" answers that are dodges: the page's own data or an open official source can fill them.
+1. rate_of_change: computable from the series.
+2. gauge_map: coordinates are known; a map needs an open source with terms read.
+3. hourly_heatmap: from the hourly forecast we already hold.
+4. daily_readings: Canada's daily means, and our own daily values from the 30-day series, labelled ours.
+5. historic_crests: Canada's annual statistics publish yearly maxima.
+6. sustained_flow and flow_duration: Canada's daily-mean history.
+7. radar: DWD radar open data; ECCC GeoMet radar (terms to read).
+8. cpc_outlook: ECCC and DWD seasonal outlooks (terms to read).
+9. public_land and recreation_sites: Parks Canada and CPCAD open data; Germany's protected areas (terms to read).
+10. water_samples and water_quality_assessment: ECCC long-term freshwater quality; England's Water Quality Archive and Catchment Data Explorer (already listed as next).
+
+C. England "next:" items: real to-dos.
+- NRFA statistics (peaks, frequency, duration, sustained flow).
+- Defra air quality.
+- Met Office observations, rain totals and radar.
+- Impact levels.
+- Flood Forecasting Centre outlook.
+- Drought status.
+- Water temperature at 2 gauges.
+- Water quality archive.
+- Land cover.
+- The English counterparts never checked for cpc, wpc, nwm, nws_point, dam releases, recreation and streamcat.
+
+D. Fair "none": no counterpart exists or it is wrong for the reader.
+- US federal only: wpc, nwm, nws_point, attains, streamcat.
+- snowpack, tides, camera.
+- rating curves and field measurements: no agency record.
+- low_water: covered by official marks.
+Each one stays only with a reason a reader would accept.
+
+E. The forcing guard. These are its own edge cases, adversarial:
+1. Every US block needs a per-feed status: have (must render, or say Unknown with the gauge's reason), substitute (a declared world id, never a regex guess), none (a reviewed reason) or next. A new US block already fails at import without a COVER row.
+2. check.py on every world page in dist, carried pages included. A "have" block that is absent fails the page as carryable: the live copy stays, the watchdog names it, never noindexed.
+3. A "have" block showing Unknown on over half of a country's pages is a broken promise: the watchdog alarms. Unknown on every page is not "have".
+4. A stale or outage hide never fails the deploy (heal rule). Only a block missing with fresh data fails.
+5. A daily live audit (the script that made this matrix) compares the live site against COVER, because built pages can drift from live.
+6. A new country cannot ship until its COVER column passes the live audit on its first 2 pages (room opens 2 a day).
+7. A substitute has to answer the same reader question; one reviewer reads each substitute once.
+8. Selftest fixtures: a page missing about_gauge fails; a page with Unknown plus a reason passes; a declared substitute passes; an undeclared one fails.
+
+F. Pipeline gaps from the two reviews (see the sections below): URL collision, Canada time zones, phone refresh mixing numbers, truth_world before deploy, per-feed failure counter, world supply from station lists, held gauges returned, world URLs through open_wave, world hubs (fixed), first-day cap (fixed).
+
 ## Live block audit, 2026-11-04 02 UTC (script, every gauge page in the sitemap: 162 US, 37 world)
 Blocks with data, US / world:
 - rate_of_change 157/0
