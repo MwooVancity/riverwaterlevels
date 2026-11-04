@@ -170,13 +170,15 @@ def b_hourly(G):
     if not hr or age is None or age > HIDE_H["hourly_forecast"]:
         return None
     rows = ""
-    for p in [p for p in hr if parse_t(p["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]:
+    hrs = [p for p in hr if parse_t(p["startTime"]) > G["now"] - datetime.timedelta(hours=1)][:24]
+    sky = any(p.get("shortForecast") for p in hrs)  # Met Office rows carry no sky words until its code table is read: no blank column
+    for p in hrs:
         pop = p.get("pop")
         rows += tr([esc(tzl(parse_t(p["startTime"]), G["zone"], date=False)), "%s °%s" % (("–" if p.get("temperature") is None else esc(str(p.get("temperature")))), esc(p.get("temperatureUnit") or "F")),
-                    _wind(p, False), "%s%%" % pop if pop is not None else "–", esc(p.get("shortForecast") or "")], right=(1, 3))
+                    _wind(p, False), "%s%%" % pop if pop is not None else "–"] + ([esc(p.get("shortForecast") or "")] if sky else []), right=(1, 3))
     if not rows:
         return None
-    return block("hourly_forecast", aged("hourly_forecast", "Hourly weather %s, next 24 hours" % where_(G), n.get("hourly_updated"), age, G), "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance", "Sky"], rows, right=(1, 3)),
+    return block("hourly_forecast", aged("hourly_forecast", "Hourly weather %s, next 24 hours" % where_(G), n.get("hourly_updated"), age, G), "official", storm_line(G) + table(["Hour", "Temp", "Wind", "Rain chance"] + (["Sky"] if sky else []), rows, right=(1, 3)),
                  "Source: National Weather Service hourly point forecast, updated %s." % esc(tzl(parse_t(n["hourly_updated"]), G["zone"])), "nws", amber=age)
 
 
