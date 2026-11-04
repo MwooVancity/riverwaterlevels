@@ -348,6 +348,37 @@ def room(feed, pages, thin=None):
     return 0 if all(n in thin for n in have) else 10 ** 6
 
 
+DROP_DAYS = 7
+
+
+def drop_held(pages, thin, today):
+    """A gauge held since its first build never shipped and kept a slot under WORLD_MAX forever (PLAN 2026-11-04). The daily release dates each hold
+    in the page row ("held"); after DROP_DAYS it leaves gauge_pages and stations with its reason in "dropped", which the matcher and release never re-add.
+    A live page is never held (choose), so this only ever removes gauges no reader has seen. thin None (status unread) changes nothing."""
+    out = []
+    if thin is None:
+        return out
+    for p in pages:
+        held = p.get("held") or {}
+        for s in list(p.get("gauge_pages") or []):
+            if s not in thin:
+                held.pop(s, None)
+                continue
+            since = held.setdefault(s, today)
+            if (datetime.date.fromisoformat(today) - datetime.date.fromisoformat(since)).days >= DROP_DAYS:
+                for k in ("stations", "gauge_pages"):
+                    if s in (p.get(k) or []):
+                        p[k].remove(s)
+                p.setdefault("dropped", {})[s] = "held %s to %s: %s" % (since, today, "; ".join(thin[s])[:160])
+                held.pop(s)
+                out.append(s)
+        if held:
+            p["held"] = held
+        else:
+            p.pop("held", None)
+    return out
+
+
 GATE = True
 ALIKE = 0.75  # check.py fails a site over 0.80; held back at 0.75 here, so a gauge whose text drifts skips itself and never blocks a deploy
 

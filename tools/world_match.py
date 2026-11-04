@@ -150,7 +150,7 @@ def main(stations=None, seen=None):
     if len(stations) < 1000:
         sys.exit("station list cut short (%d): nothing written" % len(stations))
     pages = json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))
-    have = {n for p in pages for n in p.get("gauge_pages") or []}
+    have = {n for p in pages for n in list(p.get("gauge_pages") or []) + list(p.get("dropped") or {})}  # a gauge dropped after 7 days held is never matched again
     out, skip, gb = [], [], []
     for r in csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), encoding="utf-8")):
         if r["ready"] != "yes" and r["tier"] != "0" and "GB" in r["country"].split("|"):

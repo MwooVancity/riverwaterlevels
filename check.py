@@ -215,10 +215,38 @@ def shingles(h):
     return {hash(" ".join(w[i:i + 5])) for i in range(len(w) - 4)}
 
 
-def near_dupes(sh):
-    """Pairs of gauge pages sharing more than DUP_MAX of their text. ponytail: all pairs, fine to ~3,000 pages (4.5M set ops); past that compare within a state or use MinHash."""
-    ks = sorted(sh)
-    return [(a, b, j) for i, a in enumerate(ks) for b in ks[i + 1:] if sh[a] and sh[b] and (j := len(sh[a] & sh[b]) / len(sh[a] | sh[b])) > DUP_MAX]
+BINS, ROWS = 320, 8  # 40 bands of 8: a pair at 80% slips past 6 in 10,000 runs, at 90% never in practice; live pages sit at 32-46% (2026-11-04), so about 1 pair in 100 is checked exactly
+
+
+def sketch(s):
+    """One-permutation MinHash: the smallest hash in each of BINS bins. 320 values a page instead of ~4,000 shingles held in memory."""
+    m = [None] * BINS
+    for x in s:
+        b, v = x % BINS, x // BINS
+        if m[b] is None or v < m[b]:
+            m[b] = v
+    return tuple(m)
+
+
+def near_dupes(sh, load=None):
+    """Pairs of gauge pages sharing more than DUP_MAX of their text. sh maps url to a shingle set, or to a sketch with load(url) giving the set back.
+    Banding picks candidates, the exact Jaccard decides: all pairs took ~1 ms each and hit the 45-min brake near 2,000 pages.
+    ponytail: a bug making 1,000 identical pages costs 500k exact checks (~8 min); fine, the build already fails."""
+    sk = {u: s if isinstance(s, tuple) else sketch(s) for u, s in sh.items() if s}
+    cand = set()
+    for i in range(0, BINS, ROWS):
+        buck = {}
+        for u, m in sk.items():
+            buck.setdefault(m[i:i + ROWS], []).append(u)
+        cand.update(tuple(sorted((a, b))) for us in buck.values() if len(us) > 1 for k, a in enumerate(us) for b in us[k + 1:])
+    get, out = load or sh.get, []
+    for a, b in sorted(cand):
+        if sum(x == y for x, y in zip(sk[a], sk[b])) / BINS < DUP_MAX - 0.15:  # estimate error ~0.02 at 320 bins: 7 of them
+            continue
+        A, B = get(a), get(b)
+        if (j := len(A & B) / len(A | B)) > DUP_MAX:
+            out.append((a, b, j))
+    return out
 
 
 def cloak_risks(js):
@@ -508,9 +536,9 @@ def check_dir(d):
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
                 if kind_of(rel) == "world":
-                    gauge_sh[u] = shingles(h)
+                    gauge_sh[u] = sketch(shingles(h))
                 if kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h):
-                    gauge_sh[u] = shingles(h)
+                    gauge_sh[u] = sketch(shingles(h))
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
@@ -523,7 +551,7 @@ def check_dir(d):
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
     live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
-    for a, b, j in near_dupes(gauge_sh):
+    for a, b, j in near_dupes(gauge_sh, lambda u: shingles(open(os.path.join(d, rel_of[u]), encoding="utf-8").read().replace(" ", " "))):
         site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
     for t, rels in titles.items():
         if len(rels) > 1:
@@ -908,6 +936,12 @@ def selftest():
     nums = "<main>" + " ".join("gauge reading %d cm at %d" % (i * 7, i) for i in range(60)) + "</main>"
     assert not near_dupes({"/x/": shingles(nums), "/y/": shingles(re.sub(r"\d+", lambda m: str(int(m.group()) + 3), nums))}), "selftest: same words with other readings are two gauges"
     assert not near_dupes({"/x/": shingles(a), "/y/": shingles("<main>" + " ".join(wd(i, "z") for i in range(300)) + "</main>")}), "selftest: distinct pages wrongly flagged"
+    tpl = " ".join(wd(i, "t") for i in range(1500))  # 200 template pages: shared words plus their own readings, like the live site (32-46% alike)
+    many = {"/g%d/" % k: shingles("<main>" + tpl + " " + " ".join("level %d at %d" % (k * 1000 + i, i) for i in range(500)) + "</main>") for k in range(200)}
+    twin = "<main>" + tpl + " " + " ".join("level %d at %d" % (7000 + i, i) for i in range(500)) + "</main>"  # page 7 with 1 reading in 12 changed: ~85% alike
+    many["/twin/"] = shingles(re.sub(r"level (\d+)", lambda m: "level %d" % (int(m.group(1)) + (int(m.group(1)) % 12 == 0)), twin))
+    got = near_dupes({u: sketch(s) for u, s in many.items()}, many.get)
+    assert [(a, b) for a, b, _ in got] == [("/g7/", "/twin/")], "selftest: banding missed or invented a near-duplicate among 200 template pages: %s" % got
     good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)

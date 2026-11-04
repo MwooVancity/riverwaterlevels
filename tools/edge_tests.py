@@ -231,8 +231,14 @@ def england(ago):
     finally:
         collect.http_json = real
     assert w["fetched_at"] == "2026-11-01T00:00:00+00:00" and w["no_weather"], "a cut-short list refreshed the alert time, so the page could say none"
+    hp = [{"slug": "x", "stations": ["A", "B"], "gauge_pages": ["A", "B"]}]
+    assert world.drop_held(hp, {"A": ["thin"]}, "2026-11-01") == [] and hp[0]["held"] == {"A": "2026-11-01"}, "a first hold was not dated"
+    assert world.drop_held(hp, {"A": ["thin"]}, "2026-11-07") == [] and world.drop_held(hp, None, "2026-12-01") == [], "a gauge dropped before 7 days, or on an unread status"
+    assert world.drop_held(hp, {"A": ["thin"]}, "2026-11-08") == ["A"] and hp[0]["gauge_pages"] == ["B"] == hp[0]["stations"] and "thin" in hp[0]["dropped"]["A"] and "held" not in hp[0], "a gauge held 7 days kept its slot, or lost its reason"
+    hp = [{"slug": "x", "gauge_pages": ["A"], "held": {"A": "2026-10-01"}}]
+    assert world.drop_held(hp, {}, "2026-11-08") == [] and "held" not in hp[0], "a gauge that healed kept its old hold date"
     pages = [{"slug": "england", "feed": "ea", "gauge_pages": []}, {"slug": "rhine", "gauge_pages": ["KAUB"]}]
-    unproven = dict(world.PROVED, ea={"reading": "seen on live data 2026-11-03"})
+    unproven =dict(world.PROVED, ea={"reading": "seen on live data 2026-11-03"})
     assert world.listing(pages) == ["pegelonline"] and not world.proof_faults(world.listing(pages), unproven), "a country with no gauge page failed the proof gate"
     assert world.proof_faults(world.listing([dict(pages[0], gauge_pages=["4009"])]), unproven), "a country with a gauge page passed without every proof"
     keep, cache = world.PROVED, (collect.CACHE, world.common.CACHE, collect.http_raw)

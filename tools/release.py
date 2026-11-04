@@ -30,12 +30,16 @@ share = lambda t, k: int(t or 0) / max(1, per_[k])  # gauges that share one keyw
 tier_ = {r["gauge"]: share(r["tier"], r["keyword"]) for r in q_ if r["gauge"]}
 wpp = os.path.join(ROOT, "data", "world-pages.json")
 wpages = _json.load(open(wpp, encoding="utf-8"))
+from lib import world as _world
+thin_ = _world.live_thin()
+held_before_ = _json.dumps([p.get("held") for p in wpages])
+gone_ = _world.drop_held(wpages, thin_, __import__("datetime").date.today().isoformat())  # a hold older than 7 days frees its WORLD_MAX slot and is never re-added
+for s_ in gone_:
+    print("  world  dropped %s after %d days held" % (s_, _world.DROP_DAYS))
 listed = {s for p in wpages for s in p.get("gauge_pages") or []}
 wr = os.path.join(ROOT, "data", "world-ready.csv")
-ready = [w for w in csv.DictReader(open(wr, encoding="utf-8")) if w["station"] not in listed] if os.path.exists(wr) else []
-from lib import world as _world
+ready = [w for w in csv.DictReader(open(wr, encoding="utf-8")) if w["station"] not in listed and not any(w["station"] in (p.get("dropped") or {}) for p in wpages)] if os.path.exists(wr) else []
 room_, fits = {}, []
-thin_ = _world.live_thin()
 for w in ready:  # a feed missing a proof adds nothing; a feed whose every listed gauge was held thin adds nothing (lib/world.py room), so thin pages never eat the 25 a day
     room_.setdefault(w["feed"], _world.room(w["feed"], wpages, thin_))
     if room_[w["feed"]] > 0:
@@ -48,7 +52,7 @@ RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
 both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
-if world_add:
+if world_add or gone_ or held_before_ != _json.dumps([p.get("held") for p in wpages]):
     for w in world_add:
         page = next(p for p in wpages if p["slug"] == w["page"])
         for k in ("stations", "gauge_pages"):
