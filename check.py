@@ -744,8 +744,8 @@ def selftest():
     finally:
         world.COVER = real
     fw = {"fetched_at": "x", "no_weather": "far"}
-    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": fw, "_along": True}) == ['class="tile rain', "along_river", "about_gauge"], "selftest: a world page without its rain tile or along-the-river strip passed"
-    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river" id="about_gauge"', {"wx": fw, "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == ['class="tile rain', "along_river", "about_gauge"] and world.missing('id="alerts" id="official_links" id="stage_chart" id="about_gauge"', {"wx": fw}) == [], "selftest: a world page without its rain tile or along-the-river strip passed"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river" id="about_gauge"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
     assert world.cover_faults([], [], {"b_x": ("next: wire this source, words missing", "have")}) and not [f for f in world.cover_faults([], [{"feed": "ea", "gauge_pages": list(range(500))}]) if "lists" in f], "selftest: a next item with no reader words passed, or a country cap is back"

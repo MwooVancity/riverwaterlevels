@@ -505,7 +505,8 @@ def owed(r):
     w = r.get("wx")
     if not w or (not w.get("fetched_at") and not w.get("periods")):
         return ["weather not collected yet"]
-    out = ["alerts", "official_links", "stage_chart", 'class="tile rain'] + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge"]
+    rain = r.get("ea") is not None or ((w.get("rain") or {}).get("inches") or {}).get("last_24h") is not None  # England's tile has four states and always shows; elsewhere a total shows its tile, fresh or marked old. Canada has none (live 2026-11-04: 14 pages named for a tile they could not have)
+    out = ["alerts", "official_links", "stage_chart"] + (['class="tile rain'] if rain else []) + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge"]
     if w.get("no_weather"):
         return out
     for key, t, bid in (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
