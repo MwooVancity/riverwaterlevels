@@ -15,6 +15,15 @@ def run():
     assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"
     late = dict(new, time="t3", value="12400")  # Animas 2026-11-03: latest-continuous kept 12,400 at a time the continuous series no longer had
     assert [r["value"] for r in collect.add_latest([new], [late, dict(new, value="99")])] == ["11000", "12400"], "the page lacks the latest reading the edge shows, or a latest value overrode a continuous correction"
+    calls, rec_, log_ = [], {"access": "old"}, []
+    def dead():
+        calls.append(1)
+        raise TimeoutError("The read operation timed out")
+    for _ in range(6):
+        collect.run_source(rec_, "access", dead, log_)
+    collect.run_source(rec_, "land", lambda: (_ for _ in ()).throw(OSError("HTTP Error 404: Not Found")), log_)
+    assert len(calls) == collect.DOWN_AFTER and rec_["access"] == "old" and collect.DOWN.get("land", 0) == 0, "a dead source was asked at every gauge (32 of 33 release minutes, 2026-11-04), lost its previous value, or a 404 counted as down"
+    collect.DOWN.clear()
     src = open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read()
     assert "&last_modified=" in src[src.index("def fast_usgs"):src.index("SLOW_KEYS")], "the hourly fetch cannot see a correction to an older reading"
     assert "g.f[0] !== m[3]" in open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read(), "the edge cannot correct a reading of the same time"

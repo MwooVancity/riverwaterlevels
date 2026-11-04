@@ -1111,16 +1111,25 @@ def note(src, outcome, err=""):
             c["err"] = str(err)[:80]
 
 
+DOWN = {}  # source -> failures in a row this run (a 404 or an empty answer is a gauge without it, not a down source)
+DOWN_AFTER = 3  # the 2026-11-04 release spent 32 of 33 min on the boat-ramp source timing out at every gauge; at 3 in a row the rest of the run keeps previous values
+
+
 def run_source(rec, key, fn, log):
     """Fetch one source into rec[key]. A failure keeps the previous value AND is recorded as failed: kept-previous is never counted as success."""
     t0 = _time.time()
     try:
+        if DOWN.get(key, 0) >= DOWN_AFTER:
+            raise OSError("skipped: failed %d times in a row this run" % DOWN[key])
         v = fn()
     except Exception as e:
         _tick("src " + key, _time.time() - t0)
+        if not str(e).startswith("skipped") and "404" not in str(e) and "out of range" not in str(e):
+            DOWN[key] = DOWN.get(key, 0) + 1
         log.append("%s FAILED (%s), kept previous" % (key, str(e)[:60]))
         note(key, "failed", e)
         return False
+    DOWN[key] = 0
     _tick("src " + key, _time.time() - t0)
     rec[key] = v
     note(key, "ok" if v else "absent")
@@ -2002,7 +2011,7 @@ def wx_germany(r, w, ctx):
         got = once(ctx, "aq-" + i, lambda: http_json("https://www.umweltbundesamt.de/api/air_data/v3/airquality/json?station=%s&date_from=%s&time_from=1&date_to=%s&time_to=24&lang=en" % (i, back, day), {}, 30)["data"].get(i))
         if got and any(v[1] is not None for v in got.values()):
             t = max(k for k, v in got.items() if v[1] is not None)
-            w["aq"] = {"value": "%d, on the agency's scale from 0 (very good) to 4 (very bad)" % got[t][1],  # "0 of 0 to 4" was unreadable (UI review 2026-11-04) "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}
+            w["aq"] = {"value": "%d, on the agency's scale from 0 (very good) to 4 (very bad)" % got[t][1], "scale": "German air quality index, 0 very good to 4 very bad", "place": aqs[i][2], "km": d, "t": t.replace(" ", "T") + "+01:00", "src": "Umweltbundesamt with data from the networks of the states and the federal government"}  # "0 of 0 to 4" was unreadable (UI review 2026-11-04)
 
 
 def wx_fill(page, rows, old, ctx):
