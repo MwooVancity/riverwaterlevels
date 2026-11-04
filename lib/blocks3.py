@@ -700,6 +700,32 @@ def b_world_about(G):
     return block("about_gauge", "About this gauge", "agency", table(["Fact", "Value"], "".join(tr([esc(k), esc(v)]) for k, v in f["about"])), "Source: %s station record, %s." % (esc(f["api"]), esc(f["name"])), f["src"])
 
 
+def b_world_rate(G):
+    """Level change over 1 to 24 hours and the week's highest and lowest, from the agency's own readings; our arithmetic, said as ours (the US page's rate of change, 0 of 37 world pages had it 2026-11-04)."""
+    f, sg = G["feed"], G["sg"]
+    if len(sg) < 8:
+        return None
+    from lib.world import fmt_level
+    u = f["unit"]
+    k = 30.48 if u == "cm" else 0.3048  # the chart series is in feet; back to the agency's unit
+    lv = lambda ft: fmt_level(ft * k, u)
+    ch = lambda d: ("%+.0f cm" if u == "cm" else "%+.2f m") % (d * k)
+    t1, v1 = sg[-1][0], sg[-1][1]
+    rows = ""
+    for h in (1, 3, 6, 12, 24):
+        want = t1 - datetime.timedelta(hours=h)
+        past = [x for x in sg if x[0] <= want]
+        if past and (want - past[-1][0]).total_seconds() <= 3 * 3600:  # a gap in the feed is never bridged by a reading hours older
+            rows += tr(["Last %d h" % h, lv(past[-1][1]), ch(v1 - past[-1][1])], right=(1, 2))
+    if not rows:
+        return None
+    week = [x for x in sg if x[0] >= t1 - datetime.timedelta(days=7)]
+    hi, lo = max(week, key=lambda x: x[1]), min(week, key=lambda x: x[1])
+    ext = tr(["Highest in 7 days, %s" % esc(tzl(hi[0], G["zone"])), lv(hi[1]), ch(v1 - hi[1])], right=(1, 2)) + tr(["Lowest in 7 days, %s" % esc(tzl(lo[0], G["zone"])), lv(lo[1]), ch(v1 - lo[1])], right=(1, 2))
+    return block("rate_of_change", "How fast the level is changing", "calc", table(["Compared with", "Level then", "Change to now"], rows + ext, right=(1, 2)),
+                 "Source: %s readings, %s; the changes are our arithmetic on them." % (esc(f["api"]), esc(f["name"])), f["src"])
+
+
 def b_world_near(G):
     """Up to five gauges on other rivers within 100 km, nearest first, each with its latest reading and a link: a reader whose river is quiet checks the next one over (the US page has had this since 2026-10-21)."""
     f = G["feed"]

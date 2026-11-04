@@ -225,7 +225,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_alerts": ("have", "have"), "b_stage_chart": ("have", "have"), "b_official_marks": ("have", "have"),
     "b_hourly": ("have", "have"), "b_weather": ("have", "have"), "b_air": ("have", "have"), "b_air_quality": ("have", "have"), "b_official_links": ("have", "have"),
     "b_flow_chart": ("have", "have"),
-    "b_rate": ("none: the 24 h change tile and the flow line carry it", "none: the 24 h change tile and the flow line carry it"),
+    "b_rate": ("have", "have"),
     "b_rain": ("none: city pages carry no rain total; the SWOB record at Ottawa airport carried none on 2026-11-02", "have"),
     "b_river_forecast": ("none: river forecasts are provincial in Canada, with no national open feed", "have"),
     "b_quality": ("none: the Water Office real-time feed publishes level and flow only", "have"),
@@ -262,7 +262,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
-    "b_rate": COVER["b_rate"][0],
+    "b_rate": "have",
     "b_rain": "have",  # the rain tile: 24 h total of the nearest EA rain gauge within 15 km (collect.py ea_rain, lib/world.py ea_rain_tile)
     "b_river_forecast": "next: GOV.UK Check for flooding shows an agency model forecast at some stations (Colwick 2026-11-03); no open feed read",
     "b_quality": "none: the flood-monitoring API measures level, flow, rainfall, temperature, wind and velocity only, all 7,439 measures read 2026-11-03",
@@ -527,6 +527,8 @@ def owed(r):
         out.append("also_measured")
     if len(r.get("flow") or []) >= 8:
         out.append("flow_chart")
+    if len(r.get("series") or []) >= 8:
+        out.append("rate_of_change")
     if r.get("deciles") or r.get("days") or r.get("years"):
         out.append("world_history")
     if (r.get("access") or {}).get("rows"):

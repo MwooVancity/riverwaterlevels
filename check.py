@@ -520,7 +520,10 @@ def check_dir(d):
             if len(q) >= 2:
                 redirects[q[0]] = q[1]
         site_bad += redirect_limit(len(redirects))
-    site_bad += file_limit(sum(len(f) for _, _, f in os.walk(d)))
+    n_files = sum(len(f) for _, _, f in os.walk(d))
+    if n_files > 15000:
+        print("WARNING: %d files in the deploy; Cloudflare refuses past 20,000. Drop the embed copies or move data.json to the Worker before 19,000." % n_files)
+    site_bad += file_limit(n_files)
     sp = os.path.join(d, "single-rivers.json")
     if os.path.exists(sp):
         redirects.update(json.load(open(sp, encoding="utf-8")))
@@ -650,8 +653,6 @@ def world_rules(h):
 
 def file_limit(n):
     """Cloudflare takes at most 20,000 files per deploy and refuses the rest: the live site freezes (each gauge is 3 files: page, embed copy, data.json, so about 6,500 gauges). Fail at 19,000 with the reason; warn from 15,000 so the fix lands first."""
-    if n > 15000:
-        print("WARNING: %d files in the deploy; Cloudflare refuses past 20,000. Drop the embed copies or move data.json to the Worker before 19,000." % n)
     return ["%d files in the deploy (Cloudflare refuses past 20,000; this check fails at 19,000): drop the embed copies or serve data.json from the Worker" % n] if n > 19000 else []
 
 
