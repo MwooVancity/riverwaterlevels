@@ -66,7 +66,7 @@ Failures seen: laptop data differs from cloud data (only the dry run proves); on
 
 ## Reviews
 - No signature gate: paperwork never blocks a deploy.
-- Screenshots only for what a machine cannot see: one full (~170k tokens) a day, one light (~80k) a batch. `python -I tools/hater_sample.py`, `node tools/hater_shots.mjs [sites]`, then a reviewer who did not build it reads `tools/review_brief.md`.
+- Screenshots (owner 2026-11-05: no daily cap): every new page and every new block type is screenshotted at phone width before it opens to Google; name the token cost first. `python -I tools/hater_sample.py`, `node tools/hater_shots.mjs [sites]`, then a reviewer who did not build it reads `tools/review_brief.md`.
 - A defect found twice becomes a `check.py` rule that batch. Delete a gate with no real catch in 10 runs.
 - Helpfulness checklist: `tools/helpful_audit.md` (A-Q); each batch checks the categories it touches.
 
