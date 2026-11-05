@@ -273,6 +273,8 @@ def main():
             except OSError:
                 pass
         st_["cache_lost"] = os.environ.get("CACHE_MATCHED") == ""
+        from lib import ledger
+        st_["ledger"] = ledger.report()  # every stage's slowest run today and the page count where it breaks; tools/watchdog.py alarms on "soon"
         st_["coverage"] = coverage.scan(nxt, json.load(open(os.path.join(ROOT, "dist", "status.json"))).get("coverage") if os.path.exists(os.path.join(ROOT, "dist", "status.json")) else None)
         json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:

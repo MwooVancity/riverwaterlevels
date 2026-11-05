@@ -74,6 +74,8 @@ def main():
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
         if world_thin(s):
             ok.append(world_thin(s))
+        for x in (s.get("ledger") or {}).get("soon") or []:  # machinery audit: a stage that passes its time limit within 30 days of growth
+            bad.append("run time: " + x)
         if s.get("cache_lost"):
             bad.append("data cache lost: this build started empty; the good copy was not overwritten")
         try:

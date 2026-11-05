@@ -73,6 +73,21 @@ if sum_:
     os.makedirs(os.path.dirname(hp), exist_ok=True)
     json.dump({"at": at, "mode": "run", "attempted": max((a["ok"] + a["absent"] + a["failed"] for k, a in sum_.items() if k == "usgs"), default=0), "sources": out}, open(hp, "w"), indent=1)
 print("merged %d files from %d of %d shards" % (copied, n - len(failed), n))
+walls = []
+for i in range(n):  # machinery audit: the slowest shard's collect time, so the 60-min shard limit is seen coming (timing.json was uploaded and never read)
+    try:
+        walls.append(json.load(open(os.path.join(d, "shard-%d" % i, "timing.json")))["wall_s"])
+    except (OSError, ValueError, KeyError):
+        pass
+if walls:
+    sys.path.insert(0, ROOT)
+    from lib import ledger
+    try:
+        pages = len(json.load(open(os.path.join(ROOT, "dist", "_urls.json")))["urls"])
+    except (OSError, ValueError, KeyError):
+        pages = 0
+    ledger.add("shard collect", max(walls), pages)
+    print("slowest shard collect %.0f s of %d shards" % (max(walls), len(walls)))
 if failed:
     print("SHARDS THAT FAILED (their gauges keep the old cache files): %s" % ", ".join(map(str, failed)))
 os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)

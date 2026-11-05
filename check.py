@@ -1002,6 +1002,8 @@ def selftest():
         assert any(want in g for g in got), "selftest: %r did not fire (got %s)" % (want, got)
     import tools.edge_tests
     tools.edge_tests.run()
+    import runpy
+    runpy.run_path(os.path.join(ROOT, "lib", "ledger.py"), run_name="__main__")  # the run-time ledger names a stage before it hits its limit
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 
