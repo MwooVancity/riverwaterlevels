@@ -31,8 +31,9 @@ export default {
         if (d) o.headers.set("x-rwl-build-trigger", d); // the last time the cron asked GitHub for a build, and GitHub's answer
         return secure(o, url);
       }
-      if (!url.pathname.startsWith("/river/")) return env.ASSETS.fetch(req);
+      if (!url.pathname.startsWith("/river/")) return perm(await env.ASSETS.fetch(req));
       let res = await env.ASSETS.fetch(req);
+      if (res.status === 307) return secure(perm(res), url);
       if (res.status === 404) { // a river with one gauge has no hub page: its address leads to that gauge (build.py writes the map)
         const to = (await (await env.ASSETS.fetch("https://riverwaterlevels.com/single-rivers.json")).json())[url.pathname];
         if (to) return secure(new Response(null, { status: 301, headers: { location: to } }), url);
@@ -54,6 +55,11 @@ export default {
     }
   },
 };
+
+// Assets answer the trailing-slash and index.html redirects with 307; the address change is permanent, so Google should move the URL's credit (SEO audit 2026-11-05)
+function perm(res) {
+  return res.status === 307 ? new Response(null, { status: 301, headers: { location: res.headers.get("location") } }) : res;
+}
 
 let SITES = null; // url -> [site, built reading time, time zone], from the built live-sites.json; kept for the life of this isolate
 

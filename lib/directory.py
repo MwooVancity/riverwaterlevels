@@ -165,10 +165,10 @@ def home(built, Gs):
     tools = ('<div class="search"><input id="q" type="search" placeholder="Search rivers, places or states" aria-label="Search rivers, places or states"><span class="sub" id="gcount" style="margin:0">%d gauges</span></div>'
              '<p id="nomatch" class="sub" hidden>No rivers match that search.</p><div class="pills" aria-label="Filters"><button type="button" class="pill" data-f="large">Large rivers</button>'
              '<button type="button" class="pill" data-f="fc">Has river forecast</button><button type="button" class="pill" data-f="wq">Has water quality sensors</button></div>%s' % (len(built), jump))
-    body = ('<h1>River levels and flows for US rivers and creeks</h1><p class="sub">Flow and water level at %d USGS gauges across the US, with National Weather Service forecasts and alerts.</p>'
+    body = ('<h1>River levels and flows</h1><p class="sub">Flow and water level at %d USGS gauges across the US, with National Weather Service forecasts and alerts' + esc(plus_world()) + '.</p>'
             '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
             % (len(built), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + NEAR_JS))
-    return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service.", "/", body)
+    return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body)
 
 
 def world_pages():
@@ -185,6 +185,20 @@ def world_ft(v, r):
 
 def world_name(p):
     return p["river"] if p.get("lake") or p.get("flat") else p["river"] + " river"
+
+
+COUNTRY = {None: "Germany", "pegelonline": "Germany", "eccc": "Canada", "ea": "England"}
+
+
+def world_countries():
+    """Countries with a world page built from cache, in reading order: the home page and llms.txt name them, never a fixed list (audit 2026-11-05: the home said US only)."""
+    on = {COUNTRY[p.get("feed")] for p in world_pages() if os.path.exists(os.path.join(ROOT, "cache", "_river-%s.json" % p["slug"]))}
+    return sorted(on)
+
+
+def plus_world():
+    c = world_countries()
+    return (", plus official agency gauges in %s" % (" and ".join(c) if len(c) < 3 else ", ".join(c[:-1]) + " and " + c[-1])) if c else ""
 
 
 def world_links():
@@ -473,7 +487,7 @@ def sitemap(urls, lastmod):
 
 def llms(built):
     """llms.txt: what the site is, where the pages and the data files are, how to credit the sources."""
-    lines = ["# %s" % BRAND, "", "> One page per USGS river gauge: current flow and gage height, how today compares with the gauge's own record, NWS forecasts, alerts and flood record. Government data only (USGS, NOAA/NWS), every number with its observed time and source.", "",
+    lines = ["# %s" % BRAND, "", "> One page per USGS river gauge: current flow and gage height, how today compares with the gauge's own record, NWS forecasts, alerts and flood record. Government data only (USGS, NOAA/NWS), every number with its observed time and source." + (" Also gauge pages from the official agencies of %s, linked from the home page." % " and ".join(world_countries()) if world_countries() else ""), "",
              "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each gauge page has a machine-readable copy at <page URL>data.json (7-day flow and gage height, daily mean flow by year).", "- Embeddable panel per gauge at %s/embed/river/<river>/<place>/" % SITE_URL,
              "- Credits: Data: U.S. Geological Survey; NOAA National Weather Service. Provisional USGS data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL), "", "## Gauge pages", ""]
     lines += ["- [%s, %s](%s%s)" % (river_at(r["river"], r["place"]), r["state"], SITE_URL, r["dashboard_url"]) for r in sorted(built, key=lambda r: (r["state"], r["river"], r["place"]))]

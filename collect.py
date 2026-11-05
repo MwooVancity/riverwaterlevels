@@ -2194,7 +2194,7 @@ def fetch_world():
                 past = past[-672:]  # the table's line stays 7 days
                 flow = []
                 if name in (page.get("gauge_pages") or []) and any(t["shortname"] == "Q" for t in st["timeseries"]):
-                    flow = [[p["timestamp"], p["value"]] for p in retry_json(base + q + "/Q/measurements.json?start=P7D", {}, 30)[::8]]
+                    flow = [[p["timestamp"], p["value"]] for p in retry_json(base + q + "/Q/measurements.json?start=P7D", {}, 30)[::-8][::-1]]  # counted back from the newest: the chart's "Latest" is the agency's latest (dry run 2026-11-05: Frankfurt 92 beside 60)
                 try:
                     fc = retry_json(base + q + "/WV/measurements.json", {}, 30) if name in (page.get("gauge_pages") or []) else []
                 except urllib.error.HTTPError:

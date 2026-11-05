@@ -741,6 +741,8 @@ def selftest():
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
     from lib.common import latest_band_note
+    from lib.directory import COUNTRY, world_pages
+    assert all(p.get("feed") in COUNTRY for p in world_pages()), "selftest: a world feed has no country name for the home page (lib/directory.py COUNTRY)"
     lou = [97, 10000.0, 14000.0, None, 22000.0, 30000.0, 38000.0, None, 46000.0, 55000.0]  # Louisville-like: 24 h mean 27,900 typical, latest 51,000 well above
     assert "51,000 cfs, is much above normal" in latest_band_note(lou, 51000.0, "Typical for this date") and latest_band_note(lou, 30000.0, "Typical for this date") == "", "selftest: the normal tile hid a latest reading in another band than the 24 h average"
     wr = [{"name": "KAUB", "cm": 23.0, "time": "2026-11-04T15:45:00+01:00"}]

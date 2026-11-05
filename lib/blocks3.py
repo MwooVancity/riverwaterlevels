@@ -677,7 +677,8 @@ def b_also(G):
     """What else the agency measures at this gauge right now: flow, water temperature, air temperature."""
     f = G["feed"]
     words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
-    rows = "".join(tr([words.get(k, esc(v[2])), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
+    own = lambda v: (", %s" % esc(tzl(parse_t(v[3]), G["zone"]))) if len(v) > 3 and v[3] and G["sg"] and parse_t(v[3]) != G["sg"][-1][0] else ""  # a reading of another time than the level names its own time, never the level's
+    rows = "".join(tr([words.get(k, esc(v[2])) + own(v), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
     if f.get("ship") in ("low", "normal", "high"):
         rows += tr(["Against the agency's lowest and highest shipping levels (not a sailing decision)", {"low": "Below the lowest", "normal": "Between them", "high": "Above the highest"}[f["ship"]]], right=(1,))  # "Normal" here sat beside a headline "Low" against mean low water (UI review 2026-11-04)
     return block("also_measured", "Also measured here now", "agency", table(["Measure", "Latest"], rows, right=(1,)), "Source: %s, %s, with the reading at %s." % (f["api"], f["name"], esc(G["obs"])), f["src"]) if rows else None
