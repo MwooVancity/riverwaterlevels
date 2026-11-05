@@ -16,6 +16,8 @@ NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 HU = dict(usgs_headers(), **H)  # with the key: anonymous calls from shared CI addresses get rate-limited and the check silently skips
 MAX_LAG_H = 3
+SAMPLE = 300  # live mode checks this many pages a run, rotating hourly: every page within ceil(pages / 300) hours. 185 pages serial took 92-313 s against a 5-min limit (2026-11-04)
+WORKERS = 8  # parallel page and NWS fetches; ~0.3 s each, so 300 pages plus their NWS points take ~25 s at any site size
 STALE_FAIL_H = 12  # a lag up to here is a warning (USGS lag or a single slow gauge, not a wrong number); beyond it the refresh is genuinely broken and the run should go red
 
 
@@ -40,6 +42,13 @@ def get(u, t=60):
         except Exception as e:
             if i == 3 or getattr(e, "code", 0) not in (0, 429, 500, 502, 503, 504):
                 raise
+
+
+def pmap(f, xs):
+    """f over xs, WORKERS at a time; an exception in f is raised here, as the serial loop did."""
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(WORKERS) as ex:
+        return list(ex.map(f, xs))
 
 
 def record(status, compared, bad, skipped):
@@ -67,13 +76,16 @@ def main():
         carried = {"/" + r.rsplit("index.html", 1)[0] for r in (json.load(open(os.path.join(LOCAL, "_carried.json"))) if LOCAL else [])}
     except (OSError, ValueError):
         carried = set()
-    for name, url, *_ in gauges:
-        if not url.startswith("/river/"):  # gauges outside the US: tools/truth_world.py checks them against their own feed
-            continue
+    urls = [u for _, u, *_ in gauges if u.startswith("/river/")]  # gauges outside the US: tools/truth_world.py checks them against their own feed
+    if not LOCAL and len(urls) > SAMPLE:
+        k = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) * SAMPLE % len(urls)
+        urls = (urls + urls)[k:k + SAMPLE]
+    html = dict(pmap(lambda u: (u, None if u in carried else page(u)), urls))
+    for url in urls:
         if url in carried:
             skipped.append("%s: carried from the live site (this build's page failed a check)" % url)
             continue
-        h = page(url)
+        h = html[url]
         if '>Latest flow</span><b>Not published<' in h:  # ice: USGS publishes stage only, so no flow to compare; a page must never fail for saying so
             skipped.append("%s: flow not published by USGS" % url)
             continue
@@ -106,6 +118,12 @@ def main():
         for f in j.get("features", []):
             p = f["properties"]
             latest[(p["monitoring_location_id"][5:], p["parameter_code"])] = (datetime.datetime.fromisoformat(p["time"]), float(p["value"]))
+    def nws(lid):
+        try:
+            return lid, json.loads(get(NWPS % lid))
+        except Exception as e:
+            return lid, e
+    nwps = dict(pmap(nws, sorted({pg["lid"] for pg in pages.values() if pg["lid"] and (pg["cats"] or pg["derived"])})))
     for sid, pg in pages.items():
         u = latest.get((sid, "00060"))
         if not u:
@@ -131,15 +149,15 @@ def main():
             elif lag > MAX_LAG_H:
                 stale.append("%s: page is %.1f h behind USGS (USGS reads %s; the page shows this age)" % (pg["url"], lag, ut.isoformat()))
         if pg["lid"] and (pg["cats"] or pg["derived"]):
-            try:
-                nj = json.loads(get(NWPS % pg["lid"]))
-                cats = (nj.get("flood") or {}).get("categories") or {}
-            except Exception as e:
+            nj = nwps[pg["lid"]]
+            if isinstance(nj, Exception):
+                e = nj
                 if LOCAL:  # an NWS outage must not freeze fresh USGS data: the flood stages stay unchecked and the skip is recorded
                     skipped.append(pg["lid"])
                     continue
                 bad.append("%s: NWS forecast point %s did not answer (%s)" % (pg["url"], pg["lid"], str(e)[:60]))
                 continue
+            cats = (nj.get("flood") or {}).get("categories") or {}
             for k, v in pg["cats"].items():
                 nv = (cats.get(k) or {}).get("stage")
                 if not isinstance(nv, (int, float)) or abs(nv - v) > 0.05:
