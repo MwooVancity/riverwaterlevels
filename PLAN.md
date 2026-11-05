@@ -154,6 +154,12 @@ UI review (light, live, 3 pages, 2026-11-04), worst first, open:
 10. Ragged half-width tiles on phone (all pages); England jump pills missing; world desktop first row stops at 940 px.
 11. Footer "·" dangles at line ends; England credit sentence repeated.
 
+## 2026-11-05 early batch (main 9dfa532, refresh OK; live read)
+- truth_live: parallel fetches, live mode 300 pages an hour rotating: 28 s at 185 pages (was 92-313 s, 5-min limit). Every page within 47 h at 14,000. The --dir gate still checks every built page; its NWS calls run 8 at a time (~9 min at 14,000 if every page has a forecast point: next limit).
+- Run-time ledger (audit item 1): `lib/ledger.py`, cache/_ledger.jsonl; refresh steps and slowest shard; status.json `ledger` names the page count where each stage breaks; watchdog alarms when under pages + 750. Live first reading: shard collect 231 s at 288 pages, breaks near 3,367 pages. Release stage not yet timed.
+- Key facts (owner 2026-11-04, for Google AI answers): stable sourced sentences, never the live reading; check.py fails a page with a station record and no Key facts, or Key facts with a live number or a word for now. Live: Louisville (drainage, record span, 1937 peak, NWS stages), Ottawa (2019 peak 60.70 m = agency 60.701 m on 2019-04-30), Kaub (agency record 825 cm). World link budget 60 -> 125 (one standard page).
+Next: limits file + code scanner (audit items 2-3); 9-area status line.
+
 ## Machinery audit, 2026-11-04 night (fresh agent, read-only; its numbers, not yet re-checked)
 Why missed: every heavy step is continue-on-error, so runs read green; no per-stage time is recorded (refresh.py log stays local, release collect writes no timing, shard timing.json unread); the 45-min brake reads whole-run wall clock incl. queue wait and never sees the release; 22 ponytail ceilings are comments, no script compares today's count to them; the scale rule is a sentence, not a measurement; same failure class fixed 4 times one-off.
 Master audit to build (unattended, no new cron):
