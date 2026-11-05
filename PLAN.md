@@ -155,7 +155,7 @@ UI review (light, live, 3 pages, 2026-11-04), worst first, open:
 11. Footer "·" dangles at line ends; England credit sentence repeated.
 
 ## SEO audit 2026-11-05 (6 agents; full plan in reports/riverwaterlevels.com-audit/ACTION-PLAN.md)
-Score 73/100: technical 86, content 71, schema 52, speed 74 (est.), AI search 52. Owner: publisher name + contact email (/contact/ 404; AdSense trust risk), gtag keep or cut (181 KB). Code next, in order: Louisville "Typical" chip compares the 24 h mean beside +168% (truth); Ottawa 517 vs 526 m3/s on one page (truth); world schema graph + home WebSite/Organization; home and llms.txt say US only; 307 to 301; world titles add country and id; fold 1-2 gauge hubs; lastmod per page.
+Score 73/100: technical 86, content 71, schema 52, speed 74 (est.), AI search 52. Owner: publisher name + contact email (/contact/ 404; AdSense trust risk). gtag: keep (owner 2026-11-05); revisit only if Search Console Core Web Vitals flags mobile pages. Code next, in order: Louisville "Typical" chip compares the 24 h mean beside +168% (truth); Ottawa 517 vs 526 m3/s on one page (truth); world schema graph + home WebSite/Organization; home and llms.txt say US only; 307 to 301; world titles add country and id; fold 1-2 gauge hubs; lastmod per page.
 
 ## 2026-11-05 early batch (main 9dfa532, refresh OK; live read)
 - truth_live: parallel fetches, live mode 300 pages an hour rotating: 28 s at 185 pages (was 92-313 s, 5-min limit). Every page within 47 h at 14,000. The --dir gate still checks every built page; its NWS calls run 8 at a time (~9 min at 14,000 if every page has a forecast point: next limit).
