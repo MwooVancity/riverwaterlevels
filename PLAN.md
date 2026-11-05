@@ -229,6 +229,14 @@ Each step: gate, cloud dry run, deploy, live read, PLAN.md.
 - Cloud dry run "refresh OK", then main.
 - Live: Choke Canyon ours vs Lakebrief (fresher reading, storage, 27-year normal); status.json `census` totals; one ocean page vs a top tide site.
 
+## Keyword Planner, lakes and oceans, 2026-11-05 (account livedatacalc, all locations, Oct 2025 to Sep 2026)
+- Asked 53,963 keywords in 7 uploads: Wikidata lakes with an English article (10,753 names), USGS lake sites plus Lakebrief lake names (US), NOAA tide stations, Wikidata beaches, bays and harbours (8,198 places as "tide times", "tides", "water temperature"), and "dam level" / "how full is" phrasings.
+- 4,332 have searches (`data/keyword-tiers-water.csv`: keyword, tier, top-of-page bid in CAD, kind). 10K-100K: 25 lake searches (Lake Powell, Mead, Lanier, Travis, Shasta, Choke Canyon, Corpus Christi, Medina, Canyon, Hartwell, Kerr) and 7 ocean (San Diego tides, Norfolk tides, Myrtle Beach tide times). 1K-10K: 141 lake, 261 ocean.
+- Lakes and oceans carry ad bids; rivers mostly did not (Great Salt Lake up to C$28, Sarasota tides C$23.51, Brighton tides C$12.95).
+- Census first run: USGS 9,605 flow gauges (203 built); our code cannot build 1,747 level-only, 736 lakes, 91 tidal, plus 302 NOAA water-level stations.
+- Fresh review: today we would build none of Lakebrief's top 5 lakes (no lake path). Choke Canyon is the first fix (USGS 08206900, 27 years).
+- Rivers not re-asked: 28,068 world plus 10,717 US keywords from 2026-11-01 stand. Missing river phrasings ("river height", "gauge" in GB, AU, NZ, IE) are next.
+
 ## 2026-11-05 evening batch (main 4b41fe9, dry run refresh OK, refresh success; live read)
 - Truth: normal tile names the latest reading when its band differs from the 24 h average (Louisville). Canada and Germany 7-day flow thinned from the newest point, so "Latest" is the agency's latest; a side reading of another time names its own time. Gate `one_latest` (check.py, gauge and world pages, fixture): failed 8+ German pages on its first cloud run (Frankfurt 92 beside 60 m3/s), all pass now. Live: Mainz 487 m3/s in both places.
 - Why the truth gate missed it: truth_live checks each number against the agency alone; two true readings 15 min apart passed. Coverage today: flow only, chart vs "also measured". Systemic next: every reading printed through one stamp (measure + time) and one gate over every page and measure.
