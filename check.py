@@ -333,6 +333,11 @@ def hater_rules(h):
     """Defects the first hater round found on every page that a machine can see in the built HTML."""
     bad = []
     t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", h))
+    kf_ = re.search(r'<section[^>]*id="key_facts".*?</section>', h, re.S)
+    if 'id="about_gauge"' in h and not kf_:  # owner 2026-11-04: quotable stable facts for Google's AI answers on every page whose gauge data allows them
+        bad.append("no Key facts block while the gauge's station record is on the page")
+    if kf_ and ("data-live=" in kf_.group(0) or re.search(r"\b(?:today|now|currently|latest)\b", re.sub(r"<[^>]+>", " ", re.sub(r"<p class=\"src\">.*?</p>", "", kf_.group(0), flags=re.S)), re.I)):  # a quoted copy must never read as today's level
+        bad.append("Key facts hold a live reading or a word for now: a cached quote would show it as today's")
     tn_ = re.search(r"<title>(.*?)(?:\(USGS|</title>)", h)
     if tn_ and re.search(r"\b\d{7,}\b", tn_.group(1)):  # 2026-10-31: "Apple River above 05341499": a gauge number in the place name. release.py sends it back to the queue
         bad.append("a gauge number inside the page name: add a line to data/name-overrides.csv")
@@ -772,15 +777,15 @@ def selftest():
     finally:
         world.COVER = real
     fw = {"fetched_at": "x", "no_weather": "far"}
-    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == ['class="tile rain', "along_river", "about_gauge"] and world.missing('id="alerts" id="official_links" id="stage_chart" id="about_gauge"', {"wx": fw}) == [], "selftest: a world page without its rain tile or along-the-river strip passed"
-    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river" id="about_gauge"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == ['class="tile rain', "along_river", "about_gauge", "key_facts"] and world.missing('id="alerts" id="official_links" id="stage_chart" id="about_gauge" id="key_facts"', {"wx": fw}) == [], "selftest: a world page without its rain tile or along-the-river strip passed"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart" <div class="tile rain none"> id="along_river" id="about_gauge" id="key_facts"', {"wx": dict(fw, rain={"inches": {"last_24h": 0.0}}), "_along": True}) == [], "selftest: a rain tile marked none still answers the rain question"
     assert world.cover_faults(["b_new_us_block"], [], {"b_alerts": ("have", "have")}), "selftest: a new US block must need an answer per country"
     assert world.cover_faults([], [], {"b_x": ("none: x", "have")}), "selftest: a none with no reason"
     assert world.cover_faults([], [], {"b_x": ("next: wire this source, words missing", "have")}) and not [f for f in world.cover_faults([], [{"feed": "ea", "gauge_pages": list(range(500))}]) if "lists" in f], "selftest: a next item with no reader words passed, or a country cap is back"
     assert "weather not collected yet" in world.missing("<p></p>", {"name": "x"}), "selftest: a gauge the weather never reached must not publish"
     fw = {"fetched_at": "t", "periods": [1], "forecast_updated": "2020-01-01T00:00:00+00:00"}
     assert "weather_forecast" not in world.owed({"wx": fw}), "selftest: an outage past the hide limit must not pull a live page"
-    assert world.missing('id="alerts" id="official_links" id="stage_chart" class="tile rain" id="about_gauge"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"
+    assert world.missing('id="alerts" id="official_links" id="stage_chart" class="tile rain" id="about_gauge" id="key_facts"', {"wx": dict(fw, no_weather="far")}) == [], "selftest: a gauge with no station near owes no weather"
     assert "weather_forecast" in world.owed({"wx": dict(fw, forecast_updated=wn.isoformat())}) or True
     assert world_rules(wh + "<script>fetch('https://api.weather.gov/x')</script>") and world_rules(wh + "<img src=\"https://unknown.example/x.png\">") and world_rules(wh + "NWS material is not subject to copyright"), "selftest: a US script, an unknown host or a US credit on a world page"
     assert world_rules(wh + "<p>wind 5 mph</p>") and world_rules(wh + "<p>40 °F</p>") and not world_rules(wh + "<p>7 km/h (5 mph), 4 °C (40 °F)</p>"), "selftest: a US unit alone on a world page"
@@ -1000,6 +1005,10 @@ def selftest():
             assert not got, "selftest: %r wrongly failed: %s" % (want, got)
             continue
         assert any(want in g for g in got), "selftest: %r did not fire (got %s)" % (want, got)
+    kf = '<section class="card blk" id="key_facts"><ul class="facts"><li>X is USGS gauge 1 in Y County.</li></ul><p class="src">Sources: USGS. These facts change rarely.</p></section>'
+    assert not [b for b in hater_rules('<section id="about_gauge"></section>' + kf) if "Key facts" in b], "selftest: a good Key facts block failed"
+    assert any("no Key facts" in b for b in hater_rules('<section id="about_gauge"></section>')), "selftest: a page with a station record and no Key facts passed"
+    assert any("live reading" in b for b in hater_rules(kf.replace("in Y County.", 'flows <b data-live="flow">5</b> cfs now.'))), "selftest: Key facts holding the live reading passed"
     import tools.edge_tests
     tools.edge_tests.run()
     import runpy

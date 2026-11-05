@@ -234,6 +234,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_access": ("have", "have"),
     "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
     "b_about": ("have", "have"),
+    "b_key_facts": ("have", "have"),
     "b_map": (MAP, MAP),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
@@ -248,7 +249,7 @@ MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (own
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
-    "b_offline": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
+    "b_offline": "have", "b_key_facts": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": "have",
@@ -537,7 +538,7 @@ def owed(r):
     if not w or (not w.get("fetched_at") and not w.get("periods")):
         return ["weather not collected yet"]
     rain = r.get("ea") is not None or ((w.get("rain") or {}).get("inches") or {}).get("last_24h") is not None  # England's tile has four states and always shows; elsewhere a total shows its tile, fresh or marked old. Canada has none (live 2026-11-04: 14 pages named for a tile they could not have)
-    out = ["alerts", "official_links", "stage_chart"] + (['class="tile rain'] if rain else []) + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge"]
+    out = ["alerts", "official_links", "stage_chart"] + (['class="tile rain'] if rain else []) + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge", "key_facts"]
     for key, t, bid in () if w.get("no_weather") else (("obs", (w.get("obs") or {}).get("timestamp"), "air_obs"), ("periods", w.get("forecast_updated"), "weather_forecast"), ("hourly", w.get("hourly_updated"), "hourly_forecast")):
         if fresh(w, key, t, bid):
             out.append(bid)
@@ -629,6 +630,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
         ("Years of daily values on record", str(r["day_years"]) if r.get("day_years") else None),
         ("Coordinates", "%.4f, %.4f" % (r["lat"], r["lon"]) if r.get("lat") is not None else None)) if v]  # every fact read from the agency's station record in this run's cache, never typed
     rec["feed"]["also"] = r.get("also") or {}
+    rec["feed"]["head"] = row["place"] if p.get("flat") else "%s at %s" % (p["river"], row["place"])  # the H1 name, as localize writes it
     G = render.ctx(row["site"], row, rec, now)
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
     top = fc_top(rec["feed"], now)

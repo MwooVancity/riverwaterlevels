@@ -847,3 +847,48 @@ def b_world_peaks(G):
     rows = "".join(tr([str(y), fmt_level(v, f["unit"]), esc(d)], right=(1,)) for y, v, d in reversed(f["peaks"]))
     return block("annual_peaks", "Highest level each year", "agency", table(["Year", "Peak level", "Date"], rows, right=(1,)),
                  "Source: %s, %s, annual instantaneous peaks (HYDAT), last %d years on file; peaks the agency marks with a data symbol are left out." % (f["api"], f["name"], len(f["peaks"])), f["src"])
+
+
+def b_key_facts(G):
+    """Facts that do not change by the hour, as plain sentences with their source: what Google's AI answers can quote without going stale (owner 2026-11-04).
+    Never the live reading: a cached copy of it would read as today's level. Each sentence is built only from a value in this run's cache; none, no block."""
+    rp = river_at(G["river"], G["place"])
+    lines, srcs = [], []
+    if G["feed"]:
+        from lib.world import fmt_level, to_ft
+        f = G["feed"]
+        lv = lambda v: "%s (%.1f ft)" % (fmt_level(v, f["unit"]), to_ft(v, f["unit"]))
+        about = dict(f.get("about") or ())
+        rp = f.get("head") or rp
+        if about.get("Station number"):
+            lines.append("%s is %s station %s%s." % (rp, f["name"], about["Station number"], (", with %s years of daily values on record" % about["Years of daily values on record"]) if about.get("Years of daily values on record") else ""))
+        if f.get("peaks"):
+            y, v, d = max(f["peaks"], key=lambda x: x[1])
+            lines.append("Highest yearly peak level in the last %d years on file: %s on %s." % (len(f["peaks"]), lv(v), fdate(d)))
+        if f.get("src") == "pegelonline" and (f.get("marks") or {}).get("HHW") is not None:
+            hd = (f.get("mark_dates") or {}).get("HHW")
+            lines.append("Highest level on the agency's record: %s%s." % (lv(f["marks"]["HHW"]), (" on %s" % fdate(hd[:10])) if hd else ""))
+        srcs.append("%s, %s" % (f["api"], f["name"]))
+    else:
+        loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
+        where = ", ".join(x for x in (loc.get("county_name"), loc.get("state_name")) if x)
+        if where:
+            lines.append("%s is USGS gauge %s in %s%s." % (rp, G["site"], where, ("; it drains %s square miles" % fmt(loc["drainage_area"])) if loc.get("drainage_area") else ""))
+        fd = ((G["rec"].get("meta") or {}).get("ts") or {}).get("flow_daily")
+        if fd:
+            lines.append("USGS daily flow records here run from %s to %s." % (fdate(fd[0]), fdate(fd[1])))
+        pk = [r for r in ((G["rec"].get("peaks") or {}).get("rows") or []) if r[1] is not None]
+        if pk:
+            t, q = max(pk, key=lambda r: r[1])[:2]
+            lines.append("Highest annual peak flow on USGS file: %s cfs on %s (%d annual peaks, %s to %s)." % (fmtc(q), fdate(t[:10]), len(pk), pk[0][0][:4], pk[-1][0][:4]))
+        if lines:
+            srcs.append("USGS Water Data API and USGS annual peak streamflow")
+        n = G["rec"].get("nwps") or {}
+        cats = [(k, n["categories"][k]) for k in ("action", "minor", "moderate", "major") if isinstance((n.get("categories") or {}).get(k), (int, float)) and n["categories"][k] > 0]
+        if cats and n.get("lid") and SOURCES["nwps"]["status"] in ("quoted", "owner-permission"):
+            lines.append("National Weather Service flood stages for forecast point %s: %s." % (n["lid"], ", ".join("%s %s ft" % (k, fmt(v)) for k, v in cats)))
+            srcs.append("NWS National Water Prediction Service")
+    if not lines:
+        return None
+    return block("key_facts", "Key facts", "hist", "<ul class=\"facts\">%s</ul>" % "".join("<li>%s</li>" % esc(l) for l in lines),
+                 "Sources: %s. These facts change rarely; the reading for this hour is in the tiles above." % "; ".join(srcs), "eccc" if G["feed"] and G["feed"].get("src") == "eccc" else (G["feed"]["src"] if G["feed"] else "usgs"))
