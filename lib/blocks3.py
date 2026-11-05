@@ -886,8 +886,8 @@ def b_key_facts(G):
         n = G["rec"].get("nwps") or {}
         cats = [(k, n["categories"][k]) for k in ("action", "minor", "moderate", "major") if isinstance((n.get("categories") or {}).get(k), (int, float)) and n["categories"][k] > 0]
         if cats and n.get("lid") and SOURCES["nwps"]["status"] in ("quoted", "owner-permission"):
-            lines.append("National Weather Service flood stages for forecast point %s: %s." % (n["lid"], ", ".join("%s %s ft" % (k, fmt(v)) for k, v in cats)))
-            srcs.append("NWS National Water Prediction Service")
+            lines.append("National Weather Service flood stages at this gauge: %s." % ", ".join("%s %s ft" % (k, fmt(v)) for k, v in cats))
+            srcs.append("NWS National Water Prediction Service, forecast point %s" % n["lid"])
     if not lines:
         return None
     return block("key_facts", "Key facts", "hist", "<ul class=\"facts\">%s</ul>" % "".join("<li>%s</li>" % esc(l) for l in lines),
