@@ -252,7 +252,7 @@ queue,9,09365000,San Juan River,Farmington,NM,81.1,100,74,40,fame,,,high,/river/
 queue,10,01536500,Susquehanna River,Wilkes-Barre,PA,81.5,100,77,40,fame,,,high,/river/susquehanna-river-pa/wilkes-barre/
 queue,10,03270000,Mad River,Dayton,OH,81.3,85,80,70,"nri,nri-paddle,nri-fish",,,auto2,/river/mad-river-oh/dayton/
 queue,10,04099000,Saint Joseph River,Mottville,MI,81.1,85,69,70,"nri,nri-paddle,nri-fish",,,high,/river/saint-joseph-river-mi/mottville/
-queue,10,02132000,Lynches River,Effingham,SC,81.1,85,69,70,"nri,nri-paddle",,,high,/river/lynches-river/effingham/
+live,10,02132000,Lynches River,Effingham,SC,81.1,85,69,70,"nri,nri-paddle",,,high,/river/lynches-river/effingham/
 queue,10,02387000,Conasauga River,Tilton,GA,81.1,85,69,70,"nri,nri-paddle",,,high,/river/conasauga-river/tilton/
 queue,10,14377100,Illinois River,Kerby,OR,81.1,100,24,70,"wsr-rec,wsr-fish,wsr,fame",,3345,high,/river/illinois-river-or/kerby/
 live,10,14400000,Chetco River,Brookings,OR,81.1,90,57,70,"wsr,nri,nri-fish",,,high,/river/chetco-river/brookings/
@@ -432,7 +432,7 @@ queue,17,01479820,Red Clay Creek,Kennett Square,PA,78.7,90,65,70,wsr,,1233,high,
 queue,17,14359000,Rogue River,Raygold Near Central Point,OR,78.6,100,74,70,"nri,fame",,,high,/river/rogue-river-or/raygold-near-central-point/
 queue,17,05244000,Crow Wing River,Nimrod,MN,78.6,85,53,70,"nri,nri-paddle,nri-fish",,2284,high,/river/crow-wing-river/nimrod/
 queue,17,07230000,Little River,Below Lake Thunderbird Near Norman,OK,78.6,65,79,90,tail,,,high,/river/little-river-ok/below-lake-thunderbird-near-norman/
-queue,17,04127800,Jordan River,East Jordan,MI,78.6,85,52,70,"nri,nri-paddle,nri-fish",,,high,/river/jordan-river/east-jordan/
+live,17,04127800,Jordan River,East Jordan,MI,78.6,85,52,70,"nri,nri-paddle,nri-fish",,,high,/river/jordan-river/east-jordan/
 queue,17,11097000,Big Tujunga Creek,Below Hansen Dam,CA,78.6,65,80,90,tail,,,auto2,/river/big-tujunga-creek/below-hansen-dam/
 queue,17,04122200,White River,Whitehall,MI,78.5,85,52,70,"nri,nri-paddle,nri-fish",,,high,/river/white-river-mi/whitehall/
 queue,17,02054500,Roanoke River,Lafayette,VA,78.5,100,73,70,fame,,,high,/river/roanoke-river-va/lafayette/
@@ -538,7 +538,7 @@ queue,21,08165500,Guadalupe River,Hunt,TX,77.3,100,65,70,"nri,nri-paddle,fame",,
 queue,21,01671020,North Anna River,Hart Corner Near Doswell,VA,77.3,85,59,70,"nri,nri-paddle,nri-fish",,,high,/river/north-anna-river/hart-corner-near-doswell/
 queue,21,02140991,Johns River,Arneys Store,NC,77.3,85,65,70,"nri,nri-paddle",,,high,/river/johns-river/arneys-store/
 queue,21,07056000,Buffalo River,Saint Joe,AR,77.3,100,0,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/buffalo-river-ar/saint-joe/
-queue,21,11266500,Merced River,Pohono Bridge Near Yosemite,CA,77.3,100,0,70,"wsr-rec,wsr,fame",,,auto2,/river/merced-river/pohono-bridge-near-yosemite/
+live,21,11266500,Merced River,Pohono Bridge Near Yosemite,CA,77.3,100,0,70,"wsr-rec,wsr,fame",,,auto2,/river/merced-river/pohono-bridge-near-yosemite/
 queue,21,01608000,South Fork South Branch Potomac River,Moorefield,WV,77.3,100,0,70,"nri,nri-paddle,fame",,,auto2,/river/south-fork-south-branch-potomac-river/moorefield/
 queue,21,10396000,Donner Und Blitzen River,Frenchglen,OR,77.3,100,0,70,"wsr-rec,wsr-fish,wsr",,,auto2,/river/donner-und-blitzen-river/frenchglen/
 queue,21,02160326,Enoree River,Pelham,SC,77.3,85,74,70,"nri,nri-paddle",,,high,/river/enoree-river/pelham/
@@ -752,7 +752,7 @@ queue,29,04040000,Ontonagon River,Rockland,MI,74.2,85,23,70,"nri,nri-paddle,nri-
 queue,30,07179730,Neosho River,Americus,KS,74.2,70,68,70,fame,,,high,/river/neosho-river-ks/americus/
 queue,30,14310000,Cow Creek,Riddle,OR,74.2,75,53,70,"nri,nri-fish",,,high,/river/cow-creek-or/riddle/
 queue,30,01480500,West Branch Brandywine Creek,Coatesville,PA,74.2,70,68,70,fame,,,high,/river/west-branch-brandywine-creek/coatesville/
-queue,30,02358789,Chipola River,Marianna,FL,74.2,85,62,70,"nri,nri-paddle",,,high,/river/chipola-river/marianna/
+live,30,02358789,Chipola River,Marianna,FL,74.2,85,62,70,"nri,nri-paddle",,,high,/river/chipola-river/marianna/
 queue,30,07185910,North Fork Spring River,Purcell,MO,74.2,85,69,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/north-fork-spring-river/purcell/
 queue,30,04292500,Lamoille River,East Georgia,VT,74.1,70,67,70,fame,,,high,/river/lamoille-river/east-georgia/
 queue,30,09239500,Yampa River,Steamboat Springs,CO,74.1,70,68,70,fame,,8647,high,/river/yampa-river/steamboat-springs/
@@ -807,7 +807,7 @@ queue,32,09114500,Gunnison River,Gunnison,CO,73.3,70,62,70,fame,,,high,/river/gu
 queue,32,01639000,Monocacy River,Bridgeport,MD,73.3,70,62,70,"nri,fame",,,high,/river/monocacy-river/bridgeport/
 queue,32,10154200,Provo River,Woodland,UT,73.3,70,62,70,"nri,fame",,,high,/river/provo-river/woodland/
 queue,32,04285500,North Branch Winooski River,Wrightsville,VT,73.3,70,62,70,fame,,,high,/river/north-branch-winooski-river/wrightsville/
-queue,32,13309220,Middle Fork Salmon River,Middle Fork Lodge Near Yellow Pine,ID,73.3,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/middle-fork-salmon-river/middle-fork-lodge-near-yellow-pine/
+live,32,13309220,Middle Fork Salmon River,Middle Fork Lodge Near Yellow Pine,ID,73.3,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/middle-fork-salmon-river/middle-fork-lodge-near-yellow-pine/
 queue,32,01648000,Rock Creek,Sherrill Drive Washington,DC,73.3,60,92,70,nri,,,high,/river/rock-creek-dc/sherrill-drive-washington/
 queue,32,02152100,First Broad River,Casar,NC,73.3,70,62,70,fame,,,high,/river/first-broad-river/casar/
 queue,32,12433200,Chamokane Creek,Below Falls Near Long Lake,WA,73.3,65,55,90,tail,,,high,/river/chamokane-creek/below-falls-near-long-lake/
@@ -861,7 +861,7 @@ queue,34,05355024,Cannon River,Northfield,MN,72.8,85,67,70,"nri,nri-paddle,nri-f
 queue,34,04180988,Saint Marys River,Rockford,OH,72.8,85,59,70,"nri,nri-paddle,nri-fish",,,high,/river/saint-marys-river-oh/rockford/
 queue,34,03027500,East Branch Clarion River,East Branch Clarion River Dam,PA,72.8,70,61,70,fame,,,auto2,/river/east-branch-clarion-river/east-branch-clarion-river-dam/
 live,34,02037500,James River,Richmond,VA,72.7,100,85,40,"nri,nri-fish,fame",,,high,/river/james-river-va/richmond/
-queue,34,06052500,Gallatin River,Logan,MT,72.7,70,58,70,fame,,,high,/river/gallatin-river/logan/
+live,34,06052500,Gallatin River,Logan,MT,72.7,70,58,70,fame,,,high,/river/gallatin-river/logan/
 queue,34,09166500,Dolores River,Dolores,CO,72.7,70,58,70,fame,,,high,/river/dolores-river-co/dolores/
 queue,34,05411600,Turkey River,Spillville,IA,72.7,75,56,70,"nri,nri-fish",,,high,/river/turkey-river/spillville/
 queue,34,01620500,North River,Stokesville,VA,72.7,85,63,40,"nri,nri-paddle",,,high,/river/north-river-va/stokesville/
@@ -927,7 +927,7 @@ queue,36,04153300,Tittabawassee River,Sanford,MI,71.8,85,70,70,"nri,nri-paddle,n
 queue,37,04103490,Rice Creek,Monroe Street At Marshall,MI,71.8,85,69,70,"nri,nri-paddle,nri-fish",,,high,/river/rice-creek-mi/monroe-street-at-marshall/
 queue,37,12413875,Saint Joe River,Red Ives Ranger Station,ID,71.8,100,0,70,"wsr-rec,wsr-fish,wsr",,,auto2,/river/saint-joe-river/red-ives-ranger-station/
 queue,37,12472800,Columbia River,Below Priest Rapids Dam,WA,71.7,75,53,60,"nri,nri-fish,tail",,,high,/river/columbia-river-wa/below-priest-rapids-dam/
-queue,37,03193000,Kanawha River,Kanawha Falls,WV,71.7,85,56,40,"nri,nri-paddle,nri-fish",,,high,/river/kanawha-river/kanawha-falls/
+live,37,03193000,Kanawha River,Kanawha Falls,WV,71.7,85,56,40,"nri,nri-paddle,nri-fish",,,high,/river/kanawha-river/kanawha-falls/
 queue,37,02352500,Flint River,Albany,GA,71.7,100,78,40,"nri,nri-paddle,nri-fish,fame",,,high,/river/flint-river-ga/albany/
 queue,37,05360500,Flambeau River,Bruce,WI,71.7,70,51,70,fame,,,high,/river/flambeau-river/bruce/
 queue,37,04147500,Flint River,Otisville,MI,71.7,85,73,70,"nri,nri-paddle,nri-fish",,,high,/river/flint-river-mi/otisville/
@@ -1112,7 +1112,7 @@ live,44,09180500,Colorado River,Cisco,UT,70.0,100,0,40,"nri,fame",,,high,/river/
 queue,44,05211000,Mississippi River,Grand Rapids,MN,70.0,100,67,40,fame,,,high,/river/mississippi-river-mn/grand-rapids/
 queue,44,09471000,San Pedro River,Charleston,AZ,70.0,60,70,70,nri,,,high,/river/san-pedro-river/charleston/
 queue,44,03351000,White River,Nora,IN,70.0,75,91,70,"nri,nri-fish,fame",,,high,/river/white-river-in/nora/
-queue,44,14301000,Nehalem River,Foss,OR,70.0,75,25,70,"nri,nri-fish",,4769,high,/river/nehalem-river/foss/
+live,44,14301000,Nehalem River,Foss,OR,70.0,75,25,70,"nri,nri-fish",,4769,high,/river/nehalem-river/foss/
 queue,44,13090500,Snake River,Twin Falls,ID,69.9,100,76,40,fame,,,high,/river/snake-river-id/twin-falls/
 live,44,12391950,Clark Fork River,Below Cabinet Gorge Dam,ID,69.9,100,0,60,"tail,fame",,,high,/river/clark-fork-river/below-cabinet-gorge-dam/
 queue,44,01161000,Ashuelot River,Hinsdale,NH,69.9,85,61,70,"nri,nri-paddle,nri-fish",,2449,high,/river/ashuelot-river/hinsdale/
@@ -1166,7 +1166,7 @@ queue,46,01583600,Beaverdam Run,Cockeysville,MD,69.5,60,87,70,nri,,,auto2,/river
 queue,46,11074000,Santa Ana River,Below Prado Dam,CA,69.5,65,86,50,tail,,,auto2,/river/santa-ana-river/below-prado-dam/
 queue,46,12305000,Kootenai River,Leonia,ID,69.4,85,47,40,"nri,nri-paddle,nri-fish,fame",,,high,/river/kootenai-river-id/leonia/
 queue,46,04228500,Genesee River,Avon,NY,69.4,85,58,70,"nri,nri-paddle",,,high,/river/genesee-river/avon/
-queue,46,02226500,Satilla River,Waycross,GA,69.4,60,66,70,nri,,,high,/river/satilla-river/waycross/
+live,46,02226500,Satilla River,Waycross,GA,69.4,60,66,70,nri,,,high,/river/satilla-river/waycross/
 queue,46,02110500,Waccamaw River,Longs,SC,69.4,60,66,70,nri,,,high,/river/waccamaw-river-sc/longs/
 queue,46,02475500,Chunky River,Chunky,MS,69.4,60,66,70,nri,,,high,/river/chunky-river/chunky/
 queue,46,02313000,Withlacoochee River,SR 200 Near Holder,FL,69.4,85,70,70,"nri,nri-paddle",,,medium,/river/withlacoochee-river-fl/sr-200-near-holder/
@@ -1182,7 +1182,7 @@ queue,47,05497150,North Fabius River,Ewing,MO,69.4,75,67,70,"nri,nri-fish",,,hig
 queue,47,13269000,Snake River,Weiser,ID,69.3,100,62,40,fame,,,high,/river/snake-river-id/weiser/
 live,47,14191000,Willamette River,Salem,OR,69.3,70,85,40,"nri,fame",,,high,/river/willamette-river/salem/
 queue,47,08175800,Guadalupe River,Cuero,TX,69.3,100,62,40,fame,,,high,/river/guadalupe-river-tx/cuero/
-queue,47,03314500,Barren River,Bowling Green,KY,69.3,60,71,70,nri,,2999,high,/river/barren-river/bowling-green/
+live,47,03314500,Barren River,Bowling Green,KY,69.3,60,71,70,nri,,2999,high,/river/barren-river/bowling-green/
 queue,47,02477000,Chickasawhay River,Enterprise,MS,69.3,60,65,70,nri,,,high,/river/chickasawhay-river/enterprise/
 queue,47,01335754,Hudson River,Above Lock 1 Near Waterford,NY,69.3,100,74,40,fame,,,medium,/river/hudson-river/above-lock-1-near-waterford/
 queue,47,02021500,Maury River,Rockbridge Baths,VA,69.3,85,57,70,"nri,nri-paddle",,,high,/river/maury-river/rockbridge-baths/
@@ -1368,7 +1368,7 @@ queue,54,02047000,Nottoway River,Sebrell,VA,67.9,60,56,70,nri,,,high,/river/nott
 queue,54,05270700,Mississippi River,Saint Cloud,MN,67.9,100,78,40,fame,,,high,/river/mississippi-river-mn/saint-cloud/
 queue,54,09512500,Agua Fria River,Mayer,AZ,67.9,60,56,70,nri,,6284,high,/river/agua-fria-river/mayer/
 queue,54,02047500,Blackwater River,Dendron,VA,67.9,60,56,70,nri,,,high,/river/blackwater-river-va/dendron/
-queue,54,14301500,Wilson River,Tillamook,OR,67.9,60,56,70,nri,,,high,/river/wilson-river/tillamook/
+live,54,14301500,Wilson River,Tillamook,OR,67.9,60,56,70,nri,,,high,/river/wilson-river/tillamook/
 queue,54,13342450,Lapwai Creek,Lapwai,ID,67.9,60,67,70,nri,,,high,/river/lapwai-creek/lapwai/
 queue,54,09065100,Cross Creek,Minturn,CO,67.9,60,56,70,nri,,,high,/river/cross-creek-co/minturn/
 queue,54,02204070,South River,Klondike Road Near Lithonia,GA,67.9,60,76,70,nri,,,high,/river/south-river-ga/klondike-road-near-lithonia/
@@ -2037,7 +2037,7 @@ queue,81,01379000,Passaic River,Millington,NJ,60.3,60,72,70,nri,,,high,/river/pa
 queue,81,03418000,Roaring River,Hilham,TN,60.3,60,66,70,nri,,,high,/river/roaring-river-tn/hilham/
 queue,81,01491500,Tuckahoe Creek,Ruthsburg,MD,60.3,75,61,30,"nri,nri-fish",,,high,/river/tuckahoe-creek-md/ruthsburg/
 queue,81,15055500,Antler River,Below Antler Lake Near Auke Bay,AK,60.3,85,0,50,"nri,nri-paddle,tail",,,auto2,/river/antler-river/below-antler-lake-near-auke-bay/
-queue,81,02375500,Escambia River,Century,FL,60.2,60,55,40,nri,,,high,/river/escambia-river/century/
+live,81,02375500,Escambia River,Century,FL,60.2,60,55,40,nri,,,high,/river/escambia-river/century/
 queue,81,08158600,Walnut Creek,Webberville Road Austin,TX,60.2,30,94,70,,,,high,/river/walnut-creek-tx/webberville-road-austin/
 queue,81,02146300,Irwin Creek,Charlotte,NC,60.2,30,95,70,,,,high,/river/irwin-creek/charlotte/
 queue,81,07130500,Arkansas River,Below John Martin Reservoir,CO,60.2,100,34,20,"tail,fame",,104327,high,/river/arkansas-river-co/below-john-martin-reservoir/
@@ -2391,7 +2391,7 @@ queue,95,01112500,Blackstone River,Woonsocket,RI,57.8,30,79,70,,,,high,/river/bl
 queue,95,08053500,Denton Creek,Justin,TX,57.8,30,78,70,,,,high,/river/denton-creek/justin/
 queue,95,07047942,LAnguille River,Colt,AR,57.8,60,60,70,nri,,,high,/river/languille-river/colt/
 queue,95,03324000,Little River,Huntington,IN,57.8,30,79,70,,,,high,/river/little-river-in/huntington/
-queue,95,04230500,Oatka Creek,Garbutt,NY,57.8,30,79,70,,,,high,/river/oatka-creek/garbutt/
+live,95,04230500,Oatka Creek,Garbutt,NY,57.8,30,79,70,,,,high,/river/oatka-creek/garbutt/
 queue,95,04229500,Honeoye Creek,Honeoye Falls,NY,57.8,30,79,70,,,,high,/river/honeoye-creek/honeoye-falls/
 queue,95,02223056,Oconee River,Avant Mine Near Oconee,GA,57.8,85,61,40,"nri,nri-paddle,nri-fish",,,high,/river/oconee-river/avant-mine-near-oconee/
 queue,95,04231000,Black Creek,Churchville,NY,57.8,30,78,70,,,,high,/river/black-creek-ny/churchville/
@@ -2445,7 +2445,7 @@ queue,97,11274630,Del Puerto Creek,Patterson,CA,57.6,30,79,70,,,,auto2,/river/de
 queue,97,03145173,South Fork Licking River,Heath,OH,57.6,70,76,70,fame,,,high,/river/south-fork-licking-river-oh/heath/
 queue,97,12334550,Clark Fork,Turah Bridge Near Bonner,MT,57.6,100,73,0,fame,,,high,/river/clark-fork/turah-bridge-near-bonner/
 queue,97,12200500,Skagit River,Mount Vernon,WA,57.5,70,73,40,fame,,19032,high,/river/skagit-river/mount-vernon/
-queue,97,12149000,Snoqualmie River,Carnation,WA,57.5,30,77,70,,,,high,/river/snoqualmie-river/carnation/
+live,97,12149000,Snoqualmie River,Carnation,WA,57.5,30,77,70,,,,high,/river/snoqualmie-river/carnation/
 live,97,04086000,Sheboygan River,Sheboygan,WI,57.5,30,77,70,,,,high,/river/sheboygan-river/sheboygan/
 queue,97,05439500,South Branch Kishwaukee River,Fairdale,IL,57.5,30,77,70,,,,high,/river/south-branch-kishwaukee-river/fairdale/
 queue,97,03118500,Nimishillen Creek,North Industry,OH,57.5,30,76,70,,,,high,/river/nimishillen-creek/north-industry/
@@ -3201,7 +3201,7 @@ queue,127,02423630,Shades Creek,Greenwood,AL,54.9,30,78,70,,,,high,/river/shades
 queue,127,03353700,West Fork White Lick Creek,Danville,IN,54.9,30,69,70,,,,high,/river/west-fork-white-lick-creek/danville/
 queue,128,02461500,Valley Creek,Bessemer,AL,54.9,30,79,70,,,,high,/river/valley-creek-al/bessemer/
 queue,128,01064801,Bearcamp River,South Tamworth,NH,54.9,60,0,70,nri,,,high,/river/bearcamp-river/south-tamworth/
-queue,128,11453500,Putah Creek,Guenoc,CA,54.9,30,61,70,,,,auto2,/river/putah-creek/guenoc/
+live,128,11453500,Putah Creek,Guenoc,CA,54.9,30,61,70,,,,auto2,/river/putah-creek/guenoc/
 queue,128,02271500,Josephine Creek,De Soto City,FL,54.9,30,61,70,,,,auto2,/river/josephine-creek/de-soto-city/
 queue,128,08178565,San Antonio River,Loop 410 San Antonio,TX,54.9,30,95,70,,,,medium,/river/san-antonio-river-tx/loop-410-san-antonio/
 queue,128,02423647,Cahaba River,West Blocton,AL,54.9,70,66,70,fame,,,high,/river/cahaba-river/west-blocton/
@@ -3272,7 +3272,7 @@ queue,130,01192883,Coginchaug River,Middlefield,CT,54.7,30,75,70,,,,high,/river/
 queue,130,06921070,Pomme De Terre River,Polk,MO,54.7,30,62,70,,,,auto2,/river/pomme-de-terre-river-mo/polk/
 queue,130,01463620,Assunpink Creek,Clarksville,NJ,54.7,30,77,70,,,,high,/river/assunpink-creek/clarksville/
 queue,130,07052100,Wilson Creek,Springfield,MO,54.7,30,82,70,,,,high,/river/wilson-creek-mo/springfield-07052100/
-queue,130,01396800,Spruce Run,Clinton,NJ,54.7,30,60,70,,,,auto2,/river/spruce-run/clinton/
+live,130,01396800,Spruce Run,Clinton,NJ,54.7,30,60,70,,,,auto2,/river/spruce-run/clinton/
 queue,130,07363200,Saline River,Sheridan,AR,54.7,85,52,30,"nri,nri-paddle,nri-fish",,,high,/river/saline-river-ar/sheridan/
 queue,131,07188005,Beaver Creek,Quapaw,OK,54.7,85,68,0,"nri,nri-paddle,nri-fish",,,high,/river/beaver-creek-ok/quapaw/
 queue,131,05338500,Snake River,Pine City,MN,54.6,30,57,70,,,,high,/river/snake-river-mn/pine-city/
@@ -3347,7 +3347,7 @@ queue,133,03061000,West Fork River,Enterprise,WV,54.4,30,64,70,,,,high,/river/we
 queue,133,05433000,East Branch Pecatonica River,Blanchardville,WI,54.4,30,56,70,,,,high,/river/east-branch-pecatonica-river/blanchardville/
 queue,133,01510000,Otselic River,Cincinnatus,NY,54.4,30,56,70,,,783,high,/river/otselic-river/cincinnatus/
 queue,133,04289000,Little River,Waterbury,VT,54.4,30,56,70,,,,high,/river/little-river-vt/waterbury/
-queue,133,08176900,Coleto Creek,Arnold Road Crsg Near Schroeder,TX,54.4,30,71,70,,,,high,/river/coleto-creek/arnold-road-crsg-near-schroeder/
+live,133,08176900,Coleto Creek,Arnold Road Crsg Near Schroeder,TX,54.4,30,71,70,,,,high,/river/coleto-creek/arnold-road-crsg-near-schroeder/
 queue,133,01599000,Georges Creek,Franklin,MD,54.4,30,56,70,,,,high,/river/georges-creek/franklin/
 queue,134,04108600,Rabbit River,Hopkins,MI,54.4,30,56,70,,,,high,/river/rabbit-river/hopkins/
 queue,134,06638090,Sweetwater River,Sweetwater Station,WY,54.4,60,0,70,nri,,,high,/river/sweetwater-river-wy/sweetwater-station/
@@ -3391,7 +3391,7 @@ queue,135,08059400,Sister Grove Creek,Blue Ridge,TX,54.3,30,80,70,,,,high,/river
 queue,135,07184000,Lightning Creek,Mccune,KS,54.3,30,57,70,,,,auto2,/river/lightning-creek-ks/mccune/
 queue,135,01589352,Gwynns Falls,Washington Blvd At Baltimore,MD,54.3,30,93,70,,,,high,/river/gwynns-falls/washington-blvd-at-baltimore/
 queue,135,02087359,Walnut Creek,Sunnybrook Drive Near Raleigh,NC,54.3,30,89,70,,,,high,/river/walnut-creek-nc/sunnybrook-drive-near-raleigh/
-queue,135,06752280,Cache La Poudre River,Above Boxelder Creek Near Timnath,CO,54.3,70,84,30,fame,,,high,/river/cache-la-poudre-river/above-boxelder-creek-near-timnath/
+live,135,06752280,Cache La Poudre River,Above Boxelder Creek Near Timnath,CO,54.3,70,84,30,fame,,,high,/river/cache-la-poudre-river/above-boxelder-creek-near-timnath/
 queue,135,02236350,Green Swamp Run,Eva,FL,54.3,30,72,70,,,,auto2,/river/green-swamp-run/eva/
 queue,135,13057000,Snake River,Menan,ID,54.3,100,68,40,"nri,nri-paddle,nri-fish,fame",,,high,/river/snake-river-id/menan/
 queue,135,0136230002,Woodland Creek,Above Mouth At Phoenicia,NY,54.3,85,0,30,"nri,nri-paddle,nri-fish",,,high,/river/woodland-creek/above-mouth-at-phoenicia/
@@ -6561,7 +6561,7 @@ queue,262,11070210,San Jacinto River,Ramona Expressway Near Lakeview,CA,32.2,30,
 queue,262,03292550,South Fork Beargrass Creek,East Oak Saint At Louisville,KY,32.2,30,91,30,,,,high,/river/south-fork-beargrass-creek/east-oak-saint-at-louisville/
 queue,262,08083480,Cedar Creek,Ih 20 Abilene,TX,32.2,30,82,30,,,,auto2,/river/cedar-creek-tx/ih-20-abilene/
 queue,262,12091100,Flett Creek,Tacoma,WA,32.1,10,84,0,,,,high,/river/flett-creek/tacoma/
-queue,262,15129500,Situk River,Yakutat,AK,32.1,30,0,30,,,,high,/river/situk-river/yakutat/
+queue,262,15129500,Situk River,Yakutat,AK,32.1,30,0,30,,"page-check: banned '-?999\\d{2,}\\b' near '% |    Major flooding |  -99900% |          Daily values'",,high,/river/situk-river/yakutat/
 queue,262,06893100,Blue River,Kenneth Road Overland Park,KS,32.1,30,83,30,,,,high,/river/blue-river-ks/kenneth-road-overland-park/
 queue,262,11058500,East Twin Creek,Arrowhead Springs,CA,32.1,10,86,0,,,,auto2,/river/east-twin-creek/arrowhead-springs/
 queue,262,02309447,Bee Branch,Palm Harbor,FL,32.1,10,79,40,,,,auto2,/river/bee-branch/palm-harbor/
