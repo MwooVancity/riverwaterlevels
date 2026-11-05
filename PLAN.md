@@ -157,6 +157,78 @@ UI review (light, live, 3 pages, 2026-11-04), worst first, open:
 ## SEO audit 2026-11-05 (6 agents; full plan in reports/riverwaterlevels.com-audit/ACTION-PLAN.md)
 Score 73/100: technical 86, content 71, schema 52, speed 74 (est.), AI search 52. Owner: publisher name + contact email (/contact/ 404; AdSense trust risk). gtag: keep (owner 2026-11-05); revisit only if Search Console Core Web Vitals flags mobile pages. Code next, in order: Louisville "Typical" chip compares the 24 h mean beside +168% (truth); Ottawa 517 vs 526 m3/s on one page (truth); world schema graph + home WebSite/Organization; home and llms.txt say US only; 307 to 301; world titles add country and id; fold 1-2 gauge hubs; lastmod per page.
 
+## Whole world, every water (approved 2026-11-05; this order wins)
+
+## Context
+Owner 2026-11-05:
+- Rivers, lakes and oceans, the whole world including the US. Every keyword gets measured.
+- Compete with everyone (Lakebrief, SNOFLO, USGS, NWS, NOAA, tide and surf sites), but only where our page has more sourced data.
+
+A fresh review proved we lose today on Lakebrief's top 5 lakes (Norman, Choke Canyon, Oroville, Folsom), and not on data: our code can't build a lake page. The US page refuses any gauge without flow (`lib/hero.py:10-23`), `collect.py:13` never fetches lake elevation or storage, and "is this normal" is flow-only (`collect.py:876`).
+
+The deeper problem: what we can't build is skipped silently, so we never know how much we're missing. Lakebrief's real weaknesses:
+- 30 days of history only, "no long-term normal".
+- Readings a day old.
+- Water temperature stuck on "Reading…".
+- Its Lake Norman page is mostly "Loading…".
+- Storage estimated, 3.4% off the official figure at Folsom.
+
+Each is a win once we can build lakes.
+
+## Step 1. Coverage census (first: it measures the hole)
+- `tools/census.py`, run daily in the cloud job (no new cron). It counts every official site per feed:
+  - USGS: rivers, lakes, tide sites by state, about 50 calls.
+  - NOAA tide stations (one call).
+  - ECCC, EA and WSV (lists we already fetch).
+- Each site is either `built`, or `held:<reason>`. Reasons: no reading, no time, unit unknown, not water, terms unread, or `code_cannot` (our page can't build this type).
+- status.json gets `census` totals per feed. A gate fails when `code_cannot` grows, so a silent skip becomes a number. The selftest has a fixture.
+- At 14,000 pages: the calls are per feed, not per page (about 55 a day). A dead inventory endpoint shows Unknown, never zero.
+
+## Step 2. One page for any gauge (the refactor)
+- The headline becomes whatever the agency measures: flow, river level, lake elevation or tide. Reuse the level-first path world pages already use (`lib/world.py` feed, `G["feed"]`), not a third template.
+- `collect.py` adds codes 62614/62615/72020 (lake elevation) and 00054 (storage), plus daily statistics for them, so "is this normal for today's date" works for lakes.
+- Lake wording swaps in (the Lake Constance swap at `lib/world.py:128`). No "River forecast" tile on a lake.
+- `b_reservoir`: full pool, % full, storage and the operator's range, from an official source with a `data/sources.json` row.
+- Gate: a dammed lake shows the operator's range or Unknown, never our own percentile "normal".
+- First test: Choke Canyon (USGS 08206900, 27 years), checked side by side with Lakebrief's page. Then Oroville and Folsom once the California water agency's (CDEC) terms are read.
+- Lake Norman is held: Duke Energy is not a government source.
+
+## Step 3. Keyword Planner: every keyword
+- Done: rivers (28,068 world plus 10,717 US) and the top non-US lakes (9,900). US lakes (2,824) submitted and processing.
+- Queued, one upload after another, about 5 minutes each:
+  - Batches 1-4: the rest of the lakes plus "dam level" and "how full is" phrasings (16,731).
+  - Batches 4-5: oceans, 8,198 places from NOAA tide stations and Wikidata beaches and harbours, each as "tide times", "tides" and "water temperature" (24,594).
+- Then add the river phrasings missing so far: "river height" and "gauge" in the UK, Australia, New Zealand and Ireland.
+- Every download goes to the temporary folder and is deleted after merging. Results join `data/keyword-tiers.csv`.
+- `tools/world_queue.py` builds one money list across rivers, lakes and oceans: tier × country rate. A shared name (Lake Murray SC vs Papua New Guinea) steps down one tier.
+
+## Step 4. Oceans on the same page
+- NOAA CO-OPS (US, public domain) first: water level, tide predictions, water temperature and alerts.
+- Abroad: national tide feeds, each with its terms read (`PROVED` rules in `lib/world.py`).
+- The same competitor bar applies: tide sites show predictions only; we add observed level, temperature, NWS marine alerts and weather.
+
+## Step 5. Competitor gate and one-reading gate
+- `data/competitors.json` lists every item Lakebrief, SNOFLO, USGS, NWS and the tide sites show. Each item is answered have, next or none, and an unanswered item fails the build.
+- A weekly scan inside the watchdog flags new competitor items.
+- A page ships only with every "have" item its data allows.
+- One-reading gate: every reading is printed through one stamp (measure and time). A measure never shows two different "latest" values on one page.
+
+## Order
+1. Census.
+2. Refactor plus Choke Canyon.
+3. Keyword batches, running alongside.
+4. Money list.
+5. Competitor gate.
+6. Oceans.
+7. California feed.
+
+Each step: gate, cloud dry run, deploy, live read, PLAN.md.
+
+## Verification
+- `check.py --selftest` fixtures: a census `code_cannot` increase fails; a lake page renders level-first with no flow; a reservoir showing a percentile "normal" fails; an unanswered competitor item fails; two different latest readings fail.
+- Cloud dry run "refresh OK", then main.
+- Live: Choke Canyon ours vs Lakebrief (fresher reading, storage, 27-year normal); status.json `census` totals; one ocean page vs a top tide site.
+
 ## 2026-11-05 evening batch (main 4b41fe9, dry run refresh OK, refresh success; live read)
 - Truth: normal tile names the latest reading when its band differs from the 24 h average (Louisville). Canada and Germany 7-day flow thinned from the newest point, so "Latest" is the agency's latest; a side reading of another time names its own time. Gate `one_latest` (check.py, gauge and world pages, fixture): failed 8+ German pages on its first cloud run (Frankfurt 92 beside 60 m3/s), all pass now. Live: Mainz 487 m3/s in both places.
 - Why the truth gate missed it: truth_live checks each number against the agency alone; two true readings 15 min apart passed. Coverage today: flow only, chart vs "also measured". Systemic next: every reading printed through one stamp (measure + time) and one gate over every page and measure.
