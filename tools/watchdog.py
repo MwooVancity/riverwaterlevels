@@ -74,6 +74,14 @@ def main():
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
         if world_thin(s):
             ok.append(world_thin(s))
+        cn_ = s.get("census") or {}
+        if not cn_ or (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(cn_["fetched_at"])).total_seconds() > 48 * 3600:
+            bad.append("coverage census: Unknown (older than 48 h or never run)")
+        else:
+            u_, t_ = cn_.get("usgs") or {}, cn_.get("noaa_tides") or {}
+            ok.append("coverage census: %s USGS flow gauges (%s built); our code cannot build %s USGS (level-only %s, lakes %s, tidal %s) and %s NOAA tide stations%s" % (
+                format(u_.get("flow", 0), ","), u_.get("built"), format(u_.get("code_cannot", 0), ","), u_.get("stage_only"), u_.get("lake"), u_.get("tidal"), t_.get("code_cannot", "Unknown"),
+                ("; states Unknown: " + ", ".join(u_["unknown"])) if u_.get("unknown") else ""))
         for x in (s.get("ledger") or {}).get("soon") or []:  # machinery audit: a stage that passes its time limit within 30 days of growth
             bad.append("run time: " + x)
         if s.get("cache_lost"):

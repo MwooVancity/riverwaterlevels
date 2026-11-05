@@ -1524,6 +1524,7 @@ def fast(inv, sites):
     if not any(a.startswith("--shard=") and not a.startswith("--shard=0/") for a in sys.argv):
         fetch_world()
         write_health("run", len(sites))  # world feeds run last: without this no alarm could see them
+        fetch_census()
 
 
 STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
@@ -2158,6 +2159,43 @@ def archive(page, rows):
             wx.day_add(a, r["name"], r["time"][:10], r["cm"])
     json.dump(a, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
     os.replace(p + ".tmp", p)
+
+
+def fetch_census():
+    """Once a day: every active USGS site with a flow or a level, and every NOAA tide station, counted as built or not buildable by our code
+    (lib/census.py). About 100 USGS calls and 1 NOAA call a day, whatever our page count. A state that fails is named in "unknown", never counted as zero."""
+    import csv
+    from lib import census
+    path = os.path.join(CACHE, "_census.json")
+    prev = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
+    if not daily_due(prev.get("fetched_at")):
+        return
+    base = "https://waterservices.usgs.gov/nwis/site/?format=rdb&siteStatus=active&hasDataTypeCd=iv&stateCd=%s&parameterCd="
+    flow, level, unknown = set(), {}, []
+    for st in sorted(STATE_FIPS) + ["PR"]:
+        try:
+            for pc, into in (("00060", None), ("00065,62614,62615,72020,00062,72279", level)):
+                rows = [l.split("	") for l in http_raw(base % st + pc, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
+                hd = rows[0] if rows else []
+                for r in rows[2:]:
+                    d = dict(zip(hd, r))
+                    if into is None:
+                        flow.add(d["site_no"])
+                    else:
+                        into[d["site_no"]] = d.get("site_tp_cd") or ""
+        except Exception as e:
+            if "404" not in str(e):  # USGS answers 404 when a state has no site of that kind
+                unknown.append(st)
+    built = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
+    out = {"fetched_at": now_iso(), "usgs": dict(census.classify(flow, level, built), unknown=unknown)}
+    try:
+        n = len(json.loads(http_raw("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels", 60))["stations"])
+        out["noaa_tides"] = {"tidal": n, "built": 0, "code_cannot": n}
+    except Exception as e:
+        out["noaa_tides"] = {"unknown": str(e)[:80]}
+    json.dump(out, open(path + ".tmp", "w", encoding="utf-8"))
+    os.replace(path + ".tmp", path)
+    print("census", json.dumps(out)[:300])
 
 
 def fetch_world():
