@@ -302,7 +302,7 @@ def hero(G, pages=None):
         if _de and _de[:4].isdigit() and int(_de[:4]) < G["ldate"].year - 1:
             plain = plain.rstrip(".") + " (USGS daily record ended %s)." % fdate(_de)  # hater r4/r5: Freeport's record ends 2015
         if G["basis_mean"]:
-            plain = "The 24 h average, %s cfs, is %s" % (fmtc(G["basis"]), plain[0].lower() + plain[1:])  # hater r4: the latest reading sat in the band while the verdict said below
+            plain = "The 24 h average, %s cfs, is %s" % (fmtc(G["basis"]), plain[0].lower() + plain[1:]) + latest_band_note(srow, G["lv"], word, tzl(G["lt"], G["zone"], date=False))  # hater r4: the latest reading sat in the band while the verdict said below
     norm_word, norm_plain = word, plain  # the trend tile below reuses the name `word`
     pre, dir_chip, word_note = tiles, "", ""
     if G["osc"]:

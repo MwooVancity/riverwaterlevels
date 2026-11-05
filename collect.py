@@ -1616,12 +1616,12 @@ def fetch_eccc(sid, prev):
             print("history failed", sid, str(e)[:100])
     last = pts[-1]
     geo = (live[0].get("geometry") or {}).get("coordinates") or [None, None]
-    series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::3]]
+    series = [[p["DATETIME"], p["LEVEL"]] for p in pts[::-3][::-1]]  # counted back from the newest so the chart ends on the reading the tiles show
     day_ago = datetime.datetime.fromisoformat(last["DATETIME"].replace("Z", "+00:00")) - datetime.timedelta(days=1)
     then = next((p["LEVEL"] for p in pts if datetime.datetime.fromisoformat(p["DATETIME"].replace("Z", "+00:00")) >= day_ago), None)
     return {"name": sid, "title": re.sub(r" (At|Near|Above|Below) ", lambda m: m.group(0).lower(), last["STATION_NAME"].title()), "km": 0, "lat": geo[1], "lon": geo[0], "unit": "m", "flag": last.get("LEVEL_SYMBOL_EN"), "zone": eccc_zone(last, geo[0], geo[1]), "cm": last["LEVEL"], "time": last["DATETIME"], "then": then,
             "state": None, "marks": {}, "months": months, "months_at": prev.get("months_at") if months is prev.get("months") else now_iso(), "week": [p["LEVEL"] for p in pts[::36]], "series": series,
-            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "peaks": prev.get("peaks"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in pts[::6] if p.get("DISCHARGE") is not None],
+            "record": prev.get("record") or {}, "drainage": prev.get("drainage"), "days": prev.get("days"), "deciles": prev.get("deciles"), "day_years": prev.get("day_years"), "years": prev.get("years"), "peaks": prev.get("peaks"), "flow": [[p["DATETIME"], p["DISCHARGE"]] for p in [p for p in pts if p.get("DISCHARGE") is not None][::-6][::-1]],  # every 6th counted back from the newest, so "Latest" is the agency's latest (audit 2026-11-05: Ottawa showed 526 beside 517)
             "also": dict({"Q": [last["DISCHARGE"], "m³/s", "Flow"]} if last.get("DISCHARGE") is not None else {}, **({"DRAIN": [prev["drainage"], "km²", "Drainage area"]} if prev.get("drainage") else {}))}
 
 

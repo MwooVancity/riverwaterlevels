@@ -235,6 +235,15 @@ def band_glossary():
             "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
 
 
+def latest_band_note(srow, lv, word, when=""):
+    """' The latest reading, X cfs, is <band>.' when the latest reading sits in another band than the 24 h average the headline judges; else ''.
+    Audit 2026-11-05: Louisville read "Typical for this date" beside +168% in 24 h."""
+    pl = interp_pct(srow, lv) if srow and lv is not None else None
+    if pl is None or band_word(pl) == word:
+        return ""
+    return " The latest reading, %s cfs%s, is %s." % (fmtc(lv), (" at " + when) if when else "", PCT_PHRASE[band_word(pl)])
+
+
 def band_word(p):
     """Plain-word USGS WaterWatch class of today's flow against the same date in past years (p = percentile 0-100, -1 below the 5th, 101 above the 95th, None unknown). Boundaries follow USGS WaterWatch: <10 much below, 10-24 below, 25-75 normal, 76-90 above, >90 much above."""
     if p is None:

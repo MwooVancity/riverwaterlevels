@@ -329,6 +329,16 @@ def css_truncation(css):
     return ["site.css cuts reader text off (%s)" % m.group(0) for m in re.finditer(r"text-overflow\s*:\s*ellipsis|line-clamp\s*:", css)]
 
 
+def one_latest(h):
+    """Truth gate checks each number against the agency alone; this checks the page never shows two different latest values of one measure."""
+    bad = []
+    fq_ = re.search(r'id="flow_chart".*?Latest, [^<]*</td><td[^>]*>([\d,.]+)', h, re.S)
+    aq_ = re.search(r'id="also_measured".*?<td>Flow</td><td[^>]*>([\d,.]+)', h, re.S)
+    if fq_ and aq_ and fq_.group(1) != aq_.group(1):  # audit 2026-11-05: Ottawa 526 m³/s in the chart beside 517 m³/s measured now
+        bad.append("two different latest flows on one page (%s and %s)" % (fq_.group(1), aq_.group(1)))
+    return bad
+
+
 def hater_rules(h):
     """Defects the first hater round found on every page that a machine can see in the built HTML."""
     bad = []
@@ -338,6 +348,7 @@ def hater_rules(h):
         bad.append("no Key facts block while the gauge's station record is on the page")
     if kf_ and ("data-live=" in kf_.group(0) or re.search(r"\b(?:today|now|currently|latest)\b", re.sub(r"<[^>]+>", " ", re.sub(r"<p class=\"src\">.*?</p>", "", kf_.group(0), flags=re.S)), re.I)):  # a quoted copy must never read as today's level
         bad.append("Key facts hold a live reading or a word for now: a cached quote would show it as today's")
+    bad += one_latest(h)
     tn_ = re.search(r"<title>(.*?)(?:\(USGS|</title>)", h)
     if tn_ and re.search(r"\b\d{7,}\b", tn_.group(1)):  # 2026-10-31: "Apple River above 05341499": a gauge number in the place name. release.py sends it back to the queue
         bad.append("a gauge number inside the page name: add a line to data/name-overrides.csv")
@@ -516,7 +527,7 @@ def check_dir(d):
                 p = os.path.join(root, f)
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
-                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else []) + (world_rules(h) if kind_of(rel) == "world" else [])
+                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else []) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
                 if rel.replace("\\", "/") == "glossary/index.html":
                     results[rel] += glossary_gaps(h)
                 sid = re.search(r"USGS gauge (\d{8,15})\b", h)
@@ -729,6 +740,9 @@ def selftest():
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
+    from lib.common import latest_band_note
+    lou = [97, 10000.0, 14000.0, None, 22000.0, 30000.0, 38000.0, None, 46000.0, 55000.0]  # Louisville-like: 24 h mean 27,900 typical, latest 51,000 well above
+    assert "51,000 cfs, is much above normal" in latest_band_note(lou, 51000.0, "Typical for this date") and latest_band_note(lou, 30000.0, "Typical for this date") == "", "selftest: the normal tile hid a latest reading in another band than the 24 h average"
     wr = [{"name": "KAUB", "cm": 23.0, "time": "2026-11-04T15:45:00+01:00"}]
     wh = lambda shown, t="2026-11-04T15:45:00+01:00": '<div class="hero hero2" data-n="KAUB" data-t="%s"><span data-live="stage">%s</span>' % (t, shown)
     assert world_claims(wh("230"), wr) and not world_claims(wh("23"), wr) and not world_claims(wh("230", "2026-11-04T15:30:00+01:00"), wr) and world_claims(wh("0.23"), [dict(wr[0], unit="m", cm=2.3)]), "selftest: a world level 10 times its cached reading passed, or an older carried page failed"
@@ -823,6 +837,8 @@ def selftest():
     assert hater_rules('<section id="alerts"><h2>Weather alerts <span class="tag amber">Older than 3 h</span></h2><p>No active National Weather Service alerts were returned for this location.</p></section>'), "selftest: 'No active alerts' in a stale alerts block did not fire"
     assert hater_rules('<title>Pere Marquette River: live water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: 'live' in the title of a not-reporting gauge did not fire"
     assert not hater_rules('<title>Pere Marquette River: water level</title><section id="gauge_not_reporting"><p>The newest USGS flow reading is from Oct 26, 2.1 days ago.</p></section>'), "selftest: a not-reporting title without 'live' wrongly flagged"
+    two_ = '<section id="flow_chart"><table><tr><td>Latest, Nov 5, 2:10 PM EST</td><td class="r">%s m³/s</td></tr></table></section><section id="also_measured"><table><tr><td>Flow</td><td class="r">536 m³/s</td></tr></table></section>'
+    assert one_latest(two_ % "540") and not one_latest(two_ % "536"), "selftest: two different latest flows on one page did not fire (Ottawa 2026-11-05)"
     assert not hater_rules('<title>Pere Marquette River: live water level</title><p>reading</p>'), "selftest: 'live' in a reporting gauge's title wrongly flagged"
     chip_ = '<span class="ab stale"><span data-live="age" data-t="x">%s</span> old</span>'
     assert hater_rules('<title>Pere Marquette River: live water level</title>' + chip_ % "9 h"), "selftest: 'live' over a 9 h old reading did not fire"
