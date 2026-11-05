@@ -125,7 +125,7 @@ Evening batch 2026-11-04, all live on main 9b2e523 (refresh success, built 16:53
 - UI: no empty Lower/Typical/Higher scale; England range sentence fixed; Rhine shipping row "Between them"; England one short Unknown line, to-do list below the data; hourly table 3-hour steps; units keep their case; level and feet never split; footer dots gone; jump links on England; German air quality index in words.
 - World blocks: nearby gauges on other rivers (100 km, 1-degree squares, 0.1 s at full size), About this gauge (agency station record, coordinates open OpenStreetMap), rate of change (our arithmetic), Canada yearly highs and lows without daily history. COVER: b_nearby, b_about, b_rate have; Canada b_stage_years have; b_map none with a usable reason.
 - Pipeline: a source failing 3 times in a row is skipped for the run (the release spent 32 of 33 min on dead boat-ramp calls); world fetch stop-counter per feed (PEGELONLINE down skipped Canada and England) with retries; Canadian zones by the station's offset (Nunavut, Quebec east, west Saskatchewan); two gauges with one address: the second is held; world level must equal its cached reading (check.py world_claims); world in-browser level swap and the Worker's world poll deleted (mixed times on one page); open_wave --pull works for world pages; Cloudflare file_limit check.
-Done 2026-11-04 night (commits 2ff7069, f370ed9, 7a6e437; live proof below when deployed):
+Done 2026-11-04 night (main b755fc7, sharded finish refresh OK 23:59Z; index_live 0 mismatches of 185; status.json world listed 42 shown 38 gaps {} thin {}; all 8 Canadian pages show annual_peaks, Ottawa 2024 59.44 m on 2024-04-18 = feed 59.437; tile CSS live in the hashed site.css):
 - near_dupes: one-permutation MinHash (320 bins, 40 bands of 8) picks candidates, exact Jaccard decides. Measured: 3,000 pages ~3 s (was ~80 min); 14,000 about 15 s. Memory 320 numbers a page, not ~4,000 shingles. Misses a pair at exactly 80% about 6 in 10,000; above 90% never in practice. Breaks: a bug making ~1,000 identical pages costs ~8 min of exact checks (the build already fails). Fixture: one 85% twin among 200 template pages.
 - Held world gauges: the release dates each hold in `world-pages.json` ("held"); after 7 days the gauge leaves `gauge_pages`/`stations` with its reason in "dropped", never re-matched. Known edge: a day whose only change is a hold date writes `last-release.txt`, which could hide a release stall for that day.
 - Canada yearly peak levels (HYDAT annual peaks, flagged peaks left out): block `annual_peaks`, COVER b_peaks have, enforced by owed(). owed() no longer skips history and peaks on pages without weather.
@@ -153,6 +153,28 @@ UI review (light, live, 3 pages, 2026-11-04), worst first, open:
 9. Rhine observed time "GMT+1" beside "CET".
 10. Ragged half-width tiles on phone (all pages); England jump pills missing; world desktop first row stops at 940 px.
 11. Footer "·" dangles at line ends; England credit sentence repeated.
+
+## Machinery audit, 2026-11-04 night (fresh agent, read-only; its numbers, not yet re-checked)
+Why missed: every heavy step is continue-on-error, so runs read green; no per-stage time is recorded (refresh.py log stays local, release collect writes no timing, shard timing.json unread); the 45-min brake reads whole-run wall clock incl. queue wait and never sees the release; 22 ponytail ceilings are comments, no script compares today's count to them; the scale rule is a sentence, not a measurement; same failure class fixed 4 times one-off.
+Master audit to build (unattended, no new cron):
+1. `tools/ledger.py`: every stage appends run id, gauges, seconds, calls per host (data cache, 90 days); projects to 14,000 and to 60 days at 25/day; fails a stage past 45 of 60 min or a quota past 70% (USGS 1,000/h, Met Office 360/day, Worker 50 subrequests, KV 1,000/day). Replaces the brake's gh read.
+2. `tools/scale_lint.py` in `check.py --selftest`: page loop in page loop, network call in a gauge loop without a total budget, retry without deadline, counter shared across feeds, a ceiling comment with no `data/limits.json` row.
+3. `data/limits.json` + checker: each ceiling as data (where today's value is read, limit, growth per gauge); watchdog alarms when the break is under 30 days away.
+4. A check that times out is a fail: Unknown in status.json and an alarm.
+Then delete: PLAN "Limits"/"Scale, measured" prose, the per-change 14,000 paragraph, agent scale reviews.
+Breaks found, soonest first:
+1. truth_live (watchdog.yml:48; tools/truth_live.py:70-76, :136 one NWS call per page, serial): 92-313 s at 185 pages, timed out 2 of 12 runs today, log-only. Every run at ~300 pages (~Nov 9).
+2. 09 UTC USGS burst (collect.py:1484 usgs_full, daily_due :1160): over the 1,000/h key at ~900 gauges (~Dec 1); Worker poll then freezes live numbers; a 429 never sets USGS_OUT.
+3. Same 09 UTC burst for 14 daily sources: shard collect 4,030 s vs 1,249 s at 08; shards die ~4,000 gauges (45 min ~3,000).
+4. Code change rebuilds every page (build.py:107): ~0.8 s/gauge, 90-min limit ~6,700 gauges (estimate).
+5. Hourly refresh parses every cache 3 times (build, check, truth_tests, coverage): brake ~3,400 gauges (estimate).
+6. Worker cron parses live-sites.json (98 B/gauge) + live key every 3 min: 10 ms CPU ~5,000-8,000 gauges (estimate).
+7. Worker parses single-rivers.json on every /river/ 404: ~5,000 gauges under bots (estimate).
+8. Release collect serial, untimed, builds up to 3 times; flaky source can again cost ~33 min (does not grow).
+9. Every shard downloads the full data cache (186 KB/gauge): ~52 GB/h at 14,000 (estimate).
+10. Yearly archive per country passes Cloudflare 25 MB at ~2,700 gauges in one country.
+11. World pages rendered twice per run; flat-country along() all pairs (behind WORLD_MAX 400).
+12. gauges.json 117 B/gauge, 1.6 MB at 14,000 on phones' missed search (not in the 90 KB count).
 
 ## Live block audit, 2026-11-04 02 UTC (script, every gauge page in the sitemap: 162 US, 37 world)
 Blocks with data, US / world:
