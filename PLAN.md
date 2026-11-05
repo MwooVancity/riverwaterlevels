@@ -229,6 +229,59 @@ Each step: gate, cloud dry run, deploy, live read, PLAN.md.
 - Cloud dry run "refresh OK", then main.
 - Live: Choke Canyon ours vs Lakebrief (fresher reading, storage, 27-year normal); status.json `census` totals; one ocean page vs a top tide site.
 
+## NEXT SESSION: top 25 new pages, lakes and oceans (owner 2026-11-05: "run it all")
+Start prompt: "Read PLAN.md 'NEXT SESSION: top 25' and do it in order; report after each stage with live proof."
+
+Goal: the 25 highest-money new pages from `data/keyword-tiers-water.csv` (tier, then bid), each beating the best competing page on sourced data, each screenshot-checked. No bulk publish: they enter Google through `tools/open_wave.py`.
+
+The 25 (place, kind, Keyword Planner tier, top bid C$, source):
+1 Lake Powell, lake, 10K-100K, 13.07, USBR RISE item 508 elevation (parameterId 2), 509 storage, location 393 (daily, provisional) + USGS 09379900 supporting
+2 Lake Mead, lake, 10K-100K, 4.35, USBR RISE location 3514, items 6123/6124 (not on USGS)
+3 San Diego, ocean, 10K-100K, 4.02, NOAA CO-OPS 9410170 + CDIP 46254 ("Data courtesy of CDIP", unaltered, linked)
+4 Norfolk, ocean, 10K-100K, 1.53, CO-OPS Sewells Point + NDBC 44099 labelled offshore with distance
+5 Myrtle Beach, ocean, 10K-100K, 0.03, CO-OPS Springmaid Pier + NDBC 41013 offshore (about 58 nm)
+6 Canyon Lake TX, USGS 08167700 + TWDB % of conservation capacity
+7 Choke Canyon, USGS 08206900 + TWDB (first proof page; side by side with Lakebrief)
+8 Hartwell, USGS 02187010 + USACE Savannah guide curve (656 ft, restriction noted, dated)
+9 Kerr, USGS 02079490 + USACE 2016 plan guide curve, labelled "published seasonal guide curve", revision date shown
+10 Corpus Christi, USGS 08210500 + TWDB
+11 Lanier, USGS 02334400 + USACE action zones (no target number unless published)
+12 Travis, USGS 08154500 (measurement origin LCRA, labelled) + LCRA 681 ft top of conservation pool; LCRA reuse terms read first
+13 Medina, USGS 08179500 + TWDB
+14 Shasta, not on USGS: USBR RISE (check catalogue) or CDEC (terms read first)
+15 Plymouth (UK), ocean: EA tide gauge observed level (OGL); tide predictions need UKHO (owner key, below)
+16 Portsmouth (UK), same as 15
+17 Great Salt Lake, USGS lake site (Saltair) + datum
+18 Sarasota, ocean, 1K-10K, 23.51, nearest active CO-OPS station (confirm one exists; else held)
+19 Lake Michigan, NOAA CO-OPS Great Lakes stations (IGLD 1985 datum named)
+20 Lake Tahoe, USGS Tahoe City
+21 Brighton (UK), ocean, EA Newhaven gauge + UKHO predictions
+22 Virginia Beach, CO-OPS + NDBC offshore labelled
+23 Vero Beach, nearest CO-OPS (Trident Pier) with distance shown
+24 Panama City Beach, CO-OPS 8729210 area
+25 Fort Lauderdale, CO-OPS Port Everglades with distance
+(Next: Fort Lauderdale 26, Gulf Shores, Galveston, Chatham, Bodega Bay, Chesapeake Bay, Cape May, Pensacola, Monterey, Key West.) A place whose page cannot beat its competitor is held and the next row takes its slot.
+
+Order (each stage: gates once, push check, dry run "refresh OK", main, live read, PLAN proof):
+1. Lake path: CODES += 62614,62615,72020,00062,00054; `lib/hero.py` ctx uses lake elevation when no 00065 (the existing stage_only path); lake wording (reuse `lib/world.py:128` swap); datum named from the parameter code; USGS daily stats for 62614/62615/00054 so "normal for this date" works; lakes added to the gauge list from the census site list (one page per lake, primary series named, others as supporting readings).
+2. Source roles in `data/sources.json` and per series: host, station operator, measurement origin, funding cooperator, official reference (Travis proves one "agency" field is not enough). Owner rule applied: created by law and publicly owned = government (LCRA, TVA, USACE, USBR); investor-owned utilities (Duke, Georgia Power) never carry a government label and stay out under the current rule.
+3. `b_reservoir`: storage, % only with a named basis (TWDB "% of conservation capacity"), full or conservation pool, operator guide curve when published (dated, versioned file for document-only curves, never "today's target" unless the operator publishes it), feet from pool.
+4. USBR RISE fetch (Powell, Mead, Shasta check): daily, provisional, labelled "daily".
+5. Ocean path: NOAA CO-OPS station as the gauge (observed level vs predictions kept apart, MLLW named), water temperature, NWS marine alerts (rip current, high surf, coastal flood, small craft), CO-OPS flood thresholds and high-tide flooding outlook, nearest buoy with distance and "offshore" label past 5 km. UK pages wait for tide predictions (UKHO key).
+6. New gates (check.py, each with a fixture from the ChatGPT round-3 list, trimmed): datum named on every elevation, both-datum disagreement; observed / predicted / derived kind on every value; source role (a utility never labelled government); % full basis; buoy distance; storage-curve monotonic; pool boundaries; schema drift (missing time = Unknown); time without an offset = Unknown. Reservoir "normal": rule curve and percentile shown apart; percentile suppressed across a datum or operations change.
+7. Competitor gate (`data/competitors.json`): Lakebrief items (level, full pool, % full, storage, 7-day trend, recent table, wind) and tide-site items (next high and low, tide chart, water temperature, sunrise) each answered have / next / none.
+8. Build the 25. Info-gain score per page by script: count of sourced blocks with data vs the competitor page for the same place (Lakebrief for lakes, tide-forecast.com or NOAA for coasts); a page below its competitor is held.
+9. Screenshots: phone width, two batches (13 + 12), about 250-400k tokens total; a reviewer who did not build them reads `tools/review_brief.md` and lists missing data, misleading labels and empty tiles; fix, then release through `tools/open_wave.py`.
+
+Owner keys (only these; everything else in the 25 is keyless): (a) UKHO ADMIRALTY UK Tidal API, Discovery tier (free, sign up at admiraltyapi.portal.azure-api.net), needed for UK tide times on Plymouth, Portsmouth and Brighton; read its terms for ad use before use; (b) a new Met Office DataHub Site Specific key (the one pasted in chat on 2026-11-04 must be regenerated). Keys go in GitHub secrets, never chat.
+
+Edge case at 14,000 pages: RISE is daily (about 50 lake calls a day), CO-OPS one call per station per hour (300 stations = 300 an hour, 7,200 a day, no published limit: ramp and watch 429s), USGS lake codes ride the existing calls. Screenshots never scale: the competitor gate and info-gain script decide past the first 25.
+
+## Debate with ChatGPT, rounds 1-3, outcome (2026-11-05)
+- ChatGPT conceded 15 points (Met Office, USGS before USACE/USBR, our permissions, CO-OPS already ours, Allatoona = USACE, one page type, Lakebrief history claim, river ranking, rate limits, its false "already in audit" claim, Hub'Eau wording, guide curves, RISE IDs, fixtures).
+- Verified by us: USGS 08154500 marks Travis data "obtained from LCRA"; RISE item 508 is Lake Powell daily elevation, parameterId 2.
+- Our position kept against it: LCRA is a public authority created by the Texas Legislature, so government under our rule (same as TVA); its "suppress Travis" fixture is rejected. Its DST fixtures guard a case our feeds never produce (all times carry offsets); one fixture (time without offset = Unknown) is kept. Debate closed: what remains are one-request checks done in the build step that uses them (LCRA terms, Kerr plan revision, other operator-origin USGS lakes, beach flags, Hub'Eau producer licences, CDIP terms read on CDIP's page).
+
 ## ChatGPT data-gap audit, 2026-11-05, with rebuttal (nothing below is verified until read on the agency's own page)
 - Wrong or stale in it: "Met Office DataPoint retired" (our row is Site Specific; the real fix is a new key, the pasted one is burned); "start with USACE/USBR" (USGS already has elevation, storage and daily stats for 736 lakes, our own feed; USACE `cwms` and USBR `usbr` are already owner-permission rows); "NOAA CO-OPS is new" (`coops` quoted; the gap is ocean pages, census 302); Lake Allatoona as Georgia Power (it is USACE); "four separate page models" (owner order: one standard page, blocks by data); most of its 27 gates already exist (country proof, four states, stale limits, one_latest, unit allowlist, suspect, empty = Unknown).
 - Kept, added to step 2/4 work, each a check.py gate with a fixture: (1) datum named on every elevation, mismatch blocks (Lakebrief shows Lanier in NGVD29); (2) observed / predicted / derived kind on every value, a tide prediction never prints as a reading; (3) source owner class, a utility (Duke, LCRA) never carries a government label; (4) % full only with a named basis (conservation pool vs total) from an official source; (5) buoy distance to the beach always shown, never "at the beach".
