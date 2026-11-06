@@ -20010,4 +20010,14 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 20009,1,50000,lake powell water level,Lake Powell,Glen Canyon Dam,AZ,US,09379900,,USGS,yes
 20010,1,50000,san diego tides,San Diego Bay,San Diego,CA,US,9410170,,USGS,yes
 20011,1,50000,norfolk tides,Sewells Point,Norfolk,VA,US,8638610,,USGS,yes
-20012,1,50000,myrtle beach tides,Springmaid Pier,Myrtle Beach,SC,US,8661070,,USGS,yes
+20012,1,50000,myrtle beach tide times,Springmaid Pier,Myrtle Beach,SC,US,8661070,,USGS,yes
+20013,1,5000,fort lauderdale water temperature,South Port Everglades,Fort Lauderdale,FL,US,8722956,,USGS,yes
+20014,1,5000,chatham tides,Chatham,Chatham,MA,US,8447435,,USGS,yes
+20015,1,5000,monterey tides,Monterey,Monterey,CA,US,9413450,,USGS,yes
+20016,1,5000,pensacola tides,Pensacola,Pensacola,FL,US,8729840,,USGS,yes
+20017,1,5000,panama city beach water temperature,Panama City Beach,Panama City Beach,FL,US,8729210,,USGS,yes
+20018,1,5000,port angeles tides,Port Angeles,Port Angeles,WA,US,9444090,,USGS,yes
+20019,1,5000,new york tides,The Battery,New York,NY,US,8518750,,USGS,yes
+20020,1,5000,atlantic city water temperature,Atlantic City,Atlantic City,NJ,US,8534720,,USGS,yes
+20021,1,5000,boston tides,Boston,Boston,MA,US,8443970,,USGS,yes
+20022,1,5000,galveston water temperature,Galveston Pier 21,Galveston,TX,US,8771450,,USGS,yes

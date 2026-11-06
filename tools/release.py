@@ -25,9 +25,16 @@ picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values
 WORLD_MAX = 400  # ponytail: world feeds are fetched one gauge at a time on shard 0; past about 500 that job nears its hour. Split the world fetch first.
 import json as _json
 q_ = list(csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), encoding="utf-8")))
-per_ = __import__("collections").Counter(r["keyword"] for r in q_)
-share = lambda t, k: int(t or 0) / max(1, per_[k])  # gauges that share one keyword split its searches: four White River gauges get 125 each, not 500
-tier_ = {r["gauge"]: share(r["tier"], r["keyword"]) for r in q_ if r["gauge"]}
+# keyword debate 2026-11-06: the first gauge on a keyword gets its whole search band, every other gauge 5% (one gauge per river first);
+# an equal split put 15 Guadalupe gauges below 250-search creeks. A row naming several countries ("AU|CA|FR|GB") gets nothing until one is chosen.
+live_kw = {r["keyword"] for r in q_ if r["gauge"] and live_.get(r["gauge"], {}).get("status") == "live"}
+first_ = {}
+for r in q_:
+    if r["keyword"] and r["gauge"] and r["keyword"] not in live_kw:
+        first_.setdefault(r["keyword"], r["gauge"])
+def share(t, k, g=None):
+    return 0 if not k else int(t or 0) * (1 if k not in live_kw and first_.get(k, g) == g else 0.05)  # a world row is the first gauge when no US gauge holds the keyword
+tier_ = {r["gauge"]: (0 if "|" in (r.get("country") or "") else share(r["tier"], r["keyword"], r["gauge"])) for r in q_ if r["gauge"]}
 wpp = os.path.join(ROOT, "data", "world-pages.json")
 wpages = _json.load(open(wpp, encoding="utf-8"))
 from lib import world as _world
@@ -49,7 +56,7 @@ ready = fits
 ready = ready[:max(0, WORLD_MAX - len(listed))]
 # money first (owner 2026-11-03): searches x ad rate per country. Guesses from PLAN.md until AdSense reports ours; US 1.0.
 RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
-both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row
+both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
 if world_add or gone_ or held_before_ != _json.dumps([p.get("held") for p in wpages]):

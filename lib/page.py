@@ -324,7 +324,7 @@ def lake_words(h, G):
                  ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
         h = h.replace(a, b)
     if G.get("coast"):  # a coast page: the lake path's words in coast words, and the reading's source is NOAA CO-OPS, never USGS
-        for a, b in (("water level and elevation", "tide times, water level and water temperature"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
+        for a, b in (("water level and elevation", "tide times, water level and water temperature" if any(r.get("parameter_code") == "00010" for r in G["rec"]["usgs"]["rows"]) else "tide times and water level"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
                      ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings", "Solid line: NOAA readings (preliminary)"), (" &middot; dashed curve: NWS forecast", " &middot; dashed curve: NOAA predicted tide, next 24 h"), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
                      ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Water levels are preliminary until NOAA verifies them."),
                      ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "The National Weather Service has no forecast point for this station. NOAA tide predictions are under Tides."),
@@ -422,6 +422,9 @@ def build_tab(tab, G, pages):
     # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
     live = "" if G["age_min"] > stale_after("usgs") * 2 * 60 else "live "  # a reading over 6 h old is not live (audit run 1 row 2; run 5 row 4: the title is static, the Worker only refreshes the number)
     title = mk_title("%s, %s: %swater level and flow (USGS %s)" % (rp, st, live, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after
+        wt_ = any(r.get("parameter_code") == "00010" for r in G["rec"]["usgs"]["rows"])  # Boston and Chatham have no NOAA temperature sensor: the title never promises one
+        title = mk_title("%s tides and tide times today: %s water level%s, %s (NOAA %s)" % (place, G["river"], " and water temperature" if wt_ else "", st, G["site"]))
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")

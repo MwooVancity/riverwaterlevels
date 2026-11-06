@@ -4,7 +4,7 @@ Site: unique titles, every internal link resolves, sitemap equals page set, tab/
 Exit 1 if anything fails.
 """
 import glob
-import os, re, sys, json, collections, gzip, hashlib, html, datetime
+import os, re, sys, json, collections, gzip, hashlib, html, datetime, csv
 MAX_GZ = 90000  # pilot pages are about 48 KB compressed; tail pages carry fewer blocks
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
@@ -144,7 +144,7 @@ def check_html(h, rel):
         first_blk = fb_.start() if fb_ else -1
         head = body[:first_blk] if first_blk > 0 else body
         for need in ('class="tile flow', 'class="tile stage', 'class="tile norm', 'class="tile trend'):
-            if need == 'class="tile trend' and ("Tidal reach:" in head or "Rose and fell:" in head):
+            if need == 'class="tile trend' and ("Tidal reach:" in head or "Rose and fell:" in head or "Today&#x27;s tides (NOAA prediction)" in head or "Today's tides (NOAA prediction)" in head):  # a coast shows today's tides, not a tidal 24 h change
                 continue  # a tidal reach has no 6 h direction; hero.py prints the day's range instead
             if need not in head:
                 bad.append("first screen missing %s" % need.split('"')[1])
@@ -341,6 +341,13 @@ def one_latest(h):
     return bad
 
 
+def queue_over(queue, tiers):
+    """Queue rows that claim more searches than Keyword Planner gave their keyword (keyword debate 2026-11-06: 'myrtle beach tides' sat at 50,000, the file says 5,000).
+    A lower queue number can be a deliberate rule (shared names step down, flow-only capped); a higher one is always wrong."""
+    return ["queue row %s: %r at %s, Keyword Planner %s" % (r.get("rank"), r["keyword"], r["tier"], tiers[r["keyword"].lower()])
+            for r in queue if r.get("keyword") and r["keyword"].lower() in tiers and int(r["tier"] or 0) > int(tiers[r["keyword"].lower()] or 0)]
+
+
 def reuse_barred(sources):
     """Owner HARD rule 2026-11-05: a source whose terms bar ads, commercial use or caching is never used, and no permission is asked.
     A row records it as "ads", "commercial" or "cache": "barred"; such a row may never be quoted or owner-permission (blocks show only those)."""
@@ -358,7 +365,7 @@ def hater_rules(h):
     if kf_ and ("data-live=" in kf_.group(0) or re.search(r"\b(?:today|now|currently|latest)\b", re.sub(r"<[^>]+>", " ", re.sub(r"<p class=\"src\">.*?</p>", "", kf_.group(0), flags=re.S)), re.I)):  # a quoted copy must never read as today's level
         bad.append("Key facts hold a live reading or a word for now: a cached quote would show it as today's")
     bad += one_latest(h)
-    tn_ = re.search(r"<title>(.*?)(?:\(USGS|</title>)", h)
+    tn_ = re.search(r"<title>(.*?)(?:\((?:USGS|NOAA) |</title>)", h)  # coast titles end "(NOAA <station>)"
     if tn_ and re.search(r"\b\d{7,}\b", tn_.group(1)):  # 2026-10-31: "Apple River above 05341499": a gauge number in the place name. release.py sends it back to the queue
         bad.append("a gauge number inside the page name: add a line to data/name-overrides.csv")
     if re.search(r'(?:NWS|National Weather Service)\s*<span class="tag t-official">', h):  # newcomer review: "...as issued by NWS  OFFICIAL NWS" says it twice
@@ -752,6 +759,13 @@ def selftest():
     assert reuse_barred([{"id": "chs", "status": "quoted", "commercial": "barred"}]) and not reuse_barred([{"id": "chs", "status": "off", "commercial": "barred"}]), "selftest: a source whose terms bar ads or commercial use could still show"
     _bar = reuse_barred(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"])
     assert not _bar, "; ".join(_bar)
+    assert queue_over([{"rank": "1", "keyword": "x tides", "tier": "50000"}], {"x tides": "5000"}) and not queue_over([{"rank": "1", "keyword": "x tides", "tier": "500"}], {"x tides": "5000"}), "selftest: a queue row above its Keyword Planner tier passed"
+    _kt = {}
+    for _f in ("keyword-tiers.csv", "keyword-tiers-water.csv"):
+        for _r in csv.DictReader(open(os.path.join(ROOT, "data", _f), encoding="utf-8")):
+            _kt.setdefault(_r["keyword"].strip().lower(), _r["tier"])
+    _ov = queue_over(list(csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), encoding="utf-8"))), _kt)
+    assert not _ov, "; ".join(_ov[:5])
     from lib.common import latest_band_note
     from lib.directory import COUNTRY, world_pages
     assert all(p.get("feed") in COUNTRY for p in world_pages()), "selftest: a world feed has no country name for the home page (lib/directory.py COUNTRY)"
