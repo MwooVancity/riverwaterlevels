@@ -339,6 +339,13 @@ def one_latest(h):
     return bad
 
 
+def reuse_barred(sources):
+    """Owner HARD rule 2026-11-05: a source whose terms bar ads, commercial use or caching is never used, and no permission is asked.
+    A row records it as "ads", "commercial" or "cache": "barred"; such a row may never be quoted or owner-permission (blocks show only those)."""
+    return ["source %s shows on pages but its terms bar %s: use another official source or link out" % (r.get("id"), ", ".join(k for k in ("ads", "commercial", "cache") if r.get(k) == "barred"))
+            for r in sources if r.get("status") in ("quoted", "owner-permission") and any(r.get(k) == "barred" for k in ("ads", "commercial", "cache"))]
+
+
 def hater_rules(h):
     """Defects the first hater round found on every page that a machine can see in the built HTML."""
     bad = []
@@ -740,6 +747,9 @@ def selftest():
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
+    assert reuse_barred([{"id": "chs", "status": "quoted", "commercial": "barred"}]) and not reuse_barred([{"id": "chs", "status": "off", "commercial": "barred"}]), "selftest: a source whose terms bar ads or commercial use could still show"
+    _bar = reuse_barred(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"])
+    assert not _bar, "; ".join(_bar)
     from lib.common import latest_band_note
     from lib.directory import COUNTRY, world_pages
     assert all(p.get("feed") in COUNTRY for p in world_pages()), "selftest: a world feed has no country name for the home page (lib/directory.py COUNTRY)"

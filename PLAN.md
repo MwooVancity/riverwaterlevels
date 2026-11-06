@@ -273,6 +273,7 @@ Order (each stage: gates once, push check, dry run "refresh OK", main, live read
 8. Build the 25. Info-gain score per page by script: count of sourced blocks with data vs the competitor page for the same place (Lakebrief for lakes, tide-forecast.com or NOAA for coasts); a page below its competitor is held.
 9. Screenshots: every one of the 25 at phone width, no cap (owner 2026-11-05); a reviewer who did not build them reads `tools/review_brief.md` and lists missing data, misleading labels and empty tiles; fix, then release through `tools/open_wave.py`.
 
+HARD (owner 2026-11-05): no source whose terms bar ads, commercial use or caching; no permission requests; alternative official source or link-out. Every new sources.json row records ads / commercial / cache as allowed or barred from its terms page (gate `reuse_barred`).
 Owner keys (only these; everything else in the 25 is keyless): (a) UKHO ADMIRALTY UK Tidal API, Discovery tier (free, sign up at admiraltyapi.portal.azure-api.net), needed for UK tide times on Plymouth, Portsmouth and Brighton; read its terms for ad use before use; (b) a new Met Office DataHub Site Specific key (the one pasted in chat on 2026-11-04 must be regenerated). Keys go in GitHub secrets, never chat.
 
 Edge case at 14,000 pages: RISE is daily (about 50 lake calls a day), CO-OPS one call per station per hour (300 stations = 300 an hour, 7,200 a day, no published limit: ramp and watch 429s), USGS lake codes ride the existing calls. Screenshots never scale: the competitor gate and info-gain script decide past the first 25.
