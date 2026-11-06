@@ -1029,7 +1029,7 @@ centennial beach tides,500,0.0,ocean
 charleston harbor water temperature,500,0.0,ocean
 charlestown tide times,500,0.0,ocean
 charlestown tides,500,0.0,ocean
-chatham tide times,500,0.0,ocean
+chatham tide times,50,0.0,ocean
 cheltenham beach tides,500,0.0,ocean
 cherry beach water temperature,500,0.0,ocean
 cherry grove tides,500,0.0,ocean
@@ -1356,7 +1356,7 @@ niantic tides,500,0.0,ocean
 nikiski tides,500,0.0,ocean
 ninilchik tides,500,0.0,ocean
 nissi beach water temperature,500,0.0,ocean
-norfolk tide times,500,0.0,ocean
+norfolk tide times,50,0.0,ocean
 north beach tides,500,0.0,ocean
 north haven tide times,500,0.0,ocean
 north haven tides,500,0.0,ocean
@@ -52198,3 +52198,183 @@ zubovskaya bay water temperature,0,0.0,ocean
 ōnahau bay tide times,0,0.0,ocean
 ōnahau bay tides,0,0.0,ocean
 ōnahau bay water temperature,0,0.0,ocean
+altamaha river level today,50,,river
+altamaha river water temperature,50,,river
+atlantic city tide chart,5000,,ocean
+bogachiel river gauge,50,,river
+boston tide chart,5000,,ocean
+brazos river dam release,50,,river
+brazos river gauge,50,,river
+brazos river level today,50,,river
+brazos river water temperature,50,,river
+buffalo river gauge,50,,river
+buffalo river water temperature,50,,river
+canyon lake dam release,50,,lake
+canyon lake level today,500,,lake
+canyon lake water temperature,500,,lake
+chagrin river gauge,50,,river
+chagrin river water temperature,50,,river
+chatham tide chart,500,,ocean
+chetco river gauge,50,,river
+choke canyon reservoir level today,50,,lake
+clackamas river gauge,50,,river
+clackamas river level today,50,,river
+clackamas river water temperature,500,,river
+clarion river gauge,50,,river
+clarion river water temperature,50,,river
+clark fork river water temperature,50,,river
+colorado river gauge,50,,river
+colorado river level today,50,,river
+colorado river water temperature,50,,river
+congaree river gauge,50,,river
+congaree river level today,50,,river
+conneaut creek gauge,50,,river
+cowlitz river gauge,50,,river
+cowlitz river water temperature,50,,river
+des plaines river gauge,50,,river
+des plaines river level today,50,,river
+escambia river gauge,50,,river
+floyds fork gauge,50,,river
+fort lauderdale tide chart,5000,,ocean
+galveston tide chart,5000,,ocean
+genesee river water temperature,50,,river
+great miami river gauge,50,,river
+great miami river level today,50,,river
+great miami river water temperature,50,,river
+great salt lake level today,50,,lake
+great salt lake water temperature,50,,lake
+greenbrier river gauge,50,,river
+greenbrier river water temperature,50,,river
+gunnison river water temperature,50,,river
+harpeth river gauge,50,,river
+harpeth river water temperature,50,,river
+hocking river gauge,50,,river
+hocking river water temperature,50,,river
+hoh river gauge,50,,river
+humptulips river gauge,50,,river
+james river gauge,50,,river
+james river level today,50,,river
+james river water temperature,500,,river
+john day river gauge,50,,river
+john day river level today,50,,river
+john day river water temperature,50,,river
+jordan river water temperature,50,,river
+juniata river gauge,50,,river
+juniata river level today,50,,river
+juniata river water temperature,50,,river
+kanawha river gauge,50,,river
+kanawha river water temperature,50,,river
+kern river water temperature,50,,river
+kerr lake level today,5000,,lake
+kerr lake water temperature,500,,lake
+kings river gauge,50,,river
+kings river water temperature,50,,river
+lake corpus christi level today,500,,lake
+lake corpus christi water temperature,50,,lake
+lake fork dam release,50,,lake
+lake fork level today,50,,lake
+lake fork water temperature,500,,lake
+lake hartwell dam release,50,,lake
+lake hartwell level,5000,,lake
+lake hartwell level today,500,,lake
+lake hartwell water temperature,500,,lake
+lake lanier dam release,50,,lake
+lake lanier level today,500,,lake
+lake lanier water temperature,5000,,lake
+lake powell dam release,50,,lake
+lake powell level today,500,,lake
+lake powell water temperature,500,,lake
+little pee dee river level today,50,,river
+lochsa river gauge,50,,river
+manistee river water temperature,50,,river
+maumee river level today,50,,river
+maumee river water temperature,500,,river
+medina lake level today,500,,lake
+medina lake water temperature,50,,lake
+meramec river gauge,50,,river
+meramec river water temperature,50,,river
+merced river gauge,50,,river
+merced river water temperature,50,,river
+methow river gauge,50,,river
+methow river water temperature,50,,river
+middle fork salmon river gauge,50,,river
+middle fork salmon river water temperature,50,,river
+milwaukee river gauge,50,,river
+milwaukee river level today,50,,river
+milwaukee river water temperature,50,,river
+mississippi river gauge,500,,river
+mississippi river level today,500,,river
+mississippi river water temperature,500,,river
+monocacy river gauge,50,,river
+monocacy river water temperature,50,,river
+monterey tide chart,5000,,ocean
+mulberry river gauge,50,,river
+mulberry river level today,50,,river
+mulberry river water temperature,50,,river
+muskegon river gauge,50,,river
+muskegon river water temperature,500,,river
+myrtle beach tide chart,50000,0.03,ocean
+neches river water temperature,50,,river
+nehalem river gauge,50,,river
+nehalem river level today,50,,river
+neuse river gauge,50,,river
+neuse river level today,50,,river
+neuse river water temperature,50,,river
+new york tide chart,5000,,ocean
+niangua river gauge,50,,river
+niangua river water temperature,50,,river
+nooksack river gauge,50,,river
+norfolk tide chart,5000,,ocean
+nueces river gauge,50,,river
+nueces river level today,50,,river
+ogeechee river gauge,50,,river
+ogeechee river level today,50,,river
+ogeechee river water temperature,50,,river
+ohio river gauge,500,,river
+ohio river level today,500,,river
+ohio river water temperature,500,,river
+ottawa river gauge,50,,river
+ottawa river water temperature,50,,river
+paint creek water temperature,50,,river
+panama city beach tide chart,5000,,ocean
+payette river water temperature,50,,river
+pensacola tide chart,500,,ocean
+port angeles tide chart,500,,ocean
+provo river water temperature,50,,river
+puyallup river gauge,50,,river
+puyallup river level today,50,,river
+russian river gauge,50,,river
+russian river level today,50,,river
+russian river water temperature,50,,river
+saluda river water temperature,50,,river
+san diego tide chart,5000,,ocean
+sandy river gauge,50,,river
+sandy river level today,50,,river
+sandy river water temperature,50,,river
+satilla river water temperature,50,,river
+savannah river level today,50,,river
+savannah river water temperature,50,,river
+scioto river gauge,50,,river
+scioto river water temperature,50,,river
+selway river gauge,50,,river
+skykomish river gauge,50,,river
+skykomish river level today,500,,river
+skykomish river water temperature,50,,river
+snoqualmie river gauge,50,,river
+snoqualmie river level today,50,,river
+snoqualmie river water temperature,50,,river
+south fork shenandoah river gauge,50,,river
+tennessee river gauge,50,,river
+tennessee river water temperature,50,,river
+weber river water temperature,50,,river
+wenatchee river gauge,50,,river
+wenatchee river water temperature,50,,river
+white river gauge,50,,river
+white river water temperature,50,,river
+wilson river gauge,50,,river
+wilson river level today,50,,river
+wilson river water temperature,50,,river
+yampa river gauge,50,,river
+yampa river water temperature,50,,river
+yellow breeches creek water temperature,50,,river
+yellow river dam release,50,,river

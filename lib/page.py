@@ -421,10 +421,12 @@ def build_tab(tab, G, pages):
     # cannot update them, so a number there becomes a stale number in search results under our name (snoflo's snippets showed weeks-old
     # readings). The live number lives in the page body, where the edge keeps it current for every visitor, Googlebot included.
     live = "" if G["age_min"] > stale_after("usgs") * 2 * 60 else "live "  # a reading over 6 h old is not live (audit run 1 row 2; run 5 row 4: the title is static, the Worker only refreshes the number)
-    title = mk_title("%s, %s: %swater level and flow (USGS %s)" % (rp, st, live, G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
-    if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after
-        wt_ = any(r.get("parameter_code") == "00010" for r in G["rec"]["usgs"]["rows"])  # Boston and Chatham have no NOAA temperature sensor: the title never promises one
-        title = mk_title("%s tides and tide times today: %s water level%s, %s (NOAA %s)" % (place, G["river"], " and water temperature" if wt_ else "", st, G["site"]))
+    # Keyword Planner 2026-11-06 (US): '<water> water temperature' beats 'level today', 'gauge' and 'dam release' (22 of 122 at 100+, those three near 0).
+    # The title names water temperature only while the tile shows it (fresh under 24 h, Celsius, not held as suspect): never a promise the page breaks.
+    wt_ = bool(b3.conditions(G).get("wt"))
+    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, ", water temperature" if wt_ else "", G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
+        title = mk_title("%s tides, tide times and tide chart today: %s water level%s, %s (NOAA %s)" % (place, G["river"], " and water temperature" if wt_ else "", st, G["site"]))
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
