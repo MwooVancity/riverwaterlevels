@@ -2,7 +2,7 @@
 build is a number in status.json, never a silent skip. collect.py fetch_census fetches; this file only counts (no network)."""
 
 KIND = {"ST": "stage_only", "LK": "lake", "ES": "tidal", "OC": "tidal"}  # USGS site type of a level-only site
-BUILDS = {"flow"}  # what our page builds today; the refactor adds lake, stage_only and tidal here
+BUILDS = {"flow", "stage_only", "lake"}  # what our page builds (level-only through the ice path; lakes since 2026-11-05); tidal and ocean are the gap
 
 
 def classify(flow, level, built):
@@ -21,5 +21,5 @@ def classify(flow, level, built):
 
 if __name__ == "__main__":
     c = classify({"1", "2"}, {"2": "ST", "3": "LK", "4": "ES", "5": "ST-CA"}, {"1"})
-    assert c == {"flow": 2, "lake": 1, "tidal": 1, "stage_only": 1, "built": 1, "code_cannot": 3}, c
+    assert c == {"flow": 2, "lake": 1, "tidal": 1, "stage_only": 1, "built": 1, "code_cannot": 1}, c
     print("census selftest OK")
