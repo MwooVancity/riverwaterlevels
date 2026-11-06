@@ -32,14 +32,15 @@ def load_effective():
         r["place_slug"] = slug(r["place"])
         by_rs[r["river_slug"]].add(r["state"])
     hubs = collections.defaultdict(list)
+    lake_n = collections.Counter(r["river_slug"] for r in rows.values() if r.get("lake"))  # two lakes with one name (Clear Lake CA and IA) never share an address
     for r in rows.values():
-        r["hub_slug"] = r["river_slug"] + ("-" + r["state"].lower() if len(by_rs[r["river_slug"]]) > 1 else "")
+        r["hub_slug"] = ("lake-" + r["site"]) if r.get("lake") else r["river_slug"] + ("-" + r["state"].lower() if len(by_rs[r["river_slug"]]) > 1 else "")  # a lake is never grouped into a river hub
         hubs[(r["hub_slug"], r["state"])].append(r)
     for g in hubs.values():
         seen = collections.Counter(x["place_slug"] for x in g)
         for x in g:
             x["place_final"] = x["place_slug"] + ("-" + x["site"] if seen[x["place_slug"]] > 1 or not x["place_slug"] else "")
-            base = ("/lake/%s/" % x["river_slug"]) if x.get("lake") else "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
+            base = ("/lake/%s/" % (x["river_slug"] + ("" if lake_n[x["river_slug"]] == 1 else "-" + x["state"].lower() + "-" + x["site"]))) if x.get("lake") else "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
             x["hub_url"] = base if x.get("lake") else "/river/%s/" % x["hub_slug"]
             x["dashboard_url"], x["water_url"], x["forecast_url"] = base, base, base + "forecast/"  # one page per gauge; /water/ redirects here
     return rows, hubs

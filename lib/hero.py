@@ -28,7 +28,7 @@ def ctx(site, row, rec, now):
     else:
         lt, lv, lrow = fl[-1]
     age_min = (now - lt).total_seconds() / 60
-    stats = rec.get("stats")
+    stats = rec.get("stats") if (rec.get("stats_code") or "00060") == (lake or "00060") else None  # percentiles of another parameter or datum are never compared (review 2026-11-06)
     ldate = lt.astimezone(zone).date()
     mmdd = ldate.isoformat()[5:10]
     cmp_v = lv if lv is not None else (sg[-1][1] if lake and sg else None)  # a lake is compared on its elevation against USGS's own daily percentiles for it; lv stays the flow (None), so no list shows an elevation as cfs

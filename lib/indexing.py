@@ -5,7 +5,7 @@
 - To pull a batch back: remove its URLs from "allow" (or set open false) and deploy; the next 30-minute refresh serves noindex for them. Search engines drop a page only after they recrawl it, so this is fast to apply and slow to take effect: release small batches."""
 import json, os, re
 
-GAUGE = re.compile(r"^/river/[^/]+/[^/]+/(forecast/)?$")
+GAUGE = re.compile(r"^/(?:river/[^/]+/[^/]+|lake/[^/]+)/(forecast/)?$")  # lakes enter Google only through open_wave too (review 2026-11-06)
 DEFAULT = {"open": False, "site_pages": False, "allow": []}
 
 
@@ -22,7 +22,7 @@ def load(root):
 
 
 def indexable(url, cfg):
-    if not cfg["open"] or url.startswith("/embed/river/") or url == "/status/":  # embed panels are framed copies of the gauge page; /status/ is an operations page
+    if not cfg["open"] or url.startswith(("/embed/river/", "/embed/lake/")) or url == "/status/":  # embed panels are framed copies of the gauge page; /status/ is an operations page
         return False
     if url in cfg.get("pulled", ()):
         return False

@@ -10,7 +10,7 @@ from lib.common import *
 from lib import wx
 import zoneinfo
 
-CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054"  # last five: lake elevation (NGVD29, NAVD88, two above-datum codes) and storage
+CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054"  # last five: lake elevation (62614 and 72020 NGVD29, 62615 NAVD88, 00062 above the reservoir datum) and storage
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
@@ -882,7 +882,10 @@ def fetch_daily(site, h):
             except (KeyError, TypeError, ValueError):
                 pass
         return len(feats)
-    old = json.load(gzip.open(p, "rt")) if os.path.exists(p) else []
+    try:
+        old = json.load(gzip.open(p, "rt")) if os.path.exists(p) else []
+    except (OSError, EOFError, ValueError):
+        old = []  # a damaged file is pulled again in full
     if old:  # only what changed (owner 2026-11-06): keep the stored record and re-pull the last 400 days, the window in which USGS still revises provisional values
         cut = (datetime.date.today() - datetime.timedelta(days=400)).isoformat()
         if not pull("&time=%s/%s" % (cut, datetime.date.today().isoformat())):
@@ -894,7 +897,8 @@ def fetch_daily(site, h):
             pull("&time=%d-01-01/%d-12-31" % (y, min(y + 39, datetime.date.today().year)))
     rows = [list(x) for x in sorted({r[0]: r for r in rows}.values())]
     os.makedirs(os.path.dirname(p), exist_ok=True)
-    json.dump(rows, gzip.open(p, "wt"), separators=(",", ":"))
+    json.dump(rows, gzip.open(p + ".tmp", "wt"), separators=(",", ":"))
+    os.replace(p + ".tmp", p)  # a run killed mid-write never leaves a broken file that every later run trips on
     return rows
 
 
@@ -1321,7 +1325,8 @@ def collect(site, inv):
     sp = os.path.join(LEGACY, "stats", site + ".json")
     note("stats", "ok" if os.path.exists(sp) else "absent")  # input file, not a fetch: absent here means "is this normal" shows "-" (2026-10-25: 28 gauges)
     if os.path.exists(sp):
-        rec["stats"] = json.load(open(sp))["d"]
+        _sj = json.load(open(sp))
+        rec["stats"], rec["stats_code"] = _sj["d"], _sj.get("code", "00060")
         rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
     run_source(rec, "record", lambda: record_summary(fetch_daily(site, h), rec.get("stats")), log)
     fetch_extras(site, rec, h, log)
@@ -1517,7 +1522,8 @@ def fast(inv, sites):
             sp = os.path.join(LEGACY, "stats", s + ".json")
             note("stats", "ok" if os.path.exists(sp) else "absent")  # same input-file note as the full path, so the doctor sees it every run
             if os.path.exists(sp):
-                rec["stats"] = json.load(open(sp))["d"]
+                _sj = json.load(open(sp))
+                rec["stats"], rec["stats_code"] = _sj["d"], _sj.get("code", "00060")
                 rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
             fetch_extras(s, rec, h, log)
             rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")

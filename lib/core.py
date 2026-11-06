@@ -190,7 +190,7 @@ def usgs_tz(rec):
     return USGS_TZ.get((loc.get("time_zone_abbreviation"), loc.get("uses_daylight_savings")))
 
 
-_SCALAR_KEYS = ("site", "stats_source", "tz", "fetched_at", "lat", "lon", "year")
+_SCALAR_KEYS = ("site", "stats_source", "stats_code", "tz", "fetched_at", "lat", "lon", "year")
 
 
 try:

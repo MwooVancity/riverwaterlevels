@@ -236,7 +236,7 @@ def band_glossary():
 
 
 LAKE_CODES = ("62615", "62614", "72020", "00062")  # NAVD88 first, then NGVD29, then the agency's own datum
-LAKE_DATUM = {"62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "the reservoir's own datum", "00062": "the reservoir's own datum"}
+LAKE_DATUM = {"62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
 
 
 def latest_band_note(srow, lv, word, when=""):

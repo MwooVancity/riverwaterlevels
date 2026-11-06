@@ -37,6 +37,8 @@ def kind_of(rel):
         return "country"
     if parts[0] == "river":
         return "hub" if len(parts) == 3 else "gauge"
+    if parts[0] == "lake":  # a lake page is a gauge page: every gauge check runs on it (review 2026-11-06)
+        return "gauge"
     return "trust"
 
 

@@ -56,7 +56,9 @@ def main():
         d, t = {}, None
         for code in LAKE_CODES if s in lakes else ("00060",):
             t = get(URL % (s, code))
-            d = parse(t, code) if t is not None else {}
+            if t is None:
+                break  # a failed call never falls through to another datum's statistics
+            d = parse(t, code)
             if d:
                 break
         if t is None:
@@ -65,7 +67,7 @@ def main():
         if not d:
             none.append(s)
             continue
-        json.dump({"d": d, "src": "USGS Water Data API statistics/v0 observationNormals (full period of record; differs from the legacy NWIS statistics kept for older gauges)"}, open(os.path.join(OUT, s + ".json"), "w"), separators=(",", ":"))
+        json.dump({"d": d, "code": code, "src": "USGS Water Data API statistics/v0 observationNormals (full period of record; differs from the legacy NWIS statistics kept for older gauges)"}, open(os.path.join(OUT, s + ".json"), "w"), separators=(",", ":"))
         got += 1
     print("stats: %d needed, %d downloaded, none published for: %s; download failed for: %s" % (len(todo), got, " ".join(none) or "none", " ".join(failed) or "none"))
 
