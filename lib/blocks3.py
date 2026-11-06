@@ -850,6 +850,24 @@ def b_world_peaks(G):
                  "Source: %s, %s, annual instantaneous peaks (HYDAT), last %d years on file; peaks the agency marks with a data symbol are left out." % (f["api"], f["name"], len(f["peaks"])), f["src"])
 
 
+def b_reservoir(G):
+    """How full a reservoir is, on the operator's or state's own basis (plan 2026-11-05 step 3). Texas: TWDB's daily estimate, whose percent is
+    conservation storage / conservation capacity; a percent is never shown without that basis named. No source for this lake: no block."""
+    t = G["rec"].get("twdb")
+    if not G.get("lake") or not t or not cleared("twdb"):
+        return None
+    age_h = (G["now"] - datetime.datetime.fromisoformat(t["date"] + "T12:00:00+00:00")).total_seconds() / 3600
+    rows = "".join(tr([a, b], right=(1,)) for a, b in (
+        ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
+        ("Conservation storage", "%s acre-ft" % fmtc(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),
+        ("Conservation capacity", "%s acre-ft" % fmtc(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
+        ("Surface area", "%s acres" % fmtc(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
+        ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
+    return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
+                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers." % esc(fdate(t["date"])),
+                 "twdb", amber=age_h > 72)
+
+
 def b_key_facts(G):
     """Facts that do not change by the hour, as plain sentences with their source: what Google's AI answers can quote without going stale (owner 2026-11-04).
     Never the live reading: a cached copy of it would read as today's level. Each sentence is built only from a value in this run's cache; none, no block."""

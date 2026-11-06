@@ -1257,6 +1257,22 @@ def fetch_uv(rec):
     return {"zip": z, "index": int(j[0]["UV_INDEX"]), "date": d, "fetched_at": now_iso()}
 
 
+LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
+
+
+def fetch_twdb(slug):
+    """Texas Water Development Board daily reservoir estimate (last 30 days file): its % of conservation capacity, storages and area.
+    TWDB defines percent_full = conservation storage / conservation capacity (header of the file); the page names that basis."""
+    rows = [l.split(",") for l in http_raw("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % slug, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
+    hd, last = rows[0], rows[-1]
+    r = dict(zip(hd, last))
+    if r.get("date", "")[:2] != "20" or not r.get("percent_full"):
+        raise RuntimeError("TWDB file parsed to nothing")
+    num = lambda k: float(r[k]) if r.get(k) not in (None, "", "NA") else None
+    return {"date": r["date"], "elev_ft": num("water_level"), "area_ac": num("surface_area"), "storage_af": num("reservoir_storage"), "cons_storage_af": num("conservation_storage"),
+            "pct_cons": num("percent_full"), "cons_cap_af": num("conservation_capacity"), "dead_pool_af": num("dead_pool_capacity"), "slug": slug, "fetched_at": now_iso()}
+
+
 def fetch_extras(site, rec, h, log):
     """Blocks added in the final-form pass. Each source is independent; a failure keeps the previous cached value."""
     lat, lon = rec["lat"], rec["lon"]
@@ -1269,6 +1285,7 @@ def fetch_extras(site, rec, h, log):
                     ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)), ("land", lambda: fetch_land(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("wqp", lambda: fetch_wqp(site)), ("uv", lambda: fetch_uv(rec)),
                     *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
+                    *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue

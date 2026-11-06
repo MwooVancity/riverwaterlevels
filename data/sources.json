@@ -472,6 +472,21 @@
    ],
    "evidence": "curl 2026-11-03 of datahub.metoffice.gov.uk/support/faqs (licence, attribution, commercial use, 360 calls a day). Field names (screenTemperature, probOfPrecipitation, windSpeed10m, windDirectionFrom10m, dayMaxScreenTemperature, nightMinScreenTemperature) from WebSearch of user integrations, to be proven by the first live run's 'met ... fields' log line; a field not found is left out, never guessed. Significant weather code table not read: no sky words shown.",
    "read_on": "2026-11-03"
+  },
+  {
+   "id": "twdb",
+   "name": "Texas Water Development Board, Water Data for Texas (reservoirs)",
+   "status": "quoted",
+   "terms_url": "https://www.waterdatafortexas.org/policies",
+   "summary": "TWDB freely grants permission to copy and distribute its materials and asks for acknowledgment; the reservoir file says its values are TWDB best estimates with no warranty.",
+   "credit": "Data: Texas Water Development Board, Water Data for Texas",
+   "blocks": [
+    "reservoir"
+   ],
+   "read_on": "2026-11-05",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   }
  ]
 }

@@ -235,6 +235,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_related": ("none: stations in the feed carry no upstream or downstream order", "have"), "b_nearby": ("have", "have"),
     "b_about": ("have", "have"),
     "b_key_facts": ("have", "have"),
+    "b_reservoir": ("none: shown for US reservoirs with a state or operator capacity basis; no Canadian lake feed in use publishes one", "none: PEGELONLINE publishes levels, not reservoir storage"),
     "b_map": (MAP, MAP),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
     "b_flood_stages": ("none: flood stages are provincial, with no national open feed", "none: flood stages are set by the states; shipping marks are in official marks"),
@@ -249,7 +250,7 @@ MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (own
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
-    "b_offline": "have", "b_key_facts": "have", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
+    "b_offline": "have", "b_key_facts": "have", "b_reservoir": "none: the EA publishes levels, not reservoir storage", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": "have",
