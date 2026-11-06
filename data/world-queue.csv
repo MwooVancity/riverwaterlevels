@@ -20009,3 +20009,5 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 20008,1,5000,great salt lake water level,Great Salt Lake,Saltair Boat Harbor,UT,US,10010000,,USGS,yes
 20009,1,50000,lake powell water level,Lake Powell,Glen Canyon Dam,AZ,US,09379900,,USGS,yes
 20010,1,50000,san diego tides,San Diego Bay,San Diego,CA,US,9410170,,USGS,yes
+20011,1,50000,norfolk tides,Sewells Point,Norfolk,VA,US,8638610,,USGS,yes
+20012,1,50000,myrtle beach tides,Springmaid Pier,Myrtle Beach,SC,US,8661070,,USGS,yes

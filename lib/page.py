@@ -117,7 +117,7 @@ def b_official_links(G):
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
     from lib.directory import STATE_NAMES  # here, not at the top: directory imports render
     for k, what in (("fish", "Fishing rules"), ("boat", "Boating rules")):  # owner 2026-10-29: the official state page an angler or boater needs next (data/state-rules.json, each URL from a search result and curl-checked)
-        e = (STATE_RULES.get(G["row"]["state"]) or {}).get(k)
+        e = None if G.get("coast") else (STATE_RULES.get(G["row"]["state"]) or {}).get(k)  # coast review: the state list holds the freshwater agency; saltwater rules are another agency's, not read yet
         if e:
             links.append(("%s in %s (%s)" % (what, STATE_NAMES.get(G["row"]["state"], G["row"]["state"]), e["agency"]), e["url"]))
     links.append(("This page's data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)" if G.get("coast") else "This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
@@ -333,7 +333,10 @@ def lake_words(h, G):
                      ("river access not confirmed", "shore access not confirmed"), ("Live gauge", "Live station"), ("this gauge", "this station"), ("the gauge location", "the station location"), ("from the gauge", "from the station"), ("Gauge location", "Station location"), ("this gauge's", "this station's"), ("this gauge&#x27;s", "this station&#x27;s"),
                      ("The National Weather Service publishes no flood stages for this station, so none are drawn.", ""), ("(USGS, NOAA National Weather Service)", "(NOAA CO-OPS, NOAA National Weather Service)")):
             h = h.replace(a, b)
-        h = re.sub(r"The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
+        h = re.sub(r"[^.<>]*the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
+        h = re.sub(r"Tides nearby at [^<\"]*, next two days", "Tide predictions at this NOAA station, next two days", h)
+        for a, b in (("gauge-local time", "station time"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
+            h = h.replace(a, b)
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
     return h
 

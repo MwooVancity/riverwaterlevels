@@ -1104,8 +1104,8 @@ def default_sites():
 
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "wqp", "uv", "dam_rise"}
-WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear"}  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
+DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise"}
+WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
 MONTHLY = {"access", "land"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
 
@@ -1234,19 +1234,26 @@ def fetch_wqp(site):
             sites[p["identifier"]] = p.get("name") or p["identifier"]
     rows = []
     if sites:
-        body = json.dumps({"siteid": list(sites), "characteristicName": ["Escherichia coli"], "startDateLo": (datetime.date.today() - datetime.timedelta(days=1095)).strftime("%m-%d-%Y"), "mimeType": "csv", "zip": "no"}).encode()
-        r = urllib.request.urlopen(urllib.request.Request("https://www.waterqualitydata.us/data/Result/search", data=body, headers={"Content-Type": "application/json", "Accept": "text/csv", "User-Agent": "riverwaterlevels.com"}), timeout=120)
+        # WQX 3.0 profile (ChatGPT audit 2026-11-06, proven live): the legacy /data/Result/search (WQX 2.2) has no USGS results after 2024-03-11;
+        # at Chattahoochee at Atlanta it returned 0 E. coli results since 2025 while WQX 3.0 returned 81, the newest from the day before
         import csv, io
-        seen = set()
-        for x in csv.DictReader(io.StringIO(r.read().decode("utf-8", "ignore"))):
-            v = x.get("ResultMeasureValue") or ""
+        seen, ids, text = set(), list(sites), ""
+        for i in range(0, len(ids), 40):  # 140 stations in one body answered "Request Entity Too Large" (Louisville); a failed chunk raises and the previous cache stays
+            if i:
+                _time.sleep(2)  # the portal's firewall answers 429 to bursts (seen 2026-11-06)
+            body = json.dumps({"siteid": ids[i:i + 40], "characteristicName": ["Escherichia coli"], "startDateLo": (datetime.date.today() - datetime.timedelta(days=1095)).strftime("%m-%d-%Y"), "mimeType": "csv", "dataProfile": "basicPhysChem"}).encode()
+            r = urllib.request.urlopen(urllib.request.Request("https://www.waterqualitydata.us/wqx3/Result/search", data=body, headers={"Content-Type": "application/json", "Accept": "text/csv", "User-Agent": "riverwaterlevels.com"}), timeout=120)
+            part = r.read().decode("utf-8", "ignore")
+            text += part if not text else part.partition("\n")[2]  # later chunks repeat the CSV header
+        for x in csv.DictReader(io.StringIO(text)):
+            v = x.get("Result_Measure") or ""
             if v == "ND" or not v:
-                v = x.get("ResultDetectionConditionText") or ""
-            k = (x["MonitoringLocationIdentifier"], x["ActivityStartDate"], v)
-            if not v or k in seen or not x.get("ActivityStartDate"):
+                v = x.get("Result_ResultDetectionCondition") or ""
+            k = (x.get("Location_Identifier"), x.get("Activity_StartDate"), v)
+            if not v or k in seen or not k[0] or not k[1]:
                 continue
             seen.add(k)
-            rows.append({"date": x["ActivityStartDate"], "value": v, "unit": "" if (x.get("ResultMeasure/MeasureUnitCode") or "").lower() == "none" else x.get("ResultMeasure/MeasureUnitCode") or "", "site": sites.get(k[0], k[0]), "id": k[0]})
+            rows.append({"date": k[1], "value": v, "unit": "" if (x.get("Result_MeasureUnit") or "").lower() == "none" else x.get("Result_MeasureUnit") or "", "site": sites.get(k[0], x.get("Location_Name") or k[0]), "id": k[0], "status": x.get("Result_MeasureStatusIdentifier") or ""})
         rows.sort(key=lambda r: r["date"], reverse=True)
     return {"fetched_at": now_iso(), "n_sites": len(sites), "rows": rows[:3]}
 
@@ -2245,27 +2252,37 @@ def fetch_census():
     prev = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
     if not daily_due(prev.get("fetched_at")):
         return
-    base = "https://waterservices.usgs.gov/nwis/site/?format=rdb&siteStatus=active&hasDataTypeCd=iv&stateCd=%s&parameterCd="
-    flow, level, unknown = set(), {}, []
-    for st in sorted(STATE_FIPS) + ["PR"]:
-        try:
-            for pc, into in (("00060", None), ("00065,62614,62615,72020,00062,72279", level)):
-                rows = [l.split("	") for l in http_raw(base % st + pc, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
-                hd = rows[0] if rows else []
-                for r in rows[2:]:
-                    d = dict(zip(hd, r))
-                    if into is None:
-                        flow.add(d["site_no"])
-                    else:
-                        into[d["site_no"]] = d.get("site_tp_cd") or ""
-        except Exception as e:
-            if "404" not in str(e):  # USGS answers 404 when a state has no site of that kind
-                unknown.append(st)
+    # USGS Water Data API (waterservices.usgs.gov retires Q1 2027): every site with a reading in the last 30 days, nationally, in about 3 calls
+    # (2026-11-06: 8,918 flow sites, 11,603 with a level), then the site type of the level-only ones, 300 ids a call (about 10 calls)
+    h, unknown = usgs_headers(), []
+    def ids(pc):
+        url, got, pages = BASE + "latest-continuous/items?parameter_code=%s&time=P30D&skipGeometry=true&properties=monitoring_location_id&limit=10000&f=json" % pc, set(), 0
+        while url and pages < 10:
+            d = http_json(url, h, 180)
+            pages += 1
+            got |= {str(f["properties"]["monitoring_location_id"])[5:] for f in d.get("features", [])}
+            url = next((l.get("href") for l in d.get("links", []) if l.get("rel") == "next"), None)
+        if url:
+            raise RuntimeError("census page cap reached")
+        return got
+    try:
+        flow = ids("00060")
+        lv = ids("00065,62614,62615,72020,00062,72279")
+        only = sorted(lv - flow)
+        level = {s: "" for s in lv & flow}
+        for i in range(0, len(only), 300):
+            for f in http_json(BASE + "monitoring-locations/items?id=%s&properties=monitoring_location_number,site_type_code&skipGeometry=true&limit=500&f=json" % ",".join("USGS-" + s for s in only[i:i + 300]), h, 120).get("features", []):
+                level[f["properties"]["monitoring_location_number"]] = f["properties"].get("site_type_code") or ""
+        level.update({s: "" for s in only if s not in level})  # a site the location call did not return counts as level-only, never as zero
+    except Exception as e:  # the whole national count is Unknown, never a partial number read as the truth
+        print("census FAILED", str(e)[:100])
+        return
     built = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     out = {"fetched_at": now_iso(), "usgs": dict(census.classify(flow, level, built), unknown=unknown)}
     try:
         n = len(json.loads(http_raw("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=waterlevels", 60))["stations"])
-        out["noaa_tides"] = {"tidal": n, "built": 0, "code_cannot": n}
+        nb = len(built & COASTS)  # coast pages since 2026-11-06
+        out["noaa_tides"] = {"tidal": n, "built": nb, "code_cannot": n - nb}
     except Exception as e:
         out["noaa_tides"] = {"unknown": str(e)[:80]}
     json.dump(out, open(path + ".tmp", "w", encoding="utf-8"))
