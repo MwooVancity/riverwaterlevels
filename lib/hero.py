@@ -15,7 +15,7 @@ def ctx(site, row, rec, now):
     fl, sg = series(rec, "00060"), series(rec, "00065")
     lake = None
     if not sg or row.get("lake"):  # a lake or reservoir: the page lives on the elevation USGS publishes, with its datum named (plan 2026-11-05 step 1)
-        lake = next((c for c in LAKE_CODES if series(rec, c)), None)
+        lake = next((c for c in (("MLLW",) if row.get("coast") else LAKE_CODES) if series(rec, c)), None)  # a coast page lives on the NOAA water level above MLLW
         sg = series(rec, lake) if lake else sg
     if row.get("lake") and not lake:  # lake review #11: a /lake/ address never carries a river page
         raise CriticalFail("lake listed in data/lakes.csv but USGS publishes no lake elevation")
@@ -60,7 +60,8 @@ def ctx(site, row, rec, now):
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     out["stage_only"] = stage_only
-    out["lake"] = lake  # USGS parameter code of the lake elevation, or None
+    out["lake"] = lake
+    out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
     day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None
     out["stage_chg"] = sg[-1][1] - day_ago[1] if day_ago and abs((day_ago[0] - sg[-1][0]).total_seconds() + 86400) <= 7200 else None  # no flow, so the 24 h change is in height
@@ -235,6 +236,18 @@ def strip_dir_word(chip):
     return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
 
 
+def coast_anomaly(G):
+    """(word, caption) comparing the latest NOAA water level with NOAA's predicted tide for the same 6-minute time; our calculation, said so.
+    Within 0.25 ft reads 'Close to predicted'. None when no prediction matches the reading's time."""
+    pr = dict((parse_t(t), v) for t, v in ((G["rec"].get("coops") or {}).get("pred") or []))
+    if not G["sg"] or G["sg"][-1][0] not in pr:
+        return None
+    t, v = G["sg"][-1][0], G["sg"][-1][1]
+    d = v - pr[t]
+    word = "Close to predicted" if abs(d) < 0.25 else "Above predicted" if d > 0 else "Below predicted"
+    return word, "Observed %.2f ft against NOAA's predicted tide of %.2f ft at %s: %+.2f ft (our calculation)." % (v, pr[t], tzl(t, G["zone"], date=False), d)
+
+
 def beyond(srow, v, unit="cfs"):
     """('above 90th', caption) or ('below 25th', caption) when the reading is past the highest or lowest percentile USGS publishes for this date; else None.
     Bogachiel 2026-11-03: in flood, 95th not published, the page wrongly said no statistics existed. Lake Powell 2026-11-06: only the 25th to 75th published."""
@@ -268,7 +281,7 @@ def hero(G, pages=None):
         if G.get("lake"):
             cap += "" if G["row"].get("natural") else " An operator raises and lowers a reservoir on purpose; this compares with past years, not with the operator's target."  # Great Salt Lake has no operator
     else:
-        pct_med, cap = "", "" if G["feed"] else out_[1] if out_ else "No percentile: no published statistics for this date."
+        pct_med, cap = "", "" if G["feed"] or G.get("coast") else out_[1] if out_ else "No percentile: no published statistics for this date."
     sg = G["sg"]
     stage_txt = ("%.2f" % sg[-1][1]) if sg else "–"
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
@@ -290,6 +303,10 @@ def hero(G, pages=None):
     bcls = band_cls(p) and "b-" + band_cls(p)
     if G["feed"]:
         tiles = ""  # this agency publishes level only: no flow tile to explain
+    elif G.get("coast"):  # a coast page leads with the next NOAA tide prediction (predictions, never readings)
+        nx = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if parse_t(x[0]) > G["now"]]
+        tiles = ui.tile("flow", "flow", "Next tide (NOAA prediction)", ('%s <small>%.1f ft</small>' % ("High" if nx[0][2] == "H" else "Low", nx[0][1])) if nx else "Unknown",
+                        ("<small>%s, above MLLW. A prediction, not a reading.</small>" % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction in the cache for the coming hours.</small>")
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
         tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % fmtc(st_[-1][1])) if st_ else "Not published",
@@ -310,8 +327,11 @@ def hero(G, pages=None):
         else:
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
+    an_ = coast_anomaly(G) if G.get("coast") and p is None else None
     if p is None:
         word, plain = G["feed"].get("label") or (band_word(int(re.sub(r"\D", "", out_[0])) + (0.5 if out_[0].startswith("above") else -0.5)) if out_ else "–"), G["feed"].get("label_note") or ""  # lake review 2026-11-06: past the published range read "–" beside a caption that compares
+        if an_:
+            word, plain = an_
     else:
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
@@ -456,7 +476,7 @@ def hero(G, pages=None):
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
-    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else "No past-years comparison for this date"
+    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s now" % norm_word) if an_ else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (

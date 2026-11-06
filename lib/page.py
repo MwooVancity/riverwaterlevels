@@ -111,7 +111,7 @@ def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
     lid = n.get("lid")
-    links = [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
+    links = [("NOAA Tides and Currents page for this station", "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % G["site"])] if G.get("coast") else [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
@@ -120,7 +120,7 @@ def b_official_links(G):
         e = (STATE_RULES.get(G["row"]["state"]) or {}).get(k)
         if e:
             links.append(("%s in %s (%s)" % (what, STATE_NAMES.get(G["row"]["state"], G["row"]["state"]), e["agency"]), e["url"]))
-    links.append(("This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
+    links.append(("This page's data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)" if G.get("coast") else "This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
     links.append(("Put this gauge's live panel on your own site (free embed, links back here)", "/embed" + G["row"]["dashboard_url"]))
     body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)
     return block("official_links", "Official pages for this gauge", "agency", body, "Source: links to the agencies that publish the data on this page (USGS, NOAA National Weather Service); they open in a new tab.", "usgs")
@@ -193,7 +193,7 @@ def sources_block(blocks, G):
         for sid in [b["src_id"]] + list(b.get("also") or []):
             if sid not in ids:
                 ids.append(sid)
-    if "usgs" not in ids:
+    if "usgs" not in ids and not G.get("coast"):
         ids.insert(0, "usgs")
     lis = ""
     for i in ids:
@@ -201,7 +201,7 @@ def sources_block(blocks, G):
         lis += '<li>%s. <a href="%s" rel="noopener">Terms</a></li>' % (esc((s.get("credit") or s["name"]).rstrip(".")), esc(s["terms_url"]))
     stats_src = G["rec"].get("stats_source")
     return ('<details class="card fold srcall" data-g="data" id="sources"><summary><b>Sources and method</b><span>%d data sources, how the percentile is calculated, disclaimer</span></summary><ul>%s</ul><p class="src">%s</p><p class="src">Percentile method: %s.</p><p class="src">%s</p></details>' % (
-        len(ids), lis, esc(humanize_iso(stats_src) if stats_src else "USGS daily statistics: not available for this gauge."), esc(G["method"]), esc(DISCLAIMER)))
+        len(ids), lis, esc(humanize_iso(stats_src) if stats_src else "Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation." if G.get("coast") else "USGS daily statistics: not available for this gauge."), esc(G["method"]), esc(DISCLAIMER)))
 
 
 # the age chip in the browser: the same text and rounding as age_text() in lib/core.py; worker/index.js carries this exact line (check.py --selftest)
@@ -323,6 +323,17 @@ def lake_words(h, G):
                  ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), ("Level, flow and flood risk", "Lake level and flood risk"),
                  ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
         h = h.replace(a, b)
+    if G.get("coast"):  # a coast page: the lake path's words in coast words, and the reading's source is NOAA CO-OPS, never USGS
+        for a, b in (("water level and elevation", "tide times, water level and water temperature"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
+                     ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings.", "Solid line: NOAA readings (preliminary)."), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
+                     ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Water levels are preliminary until NOAA verifies them."),
+                     ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "The National Weather Service has no forecast point for this station. NOAA tide predictions are under Tides."),
+                     ("Lake elevation", "Water level"), ("lake elevation", "water level"), ("Weather at the lake", "Weather at the coast"), ("Lake level and flood risk", "Water level and coastal flood risk"), ("near this lake", "near this station"),
+                     ("Latest USGS water level", "Latest NOAA water level"), (" Predictions, not observations; the river level here also depends on flow from upstream.", " Predictions, not observations."),
+                     ("river access not confirmed", "shore access not confirmed"), ("(USGS, NOAA National Weather Service)", "(NOAA CO-OPS, NOAA National Weather Service)")):
+            h = h.replace(a, b)
+        h = re.sub(r"The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
+        h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
     return h
 
 
@@ -392,6 +403,10 @@ def build_tab(tab, G, pages):
     blocks = merge_charts(blocks)
     flat = [x for b in blocks for x in (b if isinstance(b, list) else [b])]
     shown = [b for b in flat if isinstance(b, dict)]
+    if G.get("coast"):  # the readings on a coast page are NOAA CO-OPS; USGS stays only where it is the real source (protected areas, topo map)
+        for b in shown:
+            if b["src_id"] == "usgs" and b["id"] not in ("public_land", "gauge_map"):
+                b["src_id"] = "coops"
     if G["age_min"] > stale_after("usgs") * 60:  # break test 2026-10-28: a gauge not reporting for 3 h wears no live badge on any block
         for b in shown:
             if b["tag"] == "live" and b["id"] not in ("related_gauges", "nearby_gauges"):

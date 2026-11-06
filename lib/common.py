@@ -236,7 +236,7 @@ def band_glossary():
 
 
 LAKE_CODES = ("62614", "62615", "72020", "00062")  # NGVD29 first (the datum Reclamation and USACE quote pools in: Powell 3,700 ft full pool), then NAVD88, then the gauge datum
-LAKE_DATUM = {"62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
+LAKE_DATUM = {"MLLW": "mean lower low water (MLLW, NOAA tidal datum at this station)", "62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
 
 
 def lake_datum(G):

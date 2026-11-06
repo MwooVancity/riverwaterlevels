@@ -321,11 +321,11 @@
   },
   {
    "id": "coops",
-   "name": "NOAA CO-OPS tide predictions (api.tidesandcurrents.noaa.gov)",
+   "name": "NOAA CO-OPS water levels, water temperature and tide predictions (api.tidesandcurrents.noaa.gov)",
    "status": "quoted",
    "terms_url": "https://tidesandcurrents.noaa.gov/disclaimers.html",
    "summary": "CO-OPS disclaimers: 'The information on government servers are in the public domain'; content 'shall not be modified in content and then presented as official government material'; 'NOS requests that attribution be given whenever NOS material is reproduced and re-disseminated.' Nearest station: list stations.json?type=tidepredictions and pick nearest by distance.",
-   "credit": "Tide predictions: NOAA National Ocean Service, CO-OPS",
+   "credit": "Data: NOAA National Ocean Service, CO-OPS",
    "blocks": [
     "tides"
    ],

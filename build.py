@@ -157,7 +157,7 @@ def main():
         ser = lambda code: [[r["time"], float(r["value"])] for r in ur if r["parameter_code"] == code and r.get("value") not in (None, "")]
         my = G["rec"].get("multiyear") or {}
         json.dump({"site": s, "name": river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], "page": SITE_URL + meta["url"], "observed": iso(G["lt"]), "units": {"flow": "cfs", "stage": "ft"}, "flow_7d": ser("00060"), "stage_7d": ser("00065"), **({"lake_elevation_7d": ser(G["lake"]), "storage_7d": ser("00054"), "lake_units": {"lake_elevation": "ft above " + lake_datum(G), "storage": "acre-ft"}} if G.get("lake") else {}),
-                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "USGS Water Data API, provisional data subject to revision", "credit": "U.S. Geological Survey", "built_at": iso(now)},
+                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else "U.S. Geological Survey", "built_at": iso(now)},
                   open(os.path.join(nxt, meta["url"].strip("/"), "data.json"), "w"), separators=(",", ":"))
         block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})

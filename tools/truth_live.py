@@ -76,7 +76,7 @@ def main():
         carried = {"/" + r.rsplit("index.html", 1)[0] for r in (json.load(open(os.path.join(LOCAL, "_carried.json"))) if LOCAL else [])}
     except (OSError, ValueError):
         carried = set()
-    urls = [u for _, u, *_ in gauges if u.startswith(("/river/", "/lake/"))]  # gauges outside the US: tools/truth_world.py checks them against their own feed
+    urls = [u for _, u, *_ in gauges if u.startswith(("/river/", "/lake/"))]  # coast pages: NOAA CO-OPS, checked below against CO-OPS  # gauges outside the US: tools/truth_world.py checks them against their own feed
     if not LOCAL and len(urls) > SAMPLE:
         k = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) * SAMPLE % len(urls)
         urls = (urls + urls)[k:k + SAMPLE]
@@ -109,6 +109,22 @@ def main():
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)},
                                # derived NWS sentences: "NWS action stage X ft (D ft above the latest reading)", "Next NWS impact at X ft (D ft above the NWS reading of R ft, ...)"
                                "derived": set(re.findall(r"(?:NWS (action|minor|moderate|major) stage|Next NWS impact at) ([\d.\-]+) ft \(([\d.]+) ft (above|below) (?:the latest reading|the NWS reading of ([\d.\-]+) ft)", h))}
+    for u in [u for _, u, *_ in gauges if u.startswith("/coast/")]:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
+        h = page(u)
+        sid, st_, t_ = re.search(r"NOAA tide station (\d+)", h), re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
+        if not (sid and st_ and t_):
+            bad.append("%s: cannot read station, water level or time from the page" % u)
+            continue
+        try:
+            d = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=MLLW&date=latest&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % sid.group(1)))["data"][-1]
+        except Exception as e:
+            (skipped if LOCAL else bad).append("%s: NOAA CO-OPS did not answer (%s)" % (u, str(e)[:60]))
+            continue
+        nt, pt = datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"), datetime.datetime.fromisoformat(t_.group(1))
+        if nt == pt and abs(float(d["v"]) - float(st_.group(1))) > 0.02:
+            bad.append("%s: water level %s on the page, %s at NOAA for the same time" % (u, st_.group(1), d["v"]))
+        elif (nt - pt).total_seconds() / 3600 > STALE_FAIL_H:
+            bad.append("%s: page is more than %d h behind NOAA" % (u, STALE_FAIL_H))
     ids = sorted(pages)
     latest = {}
     failed_ids = set()

@@ -19,7 +19,7 @@ def main():
     if "--pull" in sys.argv:
         gone = [a for a in sys.argv[sys.argv.index("--pull") + 1:]]
         cfg["allow"] = [u for u in cfg["allow"] if u not in gone]
-        cfg["pulled"] = sorted(set(cfg.get("pulled") or []) | {u for u in gone if not u.startswith(("/river/", "/lake/"))})  # a world page is not on the allow list: it is pulled by name
+        cfg["pulled"] = sorted(set(cfg.get("pulled") or []) | {u for u in gone if not u.startswith(("/river/", "/lake/", "/coast/"))})  # a world page is not on the allow list: it is pulled by name
         json.dump(cfg, open(IX, "w", encoding="utf-8"), indent=1)
         print("pulled %d page(s); %d remain allowed. Deploy to take effect." % (len(gone), len(cfg["allow"])))
         return
@@ -47,7 +47,9 @@ def main():
             skipped["few blocks"] += 1
             stuck.append("%s: %d blocks (minimum %d)" % (u, blocks.get(u, 0), MIN_BLOCKS))
             continue
-        if u.startswith("/lake/"):  # lakes are not in pages-all.csv: the record is the years behind the USGS statistics the page compares with (Powell 7)
+        if u.startswith("/coast/"):  # a coast page compares with NOAA's tide predictions, not a multi-year record
+            pass
+        elif u.startswith("/lake/"):  # lakes are not in pages-all.csv: the record is the years behind the USGS statistics the page compares with (Powell 7)
             try:
                 yrs_ = max(v[0] for v in json.load(open(os.path.join(ROOT, "legacy", "stats", row["site"] + ".json")))["d"].values())
             except (OSError, ValueError, KeyError):
