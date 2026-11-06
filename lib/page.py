@@ -330,7 +330,8 @@ def lake_words(h, G):
                      ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "The National Weather Service has no forecast point for this station. NOAA tide predictions are under Tides."),
                      ("Lake elevation", "Water level"), ("lake elevation", "water level"), ("Weather at the lake", "Weather at the coast"), ("Lake level and flood risk", "Water level and coastal flood risk"), ("near this lake", "near this station"),
                      ("Latest USGS water level", "Latest NOAA water level"), (" Predictions, not observations; the river level here also depends on flow from upstream.", " Predictions, not observations."),
-                     ("river access not confirmed", "shore access not confirmed"), ("(USGS, NOAA National Weather Service)", "(NOAA CO-OPS, NOAA National Weather Service)")):
+                     ("river access not confirmed", "shore access not confirmed"), ("Live gauge", "Live station"), ("this gauge", "this station"), ("the gauge location", "the station location"), ("from the gauge", "from the station"), ("Gauge location", "Station location"), ("this gauge's", "this station's"), ("this gauge&#x27;s", "this station&#x27;s"),
+                     ("The National Weather Service publishes no flood stages for this station, so none are drawn.", ""), ("(USGS, NOAA National Weather Service)", "(NOAA CO-OPS, NOAA National Weather Service)")):
             h = h.replace(a, b)
         h = re.sub(r"The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)

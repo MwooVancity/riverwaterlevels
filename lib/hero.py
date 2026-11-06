@@ -236,6 +236,12 @@ def strip_dir_word(chip):
     return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
 
 
+def _nt_txt(G):
+    """The answer strip's coast part: the next NOAA predicted high or low, its time (the tide tile says the same)."""
+    nx = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if parse_t(x[0]) > G["now"]]
+    return ("%s %.1f ft at %s" % ("high" if nx[0][2] == "H" else "low", nx[0][1], tzl(parse_t(nx[0][0]), G["zone"], date=False))) if nx else "Unknown"
+
+
 def coast_anomaly(G):
     """(word, caption) comparing the latest NOAA water level with NOAA's predicted tide for the same 6-minute time; our calculation, said so.
     Within 0.25 ft reads 'Close to predicted'. None when no prediction matches the reading's time."""
@@ -357,7 +363,9 @@ def hero(G, pages=None):
         tiles += ui.tile("trend dv " + word.lower(), ico, "Gage height, last 6 h", '%s%.2f <small>ft</small> <small class="word">%s</small>' % ("+" if d6 > 0 else "", d6, word),
                          '<small id="ccap">Flow readings here swing between %s and %s cfs within 24 h and do not move with the gage height (correlation %.2f), so the flow is not a reliable direction and the gage height is used.</small>' % (fmtc(lo_), fmtc(hi_), rg_))
     else:
-        if G.get("stage_chg") is not None:
+        if G.get("coast"):
+            pass  # coast review 2026-11-06: a 24 h change compares two tide phases and says nothing; the tide tiles carry what is coming
+        elif G.get("stage_chg") is not None:
             sc = G["stage_chg"]
             sc_txt = {"cm": "%+.0f <small>cm</small>" % (sc * 30.48), "m": "%+.2f <small>m</small>" % (sc / 3.28084)}.get(G["feed"].get("unit"), "%+.2f <small>ft</small>" % sc)
             tiles += ui.tile("trend", "steady", "24 h change", sc_txt, '<small id="ccap">Height against the reading 24 hours earlier</small>')
@@ -388,7 +396,7 @@ def hero(G, pages=None):
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     if G["offline"] and not G["osc"]:
         dir_chip = "Trend unknown (gauge not reporting)"
-    norm_html = ui.tile("norm", "map", "Is this normal for %s?" % md(G["ldate"]), norm_word,
+    norm_html = ui.tile("norm", "map", "Compared with NOAA's predicted tide" if G.get("coast") else "Is this normal for %s?" % md(G["ldate"]), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
     trend_html = tiles[len(pre):]
@@ -433,6 +441,11 @@ def hero(G, pages=None):
         strip += ui.tile("fcst none", "crest", "River forecast", "Out of date", '<small>The latest NWS forecast for point %s is old or not in feet, so it is not shown. The weather forecast below is not a river forecast.</small>' % esc(nwl))
     elif nwl:
         strip += ui.tile("fcst none", "crest", "River forecast", "Not issued", '<small>NWS %s has no current river forecast. The weather forecast below is not a river forecast.</small>' % esc(nwl))
+    elif G.get("coast"):  # coast review 2026-11-06: a dead river tile; today's NOAA tide predictions answer "what is coming"
+        loc = lambda x: parse_t(x[0]).astimezone(G["zone"])
+        today = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if loc(x).date() == G["now"].astimezone(G["zone"]).date()]
+        strip += ui.tile("fcst", "crest", "Today's tides (NOAA prediction)", " ".join('%s <small>%s %.1f ft</small>' % (loc(x).strftime("%-I:%M %p").lower() if os.name != "nt" else loc(x).strftime("%I:%M %p").lstrip("0").lower(), "high" if x[2] == "H" else "low", x[1]) for x in today) or "Unknown",
+                         "<small>Times %s; heights above MLLW. Predictions, not readings.</small>" % esc(loc(today[0]).strftime("%Z")) if today else "<small>No NOAA prediction for today in the cache.</small>")
     else:
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.</small>')
     if c["alerts"] is not None and not c["alerts"]["n"] and c["alerts"].get("age_h") is not None and c["alerts"]["age_h"] > stale_after("alerts"):  # a fresh answer is said by the answer line and the alerts block; only an old or missing answer gets a tile
@@ -480,7 +493,7 @@ def hero(G, pages=None):
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
-        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or feed_chg or "Direction unclear"), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     if c["rain"]:
         rn_ = c["rain"]
         if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"
