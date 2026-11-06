@@ -882,7 +882,13 @@ def fetch_daily(site, h):
             except (KeyError, TypeError, ValueError):
                 pass
         return len(feats)
-    if pull("") >= 50000:  # the API answers at most 50,000 rows, in no time order, and refuses paging past that: a record that long (St. Louis since 1861) is pulled in 40-year windows instead
+    old = json.load(gzip.open(p, "rt")) if os.path.exists(p) else []
+    if old:  # only what changed (owner 2026-11-06): keep the stored record and re-pull the last 400 days, the window in which USGS still revises provisional values
+        cut = (datetime.date.today() - datetime.timedelta(days=400)).isoformat()
+        if not pull("&time=%s/%s" % (cut, datetime.date.today().isoformat())):
+            return old  # an empty answer is an outage, never a reason to drop the last 400 days
+        rows = [r for r in old if r[0] < cut] + rows
+    elif pull("") >= 50000:  # the API answers at most 50,000 rows, in no time order, and refuses paging past that: a record that long (St. Louis since 1861) is pulled in 40-year windows instead
         rows = []
         for y in range(1850, datetime.date.today().year + 1, 40):
             pull("&time=%d-01-01/%d-12-31" % (y, min(y + 39, datetime.date.today().year)))
