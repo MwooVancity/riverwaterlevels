@@ -867,7 +867,7 @@ def b_reservoir(G):
         ("Surface area", "%s acres" % fmtc(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
     return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
-                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers. TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % (esc(fdate(t["date"])), LAKE_DATUM.get(G["lake"], "the reservoir's own datum")),
+                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers. TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % (esc(fdate(t["date"])), lake_datum(G)),
                  "twdb", amber=age_h > 72)
 
 

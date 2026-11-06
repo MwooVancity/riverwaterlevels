@@ -235,8 +235,19 @@ def band_glossary():
             "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
 
 
-LAKE_CODES = ("62615", "62614", "72020", "00062")  # NAVD88 first, then NGVD29, then the agency's own datum
+LAKE_CODES = ("62614", "62615", "72020", "00062")  # NGVD29 first (the datum Reclamation and USACE quote pools in: Powell 3,700 ft full pool), then NAVD88, then the gauge datum
 LAKE_DATUM = {"62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
+
+
+def lake_datum(G):
+    """What a lake elevation is measured above. 00062 is above the gauge datum, so the gauge's own altitude and datum from USGS are named
+    (Lanier 0.0 ft NAVD88, Hartwell -0.04 ft NAVD88); without that metadata it says the gauge datum, never a guessed sea-level datum."""
+    if G.get("lake") != "00062":
+        return LAKE_DATUM.get(G.get("lake"), "the reservoir's own datum")
+    loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
+    if loc.get("altitude") is not None and loc.get("vertical_datum"):
+        return "the gauge datum (USGS lists it at %s ft %s)" % (("%.2f" % loc["altitude"]).rstrip("0").rstrip("."), loc["vertical_datum"])
+    return "the gauge datum"
 
 
 def latest_band_note(srow, lv, word, when=""):

@@ -236,15 +236,23 @@ def strip_dir_word(chip):
 
 
 def beyond(srow, v, unit="cfs"):
-    """('above 90th' or 'below 10th', caption) when the flow is past the highest or lowest percentile USGS publishes for this date and the 5th or 95th is not published; else None.
-    Bogachiel 2026-11-03: in flood, 95th not published, the page wrongly said no statistics existed."""
+    """('above 90th', caption) or ('below 25th', caption) when the reading is past the highest or lowest percentile USGS publishes for this date; else None.
+    Bogachiel 2026-11-03: in flood, 95th not published, the page wrongly said no statistics existed. Lake Powell 2026-11-06: only the 25th to 75th published."""
     if not srow or v is None:
         return None
-    if srow[8] is not None and v > srow[8]:
-        return "above 90th", "Above the 90th percentile (%s %s), the highest USGS publishes for this date, from %d years." % (fmtc(srow[8]) if unit == "cfs" else "%.2f" % srow[8], unit, srow[0])
-    if srow[2] is not None and v < srow[2]:
-        return "below 10th", "Below the 10th percentile (%s %s), the lowest USGS publishes for this date, from %d years." % (fmtc(srow[2]) if unit == "cfs" else "%.2f" % srow[2], unit, srow[0])
+    pub = [(PCT_SLOT[i], srow[i]) for i in range(1, 10) if srow[i] is not None]
+    if not pub:
+        return None
+    show = lambda x: fmtc(x) if unit == "cfs" else "%.2f" % x
+    (lp, lo), (hp, hi) = pub[0], pub[-1]
+    if v > hi:
+        return "above %s" % ordinal(hp), "Above the %s percentile (%s %s), the highest USGS publishes for this date, from %d years." % (ordinal(hp), show(hi), unit, srow[0])
+    if v < lo:
+        return "below %s" % ordinal(lp), "Below the %s percentile (%s %s), the lowest USGS publishes for this date, from %d years." % (ordinal(lp), show(lo), unit, srow[0])
     return None
+
+
+PCT_SLOT = {1: 5, 2: 10, 3: 20, 4: 25, 5: 50, 6: 75, 7: 80, 8: 90, 9: 95}  # srow index -> percentile (years first, as in tools/fetch_stats.py)
 
 
 def hero(G, pages=None):

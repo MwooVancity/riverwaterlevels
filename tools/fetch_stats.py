@@ -10,7 +10,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "legacy", "stats")
 SLOT = ["5", "10", "20", "25", "50", "75", "80", "90", "95"]
 URL = "https://api.waterdata.usgs.gov/statistics/v0/observationNormals?monitoring_location_id=USGS-%s&parameter_code=%s&computation_type=percentile"
-LAKE_CODES = ("62615", "62614", "72020", "00062")  # same order as lib/common.py: a lake is compared on its elevation
+sys.path.insert(0, ROOT)
+from lib.common import LAKE_CODES  # one order for the page and its statistics: a lake is compared on the elevation it shows
 
 
 def get(u):

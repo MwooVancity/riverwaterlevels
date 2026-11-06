@@ -304,7 +304,7 @@ INDEX_CFG = None  # set by build.py from data/index-allow.json
 
 def lake_words(h, G):
     """A lake page in lake words (plan 2026-11-05 step 1). The elevation is height above a named datum, never "the gauge's zero point": that line would be false here."""
-    d = LAKE_DATUM.get(G["lake"], "the reservoir's own datum")
+    d = lake_datum(G)
     al = re.search(r'<section class="card blk[^"]*" data-f="[^"]*" id="alerts">.*?</section>', h, re.S)  # lake review #13: quoted NWS alert text is never reworded
     if al:
         return lake_words(h[:al.start()], G) + al.group(0) + lake_words(h[al.end():], G)
