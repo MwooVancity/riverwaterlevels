@@ -235,6 +235,10 @@ def band_glossary():
             "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
 
 
+LAKE_CODES = ("62615", "62614", "72020", "00062")  # NAVD88 first, then NGVD29, then the agency's own datum
+LAKE_DATUM = {"62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "the reservoir's own datum", "00062": "the reservoir's own datum"}
+
+
 def latest_band_note(srow, lv, word, when=""):
     """' The latest reading, X cfs, is <band>.' when the latest reading sits in another band than the 24 h average the headline judges; else ''.
     Audit 2026-11-05: Louisville read "Typical for this date" beside +168% in 24 h."""

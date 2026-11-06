@@ -4,13 +4,13 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 """
 import collections
 import email.utils
-import os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
+import csv, os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib import wx
 import zoneinfo
 
-CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480"
+CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054"  # last five: lake elevation (NGVD29, NAVD88, two above-datum codes) and storage
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
@@ -2303,6 +2303,8 @@ def main():
         c = l.split("\t")
         if len(c) > 10 and c[1]:
             inv[c[1]] = {"lat": c[4], "lon": c[5], "name": c[2]}
+    for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")):  # lakes are not in the legacy river inventory
+        inv[r["site"]] = {"lat": r["lat"], "lon": r["lon"], "name": r["raw_name"]}
     os.makedirs(CACHE, exist_ok=True)
     sites = [a for a in sys.argv[1:] if not a.startswith("--")]
     if "--print-sites" in sys.argv:  # collect-shadow.yml: which gauges this shard owns

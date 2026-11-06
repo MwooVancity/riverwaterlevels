@@ -13,6 +13,10 @@ def ctx(site, row, rec, now):
     tzname = usgs_tz(rec) or rec.get("tz") or "UTC"
     zone = zoneinfo.ZoneInfo(tzname)
     fl, sg = series(rec, "00060"), series(rec, "00065")
+    lake = None
+    if not sg:  # a lake or reservoir: the page lives on the elevation USGS publishes, with its datum named (plan 2026-11-05 step 1)
+        lake = next((c for c in LAKE_CODES if series(rec, c)), None)
+        sg = series(rec, lake) if lake else sg
     # ice: USGS withholds flow for weeks and keeps the stage (1,922 gauges in cold states); the page lives on the stage, never on an old flow
     month = datetime.timedelta(days=30)
     stage_only = bool(sg) and now - sg[-1][0] < month and (not fl or now - fl[-1][0] > month)
@@ -53,6 +57,7 @@ def ctx(site, row, rec, now):
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     out["stage_only"] = stage_only
+    out["lake"] = lake  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
     day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None
     out["stage_chg"] = sg[-1][1] - day_ago[1] if day_ago and abs((day_ago[0] - sg[-1][0]).total_seconds() + 86400) <= 7200 else None  # no flow, so the 24 h change is in height
@@ -272,6 +277,10 @@ def hero(G, pages=None):
     bcls = band_cls(p) and "b-" + band_cls(p)
     if G["feed"]:
         tiles = ""  # this agency publishes level only: no flow tile to explain
+    elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
+        st_ = series(G["rec"], "00054")
+        tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % fmtc(st_[-1][1])) if st_ else "Not published",
+                        ("<small>Water stored in the reservoir, USGS, %s</small>@@DIR@@" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>@@DIR@@")
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:

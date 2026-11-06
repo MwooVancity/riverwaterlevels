@@ -13,6 +13,9 @@ def slug(s):
 
 def load_effective():
     rows = {r["site"]: dict(r) for r in csv.DictReader(open(os.path.join(DATA, "pages-all.csv"), encoding="utf-8"))}
+    for r in csv.DictReader(open(os.path.join(DATA, "lakes.csv"), encoding="utf-8")):  # lakes and reservoirs (plan 2026-11-05 step 1): one page per lake at /lake/<name>/
+        rows[r["site"]] = {"wave": "", "site": r["site"], "state": r["state"], "river": r["lake"], "place": r["place"], "name_confidence": "human", "score": "0", "years_record": "", "nws_lid": "",
+                           "drainage_sqmi": "", "raw_name": r["raw_name"], "lake": "1"}
     ov = {r["site"]: r for r in csv.DictReader(open(os.path.join(DATA, "name-overrides.csv"), encoding="utf-8"))}
     fx_p = os.path.join(DATA, "name-fixes.csv")  # name cleaner v2 (tools/clean_names.py): low-confidence names it could read; human overrides win, live gauges are never renamed
     fx = {r["site"]: r for r in csv.DictReader(open(fx_p, encoding="utf-8"))} if os.path.exists(fx_p) else {}
@@ -36,7 +39,7 @@ def load_effective():
         seen = collections.Counter(x["place_slug"] for x in g)
         for x in g:
             x["place_final"] = x["place_slug"] + ("-" + x["site"] if seen[x["place_slug"]] > 1 or not x["place_slug"] else "")
-            base = "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
-            x["hub_url"] = "/river/%s/" % x["hub_slug"]
+            base = ("/lake/%s/" % x["river_slug"]) if x.get("lake") else "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
+            x["hub_url"] = base if x.get("lake") else "/river/%s/" % x["hub_slug"]
             x["dashboard_url"], x["water_url"], x["forecast_url"] = base, base, base + "forecast/"  # one page per gauge; /water/ redirects here
     return rows, hubs

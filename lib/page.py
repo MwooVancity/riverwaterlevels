@@ -301,6 +301,20 @@ sp.textContent='Source: National Weather Service alerts for the gauge location, 
 INDEX_CFG = None  # set by build.py from data/index-allow.json
 
 
+def lake_words(h, G):
+    """A lake page in lake words (plan 2026-11-05 step 1). The elevation is height above a named datum, never "the gauge's zero point": that line would be false here."""
+    d = LAKE_DATUM.get(G["lake"], "the reservoir's own datum")
+    h = re.sub(r"cfs = cubic feet of water passing the gauge each second\. Gage height is the gauge(?:’|&rsquo;|')s own scale, not water depth\.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d, h)
+    h = re.sub(r"Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point", "Gauge datum (lake readings are elevations above it)", h)
+    for a, b in (("water level and flow", "lake level and storage"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
+                 ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
+                 ("cfs = cubic feet of water passing the gauge each second. Gage height is the gauge’s own scale, not water depth.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d),
+                 ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"),
+                 ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
+        h = h.replace(a, b)
+    return h
+
+
 def robots_meta(path):
     from lib import indexing
     return indexing.robots_meta(path, INDEX_CFG) if INDEX_CFG is not None else ""
@@ -468,6 +482,8 @@ def build_tab(tab, G, pages):
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s%s</head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
                 esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"]) + GTABS_JS + RANGE_JS + CITE_JS if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
+    if G.get("lake"):
+        page = lake_words(page, G)
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

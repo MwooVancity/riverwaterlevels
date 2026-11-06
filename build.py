@@ -170,17 +170,18 @@ def main():
     print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
-        emit("/", directory.home(built, Gs))
+        rivers_ = [r for r in built if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
+        emit("/", directory.home(rivers_, Gs))
         state_data = {}
-        for st in sorted({r["state"] for r in built}):
+        for st in sorted({r["state"] for r in rivers_}):
             sp = os.path.join(ROOT, "cache", "state-%s.json" % st.lower())
             if os.path.exists(sp):
                 try:
                     state_data[st] = json.load(open(sp, encoding="utf-8"))
                 except Exception:
                     pass
-        for st in sorted({r["state"] for r in built}):
-            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in built if r["state"] == st], Gs, state_data.get(st)))
+        for st in sorted({r["state"] for r in rivers_}):
+            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st)))
         for (hs, st), g in by_hub.items():
             if len(g) > 1:
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
