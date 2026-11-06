@@ -118,7 +118,7 @@ def b_river_forecast(G):
 
 
 def b_nwm(G):
-    if (G["rec"].get("nwps") or {}).get("forecast"):
+    if (G["rec"].get("nwps") or {}).get("forecast") or G.get("lake"):  # lake review #13: the model's streamflow at a reservoir reach is not the lake level
         return None
     n = G["rec"].get("nwm") or {}
     pts = n.get("points") or []

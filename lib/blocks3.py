@@ -856,6 +856,9 @@ def b_reservoir(G):
     t = G["rec"].get("twdb")
     if not G.get("lake") or not t or not cleared("twdb"):
         return None
+    same = [v for d, v, _ in G["sg"] if d.date().isoformat() == t["date"]]  # lake review #9: TWDB's level must match USGS's the same day, or the file may be another lake or datum
+    if not same or t.get("elev_ft") is None or abs(sum(same) / len(same) - t["elev_ft"]) > 0.5:
+        return None
     age_h = (G["now"] - datetime.datetime.fromisoformat(t["date"] + "T12:00:00+00:00")).total_seconds() / 3600
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
         ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
@@ -864,7 +867,7 @@ def b_reservoir(G):
         ("Surface area", "%s acres" % fmtc(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
     return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
-                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers." % esc(fdate(t["date"])),
+                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers. TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % (esc(fdate(t["date"])), LAKE_DATUM.get(G["lake"], "the reservoir's own datum")),
                  "twdb", amber=age_h > 72)
 
 

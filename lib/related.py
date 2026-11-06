@@ -10,7 +10,7 @@ def close(Gs, iso):
     for a, G in Gs.items():
         for x in (G["rec"].get("related") or {}).get("items") or []:
             b = x["site"]
-            if b not in Gs or b == a:
+            if b not in Gs or b == a or G.get("lake"):  # lake review #10: a lake has no flow to list on a river page
                 continue
             rel = Gs[b]["rec"].setdefault("related", {"items": []})
             items = rel.setdefault("items", [])
@@ -31,6 +31,6 @@ def check(Gs):
     for a, G in Gs.items():
         for x in (G["rec"].get("related") or {}).get("items") or []:
             b = x["site"]
-            if b in Gs and not any(y["site"] == a and y["relation"] == INV[x["relation"]] for y in (Gs[b]["rec"].get("related") or {}).get("items") or []):
+            if b in Gs and not G.get("lake") and not any(y["site"] == a and y["relation"] == INV[x["relation"]] for y in (Gs[b]["rec"].get("related") or {}).get("items") or []):
                 bad.append((a, b))
     return bad

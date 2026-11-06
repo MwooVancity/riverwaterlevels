@@ -14,9 +14,11 @@ def ctx(site, row, rec, now):
     zone = zoneinfo.ZoneInfo(tzname)
     fl, sg = series(rec, "00060"), series(rec, "00065")
     lake = None
-    if not sg:  # a lake or reservoir: the page lives on the elevation USGS publishes, with its datum named (plan 2026-11-05 step 1)
+    if not sg or row.get("lake"):  # a lake or reservoir: the page lives on the elevation USGS publishes, with its datum named (plan 2026-11-05 step 1)
         lake = next((c for c in LAKE_CODES if series(rec, c)), None)
         sg = series(rec, lake) if lake else sg
+    if row.get("lake") and not lake:  # lake review #11: a /lake/ address never carries a river page
+        raise CriticalFail("lake listed in data/lakes.csv but USGS publishes no lake elevation")
     # ice: USGS withholds flow for weeks and keeps the stage (1,922 gauges in cold states); the page lives on the stage, never on an old flow
     month = datetime.timedelta(days=30)
     stage_only = bool(sg) and now - sg[-1][0] < month and (not fl or now - fl[-1][0] > month)
@@ -233,15 +235,15 @@ def strip_dir_word(chip):
     return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
 
 
-def beyond(srow, v):
+def beyond(srow, v, unit="cfs"):
     """('above 90th' or 'below 10th', caption) when the flow is past the highest or lowest percentile USGS publishes for this date and the 5th or 95th is not published; else None.
     Bogachiel 2026-11-03: in flood, 95th not published, the page wrongly said no statistics existed."""
     if not srow or v is None:
         return None
     if srow[8] is not None and v > srow[8]:
-        return "above 90th", "Above the 90th percentile (%s cfs), the highest USGS publishes for this date, from %d years." % (fmtc(srow[8]), srow[0])
+        return "above 90th", "Above the 90th percentile (%s %s), the highest USGS publishes for this date, from %d years." % (fmtc(srow[8]) if unit == "cfs" else "%.2f" % srow[8], unit, srow[0])
     if srow[2] is not None and v < srow[2]:
-        return "below 10th", "Below the 10th percentile (%s cfs), the lowest USGS publishes for this date, from %d years." % (fmtc(srow[2]), srow[0])
+        return "below 10th", "Below the 10th percentile (%s %s), the lowest USGS publishes for this date, from %d years." % (fmtc(srow[2]) if unit == "cfs" else "%.2f" % srow[2], unit, srow[0])
     return None
 
 
@@ -249,7 +251,7 @@ def hero(G, pages=None):
     from lib import ui
     c = b3.conditions(G, pages)
     p, srow = G["p"], G["srow"]
-    out_ = beyond(srow, G["basis"]) if p is None else None
+    out_ = beyond(srow, G["basis"], "ft" if G.get("lake") else "cfs") if p is None else None  # lake review #7: an elevation percentile is in feet
     pv = ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)) if p is not None else out_[0] if out_ else "–"
     if p is not None and srow:
         pct_med = "" if G.get("lake") else "%.0f%% of the median" % (G["basis"] / srow[5] * 100) if srow[5] else ""  # a share of an elevation above sea level means nothing

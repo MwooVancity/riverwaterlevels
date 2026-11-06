@@ -276,6 +276,19 @@ def week_due(ts, site, now=None):
     return age > 336 or (age > 24 and now.weekday() * 24 + now.hour == zlib.crc32(site.encode()) % 168)
 
 
+def day_due(ts, site, now=None):
+    """Daily USGS work (8-day re-pull, neighbour list) in the gauge's own hour of the day, so the key's 1,000 calls an hour are never spent in one
+    burst (was 09-12 UTC for every gauge: about 650 gauges filled the hour). A new gauge is due at once; a skipped run costs one day (36 h is due on any run)."""
+    if not ts:
+        return True
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        age = (now - datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))).total_seconds() / 3600
+    except ValueError:
+        return True
+    return age > 36 or (age > 12 and now.hour == zlib.crc32(site.encode()) % 24)
+
+
 def dir_lv(G):
     """The flow a list row shows: on a tidal reach the latest reading is a moment in the tide cycle (Freeport swings 1,090 to 12,500 cfs in a day), so lists show the 24 h mean the comparison uses; the gauge page shows the day's range.
     Every list of gauges (home, state, hub, nearby, upstream and downstream) calls this."""

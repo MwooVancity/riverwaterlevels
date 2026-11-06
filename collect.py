@@ -1510,14 +1510,14 @@ def fast(inv, sites):
                 for key, fn in srcs:
                     run_source(rec, key, fn, log)
             stamp = rec.setdefault("_fetched", {})
-            if daily_due(stamp.get("usgs_full")):  # once a day the whole 8-day series again: USGS revises provisional readings
+            if day_due(stamp.get("usgs_full"), s):  # once a day, in this gauge's own hour, the whole 8-day series again: USGS revises provisional readings
                 try:
                     rec["usgs"], stamp["usgs_full"] = fetch_usgs(s, h), now_iso()
                 except Exception as e:
                     log.append("usgs_full FAILED (%s), kept previous" % str(e)[:60])
                     note("usgs_full", "failed", e)
             rec["usgs"]["rows"] = add_latest(rec["usgs"]["rows"], [r for r in latest.get(s, []) if str(r["time"]) >= cutoff])  # the service returns decades-old values for dead sensors
-            if daily_due(stamp.get("related_list")) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
+            if day_due(stamp.get("related_list"), s) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
                 stamp["related_list"] = now_iso()
             sp = os.path.join(LEGACY, "stats", s + ".json")
             note("stats", "ok" if os.path.exists(sp) else "absent")  # same input-file note as the full path, so the doctor sees it every run

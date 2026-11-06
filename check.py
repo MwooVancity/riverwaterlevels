@@ -771,6 +771,17 @@ def selftest():
     ago = lambda h: (at - dt_.timedelta(hours=h)).isoformat()
     assert week_due(None, "01", at) and week_due(ago(30), "01", at) and week_due(ago(400), "01", at + dt_.timedelta(hours=1)), "selftest: history not due for a new gauge, in its slot, or after 14 days"
     assert not week_due(ago(2), "01", at) and not week_due(ago(30), "01", at + dt_.timedelta(hours=1)), "selftest: history due just after a fetch or outside its slot"
+    from lib import blocks3 as b3_
+    t0 = dt_.datetime(2026, 11, 5, 12, tzinfo=dt_.timezone.utc)
+    Gl = lambda lv: {"lake": "62614", "now": t0 + dt_.timedelta(hours=10), "sg": [(t0, 190.37, {})], "rec": {"twdb": {"date": "2026-11-05", "elev_ft": lv, "pct_cons": 20.9}}}
+    if b3_.cleared("twdb"):
+        assert b3_.b_reservoir(Gl(190.38)) and b3_.b_reservoir(Gl(191.0)) is None and b3_.b_reservoir({**Gl(190.38), "sg": []}) is None, "selftest: TWDB block shown for a level that does not match USGS the same day (another lake or datum)"
+    from lib.common import day_due
+    assert len({zlib.crc32(str(i).encode()) % 24 for i in range(200)}) >= 20, "selftest: daily USGS work is not spread over the day"
+    hs = zlib.crc32(b"01") % 24
+    at2 = dt_.datetime(2026, 11, 2, hs, tzinfo=dt_.timezone.utc)
+    assert day_due(None, "01", at2) and day_due((at2 - dt_.timedelta(hours=20)).isoformat(), "01", at2) and day_due((at2 - dt_.timedelta(hours=37)).isoformat(), "01", at2 + dt_.timedelta(hours=1)), "selftest: daily USGS work not due when new, in its hour, or after 36 h"
+    assert not day_due((at2 - dt_.timedelta(hours=2)).isoformat(), "01", at2) and not day_due((at2 - dt_.timedelta(hours=20)).isoformat(), "01", at2 + dt_.timedelta(hours=1)), "selftest: daily USGS work due just after a fetch or outside its hour"
     from lib.directory import world_page, world_pages
     rn = dt_.datetime(2026, 11, 1, 12, tzinfo=dt_.timezone.utc)
     rr = {"name": "KAUB", "km": 546.2, "cm": 21.0, "time": "2026-11-01T12:00:00+01:00", "state": "low", "then": 30.0, "glw": 77.0, "nnw": 25.0}
