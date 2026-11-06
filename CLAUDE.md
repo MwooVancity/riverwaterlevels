@@ -15,6 +15,7 @@ Every change states how it fails today AND at 14,000 pages (calls, CPU, URL leng
 4. World queue at full speed. Global rivers and non-US lakes are first priority for build time. Never wait on traffic numbers; Search Console reorders, never pauses. Official feed and reuse terms read from the agency stay required. Never bulk-publish.
 5. HARD (owner 2026-11-03): "world" is the whole keyword list, US and non-US, one ranking; the only order is money: searches x country ad rate (`RATE` in `tools/release.py`, guesses from PLAN.md until AdSense reports ours). Lakes join the same ranking, US included. Owner 2026-11-05: rivers, lakes and oceans, whole world including the US; every keyword measured in Keyword Planner; compete with every site (Lakebrief, SNOFLO, USGS, NWS, NOAA, tide and surf sites, apps) on any water, only where our page holds more sourced data than the best competing page for that search; no info gain, no page.
 6. Reviews are `/code-review high`, never ultra.
+8. HARD (owner 2026-11-05): a source whose terms bar ads, commercial use or caching is never used; no permission requests. Use another official source with open terms, else show what is allowed and link out to the agency for the rest. Takedowns and AdSense risk outrank any page.
 7. AdSense: site is under review ("Getting ready"), earns $0 until approved; sibling sites rejected for low value content. Consent message published since 2026-10-23; consent follows the visitor's location, so all indexable pages carry the same tags.
 
 ## Reader
