@@ -63,6 +63,7 @@ def main():
         r["_built"] = True
         g = Gs[r["site"]]
         r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
+        r["_val"] = ("%.2f ft" % g["sg"][-1][1]) if g.get("lake") and g["sg"] else None  # lake review: lists showed "– cfs" for a lake
         key = (r["hub_slug"], r["state"])
         by_hub[key].append(r)
     for key, g in by_hub.items():  # a hub page needs two or more built gauges; with one, the river address redirects to that gauge

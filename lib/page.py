@@ -95,7 +95,7 @@ def b_nearby(G, pages):
         far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: fill to five with the nearest anywhere, distance shown
     if not out and not same and not far:
         return None
-    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s cfs &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), fmtc(p["_lv"]), esc(p["_band"].lower()), round(mi)) for mi, p in grp)
+    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), p.get("_val") or fmtc(p["_lv"]) + " cfs", esc(p["_band"].lower()), round(mi)) for mi, p in grp)
     lis = li(out[:5])
     if same:
         lis += '</ul><p class="src">More gauges in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
@@ -318,7 +318,7 @@ def lake_words(h, G):
     for a, b in (("water level and flow", "lake level and storage"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
                  ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
                  ("cfs = cubic feet of water passing the gauge each second. Gage height is the gauge’s own scale, not water depth.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d),
-                 ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"),
+                 ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), ("Level, flow and flood risk", "Lake level and flood risk"),
                  ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
         h = h.replace(a, b)
     return h

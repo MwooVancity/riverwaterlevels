@@ -15,7 +15,7 @@ def load_effective():
     rows = {r["site"]: dict(r) for r in csv.DictReader(open(os.path.join(DATA, "pages-all.csv"), encoding="utf-8"))}
     for r in csv.DictReader(open(os.path.join(DATA, "lakes.csv"), encoding="utf-8")):  # lakes and reservoirs (plan 2026-11-05 step 1): one page per lake at /lake/<name>/
         rows[r["site"]] = {"wave": "", "site": r["site"], "state": r["state"], "river": r["lake"], "place": r["place"], "name_confidence": "human", "score": "0", "years_record": "", "nws_lid": "",
-                           "drainage_sqmi": "", "raw_name": r["raw_name"], "lake": "1"}
+                           "drainage_sqmi": "", "raw_name": r["raw_name"], "lake": "1", "natural": r.get("natural") or ""}
     ov = {r["site"]: r for r in csv.DictReader(open(os.path.join(DATA, "name-overrides.csv"), encoding="utf-8"))}
     fx_p = os.path.join(DATA, "name-fixes.csv")  # name cleaner v2 (tools/clean_names.py): low-confidence names it could read; human overrides win, live gauges are never renamed
     fx = {r["site"]: r for r in csv.DictReader(open(fx_p, encoding="utf-8"))} if os.path.exists(fx_p) else {}

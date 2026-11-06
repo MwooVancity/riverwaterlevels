@@ -218,7 +218,9 @@ def b_low_water(G):
         out += ('<p class="src">The latest reading, %s, is in the NWS range %s.</p>' % (("%s cfs" % fmtc(hcur)) if _low_range(hit["value"])[2] == "cfs" else ("%.2f ft" % hcur), esc(_commas(hit["value"])))) if hit else ""
         out += table(["Level", "National Weather Service low-water statement"], rows)
     if lh:
-        out += table(["Record low date", "Stage", "Flow"], "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc((n.get("stage_units") or "ft").lower())), ("%s cfs" % fmtc(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"], right=(1, 2)) for c in lh), right=(1, 2))
+        fl_ = lambda c: ("%s cfs" % fmtc(c["flow"])) if isinstance(c.get("flow"), (int, float)) and c["flow"] > 0 else "–"
+        wf = any(fl_(c) != "–" for c in lh)  # a Flow column of dashes only says nothing (Lake Lanier 2026-11-06)
+        out += table(["Record low date", "Stage"] + (["Flow"] if wf else []), "".join(tr([crest_date(c["t"], G["zone"]) if c.get("t") else "–", "%.2f %s" % (c["stage"], esc((n.get("stage_units") or "ft").lower()))] + ([fl_(c)] if wf else []), right=(1, 2)) for c in lh), right=(1, 2))
     return block("low_water", "Low-water levels", "official", out,
                  "Source: National Weather Service forecast point %s (%s), low-water impacts and historic low stages. Statements are quoted from the NWS." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
 

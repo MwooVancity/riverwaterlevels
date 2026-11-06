@@ -266,7 +266,7 @@ def hero(G, pages=None):
         what = ("the trailing 24 h mean (%s cfs)" % fmtc(G["basis"])) if G["basis_mean"] else ("the %s reading" % tzl(G["lt"], G["zone"], date=False))
         cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], md(G["ldate"]))
         if G.get("lake"):
-            cap += " An operator raises and lowers a reservoir on purpose; this compares with past years, not with the operator's target."
+            cap += "" if G["row"].get("natural") else " An operator raises and lowers a reservoir on purpose; this compares with past years, not with the operator's target."  # Great Salt Lake has no operator
     else:
         pct_med, cap = "", "" if G["feed"] else out_[1] if out_ else "No percentile: no published statistics for this date."
     sg = G["sg"]
@@ -293,7 +293,7 @@ def hero(G, pages=None):
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
         tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % fmtc(st_[-1][1])) if st_ else "Not published",
-                        ("<small>Water stored in the reservoir, USGS, %s</small>@@DIR@@" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>@@DIR@@")
+                        ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>")  # no "Last 24 hours" under a tile with no series
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:
@@ -311,7 +311,7 @@ def hero(G, pages=None):
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
     if p is None:
-        word, plain = G["feed"].get("label") or "–", G["feed"].get("label_note") or ""
+        word, plain = G["feed"].get("label") or ((out_[0].replace("above ", "Above the ").replace("below ", "Below the ") + " percentile") if out_ else "–"), G["feed"].get("label_note") or ""  # lake review 2026-11-06: past the published range read "–" beside a caption that compares
     else:
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
@@ -454,7 +454,7 @@ def hero(G, pages=None):
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
-    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else "No past-years comparison for this date"
+    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word, md(G["ldate"]))) if p is not None else (norm_word + " for " + md(G["ldate"])) if out_ else "No past-years comparison for this date"
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (

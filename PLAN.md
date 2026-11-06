@@ -229,6 +229,8 @@ Each step: gate, cloud dry run, deploy, live read, PLAN.md.
 - Cloud dry run "refresh OK", then main.
 - Live: Choke Canyon ours vs Lakebrief (fresher reading, storage, 27-year normal); status.json `census` totals; one ocean page vs a top tide site.
 
+Progress 2026-11-06 (commit 4424981): lakes 6-13, 17 and 1 built in local preview from USGS + TWDB, not live (enter Google only via open_wave after review): Canyon 907.24 ft typical (TWDB 96.2%), Corpus Christi 91.17 ft typical (78.8%), Medina 1018.59 ft typical (26.8%), Hartwell 647.72 ft below normal, Lanier 1062.69 ft typical, Kerr 287.62 ft below the 10th percentile (NWS KERV2 reads 287.61: real drought), Great Salt Lake 4190.00 ft much below normal, Powell 3537.30 ft NGVD29 below the 25th (only 25-75th published, 7 years). TWDB levels matched USGS within 0.05 ft on all four Texas lakes. HELD: Travis (USGS has no live lake series since 1993; LCRA terms unread), Tahoe (USGS 10337000 publishes gage height only: needs a lake-on-stage path), Mead (no USGS gauge: needs USBR RISE items 6123/6124; RISE terms: usbr.gov disclaimer uses DOI policy, doi.gov/copyright says federal materials are public domain, read 2026-11-06; RISE disclaimer: provisional), Shasta (RISE or CDEC). Next: reviewer findings on the 9 phone screenshots, then RISE fetch for Mead and Powell storage, then release the lakes through open_wave.
+
 ## NEXT SESSION: top 25 new pages, lakes and oceans (owner 2026-11-05: "run it all")
 Start prompt: "Read PLAN.md 'NEXT SESSION: top 25' and do it in order; report after each stage with live proof."
 
