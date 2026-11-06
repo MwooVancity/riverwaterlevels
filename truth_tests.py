@@ -12,6 +12,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 from lib import render  # noqa: E402
 from lib.common import flow_dir  # noqa: E402
+from lib.hero import beyond  # noqa: E402
 from lib.pages import load_effective  # noqa: E402
 
 bad = []
@@ -61,9 +62,10 @@ def main(only=None):
                 if chip and not ok_word:  # the answer may add the NWS forecast after the trend, never say a different trend
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
-                if nw and G["p"] is not None and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
+                past_ = G["p"] is None and beyond(G["srow"], G["basis"], "ft" if G.get("lake") else "cfs")  # past the highest or lowest published percentile: a real comparison (Lake Powell 2026-11-06)
+                if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
                     fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[ni], nw.group(1)))
-                if G["p"] is None and "No past-years" not in spans[ni]:
+                if G["p"] is None and not past_ and "No past-years" not in spans[ni]:
                     fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[ni])
                 if c["alerts"] is not None and c["alerts"]["n"] and "active NWS alert" not in spans[ai]:
                     fail(site, "active alert not stated in the answer strip: %r" % spans[ai])
@@ -76,7 +78,10 @@ def main(only=None):
             if ser and render.qual_text(ser[-1][2]) and "USGS flag:" not in h:
                 fail(site, "latest %s reading carries a USGS qualifier %s but the page prints it as a plain number" % (nm, ser[-1][2].get("qualifier")))
         if G.get("stage_only"):  # ice: every check below is about a flow this page does not have
-            if "Not published" not in h:
+            if G.get("lake"):  # a lake has no flow to report: its first tile is the storage USGS publishes, or says it has none
+                if ">Storage<" not in h or 'data-live="flow"' in h:
+                    fail(site, "lake page without its storage tile, or with a live flow slot")
+            elif "Not published" not in h:
                 fail(site, "USGS publishes no flow here and the page does not say so")
             continue
         # 19. plausible numbers: no sentinel or physically impossible reading in the series the page uses (a source's -999999, a negative flow outside a tidal reach, a 400 degree water temperature)
