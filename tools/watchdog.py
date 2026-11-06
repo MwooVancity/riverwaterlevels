@@ -39,6 +39,16 @@ def release_stall():
     return "no new gauges released for %d days, %d waiting" % (days, waiting) if days >= 3 and waiting else None
 
 
+def open_stuck():
+    """A line when live pages are held out of Google for a fixable reason (few blocks, a lake with too short a record); tools/open_wave.py writes the list on every --apply."""
+    try:
+        o = json.load(open(os.path.join(ROOT, "data", "open-wave-last.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    from lib.indexing import stuck_line
+    return stuck_line(o)
+
+
 def world_short(s):
     """A line when a world page lacks a block its data allows, or a quarter of listed gauges are held back (5 of 38 today: 4 Austrian gauges with no coordinates, 1 near-duplicate)."""
     w = s.get("world") or {}
@@ -72,6 +82,7 @@ def main():
             if s.get(k_) is not None:
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
+        (bad if open_stuck() else ok).append(open_stuck() or "every live page that can open to Google is open (or waits only on a river's short record)")
         if world_thin(s):
             ok.append(world_thin(s))
         cn_ = s.get("census") or {}

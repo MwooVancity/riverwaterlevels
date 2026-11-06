@@ -55,3 +55,8 @@ def headers(template_text, cfg):
         skip = False
         out.append(line)
     return "\n".join(out) + "\n"
+
+
+def stuck_line(o):
+    """The watchdog's alarm text for data/open-wave-last.json: live pages held out of Google for a fixable reason, else None."""
+    return "%d live page(s) never opened to Google: %s" % (len(o["stuck"]), "; ".join(o["stuck"][:3])) if (o or {}).get("stuck") else None

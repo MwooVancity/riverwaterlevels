@@ -776,6 +776,8 @@ def selftest():
     Gl = lambda lv: {"lake": "62614", "now": t0 + dt_.timedelta(hours=10), "sg": [(t0, 190.37, {})], "rec": {"twdb": {"date": "2026-11-05", "elev_ft": lv, "pct_cons": 20.9}}}
     if b3_.cleared("twdb"):
         assert b3_.b_reservoir(Gl(190.38)) and b3_.b_reservoir(Gl(191.0)) is None and b3_.b_reservoir({**Gl(190.38), "sg": []}) is None, "selftest: TWDB block shown for a level that does not match USGS the same day (another lake or datum)"
+    from lib.indexing import stuck_line
+    assert stuck_line({"stuck": ["/lake/x/: 0 years"]}) and stuck_line({"stuck": []}) is None and stuck_line(None) is None, "selftest: a live page stuck out of Google raised no watchdog line"
     from lib.common import day_due
     assert len({zlib.crc32(str(i).encode()) % 24 for i in range(200)}) >= 20, "selftest: daily USGS work is not spread over the day"
     hs = zlib.crc32(b"01") % 24
