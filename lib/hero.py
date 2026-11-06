@@ -31,10 +31,11 @@ def ctx(site, row, rec, now):
     stats = rec.get("stats")
     ldate = lt.astimezone(zone).date()
     mmdd = ldate.isoformat()[5:10]
-    srow = stats.get(mmdd) if stats and lv is not None else None
+    cmp_v = lv if lv is not None else (sg[-1][1] if lake and sg else None)  # a lake is compared on its elevation against USGS's own daily percentiles for it; lv stays the flow (None), so no list shows an elevation as cfs
+    srow = stats.get(mmdd) if stats and cmp_v is not None else None
     win = [x for x in fl if x[0] > lt - datetime.timedelta(hours=24)]
     mdate = md(ldate)
-    basis, method = lv, "latest reading compared with USGS daily percentiles for %s" % mdate
+    basis, method = cmp_v, "latest reading compared with USGS daily percentiles for %s" % mdate
     if len(win) >= 4:
         steps = sorted((win[i][0] - win[i - 1][0]).total_seconds() for i in range(1, len(win)))
         step = steps[len(steps) // 2] or 900
@@ -42,7 +43,7 @@ def ctx(site, row, rec, now):
             basis = sum(x[1] for x in win) / len(win)
             method = "trailing 24-hour mean compared with USGS daily percentiles for %s" % mdate
             if basis and abs(lv / basis - 1) > 0.3 and not oscillating(fl) and max(x[1] for x in win) < 1.5 * max(1e-9, min(x[1] for x in win)):  # the day's mean says little about a river that has just moved by a third or more: judge the latest reading (tidal and oscillating gauges keep the mean)
-                basis, method = lv, "latest reading compared with USGS daily percentiles for %s" % mdate
+                basis, method = cmp_v, "latest reading compared with USGS daily percentiles for %s" % mdate
     p = interp_pct(srow, basis) if srow else None
     ago = min(fl or [(lt,)], key=lambda x: abs((x[0] - (lt - datetime.timedelta(hours=24))).total_seconds()))
     steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(max(1, len(fl) - 200), len(fl)))
@@ -251,9 +252,11 @@ def hero(G, pages=None):
     out_ = beyond(srow, G["basis"]) if p is None else None
     pv = ("below 5th" if p == -1 else "above 95th" if p == 101 else ordinal(p)) if p is not None else out_[0] if out_ else "–"
     if p is not None and srow:
-        pct_med = "%.0f%% of the median" % (G["basis"] / srow[5] * 100) if srow[5] else ""
+        pct_med = "" if G.get("lake") else "%.0f%% of the median" % (G["basis"] / srow[5] * 100) if srow[5] else ""  # a share of an elevation above sea level means nothing
         what = ("the trailing 24 h mean (%s cfs)" % fmtc(G["basis"])) if G["basis_mean"] else ("the %s reading" % tzl(G["lt"], G["zone"], date=False))
         cap = "Estimated from %s against %d years of USGS daily statistics for %s." % (what, srow[0], md(G["ldate"]))
+        if G.get("lake"):
+            cap += " An operator raises and lowers a reservoir on purpose; this compares with past years, not with the operator's target."
     else:
         pct_med, cap = "", "" if G["feed"] else out_[1] if out_ else "No percentile: no published statistics for this date."
     sg = G["sg"]

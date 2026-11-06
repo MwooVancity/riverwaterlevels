@@ -9,7 +9,8 @@ import csv, json, os, sys, time, urllib.request, urllib.error
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "legacy", "stats")
 SLOT = ["5", "10", "20", "25", "50", "75", "80", "90", "95"]
-URL = "https://api.waterdata.usgs.gov/statistics/v0/observationNormals?monitoring_location_id=USGS-%s&parameter_code=00060&computation_type=percentile"
+URL = "https://api.waterdata.usgs.gov/statistics/v0/observationNormals?monitoring_location_id=USGS-%s&parameter_code=%s&computation_type=percentile"
+LAKE_CODES = ("62615", "62614", "72020", "00062")  # same order as lib/common.py: a lake is compared on its elevation
 
 
 def get(u):
@@ -28,12 +29,12 @@ def get(u):
     return None  # failed, as opposed to "" (USGS answered: no statistics)
 
 
-def parse(t):
+def parse(t, code="00060"):
     """{"MM-DD": [years, p05 ... p95]} from the daily-mean discharge normals; {} when USGS has none."""
     out = {}
     for f in (json.loads(t).get("features") or []) if t else []:
         for s in f["properties"].get("data") or []:
-            if s.get("parameter_code") != "00060" or s.get("parent_statistic_id") != "00003":  # daily mean flow only
+            if s.get("parameter_code") != code or s.get("parent_statistic_id") != "00003":  # daily means of the one parameter the page compares (flow, or a lake's elevation)
                 continue
             for v in s.get("values") or []:
                 if v.get("time_of_year_type") != "day_of_year" or v.get("computation") != "percentile":
@@ -50,12 +51,17 @@ def main():
     todo = [s for s in want if not os.path.exists(os.path.join(OUT, s + ".json"))] if "--all" not in sys.argv else want
     os.makedirs(OUT, exist_ok=True)
     got, failed, none = 0, [], []
+    lakes = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
     for s in todo:
-        t = get(URL % s)
+        d, t = {}, None
+        for code in LAKE_CODES if s in lakes else ("00060",):
+            t = get(URL % (s, code))
+            d = parse(t, code) if t is not None else {}
+            if d:
+                break
         if t is None:
             failed.append(s)
             continue
-        d = parse(t)
         if not d:
             none.append(s)
             continue

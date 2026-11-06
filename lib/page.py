@@ -305,6 +305,7 @@ def lake_words(h, G):
     """A lake page in lake words (plan 2026-11-05 step 1). The elevation is height above a named datum, never "the gauge's zero point": that line would be false here."""
     d = LAKE_DATUM.get(G["lake"], "the reservoir's own datum")
     h = re.sub(r"cfs = cubic feet of water passing the gauge each second\. Gage height is the gauge(?:’|&rsquo;|')s own scale, not water depth\.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d, h)
+    h = re.sub(r" (?:A dam|[\d,]+ dams) upstream may have changed flows during this record\.", "", h)  # a reservoir is itself the dam
     h = re.sub(r"Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point", "Gauge datum (lake readings are elevations above it)", h)
     for a, b in (("water level and flow", "lake level and storage"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
                  ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
