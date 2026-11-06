@@ -239,6 +239,11 @@ LAKE_CODES = ("62614", "62615", "72020", "00062")  # NGVD29 first (the datum Rec
 LAKE_DATUM = {"MLLW": "mean lower low water (MLLW, NOAA tidal datum at this station)", "62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
 
 
+def wt_suspect(vs):
+    """A NOAA water temperature series that swings over 10 F in 3 days or passes 95 F is a sensor problem, never the sea (Fort Lauderdale 2026-11-06: 82.4 to 99.5 F)."""
+    return bool(vs) and (max(vs) - min(vs) > 10 or max(vs) > 95)
+
+
 def lake_datum(G):
     """What a lake elevation is measured above. 00062 is above the gauge datum, so the gauge's own altitude and datum from USGS are named
     (Lanier 0.0 ft NAVD88, Hartwell -0.04 ft NAVD88); without that metadata it says the gauge datum, never a guessed sea-level datum."""

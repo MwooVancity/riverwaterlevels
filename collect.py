@@ -1310,14 +1310,16 @@ def fetch_coops(st):
     if not wl:
         raise RuntimeError("no CO-OPS water level rows for %s" % st)
     rows = [{"parameter_code": "MLLW", "time": t(r["t"]), "value": r["v"], "unit_of_measure": "ft", "qualifier": None, "approval_status": "Preliminary" if r.get("q") == "p" else "Verified" if r.get("q") == "v" else "Unknown"} for r in wl if r.get("v") not in (None, "")]
-    wt = coops_get(st, "product=water_temperature&date=latest")
-    for r in wt[-1:]:
+    wt = [r for r in coops_get(st, "product=water_temperature&range=72") if r.get("v") not in (None, "")]
+    vs = [float(r["v"]) for r in wt]
+    suspect = wt_suspect(vs)  # held, never shown as the sea
+    for r in ([] if suspect else wt[-1:]):
         if r.get("v") not in (None, ""):
             rows.append({"parameter_code": "00010", "time": t(r["t"]), "value": str(round((float(r["v"]) - 32) / 1.8, 2)), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Preliminary"})
     begin = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)).strftime("%Y%m%d %H:%M")
     pred = coops_get(st, "product=predictions&datum=MLLW&interval=6&begin_date=%s&range=96" % urllib.parse.quote(begin))
     hilo = coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=72" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
-    return {"fetched_at": now_iso(), "rows": rows, "truncated": []}, {"fetched_at": now_iso(), "station": st, "pred": [[t(p["t"]), float(p["v"])] for p in pred], "hilo": [[t(p["t"]), float(p["v"]), p["type"]] for p in hilo]}
+    return {"fetched_at": now_iso(), "rows": rows, "truncated": []}, {"fetched_at": now_iso(), "station": st, "pred": [[t(p["t"]), float(p["v"])] for p in pred], "hilo": [[t(p["t"]), float(p["v"]), p["type"]] for p in hilo], "wt_suspect": [min(vs), max(vs)] if suspect else None}
 
 
 def fetch_twdb(slug):

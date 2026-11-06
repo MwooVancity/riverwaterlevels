@@ -29,7 +29,7 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
         lines += '<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="%s" stroke-dasharray="6 4"/><text x="%d" y="%.1f" font-size="%d" fill="%s" text-anchor="end">%s %s</text>' % (L, W - 14, Y(v), Y(v), AMBER, W - 16, Y(v) - 4, fs, AMBER, esc(name), fmt(v))
     step = max(1, len(obs) // 220)
     gaps = sorted((b[0] - a[0]).total_seconds() for a, b in zip(obs, obs[1:]))
-    gmax = max(7200, 3 * gaps[len(gaps) // 2]) if gaps else 7200  # a gap over 3x the usual step (min 2 h) breaks the line
+    gmax = max(1800 if gaps and gaps[len(gaps) // 2] <= 600 else 7200, 3 * gaps[len(gaps) // 2]) if gaps else 7200  # a gap over 3x the usual step breaks the line (min 2 h; 30 min for 6-minute NOAA data: Atlantic City drew a 1 h 48 min gap as a 1.6 ft step)
     segs, cur_seg = [], [obs[0]]
     for a, b in zip(obs, obs[1:]):
         if (b[0] - a[0]).total_seconds() > gmax:

@@ -335,7 +335,7 @@ def lake_words(h, G):
             h = h.replace(a, b)
         h = re.sub(r"[^.<>]*the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
         h = re.sub(r"Tides nearby at [^<\"]*, next two days", "Tide predictions at this NOAA station, next two days", h)
-        for a, b in (("gauge-local time", "station time"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
+        for a, b in (("gauge-local time", "station time"), ("live water temperature (no USGS temperature sensor at this station or within 40 mi on the rivers here)", "live water temperature (NOAA publishes none at this station)"), ("clarity (no USGS turbidity or water-quality sensor at this station)", "clarity (no NOAA water-quality sensor at this station)"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
             h = h.replace(a, b)
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
     return h

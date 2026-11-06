@@ -792,6 +792,8 @@ def selftest():
         assert b3_.b_reservoir(Gl(190.38)) and b3_.b_reservoir(Gl(191.0)) is None and b3_.b_reservoir({**Gl(190.38), "sg": []}) is None, "selftest: TWDB block shown for a level that does not match USGS the same day (another lake or datum)"
     from lib.indexing import stuck_line
     assert stuck_line({"stuck": ["/lake/x/: 0 years"]}) and stuck_line({"stuck": []}) is None and stuck_line(None) is None, "selftest: a live page stuck out of Google raised no watchdog line"
+    from lib.common import wt_suspect
+    assert wt_suspect([82.4, 99.5]) and wt_suspect([96.0]) and not wt_suspect([64.0, 66.5]) and not wt_suspect([]), "selftest: a broken NOAA water temperature sensor would show as the sea"
     from lib.common import day_due
     assert len({zlib.crc32(str(i).encode()) % 24 for i in range(200)}) >= 20, "selftest: daily USGS work is not spread over the day"
     hs = zlib.crc32(b"01") % 24

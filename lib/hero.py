@@ -444,7 +444,7 @@ def hero(G, pages=None):
     elif G.get("coast"):  # coast review 2026-11-06: a dead river tile; today's NOAA tide predictions answer "what is coming"
         loc = lambda x: parse_t(x[0]).astimezone(G["zone"])
         today = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if loc(x).date() == G["now"].astimezone(G["zone"]).date()]
-        strip += ui.tile("fcst", "crest", "Today's tides (NOAA prediction)", "<br>".join('%s <small>%s %.1f ft</small>' % (loc(x).strftime("%-I:%M %p").lower() if os.name != "nt" else loc(x).strftime("%I:%M %p").lstrip("0").lower(), "high" if x[2] == "H" else "low", x[1]) for x in today) or "Unknown",
+        strip += ui.tile("fcst", "crest", "Today's tides (NOAA prediction)", "<br>".join('<span class="nb">%s %s %.1f ft</span>' % (loc(x).strftime("%-I:%M %p").lower() if os.name != "nt" else loc(x).strftime("%I:%M %p").lstrip("0").lower(), "high" if x[2] == "H" else "low", x[1]) for x in today) or "Unknown",
                          "<small>Times %s; heights above MLLW. Predictions, not readings.</small>" % esc(loc(today[0]).strftime("%Z")) if today else "<small>No NOAA prediction for today in the cache.</small>")
     else:
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.</small>')
@@ -617,7 +617,10 @@ def storm_line(G):
         runs.append(cur)
     per = [p for p in n.get("periods") or [] if p.get("startTime") and parse_t(p["startTime"]) < G["now"] + datetime.timedelta(hours=24) and parse_t(p.get("endTime") or p["startTime"]) > G["now"] and re.search(r"(?i)t-?storm|thunder", (p.get("shortForecast") or "") + " " + (p.get("detailedForecast") or ""))]
     if not runs and per:  # full review: "not in the forecast wording" above "Tonight: Slight Chance T-storms"
-        return '<p class="storm warn"><b>Thunderstorms in the forecast:</b> the NWS forecast for %s says %s.</p>' % (esc(per[0]["name"]), esc((per[0].get("shortForecast") or "thunderstorms possible").replace("T-storms", "thunderstorms")))
+        sf_ = per[0].get("shortForecast") or ""
+        if not re.search(r"(?i)t-?storm|thunder", sf_):  # coast review 2026-11-06: "says Rain Likely" under a thunder heading; quote the NWS sentence that names thunder
+            sf_ = next((x.strip() for x in re.split(r"(?<=\.)\s+", per[0].get("detailedForecast") or "") if re.search(r"(?i)t-?storm|thunder", x)), "thunderstorms possible").rstrip(".")
+        return '<p class="storm warn"><b>Thunderstorms in the forecast:</b> the NWS forecast for %s says %s.</p>' % (esc(per[0]["name"]), esc(sf_.replace("T-storms", "thunderstorms")))
     if not runs:  # the forecast words name no thunderstorm; the hourly grid may still carry a small chance (hater 2026-10-27: "none" above "Thunder % 9 11")
         pk = 0
         for h in [h for h in ((n.get("grid") or {}).get("hours") or []) if parse_t(h["t"]) > G["now"] - datetime.timedelta(hours=1)][:24]:  # the same hours the table shows (full review: "up to 15%" over a row of zeros)
