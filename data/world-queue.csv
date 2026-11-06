@@ -19999,3 +19999,12 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 19998,8,0,,Forquetinha River,,,BR,,,not checked,no
 19999,8,0,,Forquilha River,,,BR,,,not checked,no
 20000,8,0,,Forromeco River,,,BR,,,not checked,no
+20001,1,50000,choke canyon reservoir water level,Choke Canyon Reservoir,Three Rivers,TX,US,08206900,,USGS,yes
+20002,1,50000,canyon lake water level,Canyon Lake,New Braunfels,TX,US,08167700,,USGS,yes
+20003,1,50000,lake corpus christi water level,Lake Corpus Christi,Mathis,TX,US,08210500,,USGS,yes
+20004,1,50000,medina lake water level,Medina Lake,San Antonio,TX,US,08179500,,USGS,yes
+20005,1,50000,hartwell lake water level,Lake Hartwell,Anderson,SC,US,02187010,,USGS,yes
+20006,1,50000,lake lanier water level,Lake Lanier,Buford,GA,US,02334400,,USGS,yes
+20007,1,50000,kerr lake water level,Kerr Lake,Boydton,VA,US,02079490,,USGS,yes
+20008,1,5000,great salt lake water level,Great Salt Lake,Saltair Boat Harbor,UT,US,10010000,,USGS,yes
+20009,1,50000,lake powell water level,Lake Powell,Glen Canyon Dam,AZ,US,09379900,,USGS,yes

@@ -311,7 +311,7 @@ def hero(G, pages=None):
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
     if p is None:
-        word, plain = G["feed"].get("label") or ((out_[0].replace("above ", "Above the ").replace("below ", "Below the ") + " percentile") if out_ else "–"), G["feed"].get("label_note") or ""  # lake review 2026-11-06: past the published range read "–" beside a caption that compares
+        word, plain = G["feed"].get("label") or (band_word(int(re.sub(r"\D", "", out_[0])) + (0.5 if out_[0].startswith("above") else -0.5)) if out_ else "–"), G["feed"].get("label_note") or ""  # lake review 2026-11-06: past the published range read "–" beside a caption that compares
     else:
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
