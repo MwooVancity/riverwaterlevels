@@ -7,7 +7,7 @@ import csv, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IX = os.path.join(ROOT, "data", "index-allow.json")
-MIN_BLOCKS, MIN_YEARS = 15, 10  # the pilot pages render 26 to 38 blocks; re-set after a sample of tail gauges has been built
+MIN_BLOCKS, MIN_YEARS, MIN_LAKE_YEARS = 15, 10, 5  # the pilot pages render 26 to 38 blocks; re-set after a sample of tail gauges has been built
 
 
 def load(p, default):
@@ -19,7 +19,7 @@ def main():
     if "--pull" in sys.argv:
         gone = [a for a in sys.argv[sys.argv.index("--pull") + 1:]]
         cfg["allow"] = [u for u in cfg["allow"] if u not in gone]
-        cfg["pulled"] = sorted(set(cfg.get("pulled") or []) | {u for u in gone if not u.startswith("/river/")})  # a world page is not on the allow list: it is pulled by name
+        cfg["pulled"] = sorted(set(cfg.get("pulled") or []) | {u for u in gone if not u.startswith(("/river/", "/lake/"))})  # a world page is not on the allow list: it is pulled by name
         json.dump(cfg, open(IX, "w", encoding="utf-8"), indent=1)
         print("pulled %d page(s); %d remain allowed. Deploy to take effect." % (len(gone), len(cfg["allow"])))
         return
@@ -45,7 +45,15 @@ def main():
         if blocks.get(u, 0) < MIN_BLOCKS:
             skipped["few blocks"] += 1
             continue
-        if years.get(row["site"], 0) < MIN_YEARS:
+        if u.startswith("/lake/"):  # lakes are not in pages-all.csv: the record is the years behind the USGS statistics the page compares with (Powell 7)
+            try:
+                yrs_ = max(v[0] for v in json.load(open(os.path.join(ROOT, "legacy", "stats", row["site"] + ".json")))["d"].values())
+            except (OSError, ValueError, KeyError):
+                yrs_ = 0
+            if yrs_ < MIN_LAKE_YEARS:
+                skipped["short record"] += 1
+                continue
+        elif years.get(row["site"], 0) < MIN_YEARS:
             skipped["short record"] += 1
             continue
         pick.append((u, row["river"], row["place"], row["score"]))

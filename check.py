@@ -320,7 +320,7 @@ def rank_checks(h, url):
     if rep:
         g, n = max(rep, key=lambda x: x[1])
         bad.append("first screen says %r %d times (clutter on the screen that decides the click)" % (g, n))
-    others = {u for u in re.findall(r'href="(/river/[^"#?]+/)"', h) if u != url}
+    others = {u for u in re.findall(r'href="(/(?:river|lake)/[^"#?]+/)"', h) if u != url}  # a lake links lakes and rivers
     if len(others) < 3:
         bad.append("links only %d other gauge pages (at least 3: nearby, upstream, downstream)" % len(others))
     return bad

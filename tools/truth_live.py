@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers
 
 SITE = "https://riverwaterlevels.com"
-USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065&limit=1000&f=json"
+USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065,62614,62615,72020,00062&limit=1000&f=json"
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 HU = dict(usgs_headers(), **H)  # with the key: anonymous calls from shared CI addresses get rate-limited and the check silently skips
@@ -76,7 +76,7 @@ def main():
         carried = {"/" + r.rsplit("index.html", 1)[0] for r in (json.load(open(os.path.join(LOCAL, "_carried.json"))) if LOCAL else [])}
     except (OSError, ValueError):
         carried = set()
-    urls = [u for _, u, *_ in gauges if u.startswith("/river/")]  # gauges outside the US: tools/truth_world.py checks them against their own feed
+    urls = [u for _, u, *_ in gauges if u.startswith(("/river/", "/lake/"))]  # gauges outside the US: tools/truth_world.py checks them against their own feed
     if not LOCAL and len(urls) > SAMPLE:
         k = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) * SAMPLE % len(urls)
         urls = (urls + urls)[k:k + SAMPLE]
@@ -95,6 +95,12 @@ def main():
         stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
+        if url.startswith("/lake/"):  # a lake page shows its elevation in the stage slot and no flow: checked against the USGS lake codes
+            if not (sid and stage and t):
+                bad.append("%s: cannot read gauge id, lake elevation or time from the page" % url)
+            else:
+                pages[sid.group(1)] = {"url": url, "lake": True, "stage": float(stage.group(1)), "t": datetime.datetime.fromisoformat(t.group(1)), "lid": None, "cats": {}, "derived": set()}
+            continue
         if not (sid and flow and t):
             bad.append("%s: cannot read gauge id, flow or time from the page" % url)
             continue
@@ -125,6 +131,16 @@ def main():
             return lid, e
     nwps = dict(pmap(nws, sorted({pg["lid"] for pg in pages.values() if pg["lid"] and (pg["cats"] or pg["derived"])})))
     for sid, pg in pages.items():
+        if pg.get("lake"):
+            got = [latest[(sid, c)] for c in ("62614", "62615", "72020", "00062") if (sid, c) in latest]
+            if not got:
+                (skipped if sid in failed_ids else bad).append("%s: USGS %s" % (pg["url"], "batch did not answer (skipped)" if sid in failed_ids else "returned no latest lake elevation"))
+            elif any(gt == pg["t"] for gt, _ in got):
+                if not any(gt == pg["t"] and abs(gv - pg["stage"]) <= 0.02 for gt, gv in got):
+                    bad.append("%s: lake elevation %s on the page, USGS %s for the same time" % (pg["url"], pg["stage"], [gv for gt, gv in got if gt == pg["t"]]))
+            elif max(gt for gt, _ in got) > pg["t"] and (max(gt for gt, _ in got) - pg["t"]).total_seconds() / 3600 > STALE_FAIL_H:
+                bad.append("%s: page is more than %d h behind USGS" % (pg["url"], STALE_FAIL_H))
+            continue
         u = latest.get((sid, "00060"))
         if not u:
             (skipped if sid in failed_ids else bad).append("%s: USGS %s" % (pg["url"], "batch did not answer (skipped)" if sid in failed_ids else "returned no latest flow"))

@@ -13,7 +13,7 @@ sys.path.insert(0, ROOT)
 from lib.common import http_open
 SITE = "https://riverwaterlevels.com"
 H = {"User-Agent": "Mozilla/5.0 (index-live)"}
-GAUGE = re.compile(r"^/river/[^/]+/[^/]+/(forecast/)?$")
+from lib.indexing import GAUGE  # one pattern for river and lake gauge pages (was /river/ only)
 
 
 def get(url):

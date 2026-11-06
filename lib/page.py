@@ -315,7 +315,9 @@ def lake_words(h, G):
     h = re.sub(r" (?:A dam|[\d,]+ dams) upstream may have changed flows during this record\.", "", h)  # a reservoir is itself the dam
     if G["lake"] == "00062":  # only this code is read above the gauge datum; 62614, 62615 and 72020 are above sea-level datums, so the row keeps its own true label
         h = re.sub(r"Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point", "Gauge datum (lake readings are heights above it)", h)
-    for a, b in (("water level and flow", "lake level and storage"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
+    st_ = any(r.get("parameter_code") == "00054" for r in G["rec"]["usgs"]["rows"])
+    for a, b in (("water level and flow", "water level, elevation and storage" if st_ else "water level and elevation"),  # release gate: the title names the search ("water level"); storage only where USGS publishes it
+                 ("E. coli results at stations on this river within", "E. coli results at stations on the rivers within"), ("E. coli samples on this stretch", "E. coli samples nearby"), ("within 40 mi on this river", "within 40 mi on the rivers here"), ("for this stretch", "near this lake"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
                  ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
                  ("cfs = cubic feet of water passing the gauge each second. Gage height is the gauge’s own scale, not water depth.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d),
                  ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), ("Level, flow and flood risk", "Lake level and flood risk"),
@@ -422,10 +424,11 @@ def build_tab(tab, G, pages):
     tabbar = "" if len(avail) == 1 else '<nav class="tabbar" aria-label="Gauge tabs">%s<a href="/">Rivers</a></nav>' % "".join('<a href="%s"%s>%s</a>' % (row[t + "_url"], ' aria-current="page"' if t == tab else "", ("<b>%s</b>" if t == tab else "%s") % TABS[t]["label"]) for t in avail)
     hub_part = "" if row.get("_single") else '<a href="%s">%s</a> / ' % (row["hub_url"], esc(river))
     last = place if hub_part else river_at(river, place)  # full review: "HOME / NE / AT OMAHA" had no river
-    crumb = '<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s%s</div>' % (G["st"].lower(), esc(G["st"]), hub_part, esc(last))
+    st_hub = any(p.get("_built") and not p.get("lake") and p.get("state") == G["st"] for p in pages.values())  # /rivers/<st>/ is built only for states with a river gauge; a lake in another state (Mead, NV) must not link a missing page. ponytail: lake state hubs come with the /lake/ silo
+    crumb = '<div class="crumb"><a href="/">Home</a> / %s%s%s</div>' % (('<a href="/rivers/%s/">%s</a> / ' % (G["st"].lower(), esc(G["st"]))) if st_hub else "", hub_part, esc(last))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), age_chip(G["age_min"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
-    ld_items = [("Home", "/"), (G["st"], "/rivers/%s/" % G["st"].lower())] + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
+    ld_items = [("Home", "/")] + ([(G["st"], "/rivers/%s/" % G["st"].lower())] if st_hub else []) + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
     fl7 = [x[0] for x in G["fl"]]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % (lambda j: j.replace("</", "<\\/"))(json.dumps({
         "@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL, "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}},

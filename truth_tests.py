@@ -63,7 +63,7 @@ def main(only=None):
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
                 past_ = G["p"] is None and beyond(G["srow"], G["basis"], "ft" if G.get("lake") else "cfs")  # past the highest or lowest published percentile: a real comparison (Lake Powell 2026-11-06)
-                if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)) + " for "):
+                if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)).replace(" for this date", "") + " for "):
                     fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[ni], nw.group(1)))
                 if G["p"] is None and not past_ and "No past-years" not in spans[ni]:
                     fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[ni])
