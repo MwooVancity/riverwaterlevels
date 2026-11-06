@@ -17,3 +17,5 @@ state/*
 !state/reviews/
 data/geo/*.geojson
 .dev.vars
+research_notes/
+reports/

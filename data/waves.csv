@@ -9098,12 +9098,12 @@ excluded,,381427121305401,Sacramento River,Below Walnut Grove Branch A Walnut Gr
 excluded,,11455420,Sacramento River,Rio Vista,CA,0.0,10,75,0,,short-record,,auto2,/river/sacramento-river/rio-vista/
 excluded,,11304810,San Joaquin River,Below Garwood Bridge A Stockton,CA,0.0,10,88,0,,short-record,,low,/river/san-joaquin-river/below-garwood-bridge-a-stockton/
 excluded,,09193700,New Fork River,Above Willow Creek Near Cora,WY,0.0,10,0,0,,short-record,,auto2,/river/new-fork-river/above-willow-creek-near-cora/
-queue,,08206900,Choke Canyon Reservoir,Three Rivers,TX,0,,,0,lake,,,human,/lake/choke-canyon-reservoir/
-queue,,08167700,Canyon Lake,New Braunfels,TX,0,,,0,lake,,,human,/lake/canyon-lake/
-queue,,08210500,Lake Corpus Christi,Mathis,TX,0,,,0,lake,,,human,/lake/lake-corpus-christi/
-queue,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,,,human,/lake/medina-lake/
-queue,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,,,human,/lake/lake-hartwell/
-queue,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,,,human,/lake/lake-lanier/
-queue,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,,,human,/lake/kerr-lake/
-queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/great-salt-lake/
-queue,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,,,human,/lake/lake-powell/
+held-lake,,08206900,Choke Canyon Reservoir,Three Rivers,TX,0,,,0,lake,,,human,/lake/choke-canyon-reservoir/
+held-lake,,08167700,Canyon Lake,New Braunfels,TX,0,,,0,lake,,,human,/lake/canyon-lake/
+held-lake,,08210500,Lake Corpus Christi,Mathis,TX,0,,,0,lake,,,human,/lake/lake-corpus-christi/
+held-lake,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,,,human,/lake/medina-lake/
+held-lake,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,,,human,/lake/lake-hartwell/
+held-lake,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,,,human,/lake/lake-lanier/
+held-lake,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,,,human,/lake/kerr-lake/
+held-lake,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/great-salt-lake/
+held-lake,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,,,human,/lake/lake-powell/
