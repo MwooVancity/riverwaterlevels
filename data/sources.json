@@ -487,6 +487,36 @@
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
+  },
+  {
+   "id": "cdip",
+   "name": "CDIP wave buoys (Scripps Institution of Oceanography), via NDBC realtime2",
+   "status": "quoted",
+   "terms_url": "https://cdip.ucsd.edu/m/documents/data_access.html",
+   "summary": "CDIP Data Access: 'CDIP data and products are freely available for public use, provided that they are not altered in any way. When used for web displays and online resources, please provide a link to the CDIP homepage.' Values shown in the file's units first.",
+   "credit": "Data courtesy of CDIP (cdip.ucsd.edu)",
+   "blocks": [
+    "waves"
+   ],
+   "read_on": "2026-11-06",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
+  },
+  {
+   "id": "ndbc",
+   "name": "NOAA National Data Buoy Center realtime2 files",
+   "status": "quoted",
+   "terms_url": "https://www.weather.gov/disclaimer",
+   "summary": "ndbc.noaa.gov/disclaimer.shtml redirects to the NWS disclaimer: 'in the public domain, unless specifically noted otherwise, and may be used without charge for any lawful purpose' (no claiming it as your own, no implied endorsement). Partner-owned buoys follow their owner's terms and are not used until read.",
+   "credit": "Data: NOAA National Data Buoy Center",
+   "blocks": [
+    "waves"
+   ],
+   "read_on": "2026-11-06",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   }
  ]
 }

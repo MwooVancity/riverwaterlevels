@@ -73,6 +73,8 @@ def b_stage_chart(G):
         if age is None or age <= HIDE_H["river_forecast"]:
             issued = f.get("issued")
             fc = [(t_, s_) for t_, s_, _ in fc_points(f) if s_ is not None and t_ > t1 and t_ >= now]
+    if G.get("coast"):  # coast review 2026-11-06: NOAA's predicted tide for the next 24 h as the dashed curve, every 6th 6-minute point
+        fc = [(parse_t(t_), v_) for t_, v_ in ((G["rec"].get("coops") or {}).get("pred") or []) if t1 < parse_t(t_) <= t1 + datetime.timedelta(hours=24)][::6]
     cats = (n.get("categories") or {}) if nws else {}
     vals = [v for _, v in obs] + [v for _, v in fc]
     lo, hi = min(vals), max(vals)
@@ -81,7 +83,7 @@ def b_stage_chart(G):
     vmin, vmax, ticks = nice_ticks(lo, hi)
     hl = [(k.capitalize(), cats[k]) for k in CATS if k in cats and vmin <= cats[k] <= vmax] if not gap else []
     tend = fc[-1][0] if fc else t1
-    label = "Gage height in %s over the last 7 days" % {"cm": "centimetres", "m": "metres"}.get(G["feed"].get("unit"), "feet") + (" and the National Weather Service forecast" if fc else "")
+    label = "Gage height in %s over the last 7 days" % {"cm": "centimetres", "m": "metres"}.get(G["feed"].get("unit"), "feet") + ((" and NOAA's predicted tide" if G.get("coast") else " and the National Weather Service forecast") if fc else "")
     svg = _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 760, 250, 11, 6, "cw", label) + _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, tend, zone, 340, 250, 12, 4, "cn", label)
     from lib.render import nws_point_note
     pn_ = nws_point_note(G) if cats else ""
@@ -95,7 +97,7 @@ def b_stage_chart(G):
         if k in cats:
             d = cats[k] - cur
             rows += tr(["%s stage" % k.capitalize(), "%.1f ft" % cats[k], ("%.1f ft above the %s" % (r1(d), "NWS reading" if gap else "latest gage height")) if d > 0 else ("the %s is %.1f ft above it" % ("NWS reading" if gap else "latest gage height", -d))], right=(1,))
-    if fc:
+    if fc and not G.get("coast"):  # a tide prediction is not an NWS forecast crest
         hi = max(fc, key=lambda x: x[1])
         rows += tr([FC_LABEL[fc_word([x[1] for x in fc], cur)], "%.1f ft" % hi[1], esc(tzl(hi[0], zone))], right=(1,))
     if gap and f and f.get("points"):

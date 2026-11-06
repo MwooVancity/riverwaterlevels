@@ -871,6 +871,31 @@ def b_reservoir(G):
                  "twdb", amber=age_h > 72)
 
 
+def b_waves(G):
+    """Coast pages: the newest reading of the station's hand-checked offshore buoy, in the file's units first (CDIP asks that data is not altered),
+    feet and Fahrenheit beside, the buoy's distance always named (a buoy is never 'at the beach'). Hidden after 6 h; amber after 2 h."""
+    b = G["rec"].get("buoy")
+    if not G.get("coast") or not b or not b.get("time"):
+        return None
+    src = "cdip" if b.get("owner") == "SCRIPPS" else "ndbc"
+    if not cleared(src):
+        return None
+    t = parse_t(b["time"])
+    age = (G["now"] - t).total_seconds() / 3600
+    if age > 6:
+        return None
+    u = lambda v, f: f(v) if v is not None else "Unknown"
+    rows = "".join(tr([a, c], right=(1,)) for a, c in (
+        ("Wave height (significant)", u(b.get("wvht_m"), lambda v: "%.1f m (%.1f ft)" % (v, v * 3.28084))),
+        ("Dominant wave period", u(b.get("dpd_s"), lambda v: "%.0f s" % v)),
+        ("Wave direction (coming from)", u(b.get("mwd_deg"), lambda v: "%.0f° true" % v)),
+        ("Sea surface temperature at the buoy", u(b.get("wtmp_c"), lambda v: "%.1f °C (%.0f °F)" % (v, v * 1.8 + 32)))))
+    credit = ' <a href="https://cdip.ucsd.edu/" rel="noopener">Data courtesy of CDIP</a>.' if src == "cdip" else ""
+    return block("waves", "Waves offshore", "live", table(["Buoy %s, %.0f km offshore" % (esc(b["id"]), b["km"]), esc(tzl(t, G["zone"]))], rows, right=(1,)),
+                 "Source: %s buoy %s, %.0f km from this station, newest reading %s; values as the buoy reports them.%s" % (
+                     "CDIP (Scripps Institution of Oceanography) via NOAA NDBC" if src == "cdip" else "NOAA National Data Buoy Center", esc(b["id"]), b["km"], esc(tzl(t, G["zone"])), credit), src, amber=age > 2)
+
+
 def b_key_facts(G):
     """Facts that do not change by the hour, as plain sentences with their source: what Google's AI answers can quote without going stale (owner 2026-11-04).
     Never the live reading: a cached copy of it would read as today's level. Each sentence is built only from a value in this run's cache; none, no block."""

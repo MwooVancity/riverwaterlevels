@@ -1276,6 +1276,7 @@ def fetch_uv(rec):
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
 COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com&"
 
@@ -1284,6 +1285,20 @@ def coops_get(st, q):
     """One CO-OPS product; NOAA answers a missing product with an error object, which becomes an empty list (Unknown on the page, never zero)."""
     j = http_json(COOPS % st + q, NWS_H, 60)
     return j.get("data") or j.get("predictions") or []
+
+
+def fetch_buoy(st):
+    """The newest row of the station's hand-checked buoy (NDBC realtime2 standard meteorological file): wave height, dominant period, mean wave
+    direction, sea temperature, in the units the file states (m, s, degT, degC). 'MM' (missing) stays None, shown Unknown, never zero. 1 call."""
+    b = COAST_BUOY.get(st)
+    if not b:
+        return None
+    lines = [l.split() for l in http_raw("https://www.ndbc.noaa.gov/data/realtime2/%s.txt" % b[0], 60).decode("utf-8", "replace").splitlines()]
+    hd, row = lines[0], next(l for l in lines[2:] if len(l) == len(lines[0]))
+    d = dict(zip([h.lstrip("#") for h in hd], row))
+    num = lambda k: float(d[k]) if d.get(k) not in (None, "MM") else None
+    return {"fetched_at": now_iso(), "id": b[0], "owner": b[1], "km": float(b[2]), "time": "%s-%s-%sT%s:%s:00+00:00" % (d["YY"], d["MM"], d["DD"], d["hh"], d["mm"]),
+            "wvht_m": num("WVHT"), "dpd_s": num("DPD"), "mwd_deg": num("MWD"), "wtmp_c": num("WTMP")}
 
 
 def fetch_coops(st):
@@ -1356,6 +1371,10 @@ def collect(site, inv):
     coast = site in COASTS
     if coast:
         rec["usgs"], rec["coops"] = fetch_coops(site)  # critical: raises, cache kept
+        try:
+            rec["buoy"] = fetch_buoy(site)
+        except Exception as e:  # waves hide alone; the page still ships
+            note("buoy", "failed", e)
     else:
         rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
@@ -1540,6 +1559,7 @@ def fast(inv, sites):
                 try:
                     cu_, rec["coops"] = fetch_coops(s)
                     new[s] = cu_["rows"]
+                    rec["buoy"] = fetch_buoy(s)
                 except Exception as e:
                     log.append("coops FAILED (%s), kept previous" % str(e)[:60])
                     note("coops", "failed", e)

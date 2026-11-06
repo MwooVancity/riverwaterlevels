@@ -135,7 +135,7 @@ def tab_blocks(tab, G, pages):
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
         has_al = bool(live_alerts(G))
-        return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_key_facts(G), b3.b_reservoir(G),
+        return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_key_facts(G), b3.b_reservoir(G), b3.b_waves(G),
                 "SEC:Level, flow and flood risk", b_flow_chart(G), b2.b_stage_chart(G) or b_flood_stages(G), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
@@ -325,7 +325,7 @@ def lake_words(h, G):
         h = h.replace(a, b)
     if G.get("coast"):  # a coast page: the lake path's words in coast words, and the reading's source is NOAA CO-OPS, never USGS
         for a, b in (("water level and elevation", "tide times, water level and water temperature"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
-                     ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings.", "Solid line: NOAA readings (preliminary)."), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
+                     ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings", "Solid line: NOAA readings (preliminary)"), (" &middot; dashed curve: NWS forecast", " &middot; dashed curve: NOAA predicted tide, next 24 h"), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
                      ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Water levels are preliminary until NOAA verifies them."),
                      ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "The National Weather Service has no forecast point for this station. NOAA tide predictions are under Tides."),
                      ("Lake elevation", "Water level"), ("lake elevation", "water level"), ("Weather at the lake", "Weather at the coast"), ("Lake level and flood risk", "Water level and coastal flood risk"), ("near this lake", "near this station"),
