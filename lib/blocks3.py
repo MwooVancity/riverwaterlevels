@@ -854,7 +854,7 @@ def b_reservoir(G):
     """How full a reservoir is, on the operator's or state's own basis (plan 2026-11-05 step 3). Texas: TWDB's daily estimate, whose percent is
     conservation storage / conservation capacity; a percent is never shown without that basis named. No source for this lake: no block."""
     c = G["rec"].get("cdec_res")
-    st_ = series(G["rec"], "00054")
+    st_ = series(G["rec"], "00054") if c else None  # a record with no reading rows (selftest fixtures) has nothing to divide
     if G.get("lake") and c and st_ and cleared("cdec"):  # CDEC lake: capacity and 1991-2020 monthly average from CDEC's reservoir profile; both percents are our calculation, said so
         v, t_ = st_[-1][1], st_[-1][0]
         avg = c["avg_af"].get(str(t_.astimezone(G["zone"]).month)) or c["avg_af"].get(t_.astimezone(G["zone"]).month)
