@@ -13,6 +13,12 @@ Start: "read docs/handoffs/2026-11-07d-queue-money-and-reviews.md and continue".
 - data/world-queue.csv 20,000 rows (a cap in tools/world_queue.py): 19 at 10K-100K, 261 at 1K-10K, 1,390 at 100-1K, 3,926 at 10-100, 14,404 zero/unmeasured.
 - Not in money order: (1) top 70 rows are US lakes/coasts blocked by UNREVIEWED_MAX 0 until a phone review; tomorrow's 25 = 5 reviewed lakes + 20 rivers at 100-1K; (2) no country rate in world_queue.py; country blank on 2,758 lake/ocean/hub rows; ambiguous names (Dunedin, Westport, Portland, New Plymouth, Bangor, Newport, Richmond, Freeport); (3) unbuildable rows at ranks 17-19 (Plymouth, Portsmouth: UK predictions barred; bore tides: place unclear); (4) ~135 US lake/coast rows at 1K+ not linked (Charleston, Biloxi, Lake Tahoe, Okeechobee, Texoma, Lake Norman); (5) multi-country rivers score 0 (Trent, Thames); world rivers enter only via data/world-ready.csv (32 rows at 10-100).
 
+## Update 17:41 UTC (deployed, main = check)
+- Live: nightly practice release (dryrun.yml schedule 03:10 UTC, tools/practice_keep.py), per-type break gate (tools/break_blocks.py --gate: 7 types, 11 samples, 0 faults), coast truth at the page's own minute, a new page's mismatch goes to _failed.json for quarantine (deleting it stopped the 17:20 publish).
+- Today's release failed twice (15:06 stats rule only at the gate; 17:20 deleted new pages broke sitemap/links). Both fixed. Picks marked 'retry after 2026-11-07'; Buffalo River MS and Lake Fork OH held (keyword means another state's river).
+- FIRST TOMORROW: read the 03:10 practice run (`gh run list --workflow dryrun.yml -L 3`, log: "practice:" lines and "practice gates committed") and the 11:00+ release ("release committed"). The 4 reviewed lakes + Provo were the pages that went missing on 17:20: read their gate reason if sent back.
+- Build order for scale and keywords: PLAN.md execution plan item 7 (NOW items first: keyword kind/scope rule in tools/world_queue.py, address clash rule, near-duplicate as page failure, release guard from status.json ledger, datum rule).
+
 ## Next, in order (money)
 1. Link the ~135 US lake/coast rows at 1K+ (data/coasts.csv: CO-OPS stations with water level, exact name, read live; data/lakes.csv: USGS lake codes or agency feeds). Script the match, hand-check ambiguous.
 2. tools/world_queue.py: country column, score = searches x RATE (tools/release.py), barred sources (UK tides, CHS) = 0, ambiguous multi-state names held until hand-picked; Trent/Thames to the UK.
