@@ -67,8 +67,10 @@ ready = ready[:max(0, WORLD_MAX - len(listed))]
 RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
 both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
 # readiness debate 2026-11-07: a lake or coast enters Google only after a phone review (data/reviewed.json), so an unreviewed one earns nothing until a
-# person reviews it; at most UNREVIEWED_MAX a day, the other slots go to the next pages Google can take at once. ponytail: a fixed 5, a review backlog count if it grows
-UNREVIEWED_MAX = 5
+# person reviews it. Owner 2026-11-07 ("worried about oceans and lakes, the new stuff"): the 2026-11-07 phone review failed 20 of 26 new lakes and coasts
+# that every machine check passed, so a new lake or coast is published only after its review passed (truth first: a false page is worse than none);
+# the review is run on a local preview (tools/hater_shots.mjs) before the release. Rivers, drilled for weeks, fill the other slots.
+UNREVIEWED_MAX = 0
 try:
     import json as _json
     _rev = set(_json.load(open(os.path.join(ROOT, "data", "reviewed.json"), encoding="utf-8"))["passed"])

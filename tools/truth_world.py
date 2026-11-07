@@ -1,11 +1,17 @@
 """World gauge pages against the live PEGELONLINE feed (log only, as truth_live.py is for the US). The built number may lag an hour; a gap over 50 cm is a fault."""
-import json, os, re, sys, time, urllib.parse, urllib.request
+import json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 
 UA = {"User-Agent": "riverwaterlevels.com truth check"}
 BATCH = 40
 
 
+LOCAL = sys.argv[sys.argv.index("--dir") + 1] if "--dir" in sys.argv else None  # readiness 2026-11-07: before deploy, built pages (dist_next) against the live feeds
+
+
 def get(u):
+    if LOCAL and u.startswith("https://riverwaterlevels.com/"):
+        p = u[len("https://riverwaterlevels.com/"):].strip("/")
+        return open(os.path.join(LOCAL, p) if p.endswith(".json") else os.path.join(LOCAL, p, "index.html"), encoding="utf-8").read()
     key = {"X-Api-Key": os.environ["USGS_API_KEY"]} if "waterdata" in u and os.environ.get("USGS_API_KEY") else {}
     return urllib.request.urlopen(urllib.request.Request(u, headers=dict(UA, **key)), timeout=30).read().decode("utf-8")
 
@@ -29,8 +35,9 @@ def moved(rows):
 def england(row, page):
     """An English page against the Environment Agency: the stage now, and warnings by the agency's own map filter (areas within 10 m of the gauge), a path our point test never uses."""
     sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
-    items = json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/stations/%s/readings?latest&parameter=level" % urllib.parse.quote(sid)))["items"]
-    live = next((i["value"] for i in items if i.get("measure", "").endswith("-level-stage-i-15_min-mASD")), None)
+    t = page_t(page)
+    items = json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/stations/%s/readings?parameter=level&%s" % (urllib.parse.quote(sid), ("since=%s&_sorted&_limit=20" % t) if t else "latest")))["items"]
+    live = next((i["value"] for i in items if i.get("measure", "").endswith("-level-stage-i-15_min-mASD") and (not t or str(i.get("dateTime", "")).replace("+00:00", "Z") == t)), None)
     ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.5  # no live stage proves nothing; "not reporting" is a true page
     print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
     near = [f for f in json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/floods?lat=%.6f&long=%.6f&dist=0.01" % (row[2], row[3])))["items"] if f.get("severityLevel") in (1, 2, 3)]
@@ -45,6 +52,16 @@ def england(row, page):
     return int(not ok)
 
 
+def page_t(page):
+    """The page's reading time as the feeds write it (2026-11-07T13:35:00Z), or None. Each feed is asked for that same minute: against the newest value,
+    a river rising in rain (Squamish, 1.3 m in hours) read as a wrong page, and the older live copy would have replaced a right one."""
+    m = re.search(r'data-live="age" data-t="([^"]+)"', page)
+    if not m:
+        return None
+    import datetime
+    return datetime.datetime.fromisoformat(m.group(1)).astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def check(row):
     """Faults on one world page."""
     canada = "Canada" in str(row[4:5])
@@ -53,8 +70,10 @@ def check(row):
         return england(row, page)
     if canada:
         sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
-        live = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&sortby=-DATETIME&properties=LEVEL" % sid))["features"][0]["properties"]["LEVEL"]
-        ok = not shown or abs(float(shown.group(1)) - live) <= 0.5  # "not reporting" is a true page
+        t = page_t(page)
+        fs = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&%sproperties=LEVEL" % (sid, ("datetime=%s&" % t) if t else "sortby=-DATETIME&")))["features"]
+        live = fs[0]["properties"]["LEVEL"] if fs else None
+        ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.5  # "not reporting" is a true page; no feed value for the page's minute proves nothing
         print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
         near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&skipGeometry=true&properties=status_en&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
         live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled")]
@@ -63,8 +82,13 @@ def check(row):
             return 2 - bool(ok)
         return int(not ok) + canada_blocks(row, page)
     name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
-    cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
-    ok = not shown or abs(int(shown.group(1)) - cur) <= 50
+    t = page_t(page)
+    if t:
+        ms = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/measurements.json?start=%s&end=%s" % (urllib.parse.quote(name), t, t)))
+        cur = ms[0]["value"] if ms else None
+    else:
+        cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
+    ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= 50
     print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")
     return int(not ok) + wt_block(name, page, row)
 
@@ -122,22 +146,63 @@ def main():
         print("no gauge list:", str(e)[:80])
         return 0
     begun = time.time()
-    try:
-        bad += moved(every)
-    except Exception as e:
-        print("station check skipped, no answer:", str(e)[:80])
+    if not LOCAL:
+        try:
+            bad += moved(every)
+        except Exception as e:
+            print("station check skipped, no answer:", str(e)[:80])
     rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5])]
     start = int(time.time() // 3600) * BATCH % max(1, len(rows))
-    for row in (rows[start:] + rows[:start])[:BATCH]:  # ponytail: 40 a run so the 10-minute job holds at any page count; all pages take len/40 runs
-        if time.time() - begun > 180:  # a slow feed must not trip the step limit and read as a wrong number
+    faulty = []
+    for row in (rows if LOCAL else (rows[start:] + rows[:start])[:BATCH]):  # ponytail: 40 a run after deploy; before deploy every world page, until the time limit
+        if time.time() - begun > (420 if LOCAL else 180):  # a slow feed must not trip the step limit and read as a wrong number; ceiling: about 1 s a page, so past ~400 world pages the rest wait for the hourly run
             print("stopped at the time limit")
             break
         try:
-            bad += check(row)
-        except Exception as e:  # a feed down proves nothing about the page: the page says its own age, and only a real mismatch may email the owner
+            n_ = check(row)
+        except Exception as e:  # a feed down proves nothing about the page: the page says its own age, and only a real mismatch counts
             print(row[1], "skipped, no answer:", str(e)[:80])
+            continue
+        bad += n_
+        if n_:
+            faulty.append(row[1])
     print("world truth: %d fault(s)" % bad)
+    if LOCAL and faulty:
+        return 0 if carry(faulty, len(rows)) else 1
     return 1 if bad else 0
+
+
+def carry(urls, n):
+    """Before deploy: each world page whose number does not match its agency keeps its live copy; a new page with none is left out of this build (the
+    next build tries again). More than max(3, 5%) of world pages is a parser or feed fault for everyone: the deploy stops. True when the rest may ship."""
+    import shutil
+    if len(urls) > max(3, n // 20):
+        print("world truth: %d pages disagree with their agency; the deploy stops" % len(urls))
+        return False
+    cp = os.path.join(LOCAL, "_carried.json")
+    try:
+        done = set(json.load(open(cp)))
+    except (OSError, ValueError):
+        done = set()
+    for u in urls:
+        dst = os.path.join(LOCAL, u.strip("/"), "index.html")
+        try:
+            html = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com" + u, headers=UA), timeout=30).read()
+        except urllib.error.HTTPError as e:
+            if e.code != 404:
+                print("world truth: could not carry", u, str(e)[:60])
+                return False
+            shutil.rmtree(os.path.dirname(dst), ignore_errors=True)
+            print("DROPPED new world page", u, "(its number did not match the agency; no live copy; the next build tries again)")
+            continue
+        except Exception as e:
+            print("world truth: could not carry", u, str(e)[:60])
+            return False
+        open(dst, "wb").write(html)
+        done.add(u.strip("/") + "/index.html")
+        print("CARRIED previous live page for", u, "(its number did not match the agency)")
+    json.dump(sorted(done), open(cp, "w"))
+    return True
 
 
 def selftest():
@@ -164,6 +229,12 @@ def selftest():
     assert moved([["n", "/u/", 40.0, -72.0, "Ohio OH 01"]]) == 0, "a gauge in place was called moved"
     assert moved([["n", "/u/", 41.0, -72.0, "Ohio OH 01"]]) == 1, "a moved gauge passed"
     assert moved([["n", "/u/", 41.0, -72.0, "Germany Europe"]]) == 0, "a world row reached USGS"
+    pg = '<i data-n="08GA022"></i><b data-live="stage">1.73</b><span data-live="age" data-t="2026-11-07T05:35:00-08:00">'
+    get = lambda u: pg if "/c/" in u else ('{"features": [{"properties": {"LEVEL": 1.731}}]}' if "datetime=2026-11-07T13:35:00Z" in u else '{"features": [{"properties": {"LEVEL": 3.046}}]}') if "hydrometric" in u else '{"features": []}'
+    assert check([0, "/c/", 49.8, -123.2, "Canada"]) == 0, "a right page read against a newer reading (river rising) counted as wrong"
+    get = lambda u: pg if "/c/" in u else ('{"features": [{"properties": {"LEVEL": 3.046}}]}' if "hydrometric" in u else '{"features": []}')
+    assert check([0, "/c/", 49.8, -123.2, "Canada"]) == 1, "a wrong number at the page's own minute passed"
+    assert carry(["/a/", "/b/", "/c/", "/d/"], 40) is False, "four of 40 world pages disagreeing did not stop the deploy"  # max(3, 5%) = 3
     get = real
     print("selftest OK")
 
