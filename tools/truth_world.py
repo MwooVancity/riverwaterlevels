@@ -192,9 +192,8 @@ def carry(urls, n):
             if e.code != 404:
                 print("world truth: could not carry", u, str(e)[:60])
                 return False
-            shutil.rmtree(os.path.dirname(dst), ignore_errors=True)
-            print("DROPPED new world page", u, "(its number did not match the agency; no live copy; the next build tries again)")
-            continue
+            print("NEW WORLD PAGE FAILED", u, "(its number did not match the agency; no live copy; this try stops and the release's second try is built without the new gauges)")
+            return False  # release 2026-11-07: deleting a page left its links and sitemap entry and stopped the publish anyway
         except Exception as e:
             print("world truth: could not carry", u, str(e)[:60])
             return False

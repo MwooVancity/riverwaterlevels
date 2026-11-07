@@ -75,6 +75,19 @@ def agency_verdict(ag, pt, pv, got):
     return None
 
 
+def coops_verdict(pt, pv, got):
+    """None when the coast page's water level pv at pt is NOAA's value for that minute (0.02 ft, the feed's 3 decimals rounded to 2), else the fault."""
+    if not got:
+        return None  # no answer proves nothing; the staleness of a dead feed is the page's own banner
+    if pt in got and abs(got[pt] - pv) > 0.02:
+        return "water level %s on the page, %s at NOAA for the same time" % (pv, got[pt])
+    if pt not in got and pt < max(got):
+        return "the page's reading time %s is not a NOAA 6-minute reading" % pt.isoformat()
+    if (max(got) - pt).total_seconds() / 3600 > STALE_FAIL_H:
+        return "page is more than %d h behind NOAA" % STALE_FAIL_H
+    return None
+
+
 def selftest():
     """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
     P = lambda s: datetime.datetime.fromisoformat(s)
@@ -89,6 +102,14 @@ def selftest():
     assert "on the page" in agency_verdict("CDEC", k, 1013.0, c)
     assert "not a CDEC reading" in agency_verdict("CDEC", P("2026-11-06T22:30:00-08:00"), 1012.34, c)
     assert "behind" in agency_verdict("CDEC", k - datetime.timedelta(hours=20), 1012.34, {**c, k - datetime.timedelta(hours=20): 1012.34})
+    q = P("2026-11-07T13:30:00+00:00")
+    nn = {q: 3.41, q + datetime.timedelta(minutes=6): 3.45}
+    assert coops_verdict(q, 3.41, nn) is None and "on the page" in coops_verdict(q, 3.9, nn) and "not a NOAA" in coops_verdict(q + datetime.timedelta(minutes=2), 3.41, nn), "a coast page's level was not compared with NOAA's for its own minute"
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        new_fail(td, "/lake/x/", ["/lake/x/: level 1 on the page, 2 at USGS"])
+        f = json.load(open(os.path.join(td, "_failed.json")))
+        assert f["pages"] == {"lake/x/index.html": ["/lake/x/: level 1 on the page, 2 at USGS"]} and f["site"] == [], "a new page's mismatch was not recorded for quarantine (release 2026-11-07)"
     print("truth_live selftest OK")
 
 
@@ -168,16 +189,16 @@ def main():
         if not (sid and st_ and t_):
             bad.append("%s: cannot read station, water level or time from the page" % u)
             continue
-        try:
-            d = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=MLLW&date=latest&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % sid.group(1)))["data"][-1]
+        pt = datetime.datetime.fromisoformat(t_.group(1)).astimezone(datetime.timezone.utc)
+        try:  # scale debate 2026-11-07: the old 'latest' call matched the page's minute almost never (6-minute data), so no coast value was ever compared; now from the page's minute to now
+            rows_ = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=MLLW&begin_date=%s&end_date=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
+                sid.group(1), pt.strftime("%Y%m%d%%20%H:%M"), datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%%20%H:%M"))))["data"]
         except Exception as e:
             (skipped if LOCAL else bad).append("%s: NOAA CO-OPS did not answer (%s)" % (u, str(e)[:60]))
             continue
-        nt, pt = datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"), datetime.datetime.fromisoformat(t_.group(1))
-        if nt == pt and abs(float(d["v"]) - float(st_.group(1))) > 0.02:
-            bad.append("%s: water level %s on the page, %s at NOAA for the same time" % (u, st_.group(1), d["v"]))
-        elif (nt - pt).total_seconds() / 3600 > STALE_FAIL_H:
-            bad.append("%s: page is more than %d h behind NOAA" % (u, STALE_FAIL_H))
+        v_ = coops_verdict(pt, float(st_.group(1)), {datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"): float(d["v"]) for d in rows_ if d.get("v") not in (None, "")})
+        if v_:
+            bad.append("%s: %s" % (u, v_))
     for u, ag, sta, st_, t_ in agency:  # the page's elevation against the operator's own value for the same time
         if not (st_ and t_):
             bad.append("%s: cannot read lake elevation or time from the page" % u)
@@ -296,6 +317,7 @@ def main():
             carried = json.load(open(cp))
         except (OSError, ValueError):
             carried = []
+        newf = []
         for u in urls_:
             try:
                 html = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com" + u, headers={"User-Agent": "riverwaterlevels.com truth_live"}), timeout=30).read()
@@ -303,9 +325,8 @@ def main():
                 if e.code != 404:
                     print("truth_live: could not carry", u, str(e)[:60])
                     return 1
-                import shutil  # review 2026-11-07 #1: a new page has no live copy; a wrong number never ships, so this build leaves it out and the rest of the site deploys
-                shutil.rmtree(os.path.join(LOCAL, u.strip("/")), ignore_errors=True)
-                print("DROPPED new page", u, "(no live copy to carry; its numbers did not match the source; the next build tries it again; listed in _truth.json mismatches)")
+                new_fail(LOCAL, u, [b for b in bad if b.startswith(u + ":")])  # release 2026-11-07: deleting the page left its links and sitemap entry and stopped the publish; now quarantine.py sends it back to the queue and the retry builds without it
+                newf.append(u)
                 continue
             except Exception as e:
                 print("truth_live: could not carry", u, str(e)[:60])
@@ -314,8 +335,21 @@ def main():
             carried.append(u.strip("/") + "/index.html")
             print("CARRIED previous live page for", u, "(this build's numbers did not match the source)")
         json.dump(sorted(set(carried)), open(cp, "w"))
-        return 0
+        return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
+
+
+def new_fail(d, u, msgs):
+    """Record a new page whose number did not match its source in <d>/_failed.json (the file check.py writes), as a page failure quarantine.py can send back."""
+    p = os.path.join(d, "_failed.json")
+    try:
+        f = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        f = {"pages": {}, "site": []}
+    f.setdefault("pages", {})[u.strip("/") + "/index.html"] = msgs or ["numbers did not match the source"]
+    f["site"] = f.get("site") or []
+    json.dump(f, open(p, "w", encoding="utf-8"))
+    print("NEW PAGE FAILED", u, "(its numbers did not match the source; the second try sends it back to the queue)")
 
 
 sys.exit(selftest() if "--selftest" in sys.argv else main())
