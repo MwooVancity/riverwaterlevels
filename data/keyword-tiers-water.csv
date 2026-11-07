@@ -52378,3 +52378,226 @@ yampa river gauge,50,,river
 yampa river water temperature,50,,river
 yellow breeches creek water temperature,50,,river
 yellow river dam release,50,,river
+alabama lake levels,50,,lake
+alabama river levels,50,,river
+altamaha river fishing report,50,,river
+amistad reservoir fishing report,500,,lake
+arizona lake levels,500,,lake
+arkansas lake levels,500,,lake
+arkansas river levels,500,,river
+beach closures,5000,2.36,river
+beach water quality,500,9.41,river
+bodega bay high tide,500,,ocean
+bodega bay surf report,50,,river
+bodega bay water temp,50,,river
+bogachiel river cfs,50,,river
+bogachiel river fishing report,50,,river
+brazos river cfs,50,,river
+brazos river fishing report,50,,river
+brighton beach conditions,50,,river
+brighton high tide,50,,ocean
+brighton surf report,50,,river
+brighton water quality,50,,river
+brighton water temp,50,,river
+brighton wave height,50,,river
+california lake levels,500,,lake
+california river levels,50,,river
+canyon lake boat ramps open,500,,lake
+canyon lake fishing report,500,,lake
+canyon lake water temp,500,,lake
+cape may beach conditions,50,,river
+cape may high tide,500,,ocean
+cape may surf report,500,,river
+cape may water quality,50,,river
+cape may water temp,5000,,river
+cape may wave height,50,,river
+cfs,50000,25.43,river
+chatham high tide,500,,ocean
+chatham water temp,50,,ocean
+choke canyon reservoir fishing report,500,,lake
+clackamas river cfs,50,,river
+clackamas river fishing report,500,,river
+colorado lake levels,50,,lake
+colorado river levels,500,2.83,river
+fishing report,5000,3.28,river
+flood warning,500000,6.28,river
+florida lake levels,50,,lake
+florida river levels,50,,river
+fort lauderdale beach conditions,5000,,ocean
+fort lauderdale high tide,5000,,ocean
+fort lauderdale rip current,50,,ocean
+fort lauderdale surf report,500,,ocean
+fort lauderdale water quality,50,,ocean
+fort lauderdale water temp,5000,,ocean
+galveston beach conditions,500,0.04,ocean
+galveston high tide,500,,ocean
+galveston rip current,50,,ocean
+galveston surf report,5000,,ocean
+galveston water quality,500,0.04,ocean
+galveston water temp,5000,,ocean
+galveston wave height,50,,ocean
+georgia lake levels,500,,lake
+georgia river levels,500,,river
+great salt lake fishing report,50,,lake
+great salt lake water temp,50,,lake
+harmful algal bloom,5000,,river
+hartwell lake fishing report,5000,5.84,lake
+hartwell lake water temp,500,,lake
+high tide today,5000,0.96,ocean
+ice thickness,500,,river
+idaho lake levels,50,,lake
+idaho river levels,50,,river
+james river fishing report,500,,river
+kansas lake levels,50,,lake
+kansas river levels,500,,river
+kayak conditions,50,,river
+kentucky lake levels,5000,,lake
+kentucky river levels,50,,river
+kerr lake boat ramps open,50,,lake
+kerr lake fishing report,500,,lake
+kerr lake water temp,500,,lake
+la jolla beach conditions,50,2.83,river
+la jolla high tide,500,,ocean
+la jolla rip current,50,,river
+la jolla surf report,5000,,river
+la jolla water quality,500,2.83,river
+la jolla water temp,5000,2.83,river
+la jolla wave height,50,,river
+lake corpus christi fishing report,50,,lake
+lake corpus christi water temp,50,,lake
+lake lanier boat ramps open,50,,lake
+lake lanier fishing report,5000,,lake
+lake lanier water temp,5000,,lake
+lake levels,5000,,lake
+lake mead boat ramps open,50,,lake
+lake mead fishing report,500,,lake
+lake mead water temp,500,,lake
+lake michigan fishing report,500,3.39,lake
+lake michigan water temp,50000,,lake
+lake powell boat ramps open,50,,lake
+lake powell fishing report,500,,lake
+lake powell water temp,500,,lake
+lake tahoe fishing report,500,,lake
+lake tahoe water temp,5000,11.32,lake
+lake travis boat ramps open,50,,lake
+lake travis fishing report,500,,lake
+lake travis how full,50,,lake
+lake travis water temp,500,,lake
+marine forecast,50000,3.89,river
+maumee river fishing report,500,,river
+medina lake boat ramps open,50,,lake
+medina lake fishing report,50,,lake
+medina lake water temp,50,,lake
+michigan lake levels,500,,lake
+michigan river levels,500,,river
+minnesota lake levels,50,,lake
+minnesota river levels,500,,river
+mississippi river cfs,50,,river
+mississippi river fishing report,500,,river
+missouri lake levels,500,,lake
+missouri river levels,500,,river
+montana lake levels,50,,lake
+montana river levels,50,,river
+monterey high tide,500,,ocean
+monterey surf report,500,,ocean
+monterey water quality,50,,ocean
+monterey water temp,500,,ocean
+muskegon river cfs,50,,river
+muskegon river fishing report,500,2.50,river
+myrtle beach beach conditions,500,,ocean
+myrtle beach high tide,5000,0.01,ocean
+myrtle beach rip current,500,,ocean
+myrtle beach surf report,500,,ocean
+myrtle beach water quality,500,,ocean
+myrtle beach water temp,5000,,ocean
+myrtle beach wave height,50,,ocean
+nebraska lake levels,50,,lake
+nebraska river levels,50,,river
+norfolk high tide,5000,,ocean
+norfolk surf report,50,,ocean
+norfolk water quality,50,,ocean
+norfolk water temp,50,,ocean
+north carolina lake levels,500,,lake
+north carolina river levels,50,,river
+ocean temperature,5000,6.05,river
+ohio river fishing report,50,,river
+oklahoma lake levels,5000,,lake
+oklahoma river levels,50,,river
+oregon lake levels,50,,lake
+oregon river levels,5000,,river
+panama city beach beach conditions,500,,ocean
+panama city beach high tide,500,,ocean
+panama city beach rip current,50,,ocean
+panama city beach surf report,5000,,ocean
+panama city beach water quality,500,,ocean
+panama city beach water temp,5000,,ocean
+panama city beach wave height,50,,ocean
+pensacola beach conditions,500,,ocean
+pensacola high tide,500,,ocean
+pensacola rip current,50,,ocean
+pensacola surf report,5000,,ocean
+pensacola water quality,50,,ocean
+pensacola water temp,500,,ocean
+pensacola wave height,50,,ocean
+plymouth high tide,500,,ocean
+plymouth surf report,50,,river
+plymouth water quality,50,,river
+plymouth water temp,50,,river
+port angeles surf report,50,,ocean
+port angeles water quality,50,,ocean
+port angeles water temp,50,,ocean
+port townsend high tide,50,,ocean
+portsmouth high tide,500,,ocean
+portsmouth water quality,50,,river
+portsmouth water temp,50,,river
+rip current,50000,28.26,river
+river flows,5000,13.58,river
+river levels,5000,,river
+san diego beach conditions,500,2.83,ocean
+san diego high tide,500,,ocean
+san diego rip current,50,,ocean
+san diego surf report,5000,2.83,ocean
+san diego water quality,5000,6.99,ocean
+san diego water temp,50000,2.83,ocean
+san diego wave height,50,,ocean
+sarasota beach conditions,50,,river
+sarasota high tide,500,,ocean
+sarasota rip current,50,,river
+sarasota surf report,50,,river
+sarasota water quality,50,,river
+sarasota water temp,5000,,river
+shasta lake boat ramps open,50,,lake
+shasta lake fishing report,500,,lake
+shasta lake water temp,500,,lake
+skykomish river cfs,50,,river
+skykomish river fishing report,50,,river
+south carolina lake levels,500,,lake
+south carolina river levels,50,,river
+surf report,5000,28.26,river
+swell forecast,500,3.89,river
+swim conditions,50,,river
+tennessee lake levels,50,,lake
+tennessee river levels,50,,river
+texas lake levels,50000,,lake
+texas river levels,500,,river
+utah lake levels,50,,lake
+utah river levels,50,,river
+vero beach beach conditions,50,,river
+vero beach high tide,500,,ocean
+vero beach rip current,50,,river
+vero beach surf report,500,,river
+vero beach water quality,50,,river
+vero beach water temp,500,,river
+virginia beach beach conditions,50,,river
+virginia beach high tide,500,,ocean
+virginia beach rip current,50,,river
+virginia beach surf report,5000,22.66,river
+virginia beach water quality,500,,river
+virginia beach water temp,5000,,river
+virginia beach wave height,50,,river
+virginia river levels,50,,river
+washington river levels,500,,river
+water temperature today,500,,river
+wave height,5000,3.89,river
+wisconsin lake levels,50,,lake
+wisconsin river levels,500,,river
