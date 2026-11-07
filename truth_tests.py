@@ -65,7 +65,11 @@ def main(only=None):
                 past_ = G["p"] is None and (beyond(G["srow"], G["basis"], "ft" if G.get("lake") else "cfs") or (G.get("coast") and coast_anomaly(G)))  # past the highest or lowest published percentile: a real comparison (Lake Powell 2026-11-06)
                 if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)).replace(" for this date", "") + (" now" if G.get("coast") else " for ")):
                     fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[ni], nw.group(1)))
-                if G["p"] is None and not past_ and "No past-years" not in spans[ni]:
+                ca_ = render.cdec_avg(G) if G.get("agy") else None  # CDEC lake: the operator's own 1991-2020 monthly average is a real comparison; the strip must say exactly that calculation
+                if ca_ and ca_["avg"]:
+                    if not spans[ni].startswith("%s of the %s " % (ca_["pct_avg"], ca_["mon"])):
+                        fail(site, "answer strip comparison %r is not CDEC's monthly average %s" % (spans[ni], ca_["pct_avg"]))
+                elif G["p"] is None and not past_ and "No past-years" not in spans[ni]:
                     fail(site, "no percentile but the answer strip still states a comparison: %r" % spans[ni])
                 if c["alerts"] is not None and c["alerts"]["n"] and "active NWS alert" not in spans[ai]:
                     fail(site, "active alert not stated in the answer strip: %r" % spans[ai])
