@@ -174,7 +174,7 @@ def check_html(h, rel):
                 if unit not in mm.group(2) and re.search(r"\d", re.sub(r"<[^>]+>", "", mm.group(1))):  # a number needs its unit; "Not measured" has no number
                     bad.append("no unit on %s: %r" % (lab, mm.group(2)))
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
-        if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}(?:, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}| \([A-Z]+ daily average\))", re.sub(r"<[^>]+>", "", sub.group(1))):  # a daily average has a date, never a clock time (TWDB: lib/page.py agency_words)
+        if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}(?:, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}| \([A-Za-z]+ daily (?:average|value)\))", re.sub(r"<[^>]+>", "", sub.group(1))):  # a daily average has a date, never a clock time (TWDB: lib/page.py agency_words)
             bad.append("observed time without gauge-local zone label")
     for r_ in re.findall(r"<tr>.*?</tr>", h, re.S):  # a row of a gauge that stopped reporting over 24 h ago must not carry a 24 h change
         if 'class="oldm"' in r_ and re.search(r'<td class="r"[^>]*>(?:&#\d+; )?(?:[+-]\d+|0)%</td>', r_):

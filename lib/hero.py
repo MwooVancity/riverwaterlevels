@@ -63,6 +63,8 @@ def ctx(site, row, rec, now):
     out["lake"] = lake
     out["agy"] = AGENCIES.get((rec.get("usgs") or {}).get("agency"))  # CDEC and the like: no USGS line on this page
     out["agy_st"] = (rec.get("usgs") or {}).get("station")
+    if out["agy"] and out["agy"].get("day_tz"):  # a daily agency value is dated in the agency's own day (Mead: Reclamation, Arizona), never the page zone's previous evening
+        out["ldate"] = lt.astimezone(zoneinfo.ZoneInfo(out["agy"]["day_tz"])).date()
     if out["agy"] and out["agy"]["every"].startswith("daily"):  # a daily value is 1.5-3 days old when Reclamation posts it (Mead 2026-11-07: Nov 4 value posted Nov 5 13:58 UTC): "not reporting" only past 4 days
         out["offline"] = age_min > 96 * 60
     out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
