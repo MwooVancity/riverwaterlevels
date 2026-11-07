@@ -58,166 +58,166 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 57,1,5000,naples tide times,Naples Bay North,Naples,FL,US,8725114,,NOAA CO-OPS,yes
 58,1,5000,nolin lake level,Nolin Lake,Kyrock,KY,US,03310900,,USGS,yes
 59,1,5000,eureka tides,North Spit,Eureka,CA,US,9418767,,NOAA CO-OPS,yes
-60,1,5000,panama city beach tides,Panama City Beach,Panama City Beach,FL,US,8729210,,NOAA CO-OPS,yes
-61,1,5000,pensacola tides,Pensacola,Pensacola,FL,US,8729840,,NOAA CO-OPS,yes
-62,1,5000,port angeles tides,Port Angeles,Port Angeles,WA,US,9444090,,NOAA CO-OPS,yes
-63,1,5000,port aransas tide times,Port Aransas,Port Aransas,TX,US,8775237,,NOAA CO-OPS,yes
-64,1,5000,port townsend tides,Port Townsend,Port Townsend,WA,US,9444900,,NOAA CO-OPS,yes
-65,1,5000,lake richland chambers level,Richland-Chambers Reservoir,Kerens,TX,US,08064550,,USGS,yes
-66,1,5000,rough river lake level,Rough River Lake,Falls of Rough,KY,US,03318005,,USGS,yes
-67,1,5000,sam rayburn reservoir level,Sam Rayburn Reservoir,Jasper,TX,US,08039300,,USGS,yes
-68,1,5000,san francisco tide times,San Francisco,San Francisco,CA,US,9414290,,NOAA CO-OPS,yes
-69,1,5000,sandy hook tide times,Sandy Hook,Sandy Hook,NJ,US,8531680,,NOAA CO-OPS,yes
-70,1,5000,santa barbara tide times,Santa Barbara,Santa Barbara,CA,US,9411340,,NOAA CO-OPS,yes
-71,1,5000,seattle tide times,Seattle,Seattle,WA,US,9447130,,NOAA CO-OPS,yes
-72,1,5000,somerville lake level,Somerville Lake,Somerville,TX,US,08109900,,USGS,yes
-73,1,5000,south padre island tide times,South Padre Island CG Station,South Padre Island,TX,US,8779748,,NOAA CO-OPS,yes
-74,1,5000,fort lauderdale tides,South Port Everglades,Fort Lauderdale,FL,US,8722956,,NOAA CO-OPS,yes
-75,1,5000,jacksonville tide times,Southbank Riverwalk,Jacksonville,FL,US,8720226,,NOAA CO-OPS,yes
-76,1,5000,tacoma tides,Tacoma,Tacoma,WA,US,9446484,,NOAA CO-OPS,yes
-77,1,5000,new york tides,The Battery,New York,NY,US,8518750,,NOAA CO-OPS,yes
-78,1,5000,thurmond lake level,Thurmond Lake,Plum Branch,SC,US,02193900,,USGS,yes
-79,1,5000,cocoa beach tide times,Trident Pier,Cocoa Beach,FL,US,8721604,,NOAA CO-OPS,yes
-80,1,5000,wrightsville beach tide times,Wrightsville Beach,Wrightsville Beach,NC,US,8658163,,NOAA CO-OPS,yes
-81,1,5000,river trent level,River Trent,,,CA|GB|NZ,,,not checked,no
-82,1,5000,aberdeen tide times,Aberdeen,,,,,,not checked,no
-83,1,5000,amistad reservoir water level,Amistad Reservoir,,,,,,not checked,no
-84,1,5000,ardingly reservoir level,Ardingly Reservoir,,,,,,not checked,no
-85,1,5000,avalon tides,Avalon,,,,,,not checked,no
-86,1,5000,ballito tides,Ballito,,,,,,not checked,no
-87,1,5000,bandon tides,Bandon,,,,,,not checked,no
-88,1,5000,bangor tide times,Bangor,,,,,,not checked,no
-89,1,5000,barnstable harbor tides,Barnstable Harbor,,,,,,not checked,no
-90,1,5000,batemans bay tides,Batemans Bay,,,,,,not checked,no
-91,1,5000,bath water temperature,Bath,,,,,,not checked,no
-92,1,5000,bay of fundy tide times,Bay Of Fundy,,,,,,not checked,no
-93,1,5000,beaufort tides,Beaufort,,,,,,not checked,no
-94,1,5000,beaver lake level,Beaver Lake,,,,,,not checked,no
-95,1,5000,belfast tide times,Belfast,,,,,,not checked,no
-96,1,5000,bellingham tides,Bellingham,,,,,,not checked,no
-97,1,5000,belmar tides,Belmar,,,,,,not checked,no
-98,1,5000,biloxi tides,Biloxi,,,,,,not checked,no
-99,1,5000,boca raton tides,Boca Raton,,,,,,not checked,no
-100,1,5000,bodega bay tides,Bodega Bay,,,,,,not checked,no
-101,1,5000,boston harbor tides,Boston Harbor,,,,,,not checked,no
-102,1,5000,botany bay tides,Botany Bay,,,,,,not checked,no
-103,1,5000,bracklesham bay tide times,Bracklesham Bay,,,,,,not checked,no
-104,1,5000,bradenton tides,Bradenton,,,,,,not checked,no
-105,1,5000,branford tides,Branford,,,,,,not checked,no
-106,1,5000,brighton tides,Brighton,,,,,,not checked,no
-107,1,5000,brunswick tide times,Brunswick,,,,,,not checked,no
-108,1,5000,buchanan lake level,Buchanan Lake,,,,,,not checked,no
-109,1,5000,camber sands tide times,Camber Sands,,,,,,not checked,no
-110,1,5000,cape may tides,Cape May,,,,,,not checked,no
-111,1,5000,cedar creek lake level,Cedar Creek Lake,,,,,,not checked,no
-112,1,5000,charleston tides,Charleston,,,,,,not checked,no
-113,1,5000,charleston harbor tides,Charleston Harbor,,,,,,not checked,no
-114,1,5000,charlotte harbor tides,Charlotte Harbor,,,,,,not checked,no
-115,1,5000,cherokee lake level,Cherokee Lake,,,,,,not checked,no
-116,1,5000,chesapeake bay water temperature,Chesapeake Bay,,,,,,not checked,no
-117,1,5000,clearwater tides,Clearwater,,,,,,not checked,no
-118,1,5000,corpus christi tide times,Corpus Christi,,,,,,not checked,no
-119,1,5000,crescent beach tides,Crescent Beach,,,,,,not checked,no
-120,1,5000,crosby beach tide times,Crosby Beach,,,,,,not checked,no
-121,1,5000,cumberland lake level,Cumberland Lake,,,,,,not checked,no
-122,1,5000,douglas lake level,Douglas Lake,,,,,,not checked,no
-123,1,5000,dover tide times,Dover,,,,,,not checked,no
-124,1,5000,druridge bay tide times,Druridge Bay,,,,,,not checked,no
-125,1,5000,dunedin tide times,Dunedin,,,,,,not checked,no
-126,1,5000,dungeness tide times,Dungeness,,,,,,not checked,no
-127,1,5000,duxbury tides,Duxbury,,,,,,not checked,no
-128,1,5000,eastern beach tides,Eastern Beach,,,,,,not checked,no
-129,1,5000,edisto beach tide times,Edisto Beach,,,,,,not checked,no
-130,1,5000,edmonds tides,Edmonds,,,,,,not checked,no
-131,1,5000,englewood tides,Englewood,,,,,,not checked,no
-132,1,5000,everett tides,Everett,,,,,,not checked,no
-133,1,5000,falcon lake level,Falcon Lake,,,,,,not checked,no
-134,1,5000,florence tides,Florence,,,,,,not checked,no
-135,1,5000,fort gibson lake level,Fort Gibson Lake,,,,,,not checked,no
-136,1,5000,fort pierce tides,Fort Pierce,,,,,,not checked,no
-137,1,5000,freeport tides,Freeport,,,,,,not checked,no
-138,1,5000,grand lake level,Grand Lake,,,,,,not checked,no
-139,1,5000,grenada lake level,Grenada Lake,,,,,,not checked,no
-140,1,5000,gulf shores tide times,Gulf Shores,,,,,,not checked,no
-141,1,5000,half moon bay tide times,Half Moon Bay,,,,,,not checked,no
-142,1,5000,hervey bay tide times,Hervey Bay,,,,,,not checked,no
-143,1,5000,high rock lake level,High Rock Lake,,,,,,not checked,no
-144,1,5000,homer tides,Homer,,,,,,not checked,no
-145,1,5000,hot water beach tides,Hot Water Beach,,,,,,not checked,no
-146,1,5000,hull tide times,Hull,,,,,,not checked,no
-147,1,5000,humboldt bay tides,Humboldt Bay,,,,,,not checked,no
-148,1,5000,indian river inlet tides,Indian River Inlet,,,,,,not checked,no
-149,1,5000,jacksonville beach tides,Jacksonville Beach,,,,,,not checked,no
-150,1,5000,jupiter tide times,Jupiter,,,,,,not checked,no
-151,1,5000,jupiter inlet tides,Jupiter Inlet,,,,,,not checked,no
-152,1,5000,karioitahi beach tides,Karioitahi Beach,,,,,,not checked,no
-153,1,5000,kaw lake level,Kaw Lake,,,,,,not checked,no
-154,1,5000,kentucky lake level,Kentucky Lake,,,,,,not checked,no
-155,1,5000,kentucky lake levels,Kentucky Lake,,,,,,statewide hub,no
-156,1,5000,key largo water temperature,Key Largo,,,,,,not checked,no
-157,1,5000,key west water temperature,Key West,,,,,,not checked,no
-158,1,5000,keystone lake level,Keystone Lake,,,,,,not checked,no
-159,1,5000,kinsale tides,Kinsale,,,,,,not checked,no
-160,1,5000,la jolla water temperature,La Jolla,,,,,,not checked,no
-161,1,5000,ladybower reservoir level,Ladybower Reservoir,,,,,,not checked,no
-162,1,5000,lake levels,Lake,,,,,,not checked,no
-163,1,5000,lake awoonga level,Lake Awoonga,,,,,,not checked,no
-164,1,5000,lake berryessa level,Lake Berryessa,,,,,,not checked,no
-165,1,5000,lake buchanan level,Lake Buchanan,,,,,,not checked,no
-166,1,5000,lake cachuma water level,Lake Cachuma,,,,,,not checked,no
-167,1,5000,lake casitas level,Lake Casitas,,,,,,not checked,no
-168,1,5000,lake cumberland level,Lake Cumberland,,,,,,not checked,no
-169,1,5000,lake dillon water level,Lake Dillon,,,,,,not checked,no
-170,1,5000,lake eppalock water level,Lake Eppalock,,,,,,not checked,no
-171,1,5000,lake erie level,Lake Erie,,,,,,not checked,no
-172,1,5000,lake eufaula level,Lake Eufaula,,,,,,not checked,no
-173,1,5000,lake folsom water level,Lake Folsom,,,,,,not checked,no
-174,1,5000,lake fork level,Lake Fork,,,,,,not checked,no
-175,1,5000,lake hudson level,Lake Hudson,,,,,,not checked,no
-176,1,5000,lake mcconaughy water level,Lake Mcconaughy,,,,,,not checked,no
-177,1,5000,lake norman level,Lake Norman,,,,,,not checked,no
-178,1,5000,lake okeechobee level,Lake Okeechobee,,,,,,not checked,no
-179,1,5000,lake ontario water level,Lake Ontario,,,,,,not checked,no
-180,1,5000,lake oroville level,Lake Oroville,,,,,,not checked,no
-181,1,5000,lake ouachita level,Lake Ouachita,,,,,,not checked,no
-182,1,5000,lake ozarks level,Lake Ozarks,,,,,,not checked,no
-183,1,5000,lake pleasant level,Lake Pleasant,,,,,,not checked,no
-184,1,5000,lake roosevelt water level,Lake Roosevelt,,,,,,not checked,no
-185,1,5000,lake tahoe level,Lake Tahoe,,,,,,not checked,no
-186,1,5000,lake tenkiller level,Lake Tenkiller,,,,,,not checked,no
-187,1,5000,lake texoma level,Lake Texoma,,,,,,not checked,no
-188,1,5000,lake toledo bend water level,Lake Toledo Bend,,,,,,not checked,no
-189,1,5000,long beach tides,Long Beach,,,,,,not checked,no
-190,1,5000,los angeles water temperature,Los Angeles,,,,,,not checked,no
-191,1,5000,manasquan inlet tides,Manasquan Inlet,,,,,,not checked,no
-192,1,5000,marco tides,Marco,,,,,,not checked,no
-193,1,5000,marco island tide times,Marco Island,,,,,,not checked,no
-194,1,5000,mark twain lake level,Mark Twain Lake,,,,,,not checked,no
-195,1,5000,matanzas inlet tides,Matanzas Inlet,,,,,,not checked,no
-196,1,5000,miami beach tide times,Miami Beach,,,,,,not checked,no
-197,1,5000,mission bay tides,Mission Bay,,,,,,not checked,no
-198,1,5000,morecambe bay tide times,Morecambe Bay,,,,,,not checked,no
-199,1,5000,nantasket beach tides,Nantasket Beach,,,,,,not checked,no
-200,1,5000,nassau tides,Nassau,,,,,,not checked,no
-201,1,5000,netarts bay tides,Netarts Bay,,,,,,not checked,no
-202,1,5000,new plymouth tides,New Plymouth,,,,,,not checked,no
-203,1,5000,new port richey tides,New Port Richey,,,,,,not checked,no
-204,1,5000,new smyrna beach tide times,New Smyrna Beach,,,,,,not checked,no
-205,1,5000,newcastle tide times,Newcastle,,,,,,not checked,no
-206,1,5000,newport tide times,Newport,,,,,,not checked,no
-207,1,5000,ninety mile beach tides,Ninety Mile Beach,,,,,,not checked,no
-208,1,5000,norfork lake level,Norfork Lake,,,,,,not checked,no
-209,1,5000,norris lake water level,Norris Lake,,,,,,not checked,no
-210,1,5000,north myrtle beach tide times,North Myrtle Beach,,,,,,not checked,no
-211,1,5000,oak island tide times,Oak Island,,,,,,not checked,no
-212,1,5000,ocean beach tides,Ocean Beach,,,,,,not checked,no
-213,1,5000,ocean city tides,Ocean City,,,,,,not checked,no
-214,1,5000,oklahoma lake levels,Oklahoma Lake,,,,,,statewide hub,no
-215,1,5000,olympia tides,Olympia,,,,,,not checked,no
-216,1,5000,oologah lake level,Oologah Lake,,,,,,not checked,no
-217,1,5000,oregon river levels,Oregon River,,,,,,statewide hub,no
-218,1,5000,palm beach tides,Palm Beach,,,,,,not checked,no
-219,1,5000,panama city tides,Panama City,,,,,,not checked,no
+60,1,5000,panama city tides,Panama City,Panama City,FL,US,8729108,,NOAA CO-OPS,yes
+61,1,5000,panama city beach tides,Panama City Beach,Panama City Beach,FL,US,8729210,,NOAA CO-OPS,yes
+62,1,5000,pensacola tides,Pensacola,Pensacola,FL,US,8729840,,NOAA CO-OPS,yes
+63,1,5000,port angeles tides,Port Angeles,Port Angeles,WA,US,9444090,,NOAA CO-OPS,yes
+64,1,5000,port aransas tide times,Port Aransas,Port Aransas,TX,US,8775237,,NOAA CO-OPS,yes
+65,1,5000,port townsend tides,Port Townsend,Port Townsend,WA,US,9444900,,NOAA CO-OPS,yes
+66,1,5000,lake richland chambers level,Richland-Chambers Reservoir,Kerens,TX,US,08064550,,USGS,yes
+67,1,5000,rough river lake level,Rough River Lake,Falls of Rough,KY,US,03318005,,USGS,yes
+68,1,5000,sam rayburn reservoir level,Sam Rayburn Reservoir,Jasper,TX,US,08039300,,USGS,yes
+69,1,5000,san francisco tide times,San Francisco,San Francisco,CA,US,9414290,,NOAA CO-OPS,yes
+70,1,5000,sandy hook tide times,Sandy Hook,Sandy Hook,NJ,US,8531680,,NOAA CO-OPS,yes
+71,1,5000,santa barbara tide times,Santa Barbara,Santa Barbara,CA,US,9411340,,NOAA CO-OPS,yes
+72,1,5000,seattle tide times,Seattle,Seattle,WA,US,9447130,,NOAA CO-OPS,yes
+73,1,5000,somerville lake level,Somerville Lake,Somerville,TX,US,08109900,,USGS,yes
+74,1,5000,south padre island tide times,South Padre Island CG Station,South Padre Island,TX,US,8779748,,NOAA CO-OPS,yes
+75,1,5000,fort lauderdale tides,South Port Everglades,Fort Lauderdale,FL,US,8722956,,NOAA CO-OPS,yes
+76,1,5000,jacksonville tide times,Southbank Riverwalk,Jacksonville,FL,US,8720226,,NOAA CO-OPS,yes
+77,1,5000,tacoma tides,Tacoma,Tacoma,WA,US,9446484,,NOAA CO-OPS,yes
+78,1,5000,new york tides,The Battery,New York,NY,US,8518750,,NOAA CO-OPS,yes
+79,1,5000,thurmond lake level,Thurmond Lake,Plum Branch,SC,US,02193900,,USGS,yes
+80,1,5000,cocoa beach tide times,Trident Pier,Cocoa Beach,FL,US,8721604,,NOAA CO-OPS,yes
+81,1,5000,wrightsville beach tide times,Wrightsville Beach,Wrightsville Beach,NC,US,8658163,,NOAA CO-OPS,yes
+82,1,5000,river trent level,River Trent,,,CA|GB|NZ,,,not checked,no
+83,1,5000,aberdeen tide times,Aberdeen,,,,,,not checked,no
+84,1,5000,amistad reservoir water level,Amistad Reservoir,,,,,,not checked,no
+85,1,5000,ardingly reservoir level,Ardingly Reservoir,,,,,,not checked,no
+86,1,5000,avalon tides,Avalon,,,,,,not checked,no
+87,1,5000,ballito tides,Ballito,,,,,,not checked,no
+88,1,5000,bandon tides,Bandon,,,,,,not checked,no
+89,1,5000,bangor tide times,Bangor,,,,,,not checked,no
+90,1,5000,barnstable harbor tides,Barnstable Harbor,,,,,,not checked,no
+91,1,5000,batemans bay tides,Batemans Bay,,,,,,not checked,no
+92,1,5000,bath water temperature,Bath,,,,,,not checked,no
+93,1,5000,bay of fundy tide times,Bay Of Fundy,,,,,,not checked,no
+94,1,5000,beaufort tides,Beaufort,,,,,,not checked,no
+95,1,5000,beaver lake level,Beaver Lake,,,,,,not checked,no
+96,1,5000,belfast tide times,Belfast,,,,,,not checked,no
+97,1,5000,bellingham tides,Bellingham,,,,,,not checked,no
+98,1,5000,belmar tides,Belmar,,,,,,not checked,no
+99,1,5000,biloxi tides,Biloxi,,,,,,not checked,no
+100,1,5000,boca raton tides,Boca Raton,,,,,,not checked,no
+101,1,5000,bodega bay tides,Bodega Bay,,,,,,not checked,no
+102,1,5000,boston harbor tides,Boston Harbor,,,,,,not checked,no
+103,1,5000,botany bay tides,Botany Bay,,,,,,not checked,no
+104,1,5000,bracklesham bay tide times,Bracklesham Bay,,,,,,not checked,no
+105,1,5000,bradenton tides,Bradenton,,,,,,not checked,no
+106,1,5000,branford tides,Branford,,,,,,not checked,no
+107,1,5000,brighton tides,Brighton,,,,,,not checked,no
+108,1,5000,brunswick tide times,Brunswick,,,,,,not checked,no
+109,1,5000,buchanan lake level,Buchanan Lake,,,,,,not checked,no
+110,1,5000,camber sands tide times,Camber Sands,,,,,,not checked,no
+111,1,5000,cape may tides,Cape May,,,,,,not checked,no
+112,1,5000,cedar creek lake level,Cedar Creek Lake,,,,,,not checked,no
+113,1,5000,charleston tides,Charleston,,,,,,not checked,no
+114,1,5000,charleston harbor tides,Charleston Harbor,,,,,,not checked,no
+115,1,5000,charlotte harbor tides,Charlotte Harbor,,,,,,not checked,no
+116,1,5000,cherokee lake level,Cherokee Lake,,,,,,not checked,no
+117,1,5000,chesapeake bay water temperature,Chesapeake Bay,,,,,,not checked,no
+118,1,5000,clearwater tides,Clearwater,,,,,,not checked,no
+119,1,5000,corpus christi tide times,Corpus Christi,,,,,,not checked,no
+120,1,5000,crescent beach tides,Crescent Beach,,,,,,not checked,no
+121,1,5000,crosby beach tide times,Crosby Beach,,,,,,not checked,no
+122,1,5000,cumberland lake level,Cumberland Lake,,,,,,not checked,no
+123,1,5000,douglas lake level,Douglas Lake,,,,,,not checked,no
+124,1,5000,dover tide times,Dover,,,,,,not checked,no
+125,1,5000,druridge bay tide times,Druridge Bay,,,,,,not checked,no
+126,1,5000,dunedin tide times,Dunedin,,,,,,not checked,no
+127,1,5000,dungeness tide times,Dungeness,,,,,,not checked,no
+128,1,5000,duxbury tides,Duxbury,,,,,,not checked,no
+129,1,5000,eastern beach tides,Eastern Beach,,,,,,not checked,no
+130,1,5000,edisto beach tide times,Edisto Beach,,,,,,not checked,no
+131,1,5000,edmonds tides,Edmonds,,,,,,not checked,no
+132,1,5000,englewood tides,Englewood,,,,,,not checked,no
+133,1,5000,everett tides,Everett,,,,,,not checked,no
+134,1,5000,falcon lake level,Falcon Lake,,,,,,not checked,no
+135,1,5000,florence tides,Florence,,,,,,not checked,no
+136,1,5000,fort gibson lake level,Fort Gibson Lake,,,,,,not checked,no
+137,1,5000,fort pierce tides,Fort Pierce,,,,,,not checked,no
+138,1,5000,freeport tides,Freeport,,,,,,not checked,no
+139,1,5000,grand lake level,Grand Lake,,,,,,not checked,no
+140,1,5000,grenada lake level,Grenada Lake,,,,,,not checked,no
+141,1,5000,gulf shores tide times,Gulf Shores,,,,,,not checked,no
+142,1,5000,half moon bay tide times,Half Moon Bay,,,,,,not checked,no
+143,1,5000,hervey bay tide times,Hervey Bay,,,,,,not checked,no
+144,1,5000,high rock lake level,High Rock Lake,,,,,,not checked,no
+145,1,5000,homer tides,Homer,,,,,,not checked,no
+146,1,5000,hot water beach tides,Hot Water Beach,,,,,,not checked,no
+147,1,5000,hull tide times,Hull,,,,,,not checked,no
+148,1,5000,humboldt bay tides,Humboldt Bay,,,,,,not checked,no
+149,1,5000,indian river inlet tides,Indian River Inlet,,,,,,not checked,no
+150,1,5000,jacksonville beach tides,Jacksonville Beach,,,,,,not checked,no
+151,1,5000,jupiter tide times,Jupiter,,,,,,not checked,no
+152,1,5000,jupiter inlet tides,Jupiter Inlet,,,,,,not checked,no
+153,1,5000,karioitahi beach tides,Karioitahi Beach,,,,,,not checked,no
+154,1,5000,kaw lake level,Kaw Lake,,,,,,not checked,no
+155,1,5000,kentucky lake level,Kentucky Lake,,,,,,not checked,no
+156,1,5000,kentucky lake levels,Kentucky Lake,,,,,,statewide hub,no
+157,1,5000,key largo water temperature,Key Largo,,,,,,not checked,no
+158,1,5000,key west water temperature,Key West,,,,,,not checked,no
+159,1,5000,keystone lake level,Keystone Lake,,,,,,not checked,no
+160,1,5000,kinsale tides,Kinsale,,,,,,not checked,no
+161,1,5000,la jolla water temperature,La Jolla,,,,,,not checked,no
+162,1,5000,ladybower reservoir level,Ladybower Reservoir,,,,,,not checked,no
+163,1,5000,lake levels,Lake,,,,,,not checked,no
+164,1,5000,lake awoonga level,Lake Awoonga,,,,,,not checked,no
+165,1,5000,lake berryessa level,Lake Berryessa,,,,,,not checked,no
+166,1,5000,lake buchanan level,Lake Buchanan,,,,,,not checked,no
+167,1,5000,lake cachuma water level,Lake Cachuma,,,,,,not checked,no
+168,1,5000,lake casitas level,Lake Casitas,,,,,,not checked,no
+169,1,5000,lake cumberland level,Lake Cumberland,,,,,,not checked,no
+170,1,5000,lake dillon water level,Lake Dillon,,,,,,not checked,no
+171,1,5000,lake eppalock water level,Lake Eppalock,,,,,,not checked,no
+172,1,5000,lake erie level,Lake Erie,,,,,,not checked,no
+173,1,5000,lake eufaula level,Lake Eufaula,,,,,,not checked,no
+174,1,5000,lake folsom water level,Lake Folsom,,,,,,not checked,no
+175,1,5000,lake fork level,Lake Fork,,,,,,not checked,no
+176,1,5000,lake hudson level,Lake Hudson,,,,,,not checked,no
+177,1,5000,lake mcconaughy water level,Lake Mcconaughy,,,,,,not checked,no
+178,1,5000,lake norman level,Lake Norman,,,,,,not checked,no
+179,1,5000,lake okeechobee level,Lake Okeechobee,,,,,,not checked,no
+180,1,5000,lake ontario water level,Lake Ontario,,,,,,not checked,no
+181,1,5000,lake oroville level,Lake Oroville,,,,,,not checked,no
+182,1,5000,lake ouachita level,Lake Ouachita,,,,,,not checked,no
+183,1,5000,lake ozarks level,Lake Ozarks,,,,,,not checked,no
+184,1,5000,lake pleasant level,Lake Pleasant,,,,,,not checked,no
+185,1,5000,lake roosevelt water level,Lake Roosevelt,,,,,,not checked,no
+186,1,5000,lake tahoe level,Lake Tahoe,,,,,,not checked,no
+187,1,5000,lake tenkiller level,Lake Tenkiller,,,,,,not checked,no
+188,1,5000,lake texoma level,Lake Texoma,,,,,,not checked,no
+189,1,5000,lake toledo bend water level,Lake Toledo Bend,,,,,,not checked,no
+190,1,5000,long beach tides,Long Beach,,,,,,not checked,no
+191,1,5000,los angeles water temperature,Los Angeles,,,,,,not checked,no
+192,1,5000,manasquan inlet tides,Manasquan Inlet,,,,,,not checked,no
+193,1,5000,marco tides,Marco,,,,,,not checked,no
+194,1,5000,marco island tide times,Marco Island,,,,,,not checked,no
+195,1,5000,mark twain lake level,Mark Twain Lake,,,,,,not checked,no
+196,1,5000,matanzas inlet tides,Matanzas Inlet,,,,,,not checked,no
+197,1,5000,miami beach tide times,Miami Beach,,,,,,not checked,no
+198,1,5000,mission bay tides,Mission Bay,,,,,,not checked,no
+199,1,5000,morecambe bay tide times,Morecambe Bay,,,,,,not checked,no
+200,1,5000,nantasket beach tides,Nantasket Beach,,,,,,not checked,no
+201,1,5000,nassau tides,Nassau,,,,,,not checked,no
+202,1,5000,netarts bay tides,Netarts Bay,,,,,,not checked,no
+203,1,5000,new plymouth tides,New Plymouth,,,,,,not checked,no
+204,1,5000,new port richey tides,New Port Richey,,,,,,not checked,no
+205,1,5000,new smyrna beach tide times,New Smyrna Beach,,,,,,not checked,no
+206,1,5000,newcastle tide times,Newcastle,,,,,,not checked,no
+207,1,5000,newport tide times,Newport,,,,,,not checked,no
+208,1,5000,ninety mile beach tides,Ninety Mile Beach,,,,,,not checked,no
+209,1,5000,norfork lake level,Norfork Lake,,,,,,not checked,no
+210,1,5000,norris lake water level,Norris Lake,,,,,,not checked,no
+211,1,5000,north myrtle beach tide times,North Myrtle Beach,,,,,,not checked,no
+212,1,5000,oak island tide times,Oak Island,,,,,,not checked,no
+213,1,5000,ocean beach tides,Ocean Beach,,,,,,not checked,no
+214,1,5000,ocean city tides,Ocean City,,,,,,not checked,no
+215,1,5000,oklahoma lake levels,Oklahoma Lake,,,,,,statewide hub,no
+216,1,5000,olympia tides,Olympia,,,,,,not checked,no
+217,1,5000,oologah lake level,Oologah Lake,,,,,,not checked,no
+218,1,5000,oregon river levels,Oregon River,,,,,,statewide hub,no
+219,1,5000,palm beach tides,Palm Beach,,,,,,not checked,no
 220,1,5000,pomme de terre lake level,Pomme De Terre Lake,,,,,,not checked,no
 221,1,5000,ponce inlet tides,Ponce Inlet,,,,,,not checked,no
 222,1,5000,port elizabeth tides,Port Elizabeth,,,,,,not checked,no
