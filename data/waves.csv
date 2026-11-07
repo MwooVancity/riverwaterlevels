@@ -9109,7 +9109,7 @@ queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/
 queue,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,,,human,/lake/lake-powell/
 queue,,9410170,San Diego Bay,San Diego,CA,0,,,0,coast,,,human,/coast/san-diego/
 queue,,8638610,Sewells Point,Norfolk,VA,0,,,0,coast,,,human,/coast/norfolk/
-queue,,8661070,Springmaid Pier,Myrtle Beach,SC,0,,,0,coast,held 2026-11-07 phone review: 'More gauges in SC on this site' lists a Georgia river,,human,/coast/myrtle-beach/
+queue,,8661070,Springmaid Pier,Myrtle Beach,SC,0,,,0,coast,,,human,/coast/myrtle-beach/
 queue,,8722956,South Port Everglades,Fort Lauderdale,FL,0,,,0,coast,,,human,/coast/fort-lauderdale/
 queue,,8447435,Chatham,Chatham,MA,0,,,0,coast,,,human,/coast/chatham/
 queue,,9413450,Monterey,Monterey,CA,0,,,0,coast,,,human,/coast/monterey/
@@ -9124,7 +9124,7 @@ queue,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,,,human,/lake/shasta-lake/
 queue,,RISE-6123,Lake Mead,Hoover Dam,AZ,0,,,0,lake,,,human,/lake/lake-mead/
 queue,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,,,human,/lake/lake-travis/
 queue,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,,,human,/coast/anchorage/
-queue,,9439040,Astoria,Astoria,OR,0,,,0,coast,held 2026-11-07 phone review: says NOAA publishes no water temperature; the station lists a sensor (outage = Unknown),,human,/coast/astoria/
+queue,,9439040,Astoria,Astoria,OR,0,,,0,coast,,,human,/coast/astoria/
 queue,,8413320,Bar Harbor,Bar Harbor,ME,0,,,0,coast,,,human,/coast/bar-harbor/
 queue,,8727520,Cedar Key,Cedar Key,FL,0,,,0,coast,,,human,/coast/cedar-key/
 queue,,8726724,Clearwater Beach,Clearwater Beach,FL,0,,,0,coast,,,human,/coast/clearwater-beach/

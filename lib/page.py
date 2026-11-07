@@ -98,7 +98,7 @@ def b_nearby(G, pages):
     li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), p.get("_val") or fmtc(p["_lv"]) + " cfs", esc(p["_band"].lower()), round(mi)) for mi, p in grp)
     lis = li(out[:5])
     if same:
-        lis += '</ul><p class="src">More gauges in %s on this site</p><ul class="nbr">' % esc(G["st"]) + li(same)
+        lis += '</ul><p class="src">More gauges on this site, nearest first</p><ul class="nbr">' + li(same)  # hater review 2026-11-07: a border gauge USGS files under SC sits in GA, so the state name read false
     if far:
         lis += '</ul><p class="src">Nearest gauges elsewhere on this site</p><ul class="nbr">' + li(far)
     nearest = min(x[0] for x in out + same + far)
@@ -370,7 +370,7 @@ def lake_words(h, G):
             h = h.replace(a, b)
         h = re.sub(r"[^.<>]*the table is for the nearest NOAA tide station, [\d.]+ mi away, where the river is tidal\.", "NOAA high and low tide predictions for this station.", h)
         h = re.sub(r"Tides nearby at [^<\"]*, next two days", "Tide predictions at this NOAA station, next two days", h)
-        for a, b in (("gauge-local time", "station time"), ("live water temperature (no USGS temperature sensor at this station or within 40 mi on the rivers here)", "live water temperature (NOAA publishes none at this station)"), ("clarity (no USGS turbidity or water-quality sensor at this station)", "clarity (no NOAA water-quality sensor at this station)"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
+        for a, b in (("gauge-local time", "station time"), ("live water temperature (no USGS temperature sensor at this station or within 40 mi on the rivers here)", "live water temperature (none in NOAA's water temperature feed for this station in the last 3 days)"), ("clarity (no USGS turbidity or water-quality sensor at this station)", "clarity (no NOAA water-quality sensor at this station)"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
             h = h.replace(a, b)
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
     return h
