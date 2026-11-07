@@ -22,7 +22,7 @@ export default {
     try {
       const lj = url.pathname.match(/^\/live\/(\d{8,15})\.json$/);
       if (lj) {
-        const L = await stored(env), g = L && L.g && L.g[lj[1]];
+        const L = await stored(env, lj[1]), g = L && L.g && L.g[lj[1]];
         const o = new Response(JSON.stringify({ t: L ? L.t : null, g: g ? { [lj[1]]: g } : {} }), {
           headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" },
         });
@@ -39,7 +39,7 @@ export default {
         if (to) return secure(new Response(null, { status: 301, headers: { location: to } }), url);
       }
       if (res.status !== 304 && (!res.ok || !(res.headers.get("content-type") || "").includes("text/html"))) return secure(res, url);
-      const [m, L] = await Promise.all([sites(env).then((s) => s[url.pathname]), stored(env)]);
+      const m = (await sites(env))[url.pathname], L = m ? await stored(env, m[0]) : null; // sites() is cached per isolate; only a gauge page reads the stored copy
       const g = m && L && L.g && L.g[m[0]];
       // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
       if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1]) || (Date.parse(g.f[1]) === Date.parse(m[1]) && g.f[0] !== m[3])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", L), url);
@@ -91,8 +91,24 @@ async function sites(env) {
   return SITES;
 }
 
-function stored(env) {
-  return env.LIVE.get("live", { type: "json", cacheTtl: 30 }); // ponytail: one key; past ~1,500 gauges read one gauge by text slice instead of parsing all
+// One gauge out of the stored copy without parsing all of it (scale debate 2026-11-07: a whole-copy JSON.parse on every page request grows with the
+// gauge count; p99 8.9 ms at 142 gauges against the 10 ms CPU limit). The copy is written by poll() as {"t":..,"cur":..,"rem":..,"g":{"<site>":{"f":[..],"h":[..]}}}:
+// a site id is digits, its value object holds only arrays, so the first "}" after '"<site>":{' closes it.
+async function stored(env, site) {
+  const text = await env.LIVE.get("live", { type: "text", cacheTtl: 30 });
+  return text ? slice(text, site) : null;
+}
+
+function slice(text, site) {
+  const t = (text.match(/"t":"([^"]*)"/) || [])[1] || null;
+  const rem = (text.match(/"rem":(-?\d+)/) || [])[1];
+  let one = null;
+  const i = site ? text.indexOf('"' + site + '":{') : -1;
+  if (i >= 0) {
+    const s0 = text.indexOf("{", i), e = text.indexOf("}", s0);
+    try { one = JSON.parse(text.slice(s0, e + 1)); } catch (x) { one = null; }
+  }
+  return { t, rem: rem == null ? null : Number(rem), g: one ? { [site]: one } : {} };
 }
 
 // the cron: ask USGS what changed since the cursor, merge, write once if anything changed
