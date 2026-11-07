@@ -149,9 +149,11 @@ def main():
     for s, g in Gs.items():
         rows[s].update({"_built": True, "_ll": (g["lat"], g["lon"]), "_lv": dir_lv(g), "_band": band_word(g["p"]), "_hub": False, "_single": True})
     found = collections.defaultdict(set)
+    base_of = {}
     n = 0
     for s in sites:
         base, bsecs = page_faults(Gs[s], rows)
+        base_of[s] = base
         for f_ in base:
             if not f_.startswith("BLOCK CRASH"):
                 found[("(unbroken page)", "none", f_)].add(s)
@@ -200,6 +202,33 @@ def main():
                 found[("usgs", "dead 40 d", "DEAD PAGE has no not-reporting banner")].add(s)
         except Exception as e:
             found[("usgs", "dead 40 d", "DEAD CRASH %s: %s" % (type(e).__name__, str(e)[:80]))].add(s)
+    for s in sites:  # owner 2026-11-07: clock-change nights. Every reading and the clock move together onto the US fall-back hour and the spring-forward hour; the page must render and pass every page rule
+        newest = max((r["time"] for r in recs[s]["usgs"]["rows"]), default=None)
+        if not newest:
+            continue
+        for label, target in (("DST fall-back", "2026-11-01T06:45:00+00:00"), ("DST spring-forward", "2027-03-14T07:45:00+00:00")):
+            delta = datetime.datetime.fromisoformat(target) - datetime.datetime.fromisoformat(newest)
+            def mv(v, kind, d_=delta):
+                if kind == "probe-list":
+                    return False
+                if kind == "leaf" and isinstance(v, str) and ISO.match(v):
+                    try:
+                        return (datetime.datetime.fromisoformat(v.replace("Z", "+00:00")) + d_).isoformat()
+                    except (ValueError, OverflowError):
+                        return v
+                return v
+            n += 1
+            try:
+                G = render.ctx(s, rows[s], walk(copy.deepcopy(recs[s]), mv), now + delta)
+                faults, _ = page_faults(G, rows)
+                faults -= base_of.get(s, set())
+            except render.CriticalFail:
+                faults = set()
+            except Exception as e:
+                faults = {"DST CRASH %s: %s" % (type(e).__name__, str(e)[:80])}
+            for f_ in faults:
+                if not f_.startswith("BLOCK CRASH"):
+                    found[("clock", label, f_)].add(s)
     if GATE and not [a for a in sys.argv[1:] if not a.startswith("--")]:  # owner 2026-11-07: world pages too (Canada, England, Germany river, Lake Constance), one gauge per page file
         from lib import world as world_
         wp_ = {p["slug"]: p for p in json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))}
