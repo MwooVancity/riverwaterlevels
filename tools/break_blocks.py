@@ -200,6 +200,39 @@ def main():
                 found[("usgs", "dead 40 d", "DEAD PAGE has no not-reporting banner")].add(s)
         except Exception as e:
             found[("usgs", "dead 40 d", "DEAD CRASH %s: %s" % (type(e).__name__, str(e)[:80]))].add(s)
+    if GATE and not [a for a in sys.argv[1:] if not a.startswith("--")]:  # owner 2026-11-07: world pages too (Canada, England, Germany river, Lake Constance), one gauge per page file
+        from lib import world as world_
+        wp_ = {p["slug"]: p for p in json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))}
+        for slug in ("canada", "england", "rhine", "lake-constance"):
+            f_ = os.path.join(CACHE, "_river-%s.json" % slug)
+            rows_w = (json.load(open(f_, encoding="utf-8")).get("rows") or []) if os.path.exists(f_) else []
+            if not rows_w or slug not in wp_:
+                print("type world %-20s NOT TESTED: no cache file or page row" % slug)
+                continue
+            print("type world %-20s %s" % (slug, rows_w[0].get("name")))
+            p_, r0 = wp_[slug], rows_w[0]
+
+            def wfaults(r_):
+                try:
+                    got = world_.page(p_, r_, now, [r_], [r_.get("name")])
+                except Exception as e:
+                    return {"WORLD CRASH %s: %s" % (type(e).__name__, str(e)[:80])}
+                if not got:
+                    return set()  # held by the ship test: the live page stays, correct
+                u_, h_ = got
+                rel_ = u_.strip("/") + "/index.html"
+                return set(ck["check_html"](h_.replace(" ", " "), rel_) + ck["world_rules"](h_) + ck["one_latest"](h_))
+            base_w = wfaults(copy.deepcopy(r0))
+            for key in sorted(k for k in r0 if k not in ("name", "title", "lat", "lon", "uuid", "number")):
+                for mname, mf in MUT.items():
+                    r_ = copy.deepcopy(r0)
+                    if mf is None:
+                        r_.pop(key)
+                    else:
+                        r_[key] = mf(r_[key])
+                    n += 1
+                    for f2 in wfaults(r_) - base_w:
+                        found[("world:" + key, mname, f2)].add(slug)
     print("\n%d broken variants rendered over %d gauges; %d distinct faults" % (n, len(sites), len(found)))
     for (key, mname, f_), ss in sorted(found.items(), key=lambda x: (-len(x[1]), x[0])):
         print("%2d gauges | %-12s %-9s | %s | e.g. %s" % (len(ss), key, mname, f_, sorted(ss)[0]))
