@@ -5,6 +5,18 @@ from lib.core import *
 from lib.core import _normalise
 
 
+def cdec_avg(G):
+    """CDEC lake: latest storage against CDEC's own capacity and 1991-2020 average for that month; one calculation for the hero line and the reservoir card (review 2026-11-07 #8)."""
+    c = G["rec"].get("cdec_res")
+    st_ = series(G["rec"], "00054") if c else None  # a record with no reading rows (selftest fixtures) has nothing to divide
+    if not st_:
+        return None
+    v, t_ = st_[-1][1], st_[-1][0]
+    lt = t_.astimezone(G["zone"])
+    avg = c["avg_af"].get(str(lt.month)) or c["avg_af"].get(lt.month)
+    return {"c": c, "v": v, "t": t_, "mon": lt.strftime("%B"), "avg": avg, "pct_cap": "%.1f%%" % (100 * v / c["cap_af"]), "pct_avg": "%.1f%%" % (100 * v / avg) if avg else "Unknown"}
+
+
 def ctx(site, row, rec, now):
     """Everything derived once per gauge; blocks only read this."""
     if not (rec.get("usgs") or {}).get("rows"):  # a cache without USGS readings skips this gauge, never the whole build
@@ -500,12 +512,9 @@ def hero(G, pages=None):
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
     norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s now" % norm_word) if an_ else "No past-years comparison for this date"
-    c_res, st_res = G["rec"].get("cdec_res"), series(G["rec"], "00054")
-    if G.get("agy") and p is None and not out_ and c_res and st_res:  # hater review 2026-11-07 (Shasta): "no past-years comparison" beside CDEC's own 1991-2020 monthly average
-        mo_ = st_res[-1][0].astimezone(G["zone"]).month
-        avg_ = c_res["avg_af"].get(str(mo_)) or c_res["avg_af"].get(mo_)
-        if avg_:
-            norm_txt = "%.1f%% of the %s %s-%s average storage (CDEC; our calculation)" % (100 * st_res[-1][1] / avg_, st_res[-1][0].astimezone(G["zone"]).strftime("%B"), c_res["avg_from"], c_res["avg_to"])
+    ca_ = cdec_avg(G) if G.get("agy") and p is None and not out_ else None
+    if ca_ and ca_["avg"]:  # hater review 2026-11-07 (Shasta): "no past-years comparison" beside CDEC's own 1991-2020 monthly average
+        norm_txt = "%s of the %s %s-%s average storage (CDEC; our calculation)" % (ca_["pct_avg"], ca_["mon"], ca_["c"]["avg_from"], ca_["c"]["avg_to"])
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (

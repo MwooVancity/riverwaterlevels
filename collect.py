@@ -1311,10 +1311,22 @@ def fetch_rise(item):
     return {"fetched_at": now_iso(), "rows": sorted(rows, key=lambda r: r["time"]), "truncated": [], "agency": "rise", "station": item}
 
 
+_TWDB = {}
+
+
+def twdb_rows(slug):
+    """TWDB 30-day file rows, fetched once per 10 minutes: the reading series and the reservoir card read the same file (review 2026-11-07 #9: it was downloaded twice a run).
+    ponytail: one dict entry per lake, about 10 KB each; a long-lived process keeps at most one copy per lake."""
+    k = int(_time.time() // 600)
+    if _TWDB.get(slug, (None,))[0] != k:
+        _TWDB[slug] = (k, [l.split(",") for l in http_raw("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % slug, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")])
+    return _TWDB[slug][1]
+
+
 def fetch_twdb_series(slug):
     """TWDB 30-day file for one reservoir: 'Estimated daily average data' (file header), so each row is a whole day, dated, with no clock time.
     Stored at local midnight (Texas, America/Chicago); the page prints the date with 'TWDB daily average', never the midnight time. 1 call per run."""
-    rows_ = [l.split(",") for l in http_raw("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % slug, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
+    rows_ = twdb_rows(slug)
     hd, zone = rows_[0], zoneinfo.ZoneInfo("America/Chicago")
     rows = []
     for r in (dict(zip(hd, x)) for x in rows_[1:]):
@@ -1447,7 +1459,7 @@ def fetch_coops(st):
 def fetch_twdb(slug):
     """Texas Water Development Board daily reservoir estimate (last 30 days file): its % of conservation capacity, storages and area.
     TWDB defines percent_full = conservation storage / conservation capacity (header of the file); the page names that basis."""
-    rows = [l.split(",") for l in http_raw("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % slug, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
+    rows = twdb_rows(slug)
     hd, last = rows[0], rows[-1]
     r = dict(zip(hd, last))
     if r.get("date", "")[:2] != "20" or not r.get("percent_full"):

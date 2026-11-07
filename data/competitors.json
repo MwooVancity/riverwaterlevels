@@ -1,5 +1,5 @@
 {
- "note": "What the best competing page shows, per page kind, read from the live page (url, read date). tools/info_gain.py scores each built page: every item is have (our page shows it), none (reason: no open-terms source has it) or missing. 'mark' is text or a block id that proves our page has the item.",
+ "note": "What the best competing page shows, per page kind, read from the live page (url, read date). tools/info_gain.py scores each built page: every item is have (our page shows it), none (reason: no open-terms source has it) or missing. 'mark' is text or a block id that proves our page has the item. Marks are labels or block ids that exist only when the data is shown, never a bare word (review 2026-11-07: 'wind' matched 'window' in page code).",
  "lake": {
   "url": "https://lakebrief.com/lake/lanier",
   "read": "2026-11-07: static HTML and its schema.org JSON-LD (the live numbers load by script)",
@@ -7,45 +7,42 @@
    {
     "item": "current water-surface elevation",
     "mark": [
-     "Lake elevation",
-     "Water level"
+     "data-live=\"stage\">"
     ],
     "core": true
    },
    {
     "item": "full pool elevation",
     "mark": [
-     "full pool",
-     "Full pool",
-     "conservation pool",
-     "top of conservation"
+     "<td>Full pool",
+     "<td>Conservation pool",
+     "<td>Top of conservation"
     ]
    },
    {
     "item": "surface area",
     "mark": [
-     "Surface area"
+     "<td>Surface area</td>"
     ]
    },
    {
     "item": "recent level chart (14 days)",
     "mark": [
-     "id=\"stage_chart\"",
-     "<svg class=\"chart"
+     "id=\"stage_chart\""
     ],
     "core": true
    },
    {
     "item": "wind now and forecast",
     "mark": [
-     "Wind",
-     "wind"
+     "Wind mph</th>",
+     "title=\"Wind from"
     ]
    },
    {
     "item": "radar",
     "mark": [
-     "radar"
+     "id=\"radar\""
     ]
    },
    {
@@ -65,9 +62,6 @@
    {
     "item": "managing agency and its rules",
     "mark": [
-     "Corps of Engineers",
-     "USACE",
-     "operator",
      "Operated by"
     ]
    }
@@ -81,7 +75,6 @@
     "item": "next high and low tide",
     "mark": [
      "Next tide",
-     "next tide",
      "Next high",
      "Next low"
     ],
@@ -104,42 +97,35 @@
    {
     "item": "tide table for coming weeks",
     "mark": [
-     "id=\"tide_table\"",
-     "tide table"
+     "id=\"tide_table\""
     ]
    },
    {
     "item": "sunrise and sunset",
     "mark": [
      "Sunrise",
-     "Sunset",
-     "sunrise",
-     "sunset"
+     "Sunset"
     ]
    },
    {
     "item": "moonrise, moonset and moon phase",
     "mark": [
      "Moonrise",
-     "moonrise",
-     "Moon phase",
-     "moon phase"
+     "Moon phase"
     ]
    },
    {
     "item": "swell and surf now",
     "mark": [
-     "Wave height",
-     "wave height",
-     "Waves"
+     "Wave height"
     ],
     "none_if": "no NOAA-owned or terms-read buoy listed for this station in data/coasts.csv"
    },
    {
     "item": "weather and wind now",
     "mark": [
-     "Wind",
-     "wind"
+     "Wind mph</th>",
+     "title=\"Wind from"
     ]
    }
   ]

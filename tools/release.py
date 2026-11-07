@@ -8,7 +8,11 @@ import os, sys, csv, subprocess
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "tools"))
-import info_gain
+try:  # review 2026-11-07 #7: a broken data/competitors.json holds lakes and coasts that day, never the whole release
+    import info_gain
+except Exception as e:
+    info_gain = None
+    print("release: info gain unreadable (%s); lakes and coasts held today" % str(e)[:80])
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 n = int(args[0]) if args else 25
 lst = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--list=")), os.path.join(ROOT, "docs", "research", "priority", "picks.csv"))
@@ -145,8 +149,10 @@ def page_check(picks_):
             continue
         h = open(f, encoding="utf-8").read().replace("\u00a0", " ")  # as check_dir reads it (times use no-break spaces)
         bad = ck["check_html"](h, os.path.relpath(f, os.path.join(ROOT, "dist_next"))) + ck["rank_checks"](h, u) + ck["hater_rules"](h)
-        kind_ = info_gain.kind_of(u)
-        lost_ = info_gain.score(h, kind_)["lost"] if kind_ else []
+        kind_ = "lake" if u.startswith("/lake/") else "coast" if u.startswith("/coast/") else None
+        if kind_ and not info_gain:
+            bad.append("info gain could not be scored (data/competitors.json unreadable)")
+        lost_ = info_gain.score(h, kind_)["lost"] if kind_ and info_gain else []
         if lost_:  # owner rule 5: no info gain, no page; a lake or coast missing what the best competing page answers goes back to the queue
             bad.append("info gain: missing %s that %s shows" % (", ".join(lost_), info_gain.COMP[kind_]["url"]))
         if bad:

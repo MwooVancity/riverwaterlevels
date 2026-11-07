@@ -46,13 +46,16 @@ def main():
 
 
 def selftest():
-    good = {"lake": "Lake elevation id=\"stage_chart\" full pool Surface area Wind radar id=\"access_points\" USACE", "coast": "Next tide id=\"tides\" NOAA predicted tide tide table Sunrise Moonrise Wind"}
+    good = {"lake": 'data-live="stage">677 id="stage_chart" <td>Full pool <td>Surface area</td> Wind mph</th> id="radar" id="access_points" Operated by',
+            "coast": 'Next tide id="tides" NOAA predicted tide id="tide_table" Sunrise Moonrise Wind mph</th>'}
     for k, h in good.items():
         s = score(h, k)
         assert not s["lost"] and not s["missing"], (k, s)
         core = [it for it in COMP[k]["items"] if it.get("core")]
         assert core, "%s has no core item: nothing could ever lose" % k
         assert score("", k)["lost"] == [it["item"] for it in core], k
+    loose = score("window.dataLayer Lake elevation is the water surface above the datum the operator uses; radar loop credit", "lake")
+    assert "wind now and forecast" not in loose["have"] and "managing agency and its rules" not in loose["have"] and "current water-surface elevation" in loose["lost"], loose  # review #6: a bare word is no proof
     print("info_gain selftest OK")
 
 

@@ -154,7 +154,7 @@ def main():
         bad.append("cannot read /_health.json (%s)" % str(e)[:60])
     try:  # the edge asks USGS when a page is opened: one gauge's answer must be fresh, and Google must get the same page a phone gets
         pages = get("/live-sites.json")
-        site, path = pages[0][0], pages[0][1]
+        site, path = next((p[0], p[1]) for p in pages if p[0].isdigit())  # agency lakes have no /live/ copy
         rr = http_open(SITE + "/live/%s.json" % site, UA, 30)
         lj = json.load(rr)
         la = hours_since(lj["t"]) * 3600 if lj.get("t") else None

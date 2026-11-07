@@ -260,8 +260,8 @@ def main():
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
     json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built] + world_rows, open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     # the edge live layer (worker/index.js): which page is which gauge, the reading the page was built with, and its time zone
-    # only numeric ids: the cron sends every id to USGS in one request, and a CDEC-SHA there could fail the whole poll
-    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"], Gs[r["site"]]["lv"]] for r in built if r["site"].isdigit()], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
+    # every built gauge (check.py, info_gain, hater_sample read it); the Worker cron sends only the numeric USGS ids to USGS
+    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"], Gs[r["site"]]["lv"]] for r in built], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))

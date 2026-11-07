@@ -3,6 +3,7 @@ Same registry rules as render.py and blocks2.py. Each block is gated by its sour
 """
 import collections, datetime, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
+from lib.hero import cdec_avg
 
 
 def cleared(src_id):
@@ -867,15 +868,12 @@ def lc_day(G):
 def b_reservoir(G):
     """How full a reservoir is, on the operator's or state's own basis (plan 2026-11-05 step 3). Texas: TWDB's daily estimate, whose percent is
     conservation storage / conservation capacity; a percent is never shown without that basis named. No source for this lake: no block."""
-    c = G["rec"].get("cdec_res")
-    st_ = series(G["rec"], "00054") if c else None  # a record with no reading rows (selftest fixtures) has nothing to divide
-    if G.get("lake") and c and st_ and cleared("cdec"):  # CDEC lake: capacity and 1991-2020 monthly average from CDEC's reservoir profile; both percents are our calculation, said so
-        v, t_ = st_[-1][1], st_[-1][0]
-        avg = c["avg_af"].get(str(t_.astimezone(G["zone"]).month)) or c["avg_af"].get(t_.astimezone(G["zone"]).month)
-        mon = t_.astimezone(G["zone"]).strftime("%B")
+    ca = cdec_avg(G)
+    if G.get("lake") and ca and cleared("cdec"):  # CDEC lake: capacity and 1991-2020 monthly average from CDEC's reservoir profile; both percents are our calculation, said so
+        c, v, t_, avg, mon = ca["c"], ca["v"], ca["t"], ca["avg"], ca["mon"]
         rows = "".join(tr([a, b], right=(1,)) for a, b in (
-            ("Storage now (CDEC)", "{:,.0f} acre-ft".format(v)), ("Capacity (CDEC)", "{:,.0f} acre-ft".format(c["cap_af"])), ("Percent of capacity (our calculation)", "%.1f%%" % (100 * v / c["cap_af"])),
-            ("%s average storage, %s-%s (CDEC)" % (mon, c["avg_from"], c["avg_to"]), "{:,.0f} acre-ft".format(avg) if avg else "Unknown"), ("Percent of the %s average (our calculation)" % mon, "%.1f%%" % (100 * v / avg) if avg else "Unknown")))
+            ("Storage now (CDEC)", "{:,.0f} acre-ft".format(v)), ("Capacity (CDEC)", "{:,.0f} acre-ft".format(c["cap_af"])), ("Percent of capacity (our calculation)", ca["pct_cap"]),
+            ("%s average storage, %s-%s (CDEC)" % (mon, c["avg_from"], c["avg_to"]), "{:,.0f} acre-ft".format(avg) if avg else "Unknown"), ("Percent of the %s average (our calculation)" % mon, ca["pct_avg"])))
         return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(tzl(t_, G["zone"]))], rows, right=(1,)),
                      "Source: California Data Exchange Center reservoir profile for station %s (capacity, %s-%s monthly averages, read %s) and its hourly storage. The two percents are our calculation: storage divided by CDEC's capacity, and by CDEC's average for the month." % (esc(G.get("agy_st") or ""), c["avg_from"], c["avg_to"], esc(fdate(c["fetched_at"][:10]))), "cdec")
     hit = lc_day(G)

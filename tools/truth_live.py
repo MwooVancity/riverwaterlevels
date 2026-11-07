@@ -6,7 +6,7 @@ Rules per gauge page:
  - USGS has a newer reading: up to 12 hours behind is a warning, beyond STALE_FAIL_H fails (the Worker swaps the live numbers; carried pages are up to 2.5 h old)
  - flood stages shown on the page (Action, Minor, Moderate, Major) equal the NWS forecast point's categories within 0.05 ft
  - the NWS forecast point named on the page exists and answers"""
-import json, os, re, sys, urllib.request, datetime, zoneinfo
+import json, os, re, sys, urllib.request, urllib.error, datetime, zoneinfo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers
 
@@ -42,6 +42,54 @@ def get(u, t=60):
         except Exception as e:
             if i == 3 or getattr(e, "code", 0) not in (0, 429, 500, 502, 503, 504):
                 raise
+
+
+AGENCY_URL = {  # the operator's own feed for the days around the page's reading (d0 = the reading's Pacific date)
+    "CDEC": lambda sta, d0: "https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2)),
+    "TWDB": lambda sta, d0: "https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % sta,
+    "Reclamation": lambda sta, d0: "https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (sta, d0 - datetime.timedelta(days=2), d0 + datetime.timedelta(days=6)),
+}
+
+
+def agency_got(ag, text):
+    """{aware datetime: elevation ft} from the operator's answer, each in the operator's own clock."""
+    if ag == "CDEC":  # CDEC times are Pacific Standard Time all year (its data page)
+        pst = datetime.timezone(datetime.timedelta(hours=-8))
+        return {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in json.loads(text) if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
+    if ag == "TWDB":  # daily averages, dated; the page stores each at Texas midnight
+        lines = [l.split(",") for l in text.splitlines() if l and not l.startswith("#")]
+        tx = zoneinfo.ZoneInfo("America/Chicago")
+        return {datetime.datetime.combine(datetime.date.fromisoformat(r["date"]), datetime.time(0), tzinfo=tx): float(r["water_level"]) for r in (dict(zip(lines[0], x)) for x in lines[1:]) if r.get("water_level") not in (None, "", "NA")}
+    # Reclamation RISE: 'Datetime values are presented as UTC'
+    return {datetime.datetime.fromisoformat(v["dateTime"].replace(" ", "T") + "+00:00"): float(v["result"]) for k, v in json.loads(text).items() if k.isdigit() and isinstance(v.get("result"), (int, float))}
+
+
+def agency_verdict(ag, pt, pv, got):
+    """None when the page's elevation pv at time pt is the operator's value for that time, else the mismatch."""
+    if pt in got and abs(got[pt] - pv) > 0.005:
+        return "lake elevation %s on the page, %s at %s for the same time" % (pv, got[pt], ag)
+    if pt not in got and pt < max(got):
+        return "the page's reading time %s is not a %s reading" % (pt.isoformat(), ag)
+    if (max(got) - pt).total_seconds() / 3600 > STALE_FAIL_H:
+        return "page is more than %d h behind %s" % (STALE_FAIL_H, ag)
+    return None
+
+
+def selftest():
+    """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
+    P = lambda s: datetime.datetime.fromisoformat(s)
+    c = agency_got("CDEC", '[{"date": "2026-11-06 23:00", "value": 1012.34}, {"date": "2026-11-07 00:00", "value": -9999}]')
+    assert c == {P("2026-11-06T23:00:00-08:00"): 1012.34}, c  # PST all year, -9999 dropped
+    t = agency_got("TWDB", "# header\ndate,water_level,surface_area\n2026-11-06,677.15,18163\n2026-11-07,NA,1")
+    assert t == {P("2026-11-06T00:00:00-06:00"): 677.15}, t  # Texas midnight (CST in November)
+    r = agency_got("Reclamation", '{"0": {"dateTime": "2026-11-04 07:00:00", "result": 1062.5}, "meta": {}}')
+    assert r == {P("2026-11-04T07:00:00+00:00"): 1062.5}, r  # UTC
+    k = P("2026-11-06T23:00:00-08:00")
+    assert agency_verdict("CDEC", k, 1012.34, c) is None
+    assert "on the page" in agency_verdict("CDEC", k, 1013.0, c)
+    assert "not a CDEC reading" in agency_verdict("CDEC", P("2026-11-06T22:30:00-08:00"), 1012.34, c)
+    assert "behind" in agency_verdict("CDEC", k - datetime.timedelta(hours=20), 1012.34, {**c, k - datetime.timedelta(hours=20): 1012.34})
+    print("truth_live selftest OK")
 
 
 def pmap(f, xs):
@@ -137,28 +185,16 @@ def main():
         pt = datetime.datetime.fromisoformat(t_.group(1))
         d0 = (pt - datetime.timedelta(hours=8)).date()
         try:
-            if ag == "CDEC":  # CDEC times are Pacific Standard Time all year (its data page)
-                rows = json.loads(get("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2))))
-                pst = datetime.timezone(datetime.timedelta(hours=-8))
-                got = {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in rows if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
-            elif ag == "TWDB":  # daily averages, dated; the page stores each at Texas midnight
-                lines = [l.split(",") for l in get("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % sta).splitlines() if l and not l.startswith("#")]
-                tx = zoneinfo.ZoneInfo("America/Chicago")
-                got = {datetime.datetime.combine(datetime.date.fromisoformat(r["date"]), datetime.time(0), tzinfo=tx): float(r["water_level"]) for r in (dict(zip(lines[0], x)) for x in lines[1:]) if r.get("water_level") not in (None, "", "NA")}
-            else:  # Reclamation RISE: 'Datetime values are presented as UTC'
-                j = json.loads(get("https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (sta, d0 - datetime.timedelta(days=2), d0 + datetime.timedelta(days=6))))
-                got = {datetime.datetime.fromisoformat(v["dateTime"].replace(" ", "T") + "+00:00"): float(v["result"]) for k, v in j.items() if k.isdigit() and isinstance(v.get("result"), (int, float))}
+            got = agency_got(ag, get(AGENCY_URL[ag](sta, d0)))
         except Exception as e:
             (skipped if LOCAL else bad).append("%s: %s did not answer (%s)" % (u, ag, str(e)[:60]))
             continue
         if not got:
             (skipped if LOCAL else bad).append("%s: %s returned no elevation" % (u, ag))
-        elif pt in got and abs(got[pt] - float(st_.group(1))) > 0.005:
-            bad.append("%s: lake elevation %s on the page, %s at %s for the same time" % (u, st_.group(1), got[pt], ag))
-        elif pt not in got and pt < max(got):
-            bad.append("%s: the page's reading time %s is not a %s reading" % (u, pt.isoformat(), ag))
-        elif (max(got) - pt).total_seconds() / 3600 > STALE_FAIL_H:
-            bad.append("%s: page is more than %d h behind %s" % (u, STALE_FAIL_H, ag))
+        else:
+            v_ = agency_verdict(ag, pt, float(st_.group(1)), got)
+            if v_:
+                bad.append("%s: %s" % (u, v_))
     ids = sorted(pages)
     latest = {}
     failed_ids = set()
@@ -263,6 +299,14 @@ def main():
         for u in urls_:
             try:
                 html = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com" + u, headers={"User-Agent": "riverwaterlevels.com truth_live"}), timeout=30).read()
+            except urllib.error.HTTPError as e:
+                if e.code != 404:
+                    print("truth_live: could not carry", u, str(e)[:60])
+                    return 1
+                import shutil  # review 2026-11-07 #1: a new page has no live copy; a wrong number never ships, so this build leaves it out and the rest of the site deploys
+                shutil.rmtree(os.path.join(LOCAL, u.strip("/")), ignore_errors=True)
+                print("DROPPED new page", u, "(no live copy to carry; its numbers did not match the source; the next build tries it again; listed in _truth.json mismatches)")
+                continue
             except Exception as e:
                 print("truth_live: could not carry", u, str(e)[:60])
                 return 1
@@ -274,4 +318,4 @@ def main():
     return 1 if bad else 0
 
 
-sys.exit(main())
+sys.exit(selftest() if "--selftest" in sys.argv else main())

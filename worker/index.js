@@ -98,7 +98,7 @@ function stored(env) {
 // the cron: ask USGS what changed since the cursor, merge, write once if anything changed
 async function poll(env) {
   const list = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json();
-  const ids = list.map((x) => x[0]);
+  const ids = list.map((x) => x[0]).filter((s) => /^\d+$/.test(s)); // agency lakes (CDEC-SHA, TWDB-travis) are on the list for the Python tools; USGS gets only its own ids
   const prev = (await env.LIVE.get("live", { type: "json" })) || {};
   const g = {};
   for (const s of ids) if (prev.g && prev.g[s]) g[s] = prev.g[s]; // gauges no longer live drop out

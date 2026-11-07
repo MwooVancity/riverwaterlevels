@@ -2,7 +2,7 @@
 import os, re, csv, json, math, datetime, collections, zoneinfo
 from lib import ui
 from lib.common import *
-from lib.core import SOURCES_READ_ON, tzl, fdate, age_chip, STALE_H, age_text, flow_is_old, hours_old, stale_after, age_words
+from lib.core import SOURCES_READ_ON, tzl, fdate, age_chip, STALE_H, age_text, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -90,18 +90,18 @@ ALLTAB_JS = """<script>(function(){var t=document.getElementById('alltab');if(!t
 
 def old_mark(G):
     """' 2 d old' beside a list-row flow older than the not-reporting limit (home, state and hub lists); empty for a current reading."""
-    return (' <span class="oldm">%s old</span>' % age_text(G["lt"], G["now"])) if flow_is_old(G["age_min"]) else ""
+    return (' <span class="oldm">%s old</span>' % age_text(G["lt"], G["now"])) if G["offline"] else ""
 
 
 def chg_text(G):
     """The 24 h change cell text, or None: no change when unknown, tidal, or when the gauge stopped reporting over 24 h ago (the % would be a trend from before it went quiet)."""
     chg = G["chg"]
-    return None if (chg is None or G.get("osc") or flow_is_old(G["age_min"])) else ("%+d%%" % round(chg) if round(chg) else "0%")
+    return None if (chg is None or G.get("osc") or G["offline"]) else ("%+d%%" % round(chg) if round(chg) else "0%")
 
 
 def chg_dash(G):
     """The dash for a missing change; a gauge that stopped reporting says so in the cell's title."""
-    return '<span title="gauge not reporting">–</span>' if flow_is_old(G["age_min"]) else "–"
+    return '<span title="gauge not reporting">–</span>' if G["offline"] else "–"
 
 
 def all_gauges_table(built, Gs):
@@ -112,7 +112,7 @@ def all_gauges_table(built, Gs):
         p = G["p"]
         ptxt = band_word(p)
         pv = "" if p is None else str({-1: 0, 101: 100}.get(p, p))
-        chg = None if flow_is_old(G["age_min"]) else G["chg"]
+        chg = None if G["offline"] else G["chg"]
         large = "1" if float(r["drainage_sqmi"] or 0) >= 1000 else "0"
         fcf = "1" if ((G["rec"].get("nwps") or {}).get("forecast")) else "0"
         wqf = "1" if any(series(G["rec"], c) for c in LABELS if c != "00045") else "0"
@@ -321,7 +321,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
     for r in rows:
         G = Gs[r["site"]]
         pv = band_word(G["p"])
-        chg = None if (G.get("osc") or flow_is_old(G["age_min"])) else G["chg"]
+        chg = None if (G.get("osc") or G["offline"]) else G["chg"]
         ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else chg_dash(G)
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (

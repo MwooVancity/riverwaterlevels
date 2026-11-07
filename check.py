@@ -88,7 +88,7 @@ def ui_checks(body, plain=True):
 
 def foreign_usgs(h):
     """A USGS label or link carrying an id USGS does not use (CDEC-SHA): the reading's source named wrongly, or a dead USGS link (agency lakes 2026-11-07)."""
-    m = re.search(r"USGS(?:-| lake gauge | gauge | )(?!PAD-US)([A-Z]{2,}-[A-Z0-9]+)", h)
+    m = re.search(r"USGS(?:-| lake gauge | gauge | )(?!PAD-US)([A-Z]{2,}-[A-Za-z0-9]+)", h)  # review 2026-11-07 #4: TWDB ids are lower case
     return "names USGS for %s, an id USGS does not use (name the operator's feed)" % m.group(1) if m else None
 
 
@@ -764,7 +764,7 @@ def selftest():
     assert interp_pct([9, 1.0, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, 7.0], 0.5) == -1, "selftest: below the 5th stopped reporting"
     short = [17, None, 2.0, None, 3.0, 4.0, 5.0, None, 6.0, None]
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
-    assert foreign_usgs("(USGS CDEC-SHA)") and foreign_usgs('href="https://waterdata.usgs.gov/monitoring-location/USGS-CDEC-SHA/"') and not foreign_usgs("USGS PAD-US (USGS 09380000) USGS Topo"), "selftest: a USGS label on a CDEC id passed"
+    assert foreign_usgs("(USGS CDEC-SHA)") and foreign_usgs("USGS lake gauge TWDB-travis") and foreign_usgs('href="https://waterdata.usgs.gov/monitoring-location/USGS-CDEC-SHA/"') and not foreign_usgs("USGS PAD-US (USGS 09380000) USGS Topo"), "selftest: a USGS label on a CDEC id passed"
     assert reuse_barred([{"id": "chs", "status": "quoted", "commercial": "barred"}]) and not reuse_barred([{"id": "chs", "status": "off", "commercial": "barred"}]), "selftest: a source whose terms bar ads or commercial use could still show"
     _bar = reuse_barred(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"])
     assert not _bar, "; ".join(_bar)

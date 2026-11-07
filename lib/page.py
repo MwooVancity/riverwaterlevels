@@ -324,8 +324,15 @@ def agency_words(h, G):
     h = h.replace("USGS publishes no storage for this lake.", G["agy"].get("no_storage", "Not in the %s feed this page reads." % a))
     if G["agy"].get("day_avg"):  # TWDB rows are daily averages stored at local midnight: the midnight clock time is ours, never TWDB's, so every printed copy becomes the date
         dz = zoneinfo.ZoneInfo(G["agy"].get("day_tz") or G["tzname"])  # the agency's own day (Reclamation: Arizona; 07:00 UTC Nov 4 is Nov 3, 11 PM on a Pacific page)
-        for t_ in {parse_t(r["time"]) for r in G["rec"]["usgs"]["rows"]}:
-            h = h.replace(tzl(t_, G["zone"]), tzl(t_, dz).split(",")[0] + " (%s daily %s)" % (a, G["agy"].get("day_word", "average")))
+        sw = [(tzl(t_, G["zone"]), tzl(t_, dz).split(",")[0] + " (%s daily %s)" % (a, G["agy"].get("day_word", "average"))) for t_ in {parse_t(r["time"]) for r in G["rec"]["usgs"]["rows"]}]
+        def day_(m):  # review 2026-11-07 #2: only the reading's own blocks; an NWS alert or forecast at midnight keeps its real time
+            if m.group(1) not in ("stage_chart", "reservoir", "sources", "official_links", None):
+                return m.group(0)
+            s_ = m.group(0)
+            for x, y in sw:
+                s_ = s_.replace(x, y)
+            return s_
+        h = re.sub(r'<section[^>]*? id="([a-z_0-9]+)".*?</section>|(?:(?!<section).)+', day_, h, flags=re.S)
     return re.sub(r"(?:USGS daily statistics: not available for this gauge|Percentile method: latest reading compared with USGS daily percentiles for [^.<]*)\. ?", "", h)
 
 
