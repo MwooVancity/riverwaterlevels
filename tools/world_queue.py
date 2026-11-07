@@ -8,6 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOTAL = 20000
 CAP = 5000  # a higher number here is trivia, not gauge checking: "yellow river flow" 500K, "jordan river flow" 50K
 STEP = {5000: 500, 500: 50, 50: 0, 0: 0}
+PICKS = {(r["river"], r["state"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-picks.csv"), encoding="utf-8"))} if os.path.exists(os.path.join(ROOT, "data", "keyword-picks.csv")) else set()  # river name -> the state its searches mean, picked by hand
 NOT_RIVER = re.compile(r"\b(dispute|flood|floods|pollution|battle|treaty|bridge)\b", re.I)
 ENGLISH = ["GB", "IE", "CA", "AU", "NZ", "ZA", "IN", "PH", "LK", "SG", "KE", "NG"]
 
@@ -62,10 +63,12 @@ def group(t, first):
 
 def us_rows(tier):
     w = load("waves.csv")
-    states = C.defaultdict(set)
+    states, parts = C.defaultdict(set), C.defaultdict(set)
     for r in w:
         if r["status"] in ("live", "queue"):
             states[r["river"]].add(r["state"])
+            if r["site"][:8].isdigit():
+                parts[r["river"]].add(r["site"][:2])
     live = {(r["river"], r["state"]) for r in w if r["status"] == "live"}
     abroad = {r["name"] + " river" for r in load("world-rivers.csv") if "US" not in r["cc"]}  # Ottawa River, Ohio must not inherit Canada's searches
     seen, out = set(live), []
@@ -74,13 +77,19 @@ def us_rows(tier):
         n = r["river"].lower()
         t, k = best(tier, [n + " water level", n + " flow"])
         shared = len(states[r["river"]]) > 1 or n.startswith("lake ") or n in abroad
-        if shared:
+        held = ""
+        if n.startswith("lake "):  # keyword debate 2026-11-07: "lake fork water level" means Lake Fork Reservoir TX, never a river gauge named Lake Fork (7 rows)
+            t, held = 0, "held: a lake keyword on a river gauge"
+        elif len(parts[r["river"]]) > 1 and t >= 500 and (r["river"], r["state"]) not in PICKS:  # keyword debate: different rivers sharing a name (White River IN, AR, VT) earn nothing until data/keyword-picks.csv names the one the searches mean.
+            # One river crossing states (French Broad NC-TN, Youghiogheny MD-PA) keeps one USGS region (the site number's first two digits), so it is not held. ponytail: region prefix, a basin (HUC) lookup if two same-region namesakes appear
+            t, held = 0, "held: %d different rivers share this name (USGS regions %s); pick one in data/keyword-picks.csv" % (len(parts[r["river"]]), ", ".join(sorted(parts[r["river"]])))
+        elif shared:
             t = STEP[t]
         place = (r["river"], r["state"])
         first = place not in seen
         seen.add(place)
         out.append(dict(group=group(t, first), tier=t, keyword=k if t else "", river=r["river"], place=r["place"], region=r["state"], country="US",
-                        gauge=r["site"], shared="yes" if shared else "", feed="USGS", ready="yes", score=float(r["score"] or 0), category=r.get("activity") or ""))
+                        gauge=r["site"], shared=held or ("yes" if shared else ""), feed="USGS", ready="yes", score=float(r["score"] or 0), category=r.get("activity") or ""))
     return out, {r["river"].lower() for r in w}
 
 
@@ -106,13 +115,15 @@ def world_rows(tier, us_names):
         t, k = best(tier, ["river %s level" % n, head + " water level", head + " flow"])
         british = t and k.startswith("river ")  # "river thames level" is British wording, so only a British namesake competes
         shared = len(uk[n]) > 1 if british else count[n] > 1 or head in us_names
-        if shared:
+        if not british and head in us_names and t >= 500:  # keyword debate 2026-11-07: "white river water level" was credited to the White River in Jamaica; a US river shares the name, so the searches are not this river's until picked
+            t, shared = 0, "held: a US river shares this name"
+        elif shared:
             t = STEP[t]
         pool = uk[n] if british else titles[n]
         title = min(pool, key=lambda x: ("(" in x or "," in x, len(x), x))
         rank_cc = min((ENGLISH.index(c) for c in cc if c in ENGLISH), default=len(ENGLISH))
         out.append(dict(group=group(t, True) if t else 8, tier=t, keyword=k if t else "", river=title, place="", region="", country="|".join(sorted(cc - {"US"})),
-                        gauge="", shared="yes" if shared else "", feed="PEGELONLINE" if "DE" in cc else "not checked", ready="no",
+                        gauge="", shared=shared if isinstance(shared, str) else ("yes" if shared else ""), feed="PEGELONLINE" if "DE" in cc else "not checked", ready="no",
                         score=-rank_cc * 100 + len(cc), category=""))
     return out
 
