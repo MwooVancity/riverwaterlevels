@@ -95,7 +95,18 @@ def page_checks(h, rel):
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
         out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
-    return out + ad_gaps(rel, h) + stats_gap(h)
+    return out + ad_gaps(rel, h) + stats_gap(h) + datum_named(h, u)
+
+
+DATUMS = ("mean lower low water", "NAVD 1988", "NGVD 1929", "IGLD 1985", "the reservoir's own datum", "the reservoir&#x27;s own datum", "the datum the operator uses", "the gauge datum", "Ordnance Datum Malin")
+
+
+def datum_named(h, u):
+    """ChatGPT audit 2026-11-05 item 1, agreed and never built until the scale debate 2026-11-07: a lake or coast elevation is a height above a datum,
+    and the page must say which (NGVD 1929 and NAVD 1988 differ by feet at Lanier; Irish tide heights are above Ordnance Datum Malin, not chart datum)."""
+    if not u.startswith(("/lake/", "/coast/")) or 'data-live="stage"' not in h:
+        return []
+    return [] if any("above " + d in h for d in DATUMS) else ["a lake or coast elevation without its datum: say 'above <datum>' (allowed: %s)" % ", ".join(DATUMS[:5])]
 
 
 def stats_gap(h):
@@ -845,6 +856,7 @@ def selftest():
         assert old_ and old_["amber"] and gone_ is None and unk_ and "Unknown" in unk_["body"], "selftest: an old GLERL value was not marked or hidden, or a missing one was silent"
         assert b3_.b_lake_temp(Gt(gs, 30, "Lake Lanier")) is None, "selftest: a lake-wide Great Lakes temperature shown on another lake"
     assert "AKST" in b3_._aq_time({"date": "2026-11-06", "hour": "17:00", "tz": "KST"}), "selftest: AirNow's Alaska 'KST' printed as Korea time"
+    assert datum_named('<b data-live="stage">1062.6</b> ft', "/lake/x/") and not datum_named('<b data-live="stage">1062.6</b> ft above NAVD 1988', "/lake/x/") and not datum_named('<b data-live="stage">3.1</b>', "/river/x/y/"), "selftest: a lake elevation with no datum passed (ChatGPT audit 2026-11-05 item 1)"
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import info_gain  # the competitor gate release.py page_check runs: a page missing a core item must lose
     info_gain.selftest()
