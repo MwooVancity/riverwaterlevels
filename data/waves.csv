@@ -61,7 +61,7 @@ queue,2,01411000,Great Egg Harbor River,Folsom,NJ,87.9,100,71,70,"wsr-rec,wsr",,
 queue,2,01603000,North Branch Potomac River,Cumberland,MD,87.8,100,69,70,fame,,,high,/river/north-branch-potomac-river-md/cumberland/
 queue,2,01181000,West Branch Westfield River,Huntington,MA,87.8,100,69,70,"wsr-rec,wsr-fish,wsr",,,high,/river/west-branch-westfield-river/huntington/
 live,2,01628500,South Fork Shenandoah River,Lynnwood,VA,87.8,100,70,70,fame,,,auto2,/river/south-fork-shenandoah-river/lynnwood/
-queue,2,14142500,Sandy River,Below Bull Run River Near Bull Run,OR,87.8,100,70,70,"wsr-rec,wsr-fish,wsr,nri,fame",,4256,auto2,/river/sandy-river-or/below-bull-run-river-near-bull-run/
+queue,2,14142500,Sandy River,Below Bull Run River Near Bull Run,OR,87.8,100,70,70,"wsr-rec,wsr-fish,wsr,nri,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",4256,auto2,/river/sandy-river-or/below-bull-run-river-near-bull-run/
 live,2,03171000,New River,Radford,VA,87.7,100,70,70,fame,,,auto2,/river/new-river-va/radford/
 queue,2,02053800,South Fork Roanoke River,Shawsville,VA,87.7,100,69,70,fame,,,auto2,/river/south-fork-roanoke-river/shawsville/
 queue,2,03057000,Tygart Valley River,Colfax,WV,87.6,100,67,70,"nri,nri-paddle,fame",,7948,high,/river/tygart-valley-river/colfax/
@@ -264,14 +264,14 @@ queue,10,07188000,Spring River,Quapaw,OK,81.0,85,68,70,"nri,nri-paddle,nri-fish"
 queue,10,04151500,Cass River,Frankenmuth,MI,81.0,85,68,70,"nri,nri-paddle,nri-fish",,,high,/river/cass-river/frankenmuth/
 live,10,06043500,Gallatin River,Gallatin Gateway,MT,81.0,85,68,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/gallatin-river/gallatin-gateway/
 live,10,03136500,Kokosing River,Mount Vernon,OH,81.0,85,68,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/kokosing-river/mount-vernon/
-queue,10,04086600,Milwaukee River,Cedarburg,WI,81.0,85,86,70,"nri,nri-paddle",,,high,/river/milwaukee-river/cedarburg/
+queue,10,04086600,Milwaukee River,Cedarburg,WI,81.0,85,86,70,"nri,nri-paddle","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/milwaukee-river/cedarburg/
 queue,10,03336645,Middle Fork Vermilion River,Above Oakwood,IL,81.0,90,68,70,"wsr,nri,nri-fish",,,high,/river/middle-fork-vermilion-river/above-oakwood/
-queue,10,08033000,Neches River,Diboll,TX,80.9,85,67,70,"nri,nri-paddle,nri-fish",,11648,high,/river/neches-river/diboll/
+queue,10,08033000,Neches River,Diboll,TX,80.9,85,67,70,"nri,nri-paddle,nri-fish","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",11648,high,/river/neches-river/diboll/
 queue,10,02395000,Etowah River,Kingston,GA,80.9,85,67,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/etowah-river/kingston/
 queue,10,04154000,Chippewa River,Mount Pleasant,MI,80.9,85,68,70,"nri,nri-paddle,nri-fish",,,high,/river/chippewa-river-mi/mount-pleasant/
 queue,10,02081747,Tar River,Us 401 At Louisburg,NC,80.9,85,69,70,"nri,nri-paddle",,,auto2,/river/tar-river/us-401-at-louisburg/
 queue,10,04137500,Au Sable River,Au Sable,MI,80.9,100,49,70,fame,,,auto2,/river/au-sable-river/au-sable/
-queue,10,08190000,Nueces River,Laguna,TX,80.8,85,67,70,"nri,nri-paddle,nri-fish",,45146,high,/river/nueces-river/laguna/
+queue,10,08190000,Nueces River,Laguna,TX,80.8,85,67,70,"nri,nri-paddle,nri-fish","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",45146,high,/river/nueces-river/laguna/
 queue,10,02074000,Smith River,Eden,NC,80.8,85,67,70,"nri,nri-paddle",,,high,/river/smith-river-nc/eden/
 queue,10,03262000,Loramie Creek,Lockington,OH,80.8,85,67,70,"nri,nri-paddle,nri-fish",,,high,/river/loramie-creek/lockington/
 queue,11,04096405,Saint Joseph River,Burlington,MI,81.0,85,68,70,"nri,nri-paddle,nri-fish",,,high,/river/saint-joseph-river-mi/burlington/
@@ -282,11 +282,11 @@ queue,11,01367500,Rondout Creek,Rosendale,NY,80.7,85,66,70,"nri,nri-paddle,nri-f
 queue,11,04125460,Pine River,High School Bridge Near Hoxeyville,MI,80.7,100,22,70,"wsr-rec,wsr",,1404,high,/river/pine-river-mi/high-school-bridge-near-hoxeyville/
 queue,11,12488500,American River,Nile,WA,80.7,100,21,70,"nri,nri-paddle,fame",,1180,high,/river/american-river-wa/nile/
 queue,11,09217000,Green River,Green River,WY,80.6,100,70,40,fame,,31349,high,/river/green-river-wy/green-river/
-queue,11,03353000,White River,Indianapolis,IN,80.6,75,96,70,"nri,nri-fish,fame",,,high,/river/white-river-in/indianapolis/
+queue,11,03353000,White River,Indianapolis,IN,80.6,75,96,70,"nri,nri-fish,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/white-river-in/indianapolis/
 queue,11,04189000,Blanchard River,Findlay,OH,80.6,85,65,70,"nri,nri-paddle",,1290,high,/river/blanchard-river/findlay/
 queue,11,01634500,Cedar Creek,Winchester,VA,80.6,85,66,70,"nri,nri-paddle",,,high,/river/cedar-creek-va/winchester/
 queue,11,02030000,Hardware River,Below Briery Run Near Scottsville,VA,80.6,85,67,70,"nri,nri-paddle",,,auto2,/river/hardware-river/below-briery-run-near-scottsville/
-queue,11,07022000,Mississippi River,Thebes,IL,80.5,100,70,40,"nri,nri-fish,fame",,,high,/river/mississippi-river-il/thebes/
+queue,11,07022000,Mississippi River,Thebes,IL,80.5,100,70,40,"nri,nri-fish,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/mississippi-river-il/thebes/
 queue,11,03025500,Allegheny River,Franklin,PA,80.5,100,70,40,"wsr-rec,wsr,fame",,62819,high,/river/allegheny-river-pa/franklin/
 queue,11,04198000,Sandusky River,Fremont,OH,80.5,85,65,70,"nri,nri-paddle",,5502,high,/river/sandusky-river/fremont/
 queue,11,01371500,Wallkill River,Gardiner,NY,80.5,85,65,70,"nri,nri-paddle,nri-fish",,5279,high,/river/wallkill-river-ny/gardiner/
@@ -331,7 +331,7 @@ queue,13,01362500,Esopus Creek,Coldbrook,NY,80.1,85,63,70,"nri,nri-paddle,nri-fi
 queue,13,03441000,Davidson River,Brevard,NC,80.1,85,62,70,"nri,nri-paddle,nri-fish",,,high,/river/davidson-river/brevard/
 queue,13,11446500,American River,Fair Oaks,CA,80.1,100,86,30,"wsr-rec,wsr-fish,wsr,fame",,,auto2,/river/american-river-ca/fair-oaks/
 queue,13,06721000,South Platte River,Fort Lupton,CO,80.0,100,76,40,fame,,,high,/river/south-platte-river-co/fort-lupton/
-queue,13,04227500,Genesee River,Mount Morris,NY,80.0,85,62,70,"nri,nri-paddle",,,high,/river/genesee-river/mount-morris/
+queue,13,04227500,Genesee River,Mount Morris,NY,80.0,85,62,70,"nri,nri-paddle","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/genesee-river/mount-morris/
 queue,13,10348000,Truckee River,Reno,NV,80.0,100,83,70,fame,,33990,high,/river/truckee-river-nv/reno/
 queue,13,05572000,Sangamon River,Monticello,IL,80.0,85,62,70,"nri,nri-paddle,nri-fish",,,high,/river/sangamon-river/monticello/
 queue,13,09085100,Colorado River,Below Glenwood Springs,CO,79.9,100,66,40,fame,,,high,/river/colorado-river-co/below-glenwood-springs/
@@ -356,7 +356,7 @@ queue,14,03486000,Watauga River,Elizabethton,TN,79.8,100,74,70,fame,,,high,/rive
 queue,14,01076500,Pemigewasset River,Plymouth,NH,79.7,85,60,70,"nri,nri-paddle,nri-fish",,,high,/river/pemigewasset-river/plymouth/
 queue,14,12141300,Middle Fork Snoqualmie River,Tanner,WA,79.7,85,60,70,"nri,nri-paddle,nri-fish",,,high,/river/middle-fork-snoqualmie-river/tanner/
 queue,14,13239000,North Fork Payette River,Mccall,ID,79.7,85,60,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/north-fork-payette-river/mccall/
-queue,14,07014500,Meramec River,Sullivan,MO,79.6,85,59,70,"nri,nri-paddle,fame",,,high,/river/meramec-river/sullivan/
+queue,14,07014500,Meramec River,Sullivan,MO,79.6,85,59,70,"nri,nri-paddle,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/meramec-river/sullivan/
 queue,14,02492000,Bogue Chitto River,Bush,LA,79.6,85,59,70,"nri,nri-paddle,nri-fish",,,high,/river/bogue-chitto-river/bush/
 queue,14,13190500,South Fork Boise River,Anderson Ranch Dam,ID,79.6,85,59,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/south-fork-boise-river/anderson-ranch-dam/
 queue,14,02490500,Bogue Chitto,Tylertown,MS,79.6,85,59,70,"nri,nri-paddle",,,high,/river/bogue-chitto-ms/tylertown/
@@ -373,7 +373,7 @@ queue,14,01529500,Cohocton River,Campbell,NY,79.5,85,59,70,"nri,nri-paddle,nri-f
 queue,14,03053500,Buckhannon River,Hall,WV,79.5,85,58,70,"nri,nri-paddle,nri-fish",,,high,/river/buckhannon-river/hall/
 queue,14,03361000,Big Blue River,Carthage,IN,79.5,85,65,70,"nri,nri-paddle,nri-fish",,,high,/river/big-blue-river-in/carthage/
 queue,14,04102500,Paw Paw River,Riverside,MI,79.5,85,60,70,"nri,nri-paddle,nri-fish",,,auto2,/river/paw-paw-river/riverside/
-queue,14,03303280,Ohio River,Cannelton Dam At Cannelton,IN,79.4,100,73,40,fame,,286576,high,/river/ohio-river-in/cannelton-dam-at-cannelton/
+queue,14,03303280,Ohio River,Cannelton Dam At Cannelton,IN,79.4,100,73,40,fame,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",286576,high,/river/ohio-river-in/cannelton-dam-at-cannelton/
 queue,15,07189000,Elk River,Tiff City,MO,79.4,85,58,70,"nri,nri-paddle,nri-fish",,,high,/river/elk-river-mo/tiff-city/
 live,15,07050500,Kings River,Berryville,AR,79.4,85,58,70,"nri,nri-paddle",,,high,/river/kings-river/berryville/
 queue,15,10309000,East Fork Carson River,Gardnerville,NV,79.4,85,58,70,"nri,nri-paddle,nri-fish,fame",,1071,high,/river/east-fork-carson-river-nv/gardnerville/
@@ -400,7 +400,7 @@ queue,15,03404500,Cumberland River,Cumberland Falls,KY,79.0,85,55,70,"nri,nri-pa
 queue,15,05078500,Clearwater River,Red Lake Falls,MN,79.0,85,55,70,"nri,nri-paddle,fame",,,high,/river/clearwater-river-mn/red-lake-falls/
 queue,15,07151500,Chikaskia River,Corbin,KS,79.0,85,55,70,"nri,nri-paddle,nri-fish",,,high,/river/chikaskia-river-ks/corbin/
 queue,16,02234000,Saint Johns River,Above Lake Harney Near Geneva,FL,79.0,85,73,70,"nri,nri-paddle,nri-fish",,,high,/river/saint-johns-river/above-lake-harney-near-geneva/
-queue,16,02256500,Fisheating Creek,Palmdale,FL,79.0,85,55,70,"nri,nri-paddle",,3102,high,/river/fisheating-creek/palmdale/
+queue,16,02256500,Fisheating Creek,Palmdale,FL,79.0,85,55,70,"nri,nri-paddle","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",3102,high,/river/fisheating-creek/palmdale/
 queue,16,01091500,Piscataquog River,Goffstown,NH,79.0,85,69,70,"nri,nri-paddle,nri-fish",,1675,high,/river/piscataquog-river/goffstown/
 queue,16,04027000,Bad River,Odanah,WI,79.0,85,56,70,"nri,nri-paddle,nri-fish",,,auto2,/river/bad-river-wi/odanah-04027000/
 queue,16,08013000,Calcasieu River,Glenmora,LA,78.9,85,54,70,"nri,nri-paddle,nri-fish",,,high,/river/calcasieu-river/glenmora/
@@ -461,7 +461,7 @@ queue,18,04128990,Pigeon River,Vanderbilt,MI,78.3,85,51,70,"nri,nri-paddle,nri-f
 queue,18,04197170,Rock Creek,Tiffin,OH,78.3,85,70,70,"nri,nri-paddle",,,high,/river/rock-creek-oh/tiffin/
 queue,18,03505550,Nantahala River,Hewitt,NC,78.3,100,50,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/nantahala-river/hewitt/
 queue,18,01187800,Nepaug River,Nepaug,CT,78.3,100,72,30,"wsr-rec,wsr-fish,wsr",,,high,/river/nepaug-river/nepaug/
-queue,18,03263000,Great Miami River,Taylorsville,OH,78.2,75,79,70,"nri,nri-fish,fame",,,high,/river/great-miami-river/taylorsville/
+queue,18,03263000,Great Miami River,Taylorsville,OH,78.2,75,79,70,"nri,nri-fish,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/great-miami-river/taylorsville/
 queue,18,01361000,Kinderhook Creek,Rossman,NY,78.2,85,55,70,"nri,nri-paddle,nri-fish",,1250,high,/river/kinderhook-creek-ny/rossman/
 queue,18,07064440,Current River,Montauk State Park,MO,78.2,100,51,70,"nri,fame",,,high,/river/current-river/montauk-state-park/
 live,18,09355500,San Juan River,Archuleta,NM,78.1,100,54,40,fame,,,high,/river/san-juan-river-nm/archuleta/
@@ -475,7 +475,7 @@ queue,18,05340500,Saint Croix River,Saint Croix Falls,WI,78.0,100,53,40,"wsr-rec
 queue,18,02338000,Chattahoochee River,Whitesburg,GA,78.0,100,70,70,fame,,,high,/river/chattahoochee-river/whitesburg/
 queue,18,11123000,Santa Ynez River,Below Gibraltar Dam Near Santa Barbara,CA,78.0,65,75,90,tail,,,high,/river/santa-ynez-river/below-gibraltar-dam-near-santa-barbara/
 queue,19,14158850,Mckenzie River,Below Trail Branch Dam Near Belknap Springs,OR,78.0,90,0,90,"wsr,tail,fame",,,high,/river/mckenzie-river/below-trail-branch-dam-near-belknap-springs/
-queue,19,03234300,Paint Creek,Chillicothe,OH,78.0,85,70,70,"nri,nri-paddle,nri-fish",,,high,/river/paint-creek/chillicothe/
+queue,19,03234300,Paint Creek,Chillicothe,OH,78.0,85,70,70,"nri,nri-paddle,nri-fish","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/paint-creek/chillicothe/
 queue,19,03350700,Stony Creek,Noblesville,IN,78.0,75,80,70,"nri,nri-fish",,,high,/river/stony-creek-in/noblesville/
 live,19,12041200,Hoh River,Us Highway 101 Near Forks,WA,78.0,85,50,70,"nri,nri-paddle,nri-fish",,,auto2,/river/hoh-river/us-highway-101-near-forks/
 queue,19,14189000,Santiam River,Jefferson,OR,77.9,75,78,70,"nri,nri-fish",,,high,/river/santiam-river/jefferson/
@@ -521,7 +521,7 @@ queue,20,06411500,Rapid Creek,Below Pactola Dam,SD,77.5,65,72,90,tail,,,high,/ri
 queue,20,12342500,West Fork Bitterroot River,Conner,MT,77.5,100,0,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/west-fork-bitterroot-river/conner/
 queue,20,09342500,San Juan River,Pagosa Springs,CO,77.5,100,0,70,fame,,,high,/river/san-juan-river-co/pagosa-springs/
 queue,20,14316700,Steamboat Creek,Glide,OR,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,nri,nri-fish",,,high,/river/steamboat-creek-or/glide/
-queue,20,07295000,Buffalo River,Woodville,MS,77.5,100,0,70,fame,"held 2026-11-07 queue audit: the keyword's searches mean another state's river of this name (Lake Fork TX, Buffalo AR/TN); hand-pick before release (keyword debate 2026-11-06)",,high,/river/buffalo-river-ms/woodville/
+queue,20,07295000,Buffalo River,Woodville,MS,77.5,100,0,70,fame,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/buffalo-river-ms/woodville/
 queue,20,13011500,Pacific Creek,Moran,WY,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/pacific-creek/moran/
 queue,20,04033000,Middle Branch Ontonagon River,Paulding,MI,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/middle-branch-ontonagon-river/paulding/
 queue,21,09292500,Yellowstone River,Altonah,UT,77.5,100,0,70,fame,,,high,/river/yellowstone-river-ut/altonah/
@@ -611,7 +611,7 @@ queue,24,03439000,French Broad River,Rosman,NC,76.1,100,57,70,"nri,nri-paddle,fa
 queue,24,02085000,Eno River,Hillsborough,NC,76.1,70,82,70,"nri,fame",,,auto2,/river/eno-river/hillsborough/
 queue,24,07374000,Mississippi River,Baton Rouge,LA,76.0,100,85,40,fame,,,high,/river/mississippi-river-la/baton-rouge/
 queue,24,01453000,Lehigh River,Bethlehem,PA,76.0,70,80,70,fame,,,high,/river/lehigh-river/bethlehem/
-queue,24,10163000,Provo River,Provo,UT,76.0,70,80,70,fame,,,high,/river/provo-river/provo/
+queue,24,10163000,Provo River,Provo,UT,76.0,70,80,70,fame,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/provo-river/provo/
 queue,24,02331600,Chattahoochee River,Cornelia,GA,76.0,100,57,70,"nri,fame",,,high,/river/chattahoochee-river/cornelia/
 queue,24,01663500,Hazel River,Rixeyville,VA,76.0,75,65,70,"nri,nri-fish",,,high,/river/hazel-river/rixeyville/
 queue,24,01635500,Passage Creek,Buckton,VA,76.0,75,65,70,"nri,nri-fish",,,high,/river/passage-creek/buckton/
@@ -653,7 +653,7 @@ queue,26,01327750,Hudson River,Fort Edward,NY,75.5,100,65,70,fame,,,high,/river/
 queue,26,03540500,Emory River,Oakdale,TN,75.5,75,62,70,"nri,nri-fish",,1946,high,/river/emory-river/oakdale/
 live,26,03466500,Nolichucky River,Below Nolichucky Dam,TN,75.5,65,63,90,tail,,,high,/river/nolichucky-river/below-nolichucky-dam/
 queue,26,03135000,Lake Fork,Below Mohicanville Dam Near Mohicanville,OH,75.5,65,64,90,tail,"held 2026-11-07 queue audit: the keyword's searches mean another state's river of this name (Lake Fork TX, Buffalo AR/TN); hand-pick before release (keyword debate 2026-11-06)",,high,/river/lake-fork-oh/below-mohicanville-dam-near-mohicanville/
-queue,26,01643000,Monocacy River,Jug Bridge Near Frederick,MD,75.5,70,78,70,"nri,fame",,,auto2,/river/monocacy-river/jug-bridge-near-frederick/
+queue,26,01643000,Monocacy River,Jug Bridge Near Frederick,MD,75.5,70,78,70,"nri,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,auto2,/river/monocacy-river/jug-bridge-near-frederick/
 queue,26,09363500,Animas River,Cedar Hill,CO,75.4,100,53,70,fame,,,high,/river/animas-river-co/cedar-hill/
 queue,26,01580000,Deer Creek,Rocks,MD,75.4,75,61,70,"nri,nri-fish",,,high,/river/deer-creek-md/rocks/
 queue,26,01633000,North Fork Shenandoah River,Mount Jackson,VA,75.4,100,54,70,fame,,,auto2,/river/north-fork-shenandoah-river/mount-jackson/
@@ -661,10 +661,10 @@ queue,26,08294210,Rio Nambe,Below Nambe Falls Dam Near Nambe,NM,75.4,65,73,90,ta
 queue,26,06764880,South Platte River,Roscoe,NE,75.3,100,54,40,fame,,,high,/river/south-platte-river-ne/roscoe/
 queue,26,05418500,Maquoketa River,Maquoketa,IA,75.3,75,60,70,"nri,nri-fish",,,high,/river/maquoketa-river/maquoketa/
 queue,26,10311000,Carson River,Carson City,NV,75.3,70,75,70,fame,,,high,/river/carson-river/carson-city/
-queue,26,12213100,Nooksack River,Ferndale,WA,75.3,70,75,70,fame,,,high,/river/nooksack-river/ferndale/
+queue,26,12213100,Nooksack River,Ferndale,WA,75.3,70,75,70,fame,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/nooksack-river/ferndale/
 queue,26,04064500,Pine River,Below Pine River Powerplant Near Florence,WI,75.3,65,57,90,tail,,,high,/river/pine-river-wi/below-pine-river-powerplant-near-florence/
 queue,26,13153500,Malad River,Bliss,ID,75.3,85,51,70,"nri,nri-paddle,nri-fish",,,high,/river/malad-river/bliss/
-queue,26,02168504,Saluda River,Below Lake Murray Dam Near Columbia,SC,75.3,70,68,90,"nri,tail,fame",,7619,high,/river/saluda-river/below-lake-murray-dam-near-columbia/
+queue,26,02168504,Saluda River,Below Lake Murray Dam Near Columbia,SC,75.3,70,68,90,"nri,tail,fame","retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",7619,high,/river/saluda-river/below-lake-murray-dam-near-columbia/
 queue,26,01487000,Nanticoke River,Bridgeville,DE,75.3,75,60,70,"nri,nri-fish",,,high,/river/nanticoke-river/bridgeville/
 queue,26,02354500,Chickasawhatchee Creek,Elmodel,GA,75.3,85,51,70,"nri,nri-paddle",,,high,/river/chickasawhatchee-creek/elmodel/
 queue,26,03460795,Pigeon River,Below Power Plant Near Waterville,NC,75.3,100,55,90,"tail,fame",,,high,/river/pigeon-river-nc/below-power-plant-near-waterville/
@@ -9098,13 +9098,13 @@ excluded,,381427121305401,Sacramento River,Below Walnut Grove Branch A Walnut Gr
 excluded,,11455420,Sacramento River,Rio Vista,CA,0.0,10,75,0,,short-record,,auto2,/river/sacramento-river/rio-vista/
 excluded,,11304810,San Joaquin River,Below Garwood Bridge A Stockton,CA,0.0,10,88,0,,short-record,,low,/river/san-joaquin-river/below-garwood-bridge-a-stockton/
 excluded,,09193700,New Fork River,Above Willow Creek Near Cora,WY,0.0,10,0,0,,short-record,,auto2,/river/new-fork-river/above-willow-creek-near-cora/
-queue,,08206900,Choke Canyon Reservoir,Three Rivers,TX,0,,,0,lake,,,human,/lake/choke-canyon-reservoir/
+queue,,08206900,Choke Canyon Reservoir,Three Rivers,TX,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/choke-canyon-reservoir/
 queue,,08167700,Canyon Lake,New Braunfels,TX,0,,,0,lake,,,human,/lake/canyon-lake/
 queue,,08210500,Lake Corpus Christi,Mathis,TX,0,,,0,lake,,,human,/lake/lake-corpus-christi/
-queue,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,,,human,/lake/medina-lake/
-queue,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,,,human,/lake/lake-hartwell/
+queue,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/medina-lake/
+queue,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/lake-hartwell/
 queue,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,,,human,/lake/lake-lanier/
-queue,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,,,human,/lake/kerr-lake/
+queue,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/kerr-lake/
 queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/great-salt-lake/
 queue,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,,,human,/lake/lake-powell/
 queue,,9410170,San Diego Bay,San Diego,CA,0,,,0,coast,,,human,/coast/san-diego/
@@ -9122,7 +9122,7 @@ queue,,8443970,Boston,Boston,MA,0,,,0,coast,,,human,/coast/boston/
 queue,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,,,human,/coast/galveston/
 queue,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,,,human,/lake/shasta-lake/
 queue,,RISE-6123,Lake Mead,Hoover Dam,AZ,0,,,0,lake,,,human,/lake/lake-mead/
-queue,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,,,human,/lake/lake-travis/
+queue,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/lake-travis/
 queue,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,,,human,/coast/anchorage/
 queue,,9439040,Astoria,Astoria,OR,0,,,0,coast,,,human,/coast/astoria/
 queue,,8413320,Bar Harbor,Bar Harbor,ME,0,,,0,coast,,,human,/coast/bar-harbor/
