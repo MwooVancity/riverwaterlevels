@@ -172,7 +172,7 @@ def page_check(picks_):
             out[r["site"]] = "no built page at %s" % u
             continue
         h = open(f, encoding="utf-8").read().replace("\u00a0", " ")  # as check_dir reads it (times use no-break spaces)
-        bad = ck["check_html"](h, os.path.relpath(f, os.path.join(ROOT, "dist_next"))) + ck["rank_checks"](h, u) + ck["hater_rules"](h)
+        bad = ck["page_checks"](h, os.path.relpath(f, os.path.join(ROOT, "dist_next")))  # the same per-page function the site gate runs (release 2026-11-07)
         kind_ = "lake" if u.startswith("/lake/") else "coast" if u.startswith("/coast/") else None
         if kind_ and not info_gain:
             bad.append("info gain could not be scored (data/competitors.json unreadable)")

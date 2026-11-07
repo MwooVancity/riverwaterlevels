@@ -86,6 +86,28 @@ def ui_checks(body, plain=True):
     return bad
 
 
+def page_checks(h, rel):
+    """Every check that judges one page alone. The site gate and tools/release.py page_check both call this one function, so a new gauge the release
+    passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
+    u = "/" + os.path.dirname(rel).replace(os.sep, "/").replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
+    out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
+    sid = re.search(r"USGS gauge (\d{8,15})\b", h)
+    cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
+    if cp and os.path.exists(cp):
+        out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
+    return out + ad_gaps(rel, h) + stats_gap(h)
+
+
+def stats_gap(h):
+    """Wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo. One function for the site gate and
+    tools/release.py page_check (release 2026-11-07: two new gauges passed the release's check and failed this one at the gate, undoing all 25)."""
+    sid = re.search(r"USGS gauge (\d{8,15})\b", h)
+    stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
+    if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:
+        return ["says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics"]
+    return []
+
+
 def foreign_usgs(h):
     """A USGS label or link carrying an id USGS does not use (CDEC-SHA): the reading's source named wrongly, or a dead USGS link (agency lakes 2026-11-07)."""
     m = re.search(r"USGS(?:-| lake gauge | gauge | )(?!PAD-US)([A-Z]{2,}-[A-Za-z0-9]+)", h)  # review 2026-11-07 #4: TWDB ids are lower case
@@ -119,9 +141,11 @@ def check_html(h, rel):
     for pat in BANNED:
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
-    for mm in re.finditer(r"\b([A-Za-z]+) \1\b", text, re.I):  # words only: "19 19" is a day and an hour in "2026-10-19 19:38", not a typo
+    own = re.sub(r'(?s)<section[^>]*id="(?:flood_impacts|low_water|alerts|hydronotes)".*?</section>', " ", body)  # quoted NWS text is never reworded: "Meramec State Park park is flooded" is the NWS's own sentence (release 2026-11-07)
+    own = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", own)))
+    for mm in re.finditer(r"\b([A-Za-z]+) \1\b", own, re.I):  # words only: "19 19" is a day and an hour in "2026-10-19 19:38", not a typo
         if mm.group(1).lower() not in ("had", "that", "walla", "ro", "bora", "baden"):  # real names: Walla Walla River, a German "Ro Ro Anlage" ramp (2026-11-03)
-            bad.append("doubled word %r near %r" % (mm.group(0), text[max(0, mm.start() - 40):mm.end() + 40].strip()))
+            bad.append("doubled word %r near %r" % (mm.group(0), own[max(0, mm.start() - 40):mm.end() + 40].strip()))
     for sec in re.findall(r'<section class="card blk".*?</section>', body, re.S):
         sid = re.search(r'id="([^"]+)"', sec).group(1)
         if not re.search(r'<p class="src">Source', sec):
@@ -551,23 +575,15 @@ def check_dir(d):
                 p = os.path.join(root, f)
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
-                results[rel] = check_html(h, rel) + ((rank_checks(h, urlof(rel)) + hater_rules(h)) if kind_of(rel) == "gauge" else []) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
+                results[rel] = page_checks(h, rel) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
                 if rel.replace("\\", "/") == "glossary/index.html":
                     results[rel] += glossary_gaps(h)
-                sid = re.search(r"USGS gauge (\d{8,15})\b", h)
-                cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
-                if cp and os.path.exists(cp):
-                    results[rel] += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
                 if kind_of(rel) == "world":
                     slug = rel.replace("\\", "/").split("/")[0]
                     if slug not in world_rows:
                         wp = os.path.join(ROOT, "cache", "_river-%s.json" % slug)
                         world_rows[slug] = json.load(open(wp, encoding="utf-8")).get("rows", []) if os.path.exists(wp) else []
                     results[rel] += world_claims(h, world_rows[slug])
-                results[rel] += ad_gaps(rel, h)
-                stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
-                if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:  # wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo
-                    results[rel].append("says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics")
                 t = re.search(r"<title>(.*?)</title>", h)
                 titles[t.group(1) if t else ""].append(rel)
                 u = urlof(rel)
@@ -1152,7 +1168,7 @@ def keep_old_times(d, rels):
     json.dump(built, open(bp, "w"), separators=(",", ":"))
 
 
-def carry(d, fails):
+def carry(d, fails, got=None):
     """Replace each failing gauge page with its live copy (dist/ when present, else the live site), so the other pages ship. True when every one was replaced."""
     import shutil, urllib.request
     ok = True
@@ -1164,6 +1180,7 @@ def carry(d, fails):
             else:
                 url = "https://riverwaterlevels.com/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
                 open(dst, "wb").write(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read())
+            got is not None and got.append(rel)
             print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(fails[rel])[:160] + ")")
         except Exception as e:
             print("could not carry", rel, e)
@@ -1183,7 +1200,11 @@ def main():
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
     if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) in CARRYABLE) // 20) and all(kind_of(k) in CARRYABLE for k in fails):
-        if carry(d, fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
+        got = []
+        if not carry(d, fails, got) and got:  # release 2026-11-07: pages that were carried are recorded even when a new one could not be, so quarantine.py sees them as shipped, not failed
+            keep_old_times(d, set(got))
+            json.dump(sorted({r.replace("\\", "/") for r in set(got) | done}), open(os.path.join(d, "_carried.json"), "w"))
+        elif got and len(got) == len(fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
             keep_old_times(d, carried)
             json.dump(sorted({r.replace("\\", "/") for r in carried | done}), open(os.path.join(d, "_carried.json"), "w"))

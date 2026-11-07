@@ -320,7 +320,8 @@ def agency_words(h, G):
                  ("(USGS, provisional)", "(%s, provisional)" % a), ("(USGS, NOAA National Weather Service)", "(%s, NOAA National Weather Service)" % a), ("Data: USGS, NWS.", "Data: %s, NWS." % a),
                  ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Readings are provisional; %s may revise them." % a)):
         h = h.replace(x, y)
-    h = re.sub(r"\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", "(not in the %s feed this page reads)" % a, h)  # never "publishes none": nobody searched the agency's whole catalogue
+    said = []  # release 2026-11-07: the same parenthesis three times on the first screen (Lake Travis) is clutter; it is said once, the later copies are dropped
+    h = re.sub(r" ?\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", lambda m: "" if said else (said.append(1) or " (not in the %s feed this page reads)" % a), h)  # never "publishes none": nobody searched the agency's whole catalogue
     h = h.replace("USGS publishes no storage for this lake.", G["agy"].get("no_storage", "Not in the %s feed this page reads." % a))
     if G["agy"].get("day_avg"):  # TWDB rows are daily averages stored at local midnight: the midnight clock time is ours, never TWDB's, so every printed copy becomes the date
         dz = zoneinfo.ZoneInfo(G["agy"].get("day_tz") or G["tzname"])  # the agency's own day (Reclamation: Arizona; 07:00 UTC Nov 4 is Nov 3, 11 PM on a Pacific page)

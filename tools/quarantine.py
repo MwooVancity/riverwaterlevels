@@ -15,7 +15,11 @@ def main():
         failed = json.load(open(os.path.join(ROOT, "dist_next", "_failed.json"), encoding="utf-8"))
     except (OSError, ValueError):
         sys.exit("no _failed.json: the failure was not a page check")
-    pages = {k.replace("\\", "/"): v for k, v in (failed.get("pages") or {}).items()}
+    try:  # release 2026-11-07: Green River was already carried (its live copy ships), yet it counted as "not a new gauge" and undid all 25 picks
+        carried = {r.replace("\\", "/") for r in json.load(open(os.path.join(ROOT, "dist_next", "_carried.json"), encoding="utf-8"))}
+    except (OSError, ValueError):
+        carried = set()
+    pages = {k.replace("\\", "/"): v for k, v in (failed.get("pages") or {}).items() if k.replace("\\", "/") not in carried}
     if failed.get("site") or not pages:
         sys.exit("site-level failure or no failing page: %s" % str(failed.get("site"))[:200])
     was = {r["site"] for r in csv.DictReader(subprocess.check_output(["git", "show", "HEAD:data/waves.csv"], cwd=ROOT, text=True, encoding="utf-8").splitlines()) if r["status"] == "live"}

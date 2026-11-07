@@ -168,12 +168,12 @@ jobs:
           if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
             date -u +%F > data/last-release.txt; git add data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
-            git pull --rebase -q origin main && git push origin HEAD:main && echo "release committed"
+            git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
             echo "release DROPPED: the release was undone or the refresh did not pass"
             git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
             python -I tools/release_failed.py "release undone $(date -u +%F), the refresh did not pass with it"
-            git add data/waves.csv data/last-release.txt && git commit -m "release failed today: its picks wait until tomorrow ($(date -u +%F))" && git pull --rebase -q origin main && git push origin HEAD:main && echo "release-failed recorded"
+            git add data/waves.csv data/last-release.txt && git commit -m "release failed today: its picks wait until tomorrow ($(date -u +%F))" && git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release-failed recorded"
           fi
       - name: Save the published pages (a missing dist/ after a dry run only logs a warning)
         if: always()
