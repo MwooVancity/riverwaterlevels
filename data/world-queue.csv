@@ -12,12 +12,12 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 11,1,50000,myrtle beach tide times,Springmaid Pier,Myrtle Beach,SC,US,8661070,,NOAA CO-OPS,yes
 12,1,50000,texas lake levels,Texas Lake,,,,,,statewide hub,yes
 13,1,50000,bore tides,Bore,,,,,,not checked,no
-14,1,50000,lake mead level,Lake Mead,,,,,,not checked,no
+14,1,50000,lake mead level,Lake Mead,Hoover Dam,AZ,US,RISE-6123,,Reclamation RISE,yes
 15,1,50000,lake michigan water temp,Lake Michigan,,,,,,not checked,no
-16,1,50000,lake travis level,Lake Travis,,,,,,not checked,no
+16,1,50000,lake travis level,Lake Travis,Austin,TX,US,TWDB-travis,,TWDB,yes
 17,1,50000,plymouth tide times,Plymouth,,,,,,not checked,no
 18,1,50000,portsmouth tide times,Portsmouth,,,,,,not checked,no
-19,1,50000,shasta lake level,Shasta Lake,,,,,,not checked,no
+19,1,50000,shasta lake level,Shasta Lake,Shasta Dam,CA,US,CDEC-SHA,,CDEC,yes
 20,1,5000,atlantic city tide times,Atlantic City,Atlantic City,NJ,US,8534720,,NOAA CO-OPS,yes
 21,1,5000,boston tide times,Boston,Boston,MA,US,8443970,,NOAA CO-OPS,yes
 22,1,5000,chatham tides,Chatham,Chatham,MA,US,8447435,,NOAA CO-OPS,yes
