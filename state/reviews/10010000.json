@@ -1,0 +1,9 @@
+{
+ "id": "10010000",
+ "verdict": "PASS",
+ "notes": "NOTES: JSON link says storage readings though storage is not published (key exists, empty); it drains 22,060 sq mi wording on a terminal lake; SNOTEL name truncated by NRCS",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:41+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

@@ -1,0 +1,9 @@
+{
+ "id": "1612340",
+ "verdict": "PASS",
+ "notes": "NOTES: tile -0.0 ft vs table 0.0 ft (rounding); breadcrumb lacks HI; nearest gauges 2380+ mi (labelled)",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:42+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

@@ -1,0 +1,9 @@
+{
+ "id": "08104650",
+ "verdict": "FAIL",
+ "notes": "F1 phone-01/desktop-01 + text.txt: storage tile \"29,990 acre-ft Water stored, TWDB daily estimate, Nov 7, 2026\" vs \"How full the reservoir is: Conservation storage 29,927 acre-ft\" (same agency, same date, two different numbers, labels do not say which is which)",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:29+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

@@ -1,0 +1,9 @@
+{
+ "id": "03310900",
+ "verdict": "FAIL",
+ "notes": "F8 phone-01 + text.txt: NWS forecast point \"Nolin River at Nolin River Lake\" is called \"not this gauge place\" (tile) and \"for a nearby place\" (impacts), but it is the same lake (the point is on this lake, not a nearby place) | NOTE The latest reading is already above every forecast point (forecast value, not point)",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:31+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

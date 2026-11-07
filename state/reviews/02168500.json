@@ -1,0 +1,9 @@
+{
+ "id": "02168500",
+ "verdict": "FAIL",
+ "notes": "F8 text.txt: NWS forecast point \"Lake Murray\" is called \"for a nearby place\", but it is the same lake (the point is on this lake, not a nearby place)",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:30+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

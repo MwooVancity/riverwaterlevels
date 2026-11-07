@@ -1,0 +1,9 @@
+{
+ "id": "03372400",
+ "verdict": "FAIL",
+ "notes": "F8 phone-01 + text.txt: NWS forecast point \"Salt Creek (IN) at Monroe Lake\" is called \"not this gauge place\" (tile) and \"for a nearby place\" (impacts), but it is the same lake (the point is on this lake, not a nearby place) | NOTE 535 ft low-water impact listed among rising impacts while lake is 537.54; all four flood stages 556.0 (NWS); breadcrumb lacks IN; duplicate Moores Creek ramp",
+ "by": "hater-first-2026-11-07c",
+ "at": "2026-11-07T20:10:30+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}
