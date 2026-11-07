@@ -1,0 +1,9 @@
+{
+ "id": "9414290",
+ "verdict": "PASS",
+ "notes": "NOTE +1.18 vs 5.08-3.89=1.19 rounding; water temp 'Not available' while buoy 46237 SST 64F 15 km offshore shown",
+ "by": "hater-first-2026-11-07f",
+ "at": "2026-11-07T20:35:06+00:00",
+ "template": "893fbad4d72f",
+ "level": "first"
+}

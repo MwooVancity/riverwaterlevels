@@ -1,0 +1,9 @@
+{
+ "id": "8518750",
+ "verdict": "FAIL",
+ "notes": "F3 text: flood report place '1 S Point Pleasant Beac, NJ' cut off mid-word (NWS LSR city field truncated, shown as is) | NOTE phone-01 '12:17 am low -0.0 ft' (negative zero) | NOTE 'gusts to 28 mph (10 AM)' is tomorrow with no day; +0.42 vs 2.53-2.10=0.43 rounding",
+ "by": "hater-first-2026-11-07f",
+ "at": "2026-11-07T20:35:04+00:00",
+ "template": "893fbad4d72f",
+ "level": "first"
+}

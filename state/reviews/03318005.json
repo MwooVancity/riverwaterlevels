@@ -1,0 +1,9 @@
+{
+ "id": "03318005",
+ "verdict": "FAIL",
+ "notes": "F1/F6 phone-01 tile label 'NWS FORECAST: NO RISE ABOVE THE LATEST READING' over '480.8 ft' with '0.1 ft above now' (latest 480.71 ft): the label contradicts its own number",
+ "by": "hater-first-2026-11-07f",
+ "at": "2026-11-07T20:35:04+00:00",
+ "template": "893fbad4d72f",
+ "level": "first"
+}

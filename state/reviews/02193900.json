@@ -1,0 +1,9 @@
+{
+ "id": "02193900",
+ "verdict": "PASS",
+ "notes": "'above the gauge datum' matches USGS (vertical_datum null); no NWS point linked; own temp sensor monthly table",
+ "by": "hater-first-2026-11-07f",
+ "at": "2026-11-07T20:35:09+00:00",
+ "template": "893fbad4d72f",
+ "level": "first"
+}
