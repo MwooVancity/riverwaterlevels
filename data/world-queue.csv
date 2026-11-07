@@ -6,16 +6,16 @@ rank,group,tier,keyword,river,place,region,country,gauge,shared,feed,ready
 5,1,50000,hartwell lake water level,Lake Hartwell,Anderson,SC,US,02187010,,USGS,yes
 6,1,50000,lake sidney lanier water level,Lake Lanier,Buford,GA,US,02334400,,USGS,yes
 7,1,50000,lake mead level,Lake Mead,Hoover Dam,AZ,US,RISE-6123,,Reclamation RISE,yes
-8,1,50000,powell lake level,Lake Powell,Glen Canyon Dam,AZ,US,09379900,,USGS,yes
-9,1,50000,lake travis level,Lake Travis,Austin,TX,US,TWDB-travis,,TWDB,yes
-10,1,50000,medina lake level,Medina Lake,San Antonio,TX,US,08179500,,USGS,yes
-11,1,50000,san diego tides,San Diego Bay,San Diego,CA,US,9410170,,NOAA CO-OPS,yes
-12,1,50000,norfolk tides,Sewells Point,Norfolk,VA,US,8638610,,NOAA CO-OPS,yes
-13,1,50000,shasta lake level,Shasta Lake,Shasta Dam,CA,US,CDEC-SHA,,CDEC,yes
-14,1,50000,myrtle beach tide times,Springmaid Pier,Myrtle Beach,SC,US,8661070,,NOAA CO-OPS,yes
-15,1,50000,texas lake levels,Texas Lake,,,,/lakes/tx/,,statewide hub,yes
-16,1,50000,bore tides,Bore,,,,,,not checked,no
-17,1,50000,lake michigan water temp,Lake Michigan,,,,,,not checked,no
+8,1,50000,lake michigan water temp,Lake Michigan,Holland,MI,US,COOPS-9087031,,NOAA CO-OPS,yes
+9,1,50000,powell lake level,Lake Powell,Glen Canyon Dam,AZ,US,09379900,,USGS,yes
+10,1,50000,lake travis level,Lake Travis,Austin,TX,US,TWDB-travis,,TWDB,yes
+11,1,50000,medina lake level,Medina Lake,San Antonio,TX,US,08179500,,USGS,yes
+12,1,50000,san diego tides,San Diego Bay,San Diego,CA,US,9410170,,NOAA CO-OPS,yes
+13,1,50000,norfolk tides,Sewells Point,Norfolk,VA,US,8638610,,NOAA CO-OPS,yes
+14,1,50000,shasta lake level,Shasta Lake,Shasta Dam,CA,US,CDEC-SHA,,CDEC,yes
+15,1,50000,myrtle beach tide times,Springmaid Pier,Myrtle Beach,SC,US,8661070,,NOAA CO-OPS,yes
+16,1,50000,texas lake levels,Texas Lake,,,,/lakes/tx/,,statewide hub,yes
+17,1,50000,bore tides,Bore,,,,,,not checked,no
 18,1,50000,plymouth tide times,Plymouth,,,,,,not checked,no
 19,1,50000,portsmouth tide times,Portsmouth,,,,,,not checked,no
 20,1,5000,allatoona lake level,Allatoona Lake,Cartersville,GA,US,02393500,,USGS,yes
