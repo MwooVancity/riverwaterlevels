@@ -1107,7 +1107,7 @@ def default_sites():
 DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise"}
 WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
-MONTHLY = {"access", "land"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
+MONTHLY = {"access", "land", "cdec_res"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
 
 
 RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()
@@ -1275,7 +1275,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
@@ -1325,6 +1325,20 @@ def fetch_twdb_series(slug):
     if not any(r["parameter_code"] == "AGY" for r in rows):
         raise RuntimeError("TWDB %s: no water level rows" % slug)
     return {"fetched_at": now_iso(), "rows": rows, "truncated": [], "agency": "twdb", "station": slug}
+
+
+def fetch_cdec_res(sta):
+    """CDEC's reservoir profile page (dynamicapp/profile?s=SHA&type=res): capacity and the 1991-2020 monthly average storage, as CDEC prints them.
+    Read monthly. Raises when the capacity or any of the 12 months is missing, so the block hides instead of guessing."""
+    t = html.unescape(re.sub(r"<[^>]+>", " ", http_raw("https://cdec.water.ca.gov/dynamicapp/profile?s=%s&type=res" % sta, 60).decode("utf-8", "replace")))
+    t = re.sub(r"\s+", " ", t)
+    cap = re.search(r"Capacity ([0-9,]+) af", t)
+    yrs = re.search(r"Start Year Avg\. (\d{4}) End Year Avg\. (\d{4})", t)
+    months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    avg = {i + 1: re.search(r"%s ([0-9,]+) af" % m, t) for i, m in enumerate(months)}
+    if not cap or not yrs or not all(avg.values()):
+        raise RuntimeError("CDEC profile %s: capacity or monthly averages missing" % sta)
+    return {"fetched_at": now_iso(), "cap_af": int(cap.group(1).replace(",", "")), "avg_from": yrs.group(1), "avg_to": yrs.group(2), "avg_af": {k: int(v.group(1).replace(",", "")) for k, v in avg.items()}}
 
 
 def fetch_agency(site):
@@ -1400,6 +1414,7 @@ def fetch_extras(site, rec, h, log):
                     ("rating", lambda: fetch_rating(site)), ("wqp", lambda: fetch_wqp(site)), ("uv", lambda: fetch_uv(rec)),
                     *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
                     *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),
+                    *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
