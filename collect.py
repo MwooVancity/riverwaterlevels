@@ -2075,6 +2075,7 @@ def once(ctx, key, get):
     if key not in ctx:
         try:
             ctx[key] = get()
+            note("world-wx", "ok")  # without it one 410 a run read as "never worked" (watchdog 2026-11-07) while air quality was live
         except Exception as e:
             note("world-wx", "failed", e)
             print("world-wx failed", key, str(e)[:120])

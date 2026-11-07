@@ -18,6 +18,7 @@ REBUILD_MIN = 120     # the Worker rebuilds on the hour only when the last build
 EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
 # a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
 HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
+SLOW = {"world-normals": 750, "world-access": 750}  # fetched only when 720 h old (collect.py world_extras): 50 h called them dead (2026-11-07: world-normals "94 h")
 
 
 def get(path, raw=False):
@@ -144,7 +145,7 @@ def main():
             if lr.get("ok", 0) == 0 and lr.get("absent", 0) == n and n:
                 bad.append("source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n))
                 continue
-            if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > 50:  # never worked, or a daily source silent for two days
+            if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > SLOW.get(src, 50):  # never worked, or a daily source silent for two days
                 bad.append("%s %s has not worked for %s (last error: %s)" % ("feed dead:" if (src in HOURLY or src in ("eccc", "pegelonline", "ea")) and (not last or hours_since(last) > 24) else "source", src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
             elif n >= 10 and lr.get("failed", 0) / n > 0.15:
                 bad.append("source %s failed on %d of %d gauges in its last run (%s)" % (src, lr["failed"], n, v.get("last_error") or ""))
@@ -258,6 +259,7 @@ if "--selftest" in sys.argv:
         open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
         assert release_stall() is None, "a fresh release was reported"
         assert REBUILD_MIN > 112, "a normal gap between rebuilds would alarm"
+        assert SLOW.get("world-normals", 50) > 720 and SLOW.get("world-access", 50) > 720, "a monthly source between fetches would alarm"
         assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
         assert "6 held" in world_short({"world": {"listed": 20, "shown": 14, "gaps": {}}}), "held gauges went unreported"
         assert world_short({"world": {"listed": 38, "shown": 33, "gaps": {}}}) is None, "today's expected holds alarmed"
