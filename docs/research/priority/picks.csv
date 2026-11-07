@@ -5,23 +5,76 @@ site,river,place,state,category
 08210500,Lake Corpus Christi,Mathis,TX,lake
 02187010,Lake Hartwell,Anderson,SC,lake
 02334400,Lake Lanier,Buford,GA,lake
+RISE-6123,Lake Mead,Hoover Dam,AZ,lake
 09379900,Lake Powell,Glen Canyon Dam,AZ,lake
+TWDB-travis,Lake Travis,Austin,TX,lake
 08179500,Medina Lake,San Antonio,TX,lake
 9410170,San Diego Bay,San Diego,CA,ocean
 8638610,Sewells Point,Norfolk,VA,ocean
+CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 8661070,Springmaid Pier,Myrtle Beach,SC,ocean
-,Texas Lake,,,hub
+/lakes/tx/,Texas Lake,,,hub
+02393500,Allatoona Lake,Cartersville,GA,lake
+9455920,Anchorage,Anchorage,AK,ocean
+9439040,Astoria,Astoria,OR,ocean
 8534720,Atlantic City,Atlantic City,NJ,ocean
+8413320,Bar Harbor,Bar Harbor,ME,ocean
+03312900,Barren River Lake,Finney,KY,lake
+08102000,Belton Lake,Belton,TX,lake
 8443970,Boston,Boston,MA,ocean
+8727520,Cedar Key,Cedar Key,FL,ocean
+9432780,Charleston,Coos Bay,OR,ocean
 8447435,Chatham,Chatham,MA,ocean
+8726724,Clearwater Beach,Clearwater Beach,FL,ocean
+9419750,Crescent City,Crescent City,CA,ocean
+02087182,Falls Lake,Falls,NC,lake
+8720030,Fernandina Beach,Fernandina Beach,FL,ocean
+8725520,Fort Myers,Fort Myers,FL,ocean
 8771450,Galveston Pier 21,Galveston,TX,ocean
+9437540,Garibaldi,Garibaldi,OR,ocean
 10010000,Great Salt Lake,Saltair Boat Harbor,UT,lake
+03305990,Green River Lake,Campbellsville,KY,lake
+1612340,Honolulu,Honolulu,HI,ocean
+02098197,Jordan Lake,Moncure,NC,lake
+9452210,Juneau,Juneau,AK,ocean
+9450460,Ketchikan,Ketchikan,AK,ocean
+08143000,Lake Brownwood,Brownwood,TX,lake
+04294500,Lake Champlain,Burlington,VT,lake
+08067600,Lake Conroe,Conroe,TX,lake
+08104650,Lake Georgetown,Georgetown,TX,lake
+08110470,Lake Limestone,Marquez,TX,lake
+08066190,Lake Livingston,Goodrich,TX,lake
+02168500,Lake Murray,Columbia,SC,lake
+11149300,Lake Nacimiento,Bradley,CA,lake
+08164525,Lake Texana,Edna,TX,lake
+08060500,Lavon Lake,Lavon,TX,lake
+8720218,Mayport Bar Pilots Dock,Mayport,FL,ocean
+03372400,Monroe Lake,Harrodsburg,IN,lake
 9413450,Monterey,Monterey,CA,ocean
+8725114,Naples Bay North,Naples,FL,ocean
+03310900,Nolin Lake,Kyrock,KY,lake
+9418767,North Spit,Eureka,CA,ocean
 8729210,Panama City Beach,Panama City Beach,FL,ocean
 8729840,Pensacola,Pensacola,FL,ocean
 9444090,Port Angeles,Port Angeles,WA,ocean
+8775237,Port Aransas,Port Aransas,TX,ocean
+9444900,Port Townsend,Port Townsend,WA,ocean
+08064550,Richland-Chambers Reservoir,Kerens,TX,lake
+03318005,Rough River Lake,Falls of Rough,KY,lake
+08039300,Sam Rayburn Reservoir,Jasper,TX,lake
+9414290,San Francisco,San Francisco,CA,ocean
+8531680,Sandy Hook,Sandy Hook,NJ,ocean
+9411340,Santa Barbara,Santa Barbara,CA,ocean
+9447130,Seattle,Seattle,WA,ocean
+08109900,Somerville Lake,Somerville,TX,lake
+8779748,South Padre Island CG Station,South Padre Island,TX,ocean
 8722956,South Port Everglades,Fort Lauderdale,FL,ocean
+8720226,Southbank Riverwalk,Jacksonville,FL,ocean
+9446484,Tacoma,Tacoma,WA,ocean
 8518750,The Battery,New York,NY,ocean
+02193900,Thurmond Lake,Plum Branch,SC,lake
+8721604,Trident Pier,Cocoa Beach,FL,ocean
+8658163,Wrightsville Beach,Wrightsville Beach,NC,ocean
 14142500,Sandy River,Below Bull Run River Near Bull Run,OR,100
 06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,100
 04086600,Milwaukee River,Cedarburg,WI,85

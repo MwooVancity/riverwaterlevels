@@ -9123,3 +9123,53 @@ queue,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,,,human,/coast/galvest
 queue,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,,,human,/lake/shasta-lake/
 queue,,RISE-6123,Lake Mead,Hoover Dam,AZ,0,,,0,lake,,,human,/lake/lake-mead/
 queue,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,,,human,/lake/lake-travis/
+queue,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,,,human,/coast/anchorage/
+queue,,9439040,Astoria,Astoria,OR,0,,,0,coast,,,human,/coast/astoria/
+queue,,8413320,Bar Harbor,Bar Harbor,ME,0,,,0,coast,,,human,/coast/bar-harbor/
+queue,,8727520,Cedar Key,Cedar Key,FL,0,,,0,coast,,,human,/coast/cedar-key/
+queue,,8726724,Clearwater Beach,Clearwater Beach,FL,0,,,0,coast,,,human,/coast/clearwater-beach/
+queue,,9419750,Crescent City,Crescent City,CA,0,,,0,coast,,,human,/coast/crescent-city/
+queue,,8720030,Fernandina Beach,Fernandina Beach,FL,0,,,0,coast,,,human,/coast/fernandina-beach/
+queue,,8725520,Fort Myers,Fort Myers,FL,0,,,0,coast,,,human,/coast/fort-myers/
+queue,,9437540,Garibaldi,Garibaldi,OR,0,,,0,coast,,,human,/coast/garibaldi/
+queue,,1612340,Honolulu,Honolulu,HI,0,,,0,coast,,,human,/coast/honolulu/
+queue,,9452210,Juneau,Juneau,AK,0,,,0,coast,,,human,/coast/juneau/
+queue,,9450460,Ketchikan,Ketchikan,AK,0,,,0,coast,,,human,/coast/ketchikan/
+queue,,8720218,Mayport Bar Pilots Dock,Mayport,FL,0,,,0,coast,,,human,/coast/mayport/
+queue,,8725114,Naples Bay North,Naples,FL,0,,,0,coast,,,human,/coast/naples/
+queue,,8775237,Port Aransas,Port Aransas,TX,0,,,0,coast,,,human,/coast/port-aransas/
+queue,,9444900,Port Townsend,Port Townsend,WA,0,,,0,coast,,,human,/coast/port-townsend/
+queue,,9414290,San Francisco,San Francisco,CA,0,,,0,coast,,,human,/coast/san-francisco/
+queue,,8531680,Sandy Hook,Sandy Hook,NJ,0,,,0,coast,,,human,/coast/sandy-hook/
+queue,,9411340,Santa Barbara,Santa Barbara,CA,0,,,0,coast,,,human,/coast/santa-barbara/
+queue,,9447130,Seattle,Seattle,WA,0,,,0,coast,,,human,/coast/seattle/
+queue,,8779748,South Padre Island CG Station,South Padre Island,TX,0,,,0,coast,,,human,/coast/south-padre-island/
+queue,,9446484,Tacoma,Tacoma,WA,0,,,0,coast,,,human,/coast/tacoma/
+queue,,8658163,Wrightsville Beach,Wrightsville Beach,NC,0,,,0,coast,,,human,/coast/wrightsville-beach/
+queue,,9432780,Charleston,Coos Bay,OR,0,,,0,coast,,,human,/coast/coos-bay/
+queue,,9418767,North Spit,Eureka,CA,0,,,0,coast,,,human,/coast/eureka/
+queue,,8720226,Southbank Riverwalk,Jacksonville,FL,0,,,0,coast,,,human,/coast/jacksonville/
+queue,,8721604,Trident Pier,Cocoa Beach,FL,0,,,0,coast,,,human,/coast/cocoa-beach/
+queue,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,,,human,/lake/allatoona-lake/
+queue,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,,,human,/lake/barren-river-lake/
+queue,,08102000,Belton Lake,Belton,TX,0,,,0,lake,,,human,/lake/belton-lake/
+queue,,02087182,Falls Lake,Falls,NC,0,,,0,lake,,,human,/lake/falls-lake/
+queue,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/
+queue,,03305990,Green River Lake,Campbellsville,KY,0,,,0,lake,,,human,/lake/green-river-lake/
+queue,,02098197,Jordan Lake,Moncure,NC,0,,,0,lake,,,human,/lake/jordan-lake/
+queue,,08143000,Lake Brownwood,Brownwood,TX,0,,,0,lake,,,human,/lake/lake-brownwood/
+queue,,04294500,Lake Champlain,Burlington,VT,0,,,0,lake,,,human,/lake/lake-champlain/
+queue,,08067600,Lake Conroe,Conroe,TX,0,,,0,lake,,,human,/lake/lake-conroe/
+queue,,08110470,Lake Limestone,Marquez,TX,0,,,0,lake,,,human,/lake/lake-limestone/
+queue,,08066190,Lake Livingston,Goodrich,TX,0,,,0,lake,,,human,/lake/lake-livingston/
+queue,,02168500,Lake Murray,Columbia,SC,0,,,0,lake,,,human,/lake/lake-murray/
+queue,,11149300,Lake Nacimiento,Bradley,CA,0,,,0,lake,,,human,/lake/lake-nacimiento/
+queue,,08064550,Richland-Chambers Reservoir,Kerens,TX,0,,,0,lake,,,human,/lake/richland-chambers-reservoir/
+queue,,08039300,Sam Rayburn Reservoir,Jasper,TX,0,,,0,lake,,,human,/lake/sam-rayburn-reservoir/
+queue,,08164525,Lake Texana,Edna,TX,0,,,0,lake,,,human,/lake/lake-texana/
+queue,,08060500,Lavon Lake,Lavon,TX,0,,,0,lake,,,human,/lake/lavon-lake/
+queue,,03372400,Monroe Lake,Harrodsburg,IN,0,,,0,lake,,,human,/lake/monroe-lake/
+queue,,03310900,Nolin Lake,Kyrock,KY,0,,,0,lake,,,human,/lake/nolin-lake/
+queue,,03318005,Rough River Lake,Falls of Rough,KY,0,,,0,lake,,,human,/lake/rough-river-lake/
+queue,,08109900,Somerville Lake,Somerville,TX,0,,,0,lake,,,human,/lake/somerville-lake/
+queue,,02193900,Thurmond Lake,Plum Branch,SC,0,,,0,lake,,,human,/lake/thurmond-lake/

@@ -146,18 +146,19 @@ def water_rows():
             took.update((kind, x) for x in names)
             st = (w.get(r["site"]) or {}).get("status")
             out.append(dict(group=group(t, True), tier=t, keyword=k, river=r.get("lake") or r.get("name"), place=r.get("place", ""), region=r["state"], country="US",
-                            gauge=r["site"], shared="", feed="USGS" if kind == "lake" else "NOAA CO-OPS", ready="yes" if st in ("live", "queue") else "no", score=0, category=kind))
+                            gauge=r["site"], shared="", feed=FEED.get((r.get("source") or ":").split(":")[0]) or ("USGS" if kind == "lake" else "NOAA CO-OPS"), ready="yes" if st in ("live", "queue") else "no", score=0, category=kind))
     for (kind, name), (t, k) in water.items():
         if (kind, name) in took:
             continue
-        out.append(dict(group=group(t, True), tier=t, keyword=k, river=name.title(), place="", region="", country="", gauge="", shared="",
+        out.append(dict(group=group(t, True), tier=t, keyword=k, river=name.title(), place="", region="", country="", gauge=HUBS_BUILT.get(name, ""), shared="",
                         feed="statewide hub", ready="yes" if name in HUBS_BUILT else "no", score=0, category=kind) if kind == "hub" else
                    dict(group=group(t, True), tier=t, keyword=k, river=name.title(), place="", region="", country="", gauge="", shared="", feed="not checked", ready="no", score=0, category=kind))
     return out
 
 
 WET = re.compile(r"\b(lake|lakes|reservoir|pond|lago|lac|loch|lough|see|dam|bay)\b")
-HUBS_BUILT = {"texas lake"}  # ponytail: /lakes/tx/ only; the hub generator (PLAN 'SITE STRUCTURE') replaces this set
+HUBS_BUILT = {"texas lake": "/lakes/tx/"}  # built hub -> its URL in the gauge column (a built row has a gauge); ponytail: one hub, the hub generator (PLAN 'SITE STRUCTURE') replaces this
+FEED = {"cdec": "CDEC", "rise": "Reclamation RISE", "twdb": "TWDB"}  # lakes.csv source prefix -> queue feed label
 ALIAS = {frozenset({"lanier"}): {"sidney"}}  # Lake Sidney Lanier is Lake Lanier's official name
 
 
