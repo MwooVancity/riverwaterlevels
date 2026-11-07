@@ -84,8 +84,10 @@ def check(row):
     name, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?\d+)', page)
     t = page_t(page)
     if t:
-        ms = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/measurements.json?start=%s&end=%s" % (urllib.parse.quote(name), t, t)))
-        cur = ms[0]["value"] if ms else None
+        import datetime as dt_
+        t0 = dt_.datetime.fromisoformat(t.replace("Z", "+00:00"))
+        ms = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/measurements.json?start=%s&end=%s" % (urllib.parse.quote(name), t, (t0 + dt_.timedelta(minutes=15)).strftime("%Y-%m-%dT%H:%M:%SZ"))))  # start = end answers 400 (2026-11-07)
+        cur = next((m["value"] for m in ms if dt_.datetime.fromisoformat(m["timestamp"]) == t0), None)
     else:
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
     ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= 50
@@ -154,18 +156,25 @@ def main():
     rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5])]
     start = int(time.time() // 3600) * BATCH % max(1, len(rows))
     faulty = []
-    for row in (rows if LOCAL else (rows[start:] + rows[:start])[:BATCH]):  # ponytail: 40 a run after deploy; before deploy every world page, until the time limit
-        if time.time() - begun > (420 if LOCAL else 180):  # a slow feed must not trip the step limit and read as a wrong number; ceiling: about 1 s a page, so past ~400 world pages the rest wait for the hourly run
-            print("stopped at the time limit")
-            break
+    todo = rows[start:] + rows[:start] if LOCAL else (rows[start:] + rows[:start])[:BATCH]  # rotating start: a time limit never leaves the same tail unchecked every run (scale debate 2026-11-07)
+
+    def one(row):
+        if time.time() - begun > (420 if LOCAL else 180):  # a slow feed must not trip the step limit and read as a wrong number
+            return row, None, "not checked: time limit"
         try:
-            n_ = check(row)
+            return row, check(row), ""
+        except (AttributeError, TypeError, KeyError, IndexError) as e:  # our page or the feed's shape no longer reads: a format change is a fault, never "no answer" (scale debate 2026-11-07)
+            return row, 1, "FAULT page or feed could not be read (%s: %s)" % (type(e).__name__, str(e)[:60])
         except Exception as e:  # a feed down proves nothing about the page: the page says its own age, and only a real mismatch counts
-            print(row[1], "skipped, no answer:", str(e)[:80])
-            continue
-        bad += n_
-        if n_:
-            faulty.append(row[1])
+            return row, None, "skipped, no answer: " + str(e)[:80]
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(8) as ex:  # 2.8 s a page serially (124 s for 44); 8 at a time keeps ~1,000 world pages inside the 420 s limit
+        for row, n_, why in ex.map(one, todo):
+            if why:
+                print(row[1], why)
+            if n_:
+                bad += n_
+                faulty.append(row[1])
     print("world truth: %d fault(s)" % bad)
     if LOCAL and faulty:
         return 0 if carry(faulty, len(rows)) else 1
