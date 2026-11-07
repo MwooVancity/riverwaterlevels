@@ -23,6 +23,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # tools/rollback.py compares the live build's commit with main
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -32,8 +34,14 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WORKERS_PAID: ${{ vars.WORKERS_PAID }}
         run: python tools/watchdog.py
+      - name: Heal - roll our own code back to the live build's version when new code has failed every refresh for 3 h (tools/rollback.py; once, then a person)
+        id: rollback
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -I tools/rollback.py --apply
       - name: Heal - dispatch a refresh when the site stopped rebuilding
-        if: steps.doctor.outputs.heal == 'refresh'
+        if: steps.doctor.outputs.heal == 'refresh' || steps.rollback.outputs.rolled == '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

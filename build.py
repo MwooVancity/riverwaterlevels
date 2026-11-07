@@ -229,7 +229,7 @@ def main():
             shutil.copy(f, os.path.join(nxt, "archive", os.path.basename(f)[1:]))
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
-        json.dump({"built_at": report["built_at"], "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
+        json.dump({"built_at": report["built_at"], "sha": os.environ.get("GITHUB_SHA") or "", "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
                    "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "world": {"listed": wlisted, "shown": sum(len(v) for v in wkeep.values()), "gaps": {k: v[:6] for k, v in list(world.GAPS.items())[:40]}, "thin": {k: v[:3] for k, v in list(world.THIN.items())[:400]}}, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
