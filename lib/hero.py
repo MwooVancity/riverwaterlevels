@@ -61,6 +61,8 @@ def ctx(site, row, rec, now):
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     out["stage_only"] = stage_only
     out["lake"] = lake
+    out["agy"] = AGENCIES.get((rec.get("usgs") or {}).get("agency"))  # CDEC and the like: no USGS line on this page
+    out["agy_st"] = (rec.get("usgs") or {}).get("station")
     out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
     day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None

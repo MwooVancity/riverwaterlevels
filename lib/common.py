@@ -235,8 +235,9 @@ def band_glossary():
             "Above normal above the %dth up to the %dth, and Much above normal above the %dth percentile." % (a, a, b, b, c, c, d, d))
 
 
-LAKE_CODES = ("62614", "62615", "72020", "00062")  # NGVD29 first (the datum Reclamation and USACE quote pools in: Powell 3,700 ft full pool), then NAVD88, then the gauge datum
-LAKE_DATUM = {"MLLW": "mean lower low water (MLLW, NOAA tidal datum at this station)", "62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum"}
+LAKE_CODES = ("62614", "62615", "72020", "00062", "AGY")  # NGVD29 first (the datum Reclamation and USACE quote pools in: Powell 3,700 ft full pool), then NAVD88, then the gauge datum
+AGENCIES = {"cdec": {"short": "CDEC", "name": "California Data Exchange Center (California Department of Water Resources)", "page": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=%s", "every": "hourly"}}  # a lake read from its operator's feed (collect.py fetch_agency): the name every USGS line on its page is swapped for
+LAKE_DATUM = {"MLLW": "mean lower low water (MLLW, NOAA tidal datum at this station)", "62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum", "AGY": "the datum the operator uses (its feed does not name one)"}
 
 
 def wt_suspect(vs):

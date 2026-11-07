@@ -72,6 +72,7 @@ def main():
     stale = []
     gauges = json.loads(page("/gauges.json"))
     pages = {}
+    agency = []
     try:  # pages check.py --carry replaced with the live copy: they passed their own release, and their age is the live site's
         carried = {"/" + r.rsplit("index.html", 1)[0] for r in (json.load(open(os.path.join(LOCAL, "_carried.json"))) if LOCAL else [])}
     except (OSError, ValueError):
@@ -95,6 +96,10 @@ def main():
         stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
+        cd_ = re.search(r"CDEC station ([A-Z0-9]+)", h)
+        if url.startswith("/lake/") and cd_:  # a lake read from CDEC: checked below against CDEC, never USGS
+            agency.append((url, cd_.group(1), stage, t))
+            continue
         if url.startswith("/lake/"):  # a lake page shows its elevation in the stage slot and no flow: checked against the USGS lake codes
             if not (sid and stage and t):
                 bad.append("%s: cannot read gauge id, lake elevation or time from the page" % url)
@@ -125,6 +130,27 @@ def main():
             bad.append("%s: water level %s on the page, %s at NOAA for the same time" % (u, st_.group(1), d["v"]))
         elif (nt - pt).total_seconds() / 3600 > STALE_FAIL_H:
             bad.append("%s: page is more than %d h behind NOAA" % (u, STALE_FAIL_H))
+    for u, sta, st_, t_ in agency:  # CDEC times are Pacific Standard Time all year (its data page): the page's elevation against CDEC's hourly value for the same hour
+        if not (st_ and t_):
+            bad.append("%s: cannot read lake elevation or time from the page" % u)
+            continue
+        pt = datetime.datetime.fromisoformat(t_.group(1))
+        d0 = (pt - datetime.timedelta(hours=8)).date()
+        try:
+            rows = json.loads(get("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2))))
+        except Exception as e:
+            (skipped if LOCAL else bad).append("%s: CDEC did not answer (%s)" % (u, str(e)[:60]))
+            continue
+        pst = datetime.timezone(datetime.timedelta(hours=-8))
+        got = {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in rows if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
+        if not got:
+            (skipped if LOCAL else bad).append("%s: CDEC returned no elevation" % u)
+        elif pt in got and abs(got[pt] - float(st_.group(1))) > 0.005:
+            bad.append("%s: lake elevation %s on the page, %s at CDEC for the same hour" % (u, st_.group(1), got[pt]))
+        elif pt not in got and pt < max(got):
+            bad.append("%s: the page's reading time %s is not a CDEC reading" % (u, pt.isoformat()))
+        elif (max(got) - pt).total_seconds() / 3600 > STALE_FAIL_H:
+            bad.append("%s: page is more than %d h behind CDEC" % (u, STALE_FAIL_H))
     ids = sorted(pages)
     latest = {}
     failed_ids = set()
@@ -212,7 +238,7 @@ def main():
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
-    print("truth_live: %d gauge pages compared with USGS and NWS, %d mismatches%s" % (len(pages), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
+    print("truth_live: %d gauge pages compared with USGS and NWS, %d with CDEC, %d mismatches%s" % (len(pages), len(agency), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
     for s in stale[:25]:

@@ -1278,6 +1278,28 @@ LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(
 COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
+AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
+NOUSGS = COASTS | set(AGENCY)  # ids USGS does not know: every USGS-id call is skipped for them
+
+
+def fetch_cdec(sta):
+    """California Data Exchange Center hourly reservoir elevation (sensor 6, ft) and storage (sensor 15, acre-ft), last 3 days.
+    CDEC's own data page (wsSensorData, read 2026-11-07): 'Dates, times, and output will always be Pacific Standard Time', so every time is -08:00 all year.
+    -9999 is CDEC's missing value: dropped, never shown as a number. 1 call per run."""
+    today = datetime.date.today()
+    j = http_json("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6,15&dur_code=H&Start=%s&End=%s" % (sta, today - datetime.timedelta(days=3), today + datetime.timedelta(days=1)), {}, 60)
+    pst, code = datetime.timezone(datetime.timedelta(hours=-8)), {6: ("AGY", "ft"), 15: ("00054", "acre-ft")}
+    rows = [{"parameter_code": code[x["SENSOR_NUM"]][0], "time": datetime.datetime.strptime(x["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst).isoformat(), "value": str(x["value"]),
+             "unit_of_measure": code[x["SENSOR_NUM"]][1], "qualifier": None, "approval_status": "Provisional"}
+            for x in j if x.get("SENSOR_NUM") in code and isinstance(x.get("value"), (int, float)) and x["value"] != -9999 and x.get("stationId") == sta]
+    if not any(r["parameter_code"] == "AGY" for r in rows):
+        raise RuntimeError("CDEC %s: no elevation rows" % sta)
+    return {"fetched_at": now_iso(), "rows": rows, "truncated": [], "agency": "cdec", "station": sta}
+
+
+def fetch_agency(site):
+    kind, sid = AGENCY[site].split(":", 1)
+    return {"cdec": fetch_cdec}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com&"
 
 
@@ -1351,7 +1373,7 @@ def fetch_extras(site, rec, h, log):
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
-        if site in COASTS and key not in COAST_KEYS:
+        if site in NOUSGS and key not in COAST_KEYS:
             continue
         stamp = rec.setdefault("_fetched", {})
         if key in WEEKLY and USGS_OUT[0]:
@@ -1377,14 +1399,16 @@ def collect(site, inv):
             rec["buoy"] = fetch_buoy(site)
         except Exception as e:  # waves hide alone; the page still ships
             note("buoy", "failed", e)
+    elif site in AGENCY:
+        rec["usgs"] = fetch_agency(site)  # critical: raises, cache kept
     else:
         rec["usgs"] = fetch_usgs(site, h)  # critical: raises, cache kept
     log = []
     for key, fn in (("related", lambda: fetch_related(site, inv, h, rec.get("related"))), ("nwps", lambda: fetch_nwps(site, lat, lon, rec.get("nwps"))), ("nws", lambda: fetch_nws(lat, lon, rec.get("nws"), site)), ("rain", lambda: fetch_rain(lat, lon)), ("wpc", lambda: fetch_wpc(lat, lon, rec.get("wpc"), site))):
-        if coast and key in ("related", "nwps"):  # a CO-OPS id is not a USGS or NWPS gauge id: those calls would spend the USGS key for nothing
+        if site in NOUSGS and key in ("related", "nwps"):  # a CO-OPS or CDEC id is not a USGS or NWPS gauge id: those calls would spend the USGS key for nothing
             continue
         run_source(rec, key, fn, log)
-    if nwm_due(rec) and not coast:
+    if nwm_due(rec) and site not in NOUSGS:
         run_source(rec, "nwm", lambda: fetch_nwm(site, rec.get("nwm")), log)
     sp = os.path.join(LEGACY, "stats", site + ".json")
     note("stats", "ok" if os.path.exists(sp) else "absent")  # input file, not a fetch: absent here means "is this normal" shows "-" (2026-10-25: 28 gauges)
@@ -1392,7 +1416,8 @@ def collect(site, inv):
         _sj = json.load(open(sp))
         rec["stats"], rec["stats_code"] = _sj["d"], _sj.get("code", "00060")
         rec["stats_source"] = "USGS daily statistics, downloaded " + datetime.date.fromtimestamp(os.path.getmtime(sp)).isoformat()
-    run_source(rec, "record", lambda: record_summary(fetch_daily(site, h), rec.get("stats")), log)
+    if site not in NOUSGS:
+        run_source(rec, "record", lambda: record_summary(fetch_daily(site, h), rec.get("stats")), log)
     fetch_extras(site, rec, h, log)
     rec["tz"] = (rec.get("nws") or {}).get("tz") or rec.get("tz")
     rec["fetched_at"] = now_iso()
@@ -1530,7 +1555,7 @@ def seed_record(s, inv, rows):
 def fast(inv, sites):
     h = usgs_headers()
     t_phase = _time.time()
-    usites = [s for s in sites if s not in COASTS]  # coast stations are NOAA CO-OPS, refreshed per station below
+    usites = [s for s in sites if s not in NOUSGS]  # coast stations (NOAA CO-OPS) and agency lakes (CDEC) are refreshed per station below
     try:
         new = fast_usgs(usites, h)
     except Exception as e:  # USGS unavailable or rate-limited: still refresh the weather sources
@@ -1565,6 +1590,13 @@ def fast(inv, sites):
                 except Exception as e:
                     log.append("coops FAILED (%s), kept previous" % str(e)[:60])
                     note("coops", "failed", e)
+            if s in AGENCY:  # the operator's 3-day window every run: 1 call
+                try:
+                    new[s] = fetch_agency(s)["rows"]
+                    note(AGENCY[s].split(":")[0], "ok")
+                except Exception as e:
+                    log.append("agency FAILED (%s), kept previous" % str(e)[:60])
+                    note(AGENCY[s].split(":")[0], "failed", e)
             rows, add, fixed = merge_rows(rec["usgs"]["rows"], new.get(s, []))
             rec["usgs"]["rows"] = [r for r in rows if str(r["time"]) >= cutoff]
             if add or fixed:
@@ -1573,7 +1605,7 @@ def fast(inv, sites):
                 rec["_revised"] = now_iso()  # build.py rebuilds this page at once
             note("usgs", "ok" if s in new else "absent")
             srcs = [("nwps", lambda: fetch_nwps(s, rec["lat"], rec["lon"], rec.get("nwps"))), ("nws", lambda: fetch_nws(rec["lat"], rec["lon"], rec.get("nws"), s)), ("rain", lambda: fetch_rain(rec["lat"], rec["lon"])), ("wpc", lambda: fetch_wpc(rec["lat"], rec["lon"], rec.get("wpc"), s))]
-            if s in COASTS:
+            if s in NOUSGS:
                 srcs = [x for x in srcs if x[0] != "nwps"]
             elif nwm_due(rec):
                 srcs.append(("nwm", lambda: fetch_nwm(s, rec.get("nwm"))))
@@ -1585,14 +1617,14 @@ def fast(inv, sites):
                 for key, fn in srcs:
                     run_source(rec, key, fn, log)
             stamp = rec.setdefault("_fetched", {})
-            if s not in COASTS and day_due(stamp.get("usgs_full"), s):  # once a day, in this gauge's own hour, the whole 8-day series again: USGS revises provisional readings
+            if s not in NOUSGS and day_due(stamp.get("usgs_full"), s):  # once a day, in this gauge's own hour, the whole 8-day series again: USGS revises provisional readings
                 try:
                     rec["usgs"], stamp["usgs_full"] = fetch_usgs(s, h), now_iso()
                 except Exception as e:
                     log.append("usgs_full FAILED (%s), kept previous" % str(e)[:60])
                     note("usgs_full", "failed", e)
             rec["usgs"]["rows"] = add_latest(rec["usgs"]["rows"], [r for r in latest.get(s, []) if str(r["time"]) >= cutoff])  # the service returns decades-old values for dead sensors
-            if s not in COASTS and day_due(stamp.get("related_list"), s) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
+            if s not in NOUSGS and day_due(stamp.get("related_list"), s) and run_source(rec, "related", lambda: fetch_related(s, inv, h, rec.get("related")), log):
                 stamp["related_list"] = now_iso()
             sp = os.path.join(LEGACY, "stats", s + ".json")
             note("stats", "ok" if os.path.exists(sp) else "absent")  # same input-file note as the full path, so the doctor sees it every run

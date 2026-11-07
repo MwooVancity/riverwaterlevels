@@ -53,6 +53,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     got, failed, none = 0, [], []
     lakes = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
+    todo = [s for s in todo if s.isdigit()]  # an agency lake (CDEC-SHA) has no USGS statistics
     for s in todo:
         d, t = {}, None
         for code in LAKE_CODES if s in lakes else ("00060",):

@@ -112,6 +112,8 @@ def b_official_links(G):
     n = G["rec"].get("nwps") or {}
     lid = n.get("lid")
     links = [("NOAA Tides and Currents page for this station", "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % G["site"])] if G.get("coast") else [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
+    if G.get("agy"):  # a CDEC id on a USGS address is a dead link
+        links = [("%s page for station %s" % (G["agy"]["short"], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
@@ -308,6 +310,20 @@ sp.textContent='Source: National Weather Service alerts for the gauge location, 
 INDEX_CFG = None  # set by build.py from data/index-allow.json
 
 
+def agency_words(h, G):
+    """A lake read from its operator's feed (CDEC): every line that named USGS as the reading's source names the operator's feed; USGS stays only where it
+    is the real source (PAD-US public land, USGS Topo map). Sentences about USGS sensors or statistics this page never searched for are deleted, not reworded."""
+    a, st, s = G["agy"]["short"], G["agy_st"], G["site"]
+    for x, y in (("USGS lake gauge %s" % s, "%s station %s" % (a, st)), ("USGS gauge %s" % s, "%s station %s" % (a, st)), ("(USGS %s" % s, "(%s %s" % (a, st)),
+                 ("Water stored in the reservoir, USGS", "Water stored in the reservoir, %s" % a), ("Solid line: USGS readings", "Solid line: %s readings" % a), ("Latest USGS lake elevation", "Latest %s lake elevation" % a),
+                 ("Source: USGS Water Data API (continuous lake elevation)", "Source: %s, station %s, %s reservoir elevation and storage, provisional" % (G["agy"]["name"], st, G["agy"]["every"])),
+                 ("(USGS, provisional)", "(%s, provisional)" % a), ("(USGS, NOAA National Weather Service)", "(%s, NOAA National Weather Service)" % a), ("Data: USGS, NWS.", "Data: %s, NWS." % a),
+                 ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Readings are provisional; %s may revise them." % a)):
+        h = h.replace(x, y)
+    h = re.sub(r"\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", "(%s publishes none for this station)" % a, h)
+    return re.sub(r"(?:USGS daily statistics: not available for this gauge|Percentile method: latest reading compared with USGS daily percentiles for [^.<]*)\. ?", "", h)
+
+
 def lake_words(h, G):
     """A lake page in lake words (plan 2026-11-05 step 1). The elevation is height above a named datum, never "the gauge's zero point": that line would be false here."""
     d = lake_datum(G)
@@ -329,6 +345,8 @@ def lake_words(h, G):
                  ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), ("Level, flow and flood risk", "Lake level and flood risk"),
                  ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
         h = h.replace(a, b)
+    if G.get("agy"):
+        h = agency_words(h, G)
     if G.get("coast"):  # a coast page: the lake path's words in coast words, and the reading's source is NOAA CO-OPS, never USGS
         for a, b in (("water level and elevation", "tide times, water level and water temperature" if any(r.get("parameter_code") == "00010" for r in G["rec"]["usgs"]["rows"]) else "tide times and water level"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
                      ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings", "Solid line: NOAA readings (preliminary)"), (" &middot; dashed curve: NWS forecast", " &middot; dashed curve: NOAA predicted tide, next 24 h"), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
@@ -417,6 +435,10 @@ def build_tab(tab, G, pages):
         for b in shown:
             if b["src_id"] == "usgs" and b["id"] not in ("public_land", "gauge_map"):
                 b["src_id"] = "coops"
+    if G.get("agy"):  # the same for an agency lake: the credit line under each reading block is the operator's
+        for b in shown:
+            if b["src_id"] == "usgs" and b["id"] not in ("public_land", "gauge_map"):
+                b["src_id"] = next(k for k, v in AGENCIES.items() if v is G["agy"])
     if G["age_min"] > stale_after("usgs") * 60:  # break test 2026-10-28: a gauge not reporting for 3 h wears no live badge on any block
         for b in shown:
             if b["tag"] == "live" and b["id"] not in ("related_gauges", "nearby_gauges"):

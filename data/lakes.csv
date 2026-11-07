@@ -1,10 +1,11 @@
-site,state,lake,place,lat,lon,raw_name,twdb,natural
-08206900,TX,Choke Canyon Reservoir,Three Rivers,28.4838811,-98.245842,"Choke Canyon Res nr Three Rivers, TX",choke-canyon,
-08167700,TX,Canyon Lake,New Braunfels,29.8688293,-98.1988999,"Canyon Lk nr New Braunfels, TX",canyon,
-08210500,TX,Lake Corpus Christi,Mathis,28.0383472,-97.8711104,"Lk Corpus Christi nr Mathis, TX",corpus-christi,
-08179500,TX,Medina Lake,San Antonio,29.5402285,-98.9339474,"Medina Lk nr San Antonio, TX",medina,
-02187010,SC,Lake Hartwell,Anderson,34.5083333,-82.8552778,"HARTWELL LAKE NEAR ANDERSON, SC",,
-02334400,GA,Lake Lanier,Buford,34.1627222,-84.0755278,"LAKE SIDNEY LANIER NEAR BUFORD, GA",,
-02079490,VA,Kerr Lake,Boydton,36.5984761,-78.2988854,"JOHN H. KERR RESERVOIR AT DAM NEAR BOYDTON, VA",,
-10010000,UT,Great Salt Lake,Saltair Boat Harbor,40.7313333,-112.2135569,"GREAT SALT LAKE AT SALTAIR BOAT HARBOR, UT",,1
-09379900,AZ,Lake Powell,Glen Canyon Dam,36.9366548,-111.4840472,"LAKE POWELL AT GLEN CANYON DAM, AZ",,
+site,state,lake,place,lat,lon,raw_name,twdb,natural,source
+08206900,TX,Choke Canyon Reservoir,Three Rivers,28.4838811,-98.245842,"Choke Canyon Res nr Three Rivers, TX",choke-canyon,,
+08167700,TX,Canyon Lake,New Braunfels,29.8688293,-98.1988999,"Canyon Lk nr New Braunfels, TX",canyon,,
+08210500,TX,Lake Corpus Christi,Mathis,28.0383472,-97.8711104,"Lk Corpus Christi nr Mathis, TX",corpus-christi,,
+08179500,TX,Medina Lake,San Antonio,29.5402285,-98.9339474,"Medina Lk nr San Antonio, TX",medina,,
+02187010,SC,Lake Hartwell,Anderson,34.5083333,-82.8552778,"HARTWELL LAKE NEAR ANDERSON, SC",,,
+02334400,GA,Lake Lanier,Buford,34.1627222,-84.0755278,"LAKE SIDNEY LANIER NEAR BUFORD, GA",,,
+02079490,VA,Kerr Lake,Boydton,36.5984761,-78.2988854,"JOHN H. KERR RESERVOIR AT DAM NEAR BOYDTON, VA",,,
+10010000,UT,Great Salt Lake,Saltair Boat Harbor,40.7313333,-112.2135569,"GREAT SALT LAKE AT SALTAIR BOAT HARBOR, UT",,1,
+09379900,AZ,Lake Powell,Glen Canyon Dam,36.9366548,-111.4840472,"LAKE POWELL AT GLEN CANYON DAM, AZ",,,
+CDEC-SHA,CA,Shasta Lake,Shasta Dam,40.718,-122.42,SHASTA DAM (USBR),,,cdec:SHA

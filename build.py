@@ -157,7 +157,7 @@ def main():
         ser = lambda code: [[r["time"], float(r["value"])] for r in ur if r["parameter_code"] == code and r.get("value") not in (None, "")]
         my = G["rec"].get("multiyear") or {}
         json.dump({"site": s, "name": river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], "page": SITE_URL + meta["url"], "observed": iso(G["lt"]), "units": {"flow": "cfs", "stage": "ft"}, "flow_7d": ser("00060"), "stage_7d": ser("00065"), **({"lake_elevation_7d": ser(G["lake"]), "storage_7d": ser("00054"), "lake_units": {"lake_elevation": "ft above " + lake_datum(G), "storage": "acre-ft"}} if G.get("lake") else {}),
-                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else "U.S. Geological Survey", "built_at": iso(now)},
+                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else G["agy"]["name"] if G.get("agy") else "U.S. Geological Survey", "built_at": iso(now)},
                   open(os.path.join(nxt, meta["url"].strip("/"), "data.json"), "w"), separators=(",", ":"))
         block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
@@ -260,7 +260,8 @@ def main():
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)
     json.dump([[river_at(r["river"], r["place"]) + ", " + r["state"], r["dashboard_url"], round(Gs[r["site"]]["lat"], 4), round(Gs[r["site"]]["lon"], 4), (directory.STATE_NAMES.get(r["state"], r["state"]) + " " + r["state"] + " " + r["site"])] for r in built] + world_rows, open(os.path.join(nxt, "gauges.json"), "w"), separators=(",", ":"))
     # the edge live layer (worker/index.js): which page is which gauge, the reading the page was built with, and its time zone
-    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"], Gs[r["site"]]["lv"]] for r in built], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
+    # only numeric ids: the cron sends every id to USGS in one request, and a CDEC-SHA there could fail the whole poll
+    json.dump([[r["site"], r["dashboard_url"], iso(Gs[r["site"]]["lt"]), Gs[r["site"]]["tzname"], Gs[r["site"]]["lv"]] for r in built if r["site"].isdigit()], open(os.path.join(nxt, "live-sites.json"), "w"), separators=(",", ":"))
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
