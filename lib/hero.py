@@ -337,7 +337,7 @@ def hero(G, pages=None):
         alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Water stored, TWDB daily estimate, %s" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
         tiles = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
                  ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
-                 ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else "Not published",
+                 ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else ("Unknown" if G.get("agy") else "Not published"),  # phone review 2026-11-07 (Mead): the operator publishes storage we could not use this build; "Not published" was false
                          ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>"))  # no "Last 24 hours" under a tile with no series
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
@@ -418,6 +418,9 @@ def hero(G, pages=None):
                              + '<small id="ccap" hidden>Flow 24 h earlier: %s cfs.</small>' % fmtc(G["flow_then24"] if G.get("flow_then24") else G["lv"] / (1 + chg / 100)))
     if G["offline"] and not G["osc"]:
         dir_chip = "Trend unknown (gauge not reporting)"
+    ca_t = cdec_avg(G) if G.get("agy") and p is None else None
+    if ca_t and ca_t["avg"]:  # phone review 2026-11-07 (Shasta): the tile said "–" while the strip and the reservoir card gave CDEC's monthly-average comparison
+        norm_word, norm_plain = ca_t["pct_avg"], "of the %s %s-%s average storage (CDEC; our calculation)" % (ca_t["mon"], ca_t["c"]["avg_from"], ca_t["c"]["avg_to"])
     norm_html = ui.tile("norm", "map", "Compared with NOAA's predicted tide" if G.get("coast") else "Is this normal for %s?" % md(G["ldate"]), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
@@ -654,7 +657,9 @@ def storm_line(G):
         if pk:
             return '<p class="storm ok">Thunderstorms: not in the National Weather Service forecast wording for the next %d hours; the hourly grid gives a thunder chance of up to %d%%.</p>' % (len(nxt), round(pk))
         return '<p class="storm ok">Thunderstorms: none in the National Weather Service forecast for the next %d hours.</p>' % len(nxt)
-    when = "; ".join("%s to %s" % (tzl(a, G["zone"], date=(b - a) >= datetime.timedelta(hours=11)), tzl(b + datetime.timedelta(hours=1), G["zone"], date=(b - a) >= datetime.timedelta(hours=11))) if a != b else tzl(a, G["zone"], date=False) for a, b in runs)
+    td_ = G["now"].astimezone(G["zone"]).date()
+    dd_ = lambda a, b: (b - a) >= datetime.timedelta(hours=11) or a.astimezone(G["zone"]).date() != td_ or (b + datetime.timedelta(hours=1)).astimezone(G["zone"]).date() != td_  # phone review 2026-11-07 (Corpus Christi): "6:00 AM to 1:00 PM" for tomorrow read as this morning
+    when = "; ".join("%s to %s" % (tzl(a, G["zone"], date=dd_(a, b)), tzl(b + datetime.timedelta(hours=1), G["zone"], date=dd_(a, b))) if a != b else tzl(a, G["zone"], date=dd_(a, a)) for a, b in runs)
     return '<p class="storm warn"><b>Thunderstorms in the forecast:</b> %s (gauge-local time).</p>' % esc(when)
 
 

@@ -535,7 +535,7 @@ def build_tab(tab, G, pages):
         if isinstance(b, str) and b.startswith("SEC:"):
             flush()
             grp[0] = "weather" if b[4:].startswith("Forecast") else "history" if b[4:].startswith("How today") else "now" if b[4:].startswith(("What the water", "Level, flow")) else grp[0]
-            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0]) + (gtag('<p class="src wkey">%s</p>' % WINDOW_KEY, grp[0]) if b[4:].startswith("How today") else "")
+            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0]) + (gtag('<p class="src wkey">%s</p>' % WINDOW_KEY, grp[0]) if b[4:].startswith("How today") and not G.get("lake") else "")  # phone review 2026-11-07 (Falls Lake): a lake page has no flow windows; the key promised what the section did not hold
             continue
         if isinstance(b, str) and b.startswith("FOLD:"):
             flush()

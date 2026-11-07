@@ -209,7 +209,7 @@ def low_now(G):
 def low_list(G):
     """NWS low-water statements this page can show: on a lake page only levels, never flow ranges (phone review 2026-11-07, Lanier and Allatoona: Buford Dam release cfs beside a lake elevation)."""
     li = (G["rec"].get("nwps") or {}).get("low_impacts") or []
-    return [i for i in li if not re.search(r"\d\s*k?cfs\b", i.get("value") or "", re.I)] if G.get("lake") else li  # "240 cfs" and "450-500 cfs" alike
+    return [i for i in li if re.search(r"\d\s*ft\b", i.get("value") or "", re.I)] if G.get("lake") else li  # a lake keeps only levels stated in ft: "240 cfs", "450-500 cfs" and a unitless "2,000-12,000" (Lanier: river flow, phone review 2026-11-07) all go
 
 
 def b_low_water(G):
@@ -234,7 +234,7 @@ def b_low_water(G):
 def b_impacts(G):
     n = G["rec"].get("nwps") or {}
     im = n.get("impacts") or []
-    if not im:
+    if not im or (G.get("lake") and scale_clash(G) is not None):  # phone review 2026-11-07 (Corpus Christi): river-stage statements about the river below the dam, under a lake heading, misread as the lake's
         return None
     unit = (n.get("stage_units") or "ft").lower()
     by = impact_list(G)
