@@ -113,7 +113,7 @@ def b_official_links(G):
     lid = n.get("lid")
     links = [("NOAA Tides and Currents page for this station", "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % G["site"])] if G.get("coast") else [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
     if G.get("agy"):  # a CDEC id on a USGS address is a dead link
-        links = [("%s page for station %s" % (G["agy"]["short"], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
+        links = [("%s page for %s %s" % (G["agy"]["short"], G["agy"]["label"].split()[-1], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
@@ -314,13 +314,14 @@ def agency_words(h, G):
     """A lake read from its operator's feed (CDEC): every line that named USGS as the reading's source names the operator's feed; USGS stays only where it
     is the real source (PAD-US public land, USGS Topo map). Sentences about USGS sensors or statistics this page never searched for are deleted, not reworded."""
     a, st, s = G["agy"]["short"], G["agy_st"], G["site"]
-    for x, y in (("USGS lake gauge %s" % s, "%s station %s" % (a, st)), ("USGS gauge %s" % s, "%s station %s" % (a, st)), ("(USGS %s" % s, "(%s %s" % (a, st)),
+    for x, y in (("USGS lake gauge %s" % s, "%s %s" % (G["agy"]["label"], st)), ("USGS gauge %s" % s, "%s %s" % (G["agy"]["label"], st)), ("(USGS %s" % s, "(%s %s" % (a, st)),
                  ("Water stored in the reservoir, USGS", "Water stored in the reservoir, %s" % a), ("Solid line: USGS readings", "Solid line: %s readings" % a), ("Latest USGS lake elevation", "Latest %s lake elevation" % a),
                  ("Source: USGS Water Data API (continuous lake elevation)", "Source: %s, station %s, %s reservoir elevation and storage, provisional" % (G["agy"]["name"], st, G["agy"]["every"])),
                  ("(USGS, provisional)", "(%s, provisional)" % a), ("(USGS, NOAA National Weather Service)", "(%s, NOAA National Weather Service)" % a), ("Data: USGS, NWS.", "Data: %s, NWS." % a),
                  ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Readings are provisional; %s may revise them." % a)):
         h = h.replace(x, y)
-    h = re.sub(r"\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", "(%s publishes none for this station)" % a, h)
+    h = re.sub(r"\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", "(not in the %s feed this page reads)" % a, h)  # never "publishes none": nobody searched the agency's whole catalogue
+    h = h.replace("USGS publishes no storage for this lake.", G["agy"].get("no_storage", "Not in the %s feed this page reads." % a))
     return re.sub(r"(?:USGS daily statistics: not available for this gauge|Percentile method: latest reading compared with USGS daily percentiles for [^.<]*)\. ?", "", h)
 
 
@@ -438,7 +439,7 @@ def build_tab(tab, G, pages):
     if G.get("agy"):  # the same for an agency lake: the credit line under each reading block is the operator's
         for b in shown:
             if b["src_id"] == "usgs" and b["id"] not in ("public_land", "gauge_map"):
-                b["src_id"] = next(k for k, v in AGENCIES.items() if v is G["agy"])
+                b["src_id"] = G["agy"]["src"]
     if G["age_min"] > stale_after("usgs") * 60:  # break test 2026-10-28: a gauge not reporting for 3 h wears no live badge on any block
         for b in shown:
             if b["tag"] == "live" and b["id"] not in ("related_gauges", "nearby_gauges"):

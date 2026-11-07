@@ -1297,9 +1297,23 @@ def fetch_cdec(sta):
     return {"fetched_at": now_iso(), "rows": rows, "truncated": [], "agency": "cdec", "station": sta}
 
 
+def fetch_rise(item):
+    """U.S. Bureau of Reclamation RISE daily lake elevation, last 10 days. The file states 'Timestep': 'daily', 'Aggregation': 'instant' and
+    'Datetime values are presented as UTC' (Mead: 07:00 UTC = midnight Arizona). A unit other than ft raises: the page never guesses a unit. 1 call per run."""
+    today = datetime.date.today()
+    j = json.loads(get_text("https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (item, today - datetime.timedelta(days=10), today + datetime.timedelta(days=1))))
+    if j.get("Units") != "ft" or "UTC" not in (j.get("Note") or ""):
+        raise RuntimeError("RISE %s: unit %r or time note changed" % (item, j.get("Units")))
+    rows = [{"parameter_code": "AGY", "time": v["dateTime"].replace(" ", "T") + "+00:00", "value": str(v["result"]), "unit_of_measure": "ft", "qualifier": None, "approval_status": "Provisional"}
+            for k, v in j.items() if k.isdigit() and isinstance(v.get("result"), (int, float))]
+    if not rows:
+        raise RuntimeError("RISE %s: no elevation rows" % item)
+    return {"fetched_at": now_iso(), "rows": sorted(rows, key=lambda r: r["time"]), "truncated": [], "agency": "rise", "station": item}
+
+
 def fetch_agency(site):
     kind, sid = AGENCY[site].split(":", 1)
-    return {"cdec": fetch_cdec}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
+    return {"cdec": fetch_cdec, "rise": fetch_rise}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com&"
 
 

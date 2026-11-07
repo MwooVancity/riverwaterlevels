@@ -63,6 +63,8 @@ def ctx(site, row, rec, now):
     out["lake"] = lake
     out["agy"] = AGENCIES.get((rec.get("usgs") or {}).get("agency"))  # CDEC and the like: no USGS line on this page
     out["agy_st"] = (rec.get("usgs") or {}).get("station")
+    if out["agy"] and out["agy"]["every"] == "daily":  # a daily value is 1.5-3 days old when Reclamation posts it (Mead 2026-11-07: Nov 4 value posted Nov 5 13:58 UTC): "not reporting" only past 4 days
+        out["offline"] = age_min > 96 * 60
     out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
     day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None

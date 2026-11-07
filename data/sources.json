@@ -265,10 +265,14 @@
    "evidence": "owner-permission",
    "terms_url": "https://data.usbr.gov/rise-api",
    "credit": "Dam release and lake level: U.S. Bureau of Reclamation (RISE)",
-   "summary": "Daily mean release (cfs) and lake elevation (ft) for hand-matched dams (data/dams.json); no auth.",
+   "summary": "Daily mean release (cfs) and lake elevation (ft) for hand-matched dams (data/dams.json); no auth. Read 2026-11-07 in Chrome: usbr.gov/main/disclaimer.html points to DOI policy; doi.gov/copyright: 'Generally, materials produced by federal agencies are in the public domain and may be reproduced without permission' (asks a link and credit). Lake Mead elevation: RISE item 6123, daily instant at 07:00 UTC ('Datetime values are presented as UTC'). Item 6124 storage says 'af' but gives 6,904 for a lake of millions of acre-feet: unit unproven, not used.",
    "blocks": [
-    "dam_releases"
-   ]
+    "dam_releases",
+    "lake_level"
+   ],
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   },
   {
    "id": "cwms",

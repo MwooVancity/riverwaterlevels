@@ -9,3 +9,4 @@ site,state,lake,place,lat,lon,raw_name,twdb,natural,source
 10010000,UT,Great Salt Lake,Saltair Boat Harbor,40.7313333,-112.2135569,"GREAT SALT LAKE AT SALTAIR BOAT HARBOR, UT",,1,
 09379900,AZ,Lake Powell,Glen Canyon Dam,36.9366548,-111.4840472,"LAKE POWELL AT GLEN CANYON DAM, AZ",,,
 CDEC-SHA,CA,Shasta Lake,Shasta Dam,40.718,-122.42,SHASTA DAM (USBR),,,cdec:SHA
+RISE-6123,AZ,Lake Mead,Hoover Dam,36.0163,-114.7374,Lake Mead Hoover Dam and Powerplant,,,rise:6123

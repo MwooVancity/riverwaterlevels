@@ -96,9 +96,9 @@ def main():
         stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
-        cd_ = re.search(r"CDEC station ([A-Z0-9]+)", h)
-        if url.startswith("/lake/") and cd_:  # a lake read from CDEC: checked below against CDEC, never USGS
-            agency.append((url, cd_.group(1), stage, t))
+        cd_ = re.search(r"(CDEC station|Reclamation RISE item) ([A-Z0-9]+)", h)
+        if url.startswith("/lake/") and cd_:  # a lake read from its operator's feed: checked below against that feed, never USGS
+            agency.append((url, cd_.group(1).split()[0], cd_.group(2), stage, t))
             continue
         if url.startswith("/lake/"):  # a lake page shows its elevation in the stage slot and no flow: checked against the USGS lake codes
             if not (sid and stage and t):
@@ -130,27 +130,31 @@ def main():
             bad.append("%s: water level %s on the page, %s at NOAA for the same time" % (u, st_.group(1), d["v"]))
         elif (nt - pt).total_seconds() / 3600 > STALE_FAIL_H:
             bad.append("%s: page is more than %d h behind NOAA" % (u, STALE_FAIL_H))
-    for u, sta, st_, t_ in agency:  # CDEC times are Pacific Standard Time all year (its data page): the page's elevation against CDEC's hourly value for the same hour
+    for u, ag, sta, st_, t_ in agency:  # the page's elevation against the operator's own value for the same time
         if not (st_ and t_):
             bad.append("%s: cannot read lake elevation or time from the page" % u)
             continue
         pt = datetime.datetime.fromisoformat(t_.group(1))
         d0 = (pt - datetime.timedelta(hours=8)).date()
         try:
-            rows = json.loads(get("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2))))
+            if ag == "CDEC":  # CDEC times are Pacific Standard Time all year (its data page)
+                rows = json.loads(get("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2))))
+                pst = datetime.timezone(datetime.timedelta(hours=-8))
+                got = {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in rows if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
+            else:  # Reclamation RISE: 'Datetime values are presented as UTC'
+                j = json.loads(get("https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (sta, d0 - datetime.timedelta(days=2), d0 + datetime.timedelta(days=6))))
+                got = {datetime.datetime.fromisoformat(v["dateTime"].replace(" ", "T") + "+00:00"): float(v["result"]) for k, v in j.items() if k.isdigit() and isinstance(v.get("result"), (int, float))}
         except Exception as e:
-            (skipped if LOCAL else bad).append("%s: CDEC did not answer (%s)" % (u, str(e)[:60]))
+            (skipped if LOCAL else bad).append("%s: %s did not answer (%s)" % (u, ag, str(e)[:60]))
             continue
-        pst = datetime.timezone(datetime.timedelta(hours=-8))
-        got = {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in rows if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
         if not got:
-            (skipped if LOCAL else bad).append("%s: CDEC returned no elevation" % u)
+            (skipped if LOCAL else bad).append("%s: %s returned no elevation" % (u, ag))
         elif pt in got and abs(got[pt] - float(st_.group(1))) > 0.005:
-            bad.append("%s: lake elevation %s on the page, %s at CDEC for the same hour" % (u, st_.group(1), got[pt]))
+            bad.append("%s: lake elevation %s on the page, %s at %s for the same time" % (u, st_.group(1), got[pt], ag))
         elif pt not in got and pt < max(got):
-            bad.append("%s: the page's reading time %s is not a CDEC reading" % (u, pt.isoformat()))
+            bad.append("%s: the page's reading time %s is not a %s reading" % (u, pt.isoformat(), ag))
         elif (max(got) - pt).total_seconds() / 3600 > STALE_FAIL_H:
-            bad.append("%s: page is more than %d h behind CDEC" % (u, STALE_FAIL_H))
+            bad.append("%s: page is more than %d h behind %s" % (u, STALE_FAIL_H, ag))
     ids = sorted(pages)
     latest = {}
     failed_ids = set()
@@ -238,7 +242,7 @@ def main():
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
-    print("truth_live: %d gauge pages compared with USGS and NWS, %d with CDEC, %d mismatches%s" % (len(pages), len(agency), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
+    print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation), %d mismatches%s" % (len(pages), len(agency), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
     for s in stale[:25]:
@@ -246,7 +250,7 @@ def main():
     if stale:
         print("truth_live: %d gauge(s) lagging USGS by 3 to %d h (warning only; the pages show their real age)" % (len(stale), STALE_FAIL_H))
     urls_ = sorted({b.split(": ", 1)[0] for b in bad})
-    if LOCAL and bad and len(urls_) <= max(3, len(pages) // 20) and all(u.startswith("/river/") for u in urls_):  # pipeline review #4: up to 3 gauges keep their live page; the rest of the site ships
+    if LOCAL and bad and len(urls_) <= max(3, len(pages) // 20) and all(u.startswith(("/river/", "/lake/", "/coast/")) for u in urls_):  # pipeline review #4: up to 3 gauges keep their live page; the rest of the site ships (lakes and coasts too since 2026-11-07: one CDEC or NOAA mismatch stopped every deploy)
         cp = os.path.join(LOCAL, "_carried.json")
         try:
             carried = json.load(open(cp))
