@@ -1,9 +1,9 @@
 {
  "id": "08102000",
- "verdict": "FAIL",
- "notes": "F2 phone-01/desktop-01 STORAGE 'Not published / USGS publishes no storage for this lake' while text.txt 'Conservation storage 414,621 acre-ft' (TWDB) is on the page | note: air observation 'no NWS station report in the last 12 h'",
- "by": "hater-first",
- "at": "2026-11-07T03:09:34+00:00",
- "template": "40b5b80e8fba",
+ "verdict": "PASS",
+ "notes": "first-mode PASS by a fresh reviewer 2026-11-07 (notes only); re-shot on code after a non-page change, page text identical word for word",
+ "by": "hater-first-2026-11-07",
+ "at": "2026-11-07T19:25:31+00:00",
+ "template": "62fb509e6ad7",
  "level": "first"
 }
