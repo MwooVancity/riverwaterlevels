@@ -1,0 +1,147 @@
+{
+ "note": "What the best competing page shows, per page kind, read from the live page (url, read date). tools/info_gain.py scores each built page: every item is have (our page shows it), none (reason: no open-terms source has it) or missing. 'mark' is text or a block id that proves our page has the item.",
+ "lake": {
+  "url": "https://lakebrief.com/lake/lanier",
+  "read": "2026-11-07: static HTML and its schema.org JSON-LD (the live numbers load by script)",
+  "items": [
+   {
+    "item": "current water-surface elevation",
+    "mark": [
+     "Lake elevation",
+     "Water level"
+    ],
+    "core": true
+   },
+   {
+    "item": "full pool elevation",
+    "mark": [
+     "full pool",
+     "Full pool",
+     "conservation pool",
+     "top of conservation"
+    ]
+   },
+   {
+    "item": "surface area",
+    "mark": [
+     "Surface area"
+    ]
+   },
+   {
+    "item": "recent level chart (14 days)",
+    "mark": [
+     "id=\"stage_chart\"",
+     "<svg class=\"chart"
+    ],
+    "core": true
+   },
+   {
+    "item": "wind now and forecast",
+    "mark": [
+     "Wind",
+     "wind"
+    ]
+   },
+   {
+    "item": "radar",
+    "mark": [
+     "radar"
+    ]
+   },
+   {
+    "item": "boat ramps",
+    "mark": [
+     "id=\"access_points\"",
+     "id=\"recreation_sites\""
+    ]
+   },
+   {
+    "item": "live camera",
+    "mark": [
+     "id=\"camera\""
+    ],
+    "none_if": "no USGS HIVIS camera at this site (the only camera feed with read terms)"
+   },
+   {
+    "item": "managing agency and its rules",
+    "mark": [
+     "Corps of Engineers",
+     "USACE",
+     "operator",
+     "Operated by"
+    ]
+   }
+  ]
+ },
+ "coast": {
+  "url": "https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest",
+  "read": "2026-11-07: page HTML (headings and live-conditions panel)",
+  "items": [
+   {
+    "item": "next high and low tide",
+    "mark": [
+     "Next tide",
+     "next tide",
+     "Next high",
+     "Next low"
+    ],
+    "core": true
+   },
+   {
+    "item": "today's tide times",
+    "mark": [
+     "id=\"tides\""
+    ],
+    "core": true
+   },
+   {
+    "item": "tide chart",
+    "mark": [
+     "NOAA predicted tide"
+    ],
+    "core": true
+   },
+   {
+    "item": "tide table for coming weeks",
+    "mark": [
+     "id=\"tide_table\"",
+     "tide table"
+    ]
+   },
+   {
+    "item": "sunrise and sunset",
+    "mark": [
+     "Sunrise",
+     "Sunset",
+     "sunrise",
+     "sunset"
+    ]
+   },
+   {
+    "item": "moonrise, moonset and moon phase",
+    "mark": [
+     "Moonrise",
+     "moonrise",
+     "Moon phase",
+     "moon phase"
+    ]
+   },
+   {
+    "item": "swell and surf now",
+    "mark": [
+     "Wave height",
+     "wave height",
+     "Waves"
+    ],
+    "none_if": "no NOAA-owned or terms-read buoy listed for this station in data/coasts.csv"
+   },
+   {
+    "item": "weather and wind now",
+    "mark": [
+     "Wind",
+     "wind"
+    ]
+   }
+  ]
+ }
+}

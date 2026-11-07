@@ -1,0 +1,9 @@
+{
+ "id": "9439040",
+ "verdict": "FAIL",
+ "notes": "F8 desktop-01/text.txt \"live water temperature (NOAA publishes none at this station)\": NOAA lists sensor E1 WaterTemperature at 9439040 and published readings 2026-10-05; this is an outage, not none | F3 desktop-01 TODAY'S TIDES tile text clipped past card edge: \"11:41 pm high 7.5 f\"",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:09+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

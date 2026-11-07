@@ -1,0 +1,9 @@
+{
+ "id": "lake-lake-michigan",
+ "verdict": "PASS",
+ "notes": "notes: STORAGE tile headline 'Not published' but text says 'Not applicable'; GLERL '+6.0 \u00b0F' vs 57.1-51.2=5.9 (rounding); JSON link says 'storage readings' for a Great Lake; level is the Holland station (H1 says 'at Holland'), not lake-wide",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:36+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

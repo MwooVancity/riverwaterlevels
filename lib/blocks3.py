@@ -850,6 +850,17 @@ def b_world_peaks(G):
                  "Source: %s, %s, annual instantaneous peaks (HYDAT), last %d years on file; peaks the agency marks with a data symbol are left out." % (f["api"], f["name"], len(f["peaks"])), f["src"])
 
 
+def lc_day(G):
+    """(date, elevation ft, storage acre-ft) from Reclamation's Lower Colorado table for the day of the newest RISE reading, or None. Both are Reclamation's own
+    daily numbers, so the row is the day whose elevation equals RISE's newest (Nov 4 1,039.29 = 1,039.29); a time-zone date guess once picked Nov 3."""
+    m = G["rec"].get("usbr_lc")
+    if not G.get("lake") or not m or not m.get("days") or not G.get("sg") or not cleared("usbr"):
+        return None
+    v_ = G["sg"][-1][1]
+    day_ = max((d for d, x in m["days"].items() if abs(x[0] - v_) <= 0.02), default=None)
+    return (day_, m["days"][day_][0], m["days"][day_][1]) if day_ else None
+
+
 def b_reservoir(G):
     """How full a reservoir is, on the operator's or state's own basis (plan 2026-11-05 step 3). Texas: TWDB's daily estimate, whose percent is
     conservation storage / conservation capacity; a percent is never shown without that basis named. No source for this lake: no block."""
@@ -864,6 +875,19 @@ def b_reservoir(G):
             ("%s average storage, %s-%s (CDEC)" % (mon, c["avg_from"], c["avg_to"]), "{:,.0f} acre-ft".format(avg) if avg else "Unknown"), ("Percent of the %s average (our calculation)" % mon, "%.1f%%" % (100 * v / avg) if avg else "Unknown")))
         return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(tzl(t_, G["zone"]))], rows, right=(1,)),
                      "Source: California Data Exchange Center reservoir profile for station %s (capacity, %s-%s monthly averages, read %s) and its hourly storage. The two percents are our calculation: storage divided by CDEC's capacity, and by CDEC's average for the month." % (esc(G.get("agy_st") or ""), c["avg_from"], c["avg_to"], esc(fdate(c["fetched_at"][:10]))), "cdec")
+    hit = lc_day(G)
+    if hit:  # Lake Mead: Reclamation Lower Colorado Region's daily table
+        m = dict(G["rec"]["usbr_lc"], date=hit[0], elev_ft=hit[1], content_af=hit[2])
+        if True:
+            rows = "".join(tr([a, b], right=(1,)) for a, b in (
+                ("Water stored (Reclamation)", "{:,.0f} acre-ft".format(m["content_af"])),
+                ("Capacity to the bottom of the flood-control space, %s ft (Reclamation)" % "{:,.1f}".format(m["cap_elev_ft"]), "{:,.0f} acre-ft".format(m["cap_af"])),
+                ("Percent of that capacity (our calculation)", "%.1f%%" % (100 * m["content_af"] / m["cap_af"])),
+                ("Feet below %s ft (our calculation)" % "{:,.1f}".format(m["cap_elev_ft"]), "%.2f ft" % (m["cap_elev_ft"] - m["elev_ft"]))))
+            age_h = (G["now"] - datetime.datetime.fromisoformat(m["date"] + "T12:00:00+00:00")).total_seconds() / 3600
+            return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(fdate(m["date"]))], rows, right=(1,)),
+                         "Source: U.S. Bureau of Reclamation, Lower Colorado Region, 'Available reservoir elevations and contents' (usbr.gov/lc/region/g4000/hourly/levels.html), Hoover Dam row for %s (content given in thousand acre-feet), read %s. Capacity is the table's figure at the bottom of the exclusive flood-control space. The percent and the feet below are our calculation." % (
+                             esc(fdate(m["date"])), esc(tzl(parse_t(m["fetched_at"]), G["zone"]))), "usbr", amber=age_h)
     t = G["rec"].get("twdb")
     if not G.get("lake") or not t or not cleared("twdb"):
         return None
@@ -879,7 +903,30 @@ def b_reservoir(G):
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
     return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
                  "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers.%s" % (esc(fdate(t["date"])), "" if G.get("agy") else " TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % lake_datum(G)),  # an agency lake's reading is TWDB itself: no USGS to match
-                 "twdb", amber=age_h > 72)
+                 "twdb", amber=age_h)
+
+
+def b_lake_temp(G):
+    """Great Lakes pages: NOAA GLERL's lake-wide average surface water temperature (GLSEA satellite analysis, daily, deg F as the file gives it, deg C our
+    conversion) and GLERL's 1995-<year> average for the same day; the difference is our subtraction. A shoreline sensor is local and is labelled so elsewhere.
+    States: valid; stale (amber past 4 days, the file lags 1-2 days); hidden past 10 days (no old lake shown as now); unavailable = 'Unknown', never silence."""
+    if not G.get("lake") or G["row"].get("river") not in ("Lake Superior", "Lake Michigan", "Lake Huron", "Lake Erie", "Lake Ontario") or not cleared("glerl"):
+        return None
+    g = G["rec"].get("glsea")
+    src = "Source: NOAA Great Lakes Environmental Research Laboratory (GLERL) CoastWatch, GLSEA average surface water temperature for the whole lake"
+    if not g or not g.get("date") or g.get("temp_f") is None:
+        return block("lake_temp", "%s surface water temperature, lake-wide average" % esc(G["row"]["river"]), "agency", "<p>Unknown: GLERL's lake-average file was not read in this build.</p>", src + ".", "glerl")
+    age_h = (G["now"] - datetime.datetime.fromisoformat(g["date"] + "T12:00:00+00:00")).total_seconds() / 3600
+    if age_h > 240:
+        return None
+    f, a = g["temp_f"], g.get("avg_f")
+    rows = "".join(tr([x, y], right=(1,)) for x, y in (
+        ("Lake-wide average, %s (GLERL)" % fdate(g["date"]), "%.1f °F (%.1f °C)" % (f, (f - 32) / 1.8)),
+        ("Average for this day, %s-%s (GLERL)" % (g["avg_from"], g["avg_to"]), "%.1f °F" % a if a is not None else "Unknown"),
+        ("Difference (our calculation)", "%+.1f °F" % (f - a) if a is not None else "Unknown")))
+    return block("lake_temp", "%s surface water temperature, lake-wide average" % esc(G["row"]["river"]), "agency", table(["Measure", "Value"], rows, right=(1,)),
+                 src + ", daily satellite analysis for %s, read %s. Degrees Celsius and the difference from the %s-%s average are our calculation. A shoreline sensor can read several degrees off the lake-wide average." % (
+                     esc(fdate(g["date"])), esc(tzl(parse_t(g["fetched_at"]), G["zone"])), g["avg_from"], g["avg_to"]), "glerl", amber=age_h)
 
 
 def b_waves(G):

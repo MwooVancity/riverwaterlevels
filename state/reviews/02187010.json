@@ -1,0 +1,9 @@
+{
+ "id": "02187010",
+ "verdict": "PASS",
+ "notes": "notes: 'Next NWS impact at 660.0 ft' is NWS 'Normal full pool elevation' (a target, not an impact)",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:33+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

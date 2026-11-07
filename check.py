@@ -11,7 +11,7 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 
 BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "View all 1 gauges" on the live home page (crawl 2026-11-04)
           r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
-          r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
+          r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
 FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing.
@@ -174,7 +174,7 @@ def check_html(h, rel):
                 if unit not in mm.group(2) and re.search(r"\d", re.sub(r"<[^>]+>", "", mm.group(1))):  # a number needs its unit; "Not measured" has no number
                     bad.append("no unit on %s: %r" % (lab, mm.group(2)))
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
-        if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}", re.sub(r"<[^>]+>", "", sub.group(1))):
+        if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}(?:, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}| \([A-Z]+ daily average\))", re.sub(r"<[^>]+>", "", sub.group(1))):  # a daily average has a date, never a clock time (TWDB: lib/page.py agency_words)
             bad.append("observed time without gauge-local zone label")
     for r_ in re.findall(r"<tr>.*?</tr>", h, re.S):  # a row of a gauge that stopped reporting over 24 h ago must not carry a 24 h change
         if 'class="oldm"' in r_ and re.search(r'<td class="r"[^>]*>(?:&#\d+; )?(?:[+-]\d+|0)%</td>', r_):
@@ -799,6 +799,21 @@ def selftest():
     Gl = lambda lv: {"lake": "62614", "now": t0 + dt_.timedelta(hours=10), "sg": [(t0, 190.37, {})], "rec": {"twdb": {"date": "2026-11-05", "elev_ft": lv, "pct_cons": 20.9}}}
     if b3_.cleared("twdb"):
         assert b3_.b_reservoir(Gl(190.38)) and b3_.b_reservoir(Gl(191.0)) is None and b3_.b_reservoir({**Gl(190.38), "sg": []}) is None, "selftest: TWDB block shown for a level that does not match USGS the same day (another lake or datum)"
+    if b3_.cleared("usbr"):  # Lake Mead storage from Reclamation's Lower Colorado table: shown only when its elevation matches RISE's the same day
+        lc = {"days": {"2026-11-04": [1039.29, 6929000], "2026-11-05": [1039.41, 6937000]}, "cap_af": 26120000, "cap_elev_ft": 1219.6, "fetched_at": "2026-11-07T02:00:00+00:00"}
+        Gm = lambda el: {"lake": "AGY", "zone": dt_.timezone.utc, "now": t0 + dt_.timedelta(hours=30), "sg": [(dt_.datetime(2026, 11, 5, 7, tzinfo=dt_.timezone.utc), el, {})], "rec": {"usbr_lc": lc}}
+        mb = b3_.b_reservoir(Gm(1039.41))
+        assert mb and "6,937,000 acre-ft" in mb["body"] and "26.6%" in mb["body"] and b3_.b_reservoir(Gm(1045.0)) is None, "selftest: Reclamation storage shown for another day or lake, or its percent is wrong"
+    if b3_.cleared("glerl"):  # Great Lakes lake-wide temperature, four states: valid, stale (amber past 96 h), hidden past 10 days, unavailable = Unknown
+        gs = {"date": "2026-11-05", "temp_f": 57.1, "avg_f": 51.2, "avg_from": "1995", "avg_to": "2025", "fetched_at": "2026-11-07T02:00:00+00:00"}
+        Gt = lambda g, h, lake="Lake Michigan": {"lake": "IGLD", "row": {"river": lake}, "zone": dt_.timezone.utc, "now": t0 + dt_.timedelta(hours=h), "rec": {"glsea": g}}
+        ok_, old_, gone_, unk_ = b3_.b_lake_temp(Gt(gs, 30)), b3_.b_lake_temp(Gt(gs, 120)), b3_.b_lake_temp(Gt(gs, 250)), b3_.b_lake_temp(Gt(None, 30))
+        assert ok_ and not ok_["amber"] and "57.1 °F" in ok_["body"] and "+5.9 °F" in ok_["body"], "selftest: GLERL lake-wide temperature not shown, or the difference is wrong"
+        assert old_ and old_["amber"] and gone_ is None and unk_ and "Unknown" in unk_["body"], "selftest: an old GLERL value was not marked or hidden, or a missing one was silent"
+        assert b3_.b_lake_temp(Gt(gs, 30, "Lake Lanier")) is None, "selftest: a lake-wide Great Lakes temperature shown on another lake"
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    import info_gain  # the competitor gate release.py page_check runs: a page missing a core item must lose
+    info_gain.selftest()
     from lib.indexing import stuck_line
     assert stuck_line({"stuck": ["/lake/x/: 0 years"]}) and stuck_line({"stuck": []}) is None and stuck_line(None) is None, "selftest: a live page stuck out of Google raised no watchdog line"
     from lib.common import wt_suspect

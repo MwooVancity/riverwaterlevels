@@ -24,6 +24,15 @@ open(os.path.join(ROOT, "state", "reviews", "_log.jsonl"), "a", encoding="utf-8"
 import shutil
 shutil.rmtree(os.path.join(ROOT, ".cache", "review", rid), ignore_errors=True)  # signed: the screenshots are spent (about 5 MB a gauge); the verdict and findings live in _log.jsonl
 print("signed", rid, verdict, "on code", rec["template"])
+if verdict == "PASS" and rid != "_template":  # a lake or coast opens to Google only once listed in data/reviewed.json (tools/open_wave.py): a PASS lists it
+    import csv
+    u_ = next((r["url"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["site"] == rid), "") or ("/%s/" % rid.replace("-", "/", 1) if rid.startswith(("lake-", "coast-")) else "")  # a page shot by its address (agency lakes: lake-lake-mead)
+    if u_.startswith(("/lake/", "/coast/")):
+        rp = os.path.join(ROOT, "data", "reviewed.json")
+        rv = json.load(open(rp, encoding="utf-8")) if os.path.exists(rp) else {"passed": {}}
+        rv["passed"][u_] = "%s: %s review by %s on code %s" % (rec["at"][:10], rec["level"], by, rec["template"])
+        json.dump(rv, open(rp, "w", encoding="utf-8"), indent=1)
+        print("listed", u_, "in data/reviewed.json")
 if verdict == "FAIL" and rid != "_template":
     # a failed page leaves the site now, not at the next deploy (flood site 2026-10-27: pages stayed live after a hater FAIL); release.py brings it back
     p = os.path.join(ROOT, "data", "waves.csv")

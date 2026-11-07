@@ -1,0 +1,9 @@
+{
+ "id": "lake-lake-mead",
+ "verdict": "FAIL",
+ "notes": "F1 phone-01/desktop-01 'observed Nov 3, 11:00 PM PST' and 'IS THIS NORMAL FOR NOV 3?' for RISE daily value dated Nov 4 (2026-11-04T07:00Z), text.txt table 'NOV 4, 2026': a daily value shown with a fake clock time and the wrong date | F2 phone-01 STORAGE 'Not published' while text.txt 'Water stored (Reclamation) 6,929,000 acre-ft' is on the page (RISE 6124's 6,904 is thousand acre-ft = Nov 1 table value) | note: Reclamation LC table has Nov 5 1039.41 ft, newer than the '3 d old' headline; boat ramp rows listed twice ('Hemenway Harbor Launch Ramp' x2, 'Boulder Harbor Launch Ramp (Closed)' x2)",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:35+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

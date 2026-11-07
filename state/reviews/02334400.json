@@ -1,0 +1,9 @@
+{
+ "id": "02334400",
+ "verdict": "FAIL",
+ "notes": "F6 text.txt 'Low-water levels' under 'Lake level and flood risk' lists Buford Dam release flows in cfs ('450-500 cfs', '750-850 cfs', 'Permitted from Nov 14, 2008 through April 30, 2009') on a lake-elevation gauge read in ft; heading says levels, rows are dam outflows | note: 'TRIBUTARY UPSTREAM' tile is the Chattahoochee mainstem at Helen (68 cfs) while Hartwell/Allatoona pages list Helen at 38 cfs",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:33+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

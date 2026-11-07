@@ -1,0 +1,9 @@
+{
+ "id": "02393500",
+ "verdict": "FAIL",
+ "notes": "F8 desktop-01/text.txt 'WATER TEMPERATURE, ETOWAH RIVER (NOT THIS RIVER)' and '(a different river)': Allatoona Lake is the Etowah River impounded; the sensor is the dam tailwater, not a different river | F6 text.txt 'Low-water levels' lists dam release flows ('240 cfs', '300 cfs', '9,200 cfs Bankfull') on a lake-elevation gauge",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:34+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

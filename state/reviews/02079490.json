@@ -1,0 +1,9 @@
+{
+ "id": "02079490",
+ "verdict": "PASS",
+ "notes": "notes: tile 'Next NWS impact at 326.0 ft' is the NWS 'River stage sensor operating limit', not a flood impact; KAVC 15 mi visibility 1 mi",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:33+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

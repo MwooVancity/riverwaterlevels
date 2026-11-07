@@ -1104,7 +1104,7 @@ def default_sites():
 
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise"}
+DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc"}
 WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
 MONTHLY = {"access", "land", "cdec_res"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
@@ -1275,7 +1275,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
@@ -1341,9 +1341,65 @@ def fetch_cdec_res(sta):
     return {"fetched_at": now_iso(), "cap_af": int(cap.group(1).replace(",", "")), "avg_from": yrs.group(1), "avg_to": yrs.group(2), "avg_af": {k: int(v.group(1).replace(",", "")) for k, v in avg.items()}}
 
 
+def fetch_coops_lake(st):
+    """NOAA CO-OPS Great Lakes station: 3 days of 6-minute water level above IGLD 1985 (the datum CO-OPS names for its Great Lakes stations; no tides,
+    so no MLLW and no predictions) and the latest water temperature where the station has the sensor. 2 calls per run."""
+    t = lambda s: s.replace(" ", "T") + ":00+00:00"
+    wl = coops_get(st, "product=water_level&datum=IGLD&range=72")
+    rows = [{"parameter_code": "IGLD", "time": t(r["t"]), "value": r["v"], "unit_of_measure": "ft", "qualifier": None, "approval_status": "Preliminary" if r.get("q") == "p" else "Verified" if r.get("q") == "v" else "Unknown"} for r in wl if r.get("v") not in (None, "")]
+    if not rows:
+        raise RuntimeError("no CO-OPS IGLD water level rows for %s" % st)
+    wt = [r for r in coops_get(st, "product=water_temperature&range=72") if r.get("v") not in (None, "")]
+    if wt and not wt_suspect([float(r["v"]) for r in wt]):  # a swinging sensor is held, never shown as the lake
+        rows.append({"parameter_code": "00010", "time": t(wt[-1]["t"]), "value": str(round((float(wt[-1]["v"]) - 32) / 1.8, 2)), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Preliminary"})
+    return {"fetched_at": now_iso(), "rows": rows, "truncated": [], "agency": "coops", "station": st}
+
+
+GLSEA_LAKE = {"Lake Superior": "s", "Lake Michigan": "m", "Lake Huron": "h", "Lake Erie": "e", "Lake Ontario": "o"}
+LAKE_NAME = {r["site"]: r["lake"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
+
+
+def fetch_glsea(letter):
+    """NOAA GLERL CoastWatch GLSEA lake-wide average surface water temperature (satellite analysis), one CSV per lake: day of year, the 1995-<last year>
+    average, then this year's daily values in deg F (header ',Average (1995-2025),2026', read 2026-11-07, 10 KB). The newest filled day is the reading;
+    its date is the day of year in the header's year. The file lags 1-2 days. A header that is not 'Average (yyyy-yyyy),yyyy' raises: never a guessed column."""
+    t = http_raw("https://apps.glerl.noaa.gov/coastwatch/webdata/statistic/csv/avgtemps-%s_1995-%d_F.csv" % (letter, datetime.date.today().year), 60).decode("utf-8", "replace")
+    lines = [l.split(",") for l in t.splitlines() if l.strip()]
+    m = re.fullmatch(r"Average \((\d{4})-(\d{4})\)", lines[0][1].strip()) if len(lines[0]) == 3 else None
+    if not m or not re.fullmatch(r"\d{4}", lines[0][2].strip()):
+        raise RuntimeError("GLSEA header changed: %r" % lines[0])
+    yr = int(lines[0][2])
+    got = [(int(d), float(a), float(v)) for d, a, v in (l[:3] for l in lines[1:] if len(l) >= 3) if d.strip().isdigit() and v.strip() and a.strip()]
+    if not got:
+        raise RuntimeError("GLSEA %s: no %d values" % (letter, yr))
+    doy, avg, val = got[-1]
+    day = datetime.date(yr, 1, 1) + datetime.timedelta(days=doy - 1)
+    return {"fetched_at": now_iso(), "lake": letter, "date": day.isoformat(), "temp_f": val, "avg_f": avg, "avg_from": m.group(1), "avg_to": m.group(2)}
+
+
+def fetch_lc_mead():
+    """Reclamation Lower Colorado Region daily table (usbr.gov/lc/region/g4000/hourly/levels.html, read 2026-11-07): 'AVAILABLE RESERVOIR ELEVATIONS AND
+    CONTENTS FOR <MONTH YEAR>', Lake Mead 'AVAILABLE CAPACITY IN A.F. *26120000' at 'ELEVATION IN FEET 1219.6' ('* BOTTOM OF EXCLUSIVE FLOOD CONTROL SPACE'),
+    and one row per day: day, total system storage, available space, Hoover elevation (ft), content (1000 A.F.). The newest row is used. 1 call a day.
+    Any of these not found raises: the block hides, nothing is guessed."""
+    t = re.sub(r"<[^>]+>", "", http_raw("https://www.usbr.gov/lc/region/g4000/hourly/levels.html", 60).decode("utf-8", "replace"))
+    hd = re.search(r"AVAILABLE RESERVOIR ELEVATIONS AND CONTENTS FOR ([A-Z]+) (\d{4})", t)
+    if not hd:
+        raise RuntimeError("Reclamation LC table header not found")
+    part = t[hd.end():]
+    cap = re.search(r"AVAILABLE CAPACITY IN A\.F\.\s+\*?(\d+)", part)
+    cel = re.search(r"ELEVATION IN FEET\s+([\d.]+)", part)
+    rows = re.findall(r"^\s+(\d{1,2})\s+[\d.]+\s+[\d.]+\s+(\d{3,4}\.\d+)\s+(\d{3,5})\s+\d+", part.split("BOTTOM OF EXCLUSIVE")[0], re.M)
+    if not cap or not cel or not rows:
+        raise RuntimeError("Reclamation LC table: capacity, its elevation or day rows missing")
+    mon = datetime.datetime.strptime(hd.group(1).title(), "%B").month
+    days = {datetime.date(int(hd.group(2)), mon, int(d)).isoformat(): [float(el), int(kaf) * 1000] for d, el, kaf in rows}  # every day of the month: the page matches the day RISE last published
+    return {"fetched_at": now_iso(), "days": days, "cap_af": int(cap.group(1)), "cap_elev_ft": float(cel.group(1))}
+
+
 def fetch_agency(site):
     kind, sid = AGENCY[site].split(":", 1)
-    return {"cdec": fetch_cdec, "rise": fetch_rise, "twdb": fetch_twdb_series}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
+    return {"cdec": fetch_cdec, "rise": fetch_rise, "twdb": fetch_twdb_series, "coops": fetch_coops_lake}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com&"
 
 
@@ -1415,6 +1471,8 @@ def fetch_extras(site, rec, h, log):
                     *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
                     *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),
                     *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
+                    *((("usbr_lc", fetch_lc_mead),) if AGENCY.get(site) == "rise:6123" else ()),
+                    *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue

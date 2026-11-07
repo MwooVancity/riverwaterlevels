@@ -244,7 +244,7 @@ def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False, empt
     return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber, "empty": empty}
 
 
-STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24,  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
+STALE_H = {"usgs": 3, "camera": 3, "alerts": 3, "air_obs": 3, "rain_totals": 6, "river_forecast": 24, "lake_temp": 96, "reservoir": 72,  # hours after which a source is old; any other block: 12 h. The only list: amber tags, live badges and the break test read it
            "chip_fresh": 1.5, "chip_ageing": 6}  # the age chip by the H1: fresh to 1.5 h, ageing to 6 h, then stale (page, LIVE_JS and worker/index.js all read these)
 
 

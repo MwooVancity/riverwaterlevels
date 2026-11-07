@@ -1,0 +1,9 @@
+{
+ "id": "9455920",
+ "verdict": "FAIL",
+ "notes": "F1 text.txt air quality times \"Nov 6, 5:00 PM KST\" (wrong zone, page is AKST) | F3 desktop-01 TODAY'S TIDES tile text clipped past card edge: \"5:13 pm high 30.1 f\"",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:10+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

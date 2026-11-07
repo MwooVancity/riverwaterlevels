@@ -319,8 +319,12 @@ def hero(G, pages=None):
                         ("<small>%s, above MLLW. A prediction, not a reading.</small>" % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction in the cache for the coming hours.</small>")
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
-        tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else "Not published",
-                        ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>")  # no "Last 24 hours" under a tile with no series
+        tw_, lc_ = G["rec"].get("twdb") or {}, b3.lc_day(G)  # hater review 2026-11-07: "Not published" beside the page's own TWDB or Reclamation storage table
+        alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Water stored, TWDB daily estimate, %s" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
+        tiles = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
+                 ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
+                 ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else "Not published",
+                         ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>"))  # no "Last 24 hours" under a tile with no series
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:

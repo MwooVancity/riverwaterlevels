@@ -141,7 +141,7 @@ def tab_blocks(tab, G, pages):
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
         lead = ([sc, b3.b_tides(G), b3.b_waves(G), b3.b_key_facts(G)] if coast else
-                [b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_waves(G)] if lake else
+                [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_key_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + lead + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
@@ -316,7 +316,7 @@ def agency_words(h, G):
     a, st, s = G["agy"]["short"], G["agy_st"], G["site"]
     for x, y in (("USGS lake gauge %s" % s, "%s %s" % (G["agy"]["label"], st)), ("USGS gauge %s" % s, "%s %s" % (G["agy"]["label"], st)), ("(USGS %s" % s, "(%s %s" % (a, st)),
                  ("Water stored in the reservoir, USGS", "Water stored in the reservoir, %s" % a), ("Solid line: USGS readings", "Solid line: %s readings" % a), ("Latest USGS lake elevation", "Latest %s lake elevation" % a),
-                 ("Source: USGS Water Data API (continuous lake elevation)", "Source: %s, station %s, %s reservoir elevation and storage, provisional" % (G["agy"]["name"], st, G["agy"]["every"])),
+                 ("Source: USGS Water Data API (continuous lake elevation)", "Source: %s, station %s, %s %s" % (G["agy"]["name"], st, G["agy"]["every"], G["agy"].get("what", "reservoir elevation and storage, provisional"))),
                  ("(USGS, provisional)", "(%s, provisional)" % a), ("(USGS, NOAA National Weather Service)", "(%s, NOAA National Weather Service)" % a), ("Data: USGS, NWS.", "Data: %s, NWS." % a),
                  ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Readings are provisional; %s may revise them." % a)):
         h = h.replace(x, y)
@@ -339,6 +339,8 @@ def lake_words(h, G):
     h = h.replace(", flow not reporting (USGS", " above %s (USGS" % d)  # lake review #13: the cite line said flow is not reporting; a lake has none
     h = re.sub(r"cfs = cubic feet of water passing the gauge each second\. Gage height is the gauge(?:’|&rsquo;|')s own scale, not water depth\.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d, h)
     h = re.sub(r" (?:A dam|[\d,]+ dams) upstream may have changed flows during this record\.", "", h)  # a reservoir is itself the dam
+    if G["lake"] in ("62614", "62615", "72020"):  # hater review 2026-11-07 (Powell 3,719 ft, Barren 500 ft): the reading is already above a sea-level datum, so the USGS gauge-zero altitude reads as a contradiction
+        h = re.sub(r"<tr><td>Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point</td><td>[^<]*</td></tr>", "", h)
     if G["lake"] == "00062":  # only this code is read above the gauge datum; 62614, 62615 and 72020 are above sea-level datums, so the row keeps its own true label
         h = re.sub(r"Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point", "Gauge datum (lake readings are heights above it)", h)
     st_ = any(r.get("parameter_code") == "00054" for r in G["rec"]["usgs"]["rows"])
@@ -351,6 +353,10 @@ def lake_words(h, G):
         h = h.replace(a, b)
     if G.get("agy"):
         h = agency_words(h, G)
+    if G.get("lake") == "IGLD":  # a Great Lake: the search is the water temperature ('lake michigan water temp' 10K-100K); the title names it only while GLERL's lake-wide value is in the cache
+        h = h.replace("water level and elevation", "water level")  # the title's water-temperature words come from the fresh-reading rule (d7900dd), never twice
+        for a, b in (("USGS sensor", "NOAA shoreline sensor"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS shoreline station (preliminary)")):
+            h = h.replace(a, b)
     if G.get("coast"):  # a coast page: the lake path's words in coast words, and the reading's source is NOAA CO-OPS, never USGS
         for a, b in (("water level and elevation", "tide times, water level and water temperature" if any(r.get("parameter_code") == "00010" for r in G["rec"]["usgs"]["rows"]) else "tide times and water level"), ("USGS lake gauge %s" % G["site"], "NOAA tide station %s" % G["site"]), ("(USGS %s)" % G["site"], "(NOAA %s)" % G["site"]), ("(USGS %s, observed" % G["site"], "(NOAA CO-OPS %s, observed" % G["site"]),
                      ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings", "Solid line: NOAA readings (preliminary)"), (" &middot; dashed curve: NWS forecast", " &middot; dashed curve: NOAA predicted tide, next 24 h"), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),

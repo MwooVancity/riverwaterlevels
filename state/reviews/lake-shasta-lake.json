@@ -1,0 +1,9 @@
+{
+ "id": "lake-shasta-lake",
+ "verdict": "FAIL",
+ "notes": "F1 phone-01/desktop-01 'No past-years comparison for this date' / 'no published statistics' while text.txt 'November average storage, 1991-2020 (CDEC) 2,441,410 acre-ft' and 'Percent of the November average 92.4%' | note: unlabelled flat line in LAKE ELEVATION tile",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:36+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

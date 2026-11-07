@@ -55,6 +55,8 @@ def main():
             continue
         if u.startswith("/coast/"):  # a coast page compares with NOAA's tide predictions, not a multi-year record
             pass
+        elif u.startswith("/lake/") and not row["site"][:1].isdigit():  # an agency lake (RISE-6123, TWDB-travis, CDEC-SHA) is never compared with USGS statistics: no USGS record to require
+            pass
         elif u.startswith("/lake/"):  # lakes are not in pages-all.csv: the record is the years behind the USGS statistics the page compares with (Powell 7)
             try:
                 yrs_ = max(v[0] for v in json.load(open(os.path.join(ROOT, "legacy", "stats", row["site"] + ".json")))["d"].values())

@@ -1,0 +1,9 @@
+{
+ "id": "08179500",
+ "verdict": "PASS",
+ "notes": "notes: USGS storage 68,030 vs TWDB conservation 68,122 acre-ft (two labelled datasets); 'near San Antonio' is the USGS name",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:34+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

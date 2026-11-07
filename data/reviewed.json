@@ -1,17 +1,11 @@
 {
- "note": "Lake and coast pages whose phone-width screenshot review passed (CLAUDE.md Reviews). tools/open_wave.py opens a /lake/ or /coast/ page to Google only if it is listed here. Add a page only after a reviewer who did not build it read its screenshots; name the date and what was read.",
+ "note": "Lake and coast pages whose phone-width screenshot review passed (CLAUDE.md Reviews). tools/open_wave.py opens a /lake/ or /coast/ page to Google only if it is listed here. Add a page only after a reviewer who did not build it read its screenshots; name the date and what was read. 2026-11-07: the 2026-11-06 coast reviews were dropped: today's review failed every coast on the desktop tide tile overflow (CSS fixed, re-review needed).",
  "passed": {
-  "/coast/san-diego/": "2026-11-06: fresh-agent phone review, 85k tokens, fixes landed (PLAN COAST PILOT)",
-  "/coast/norfolk/": "2026-11-06: fresh-agent phone review, 94k tokens, fixes landed (PLAN COAST PILOT)",
-  "/coast/myrtle-beach/": "2026-11-06: fresh-agent phone review, 94k tokens, fixes landed (PLAN COAST PILOT)",
-  "/coast/fort-lauderdale/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens, fixes landed (PLAN KEYWORD DEBATE)",
-  "/coast/chatham/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/monterey/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/pensacola/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/panama-city-beach/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/new-york/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/atlantic-city/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/boston/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
-  "/coast/galveston/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens"
+  "/lake/kerr-lake/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
+  "/lake/lake-hartwell/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
+  "/lake/medina-lake/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
+  "/lake/choke-canyon-reservoir/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
+  "/lake/lake-travis/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
+  "/lake/lake-michigan/": "2026-11-07: first review by hater-first on code 40b5b80e8fba"
  }
 }

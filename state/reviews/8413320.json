@@ -1,0 +1,9 @@
+{
+ "id": "8413320",
+ "verdict": "FAIL",
+ "notes": "F3 desktop-01 TODAY'S TIDES tile text clipped past card edge: \"8:41 pm hig\"",
+ "by": "hater-first",
+ "at": "2026-11-07T03:09:07+00:00",
+ "template": "40b5b80e8fba",
+ "level": "first"
+}

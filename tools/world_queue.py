@@ -158,7 +158,7 @@ def water_rows():
 
 WET = re.compile(r"\b(lake|lakes|reservoir|pond|lago|lac|loch|lough|see|dam|bay)\b")
 HUBS_BUILT = {"texas lake": "/lakes/tx/"}  # built hub -> its URL in the gauge column (a built row has a gauge); ponytail: one hub, the hub generator (PLAN 'SITE STRUCTURE') replaces this
-FEED = {"cdec": "CDEC", "rise": "Reclamation RISE", "twdb": "TWDB"}  # lakes.csv source prefix -> queue feed label
+FEED = {"cdec": "CDEC", "rise": "Reclamation RISE", "twdb": "TWDB", "coops": "NOAA CO-OPS"}  # lakes.csv source prefix -> queue feed label
 ALIAS = {frozenset({"lanier"}): {"sidney"}}  # Lake Sidney Lanier is Lake Lanier's official name
 
 
