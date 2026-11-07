@@ -322,6 +322,9 @@ def edge_drift(js):
     age-chip cut-offs must be STALE_H chip_fresh and chip_ageing (lib/core.py) in minutes. A fix in one copy only would show two ages or two colours."""
     from lib.render import AGE_FN, STALE_H
     bad = [] if AGE_FN in js else ["worker/index.js age() differs from AGE_FN in lib/page.py: the edge and the page would print different ages"]
+    from lib.core import UNIT_OF
+    if '(k === "f" ? "%s" : "%s")' % (UNIT_OF["00060"], UNIT_OF["00065"]) not in js:  # edge test 2026-11-07: the Worker swaps live numbers; it must refuse the units lib/core.py refuses
+        bad.append("worker/index.js does not refuse a flow or stage unit other than lib/core.py UNIT_OF (%s, %s)" % (UNIT_OF["00060"], UNIT_OF["00065"]))
     m = re.search(r"const AGE_CHIP_MIN = \[(\d+), (\d+)\];", js)
     want = (round(STALE_H["chip_fresh"] * 60), round(STALE_H["chip_ageing"] * 60))
     if not m or (int(m.group(1)), int(m.group(2))) != want:
@@ -1064,6 +1067,9 @@ def selftest():
     assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
     assert edge_drift(w_real.replace("m<2880", "m<2881")), "selftest: a worker age that drifted from AGE_FN did not fire"
     assert edge_drift(w_real.replace("AGE_CHIP_MIN = [90, 360]", "AGE_CHIP_MIN = [90, 240]")), "selftest: a worker age-chip cut-off that drifted from STALE_H did not fire"
+    assert edge_drift(w_real.replace('"ft^3/s" : "ft"', '"m^3/s" : "m"')), "selftest: a worker that accepts another unit than lib/core.py UNIT_OF did not fire"
+    from lib.core import series as series_
+    assert not series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "7700", "unit_of_measure": "m^3/s"}]}}, "00060") and series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "272000", "unit_of_measure": "ft^3/s"}]}}, "00060"), "selftest: a flow in m^3/s was read as cfs (edge test 2026-11-07)"
     wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
     a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
     assert near_dupes({"/x/": shingles(a), "/y/": shingles(a)}), "selftest: a page with the same words and the same readings did not fire"

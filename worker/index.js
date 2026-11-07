@@ -107,7 +107,7 @@ async function poll(env) {
   let changed = 0, cur = prev.cur || null, rem = prev.rem;
   for (let i = 0; i < ids.length; i += CHUNK) {
     let next = LATEST + "?monitoring_location_id=" + ids.slice(i, i + CHUNK).map((x) => "USGS-" + x).join(",") + "&parameter_code=00060,00065"
-      + (since ? "&last_modified=" + since + "/.." : "") + "&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier,last_modified&limit=10000&f=json";
+      + (since ? "&last_modified=" + since + "/.." : "") + "&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier,last_modified,unit_of_measure&limit=10000&f=json";
     for (let page = 0; next && page < 5; page++) {
       const r = await fetch(next, { headers: env.USGS_API_KEY ? { "X-Api-Key": env.USGS_API_KEY, "User-Agent": UA } : { "User-Agent": UA } });
       if (r.headers.get("x-ratelimit-remaining")) rem = Number(r.headers.get("x-ratelimit-remaining"));
@@ -119,6 +119,7 @@ async function poll(env) {
         const k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
         const s = String(p.monitoring_location_id || "").slice(5);
         if (!k || isNaN(v) || isNaN(t) || t < cutoff) continue;
+        if (String(p.unit_of_measure || "").toLowerCase() !== (k === "f" ? "ft^3/s" : "ft")) continue; // edge test 2026-11-07: a unit change at USGS would swap m^3/s into a cfs page; same allow-list as lib/core.py UNIT_OF
         const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
         g[s] = g[s] || {};
         const o = g[s][k], ot = o ? Date.parse(o[1]) : -Infinity;

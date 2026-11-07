@@ -147,10 +147,17 @@ def stage_is_ft(row):
     return (row.get("unit_of_measure") or "ft").lower() in ("ft", "feet")
 
 
+UNIT_OF = {"00060": "ft^3/s", "00065": "ft", "62614": "ft", "62615": "ft", "00062": "ft", "72020": "ft", "MLLW": "ft", "IGLD": "ft", "AGY": "ft", "00054": "acre-ft",
+           "00010": "degc", "00095": "us/cm", "00045": "in", "00300": "mg/l", "99133": "mg/l", "63680": "_fnu", "00400": "ph units", "72255": "ft/s", "00480": "ppt"}  # every unit the caches held on 2026-11-07
+
+
 def series(rec, code):
+    """(time, value, row) for one parameter, oldest first. Edge test 2026-11-07: a feed that changed its unit (m^3/s for flow, m for a lake) printed
+    the number as cfs or ft; a row in any unit other than UNIT_OF's is never read as a number, so the page says not reporting instead of a wrong value."""
     out = []
+    want = UNIT_OF.get(code)
     for r in rec["usgs"]["rows"]:
-        if r["parameter_code"] == code:
+        if r["parameter_code"] == code and (want is None or str(r.get("unit_of_measure") or "").lower() == want):
             try:
                 if float(r["value"]) > -900:  # USGS sentinel values (-999999) are not readings
                     out.append((parse_t(r["time"]), float(r["value"]), r))
