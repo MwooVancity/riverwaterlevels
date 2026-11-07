@@ -140,7 +140,7 @@ def tab_blocks(tab, G, pages):
         # Search order (Keyword Planner, fresh agent 2026-11-06): coasts 'tides' 1.15M + 'tide times' 620k + 'tide chart' 96k a month, so the
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
-        lead = ([sc, b3.b_tides(G), b3.b_waves(G), b3.b_key_facts(G)] if coast else
+        lead = ([sc, b3.b_tides(G), b3.b_waves(G), b3.b_moon(G), b3.b_key_facts(G)] if coast else
                 [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_key_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + lead + [

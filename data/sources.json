@@ -553,6 +553,22 @@
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
+  },
+  {
+   "id": "usno",
+   "name": "U.S. Naval Observatory Astronomical Applications Department, Sun and Moon data for one day (aa.usno.navy.mil/api/rstt/oneday)",
+   "status": "quoted",
+   "terms_url": "https://aa.usno.navy.mil/data/api",
+   "summary": "USNO API page (read 2026-11-07 by curl): 'Some of these services work within an application programming interface (API), allowing users to query the calculators and receive results which can be embedded within a web page or mobile application.' The ID parameter is optional. No clause on ads, commercial use or caching. A U.S. Navy (federal) service. Live answer read 2026-11-07 for San Diego: moonrise 04:43, set 15:45 PST, closest phase New Moon 2026-11-08 23:02 (tz=-8).",
+   "credit": "Data: U.S. Naval Observatory, Astronomical Applications Department",
+   "blocks": [
+    "moon"
+   ],
+   "read_on": "2026-11-07",
+   "evidence": "WebSearch 2026-11-07 found aa.usno.navy.mil/data/api; the quoted sentence read live from that page by curl the same day",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   }
  ]
 }

@@ -804,6 +804,17 @@ def selftest():
         Gm = lambda el: {"lake": "AGY", "zone": dt_.timezone.utc, "now": t0 + dt_.timedelta(hours=30), "sg": [(dt_.datetime(2026, 11, 5, 7, tzinfo=dt_.timezone.utc), el, {})], "rec": {"usbr_lc": lc}}
         mb = b3_.b_reservoir(Gm(1039.41))
         assert mb and "6,937,000 acre-ft" in mb["body"] and "26.6%" in mb["body"] and b3_.b_reservoir(Gm(1045.0)) is None, "selftest: Reclamation storage shown for another day or lake, or its percent is wrong"
+    if b3_.cleared("usno"):  # moon on coasts: valid, valid-empty ('None today'), Unknown when the window misses today; times are UTC instants shown in station time
+        import zoneinfo as zi_
+        un = {"fetched_at": "2026-11-07T10:00:00+00:00", "days": [{"date": "2026-11-0%d" % d, "moon": mo, "closest": ["New Moon", "2026-11-08T23:02:00+00:00"]} for d, mo in (
+            (6, [["Rise", "2026-11-06T11:20:00+00:00"]]), (7, [["Rise", "2026-11-07T12:43:00+00:00"], ["Set", "2026-11-07T23:45:00+00:00"]]), (8, [["Rise", "2026-11-08T13:50:00+00:00"]]))]}
+        Gn = lambda u, now: {"coast": True, "zone": zi_.ZoneInfo("America/Los_Angeles"), "now": now, "rec": {"usno": u}}
+        mo_ = b3_.b_moon(Gn(un, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))
+        assert mo_ and "4:43" in mo_["body"] and "3:45" in mo_["body"] and "New Moon" in mo_["body"], "selftest: USNO UTC moon times not shown in station time"
+        assert "Unknown" in b3_.b_moon(Gn(un, dt_.datetime(2026, 11, 10, 20, tzinfo=dt_.timezone.utc)))["body"] and "Unknown" in b3_.b_moon(Gn({}, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))["body"], "selftest: old or missing moon data shown as today"
+        em = {**un, "days": [dict(d, moon=[]) for d in un["days"]]}
+        assert "None today" in b3_.b_moon(Gn(em, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))["body"], "selftest: a day with no moonrise not said"
+        assert b3_.b_moon({**Gn(un, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)), "coast": False}) is None, "selftest: moon block on a river page"
     if b3_.cleared("glerl"):  # Great Lakes lake-wide temperature, four states: valid, stale (amber past 96 h), hidden past 10 days, unavailable = Unknown
         gs = {"date": "2026-11-05", "temp_f": 57.1, "avg_f": 51.2, "avg_from": "1995", "avg_to": "2025", "fetched_at": "2026-11-07T02:00:00+00:00"}
         Gt = lambda g, h, lake="Lake Michigan": {"lake": "IGLD", "row": {"river": lake}, "zone": dt_.timezone.utc, "now": t0 + dt_.timedelta(hours=h), "rec": {"glsea": g}}

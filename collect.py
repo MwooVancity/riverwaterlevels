@@ -1104,7 +1104,7 @@ def default_sites():
 
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc"}
+DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc", "usno"}
 WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
 MONTHLY = {"access", "land", "cdec_res"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
@@ -1275,7 +1275,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
@@ -1389,6 +1389,20 @@ def fetch_glsea(letter):
     return {"fetched_at": now_iso(), "lake": letter, "date": day.isoformat(), "temp_f": val, "avg_f": avg, "avg_from": m.group(1), "avg_to": m.group(2)}
 
 
+def fetch_usno(lat, lon):
+    """U.S. Naval Observatory one-day Sun and Moon data, asked in UTC (tz=0) for yesterday, today and tomorrow (UTC), so any US station's local today is
+    inside the window: moonrise and moonset as UTC instants, the closest principal phase with its UTC time. 3 calls a coast a day. An answer not in UTC raises."""
+    today, days = datetime.datetime.now(datetime.timezone.utc).date(), []
+    for d in (today - datetime.timedelta(days=1), today, today + datetime.timedelta(days=1)):
+        p = json.loads(http_raw("https://aa.usno.navy.mil/api/rstt/oneday?date=%s&coords=%.4f,%.4f&tz=0" % (d.isoformat(), lat, lon), 30).decode("utf-8"))["properties"]["data"]
+        if float(p.get("tz", 99)) != 0 or (p.get("year"), p.get("month"), p.get("day")) != (d.year, d.month, d.day):
+            raise RuntimeError("USNO answered another zone or date: %r" % {k: p.get(k) for k in ("tz", "year", "month", "day")})
+        cp = p.get("closestphase") or {}
+        days.append({"date": d.isoformat(), "moon": [[x["phen"], "%sT%s:00+00:00" % (d.isoformat(), x["time"])] for x in p.get("moondata") or [] if x.get("phen") in ("Rise", "Set") and re.fullmatch(r"\d\d:\d\d", x.get("time") or "")],
+                     "closest": [cp["phase"], "%04d-%02d-%02dT%s:00+00:00" % (cp["year"], cp["month"], cp["day"], cp["time"])] if cp.get("phase") and re.fullmatch(r"\d\d:\d\d", cp.get("time") or "") else None})
+    return {"fetched_at": now_iso(), "days": days}
+
+
 def fetch_lc_mead():
     """Reclamation Lower Colorado Region daily table (usbr.gov/lc/region/g4000/hourly/levels.html, read 2026-11-07): 'AVAILABLE RESERVOIR ELEVATIONS AND
     CONTENTS FOR <MONTH YEAR>', Lake Mead 'AVAILABLE CAPACITY IN A.F. *26120000' at 'ELEVATION IN FEET 1219.6' ('* BOTTOM OF EXCLUSIVE FLOOD CONTROL SPACE'),
@@ -1485,6 +1499,7 @@ def fetch_extras(site, rec, h, log):
                     *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
                     *((("usbr_lc", fetch_lc_mead),) if AGENCY.get(site) == "rise:6123" else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
+                    *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
         if want and key not in want:
             continue
