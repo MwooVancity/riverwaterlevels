@@ -1,9 +1,9 @@
 {
  "id": "08064550",
- "verdict": "FAIL",
- "notes": "F8/F1 text: hero tile 'Water stored in the reservoir, USGS' 1,004,000 acre-ft, but the TWDB table row says 'Total storage, all pools (the first-screen tile) 1,004,653 acre-ft': the tile is USGS, not that row (blocks3.py:904 label hardcoded) | NOTE 'is this normal' '\u2013' while table gives 89.0% of conservation capacity",
- "by": "hater-first-2026-11-07f",
- "at": "2026-11-07T20:35:04+00:00",
- "template": "893fbad4d72f",
+ "verdict": "PASS",
+ "notes": "Fixed: TWDB row now 'Total storage, all pools 1,004,653 acre-ft', tile USGS 1,004,000 (two labelled datasets). NOTE: Frio River '56 cfs \u00b7 \u2013' percentile dash",
+ "by": "hater-first-2026-11-07g",
+ "at": "2026-11-07T20:38:45+00:00",
+ "template": "e324c7a50d4b",
  "level": "first"
 }

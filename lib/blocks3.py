@@ -557,8 +557,8 @@ def b_wpc(G):
         ocards = [card(esc(o["name"]), esc((o.get("category") or "–").title()), "issued %s &middot; valid %s to %s" % (esc(loc(o["issued"])), esc(loc(o["start"])), esc(loc(o["end"])))) for o in w["outlooks"]]
         body += "<h3>Outlooks covering this location</h3>" + rail(ocards, "Flood outlooks covering this location") + more("Outlooks as a table", table(["Outlook", "Category", "Issued", "Valid"], rows))
     if w.get("reports"):
-        rows = "".join(tr([esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "–", esc(r["type"] or ""), esc("%s, %s" % (r["where"], r["state"]) if r["where"] else (r["state"] or "")), esc(r["remarks"] or "–")]) for r in w["reports"])
-        rcards = [card(esc(r["type"] or "Report"), esc("%s, %s" % (r["where"], r["state"]) if r["where"] else (r["state"] or "–")), esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "") for r in w["reports"][:6]]
+        rows = "".join(tr([esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "–", esc(r["type"] or ""), esc("%s, %s" % (lsr_where(r["where"]), r["state"]) if r["where"] else (r["state"] or "")), esc(r["remarks"] or "–")]) for r in w["reports"])
+        rcards = [card(esc(r["type"] or "Report"), esc("%s, %s" % (lsr_where(r["where"]), r["state"]) if r["where"] else (r["state"] or "–")), esc(tzl(parse_t(r["t"]), zone)) if r.get("t") else "") for r in w["reports"][:6]]
         body += "<h3>Flood reports within 50 miles, last 72 hours (%d)</h3>" % len(w["reports"]) + rail(rcards, "Flood reports within 50 miles") + more(("All %d reports with the text as received" if len(w["reports"]) != 1 else "The %d report with the text as received") % len(w["reports"]), table(["Reported", "Type", "Location", "Report as received"], rows))
     if not body:
         return None
@@ -901,7 +901,7 @@ def b_reservoir(G):
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
         ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
         ("Conservation storage", "{:,.0f} acre-ft".format(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),  # the agency's own figure, never rounded to 3 figures (owner 2026-11-07)
-        ("Total storage, all pools (the first-screen tile)", "{:,.0f} acre-ft".format(t["storage_af"]) if t.get("storage_af") is not None else "Unknown"),  # phone review 2026-11-07 (Georgetown, Texana, Lavon): the tile's TWDB total and this table's conservation storage differed with nothing naming which was which
+        ("Total storage, all pools" + ("" if any(r.get("parameter_code") == "00054" for r in ((G["rec"].get("usgs") or {}).get("rows") or [])) else " (the first-screen tile)"),"{:,.0f} acre-ft".format(t["storage_af"]) if t.get("storage_af") is not None else "Unknown"),  # phone review 2026-11-07 (Georgetown, Texana, Lavon): the tile's TWDB total and this table's conservation storage differed with nothing naming which was which
         ("Conservation capacity", "{:,.0f} acre-ft".format(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
         ("Surface area", "{:,.0f} acres".format(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
@@ -931,6 +931,13 @@ def b_lake_temp(G):
     return block("lake_temp", "%s surface water temperature, lake-wide average" % esc(G["row"]["river"]), "agency", table(["Measure", "Value"], rows, right=(1,)),
                  src + ", daily satellite analysis for %s, read %s. Degrees Celsius and the difference from the %s-%s average are our calculation. A shoreline sensor can read several degrees off the lake-wide average." % (
                      esc(fdate(g["date"])), esc(tzl(parse_t(g["fetched_at"]), G["zone"])), g["avg_from"], g["avg_to"]), "glerl", amber=age_h)
+
+
+def lsr_where(w):
+    """An NWS local storm report place as received, marked when the NWS field cut it short (phone review 2026-11-07, The Battery: '1 S Point Pleasant Beac'):
+    the field holds at most 23-24 characters, so a name that fills it is shown with an ellipsis, never as if whole. ponytail: length test, a gazetteer if names of exactly that length prove whole."""
+    w = (w or "").strip()
+    return w + "…" if len(w) >= 23 else w
 
 
 def b_moon(G):

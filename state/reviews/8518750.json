@@ -1,9 +1,9 @@
 {
  "id": "8518750",
- "verdict": "FAIL",
- "notes": "F3 text: flood report place '1 S Point Pleasant Beac, NJ' cut off mid-word (NWS LSR city field truncated, shown as is) | NOTE phone-01 '12:17 am low -0.0 ft' (negative zero) | NOTE 'gusts to 28 mph (10 AM)' is tomorrow with no day; +0.42 vs 2.53-2.10=0.43 rounding",
- "by": "hater-first-2026-11-07f",
- "at": "2026-11-07T20:35:04+00:00",
- "template": "893fbad4d72f",
+ "verdict": "PASS",
+ "notes": "Fixed: '1 S Point Pleasant Beac\u2026, NJ' ellipsis marks NWS cut. NOTES: +0.42 ft vs 2.53-2.10 rounding; '-0.0 ft' low; desktop today's-tides tile wraps with wide gaps; '\u2013' percentile on Belvidere/Schuylkill",
+ "by": "hater-first-2026-11-07g",
+ "at": "2026-11-07T20:38:45+00:00",
+ "template": "e324c7a50d4b",
  "level": "first"
 }

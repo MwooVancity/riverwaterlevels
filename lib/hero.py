@@ -448,7 +448,7 @@ def hero(G, pages=None):
             _parts.append("%s: the level here rises and falls within the day around this forecast" % osc_word(G, "fc"))
         elif unit == "ft" and fcw["cur"] is not None and not fcw["datum"] and not above:
             _d = float("%.1f" % fcw["v"]) - float("%.2f" % fcw["cur"])
-            _parts.append(("%.1f ft above now" % _d) if _d >= FC_TOL_FT else "about level with the latest reading")
+            _parts.append(("%.1f ft above now" % _d) if _d >= FC_TOL_FT and fc_cmp(fcw["v"], fcw["cur"], unit) == "above" else "about level with the latest reading")  # phone review 2026-11-07 (Rough River): the label (fc_cmp on raw values) said no rise while this line, on rounded values, said 0.1 ft above; one comparison for both
         if above and not G["osc"]:
             _parts.append("%s below the latest reading" % (("%.1f ft" % (fcw["cur"] - fcw["v"])) if unit == "ft" else ("%s cfs" % fmtd(fcw["cur"] - fcw["v"]))))
         if fcw.get("swing"):
