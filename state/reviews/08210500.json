@@ -1,9 +1,9 @@
 {
  "id": "08210500",
- "verdict": "FAIL",
- "notes": "F8 text.txt 'AT 48.7 FT Flood of record - Septemeber 24, 1967 ... reached at the latest reading': NWS river-stage impact compared with a 91.12 ft lake elevation on another scale; page tells readers the 1967 flood of record is reached today",
- "by": "hater-first",
- "at": "2026-11-07T03:09:35+00:00",
- "template": "40b5b80e8fba",
+ "verdict": "PASS",
+ "notes": "Earlier defects gone: no river-stage impacts under lake heading; thunderstorm window dated 'Nov 8, 6:00 AM CST to Nov 8, 1:00 PM CST'. NOTES: storage tile 201,700 (USGS) vs 201,463 conservation storage (TWDB) are two labelled datasets; nearby 'Frio River at Concan 56 cfs \u00b7 \u2013'",
+ "by": "hater-first-2026-11-07b",
+ "at": "2026-11-07T19:28:47+00:00",
+ "template": "68f55fb01ca6",
  "level": "first"
 }

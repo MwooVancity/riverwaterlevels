@@ -1,0 +1,9 @@
+{
+ "id": "CDEC-SHA",
+ "verdict": "PASS",
+ "notes": "Earlier defect gone: normal tile shows 92.3% of November average (checks: 2,253,181/2,441,410). NOTES: elevation datum unnamed; storage 9:00 AM vs elevation 10:00 AM both labelled",
+ "by": "hater-first-2026-11-07b",
+ "at": "2026-11-07T19:28:48+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}

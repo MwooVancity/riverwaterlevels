@@ -1,0 +1,9 @@
+{
+ "id": "RISE-6123",
+ "verdict": "PASS",
+ "notes": "Earlier defect gone: storage tile 'Unknown' with reason (RISE 6124 gives 6,904). NOTES: elevation datum unnamed ('its feed does not name one'); boat ramp rows listed twice (Hemenway Harbor, Boulder Harbor); normal tile '\u2013' (no percentile in feed)",
+ "by": "hater-first-2026-11-07b",
+ "at": "2026-11-07T19:28:48+00:00",
+ "template": "68f55fb01ca6",
+ "level": "first"
+}
