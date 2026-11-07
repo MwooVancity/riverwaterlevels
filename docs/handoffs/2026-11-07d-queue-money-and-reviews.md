@@ -23,6 +23,11 @@ Start: "read docs/handoffs/2026-11-07d-queue-money-and-reviews.md and continue".
 - Live since 17:41: keyword kind/scope rule (tools/world_queue.py; 899 rows held with reason; data/keyword-picks.csv picks the state a namesake river means), address clash refused at release (tools/check_rules.py), near-duplicate pair fails the newer page only, release guard from the status.json ledger, datum rule (check.py datum_named), break gate covers world pages (2,920 variants, 0 faults).
 - PLAN.md execution plan item 7 marks what is DONE and what is left: tide-prediction safety before linking tide keywords, truth_world parallel + rotate + parse errors as faults (before ~150 world pages), hub generator, DST/clock-shift and source-format-change edge tests, Worker one-gauge read before ~400 gauges.
 
+## Update 21:00 UTC
+- All 77 queued lakes and coasts reviewed (data/reviewed.json 77); release takes them in money order from tomorrow 11:00 (03:10 practice run first). Rollback self-heal armed (status.json sha). Worker one-gauge read live.
+- Owner decisions open (PLAN item 7): prediction-only tide pages vs the CLAUDE.md ship test; daily Claude repair routine.
+- Next: read the 03:10 practice run and the 11:00 release; review notes in PLAN item 7; hub generator; Ireland coasts (Marine Institute).
+
 ## Next, in order (money)
 1. Link the ~135 US lake/coast rows at 1K+ (data/coasts.csv: CO-OPS stations with water level, exact name, read live; data/lakes.csv: USGS lake codes or agency feeds). Script the match, hand-check ambiguous.
 2. tools/world_queue.py: country column, score = searches x RATE (tools/release.py), barred sources (UK tides, CHS) = 0, ambiguous multi-state names held until hand-picked; Trent/Thames to the UK.
