@@ -181,8 +181,7 @@ def main():
                     state_data[st] = json.load(open(sp, encoding="utf-8"))
                 except Exception:
                     pass
-        for st in sorted({r["state"] for r in rivers_}):
-            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st)))
+        tx = None
         try:  # Texas lake levels hub: one cached TWDB file; missing or broken -> no page this build (the cache keeps the last good file, so only a lost cache drops it)
             tp = os.path.join(ROOT, "cache", "twdb-texas.json")
             if os.path.exists(tp):
@@ -192,6 +191,8 @@ def main():
                     emit("/lakes/tx/", tx)
         except Exception as e:
             print("FAIL lakes/tx", str(e)[:120])
+        for st in sorted({r["state"] for r in rivers_}):
+            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st), lakes_hub=bool(tx) and st == "TX"))
         for (hs, st), g in by_hub.items():
             if len(g) > 1:
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))

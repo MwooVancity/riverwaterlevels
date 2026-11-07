@@ -227,7 +227,7 @@ def most_searched(groups, tiers, st):
             'A name shared with another river can count its searches too.</p>' % (esc(STATE_NAMES.get(st, st)), links))
 
 
-def state_page(st, rows, Gs, sd=None):
+def state_page(st, rows, Gs, sd=None, lakes_hub=False):
     groups = collections.defaultdict(list)
     for r in rows:
         groups[(r["hub_slug"], r["river"])].append(r)
@@ -274,7 +274,7 @@ def state_page(st, rows, Gs, sd=None):
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if st == "TX" else "") + sw + most_searched(groups, demand(), st), trs))  # ponytail: one lake hub so far; a dict when a second state gets one
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs))  # ponytail: one lake hub so far; a dict when a second state gets one
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
