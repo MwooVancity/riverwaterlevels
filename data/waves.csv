@@ -9120,10 +9120,10 @@ queue,,8518750,The Battery,New York,NY,0,,,0,coast,,,human,/coast/new-york/
 queue,,8534720,Atlantic City,Atlantic City,NJ,0,,,0,coast,,,human,/coast/atlantic-city/
 queue,,8443970,Boston,Boston,MA,0,,,0,coast,,,human,/coast/boston/
 queue,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,,,human,/coast/galveston/
-queue,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,held 2026-11-07 phone review: 'no published statistics' line beside CDEC's 1991-2020 monthly average,,human,/lake/shasta-lake/
+queue,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,,,human,/lake/shasta-lake/
 queue,,RISE-6123,Lake Mead,Hoover Dam,AZ,0,,,0,lake,"held 2026-11-07 phone review: daily RISE value shown as Nov 3 11:00 PM PST (Reclamation's day is Nov 4, Arizona)",,human,/lake/lake-mead/
 queue,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,,,human,/lake/lake-travis/
-queue,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,held 2026-11-07 phone review: air quality times labelled KST on an AKST page,,human,/coast/anchorage/
+queue,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,,,human,/coast/anchorage/
 queue,,9439040,Astoria,Astoria,OR,0,,,0,coast,held 2026-11-07 phone review: says NOAA publishes no water temperature; the station lists a sensor (outage = Unknown),,human,/coast/astoria/
 queue,,8413320,Bar Harbor,Bar Harbor,ME,0,,,0,coast,,,human,/coast/bar-harbor/
 queue,,8727520,Cedar Key,Cedar Key,FL,0,,,0,coast,,,human,/coast/cedar-key/

@@ -541,7 +541,7 @@
   },
   {
    "id": "glerl",
-   "name": "NOAA GLERL CoastWatch GLSEA average surface water temperature (apps.glerl.noaa.gov/coastwatch/webdata/statistic/csv/avgtemps-<lake>_1995-<year>_F.csv)",
+   "name": "NOAA GLERL CoastWatch GLSEA average surface water temperature (apps.glerl.noaa.gov/coastwatch/webdata/statistic/csv/, one file per lake, for example avgtemps-m_1995-2026_F.csv for Lake Michigan)",
    "status": "quoted",
    "terms_url": "https://www.glerl.noaa.gov/home/notice.html",
    "summary": "GLERL Disclaimer and Intellectual Property Notice (read 2026-11-07 by curl): 'Information presented on these pages is considered public information and may be distributed or copied. Use of appropriate byline/photo/image credits is requested.' Real-time data disclaimer: data provided 'as is'. No clause on ads, commercial use or caching.",

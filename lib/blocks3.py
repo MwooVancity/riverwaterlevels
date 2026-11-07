@@ -439,7 +439,10 @@ def _aq_time(r):
         d = datetime.datetime.strptime("%s %s" % (r.get("date"), r.get("hour")), "%Y-%m-%d %H:%M")
     except (TypeError, ValueError):
         return "%s %s %s" % (r.get("date") or "", r.get("hour") or "", r.get("tz") or "")
-    return clock(d, r.get("tz") or "")
+    return clock(d, AQ_TZ.get(r.get("tz"), r.get("tz") or ""))
+
+
+AQ_TZ = {"KST": "AKST", "KDT": "AKDT"}  # AirNow labels Alaska time 'KST' (Anchorage 2026-11-07: hour 17:00 'KST' fetched 02:56 UTC = 17:56 AKST; Korea time would be 19 h old): never print Korea's abbreviation on an Alaska page
 
 
 def b_air_quality(G):

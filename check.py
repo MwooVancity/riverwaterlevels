@@ -811,6 +811,7 @@ def selftest():
         assert ok_ and not ok_["amber"] and "57.1 °F" in ok_["body"] and "+5.9 °F" in ok_["body"], "selftest: GLERL lake-wide temperature not shown, or the difference is wrong"
         assert old_ and old_["amber"] and gone_ is None and unk_ and "Unknown" in unk_["body"], "selftest: an old GLERL value was not marked or hidden, or a missing one was silent"
         assert b3_.b_lake_temp(Gt(gs, 30, "Lake Lanier")) is None, "selftest: a lake-wide Great Lakes temperature shown on another lake"
+    assert "AKST" in b3_._aq_time({"date": "2026-11-06", "hour": "17:00", "tz": "KST"}), "selftest: AirNow's Alaska 'KST' printed as Korea time"
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import info_gain  # the competitor gate release.py page_check runs: a page missing a core item must lose
     info_gain.selftest()

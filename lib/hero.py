@@ -291,7 +291,7 @@ def hero(G, pages=None):
         if G.get("lake"):
             cap += "" if G["row"].get("natural") else " An operator raises and lowers a reservoir on purpose; this compares with past years, not with the operator's target."  # Great Salt Lake has no operator
     else:
-        pct_med, cap = "", "" if G["feed"] or G.get("coast") else out_[1] if out_ else "No percentile: no published statistics for this date."
+        pct_med, cap = "", "" if G["feed"] or G.get("coast") else out_[1] if out_ else ("No daily percentile in the %s feed this page reads." % G["agy"]["short"]) if G.get("agy") else "No percentile: no published statistics for this date."
     sg = G["sg"]
     stage_txt = ("%.2f" % sg[-1][1]) if sg else "–"
     stage_unit = UNITS.get(sg[-1][2].get("unit_of_measure"), sg[-1][2].get("unit_of_measure") or "ft") if sg else "ft"
@@ -498,6 +498,12 @@ def hero(G, pages=None):
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
     norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s now" % norm_word) if an_ else "No past-years comparison for this date"
+    c_res, st_res = G["rec"].get("cdec_res"), series(G["rec"], "00054")
+    if G.get("agy") and p is None and not out_ and c_res and st_res:  # hater review 2026-11-07 (Shasta): "no past-years comparison" beside CDEC's own 1991-2020 monthly average
+        mo_ = st_res[-1][0].astimezone(G["zone"]).month
+        avg_ = c_res["avg_af"].get(str(mo_)) or c_res["avg_af"].get(mo_)
+        if avg_:
+            norm_txt = "%.1f%% of the %s %s-%s average storage (CDEC; our calculation)" % (100 * st_res[-1][1] / avg_, st_res[-1][0].astimezone(G["zone"]).strftime("%B"), c_res["avg_from"], c_res["avg_to"])
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
