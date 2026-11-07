@@ -9100,10 +9100,10 @@ excluded,,11304810,San Joaquin River,Below Garwood Bridge A Stockton,CA,0.0,10,8
 excluded,,09193700,New Fork River,Above Willow Creek Near Cora,WY,0.0,10,0,0,,short-record,,auto2,/river/new-fork-river/above-willow-creek-near-cora/
 queue,,08206900,Choke Canyon Reservoir,Three Rivers,TX,0,,,0,lake,,,human,/lake/choke-canyon-reservoir/
 queue,,08167700,Canyon Lake,New Braunfels,TX,0,,,0,lake,,,human,/lake/canyon-lake/
-queue,,08210500,Lake Corpus Christi,Mathis,TX,0,,,0,lake,held 2026-11-07 phone review: NWS flood of record 48.7 ft (river stage scale) shown as reached by a 91 ft lake elevation,,human,/lake/lake-corpus-christi/
+queue,,08210500,Lake Corpus Christi,Mathis,TX,0,,,0,lake,,,human,/lake/lake-corpus-christi/
 queue,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,,,human,/lake/medina-lake/
 queue,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,,,human,/lake/lake-hartwell/
-queue,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,held 2026-11-07 phone review: Low-water levels block lists Buford Dam release flows in cfs on a lake-elevation page,,human,/lake/lake-lanier/
+queue,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,,,human,/lake/lake-lanier/
 queue,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,,,human,/lake/kerr-lake/
 queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/great-salt-lake/
 queue,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,,,human,/lake/lake-powell/
@@ -9150,8 +9150,8 @@ queue,,9432780,Charleston,Coos Bay,OR,0,,,0,coast,,,human,/coast/coos-bay/
 queue,,9418767,North Spit,Eureka,CA,0,,,0,coast,,,human,/coast/eureka/
 queue,,8720226,Southbank Riverwalk,Jacksonville,FL,0,,,0,coast,,,human,/coast/jacksonville/
 queue,,8721604,Trident Pier,Cocoa Beach,FL,0,,,0,coast,,,human,/coast/cocoa-beach/
-queue,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,held 2026-11-07 phone review: water temperature labelled Etowah River (not this river) below the dam; dam-flow low-water block in cfs,,human,/lake/allatoona-lake/
-queue,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,held 2026-11-07 phone review: next NWS impact 547 ft is a low-water effect already true at 541 ft,,human,/lake/barren-river-lake/
+queue,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,,,human,/lake/allatoona-lake/
+queue,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,,,human,/lake/barren-river-lake/
 queue,,08102000,Belton Lake,Belton,TX,0,,,0,lake,,,human,/lake/belton-lake/
 queue,,02087182,Falls Lake,Falls,NC,0,,,0,lake,,,human,/lake/falls-lake/
 queue,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/

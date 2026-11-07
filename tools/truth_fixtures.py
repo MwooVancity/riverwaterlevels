@@ -65,6 +65,21 @@ b = render._forecast.b_impacts(G2)["body"]
 assert "reached at" not in b and "Next impact" not in b and "different scale" in b, b[:300]
 assert render.next_impact(G2) == ""
 
+# 2b. lake pages (phone review 2026-11-07): NWS statements quoted by level only, no "reached"/"next"; release flows in cfs never beside a lake elevation
+def m2b(r):
+    s = r["_s"]
+    set_nwps(r, [{"stage": s - 5, "statement": "Boat ramps close below this level"}, {"stage": s + 6, "statement": "Campground floods"}], {"t": t_, "v": s})
+    r["nwps"]["low_impacts"] = [{"value": "450-500 cfs", "impact": "Release flow"}, {"value": "240 cfs", "impact": "Minimum flow"}, {"value": "1050-1055 ft", "impact": "Ramps unusable"}]
+
+
+GL = with_s(m2b)
+GL["lake"] = True
+b = render._forecast.b_impacts(GL)["body"]
+assert "reached at" not in b and "Next impact" not in b and render.next_impact(GL) == "", b[:300]
+assert [i["value"] for i in render._forecast.low_list(GL)] == ["1050-1055 ft"]
+GL["lake"] = False
+assert len(render._forecast.low_list(GL)) == 3 and "reached at" in render._forecast.b_impacts(GL)["body"]  # river pages unchanged
+
 # 3. a reading above a real impact is quoted as reached (the highest one reached leads the cards)
 def m3(r):
     s = r["_s"]

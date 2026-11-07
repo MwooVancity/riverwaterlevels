@@ -485,8 +485,9 @@ def hero(G, pages=None):
         _nm = re.sub(r", (\w\w)$", lambda m: ", " + m.group(1).upper(), nw["name"].title())
         _nm = re.sub(r" (At|Below|Above|Near|Of|On|In)\b", lambda m: " " + m.group(1).lower(), _nm)
         _same = nw["name"].split()[0].lower() == G["river"].split()[0].lower()
-        _lab = "Water temperature nearby" if _same else "Water temperature, %s (not this river), %.0f mi" % (esc(re.split(r"\s(?:at|near|nr|below|above|bl|ab)\s", _nm, 1, re.I)[0]), nw["mi"])  # a creek's temperature must not read as this river's
-        strip += ui.tile("wtemp near", "thermo", _lab, '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
+        if not (G.get("lake") and not _same):  # phone review 2026-11-07 (Allatoona): river water below the dam is not the lake's water
+            _lab = "Water temperature nearby" if _same else "Water temperature, %s (not this river), %.0f mi" % (esc(re.split(r"\s(?:at|near|nr|below|above|bl|ab)\s", _nm, 1, re.I)[0]), nw["mi"])  # a creek's temperature must not read as this river's
+            strip += ui.tile("wtemp near", "thermo", _lab, '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
@@ -695,11 +696,14 @@ def scale_clash(G):
     n = G["rec"].get("nwps") or {}
     tops = [v for v in list((n.get("categories") or {}).values()) + [i.get("stage") for i in n.get("impacts") or []] if isinstance(v, (int, float))]
     cur = fc_cur(G, datum_gap(G))
-    return cur if cur is not None and tops and cur - max(tops) > 100 else None
+    lim = 30 if G.get("lake") else 100  # phone review 2026-11-07: Lake Corpus Christi reads 91 ft elevation beside river-stage impacts of 12-25 ft; ponytail: a lake 30 ft below every NWS level of its own scale would be read as a clash (none seen)
+    return cur if cur is not None and tops and cur - max(tops) > lim else None
 
 
 def impact_cur(G, gap):
     """The reading impacts are measured against: fc_cur, or None when the NWS reading is on another scale than its own impacts (scale_clash). The impacts block, the gage tile's next-impact line and the truth test all call this."""
+    if G.get("lake"):  # phone review 2026-11-07 (Barren River Lake): a lake's NWS statements mix rising and falling effects (ramps closed below a level), so "reached" and "next" cannot be told; quoted by level only
+        return None
     return None if scale_clash(G) is not None else fc_cur(G, gap)
 
 

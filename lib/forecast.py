@@ -198,7 +198,7 @@ def _commas(v):
 def low_now(G):
     """(impact, reading) for the NWS low-water impact whose range holds the latest reading (a stage range is on the NWS scale: fc_cur), or None."""
     st = fc_cur(G, datum_gap(G))
-    for i in (G["rec"].get("nwps") or {}).get("low_impacts") or []:
+    for i in low_list(G):
         r = _low_range(i["value"])
         cur = (G["lv"] if r[2] == "cfs" else st) if r else None
         if r and cur is not None and r[0] <= cur <= r[1]:
@@ -206,9 +206,15 @@ def low_now(G):
     return None
 
 
+def low_list(G):
+    """NWS low-water statements this page can show: on a lake page only levels, never flow ranges (phone review 2026-11-07, Lanier and Allatoona: Buford Dam release cfs beside a lake elevation)."""
+    li = (G["rec"].get("nwps") or {}).get("low_impacts") or []
+    return [i for i in li if not re.search(r"\d\s*k?cfs\b", i.get("value") or "", re.I)] if G.get("lake") else li  # "240 cfs" and "450-500 cfs" alike
+
+
 def b_low_water(G):
     n = G["rec"].get("nwps") or {}
-    li, lh = n.get("low_impacts") or [], n.get("low_hist") or []
+    li, lh = low_list(G), n.get("low_hist") or []
     if not li and not lh:
         return None
     hit, hcur = low_now(G) or (None, None)
@@ -269,5 +275,5 @@ def b_impacts(G):
         said_next = said_next or nxt_
         icards.append(card(("Next impact at " if nxt_ else "At ") + fv(s_), esc(short), margin))
     itable = table(["Flow" if flow_ else "Stage", "National Weather Service impact statement"], rows, right=(0,))
-    return block("flood_impacts", "Flood impacts by stage", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + _lead + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
+    return block("flood_impacts", "NWS impact statements by lake level" if G.get("lake") else "Flood impacts by stage", "official", (('<p class="src">%s</p>' % esc(pn)) if pn else "") + _lead + rail(icards, "Flood impacts by stage") + more("All %d impact statements in full" % len(ss), itable),
                  "Source: National Weather Service forecast point %s (%s). Statements are quoted from the NWS and describe that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
