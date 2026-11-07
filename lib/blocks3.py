@@ -1020,7 +1020,7 @@ def b_key_facts(G):
         n = G["rec"].get("nwps") or {}
         cats = [(k, n["categories"][k]) for k in ("action", "minor", "moderate", "major") if isinstance((n.get("categories") or {}).get(k), (int, float)) and n["categories"][k] > 0]
         if cats and n.get("lid") and SOURCES["nwps"]["status"] in ("quoted", "owner-permission"):
-            lines.append("National Weather Service flood stages at this gauge: %s." % ", ".join("%s %s ft" % (k, fmt(v)) for k, v in cats))
+            lines.append("National Weather Service flood stages at this gauge: %s." % ", ".join("%s %s ft" % (k, "{:,.2f}".format(v).rstrip("0").rstrip(".")) for k, v in cats))  # as the NWS publishes them: fmt rounded 99.5 and 100.5 both to "100" (phone review 2026-11-07, Lake Champlain)
             srcs.append("NWS National Water Prediction Service, forecast point %s" % n["lid"])
     if not lines:
         return None

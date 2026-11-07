@@ -1,9 +1,9 @@
 {
  "id": "04294500",
- "verdict": "FAIL",
- "notes": "F1 Key facts (text.txt l.91): 'National Weather Service flood stages at this gauge: action 99 ft, minor 100 ft, moderate 100 ft, major 101 ft' contradicts the flood-stage table on the same page 'Minor 99.5 ft / Moderate 100.5 ft' (half-foot stages rounded to whole feet, half-to-even, so minor and moderate read as the same level; blocks3.py key_facts fmt). Earlier defects gone: no river flow-duration rows; temperature caption now 'Measured by this gauge's own water temperature sensor, 2014 to 2024' beside the live 53 F reading",
- "by": "hater-first-2026-11-07d",
- "at": "2026-11-07T20:14:12+00:00",
- "template": "148ddf7c405c",
+ "verdict": "PASS",
+ "notes": "Earlier defect gone: Key facts now 'action 99 ft, minor 99.5 ft, moderate 100.5 ft, major 101 ft' matching the table. NOTES: impact 'AT 101.5 FT' sits above major 101.0 (separate NWS statement, not a stage); JSON link says 'lake elevation and storage readings' while storage tile says Not published; hourly wind arrows unexplained; nearest site gauges 121+ mi (distance labelled).",
+ "by": "hater-first-2026-11-07e",
+ "at": "2026-11-07T20:15:37+00:00",
+ "template": "893fbad4d72f",
  "level": "first"
 }
