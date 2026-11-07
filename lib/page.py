@@ -322,6 +322,9 @@ def agency_words(h, G):
         h = h.replace(x, y)
     h = re.sub(r"\(no USGS (?:temperature|turbidity or water-quality) sensor[^)]*\)", "(not in the %s feed this page reads)" % a, h)  # never "publishes none": nobody searched the agency's whole catalogue
     h = h.replace("USGS publishes no storage for this lake.", G["agy"].get("no_storage", "Not in the %s feed this page reads." % a))
+    if G["agy"].get("day_avg"):  # TWDB rows are daily averages stored at local midnight: the midnight clock time is ours, never TWDB's, so every printed copy becomes the date
+        for x in {tzl(parse_t(r["time"]), G["zone"]) for r in G["rec"]["usgs"]["rows"]}:
+            h = h.replace(x, x.split(",")[0] + " (%s daily average)" % a)
     return re.sub(r"(?:USGS daily statistics: not available for this gauge|Percentile method: latest reading compared with USGS daily percentiles for [^.<]*)\. ?", "", h)
 
 

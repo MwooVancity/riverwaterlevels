@@ -1275,7 +1275,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
@@ -1311,9 +1311,25 @@ def fetch_rise(item):
     return {"fetched_at": now_iso(), "rows": sorted(rows, key=lambda r: r["time"]), "truncated": [], "agency": "rise", "station": item}
 
 
+def fetch_twdb_series(slug):
+    """TWDB 30-day file for one reservoir: 'Estimated daily average data' (file header), so each row is a whole day, dated, with no clock time.
+    Stored at local midnight (Texas, America/Chicago); the page prints the date with 'TWDB daily average', never the midnight time. 1 call per run."""
+    rows_ = [l.split(",") for l in http_raw("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % slug, 60).decode("utf-8", "replace").splitlines() if l and not l.startswith("#")]
+    hd, zone = rows_[0], zoneinfo.ZoneInfo("America/Chicago")
+    rows = []
+    for r in (dict(zip(hd, x)) for x in rows_[1:]):
+        t = datetime.datetime.combine(datetime.date.fromisoformat(r["date"]), datetime.time(0), tzinfo=zone).isoformat()
+        for k, code, unit in (("water_level", "AGY", "ft"), ("reservoir_storage", "00054", "acre-ft")):
+            if r.get(k) not in (None, "", "NA"):
+                rows.append({"parameter_code": code, "time": t, "value": r[k], "unit_of_measure": unit, "qualifier": None, "approval_status": "Provisional"})
+    if not any(r["parameter_code"] == "AGY" for r in rows):
+        raise RuntimeError("TWDB %s: no water level rows" % slug)
+    return {"fetched_at": now_iso(), "rows": rows, "truncated": [], "agency": "twdb", "station": slug}
+
+
 def fetch_agency(site):
     kind, sid = AGENCY[site].split(":", 1)
-    return {"cdec": fetch_cdec, "rise": fetch_rise}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
+    return {"cdec": fetch_cdec, "rise": fetch_rise, "twdb": fetch_twdb_series}[kind](sid)  # a source with no fetch here raises: the cache is kept, the page is never built from nothing
 COOPS = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com&"
 
 

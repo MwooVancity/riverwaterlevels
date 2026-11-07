@@ -862,12 +862,12 @@ def b_reservoir(G):
     age_h = (G["now"] - datetime.datetime.fromisoformat(t["date"] + "T12:00:00+00:00")).total_seconds() / 3600
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
         ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
-        ("Conservation storage", "%s acre-ft" % fmtc(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),
-        ("Conservation capacity", "%s acre-ft" % fmtc(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
-        ("Surface area", "%s acres" % fmtc(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
+        ("Conservation storage", "{:,.0f} acre-ft".format(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),  # the agency's own figure, never rounded to 3 figures (owner 2026-11-07)
+        ("Conservation capacity", "{:,.0f} acre-ft".format(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
+        ("Surface area", "{:,.0f} acres".format(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
     return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
-                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers. TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % (esc(fdate(t["date"])), lake_datum(G)),
+                 "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers.%s" % (esc(fdate(t["date"])), "" if G.get("agy") else " TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % lake_datum(G)),  # an agency lake's reading is TWDB itself: no USGS to match
                  "twdb", amber=age_h > 72)
 
 

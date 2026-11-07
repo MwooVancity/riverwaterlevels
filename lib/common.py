@@ -237,7 +237,8 @@ def band_glossary():
 
 LAKE_CODES = ("62614", "62615", "72020", "00062", "AGY")  # NGVD29 first (the datum Reclamation and USACE quote pools in: Powell 3,700 ft full pool), then NAVD88, then the gauge datum
 AGENCIES = {"cdec": {"short": "CDEC", "name": "California Data Exchange Center (California Department of Water Resources)", "page": "https://cdec.water.ca.gov/dynamicapp/staMeta?station_id=%s", "every": "hourly", "label": "CDEC station", "src": "cdec"},
-            "rise": {"short": "Reclamation", "name": "U.S. Bureau of Reclamation (RISE)", "page": "https://data.usbr.gov/time-series/search?itemId=%s", "every": "daily", "label": "Reclamation RISE item", "src": "usbr", "no_storage": "Not shown: Reclamation's storage file (RISE item 6124) states acre-feet but gives 6,904, which cannot be acre-feet for Lake Mead."}}  # a lake read from its operator's feed (collect.py fetch_agency): the name every USGS line on its page is swapped for
+            "rise": {"short": "Reclamation", "name": "U.S. Bureau of Reclamation (RISE)", "page": "https://data.usbr.gov/time-series/search?itemId=%s", "every": "daily", "label": "Reclamation RISE item", "src": "usbr", "no_storage": "Not shown: Reclamation's storage file (RISE item 6124) states acre-feet but gives 6,904, which cannot be acre-feet for Lake Mead."},
+            "twdb": {"short": "TWDB", "name": "Texas Water Development Board (Water Data for Texas)", "page": "https://www.waterdatafortexas.org/reservoirs/individual/%s", "every": "daily average", "label": "TWDB reservoir", "src": "twdb", "day_avg": True}}  # a lake read from its operator's feed (collect.py fetch_agency): the name every USGS line on its page is swapped for
 LAKE_DATUM = {"MLLW": "mean lower low water (MLLW, NOAA tidal datum at this station)", "62615": "NAVD 1988", "62614": "NGVD 1929", "72020": "NGVD 1929", "00062": "the reservoir's own datum", "AGY": "the datum the operator uses (its feed does not name one)"}
 
 

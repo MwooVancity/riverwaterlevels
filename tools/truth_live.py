@@ -6,7 +6,7 @@ Rules per gauge page:
  - USGS has a newer reading: up to 12 hours behind is a warning, beyond STALE_FAIL_H fails (the Worker swaps the live numbers; carried pages are up to 2.5 h old)
  - flood stages shown on the page (Action, Minor, Moderate, Major) equal the NWS forecast point's categories within 0.05 ft
  - the NWS forecast point named on the page exists and answers"""
-import json, os, re, sys, urllib.request, datetime
+import json, os, re, sys, urllib.request, datetime, zoneinfo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers
 
@@ -96,7 +96,7 @@ def main():
         stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
-        cd_ = re.search(r"(CDEC station|Reclamation RISE item) ([A-Z0-9]+)", h)
+        cd_ = re.search(r"(CDEC station|Reclamation RISE item|TWDB reservoir) ([A-Za-z0-9-]+)", h)
         if url.startswith("/lake/") and cd_:  # a lake read from its operator's feed: checked below against that feed, never USGS
             agency.append((url, cd_.group(1).split()[0], cd_.group(2), stage, t))
             continue
@@ -141,6 +141,10 @@ def main():
                 rows = json.loads(get("https://cdec.water.ca.gov/dynamicapp/req/JSONDataServlet?Stations=%s&SensorNums=6&dur_code=H&Start=%s&End=%s" % (sta, d0 - datetime.timedelta(days=1), d0 + datetime.timedelta(days=2))))
                 pst = datetime.timezone(datetime.timedelta(hours=-8))
                 got = {datetime.datetime.strptime(r["date"], "%Y-%m-%d %H:%M").replace(tzinfo=pst): float(r["value"]) for r in rows if isinstance(r.get("value"), (int, float)) and r["value"] != -9999}
+            elif ag == "TWDB":  # daily averages, dated; the page stores each at Texas midnight
+                lines = [l.split(",") for l in get("https://www.waterdatafortexas.org/reservoirs/individual/%s-30day.csv" % sta).splitlines() if l and not l.startswith("#")]
+                tx = zoneinfo.ZoneInfo("America/Chicago")
+                got = {datetime.datetime.combine(datetime.date.fromisoformat(r["date"]), datetime.time(0), tzinfo=tx): float(r["water_level"]) for r in (dict(zip(lines[0], x)) for x in lines[1:]) if r.get("water_level") not in (None, "", "NA")}
             else:  # Reclamation RISE: 'Datetime values are presented as UTC'
                 j = json.loads(get("https://data.usbr.gov/rise/api/result/download?type=json&itemId=%s&after=%s&before=%s" % (sta, d0 - datetime.timedelta(days=2), d0 + datetime.timedelta(days=6))))
                 got = {datetime.datetime.fromisoformat(v["dateTime"].replace(" ", "T") + "+00:00"): float(v["result"]) for k, v in j.items() if k.isdigit() and isinstance(v.get("result"), (int, float))}
@@ -242,7 +246,7 @@ def main():
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
-    print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation), %d mismatches%s" % (len(pages), len(agency), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
+    print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation, TWDB), %d mismatches%s" % (len(pages), len(agency), len(bad), (", flood stages unchecked for %s" % skipped) if skipped else ""))
     for b in bad[:25]:
         print("  MISMATCH", b)
     for s in stale[:25]:

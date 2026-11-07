@@ -63,7 +63,7 @@ def ctx(site, row, rec, now):
     out["lake"] = lake
     out["agy"] = AGENCIES.get((rec.get("usgs") or {}).get("agency"))  # CDEC and the like: no USGS line on this page
     out["agy_st"] = (rec.get("usgs") or {}).get("station")
-    if out["agy"] and out["agy"]["every"] == "daily":  # a daily value is 1.5-3 days old when Reclamation posts it (Mead 2026-11-07: Nov 4 value posted Nov 5 13:58 UTC): "not reporting" only past 4 days
+    if out["agy"] and out["agy"]["every"].startswith("daily"):  # a daily value is 1.5-3 days old when Reclamation posts it (Mead 2026-11-07: Nov 4 value posted Nov 5 13:58 UTC): "not reporting" only past 4 days
         out["offline"] = age_min > 96 * 60
     out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
@@ -319,7 +319,7 @@ def hero(G, pages=None):
                         ("<small>%s, above MLLW. A prediction, not a reading.</small>" % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction in the cache for the coming hours.</small>")
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
-        tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % fmtc(st_[-1][1])) if st_ else "Not published",
+        tiles = ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else "Not published",
                         ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>")  # no "Last 24 hours" under a tile with no series
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
