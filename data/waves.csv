@@ -521,7 +521,7 @@ queue,20,06411500,Rapid Creek,Below Pactola Dam,SD,77.5,65,72,90,tail,,,high,/ri
 queue,20,12342500,West Fork Bitterroot River,Conner,MT,77.5,100,0,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/west-fork-bitterroot-river/conner/
 queue,20,09342500,San Juan River,Pagosa Springs,CO,77.5,100,0,70,fame,,,high,/river/san-juan-river-co/pagosa-springs/
 queue,20,14316700,Steamboat Creek,Glide,OR,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,nri,nri-fish",,,high,/river/steamboat-creek-or/glide/
-queue,20,07295000,Buffalo River,Woodville,MS,77.5,100,0,70,fame,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,high,/river/buffalo-river-ms/woodville/
+queue,20,07295000,Buffalo River,Woodville,MS,77.5,100,0,70,fame,held 2026-11-07 queue audit: the keyword's searches mean another state's river of this name (Buffalo AR/TN); hand-pick before release (keyword debate 2026-11-06),,high,/river/buffalo-river-ms/woodville/
 queue,20,13011500,Pacific Creek,Moran,WY,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/pacific-creek/moran/
 queue,20,04033000,Middle Branch Ontonagon River,Paulding,MI,77.5,100,0,70,"wsr-rec,wsr-fish,wsr",,,high,/river/middle-branch-ontonagon-river/paulding/
 queue,21,09292500,Yellowstone River,Altonah,UT,77.5,100,0,70,fame,,,high,/river/yellowstone-river-ut/altonah/
