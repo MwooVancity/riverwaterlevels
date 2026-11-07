@@ -119,8 +119,15 @@ if dry:
 # bookkeeping: data/waves.csv status queue -> live for these sites
 wp = os.path.join(ROOT, "data", "waves.csv")
 rows = list(csv.DictReader(open(wp, encoding="utf-8")))
+import check_rules
+clash = check_rules.address_clash(rows, picks)  # scale debate 2026-11-07: two places with one name (163 NOAA names cover 380 stations) would overwrite one page
+for s_, m_ in clash.items():
+    print("not released (address clash): %s  %s" % (s_, m_))
+picks = [r for r in picks if r["site"] not in clash]
 sites = {r["site"] for r in picks}
 for r in rows:
+    if r["site"] in clash and r["status"] == "queue":
+        r["gate"] = clash[r["site"]]
     if r["site"] in sites and r["status"] == "queue":
         r["status"] = "live"
 with open(wp, "w", newline="", encoding="utf-8") as f:
