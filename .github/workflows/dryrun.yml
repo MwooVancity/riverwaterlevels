@@ -6,6 +6,8 @@ name: dryrun
 on:
   push:
     branches-ignore: [main]
+  schedule:
+    - cron: "10 3 * * *"  # nightly practice release (owner 2026-11-07): tomorrow's picks through every gate; failing picks go back to the queue before 11:00
   workflow_dispatch:
     inputs:
       release:
@@ -16,6 +18,9 @@ on:
 concurrency:
   group: dryrun
   cancel-in-progress: true
+
+permissions:
+  contents: write  # only the nightly practice commits data/waves.csv (the gates of picks that failed)
 
 jobs:
   dryrun:
@@ -52,10 +57,20 @@ jobs:
         run: git checkout -- state/reviews && git clean -fdq state/reviews
       - name: Install the pinned wrangler
         run: npm ci --silent
-      - name: Practice daily release (on demand)
-        if: github.event_name == 'workflow_dispatch' && inputs.release == 'true'
+      - name: Practice daily release (nightly, or on demand)
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.release == 'true')
         continue-on-error: true
         run: python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply
       - name: Every gate, no deploy
         continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
-        run: python refresh.py --dry
+        run: python refresh.py --dry 2>&1 | tee refresh-out.log
+      - name: Nightly practice keeps only the gates of picks that failed (the real release never meets them)
+        if: github.event_name == 'schedule'
+        continue-on-error: true
+        run: |
+          grep -q "refresh OK" refresh-out.log || python -I tools/quarantine.py || echo "practice: the failure was not a new page; nothing sent back"
+          python -I tools/practice_keep.py
+          git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+          if ! git diff --quiet data/waves.csv; then
+            git add data/waves.csv && git commit -m "practice release: picks that failed go back to the queue until tomorrow ($(date -u +%F))" && git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "practice gates committed"
+          fi
