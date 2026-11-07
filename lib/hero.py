@@ -334,7 +334,7 @@ def hero(G, pages=None):
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
         tw_, lc_ = G["rec"].get("twdb") or {}, b3.lc_day(G)  # hater review 2026-11-07: "Not published" beside the page's own TWDB or Reclamation storage table
-        alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Water stored, TWDB daily estimate, %s" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
+        alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Total storage, all pools, TWDB daily estimate, %s (conservation storage is in the table below)" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
         tiles = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
                  ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
                  ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else ("Unknown" if G.get("agy") else "Not published"),  # phone review 2026-11-07 (Mead): the operator publishes storage we could not use this build; "Not published" was false
@@ -800,5 +800,8 @@ def nws_point_note(G):
     if not nm or not pl:
         return ""
     if all(w in nm for w in pl) or "".join(pl) in "".join(nm):  # every word of the gauge's place is in the NWS name ("Desoto" in "De Soto")
+        return ""
+    lw = [w for w in norm(G.get("river")) if w not in ("lake", "lk", "reservoir", "res")] if G.get("lake") else []
+    if lw and all(w in nm for w in lw):  # phone review 2026-11-07: "Green River (KY) at Green River Lake" is this lake, not a nearby place (Green River, Murray, Monroe, Nolin)
         return ""
     return "The NWS links a forecast point to this USGS gauge but names it \u201c%s\u201d, for a nearby place. %s" % (n.get("name"), "Its flood stages are on the NWS stage scale; its impact statements are NWS flow thresholds, compared with the latest USGS flow." if impact_flow(G) else "Its flood stages and impact statements are on the NWS stage scale; where the NWS and USGS read this gauge on different zero points, the margins below use the NWS reading.")

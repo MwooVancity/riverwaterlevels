@@ -1,9 +1,9 @@
 {
  "id": "04294500",
  "verdict": "FAIL",
- "notes": "F8/F6 text.txt: lake page shows river flow-duration rows \"How often the flow reaches each level ... Flow is at least 6 cfs on 5% of all days\" (Lake Champlain has no flow) | F8 text.txt: \"Measured by this gauge own water temperature sensor, 2014 to 2024 (... it no longer reports)\" while the tile shows \"53 F USGS sensor, Nov 7, 2:00 PM EST\" | NOTE key facts \"minor 100 ft, moderate 100 ft, major 101 ft\" vs chart Minor 99.5 / Moderate 100.5 / Major 101.0 (rounding) ; breadcrumb lacks VT; \"river access not confirmed\" on a lake",
- "by": "hater-first-2026-11-07c",
- "at": "2026-11-07T20:10:20+00:00",
- "template": "68f55fb01ca6",
+ "notes": "F1 Key facts (text.txt l.91): 'National Weather Service flood stages at this gauge: action 99 ft, minor 100 ft, moderate 100 ft, major 101 ft' contradicts the flood-stage table on the same page 'Minor 99.5 ft / Moderate 100.5 ft' (half-foot stages rounded to whole feet, half-to-even, so minor and moderate read as the same level; blocks3.py key_facts fmt). Earlier defects gone: no river flow-duration rows; temperature caption now 'Measured by this gauge's own water temperature sensor, 2014 to 2024' beside the live 53 F reading",
+ "by": "hater-first-2026-11-07d",
+ "at": "2026-11-07T20:14:12+00:00",
+ "template": "148ddf7c405c",
  "level": "first"
 }

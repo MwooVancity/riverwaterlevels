@@ -1,9 +1,9 @@
 {
  "id": "02168500",
- "verdict": "FAIL",
- "notes": "F8 text.txt: NWS forecast point \"Lake Murray\" is called \"for a nearby place\", but it is the same lake (the point is on this lake, not a nearby place)",
- "by": "hater-first-2026-11-07c",
- "at": "2026-11-07T20:10:30+00:00",
- "template": "68f55fb01ca6",
+ "verdict": "PASS",
+ "notes": "Own-lake point now 'NWS forecast point Lake Murray', no 'nearby place'. Notes: NWS vs USGS datum gap explained; 'no USGS temperature sensor at this gauge' vs history caption 'it no longer reports' reads slightly awkwardly.",
+ "by": "hater-first-2026-11-07d",
+ "at": "2026-11-07T20:14:13+00:00",
+ "template": "148ddf7c405c",
  "level": "first"
 }

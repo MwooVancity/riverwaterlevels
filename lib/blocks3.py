@@ -606,6 +606,8 @@ def b_floodfreq(G):
 
 
 def b_flowdur(G):
+    if G.get("lake"):  # phone review 2026-11-07 (Lake Champlain): a lake page has no flow; USGS flow-duration rows for the outlet read as the lake's
+        return None
     f = G["rec"].get("floodfreq") or {}
     want = (5, 10, 25, 50, 75, 90, 95)
     d = [r for r in f.get("dur") or [] if r["p"] in want]
@@ -899,6 +901,7 @@ def b_reservoir(G):
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
         ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
         ("Conservation storage", "{:,.0f} acre-ft".format(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),  # the agency's own figure, never rounded to 3 figures (owner 2026-11-07)
+        ("Total storage, all pools (the first-screen tile)", "{:,.0f} acre-ft".format(t["storage_af"]) if t.get("storage_af") is not None else "Unknown"),  # phone review 2026-11-07 (Georgetown, Texana, Lavon): the tile's TWDB total and this table's conservation storage differed with nothing naming which was which
         ("Conservation capacity", "{:,.0f} acre-ft".format(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
         ("Surface area", "{:,.0f} acres".format(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))

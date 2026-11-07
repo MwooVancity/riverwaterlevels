@@ -1,9 +1,9 @@
 {
  "id": "08164525",
- "verdict": "FAIL",
- "notes": "F1 phone-01/desktop-01 + text.txt: storage tile \"135,776 acre-ft Water stored, TWDB daily estimate, Nov 7, 2026\" vs \"How full the reservoir is: Conservation storage 130,563 acre-ft\" (same agency, same date, two different numbers, labels do not say which is which) | NOTE single rain station without the observation-day line",
- "by": "hater-first-2026-11-07c",
- "at": "2026-11-07T20:10:29+00:00",
- "template": "68f55fb01ca6",
+ "verdict": "PASS",
+ "notes": "Storage fixed: tile says total storage, all pools; table has conservation 130,563 and total 135,776 labelled; 82.1% checks out. Note: TWDB level 41.06 vs USGS 41.04 (two labelled datasets).",
+ "by": "hater-first-2026-11-07d",
+ "at": "2026-11-07T20:14:13+00:00",
+ "template": "148ddf7c405c",
  "level": "first"
 }
