@@ -20,7 +20,7 @@ FLOOR = {"world": 700, "gauge": 5000, "hub": 700, "home": 1500, "trust": 300, "c
 WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
-CARRYABLE = ("gauge", "world", "country")  # a failing page of these kinds keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h)
+CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
 
 
 def kind_of(rel):

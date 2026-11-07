@@ -21,9 +21,12 @@ PY = [sys.executable, "-I"]
 
 cached = {f[:-5] for f in os.listdir(os.path.join(ROOT, "cache")) if f.endswith(".json")}
 live_ = {r["site"]: r for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8"))}
-picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and not live_.get(r["site"], {}).get("gate")] if os.path.exists(lst) else []
+import datetime as _dt
+TODAY = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
+open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY)  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
+picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and open_gate(live_.get(r["site"], {}).get("gate"))] if os.path.exists(lst) else []
 seen_ = {r["site"] for r in picks}
-picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and not r.get("gate") and r["site"] not in seen_),
+picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and open_gate(r.get("gate")) and r["site"] not in seen_),
                 key=lambda r: -float(r.get("score") or 0))  # after the owner's list: the scored queue, best first
 # one ranking (owner 2026-11-03, HARD): highest search tier first, any country. US rows get their tier from the queue; world rows come
 # matched to a real station by tools/world_match.py. A world gauge is a data row in data/world-pages.json; the refresh collects and builds
@@ -62,7 +65,26 @@ ready = fits
 ready = ready[:max(0, WORLD_MAX - len(listed))]
 # money first (owner 2026-11-03): searches x ad rate per country. Guesses from PLAN.md until AdSense reports ours; US 1.0.
 RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
-both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])[:n]  # a tie goes to the world row
+both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
+# readiness debate 2026-11-07: a lake or coast enters Google only after a phone review (data/reviewed.json), so an unreviewed one earns nothing until a
+# person reviews it; at most UNREVIEWED_MAX a day, the other slots go to the next pages Google can take at once. ponytail: a fixed 5, a review backlog count if it grows
+UNREVIEWED_MAX = 5
+try:
+    import json as _json
+    _rev = set(_json.load(open(os.path.join(ROOT, "data", "reviewed.json"), encoding="utf-8"))["passed"])
+except (OSError, ValueError, KeyError):
+    _rev = set()
+_u = lambda x: x[1] == 1 and str(x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url") or "").startswith(("/lake/", "/coast/")) and (x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url")) not in _rev
+_k, _cut = [], 0
+for x in both:
+    if len(_k) >= n:
+        break
+    if _u(x):
+        if _cut >= UNREVIEWED_MAX:
+            continue
+        _cut += 1
+    _k.append(x)
+both = _k
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
 if world_add or gone_ or held_before_ != _json.dumps([p.get("held") for p in wpages]):
@@ -191,6 +213,8 @@ if failed:
     if rc:
         sys.exit("rebuild failed (%d)" % rc)
 urls = [r["url"] for r in picks if r.get("url")]
+os.makedirs(os.path.join(ROOT, "state"), exist_ok=True)
+open(os.path.join(ROOT, "state", "release-picks.txt"), "w").write("".join(r["site"] + "\n" for r in picks))  # tools/release_failed.py gates these if the refresh does not pass
 if not urls:
     sys.exit("released nothing: every pick was sent back")  # a day with no new gauge must fail, never log every gate passed
 print("\nbuilt: %d new page(s). Now: push (deploys), python -I tools/open_wave.py %d --apply, push again." % (len(urls), len(urls)))

@@ -294,7 +294,42 @@ def main(only=None):
     print("truth tests: %d gauges, %d failures" % (n, len(bad)))
     for b in bad[:30]:
         print("  FAIL", b)
+    if bad and only is None and carry_bad(rows, n):
+        return 0
     return 1 if bad else 0
+
+
+def carry_bad(rows, n):
+    """Readiness debate 2026-11-07: one gauge failing a contract (Shasta's CDEC average, Nov 7) froze every page for hours. When every failure belongs to a gauge
+    and there are at most max(3, 5% of gauges), each failing gauge keeps its live page (check.py carry: dist/ or the live site) and the rest ship.
+    A site-wide failure, more gauges than that, or a page with no live copy still stops the release. True when all were carried."""
+    by = {}
+    for b_ in bad:
+        s_, _, m_ = b_.partition(": ")
+        by.setdefault(s_, []).append(m_)
+    if any(s_ not in rows for s_ in by) or len(by) > max(3, n // 20):
+        return False
+    d = os.path.join(ROOT, "dist_next")
+    ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
+    exec(compile(open(os.path.join(ROOT, "check.py"), encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
+    fails = {}
+    for s_, ms in by.items():
+        u = rows[s_].get("dashboard_url") or rows[s_].get("url") or ""
+        rel = os.path.join(*u.strip("/").split("/"), "index.html") if u.strip("/") else ""
+        if not rel or not os.path.exists(os.path.join(d, rel)):
+            return False
+        fails[rel] = ms
+    if not ck["carry"](d, fails):
+        return False
+    ck["keep_old_times"](d, set(fails))
+    cp = os.path.join(d, "_carried.json")
+    try:
+        done = set(json.load(open(cp)))
+    except (OSError, ValueError):
+        done = set()
+    json.dump(sorted(done | {r.replace("\\", "/") for r in fails}), open(cp, "w"))
+    print("truth tests: %d gauge(s) kept their live page; the rest ship: %s" % (len(fails), ", ".join(sorted(by))))
+    return True
 
 
 if __name__ == "__main__":

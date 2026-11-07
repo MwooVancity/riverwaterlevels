@@ -125,15 +125,16 @@ jobs:
         if: steps.rel.outputs.released == '1'
         continue-on-error: true
         run: |
-          if git diff --quiet data/waves.csv data/world-pages.json; then
-            echo "release DROPPED: every new gauge went back to the queue"
-          elif grep -q "refresh OK" refresh-out.log; then
-            git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+          git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+          if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
             date -u +%F > data/last-release.txt; git add data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase -q origin main && git push origin HEAD:main && echo "release committed"
-          else
-            echo "release DROPPED: the refresh did not pass; nothing committed"
+          else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
+            echo "release DROPPED: the release was undone or the refresh did not pass"
+            git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
+            python -I tools/release_failed.py "release undone $(date -u +%F), the refresh did not pass with it"
+            git add data/waves.csv data/last-release.txt && git commit -m "release failed today: its picks wait until tomorrow ($(date -u +%F))" && git pull --rebase -q origin main && git push origin HEAD:main && echo "release-failed recorded"
           fi
       - name: Save the published pages (a missing dist/ after a dry run only logs a warning)
         if: always()
@@ -141,8 +142,12 @@ jobs:
         with:
           path: dist
           key: rwl-pages-${{ github.run_id }}
-      - name: Save the data cache (a failed restore must not replace the good copy)
-        if: ${{ always() && steps.datacache.outputs.cache-matched-key != '' }}
+      - name: Did this run pass (a missed restore saves a new cache only after a passing refresh)
+        id: passed
+        if: always()
+        run: grep -q 'refresh OK' refresh-out.log && echo 'ok=1' >> "$GITHUB_OUTPUT" || true
+      - name: Save the data cache (a failed restore must not replace the good copy; readiness debate 2026-11-07, a lost cache must not stay lost)
+        if: ${{ always() && (steps.datacache.outputs.cache-matched-key != '' || steps.passed.outputs.ok == '1') }}
         uses: actions/cache/save@v6
         with:
           path: |
