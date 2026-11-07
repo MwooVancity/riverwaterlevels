@@ -2380,8 +2380,11 @@ def fetch_twdb_state():
     """Every Texas reservoir TWDB tracks, one 73 KB file (122 reservoirs, 2026-11-06) for the /lakes/tx/ hub ('texas lake levels' 10K-100K a month).
     TWDB updates daily: fetched at most every 6 h (4 calls a day). A bad answer keeps the last good file; the page prints each reservoir's own date."""
     p = os.path.join(CACHE, "twdb-texas.json")
-    if os.path.exists(p) and _time.time() - os.path.getmtime(p) < 6 * 3600:
-        return
+    try:  # age from the file's own fetched_at: a cache restore can reset mtimes and freeze the data forever
+        if (datetime.datetime.now(datetime.timezone.utc) - parse_t(json.load(open(p, encoding="utf-8"))["fetched_at"])).total_seconds() < 6 * 3600:
+            return
+    except Exception:
+        pass
     try:
         d = json.loads(http_raw("https://www.waterdatafortexas.org/reservoirs/recent-conditions.json", 60).decode("utf-8"))
         if not isinstance(d, dict) or len(d) < 50 or sum(1 for v in d.values() if isinstance(v, dict) and v.get("timestamp")) < 50:

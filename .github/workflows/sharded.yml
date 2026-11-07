@@ -64,7 +64,7 @@ jobs:
           mkdir -p out/cache
           while read s; do cp "cache/$s.json" out/cache/ 2>/dev/null || true; done < "$RUNNER_TEMP/sites.txt"
           cp cache/state-*.json out/cache/ 2>/dev/null || true
-          cp cache/_river-*.json cache/_archive-*.json cache/_ca-*.json cache/_de-*.json cache/_ea-*.json cache/_census.json out/cache/ 2>/dev/null || true
+          cp cache/_river-*.json cache/_archive-*.json cache/_ca-*.json cache/_de-*.json cache/_ea-*.json cache/_census.json cache/twdb-texas.json out/cache/ 2>/dev/null || true
           cp "$RUNNER_TEMP/rc" out/rc; cp state/collect-timing.json out/timing.json; cp state/source-health.json out/health.json
       - uses: actions/upload-artifact@v7
         with:
