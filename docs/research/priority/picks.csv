@@ -1,170 +1,102 @@
 site,river,place,state,category
-14233500,Cowlitz River,Kosmos,WA,85
-02224940,Altamaha River,US 221 Near Charlotteville,GA,85
+08167700,Canyon Lake,New Braunfels,TX,lake
+08206900,Choke Canyon Reservoir,Three Rivers,TX,lake
+02079490,Kerr Lake,Boydton,VA,lake
+08210500,Lake Corpus Christi,Mathis,TX,lake
+02187010,Lake Hartwell,Anderson,SC,lake
+02334400,Lake Lanier,Buford,GA,lake
+09379900,Lake Powell,Glen Canyon Dam,AZ,lake
+08179500,Medina Lake,San Antonio,TX,lake
+9410170,San Diego Bay,San Diego,CA,ocean
+8638610,Sewells Point,Norfolk,VA,ocean
+8661070,Springmaid Pier,Myrtle Beach,SC,ocean
+,Texas Lake,,,hub
+8534720,Atlantic City,Atlantic City,NJ,ocean
+8443970,Boston,Boston,MA,ocean
+8447435,Chatham,Chatham,MA,ocean
+8771450,Galveston Pier 21,Galveston,TX,ocean
+10010000,Great Salt Lake,Saltair Boat Harbor,UT,lake
+9413450,Monterey,Monterey,CA,ocean
+8729210,Panama City Beach,Panama City Beach,FL,ocean
+8729840,Pensacola,Pensacola,FL,ocean
+9444090,Port Angeles,Port Angeles,WA,ocean
+8722956,South Port Everglades,Fort Lauderdale,FL,ocean
+8518750,The Battery,New York,NY,ocean
 14142500,Sandy River,Below Bull Run River Near Bull Run,OR,100
-01628500,South Fork Shenandoah River,Lynnwood,VA,100
-12352500,Bitterroot River,Missoula,MT,100
-03029500,Clarion River,Cooksburg,PA,100
-04124000,Manistee River,Sherman,MI,100
-12134500,Skykomish River,Gold Bar,WA,100
-03604000,Buffalo River,Flat Woods,TN,100
-07252000,Mulberry River,Mulberry,AR,100
-03020000,Tionesta Creek,Tionesta Creek Dam,PA,100
-14209500,Clackamas River,Above Three Lynx Creek,OR,100
-03183500,Greenbrier River,Alderson,WV,100
-03227500,Scioto River,Columbus,OH,85
-05331000,Mississippi River,Saint Paul,MN,100
 06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,100
-09010500,Colorado River,Below Baker Gulch Near Grand Lake,CO,100
-05344500,Mississippi River,Prescott,WI,100
-14222500,East Fork Lewis River,Heisson,WA,85
-11464000,Russian River,Healdsburg,CA,85
-05527800,Des Plaines River,Russell,IL,85
-14113000,Klickitat River,Pitt,WA,90
-03159500,Hocking River,Athens,OH,85
-02368000,Yellow River,Milligan,FL,85
-14400000,Chetco River,Brookings,OR,90
-02132000,Lynches River,Effingham,SC,85
-03136500,Kokosing River,Mount Vernon,OH,85
 04086600,Milwaukee River,Cedarburg,WI,85
 08033000,Neches River,Diboll,TX,85
 08190000,Nueces River,Laguna,TX,85
-01552000,Loyalsock Creek,Loyalsockville,PA,85
 03353000,White River,Indianapolis,IN,75
 07022000,Mississippi River,Thebes,IL,100
 05420500,Mississippi River,Clinton,IA,100
 04227500,Genesee River,Mount Morris,NY,85
 07014500,Meramec River,Sullivan,MO,85
 04027500,White River,Ashland,WI,85
-07050500,Kings River,Berryville,AR,85
 03303280,Ohio River,Cannelton Dam At Cannelton,IN,100
 04122001,Muskegon River,Bridge Street At Newaygo,MI,85
 02256500,Fisheating Creek,Palmdale,FL,85
-04127800,Jordan River,East Jordan,MI,85
 04122200,White River,Whitehall,MI,85
-04213500,Cattaraugus Creek,Gowanda,NY,85
 03263000,Great Miami River,Taylorsville,OH,75
-12041200,Hoh River,Us Highway 101 Near Forks,WA,85
 03234300,Paint Creek,Chillicothe,OH,85
 07295000,Buffalo River,Woodville,MS,100
-13337000,Lochsa River,Lowell,ID,100
-13336500,Selway River,Lowell,ID,100
-11266500,Merced River,Pohono Bridge Near Yosemite,CA,100
-02366000,Holmes Creek,Vernon,FL,85
 03399800,Ohio River,Smithland Dam Smithland,IL,100
 07374000,Mississippi River,Baton Rouge,LA,100
 10163000,Provo River,Provo,UT,70
-11303000,Stanislaus River,Ripon,CA,70
 12097850,White River,Below Clearwater River Near Buckley,WA,85
 03135000,Lake Fork,Below Mohicanville Dam Near Mohicanville,OH,65
 01643000,Monocacy River,Jug Bridge Near Frederick,MD,70
 12213100,Nooksack River,Ferndale,WA,70
 02168504,Saluda River,Below Lake Murray Dam Near Columbia,SC,70
-12048000,Dungeness River,Sequim,WA,75
 02074500,Sandy River,Danville,VA,70
 10141000,Weber River,Plain City,UT,70
 09237500,Yampa River,Below Stagecoach Reservoir,CO,70
 12037400,Wynoochee River,Above Black Creek Near Montesano,WA,75
 02087183,Neuse River,Falls,NC,70
 12462500,Wenatchee River,Monitor,WA,70
-02358789,Chipola River,Marianna,FL,85
-13333000,Grande Ronde River,Troy,OR,100
 01559000,Juniata River,Huntingdon,PA,70
-13338500,South Fork Clearwater River,Stites,ID,75
-12043000,Calawah River,Forks,WA,75
 09114500,Gunnison River,Gunnison,CO,70
-13309220,Middle Fork Salmon River,Middle Fork Lodge Near Yellow Pine,ID,100
 09429100,Colorado River,Below Palo Verde Dam Az-ca,CA,100
 01144000,White River,West Hartford,VT,70
 03216070,Ohio River,Ironton,OH,100
 13249500,Payette River,Emmett,ID,70
 01048000,Sandy River,Mercer Maine,ME,70
 03298000,Floyds Fork,Fisherville,KY,60
-03193000,Kanawha River,Kanawha Falls,WV,85
 03433500,Harpeth River,Bellevue,TN,60
-12042800,Bogachiel River,Forks,WA,85
 12449950,Methow River,Pateros,WA,85
 04188100,Ottawa River,Kalida,OH,85
 05389000,Yellow River,Ion,IA,75
-11194152,Kern River,Enos Park Foot Branch Near Bakersfield,CA,100
-14301000,Nehalem River,Foss,OR,75
-12391950,Clark Fork River,Below Cabinet Gorge Dam,ID,100
 14046500,John Day River,Service Creek,OR,100
-04213000,Conneaut Creek,Conneaut,OH,60
-02226500,Satilla River,Waycross,GA,60
-03314500,Barren River,Bowling Green,KY,60
 02197000,Savannah River,Augusta,GA,70
 08096500,Brazos River,Waco,TX,70
-02169500,Congaree River,Columbia,SC,70
 06923940,Niangua River,Above Lake Niangua Near Macks Creek,MO,75
-14301500,Wilson River,Tillamook,OR,60
-12210000,South Fork Nooksack River,Saxon Bridge,WA,75
-03589500,Tennessee River,Florence,AL,70
 14101500,White River,Below Tygh Valley,OR,100
 06471000,James River,Columbia,SD,75
-07014000,Huzzah Creek,Steelville,MO,75
-12039005,Humptulips River,Below Highway 101 Near Humptulips,WA,85
-02132500,Little Pee Dee River,Dillon,SC,60
 09306500,White River,Watson Utah,UT,85
-14302480,Trask River,Above Cedar Creek Near Tillamook,OR,60
 05403000,Yellow River,Necedah,WI,60
-02375500,Escambia River,Century,FL,60
 06452000,White River,Oacoma,SD,75
 09123450,Lake Fork,Below Lake San Cristobal Near Lake City,CO,65
 04183000,Maumee River,New Haven,IN,30
 12101500,Puyallup River,Puyallup,WA,30
 07050700,James River,Springfield,MO,30
-04230500,Oatka Creek,Garbutt,NY,30
-04086000,Sheboygan River,Sheboygan,WI,30
-12149000,Snoqualmie River,Carnation,WA,30
-04209000,Chagrin River,Willoughby,OH,30
 02202500,Ogeechee River,Eden,GA,30
-01571500,Yellow Breeches Creek,Camp Hill,PA,30
 07378500,Amite River,Denham Springs,LA,30
 05579500,Lake Fork,Cornland,IL,30
-01570000,Conodoguinet Creek,Hogestown,PA,30
 06799000,Elkhorn River,Norfolk,NE,30
 03228805,Alum Creek,Africa,OH,30
-11421000,Yuba River,Marysville,CA,30
 06470000,James River,Jamestown,ND,30
 01573000,Swatara Creek,Harper Tavern,PA,30
 05516500,Yellow River,Plymouth,IN,30
-07343000,North Sulphur River,Cooper,TX,30
-01550000,Lycoming Creek,Trout Run,PA,30
-03106000,Connoquenessing Creek,Zelienople,PA,30
 14033500,Umatilla River,Umatilla,OR,30
-03020500,Oil Creek,Rouseville,PA,30
 04183500,Maumee River,Antwerp,OH,30
-11453500,Putah Creek,Guenoc,CA,30
 02206500,Yellow River,Snellville,GA,30
-01396800,Spruce Run,Clinton,NJ,30
-12010000,Naselle River,Naselle,WA,30
-08176900,Coleto Creek,Arnold Road Crsg Near Schroeder,TX,30
-12035000,Satsop River,Satsop,WA,30
-12013500,Willapa River,Willapa,WA,30
-02171560,Santee River,Russellville,SC,60
-12040500,Queets River,Clearwater,WA,30
-08012150,Mermentau River,Mermentau,LA,30
 03140500,Muskingum River,Coshocton,OH,30
-12039500,Quinault River,Quinault Lake,WA,30
 09304500,White River,Meeker,CO,30
-07264000,Bayou Meto,Lonoke,AR,30
-06073500,Dearborn River,Craig,MT,30
-07359610,Caddo River,Caddo Gap,AR,60
 03086000,Ohio River,Sewickley,PA,10
+07264500,Bayou Meto,Stuttgart,AR,30
 11199500,White River,Ducor,CA,30
-02428400,Alabama River,Claiborne L&d Near Monroeville,AL,10
-15484000,Salcha River,Salchaket,AK,30
 09494000,White River,Fort Apache,AZ,30
-05536123,Chicago River,Columbus Drive At Chicago,IL,10
 07289000,Mississippi River,Vicksburg,MS,10
-15129500,Situk River,Yakutat,AK,30
-14238000,Cowlitz River,Below Mayfield Dam,WA,65
-14226500,Cowlitz River,Packwood,WA,75
-02226000,Altamaha River,Doctortown,GA,60
-14231000,Cowlitz River,Randle,WA,75
-14243000,Cowlitz River,Castle Rock,WA,30
-02225000,Altamaha River,Baxley,GA,60
 05395000,Wisconsin River,Merrill,WI,100
 09073400,Roaring Fork River,Aspen,CO,100
 01421900,West Branch Delaware River,From Delhi,NY,100
@@ -193,8 +125,6 @@ site,river,place,state,category
 01639000,Monocacy River,Bridgeport,MD,70
 10154200,Provo River,Woodland,UT,70
 02016500,James River,Lick Run,VA,100
-13310199,Middle Fork Salmon River,Mouth Near Shoup,ID,100
-06052500,Gallatin River,Logan,MT,70
 03221000,Scioto River,Below O'Shaughnessy Dam Near Dublin,OH,70
 11467000,Russian River,Hacienda Bridge Near Guerneville,CA,85
 01563500,Juniata River,Mapleton Depot,PA,70
@@ -232,7 +162,6 @@ site,river,place,state,category
 08167500,Guadalupe River,Spring Branch,TX,100
 11463980,Russian River,Digger Bend Near Healdsburg,CA,85
 0818999010,Nueces River,Barksdale,TX,85
-02131500,Lynches River,Bishopville,SC,85
 05407000,Wisconsin River,Muscoda,WI,100
 05270700,Mississippi River,Saint Cloud,MN,100
 03348000,White River,Anderson,IN,75
@@ -248,7 +177,6 @@ site,river,place,state,category
 09076300,Roaring Fork River,Below Maroon Creek Near Aspen,CO,100
 09152500,Gunnison River,Grand Junction,CO,70
 09095500,Colorado River,Cameo,CO,100
-11264500,Merced River,Happy Isles Bridge Near Yosemite,CA,100
 05587450,Mississippi River,Grafton,IL,100
 03229610,Scioto River,Commercial Point,OH,85
 03262700,Great Miami River,Troy,OH,75
@@ -285,7 +213,6 @@ site,river,place,state,category
 03352953,White River,Michigan Street At Indianapolis,IN,75
 03231500,Scioto River,Chillicothe,OH,85
 04230650,Genesee River,Ballantyne Bridge Near Mortimer,NY,85
-14299800,Nehalem River,Vernonia,OR,75
 02087500,Neuse River,Clayton,NC,70
 02163500,Saluda River,Ware Shoals,SC,70
 11462080,Russian River,Talmage,CA,85
@@ -322,7 +249,6 @@ site,river,place,state,category
 12457000,Wenatchee River,Plain,WA,85
 03274000,Great Miami River,Hamilton,OH,75
 05400760,Wisconsin River,Wisconsin Rapids,WI,100
-02359000,Chipola River,Altha,FL,85
 09247600,Yampa River,Below Craig,CO,70
 09402500,Colorado River,Grand Canyon,AZ,100
 09163500,Colorado River,Colorado-utah State Line,CO,100
@@ -334,7 +260,6 @@ site,river,place,state,category
 13250000,Payette River,Letha,ID,70
 03271620,Great Miami River,Franklin,OH,75
 01642190,Monocacy River,Monocacy Blvd At Frederick,MD,70
-02228000,Satilla River,Atkinson,GA,60
 09237450,Yampa River,Above Stagecoach Reservoir,CO,70
 05402000,Yellow River,Babcock,WI,60
 02163001,Saluda River,Williamston,SC,70
@@ -374,7 +299,6 @@ site,river,place,state,category
 02257000,Fisheating Creek,Lakeport,FL,85
 12447383,Methow River,Above Goat Creek Near Mazama,WA,85
 12036000,Wynoochee River,Above Save Creek Near Aberdeen,WA,75
-02174000,Edisto River,Branchville,SC,75
 03157500,Hocking River,Enterprise,OH,30
 07017020,Meramec River,Pacific,MO,70
 03234500,Scioto River,Higby,OH,70
@@ -390,14 +314,12 @@ site,river,place,state,category
 03272100,Great Miami River,Middletown,OH,75
 03292494,Ohio River,Water Tower At Louisville,KY,100
 07077000,White River,DeValls Bluff,AR,70
-04230380,Oatka Creek,Warsaw,NY,30
 08082500,Brazos River,Seymour,TX,70
 09144250,Gunnison River,Delta,CO,70
 07052500,James River,Galena,MO,30
 05331580,Mississippi River,Below L&d 2 At Hastings,MN,100
 11463682,Russian River,Jimtown,CA,85
 05530100,Des Plaines River,Algonquin Road At Des Plaines,IL,60
-06752280,Cache La Poudre River,Above Boxelder Creek Near Timnath,CO,70
 14020000,Umatilla River,Above Meacham Creek Near Gibbon,OR,30
 01447500,Lehigh River,Stoddartsville,PA,70
 02024752,James River,Blue Ridge Pkwy Near Big Island,VA,100
@@ -407,7 +329,6 @@ site,river,place,state,category
 09019000,Colorado River,Below Lake Granby,CO,100
 14111400,Klickitat River,Below Summit Creek Near Glenwood,WA,85
 05528100,Des Plaines River,Lincolnshire,IL,60
-03017500,Tionesta Creek,Lynch,PA,30
 06475000,James River,Redfield,SD,75
 09251000,Yampa River,Maybell,CO,75
 13213000,Boise River,Parma,ID,70
@@ -415,7 +336,6 @@ site,river,place,state,category
 07076750,White River,Georgetown,AR,70
 383103106594200,Gunnison River,Cnty Road 32 Below Gunnison,CO,70
 04124200,Manistee River,Mesick,MI,100
-15266110,Kenai River,Below Skilak Lake Outlet Near Sterling,AK,65
 08110200,Brazos River,Washington,TX,70
 14197900,Willamette River,Newberg,OR,70
 07056700,Buffalo River,Harriet,AR,100
@@ -447,9 +367,7 @@ site,river,place,state,category
 10137000,Weber River,Ogden Utah,UT,70
 09260050,Yampa River,Deerlodge Park,CO,70
 08121000,Colorado River,Colorado City,TX,30
-11454000,Putah Creek,Winters,CA,30
 08116650,Brazos River,Rosharon,TX,70
-12144500,Snoqualmie River,Snoqualmie,WA,30
 12098500,White River,Buckley,WA,30
 09240020,Yampa River,Below Soda Creek At Steamboat Springs,CO,70
 04121970,Muskegon River,Croton,MI,70
@@ -474,7 +392,6 @@ site,river,place,state,category
 08206600,Frio River,Tilden,TX,70
 08098290,Brazos River,Highbank,TX,70
 09114520,Gunnison River,Gunnison Whitewater Park,CO,70
-08177500,Coleto Creek,Victoria,TX,30
 02174055,Edisto River,Below Canadys,SC,75
 02376033,Escambia River,Molino,FL,60
 10136600,Weber River,I-84 At Uintah,UT,70
@@ -512,7 +429,6 @@ site,river,place,state,category
 02202040,Ogeechee River,Rocky Ford Road Near Rocky Ford,GA,30
 14107000,Klickitat River,Above West Fork Near Glenwood,WA,30
 021973269,Savannah River,Waynesboro,GA,70
-07264500,Bayou Meto,Stuttgart,AR,30
 08193000,Nueces River,Asherton,TX,30
 02255600,Fisheating Creek,Lake Placid,FL,30
 01573208,Swatara Creek,Palmyra,PA,30
@@ -2584,6 +2500,7 @@ site,river,place,state,category
 06139900,Beaver Creek,Reservoir Bndry Near Rocky Boy,MT,10
 06139850,Beaver Creek,Above Elk Creek Near Rocky Boy,MT,10
 05120000,Souris River,Verendrye,ND,10
+05061500,South Branch Buffalo River,Sabin,MN,100
 01411000,Great Egg Harbor River,Folsom,NJ,100
 01603000,North Branch Potomac River,Cumberland,MD,100
 01181000,West Branch Westfield River,Huntington,MA,100

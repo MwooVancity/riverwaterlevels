@@ -69,7 +69,8 @@ def us_rows(tier):
     live = {(r["river"], r["state"]) for r in w if r["status"] == "live"}
     abroad = {r["name"] + " river" for r in load("world-rivers.csv") if "US" not in r["cc"]}  # Ottawa River, Ohio must not inherit Canada's searches
     seen, out = set(live), []
-    for r in sorted((r for r in w if r["status"] == "queue" and not r["gate"]), key=lambda r: -float(r["score"] or 0)):
+    wet = {r["site"] for f in ("lakes.csv", "coasts.csv") for r in load(f)}  # lakes and coasts: water_rows
+    for r in sorted((r for r in w if r["status"] == "queue" and not r["gate"] and r["site"] not in wet), key=lambda r: -float(r["score"] or 0)):
         n = r["river"].lower()
         t, k = best(tier, [n + " water level", n + " flow"])
         shared = len(states[r["river"]]) > 1 or n.startswith("lake ") or n in abroad
@@ -116,14 +117,71 @@ def world_rows(tier, us_names):
     return out
 
 
+PHRASE = re.compile(r" (water level|level today|levels?|tides?|tide times|tide chart|high tide|water temperature|water temp|surf report|beach conditions|fishing report|dam release|gauge|depth|map)$")
+
+
+def water_rows():
+    """Lakes, coasts and state hubs in the SAME money list (owner 2026-11-07: the queue decides; 'texas lake levels' 10K-100K was missing because
+    the queue was one row per river gauge, and rerunning this file dropped the hand-added lake and coast rows). Tiers from keyword-tiers-water.csv,
+    uncapped: the CAP above is for river trivia ('yellow river flow'), a lake or tide search is the page itself. Built lakes and coasts (lakes.csv,
+    coasts.csv) are ready with their gauge; every other name with 10+ searches is a 'not checked' row until a feed and terms are proven."""
+    water = {}
+    for r in load("keyword-tiers-water.csv"):
+        k, t = norm(r["keyword"]), int(r["tier"])
+        name = PHRASE.sub("", k)
+        hub = re.match(r"(.+) (lake|river) levels$", k)
+        kind = "hub" if hub and hub.group(1).title() in STATE_NAMES else r["kind"]
+        if kind == "river" or t < 50 or name == k or (kind == "lake" and not WET.search(name)):  # 'tenis level' (tennis) is not a lake (keyword debate)
+            continue
+        cur = water.get((kind, name))
+        if not cur or t > cur[0]:
+            water[(kind, name)] = (t, r["keyword"])
+    out, took = [], set()
+    w = {r["site"]: r for r in load("waves.csv")}
+    for kind, f, key in (("lake", "lakes.csv", "lake"), ("ocean", "coasts.csv", "place")):
+        for r in load(f):
+            names = [n for (kd, n) in water if kd == kind and core(n) in (core(norm(r[key])), core(norm(r[key])) | ALIAS.get(core(norm(r[key])), set()))] or [norm(r[key])]  # 'lake choke canyon', 'hartwell lake'
+            hit = [(water[(kind, n)], n) for n in names if (kind, n) in water]
+            (t, k), n = max(hit) if hit else ((0, ""), "")
+            took.update((kind, x) for x in names)
+            st = (w.get(r["site"]) or {}).get("status")
+            out.append(dict(group=group(t, True), tier=t, keyword=k, river=r.get("lake") or r.get("name"), place=r.get("place", ""), region=r["state"], country="US",
+                            gauge=r["site"], shared="", feed="USGS" if kind == "lake" else "NOAA CO-OPS", ready="yes" if st in ("live", "queue") else "no", score=0, category=kind))
+    for (kind, name), (t, k) in water.items():
+        if (kind, name) in took:
+            continue
+        out.append(dict(group=group(t, True), tier=t, keyword=k, river=name.title(), place="", region="", country="", gauge="", shared="",
+                        feed="statewide hub", ready="yes" if name in HUBS_BUILT else "no", score=0, category=kind) if kind == "hub" else
+                   dict(group=group(t, True), tier=t, keyword=k, river=name.title(), place="", region="", country="", gauge="", shared="", feed="not checked", ready="no", score=0, category=kind))
+    return out
+
+
+WET = re.compile(r"\b(lake|lakes|reservoir|pond|lago|lac|loch|lough|see|dam|bay)\b")
+HUBS_BUILT = {"texas lake"}  # ponytail: /lakes/tx/ only; the hub generator (PLAN 'SITE STRUCTURE') replaces this set
+ALIAS = {frozenset({"lanier"}): {"sidney"}}  # Lake Sidney Lanier is Lake Lanier's official name
+
+
+def core(n):
+    return frozenset(n.split()) - {"lake", "reservoir", "the"}
+
+
+STATE_NAMES = {s.title() for s in ("alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois indiana iowa kansas kentucky "
+               "louisiana maine maryland massachusetts michigan minnesota mississippi missouri montana nebraska nevada ohio oklahoma oregon pennsylvania tennessee texas "
+               "utah vermont virginia washington wisconsin wyoming").split()} | {"New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+                                                                                   "Rhode Island", "South Carolina", "South Dakota", "West Virginia"}
+
+
 def main():
     tier = tiers()
     write_demand(tier)
     us, us_names = us_rows(tier)
     world = world_rows(tier, us_names)
-    rows = sorted(us + world, key=lambda r: (r["group"], -r["tier"], r["ready"] != "yes", -r["score"], r["river"]))[:TOTAL]
+    water = water_rows()
+    rows = sorted(us + world + water, key=lambda r: (r["group"], -r["tier"], r["ready"] != "yes", -r["score"], r["river"]))[:TOTAL]
     assert len(rows) == TOTAL, len(rows)
-    assert all(r["tier"] <= CAP for r in rows)
+    assert all(r["tier"] <= CAP for r in rows if r["category"] not in ("lake", "ocean", "hub"))
+    built = {x["site"] for x in load("waves.csv") if x["status"] in ("live", "queue")} & {r["site"] for f in ("lakes.csv", "coasts.csv") for r in load(f)}
+    assert built <= {r["gauge"] for r in rows if r["ready"] == "yes"}, "a built lake or coast fell out of the queue: %s" % sorted(built - {r["gauge"] for r in rows})
     assert all(r["group"] == 8 or r["ready"] == "yes" or r["tier"] for r in rows)
     assert len({r["gauge"] for r in rows if r["gauge"]}) == sum(1 for r in rows if r["gauge"])
     fields = ["rank", "group", "tier", "keyword", "river", "place", "region", "country", "gauge", "shared", "feed", "ready"]
