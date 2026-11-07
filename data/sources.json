@@ -523,13 +523,13 @@
    "name": "California Data Exchange Center (CDEC), California Department of Water Resources: hourly reservoir elevation and storage",
    "status": "quoted",
    "terms_url": "https://water.ca.gov/Conditions-of-Use",
-   "summary": "DWR Conditions of Use (Internet Archive copy of 2026-10-21; the live page answers 403 to scripts): information 'is made available to provide immediate access for the convenience of interested persons'; DWR 'does not guarantee the accuracy, completeness, timeliness, or correct sequencing of the information'. No limit on reuse, advertising, commercial use or caching. CDEC data page: 'Dates, times, and output will always be Pacific Standard Time.' Station SHA operator: US Bureau of Reclamation (CDEC station page).",
+   "summary": "DWR Conditions of Use (live page read by the owner in a browser 2026-11-07, same text as the Internet Archive copy of 2026-10-21; privacy, security and disclaimer sections only): information 'is made available to provide immediate access for the convenience of interested persons'; DWR 'does not guarantee the accuracy, completeness, timeliness, or correct sequencing of the information'. No limit on reuse, advertising, commercial use or caching. CDEC data page: 'Dates, times, and output will always be Pacific Standard Time.' Station SHA operator: US Bureau of Reclamation (CDEC station page).",
    "credit": "Data: California Department of Water Resources, California Data Exchange Center (CDEC); station operated by the U.S. Bureau of Reclamation",
    "blocks": [
     "lake_level"
    ],
    "read_on": "2026-11-07",
-   "evidence": "curl of web.archive.org/web/20261021104438 copy; cdec.water.ca.gov/dynamicapp/wsSensorData read 2026-11-07",
+   "evidence": "owner browser read of the live page 2026-11-07; web.archive.org/web/20261021104438 copy; cdec.water.ca.gov/dynamicapp/wsSensorData read 2026-11-07",
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
