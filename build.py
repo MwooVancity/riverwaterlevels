@@ -183,6 +183,15 @@ def main():
                     pass
         for st in sorted({r["state"] for r in rivers_}):
             emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st)))
+        try:  # Texas lake levels hub: one cached TWDB file; missing or broken -> no page this build (the cache keeps the last good file, so only a lost cache drops it)
+            tp = os.path.join(ROOT, "cache", "twdb-texas.json")
+            if os.path.exists(tp):
+                linked = {re.sub(r"[^a-z0-9]", "", (lr.get("twdb") or "").lower()): next((b["dashboard_url"] for b in built if b["site"] == lr["site"]), None) for lr in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if lr.get("twdb")}
+                tx = directory.lake_state_page(json.load(open(tp, encoding="utf-8")), {k: v for k, v in linked.items() if v}, datetime.datetime.now(datetime.timezone.utc))
+                if tx:
+                    emit("/lakes/tx/", tx)
+        except Exception as e:
+            print("FAIL lakes/tx", str(e)[:120])
         for (hs, st), g in by_hub.items():
             if len(g) > 1:
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))

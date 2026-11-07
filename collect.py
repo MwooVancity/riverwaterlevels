@@ -1626,6 +1626,7 @@ def fast(inv, sites):
     fetch_states(sites)  # statewide alerts + drought for each state hub
     _tick("phase state hubs", _time.time() - t_phase)
     if not any(a.startswith("--shard=") and not a.startswith("--shard=0/") for a in sys.argv):
+        fetch_twdb_state()
         fetch_world()
         write_health("run", len(sites))  # world feeds run last: without this no alarm could see them
         fetch_census()
@@ -2373,6 +2374,23 @@ def fetch_world():
             ea_probe(ctx)
         except Exception as e:  # the proof waits for the next run; nothing on a page depends on it
             note("world-wx", "failed", e)
+
+
+def fetch_twdb_state():
+    """Every Texas reservoir TWDB tracks, one 73 KB file (122 reservoirs, 2026-11-06) for the /lakes/tx/ hub ('texas lake levels' 10K-100K a month).
+    TWDB updates daily: fetched at most every 6 h (4 calls a day). A bad answer keeps the last good file; the page prints each reservoir's own date."""
+    p = os.path.join(CACHE, "twdb-texas.json")
+    if os.path.exists(p) and _time.time() - os.path.getmtime(p) < 6 * 3600:
+        return
+    try:
+        d = json.loads(http_raw("https://www.waterdatafortexas.org/reservoirs/recent-conditions.json", 60).decode("utf-8"))
+        if not isinstance(d, dict) or len(d) < 50 or sum(1 for v in d.values() if isinstance(v, dict) and v.get("timestamp")) < 50:
+            raise ValueError("TWDB answered %s entries with dates" % (len(d) if isinstance(d, dict) else type(d).__name__))
+        json.dump({"fetched_at": now_iso(), "rows": d}, open(p + ".tmp", "w", encoding="utf-8"), separators=(",", ":"))
+        os.replace(p + ".tmp", p)
+        print("ok twdb texas", len(d))
+    except Exception as e:
+        print("FAIL twdb texas", str(e)[:100])
 
 
 def fetch_states(sites):

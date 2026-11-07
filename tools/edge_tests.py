@@ -10,6 +10,12 @@ from lib import wx as wx_mod
 def run():
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
+    from lib import directory
+    nw = datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)
+    lk = lambda i, **k: dict({"full_name": "Lake %03d" % i, "short_name": "L%d" % i, "timestamp": "2026-11-07", "elevation": 677.15, "conservation_pool_elevation": 681.0, "percent_full": 93.5, "conservation_storage": 9.0, "conservation_capacity": 10.0}, **k)
+    assert directory.lake_state_page({"rows": {str(i): lk(i) for i in range(49)}}, {}, nw) is None, "a TWDB file cut short (under 50 reservoirs) still made the Texas page"
+    tx = directory.lake_state_page({"fetched_at": "2026-11-07T17:00:00Z", "rows": dict({str(i): lk(i) for i in range(60)}, dry=lk(98, full_name="Addicks Reservoir", percent_full=None, elevation=76.38, conservation_pool_elevation=67.5), late=lk(99, full_name="Lake Old", timestamp="2026-11-01"))}, {}, nw)
+    assert "677.15 ft" in tx and "3.85 ft below full pool" in tx and "Addicks Reservoir</td><td class=\"r\">Unknown" in tx and "8.88 ft above" not in tx and "6 days old" in tx, "Texas lake page: a published elevation was rounded, a dry flood dam got a pool figure, or an old row hid its age"
     rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])
     assert {r["time"]: r["value"] for r in rows}["t1"] == "11000" and (add, fixed) == (1, 1), "a USGS correction to a reading we already had was dropped"
     assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"

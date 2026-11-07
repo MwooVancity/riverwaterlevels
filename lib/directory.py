@@ -2,7 +2,7 @@
 import os, re, csv, json, math, datetime, collections, zoneinfo
 from lib import ui
 from lib.common import *
-from lib.core import SOURCES_READ_ON, tzl, age_chip, STALE_H, age_text, flow_is_old, hours_old, stale_after, age_words
+from lib.core import SOURCES_READ_ON, tzl, fdate, age_chip, STALE_H, age_text, flow_is_old, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -274,8 +274,45 @@ def state_page(st, rows, Gs, sd=None):
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, sw + most_searched(groups, demand(), st), trs))
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if st == "TX" else "") + sw + most_searched(groups, demand(), st), trs))  # ponytail: one lake hub so far; a dict when a second state gets one
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
+
+
+def lake_state_page(d, linked, now):
+    """/lakes/tx/: every reservoir in TWDB's statewide file ('texas lake levels' 10K-100K a month, Keyword Planner US 2026-11-06).
+    One row per reservoir with TWDB's own date; a row over 3 days old says so. linked: normalised TWDB name -> our /lake/ page.
+    Returns None when the file is missing or parsed to nothing: no page beats an empty or false one."""
+    rows = [v for v in ((d or {}).get("rows") or {}).values() if isinstance(v, dict) and v.get("full_name") and v.get("timestamp")]
+    if len(rows) < 50:
+        return None
+    today = now.astimezone(zoneinfo.ZoneInfo("America/Chicago")).date()
+    num = lambda v, f="%s": (f % "{:,.2f}".format(v).rstrip("0").rstrip(".")) if isinstance(v, (int, float)) else "Unknown"  # as TWDB publishes (677.15 ft, 93.5%, 681 ft): no rounding, no invented .00
+    trs, cap, sto, n_sum, n_old = "", 0.0, 0.0, 0, 0
+    common = collections.Counter(v["timestamp"][:10] for v in rows).most_common(1)[0][0]  # data age said once (page rule); a row on another date carries its own
+    for v in sorted(rows, key=lambda v: v["full_name"].lower()):
+        age = (today - datetime.date.fromisoformat(v["timestamp"][:10])).days
+        old = age > 3
+        n_old += old
+        if isinstance(v.get("conservation_storage"), (int, float)) and isinstance(v.get("conservation_capacity"), (int, float)) and v["conservation_capacity"] > 0 and not old:
+            cap, sto, n_sum = cap + v["conservation_capacity"], sto + v["conservation_storage"], n_sum + 1
+        el, fp = v.get("elevation"), v.get("conservation_pool_elevation")
+        ok = isinstance(el, (int, float)) and isinstance(fp, (int, float)) and isinstance(v.get("percent_full"), (int, float))  # Addicks and Barker: dry flood dams, no percent full, no pool to be below
+        below = ("%s ft below full pool" % num(fp - el) if fp >= el else "%s ft above full pool" % num(el - fp)) if ok else "Full pool: Unknown"
+        url = linked.get(re.sub(r"[^a-z0-9]", "", v.get("short_name", "").lower()))
+        nm = ('<a href="%s">%s</a>' % (url, esc(v["full_name"]))) if url else esc(v["full_name"])
+        trs += '<tr><td>%s%s</td><td class="r">%s</td><td class="r">%s<div class="src">%s</div></td></tr>' % (  # 4 columns: 6 ran off a 390 px phone (screenshot 2026-11-07)
+            nm, ('<div class="src"><b>TWDB date %s%s</b></div>' % (esc(fdate(v["timestamp"][:10])), (", %d days old" % age) if old else "")) if v["timestamp"][:10] != common else "", num(v.get("percent_full"), "%s%%"), num(el, "%s ft"), below)
+    tot = ('<p class="sub">All %d reservoirs with a current reading together hold %.1f%% of their combined conservation capacity (our sum of TWDB&rsquo;s storage and capacity figures; TWDB&rsquo;s own statewide figure may count differently).</p>' % (n_sum, 100 * sto / cap)) if cap else ""
+    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/tx/">Texas</a> / Lake levels</div><h1>Texas lake levels: %d reservoirs</h1>'
+            '<p class="sub">Percent full and water level for every reservoir the Texas Water Development Board tracks, TWDB date %s unless a row says otherwise.%s</p>%s'
+            '<div class="card scroll"><table><thead><tr><th scope="col">Reservoir</th><th scope="col" class="r">Percent full</th><th scope="col" class="r">Water level</th></tr></thead><tbody>%s</tbody></table></div>'
+            '<p class="src">Percent full is TWDB&rsquo;s conservation storage divided by conservation capacity; flood storage above the conservation pool is not counted, so a lake in flood can read 100%%. '
+            'Water level is the lake surface elevation TWDB publishes; feet below or above full pool is our subtraction of the two TWDB elevations. '
+            'Source: Texas Water Development Board, Water Data for Texas (<a href="https://www.waterdatafortexas.org/reservoirs/statewide" rel="noopener">waterdatafortexas.org</a>), daily best estimates with no warranty from TWDB; file checked %s. Credit: Data: Texas Water Development Board, Water Data for Texas.</p>') % (
+                len(rows), esc(fdate(common)), (" %d reservoir%s not updated in over 3 days %s marked." % (n_old, "" if n_old == 1 else "s", "is" if n_old == 1 else "are")) if n_old else "", tot, trs,
+                esc(tzl(parse_t(d["fetched_at"]), zoneinfo.ZoneInfo("America/Chicago"))) if d.get("fetched_at") else "time not stated")
+    return shell("Texas lake levels today: %d reservoirs, percent full and elevation (TWDB)" % len(rows), "Percent full and water level for %d Texas reservoirs from the Texas Water Development Board, each with its date." % len(rows),
+                 "/lakes/tx/", body, ld=crumb_ld([("Home", "/"), ("Texas", "/rivers/tx/"), ("Lake levels", None)]))
 
 
 def hub_page(hub_slug, st, rows, inv_count, Gs):
