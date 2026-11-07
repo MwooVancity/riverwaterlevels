@@ -130,7 +130,7 @@ jobs:
         run: |
           skip() { echo "release SKIPPED: $1"; echo "$1" > state/release-skip.txt; exit 0; }; rm -f state/release-skip.txt
           today=$(date -u +%F); last=$(cat data/last-release.txt 2>/dev/null || true)
-          m=$(gh run list --workflow refresh.yml --status success --limit 1 --json startedAt,updatedAt --jq '.[0] | ((.updatedAt|fromdateiso8601) - (.startedAt|fromdateiso8601)) / 60 | floor' 2>/dev/null || echo 0)
+          m=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; s=json.load(sys.stdin)['ledger']['stages']; print(int((s.get('refresh total',{}).get('s',0)+s.get('shard collect',{}).get('s',0))//60))" 2>/dev/null || echo 0)  # scale debate 2026-11-07: the last normal refresh from the site's own ledger, not GitHub's run time (it counted the release itself: 55 min) and no API call
           echo "last refresh took ${m} min; last release ${last:-never}"
           if [ "${m:-0}" -gt 45 ]; then skip "the last refresh took ${m} min, over 45"; fi
           cap=${{ vars.WORKERS_PAID && 100000 || 20000 }}  # WORKERS_PAID: repo variable the owner sets after buying the plan

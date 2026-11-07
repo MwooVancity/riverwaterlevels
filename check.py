@@ -607,8 +607,14 @@ def check_dir(d):
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
     live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
-    for a, b, j in near_dupes(gauge_sh, lambda u: shingles(open(os.path.join(d, rel_of[u]), encoding="utf-8").read().replace(" ", " "))):
-        site_bad.append("near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX))
+    dups = near_dupes(gauge_sh, lambda u: shingles(open(os.path.join(d, rel_of[u]), encoding="utf-8").read().replace(" ", " ")))
+    for a, b, j in dups:
+        msg = "near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX)
+        if len(dups) > max(3, len(gauge_sh) // 20):  # many pairs at once is a template fault: the site stops
+            site_bad.append(msg)
+        else:  # scale debate 2026-11-07: one pair (two dead neighbours) stopped every deploy; the newer page fails alone and is carried or sent back
+            newer = b if os.path.exists(os.path.join(ROOT, "dist", rel_of[a])) or not os.path.exists(os.path.join(ROOT, "dist", rel_of[b])) else a
+            results.setdefault(rel_of[newer], []).append(msg)
     for t, rels in titles.items():
         if len(rels) > 1:
             site_bad.append("duplicate title %r on %d pages" % (t[:50], len(rels)))
