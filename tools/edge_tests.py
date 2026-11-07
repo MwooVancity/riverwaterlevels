@@ -305,7 +305,8 @@ def england_page():
     assert got["days"]["11-03"][:3] == [0.1, None, 3.5] and got["day_years"] == 21, "a suspect or incomplete day reached the record, a repeated date was not its lowest, or the count is wrong: %s" % got["days"]["11-03"]
     assert [y[0] for y in got["years"]] == [2020] and got["years"][0][3] == 0.7, "a year with under 300 days, or this year, was listed"
     assert wx_mod.ea_days(lows[:9], highs[:9], 2026) == {}, "under 10 years said something"
-    rh = dict(r, **dict(got, days={now.astimezone(zoneinfo.ZoneInfo("Europe/London")).strftime("%m-%d"): got["days"]["11-03"]}))  # the block reads today's date: the fixture's 11-03 moved to today
+    # the block keys by the LAST READING's local date, which is yesterday just after midnight (dry run 2026-11-07 00:03 UTC failed): fixture covers both
+    rh = dict(r, **dict(got, days={(now + datetime.timedelta(days=k)).astimezone(zoneinfo.ZoneInfo("Europe/London")).strftime("%m-%d"): got["days"]["11-03"] for k in (-1, 0)}))
     hh =world.page(p, rh, now)[1]
     hist = sec(hh, "world_history")
     idx = {(52, -2): [(52.96, -1.10, "River Leen at Bulwell", "/england/river-leen-at-bulwell/", "1.00 m", "Normal")], (53, -2): [(53.9, -1.5, "Far River", "/england/far/", "2.00 m", "High")]}
