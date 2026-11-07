@@ -1,0 +1,17 @@
+{
+ "note": "Lake and coast pages whose phone-width screenshot review passed (CLAUDE.md Reviews). tools/open_wave.py opens a /lake/ or /coast/ page to Google only if it is listed here. Add a page only after a reviewer who did not build it read its screenshots; name the date and what was read.",
+ "passed": {
+  "/coast/san-diego/": "2026-11-06: fresh-agent phone review, 85k tokens, fixes landed (PLAN COAST PILOT)",
+  "/coast/norfolk/": "2026-11-06: fresh-agent phone review, 94k tokens, fixes landed (PLAN COAST PILOT)",
+  "/coast/myrtle-beach/": "2026-11-06: fresh-agent phone review, 94k tokens, fixes landed (PLAN COAST PILOT)",
+  "/coast/fort-lauderdale/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens, fixes landed (PLAN KEYWORD DEBATE)",
+  "/coast/chatham/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/monterey/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/pensacola/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/panama-city-beach/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/new-york/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/atlantic-city/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/boston/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens",
+  "/coast/galveston/": "2026-11-06: 10-coast fresh-agent phone review, 144k tokens"
+ }
+}

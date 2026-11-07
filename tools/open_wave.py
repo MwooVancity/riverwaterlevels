@@ -33,7 +33,9 @@ def main():
     pick = []
     blocks = load(os.path.join(D, "_blocks.json"), {})
     years = {r["site"]: int(r["years_record"] or 0) for r in csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8"))}
-    skipped = {"gate": 0, "few blocks": 0, "short record": 0}
+    skipped = {"gate": 0, "few blocks": 0, "short record": 0, "not reviewed": 0}
+    unreviewed = []  # live lake and coast pages waiting for their screenshot review: the next session's to-do
+    reviewed = set(load(os.path.join(ROOT, "data", "reviewed.json"), {"passed": {}})["passed"])  # url -> "date: what the reviewer read"; a missing file opens no lake or coast
     stuck = []  # live pages held for a reason a fix can clear (not a river's short record, which is by design): the watchdog alarms on these (ChatGPT round 1: open_wave exited 0 while skipping every lake)
     for row in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")):
         u = row["url"]
@@ -46,6 +48,10 @@ def main():
         if blocks.get(u, 0) < MIN_BLOCKS:
             skipped["few blocks"] += 1
             stuck.append("%s: %d blocks (minimum %d)" % (u, blocks.get(u, 0), MIN_BLOCKS))
+            continue
+        if u.startswith(("/lake/", "/coast/")) and u not in reviewed:  # CLAUDE.md: every new page kind is screenshotted at phone width before Google; a lake or coast opens only once its review passed (data/reviewed.json)
+            skipped["not reviewed"] += 1
+            unreviewed.append(u)
             continue
         if u.startswith("/coast/"):  # a coast page compares with NOAA's tide predictions, not a multi-year record
             pass
@@ -71,7 +77,7 @@ def main():
     if not pick:
         print("none: no live page is eligible")
     if "--apply" in sys.argv:
-        json.dump({"at": __import__("datetime").date.today().isoformat(), "opened": len(pick), "stuck": stuck}, open(os.path.join(ROOT, "data", "open-wave-last.json"), "w", encoding="utf-8"), indent=1)
+        json.dump({"at": __import__("datetime").date.today().isoformat(), "opened": len(pick), "stuck": stuck, "unreviewed": unreviewed}, open(os.path.join(ROOT, "data", "open-wave-last.json"), "w", encoding="utf-8"), indent=1)
     if stuck:
         print("STUCK (live, never opened): %d: %s" % (len(stuck), "; ".join(stuck[:5])))
     if "--apply" in sys.argv and pick:
