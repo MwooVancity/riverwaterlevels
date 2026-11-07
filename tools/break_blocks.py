@@ -132,8 +132,14 @@ def main():
     rows, _ = load_effective()
     now = datetime.datetime.now(datetime.timezone.utc)
     want = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if GATE and not want:
-        want = [s for s in ("07032000", "13206000", "01426500", "06461500") if os.path.exists(os.path.join(CACHE, s + ".json"))]
+    if GATE and not want:  # owner 2026-11-07: an edge-case practice run for every page type, not only US rivers (lakes and coasts crashed when dead 40 days)
+        TYPES = {"US river": ("07032000", "13206000", "01426500", "06461500"), "US lake on USGS": ("02334400", "09379900"), "lake on CDEC": ("CDEC-SHA",),
+                 "lake on Reclamation RISE": ("RISE-6123",), "lake on TWDB": ("TWDB-travis",), "Great Lake on NOAA CO-OPS": ("COOPS-9087031",), "coast on NOAA CO-OPS": ("9410170",)}
+        for k_, ss in TYPES.items():
+            have = [s for s in ss if os.path.exists(os.path.join(CACHE, s + ".json"))]
+            print("type %-26s %s" % (k_, ", ".join(have) if have else "NOT TESTED: no cache file for %s" % ", ".join(ss)))
+            want += have
+        # ponytail: world pages (Canada, England, Germany) are built by lib/world.py from feed files, not render.ctx; they are tested by world fixtures and truth_world, not here
     sites = want or ["06461500", "03466500", "07032000", "06893000", "13206000", "01570500", "14105700", "01426500", "08169000", "02336000", "05082500", "12194000"]
     Gs, recs = {}, {}
     for s in sites:

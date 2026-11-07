@@ -33,7 +33,7 @@ def ctx(site, row, rec, now):
         raise CriticalFail("lake listed in data/lakes.csv but USGS publishes no lake elevation")
     # ice: USGS withholds flow for weeks and keeps the stage (1,922 gauges in cold states); the page lives on the stage, never on an old flow
     month = datetime.timedelta(days=30)
-    stage_only = bool(sg) and now - sg[-1][0] < month and (not fl or now - fl[-1][0] > month)
+    stage_only = bool(sg) and (now - sg[-1][0] < month or not fl) and (not fl or now - fl[-1][0] > month)  # break test 2026-11-07: a lake or coast with no flow, silent 40 days, crashed and kept its old page; it now builds with its real age and the not-reporting banner
     if stage_only:
         fl = []
         lt, lv, lrow = sg[-1][0], None, sg[-1][2]

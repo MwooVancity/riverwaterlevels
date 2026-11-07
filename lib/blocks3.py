@@ -861,7 +861,7 @@ def lc_day(G):
     if not G.get("lake") or not m or not m.get("days") or not G.get("sg") or not cleared("usbr"):
         return None
     v_ = G["sg"][-1][1]
-    day_ = max((d for d, x in m["days"].items() if abs(x[0] - v_) <= 0.02), default=None)
+    day_ = max((d for d, x in m["days"].items() if isinstance(x, list) and len(x) >= 2 and isinstance(x[0], (int, float)) and isinstance(x[1], (int, float)) and abs(x[0] - v_) <= 0.02), default=None)  # break test 2026-11-07: an empty row crashed the page
     return (day_, m["days"][day_][0], m["days"][day_][1]) if day_ else None
 
 

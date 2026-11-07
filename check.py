@@ -531,7 +531,7 @@ def hater_rules(h):
     ft_ = re.search(r'class="tile fcst(?![^"]*stale)[^"]*">(?:(?!</div>).)*?data-h="(\d+(?:\.\d+)?)"', h, re.S)
     if ft_ and float(ft_.group(1)) > 24:  # STALE_H["river_forecast"]; batch F
         bad.append("the forecast tile shows a river forecast older than 24 h as current (add the age and the stale class, like the River forecast block)")
-    if re.search(r"<td>Water temperature</td>", h) and 'class="tile wtemp' not in h and "water temperature at this gauge" not in t:
+    if re.search(r"<td>Water temperature</td>", h) and 'class="tile wtemp' not in h and not re.search(r"water temperature at this (?:gauge|station)", t):  # a coast page says 'station' (break test 2026-11-07)
         bad.append("a water-temperature reading exists but its first-screen tile is hidden and the 'Not available' line does not name it with its age")
     if re.search(r"<h1>[^<]*[a-z] (?:Of|The|And|Near|At|Above|Below) [^<]*</h1>", h):
         bad.append("the H1 capitalises a small word (of/the/and/near/at/above/below) inside a name")
