@@ -4,7 +4,7 @@
 - exactly ONE water-level station in the whole NOAA list may carry that name (Long Beach x4 is refused);
 - a name that is also a non-US tide place in the queue's foreign rows is refused (Plymouth, Portland, Dunedin...).
 Prints proposed coasts.csv rows; --apply appends them. One NOAA call (the station list). Read-only without --apply."""
-import csv, json, os, re, sys, urllib.request
+import csv, json, math, os, re, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TIDE = re.compile(r"^(.*?)\s+(?:tides?|tide times|tide chart|tide table|tides today|harbor tides)$")
@@ -67,7 +67,61 @@ def main():
         print("appended %d rows to data/coasts.csv" % len(got))
 
 
+def km(a, b):
+    p = 0.017453292519943295
+    x = (float(b["lng"]) - float(a["lng"])) * p * math.cos((float(a["lat"]) + float(b["lat"])) / 2 * p)
+    return 6371 * math.hypot(x, (float(b["lat"]) - float(a["lat"])) * p)
+
+
+def pred_pick(picks, pred, wl, have, ref_km=10, level_km=25):
+    """Prediction-only tide pages (owner 2026-11-08; handoff 2026-11-08a). Only SERP-proven picks (data/tide-picks.csv verdict US); the station must have
+    no live level of its own; a subordinate station only when no reference station is within ref_km; the page's one real reading is the nearest NOAA live
+    water level within level_km of the station itself (edge case 7), named with its distance. One page per station (edge case 9)."""
+    by = {s["id"]: s for s in pred}
+    refs = [s for s in pred if s.get("type") == "R"]
+    wl_ids = {s["id"] for s in wl}
+    out, why, seen = [], {}, set()
+    for k in picks:
+        s = by.get(k["station"])
+        if k["verdict"] != "US":
+            why[k["keyword"]] = "search shows %s (%s)" % (k["verdict"], k["meant_place"])
+        elif not s:
+            why[k["keyword"]] = "not a NOAA prediction station"
+        elif s["id"] in wl_ids or s["id"] in have or s["id"] in seen:
+            why[k["keyword"]] = "station already has a page or a live level"
+        elif s.get("type") == "S" and any(km(s, r) <= ref_km for r in refs):
+            why[k["keyword"]] = "subordinate with a reference station within %d km" % ref_km
+        else:
+            lv = min(wl, key=lambda w: km(s, w), default=None)
+            if not lv or km(s, lv) > level_km:
+                why[k["keyword"]] = "no live NOAA water level within %d km" % level_km
+            else:
+                seen.add(s["id"])
+                out.append((k, s, lv, round(km(s, lv), 1)))
+    return out, why
+
+
+def pred_main():
+    get = lambda t: [s for s in json.loads(urllib.request.urlopen(urllib.request.Request("https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=" + t,
+                     headers={"User-Agent": "riverwaterlevels.com coast_match"}), timeout=60).read())["stations"] if s.get("state")]
+    have = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
+    picks = list(csv.DictReader(open(os.path.join(ROOT, "data", "tide-picks.csv"), encoding="utf-8")))
+    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)
+    for k, s, lv, d in got:
+        print("PICK %-30s %s %s, %s (%s) level from %s %s, %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], s.get("type"), lv["id"], lv["name"], d))
+    for k, w in sorted(why.items()):
+        print("skip %-30s %s" % (k, w))
+
+
 def selftest():
+    P = [{"id": "R1", "name": "Ref", "state": "FL", "lat": 27.0, "lng": -82.0, "type": "R"}, {"id": "S1", "name": "Sub near", "state": "FL", "lat": 27.05, "lng": -82.0, "type": "S"},
+         {"id": "S2", "name": "Sub far", "state": "FL", "lat": 28.0, "lng": -82.0, "type": "S"}, {"id": "R2", "name": "Lonely", "state": "AK", "lat": 60.0, "lng": -150.0, "type": "R"}]
+    W = [{"id": "W1", "name": "Level", "state": "FL", "lat": 27.1, "lng": -82.0}, {"id": "W2", "name": "Level2", "state": "FL", "lat": 28.1, "lng": -82.0}]
+    k = lambda kw, st, v="US": {"keyword": kw, "station": st, "verdict": v, "meant_place": "x"}
+    got, why = pred_pick([k("ref tides", "R1"), k("ref tide times", "R1"), k("near tides", "S1"), k("far tides", "S2"), k("lonely tides", "R2"), k("kinsale tides", "R1", "FOREIGN")], P, W, set())
+    assert [(a["keyword"], c["id"]) for a, b, c, d in got] == [("ref tides", "W1"), ("far tides", "W2")], got
+    assert "subordinate" in why["near tides"] and "within 25" in why["lonely tides"] and "FOREIGN" in why["kinsale tides"] and "already" in why["ref tide times"], why
+    print("coast_match pred selftest OK")
     sts = [{"id": "1", "name": "Biloxi", "state": "MS", "lat": 30.4, "lng": -88.9}, {"id": "2", "name": "Long Beach", "state": "CA", "lat": 0, "lng": 0},
            {"id": "3", "name": "Long Beach", "state": "WA", "lat": 0, "lng": 0}, {"id": "4", "name": "Portland", "state": "ME", "lat": 0, "lng": 0}]
     rows = [{"keyword": "biloxi tides", "tier": "5000", "gauge": ""}, {"keyword": "long beach tides", "tier": "5000", "gauge": ""},
@@ -78,4 +132,4 @@ def selftest():
 
 
 if __name__ == "__main__":
-    selftest() if "--selftest" in sys.argv else main()
+    selftest() if "--selftest" in sys.argv else pred_main() if "--predictions" in sys.argv else main()

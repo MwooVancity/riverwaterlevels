@@ -37,3 +37,9 @@ Start: "read docs/handoffs/2026-11-08a-tide-prediction-pages.md and continue". O
 12. Scale: +1 hilo call per page; fetched weekly (cache age >7 days), 25 pages/day x 3,264 max = 3,264 calls/week at full size; nearest search 3,264 x ~300 stations trivial. Files: 1 page + 1 live file each.
 13. Datum: own and level station heights both MLLW, named. Test: datum_named already covers /coast/.
 14. Negative zero on lows (-0.027 ft seen live): neg_zero rule live. Covered.
+
+## Update 03:00 UTC: picks done
+- data/tide-picks.csv: 59 keywords web-searched 2026-11-08 (47 US, 5 FOREIGN, 6 MIXED, 1 OTHER_US; search tool returns US results only, so foreign undercounted: phone review is the second check).
+- `python -I tools/coast_match.py --predictions` (selftest in --selftest): 9 PASS: bellingham 9449211 (level Cherry Point 23.3 km), corpus christi tide times 8775870 (Packery Channel 6.2), edmonds 9447427 (Seattle 23.7), homer 9455558 (Seldovia 25.0), indian river inlet 8558690 (Lewes 19.7), jacksonville beach 8720291 (Mayport 13.4), marco 8724991 (Naples Bay N 19.3), mission bay 9410196 (La Jolla 8.7), waldport 9434939 (South Beach 21.3).
+- Skipped: 23 no live level within 25 km (next: count NDBC buoy or water temperature as the real reading); 14 subordinate with a reference within 10 km (Tampa, Sarasota, Savannah, Cape May: next, point the keyword at that reference station's page, named with distance, instead of skipping).
+- NEXT BUILD, in order (edge cases above): data/coasts.csv column level_from; collect.py own-station hilo only + fetch_coops(level_from); hero/Source name the level station and km; truth_live and Worker live file use level_from; check.py rule (level_from page must name its level station) + fixture; break_blocks 'coast prediction-only' sample; build the 9; phone review; release.
