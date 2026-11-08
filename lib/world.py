@@ -576,6 +576,29 @@ def near_index(wpages, keep):
     return out
 
 
+_REV = {}
+REV_N = 3
+
+
+def near_rev(idx):
+    """Links rule 4 for world pages: each page listed by fewer than REV_N other pages' near lists is added to the lists of its nearest pages, neediest first,
+    REV_N added per list at most. Sets _REV {url: [(km, name, url, level, label)]}; world pages are rebuilt every run, so no stale list. Same rule as lib/page.py link_index."""
+    pts = [e for v in idx.values() for e in v]
+    listers = {e[3]: set() for e in pts}
+    for e in pts:
+        for x in near({"lat": e[0], "lon": e[1]}, idx, {e[3]}):
+            listers[x[2]].add(e[3])
+    _REV.clear()
+    for e in sorted(pts, key=lambda e: len(listers[e[3]])):
+        need = REV_N - len(listers[e[3]])
+        for x in (near({"lat": e[0], "lon": e[1]}, idx, {e[3]} | listers[e[3]], need + 10) if need > 0 else ()):
+            if need and len(_REV.get(x[2], ())) < REV_N:
+                _REV.setdefault(x[2], []).append((x[0], e[2], e[3], e[4], e[5]))
+                listers[e[3]].add(x[2])
+                need -= 1
+    return _REV
+
+
 def near(r, idx, skip, n=5):
     """The n nearest gauges at any distance, skipping urls in skip (owner 2026-11-08: every water page links its neighbours; live census: a Canada page linked no other gauge
     because none was within 100 km). Rings of 1-degree squares widen until n are found or the whole index is searched; the distance is printed beside each.
@@ -614,6 +637,9 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     r["_along"] = bool(rec["feed"]["along"])  # owed() then demands the strip
     own = world_gauge_url(p, r.get("title") or r["name"])
     rec["feed"]["near"] = near(r, idx, {own} | {x[5] for x in rec["feed"]["along"] if x[5]}) if idx and r.get("lat") is not None else []
+    if rec["feed"]["near"]:  # CLAUDE.md links rule 4: pages that few others list are added here (near_rev), nearest first, fixed size
+        have = {x[2] for x in rec["feed"]["near"]} | {own}
+        rec["feed"]["near"] = sorted(rec["feed"]["near"] + [x for x in _REV.get(own, ()) if x[2] not in have], key=lambda x: x[0])
     r["_near"] = bool(rec["feed"]["near"])
     feed_key = p.get("feed", "pegelonline")
     rec["feed"]["about"] = [(k, v) for k, v in (

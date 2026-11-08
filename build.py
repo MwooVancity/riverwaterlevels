@@ -218,6 +218,7 @@ def main():
         wkeep = world.choose(wpages, wnow)
         wlisted = sum(len(p.get("gauge_pages") or []) for p in directory.world_pages())
         near = world.near_index(wpages, wkeep)
+        world.near_rev(near)  # links rule 4: every world page listed by 3 others
         for page, d in wpages:
             keep = wkeep[page["slug"]]
             for r in d["rows"]:
@@ -271,6 +272,7 @@ def main():
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
+    shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, "conus.webp"))  # home map, static
     for name in ("sw.js", "icon-192.png", "icon-512.png"):
         shutil.copy(os.path.join(ROOT, "templates", name), os.path.join(nxt, name))
     for name, text in render.ASSETS.items():  # the stylesheets, each named by a hash of its content

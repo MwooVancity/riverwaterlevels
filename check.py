@@ -778,6 +778,14 @@ def selftest():
     pg_.link_index(P_)
     assert "/b/" in before_ and "/b/" not in pg_.nb_urls(G_("a"), P_), "selftest: a held page stays in its neighbour's link set, so build.py would carry a broken link (links rule 5)"
     assert all(len(pg_._IX["rev"][k_]) <= pg_.REV_N for k_ in pg_._IX["rev"]), "selftest: a reverse list grew past REV_N (links rule 6 fixed size)"
+    from lib import world as wd_
+    pts_ = [(50 + i * 0.01, 8.0, "g%d" % i, "/g%d/" % i, "1 m", "Normal") for i in range(8)] + [(60.0, 8.0, "far", "/far/", "1 m", "Normal")]
+    ix_ = {}
+    for e_ in pts_:
+        ix_.setdefault((int(e_[0] // 1), int(e_[1] // 1)), []).append(e_)
+    rv_ = wd_.near_rev(ix_)
+    win_ = collections.Counter(x[2] for e_ in pts_ for x in (lambda l_: l_ + [y for y in rv_.get(e_[3], ()) if y[2] not in {z[2] for z in l_} | {e_[3]}])(wd_.near({"lat": e_[0], "lon": e_[1]}, ix_, {e_[3]})))
+    assert min(win_[e_[3]] for e_ in pts_) >= 3 and all(len(v) <= wd_.REV_N for v in rv_.values()), "selftest: a world page is listed by fewer than 3 others, or a reverse list grew past REV_N (links rule 4)"
     from lib import directory as dr_
     pub_ = dr_.publisher
     try:

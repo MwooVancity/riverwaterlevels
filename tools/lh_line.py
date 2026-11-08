@@ -8,7 +8,7 @@ dv = lambda k: (a.get(k) or {}).get("displayValue", "?")
 try:
     el = a["largest-contentful-paint-element"]["details"]["items"][0]["items"][0]["node"].get("snippet", "?")[:90]
 except (KeyError, IndexError, TypeError):
-    el = "unknown"
+    el = "unknown (%s)" % json.dumps(a.get("largest-contentful-paint-element"))[:240]  # shape differs by Lighthouse version: print it once to fix the parse
 try:
     tp = sorted(a["third-party-summary"]["details"]["items"], key=lambda x: -(x.get("blockingTime") or 0))[:3]
     tps = "; ".join("%s %d KB %d ms" % ((x.get("entity") or {}).get("text", x.get("entity")) if isinstance(x.get("entity"), dict) else x.get("entity"), (x.get("transferSize") or 0) // 1024, x.get("blockingTime") or 0) for x in tp)

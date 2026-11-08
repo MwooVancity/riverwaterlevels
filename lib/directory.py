@@ -66,8 +66,8 @@ def conus_map(built, Gs, cap=FEATURED):
     my = lambda lat: R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
     lon0, lon1, lat0, lat1 = -125.0, -66.5, 24.0, 49.6
     x0, x1, y0, y1 = mx(lon0), mx(lon1), my(lat0), my(lat1)
-    h = round(1000 * (y1 - y0) / (x1 - x0))
-    src = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export?bbox=%.0f,%.0f,%.0f,%.0f&bboxSR=3857&imageSR=3857&size=1000,%d&format=jpg&f=image" % (x0, y0, x1, y1, h)
+    h = round(800 * (y1 - y0) / (x1 - x0))
+    src = "/conus.webp"  # templates/conus.webp: the USGS Topo export of this bbox at 800 px, saved once 2026-11-08 (the map never changes; the live export took 7-9 s and was the home page's largest paint on a phone)
     dots, shown = "", 0
     for r in featured(built, cap):
         G = Gs[r["site"]]
@@ -81,7 +81,7 @@ def conus_map(built, Gs, cap=FEATURED):
     if not shown:
         return ""
     key = '<div class="keyrow">Gauge color, flow compared with past years on this date: <b class="d-lo"></b>below normal (including very low) <b class="d-mid"></b>typical range <b class="d-hi"></b>above normal (including very high) <b class="d-na"></b>no comparison available. %d gauges shown.</div>' % shown
-    return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="1000" height="%d" loading="lazy" decoding="async">%s</div>%s'
+    return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="800" height="%d" fetchpriority="high" decoding="async">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
 
