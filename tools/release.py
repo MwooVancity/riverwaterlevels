@@ -86,7 +86,7 @@ for x in both:
         _cut += 1
     _k.append(x)
 if "--every-kind" in sys.argv:  # practice only (owner 2026-11-08 "practice run of every type of page"): plus the first queued page of each kind the money order did not reach, reviewed or not, so a new kind meets every gate before a real release does
-    _kind = lambda x: ("world-" + (x[3].get("feed") or "pegelonline")) if x[1] == 0 else (_pages.variant(x[3]["site"], _url(x)) or "river")
+    _kind = lambda x: ("world-" + (x[3].get("feed") or "pegelonline")) if x[1] == 0 else (lambda v: v + "-" + x[3]["site"].split("-")[0] if v == "lake-agency" else v)(_pages.variant(x[3]["site"], _url(x)) or "river")  # each agency feed (CDEC, RISE, TWDB) has its own parser and check
     _have = {_kind(x) for x in _k}
     for x in both:
         if _kind(x) not in _have:
