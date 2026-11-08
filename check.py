@@ -277,6 +277,11 @@ def sketch(s):
     return tuple(m)
 
 
+def dup_scope(h, rel):
+    """Pages the near-duplicate rule measures: world pages and indexable gauge pages with a hero. One rule for the gate and tools/release.py page_check."""
+    return kind_of(rel) == "world" or (kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h))
+
+
 def near_dupes(sh, load=None):
     """Pairs of gauge pages sharing more than DUP_MAX of their text. sh maps url to a shingle set, or to a sketch with load(url) giving the set back.
     Banding picks candidates, the exact Jaccard decides: all pairs took ~1 ms each and hit the 45-min brake near 2,000 pages.
@@ -613,9 +618,7 @@ def check_dir(d):
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
-                if kind_of(rel) == "world":
-                    gauge_sh[u] = sketch(shingles(h))
-                if kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h):
+                if dup_scope(h, rel):
                     gauge_sh[u] = sketch(shingles(h))
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []

@@ -188,6 +188,22 @@ def page_check(picks_):
             bad.append("info gain: missing %s that %s shows" % (", ".join(lost_), info_gain.COMP[kind_]["url"]))
         if bad:
             out[r["site"]] = bad[0]
+    # duplicate debate 2026-11-08: the gate's near-duplicate rule ran only at deploy, so a duplicate pick took a daily slot; same functions, against every built page
+    dn = os.path.join(ROOT, "dist_next")
+    sh, path_of = {}, {}
+    for dp, _, fs in os.walk(dn):
+        if "index.html" in fs:
+            f = os.path.join(dp, "index.html")
+            rel = os.path.relpath(f, dn)
+            h = open(f, encoding="utf-8").read().replace("\u00a0", " ")
+            if ck["dup_scope"](h, rel):
+                u = "/" + os.path.dirname(rel).replace(os.sep, "/") + "/"
+                sh[u], path_of[u] = ck["sketch"](ck["shingles"](h)), f
+    site_of = {r.get("url"): r["site"] for r in picks_ if r.get("url")}
+    for a, b, j in ck["near_dupes"](sh, lambda u: ck["shingles"](open(path_of[u], encoding="utf-8").read().replace("\u00a0", " "))):
+        for mine, other in ((a, b), (b, a)):
+            if mine in site_of and site_of[mine] not in out:
+                out[site_of[mine]] = "near-duplicate of %s: %.0f%% of the text shared (limit %.0f%%)" % (other, 100 * j, 100 * ck["DUP_MAX"])
     return out
 
 
