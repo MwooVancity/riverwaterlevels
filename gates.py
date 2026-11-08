@@ -11,6 +11,13 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = [sys.executable, "-I"]
 NPX = "npx.cmd" if os.name == "nt" else "npx"
 
+def census(out):
+    """CLAUDE.md links rule 7: the links census reaches every run's log, pass or fail (refresh.py and gates.py both call this)."""
+    for ln in out.splitlines():
+        if ln.startswith(("links census", "WARNING internal links")):
+            print("      " + ln[:200], flush=True)
+
+
 GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py", "--carry"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
           ("break every input", PY + ["tools/break_blocks.py", "--gate"]),  # missing, stale, empty, duplicated data on 4 sample gauges (owner 2026-10-28)
           ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"]),
@@ -36,9 +43,7 @@ if __name__ == "__main__":
         for name, cmd in checks:
             ok, secs, last, out = run(cmd)
             results.append((name, ok, secs, last))
-            for ln in out.splitlines():  # CLAUDE.md links rule 7: the census reaches every run's log, pass or fail
-                if ln.startswith(("links census", "WARNING internal links")):
-                    print("      " + ln[:200], flush=True)
+            census(out)
             if not ok:
                 details.append("--- %s / %s ---\n%s" % (gname, name, "\n".join(out.strip().splitlines()[-20:])))
         ok_all = all(r[1] for r in results)

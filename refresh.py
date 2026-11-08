@@ -5,7 +5,7 @@ import os, sys, subprocess, datetime, shutil, time, json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-from gates import PY, NPX, GATES  # the one list of gates (gates.py)
+from gates import PY, NPX, GATES, census  # the one list of gates (gates.py)
 
 os.makedirs(os.path.join(ROOT, "runs"), exist_ok=True)
 # the break test feeds invented data to test CODE: it runs in dry runs only; on a deploy it could only freeze real, good pages (2026-10-30)
@@ -25,6 +25,7 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
         t0 = time.time()
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))
+        census(p.stdout)
         if not DRY:
             ledger.add("deploy" if s[0] == NPX else " ".join(os.path.basename(a).replace(".py", "") for a in s[len(PY):len(PY) + 2] if not a.startswith("--") or a == s[len(PY) + 1]), time.time() - t0, n_pages)
         if p.returncode:
