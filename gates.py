@@ -36,6 +36,9 @@ if __name__ == "__main__":
         for name, cmd in checks:
             ok, secs, last, out = run(cmd)
             results.append((name, ok, secs, last))
+            for ln in out.splitlines():  # CLAUDE.md links rule 7: the census reaches every run's log, pass or fail
+                if ln.startswith(("links census", "WARNING internal links")):
+                    print("      " + ln[:200], flush=True)
             if not ok:
                 details.append("--- %s / %s ---\n%s" % (gname, name, "\n".join(out.strip().splitlines()[-20:])))
         ok_all = all(r[1] for r in results)

@@ -494,6 +494,7 @@ def lake_words(h, G):
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
         lv = (G["rec"].get("coops") or {}).get("level")
         if lv:  # prediction-only station (owner 2026-11-08): every reading line names the nearby station it comes from; high and low tides stay this station's own
+            h = h.replace(">Live station<", ">Live at %s<" % esc(lv["name"]))  # fresh review 2026-11-08: a 'Live station' badge on a predictions-only station read as its own reading
             at = "NOAA station %s, %s" % (esc(lv["id"]), esc(lv["name"]))  # the distance is said once, on the water level tile (hater rule: one phrase 3 times on the first screen)
             for a, b in (("NOAA tide station %s &middot; observed" % G["site"], "NOAA tide station %s, tide predictions &middot; water level at %s, observed" % (G["site"], at)),  # review 2026-11-08 blocker 1: the own id beside an observed time
                          ("(NOAA CO-OPS %s, observed" % G["site"], "(NOAA CO-OPS %s, %s, observed" % (esc(lv["id"]), esc(lv["name"]))),  # blocker 2: the citation named the page's own station
