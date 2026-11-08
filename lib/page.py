@@ -386,9 +386,9 @@ def lake_words(h, G):
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
         lv = (G["rec"].get("coops") or {}).get("level")
         if lv:  # prediction-only station (owner 2026-11-08): every reading line names the nearby station it comes from; high and low tides stay this station's own
-            at = "NOAA station %s (%s), %.1f km from this station" % (esc(lv["id"]), esc(lv["name"]), lv["km"])
+            at = "NOAA station %s, %s" % (esc(lv["id"]), esc(lv["name"]))  # the distance is said once, on the water level tile (hater rule: one phrase 3 times on the first screen)
             for a, b in (("Source: NOAA CO-OPS 6-minute water level above MLLW,", "Source: NOAA CO-OPS 6-minute water level above MLLW at %s," % at), ("Source: NOAA CO-OPS (preliminary)", "Source: NOAA CO-OPS (preliminary), readings at %s" % at),
-                         ("Tide comparison: NOAA CO-OPS 6-minute predictions for this station;", "Tide comparison: NOAA CO-OPS 6-minute predictions for %s, where the water level is read;" % at), ("NOAA sensor", "NOAA sensor at %s" % at),
+                         ("Tide comparison: NOAA CO-OPS 6-minute predictions for this station;", "Tide comparison: NOAA CO-OPS 6-minute predictions for %s, where the water level is read;" % at), ("NOAA sensor", "NOAA sensor at %s" % esc(lv["name"])), ("NOAA tidal datum at this station)", "NOAA tidal datum at %s)" % esc(lv["name"])),
                          ("Latest NOAA water level", "Latest NOAA water level, at %s," % at), ("Solid line: NOAA readings (preliminary)", "Solid line: NOAA readings at %s (preliminary)" % at), ("dashed curve: NOAA predicted tide, next 24 h", "dashed curve: NOAA predicted tide there, next 24 h"),
                          ("3-day water level readings (NOAA CO-OPS, preliminary)", "3-day water level readings at NOAA station %s (NOAA CO-OPS, preliminary)" % esc(lv["id"])),
                          ("the latest NOAA reading against NOAA's predicted tide for the same 6-minute time", "the latest NOAA reading at %s against NOAA's predicted tide there for the same 6-minute time" % at)):

@@ -36,15 +36,19 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 - `COVER` answers each US block per country (have / none: reason / next); none fails `check.py`; next = a `TODO` in the gaps line, never a cap. `thin` holds only a new world page with no reading (time, unit); `missing` holds a new gauge lacking its data; outages never pull live pages. `world_rules` allowlists hosts, units.
 
 ## HARD: internal links (owner 2026-11-08: "godlike", written here so it is followed)
-Every new page kind, block or generator obeys all of these; built from data in code, never hand-wired. Measure on the live site after each batch (census in PLAN.md).
-- Every water page (river, lake, coast, any country) links 3+ other water pages, nearest first, at any distance, distance shown; "Nearby" only within 100 km. `check.py` `few_neighbours` warns; `lib/world.py` `near`, `lib/page.py` nearby_gauges build it.
-- Same river, 2+ pages: link up and downstream, named as such. Rivers, lakes and coasts link each other's nearest pages both ways.
-- Every water page has a hub parent (river, state or country) in its breadcrumb; every hub lists all its children (`check.py` reciprocity). Home and state pages link the most-searched pages. No page over 4 clicks from home, no orphans (`check.py`).
-- Anchor text = the place name a searcher types, never "click here". Only links to built, indexable pages; a held page is never linked.
+Every page kind, block and generator obeys these; links come from data in code, never hand-wired. A link exists because a reader here would tap it next.
+1. Tree: home > country > state or region > river, lake or coast hub > gauge page. Every water page names its parents in the breadcrumb (BreadcrumbList, `crumb_ld`); every hub lists all its children; no page over 4 clicks from home, no orphans (`check.py`).
+2. Out, 3+ water pages each, nearest first, distance shown, any country or water type (`lib/world.py` `near`, `lib/page.py` nearby_gauges); "Nearby" only when all are within 100 km.
+3. Same river, 2+ pages: upstream and downstream named as such (what is coming down). Rivers, lakes and coasts link their nearest of each other kind both ways (a tidal river and its tide station; a lake and its inflow).
+4. In, 3+ from other water pages each: a page nobody lists nearest (remote, last of its region) is added to its nearest pages' lists. Inbound is measured, not only outbound.
+5. Adding or holding a page rebuilds its hub and the pages whose lists change, in the same run (a "only what changed" build must not leave stale lists). Only built, indexable pages are linked; a held, pulled or noindex page never is.
+6. Anchor = the name a searcher types ("Mission Bay tides", "Snake River at Heise"), plus the reading beside it, never "click here" or a bare id. Each list has a fixed size, so links per page never grow with the site (`check.py` BUDGET).
+7. Proof: after each batch, census the live site (orphans, depth, inbound and outbound min/median per kind) into PLAN.md Numbers. `check.py` `few_neighbours` warns on rule 2; a new rule ships with its check.
 
 ## System rules
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers.
 - Visitors spend no API calls: the Worker calls out only from its */3 cron; phones read `/live/<site>.json`.
+- HARD laptop (owner 2026-11-08 "downloading data at the absolute minimum"): collecting, building and screenshotting run in the cloud (dry run on `check`); Claude reads their output, never re-downloads it. Local only to debug one gauge, files deleted that session; `cache/` + `dist*/` capped at 50 MB, cleared when over.
 - `collect.py` is the only build-side network code; `build.py` reads `cache/` only. Keys: calcscrape `.env` only, never in pages, zips, docs or output.
 - Refresh covers every gauge with a cache file, no hard-coded list. One gauge per river first. Pages enter Google only via `tools/open_wave.py`.
 - Cloudflare free, per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.

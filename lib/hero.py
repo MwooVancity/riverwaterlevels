@@ -268,7 +268,7 @@ def level_of(G):
 def level_at(G):
     """Edge case 3 (handoff 2026-11-08a): a reading from another place says which place, on the tile itself. check.py claims_vs_cache fails a page without it."""
     lv = level_of(G)
-    return ('<small class="lvl">At NOAA station %s (%s), %.1f km away; this station has tide predictions only</small>' % (esc(lv["id"]), esc(lv["name"]), lv["km"])) if lv else ""
+    return ('<small class="lvl">At NOAA station %s, %s, %.1f km away; this station has tide predictions only</small>' % (esc(lv["id"]), esc(lv["name"]), lv["km"])) if lv else ""
 
 
 def coast_anomaly(G):
@@ -281,7 +281,7 @@ def coast_anomaly(G):
     d = v - pr[t]
     word = "Close to predicted" if abs(d) < 0.25 else "Above predicted" if d > 0 else "Below predicted"
     lv = level_of(G)  # the comparison is made where the reading is, never at this page's place
-    return word, ("At %s, %.1f km away: o" % (lv["name"], lv["km"]) if lv else "O") + "bserved %.2f ft against NOAA's predicted tide of %.2f ft at %s: %+.2f ft (our calculation)." % (v, pr[t], tzl(t, G["zone"], date=False), d)
+    return word, ("At %s: o" % lv["name"] if lv else "O") + "bserved %.2f ft against NOAA's predicted tide of %.2f ft at %s: %+.2f ft (our calculation)." % (v, pr[t], tzl(t, G["zone"], date=False), d)
 
 
 def beyond(srow, v, unit="cfs"):
@@ -527,7 +527,7 @@ def hero(G, pages=None):
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
-    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s now" % norm_word) if an_ else "No past-years comparison for this date"
+    norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s at %s now" % (norm_word, level_of(G)["name"]) if level_of(G) else "%s now" % norm_word) if an_ else "No past-years comparison for this date"
     ca_ = cdec_avg(G) if G.get("agy") and p is None and not out_ else None
     if ca_ and ca_["avg"]:  # hater review 2026-11-07 (Shasta): "no past-years comparison" beside CDEC's own 1991-2020 monthly average
         norm_txt = "%s of the %s %s-%s average storage (CDEC; our calculation)" % (ca_["pct_avg"], ca_["mon"], ca_["c"]["avg_from"], ca_["c"]["avg_to"])
