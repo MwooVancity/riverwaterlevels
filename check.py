@@ -244,6 +244,9 @@ def claims_vs_cache(h, rec, now=None):
     lv = (rec.get("coops") or {}).get("level")
     if lv and "At NOAA station %s, " % lv["id"] not in h:  # edge case 3, handoff 2026-11-08a: a reading from another place shown as this place's
         bad.append("water level read at NOAA %s but the page does not name that station and its distance" % lv["id"])
+    own = (rec.get("coops") or {}).get("station")
+    if lv and own and ("NOAA tide station %s &middot; observed" % own in h or "(NOAA CO-OPS %s, observed" % own in h):  # review 2026-11-08 blockers 1-2: the own id beside an observed time
+        bad.append("NOAA %s has predictions only, yet the page shows it beside an observed time" % own)
     return bad
 
 
@@ -1096,7 +1099,8 @@ def selftest():
     assert claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at), "selftest: hidden NWS stage did not fire"
     assert not claims_vs_cache('<span>Gage height</span><b>1.60 <small>ft</small></b>', obs, at), "selftest: filled NWS stage wrongly failed"
     assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
-    lvr = {"coops": {"level": {"id": "9449424", "name": "Cherry Point", "km": 23.3}}}
+    lvr = {"coops": {"level": {"id": "9449424", "name": "Cherry Point", "km": 23.3}, "station": "9449211"}}
+    assert claims_vs_cache("<small>At NOAA station 9449424, Cherry Point</small> NOAA tide station 9449211 &middot; observed", lvr, at), "selftest: a prediction-only station shown beside an observed time passed"
     assert claims_vs_cache("<b>4.10</b>", lvr, at) and not claims_vs_cache("<small>At NOAA station 9449424, Cherry Point, 23.3 km away</small>", lvr, at), "selftest: a prediction-only page did not name the station its water level comes from"
     emb = good.replace('<link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest">', "<style>" + "a" * 5000 + "</style>")
     assert not any("stylesheet" in x or "manifest" in x or "inline <style>" in x for x in check_html(emb, os.path.join("embed", "river", "a", "b", "index.html"))), "selftest: an embed page was wrongly held to the shared-stylesheet rules"

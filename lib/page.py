@@ -95,7 +95,7 @@ def b_nearby(G, pages):
         far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out[:5]) - len(same))]  # pSEO check 2026-10-21: fill to five with the nearest anywhere, distance shown
     if not out and not same and not far:
         return None
-    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s &middot; %s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), p.get("_val") or fmtc(p["_lv"]) + " cfs", esc(p["_band"].lower()), round(mi)) for mi, p in grp)
+    li = lambda grp: "".join('<li><a href="%s">%s</a><span>%s%s &middot; %d mi away</span></li>' % (p["water_url"], esc((lambda pl: river_at(p["river"], pl[0]) + ", " + pl[1])(usgs_place(p, {}))), esc(p.get("_val") or fmtc(p["_lv"]) + " cfs"), (" &middot; " + esc(p["_band"].lower())) if p["_band"] not in ("–", "-", "") else "", round(mi)) for mi, p in grp)
     lis = li(out[:5])
     if same:
         lis += '</ul><p class="src">More gauges on this site, nearest first</p><ul class="nbr">' + li(same)  # hater review 2026-11-07: a border gauge USGS files under SC sits in GA, so the state name read false
@@ -403,7 +403,10 @@ def lake_words(h, G):
         lv = (G["rec"].get("coops") or {}).get("level")
         if lv:  # prediction-only station (owner 2026-11-08): every reading line names the nearby station it comes from; high and low tides stay this station's own
             at = "NOAA station %s, %s" % (esc(lv["id"]), esc(lv["name"]))  # the distance is said once, on the water level tile (hater rule: one phrase 3 times on the first screen)
-            for a, b in (("Source: NOAA CO-OPS 6-minute water level above MLLW,", "Source: NOAA CO-OPS 6-minute water level above MLLW at %s," % at), ("Source: NOAA CO-OPS (preliminary)", "Source: NOAA CO-OPS (preliminary), readings at %s" % at),
+            for a, b in (("NOAA tide station %s &middot; observed" % G["site"], "NOAA tide station %s, tide predictions &middot; water level at %s, observed" % (G["site"], at)),  # review 2026-11-08 blocker 1: the own id beside an observed time
+                         ("(NOAA CO-OPS %s, observed" % G["site"], "(NOAA CO-OPS %s, %s, observed" % (esc(lv["id"]), esc(lv["name"]))),  # blocker 2: the citation named the page's own station
+                         ("Water quality sensors", "Water quality sensors at %s" % esc(lv["name"])),  # major 5
+                         ("Source: NOAA CO-OPS 6-minute water level above MLLW,","Source: NOAA CO-OPS 6-minute water level above MLLW at %s," % at), ("Source: NOAA CO-OPS (preliminary)", "Source: NOAA CO-OPS (preliminary), readings at %s" % at),
                          ("Tide comparison: NOAA CO-OPS 6-minute predictions for this station;", "Tide comparison: NOAA CO-OPS 6-minute predictions for %s, where the water level is read;" % at), ("NOAA sensor", "NOAA sensor at %s" % esc(lv["name"])), ("NOAA tidal datum at this station)", "NOAA tidal datum at %s)" % esc(lv["name"])),
                          ("Latest NOAA water level", "Latest NOAA water level, at %s," % at), ("Solid line: NOAA readings (preliminary)", "Solid line: NOAA readings at %s (preliminary)" % at), ("dashed curve: NOAA predicted tide, next 24 h", "dashed curve: NOAA predicted tide there, next 24 h"),
                          ("3-day water level readings (NOAA CO-OPS, preliminary)", "3-day water level readings at NOAA station %s (NOAA CO-OPS, preliminary)" % esc(lv["id"])),

@@ -268,7 +268,7 @@ def level_of(G):
 def level_at(G):
     """Edge case 3 (handoff 2026-11-08a): a reading from another place says which place, on the tile itself. check.py claims_vs_cache fails a page without it."""
     lv = level_of(G)
-    return ('<small class="lvl">At NOAA station %s, %s, %.1f km away; this station has tide predictions only</small>' % (esc(lv["id"]), esc(lv["name"]), lv["km"])) if lv else ""
+    return ('<small class="lvl">At NOAA station %s, %s, %.1f km away, %s; this station has tide predictions only</small>' % (esc(lv["id"]), esc(lv["name"]), lv["km"], esc(G["obs"]))) if lv else ""  # review major 4: the time in the tile
 
 
 def coast_anomaly(G):
