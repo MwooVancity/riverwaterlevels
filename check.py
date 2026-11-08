@@ -624,6 +624,11 @@ def check_dir(d):
             results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - enrich it (noindex is never the fix)" % (vis_of.get(u, 0), k, FLOOR[k]))
     water_ = {u for u in links_of if kind_of(rel_of[u]) in ("gauge", "world")}
     few_ = [u for u in water_ if few_neighbours(u, links_of[u], water_)]
+    inb = collections.Counter(v for u in water_ for v in links_of[u] if v in water_ and v != u)
+    for k_ in sorted({kind_of(rel_of[u]) for u in water_}):  # links rule 7: inbound measured, not only outbound (census in every run's log)
+        us_ = [u for u in water_ if kind_of(rel_of[u]) == k_]
+        i_, o_ = sorted(inb[u] for u in us_), sorted(len({x for x in links_of[u] if x in water_ and x != u}) for u in us_)
+        print("links census %s: %d pages, inbound min %d median %d, outbound min %d median %d, %d with under %d inbound" % (k_, len(us_), i_[0], i_[len(i_) // 2], o_[0], o_[len(o_) // 2], sum(1 for x in i_ if x < NEIGHBOURS), NEIGHBOURS))
     if few_:  # a warning, never a hold: a missing link shows the reader nothing wrong, and a new page with no live copy would stop the whole deploy; the generator (lib/world.py near, nearby_gauges) is the fix
         print("WARNING internal links: %d water pages link fewer than %d other water pages, e.g. %s" % (len(few_), NEIGHBOURS, sorted(few_)[:5]))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
@@ -757,6 +762,22 @@ def ad_gaps(rel, h):
 
 
 def selftest():
+    from lib import render as _rn  # render first: lib.page is imported through it (circular)
+    from lib import page as pg_
+    P_ = {s_: {"site": s_, "_built": True, "_ll": ll_, "_kind": k_, "state": "x", "water_url": "/%s/" % s_} for s_, ll_, k_ in
+          [("a", (40.0, -100.0), "river"), ("b", (40.1, -100.0), "river"), ("c", (40.2, -100.0), "river"), ("d", (40.3, -100.0), "river"), ("e", (40.4, -100.0), "river"),
+           ("f", (40.5, -100.0), "river"), ("g", (40.6, -100.0), "river"), ("far", (48.0, -100.0), "river"), ("lk", (45.0, -100.0), "lake")]}
+    pg_.link_index(P_)
+    G_ = lambda s_: {"site": s_, "lat": P_[s_]["_ll"][0], "lon": P_[s_]["_ll"][1], "st": "x", "lake": P_[s_]["_kind"] == "lake", "rec": {}}
+    inb_ = collections.Counter(v for s_ in P_ for v in pg_.nb_urls(G_(s_), P_))
+    assert inb_["/far/"] >= 3 and all(inb_[p_["water_url"]] >= 3 for p_ in P_.values()), "selftest: a remote page is listed by fewer than 3 pages (links rule 4): %s" % dict(inb_)
+    assert "/lk/" in pg_.nb_urls(G_("a"), P_) and "/a/" in pg_.nb_urls(G_("lk"), P_) or "/g/" in pg_.nb_urls(G_("lk"), P_), "selftest: a river page does not list the nearest lake, or the lake no river (links rule 3)"
+    assert all(len(pg_.nb_urls(G_(s_), P_)) == len(set(pg_.nb_urls(G_(s_), P_))) and "/%s/" % s_ not in pg_.nb_urls(G_(s_), P_) for s_ in P_), "selftest: a page lists itself or one page twice"
+    before_ = pg_.nb_urls(G_("a"), P_)
+    P_["b"]["_built"] = False
+    pg_.link_index(P_)
+    assert "/b/" in before_ and "/b/" not in pg_.nb_urls(G_("a"), P_), "selftest: a held page stays in its neighbour's link set, so build.py would carry a broken link (links rule 5)"
+    assert all(len(pg_._IX["rev"][k_]) <= pg_.REV_N for k_ in pg_._IX["rev"]), "selftest: a reverse list grew past REV_N (links rule 6 fixed size)"
     from lib import directory as dr_
     pub_ = dr_.publisher
     try:

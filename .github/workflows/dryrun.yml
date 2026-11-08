@@ -18,6 +18,10 @@ on:
         description: "site ids to collect, build and screenshot at phone width for a review (space separated); the shots are this run's artifact, nothing on the laptop"
         required: false
         default: ""
+      speed:
+        description: "live page paths to measure on a phone (Lighthouse mobile, performance only; space separated, e.g. /river/x/y/); scores print in the log"
+        required: false
+        default: ""
 
 concurrency:
   group: dryrun
@@ -80,6 +84,16 @@ jobs:
           npm i --no-save --silent playwright@1.49.1 && npx playwright install --with-deps chromium > /dev/null
           node tools/hater_shots.mjs $SITES
           mkdir -p .cache/review && cp .review-check.txt .cache/review/check.txt
+      - name: Phone speed of live pages (drawing board 8; the PageSpeed API quota ran out 2026-11-08)
+        if: github.event_name == 'workflow_dispatch' && inputs.speed != ''
+        continue-on-error: true  # a page or Chrome failure never turns the dry run red
+        env:
+          PATHS: ${{ inputs.speed }}
+        run: |
+          for p in $PATHS; do
+            npx -y lighthouse@12.2.1 "https://riverwaterlevels.com$p" --quiet --only-categories=performance --chrome-flags="--headless=new --no-sandbox" --output=json --output-path=lh.json || { echo "speed $p: Lighthouse failed"; continue; }
+            python3 -c "import json,sys; a=json.load(open('lh.json'))['audits']; c=json.load(open('lh.json'))['categories']['performance']['score']; print('speed %s: score %d, LCP %s, CLS %s, TBT %s, bytes %s' % (sys.argv[1], round((c or 0)*100), a['largest-contentful-paint']['displayValue'], a['cumulative-layout-shift']['displayValue'], a['total-blocking-time']['displayValue'], a['total-byte-weight']['displayValue']))" "$p"
+          done
       - name: Upload the review screenshots
         if: github.event_name == 'workflow_dispatch' && inputs.review != ''
         uses: actions/upload-artifact@v7

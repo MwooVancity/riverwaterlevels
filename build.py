@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
 from lib import coverage, render, directory, indexing, related, world
+from lib import page as pagelib
 from lib.blocks2 import flow_behind
 
 
@@ -63,10 +64,12 @@ def main():
         r["_built"] = True
         g = Gs[r["site"]]
         r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
+        r["_kind"] = pagelib.kind_of_g(g)  # links rule 3: the nearest lake, coast and river page of the other kinds
         lvl_ = (g["rec"].get("coops") or {}).get("level")  # review 2026-11-08 blocker 3: a prediction-only page's level is its neighbour's, named in every list
         r["_val"] = ("%.2f ft%s" % (g["sg"][-1][1], " at %s" % lvl_["name"] if lvl_ else "")) if g.get("lake") and g["sg"] else None  # lake review: lists showed "– cfs" for a lake
         key = (r["hub_slug"], r["state"])
         by_hub[key].append(r)
+    pagelib.link_index(rows, Gs)  # one grid for every nearby list and the rebuild test below
     for key, g in by_hub.items():  # a hub page needs two or more built gauges; with one, the river address redirects to that gauge
         for r in g:
             r["_hub"] = len(g) > 1
@@ -107,6 +110,8 @@ def main():
             return "new"
         if b.get("tpl") != tpl or rows[s]["dashboard_url"] not in old_blocks:
             return "code"
+        if pagelib.nb_urls(G, rows) != b.get("nb"):  # links rule 5: a page added, held or pulled changes its neighbours' lists in the same run
+            return "links"
         if sig(G) != b.get("sig") or abs(G.get("chg") or 0) > 20:  # a new NWS forecast issue or a changed alert set, not merely one existing (48 of 74 were "hot")
             return "hot"
         age_h = (now - datetime.datetime.fromisoformat(b["at"])).total_seconds() / 3600
@@ -131,7 +136,7 @@ def main():
             report["gauges"].append({"site": s, "url": u, "age_min": round(G["age_min"]), "percentile": G["p"]})
             continue
         why[reason] += 1
-        built_map[s] = {"at": iso(now), "tpl": tpl, "sig": sig(G)}
+        built_map[s] = {"at": iso(now), "tpl": tpl, "sig": sig(G), "nb": pagelib.nb_urls(G, rows)}
         n_err = len(render.BLOCK_ERRORS)
         try:
             page, meta = render.build_tab("dashboard", G, rows)  # one page per gauge; the river forecast is a section of it where NWS issues one

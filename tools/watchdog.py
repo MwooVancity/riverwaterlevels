@@ -61,6 +61,11 @@ def world_short(s):
         return "pages missing blocks: %d gauges short, %d held of %s: %s" % (len(gaps), held, w.get("listed"), "; ".join("%s lacks %s" % (k, ", ".join(v)) for k, v in list(gaps.items())[:5]))
 
 
+def mass_carry(n_carried, n_gauges):
+    """A line when more than 5% of gauge pages went out as their old live copy in the last run (a template or checker fault; check.py only printed it). PLAN 0b (ii)."""
+    return "%d of %d gauge pages carried as their old copy in the last run (over 5%%): a template, checker or feed fault; see the refresh log FAIL lines" % (n_carried, n_gauges) if n_gauges and n_carried > max(3, n_gauges // 20) else None
+
+
 def world_thin(s):
     t = (s.get("world") or {}).get("thin") or {}
     return "%d world gauges held as thin pages (under the floor): %s" % (len(t), "; ".join("%s: %s" % (k, ", ".join(v)) for k, v in list(t.items())[:3])) if t else None
@@ -86,6 +91,11 @@ def main():
                 (bad if s[k_] > 0.7 * cap_ else ok).append("%s: %s of %s (%d%%)" % (what_, format(s[k_], ","), format(cap_, ","), 100 * s[k_] / cap_))
         (bad if world_short(s) else ok).append(world_short(s) or "world pages show every block their data allows")
         (bad if open_stuck() else ok).append(open_stuck() or "every live page that can open to Google is open (or waits only on a river's short record)")
+        try:
+            mc_ = mass_carry(len(get("/_carried.json")), s.get("gauges") or 0)
+        except Exception:  # no carry file = nothing carried in the last deploy
+            mc_ = None
+        (bad if mc_ else ok).append(mc_ or "pages carried as old copies: within 5%")
         if world_thin(s):
             ok.append(world_thin(s))
         cn_ = s.get("census") or {}
@@ -254,6 +264,7 @@ def main():
 
 
 if "--selftest" in sys.argv:
+    assert mass_carry(12, 216) and not mass_carry(2, 216) and not mass_carry(10, 216) and not mass_carry(0, 0), "selftest: the mass-carry line fired wrong (5% of gauge pages, min 3)"
     real = open
     try:
         open = lambda p, *a, **k: __import__("io").StringIO("2026-01-01\n" if p.endswith(".txt") else "status,gate\nqueue,\n")
