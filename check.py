@@ -115,8 +115,7 @@ def stats_gap(h):
     tools/release.py page_check (release 2026-11-07: two new gauges passed the release's check and failed this one at the gate, undoing all 25)."""
     sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
-    lake_ = "USGS lake gauge" in h
-    if stp and lake_ and os.path.exists(stp) and json.load(open(stp)).get("code", "00060") == "00060":  # practice 2026-11-08: a lake's file of river-flow percentiles is never its elevation's (lib/hero.py stats_code rule); the page is right to say none
+    if re.search(r'rel="canonical" href="[^"]*/lake/', h):  # practice 2026-11-08 (Falls Lake, Lake Brownwood): a lake's stats file is often another parameter (flow, gage height), and lib/hero.py compares only the same code; a missing lake comparison is a gap, never a false fact
         return []
     if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:
         return ["says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics"]

@@ -158,6 +158,7 @@ def main():
     if not LOCAL and len(urls) > SAMPLE:
         k = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) * SAMPLE % len(urls)
         urls = (urls + urls)[k:k + SAMPLE]
+    great = []  # Great Lakes pages (NOAA CO-OPS, IGLD)
     html = dict(pmap(lambda u: (u, None if u in carried else page(u)), urls))
     for url in urls:
         if url in carried:
@@ -174,6 +175,9 @@ def main():
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
         cd_ = re.search(r"(CDEC station|Reclamation RISE item|TWDB reservoir) ([A-Za-z0-9-]+)", h)
+        if url.startswith("/lake/") and 'var ID="USGS-COOPS-' in h:  # practice 2026-11-08: a Great Lakes page reads NOAA CO-OPS above IGLD, not USGS; checked with the coast pages below
+            great.append(url)
+            continue
         if url.startswith("/lake/") and cd_:  # a lake read from its operator's feed: checked below against that feed, never USGS
             agency.append((url, cd_.group(1).split()[0], cd_.group(2), stage, t))
             continue
@@ -191,16 +195,16 @@ def main():
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)},
                                # derived NWS sentences: "NWS action stage X ft (D ft above the latest reading)", "Next NWS impact at X ft (D ft above the NWS reading of R ft, ...)"
                                "derived": set(re.findall(r"(?:NWS (action|minor|moderate|major) stage|Next NWS impact at) ([\d.\-]+) ft \(([\d.]+) ft (above|below) (?:the latest reading|the NWS reading of ([\d.\-]+) ft)", h))}
-    for u in [u for _, u, *_ in gauges if u.startswith("/coast/")]:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
+    for u in [u for _, u, *_ in gauges if u.startswith("/coast/")] + great:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
         h = page(u)
-        sid, st_, t_ = re.search(r"At NOAA station (\d+), ", h) or re.search(r"NOAA tide station (\d+)", h),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
+        sid, st_, t_ = re.search(r"At NOAA station (\d+), ", h) or re.search(r"NOAA tide station (\d+)", h) or re.search(r'var ID="USGS-COOPS-(\d+)"', h),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
         if not (sid and st_ and t_):
             bad.append("%s: cannot read station, water level or time from the page" % u)
             continue
         pt = datetime.datetime.fromisoformat(t_.group(1)).astimezone(datetime.timezone.utc)
         try:  # scale debate 2026-11-07: the old 'latest' call matched the page's minute almost never (6-minute data), so no coast value was ever compared; now from the page's minute to now
-            rows_ = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=MLLW&begin_date=%s&end_date=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
-                sid.group(1), pt.strftime("%Y%m%d%%20%H:%M"), datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%%20%H:%M"))))["data"]
+            rows_ = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=%s&begin_date=%s&end_date=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
+                sid.group(1), "IGLD" if u in great else "MLLW", pt.strftime("%Y%m%d%%20%H:%M"), datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%%20%H:%M"))))["data"]
         except Exception as e:
             (skipped if LOCAL else bad).append("%s: NOAA CO-OPS did not answer (%s)" % (u, str(e)[:60]))
             continue

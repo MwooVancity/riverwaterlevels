@@ -95,7 +95,7 @@ if "--every-kind" in sys.argv:  # practice only (owner 2026-11-08 "practice run 
             print("  practice: one %s page added (%s)" % (_kind(x), x[3].get("site") or x[3].get("station")))
     for r_ in live_.values():  # practice 2026-11-08 missed CDEC, RISE and Great Lakes: their only queued rows carry a gate; practice tests a kind even when its rows wait (the real release still honours the gate)
         x = (0, 1, 0, dict(r_, category=r_.get("activity") or ""))
-        if r_["status"] == "queue" and _kind(x) not in _have and r_["site"] not in cached:
+        if r_["status"] == "queue" and _kind(x) not in _have:
             _k.append(x)
             _have.add(_kind(x))
             print("  practice: one %s page added despite its gate (%s: %s)" % (_kind(x), r_["site"], (r_.get("gate") or "")[:60]))
