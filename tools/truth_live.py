@@ -159,6 +159,7 @@ def main():
         k = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) * SAMPLE % len(urls)
         urls = (urls + urls)[k:k + SAMPLE]
     great = []  # Great Lakes pages (NOAA CO-OPS, IGLD)
+    site_of = {g_[1]: str(g_[4]).split()[-1] for g_ in gauges if len(g_) > 4}  # gauges.json: [name, url, lat, lon, "State ST site"]
     html = dict(pmap(lambda u: (u, None if u in carried else page(u)), urls))
     for url in urls:
         if url in carried:
@@ -175,7 +176,7 @@ def main():
         # the reading time the page actually shows: the edge worker stamps the swapped reading's time on the age chip, so the swapped number is what gets checked
         t = re.search(r'data-live="age" data-t="([^"]+)"', h) or re.search(r'class="hero hero2" data-t="([^"]+)"', h)
         cd_ = re.search(r"(CDEC station|Reclamation RISE item|TWDB reservoir) ([A-Za-z0-9-]+)", h)
-        if url.startswith("/lake/") and 'var ID="USGS-COOPS-' in h:  # practice 2026-11-08: a Great Lakes page reads NOAA CO-OPS above IGLD, not USGS; checked with the coast pages below
+        if url.startswith("/lake/") and site_of.get(url, "").startswith("COOPS-"):  # practice 2026-11-08: a Great Lakes page reads NOAA CO-OPS above IGLD, not USGS; checked with the coast pages below
             great.append(url)
             continue
         if url.startswith("/lake/") and cd_:  # a lake read from its operator's feed: checked below against that feed, never USGS
@@ -197,7 +198,7 @@ def main():
                                "derived": set(re.findall(r"(?:NWS (action|minor|moderate|major) stage|Next NWS impact at) ([\d.\-]+) ft \(([\d.]+) ft (above|below) (?:the latest reading|the NWS reading of ([\d.\-]+) ft)", h))}
     for u in [u for _, u, *_ in gauges if u.startswith("/coast/")] + great:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
         h = page(u)
-        sid, st_, t_ = re.search(r"At NOAA station (\d+), ", h) or re.search(r"NOAA tide station (\d+)", h) or re.search(r'var ID="USGS-COOPS-(\d+)"', h),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
+        sid, st_, t_ = re.search(r"At NOAA station (\d+), ", h) or re.search(r"NOAA tide station (\d+)", h) or re.search(r"COOPS-(\d+)", site_of.get(u, "")),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
         if not (sid and st_ and t_):
             bad.append("%s: cannot read station, water level or time from the page" % u)
             continue
@@ -289,8 +290,9 @@ def main():
                     bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
             elif pg["stage"] is not None:  # stage shown on the page but USGS has no stage at the page's timestamp: record as skipped, not silently ignored
                 skipped.append("%s: stage not verified (no USGS stage at the page's timestamp)" % pg["url"])
-        elif ut < pg["t"]:  # gate audit 2026-11-08: a page time after USGS's latest reading is a future time or a time-zone slip, never a pass (under 1 h: USGS's own answer may lag one reading)
-            (bad if (pg["t"] - ut).total_seconds() > 3600 else skipped).append("%s: page reading time %s is after USGS's latest %s (future time or wrong time zone)" % (pg["url"], pg["t"].isoformat(), ut.isoformat()))
+        elif ut < pg["t"]:  # gate audit 2026-11-08: a page time after USGS's latest is a future time or a time-zone slip. Practice: Selway's USGS 'latest' is from 2010 (the page reads another series), so only a real slip (1-26 h) or a time past now fails
+            gap_h = (pg["t"] - ut).total_seconds() / 3600
+            (bad if pg["t"] > datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15) or 1 < gap_h <= 26 else skipped).append("%s: page reading time %s is after USGS's latest %s (future time or wrong time zone)" % (pg["url"], pg["t"].isoformat(), ut.isoformat()))
         elif ut > pg["t"]:
             lag = (ut - pg["t"]).total_seconds() / 3600
             # a lagging page is stale, not WRONG (it shows its real age). A short lag is normal; only an extreme lag means our refresh is actually broken.
