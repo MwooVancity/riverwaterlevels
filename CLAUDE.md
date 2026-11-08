@@ -21,8 +21,10 @@ Every change states how it fails today and at 14,000 pages (calls, CPU, URL leng
 ## Reader
 At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boat, camp, guide, live, drive, rescue. Answer in order: dangerous now, water like, normal, coming, today vs past. One static page per gauge, official government data, English.
 
-## HARD: the basics (owner 2026-11-08 "drawing board 101"; links were missed for weeks)
-Every session start checks these, and a missing one goes to the top of PLAN.md: (1) reader and question; (2) answer on the first screen; (3) true, sourced numbers; (4) fast on a phone; (5) Google can crawl it (robots, sitemap, canonical); (6) internal links (below); (7) backlinks (PLAN.md Backlinks); (8) who runs the site: publisher, contact, about; (9) a home page that helps; (10) measured: Search Console and analytics read into PLAN.md Numbers.
+## HARD: drawing board first (owner 2026-11-08; links were missed for weeks)
+Before any build, and whenever asked "what's missing", answer each for THIS site: current state (measured, not assumed), who owns it, next action. Table: PLAN.md "Drawing board".
+1. Demand: exact words people search, how many. 2. Intent: what they want, what page wins it today. 3. Better than #1: why a reader picks us. 4. Trust: why Google and a reader believe us on a money topic. 5. Links: why anyone links to us, who by name. 6. Discovery: can Google find, crawl, understand every page. 7. Click: why a searcher picks our result over nine others. 8. Experience: fast and easy on a phone, answer in seconds. 9. Proof: which number says it works, when we look.
+Any basic "not started", "nobody owns it" or "owner only, no plan" goes before ALL polish. An owner-only item still gets a full plan from Claude; the owner only does the final click.
 
 ## Page rules
 - Nothing that helps ranking but not the reader (stuffing, doorway, padding). The US factory publishes 25 a day alone; build time goes to `data/world-queue.csv`.
