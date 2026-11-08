@@ -107,7 +107,7 @@ def pred_main():
     have = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
     picks = list(csv.DictReader(open(os.path.join(ROOT, "data", "tide-picks.csv"), encoding="utf-8")))
     rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")))
-    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)  # owner 2026-11-08: a nearby page on the same feed is no reason to refuse a searched place; check.py's 80% rule judges real copies
+    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)  # owner 2026-11-08: a nearby page on the same feed is no reason to refuse a searched place, even when the pages match
     for k, s, lv, d in got:
         near = min(rows, key=lambda r: km(s, {"lat": r["lat"], "lng": r["lon"]}))
         print("PICK %-30s %s %s, %s (%s) level from %s %s, %.1f km; nearest coast page %s %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], s.get("type"), lv["id"], lv["name"], d, near["site"], km(s, {"lat": near["lat"], "lng": near["lon"]})))
