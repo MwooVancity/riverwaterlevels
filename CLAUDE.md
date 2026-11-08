@@ -69,7 +69,7 @@ Every page kind, block and generator obeys these; links come from data in code, 
 Seen: laptop data differs from cloud (only the dry run proves); one rule in several places (grep, `truth_tests.py` too); a laptop-only file (`git ls-files`); old data as now (clock +2 days).
 
 ## Reviews
-- No signature gate. Screenshots (owner 2026-11-05: no cap): new pages and block types at phone width before Google, cost named: `python -I tools/hater_sample.py`, `node tools/hater_shots.mjs [sites]`, a reviewer who did not build it reads `tools/review_brief.md`.
+- No signature gate. Screenshots (owner 2026-11-05: no cap) once per template variant (owner 2026-11-08 fully automatic: `lib/pages.py` `variant`, `data/reviewed.json` `variants`), and for every new block type, at phone width before Google, cost named. In the cloud: `gh workflow run dryrun.yml --ref check -f review="<site ids>"`, read artifact `review`; a reviewer who did not build it reads `tools/review_brief.md`. A page of a reviewed variant publishes on the machine gates alone.
 - A defect found twice becomes a `check.py` rule that batch; delete a gate with no catch in 10 runs. Checklist `tools/helpful_audit.md` (A-Q).
 
 ## Files
