@@ -7,6 +7,14 @@ CACHE = os.path.join(ROOT, "cache")
 DIST = os.path.join(ROOT, "dist")
 DATA = os.path.join(ROOT, "data")
 BRAND = "River Water Levels"
+
+
+def publisher():
+    """data/publisher.json ({name, email}); {} when missing. The owner fills the email; /contact/ and its footer link appear only then (drawing board: trust)."""
+    try:
+        return json.load(open(os.path.join(DATA, "publisher.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
 DOMAIN = "riverwaterlevels.com"
 SITE_URL = "https://" + DOMAIN
 # read-only sources inside the older research folder (copied into the cache by collect.py, never edited)

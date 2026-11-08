@@ -512,6 +512,10 @@ def trust_pages(built_count, built_rows):
     t["/data-sources/"] = prose_page("Data sources", "/data-sources/", '<div class="card scroll"><table><thead><tr><th scope="col">Source</th><th scope="col">Credit</th><th scope="col">Basis for reuse</th><th scope="col">Link</th></tr></thead><tbody>%s</tbody></table></div>'
                                      '<h2>How often each source updates</h2><div class="card scroll"><table><thead><tr><th scope="col">Source</th><th scope="col">Source updates</th><th scope="col">This site refreshes</th></tr></thead><tbody>%s</tbody></table></div>'
                                      '<p class="src">NWS material is public domain and not subject to copyright. Sources whose terms are not yet settled are not used on the site.</p>' % (rows, updrows), "The data sources used by River Water Levels and the terms checked.")
+    pub = publisher()
+    if pub.get("email"):  # drawing board, trust: who runs the site; appears the build after the owner fills data/publisher.json
+        t["/contact/"] = prose_page("Contact", "/contact/", "<p>%s is published by %s.</p><p>Email: <a href=\"mailto:%s\">%s</a></p><p>To report a wrong number, include the page address and the time shown on it; see <a href=\"/methodology/#corrections\">how corrections work</a>. "
+                                    "For a flood or other emergency, follow your local official warnings, not this site.</p>" % (esc(BRAND), esc(pub.get("name") or BRAND), esc(pub["email"]), esc(pub["email"])), "Contact %s: who publishes it and how to report a wrong number." % BRAND)
     return t
 
 

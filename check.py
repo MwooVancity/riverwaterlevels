@@ -757,6 +757,15 @@ def ad_gaps(rel, h):
 
 
 def selftest():
+    from lib import directory as dr_
+    pub_ = dr_.publisher
+    try:
+        dr_.publisher = lambda: {"name": "P", "email": "x@example.com"}
+        assert "mailto:x@example.com" in dr_.trust_pages(1, []).get("/contact/", ""), "selftest: a filled publisher email built no /contact/ page"
+        dr_.publisher = lambda: {}
+        assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
+    finally:
+        dr_.publisher = pub_
     from lib import pages as pg_
     rv_ = (set(), {"coast-live"})
     assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
