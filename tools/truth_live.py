@@ -92,6 +92,8 @@ GAUGE_ID = re.compile(r"USGS (?:lake )?gauge (\d+)")  # release 2026-11-08 stopp
 
 
 def selftest():
+    T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
+    assert tide_verdict(T_, 6.35, {T_: 6.35}) is None and "NOAA predicts" in tide_verdict(T_, 6.0, {T_: 6.35}) and "not a NOAA" in tide_verdict(T_ + datetime.timedelta(minutes=5), 6.35, {T_: 6.35}), "a tide page's next high/low was not checked against NOAA's list"
     assert per_page(["/lake/l%d/" % i for i in range(11)] + ["/river/a/b/"]) and not per_page(["/river/a/b/", "/rivers/tx/"]), "11 failing gauge pages stopped the release (2026-11-08), or a failing hub did not"
     assert GAUGE_ID.search("USGS lake gauge 02334400").group(1) == "02334400" and GAUGE_ID.search("USGS gauge 06893000").group(1) == "06893000", "a lake or river page's gauge id was not read"
     """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
@@ -204,6 +206,18 @@ def main():
         v_ = coops_verdict(pt, float(st_.group(1)), {datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"): float(d["v"]) for d in rows_ if d.get("v") not in (None, "")})
         if v_:
             bad.append("%s: %s" % (u, v_))
+        own, td_ = re.search(r"NOAA tide station (\d+)", h), re.search(r'data-tide="([^"|]+)\|([\d.\-]+)"', h)
+        if own and td_:  # the next high or low on the page against NOAA's own list for the page's own station (a prediction-only page has no reading of its own to check)
+            tt = datetime.datetime.fromisoformat(td_.group(1)).astimezone(datetime.timezone.utc)
+            try:
+                hl = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&interval=hilo&station=%s&datum=MLLW&begin_date=%s&range=24&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
+                    own.group(1), (tt - datetime.timedelta(hours=1)).strftime("%Y%m%d%%20%H:%M"))))["predictions"]
+            except Exception as e:
+                (skipped if LOCAL else bad).append("%s: NOAA hilo did not answer (%s)" % (u, str(e)[:60]))
+                continue
+            v_ = tide_verdict(tt, float(td_.group(2)), {datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"): float(d["v"]) for d in hl})
+            if v_:
+                bad.append("%s: %s" % (u, v_))
     for u, ag, sta, st_, t_ in agency:  # the page's elevation against the operator's own value for the same time
         if not (st_ and t_):
             bad.append("%s: cannot read lake elevation or time from the page" % u)
@@ -344,6 +358,13 @@ def main():
         json.dump(sorted(set(carried)), open(cp, "w"))
         return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
+
+
+def tide_verdict(t, v, hilo):
+    """None when NOAA lists a high or low at the page's minute with the page's height (0.01 ft); else what differs. hilo: {utc time: ft}."""
+    if t not in hilo:
+        return "next tide %s is not a NOAA high or low time for this station" % t.isoformat()
+    return None if abs(hilo[t] - v) <= 0.01 else "next tide %.3f ft on the page, NOAA predicts %.3f ft" % (v, hilo[t])
 
 
 def per_page(urls):

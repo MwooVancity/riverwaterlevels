@@ -341,7 +341,7 @@ def hero(G, pages=None):
         tiles = ""  # this agency publishes level only: no flow tile to explain
     elif G.get("coast"):  # a coast page leads with the next NOAA tide prediction (predictions, never readings)
         nx = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if parse_t(x[0]) > G["now"]]
-        tiles = ui.tile("flow", "flow", "Next tide (NOAA prediction)", ('%s <small>%.1f ft</small>' % ("High" if nx[0][2] == "H" else "Low", round(nx[0][1], 1) + 0.0)) if nx else "Unknown",
+        tiles = ui.tile("flow", "flow", "Next tide (NOAA prediction)", ('<span data-tide="%s|%.3f">%s</span> <small>%.1f ft</small>' % (esc(nx[0][0]), nx[0][1], "High" if nx[0][2] == "H" else "Low", round(nx[0][1], 1) + 0.0)) if nx else "Unknown",  # data-tide: tools/truth_live.py checks it against NOAA's own high/low list
                         ("<small>%s, above MLLW. A prediction, not a reading.</small>" % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction in the cache for the coming hours.</small>")
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
