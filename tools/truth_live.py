@@ -8,7 +8,7 @@ Rules per gauge page:
  - the NWS forecast point named on the page exists and answers"""
 import json, os, re, sys, urllib.request, urllib.error, datetime, zoneinfo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from lib.common import usgs_headers
+from lib.common import usgs_headers, new_fail  # new_fail: one writer of _failed.json, shared with truth_world
 
 SITE = "https://riverwaterlevels.com"
 USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065,62614,62615,72020,00062&limit=1000&f=json"
@@ -88,14 +88,15 @@ def coops_verdict(pt, pv, got):
     return None
 
 
-GAUGE_ID = re.compile(r"USGS (?:lake )?gauge (\d+)")  # release 2026-11-08 stopped: 11 lake pages say "USGS lake gauge", the old pattern read no id
+GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  # release 2026-11-08 stopped: 11 lake pages say "USGS lake gauge", the old pattern read no id
 
 
 def selftest():
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
     assert tide_verdict(T_, 6.35, {T_: 6.35}) is None and "NOAA predicts" in tide_verdict(T_, 6.0, {T_: 6.35}) and "not a NOAA" in tide_verdict(T_ + datetime.timedelta(minutes=5), 6.35, {T_: 6.35}), "a tide page's next high/low was not checked against NOAA's list"
     assert per_page(["/lake/l%d/" % i for i in range(11)] + ["/river/a/b/"]) and not per_page(["/river/a/b/", "/rivers/tx/"]), "11 failing gauge pages stopped the release (2026-11-08), or a failing hub did not"
-    assert GAUGE_ID.search("USGS lake gauge 02334400").group(1) == "02334400" and GAUGE_ID.search("USGS gauge 06893000").group(1) == "06893000", "a lake or river page's gauge id was not read"
+    gid = lambda h: (lambda m: m and (m.group(1) or m.group(2)))(GAUGE_ID.search(h))
+    assert gid("USGS lake gauge 02334400") == "02334400" and gid("USGS gauge 06893000") == "06893000" and gid('var ID="USGS-08154510",Z') == "08154510", "a lake or river page's gauge id was not read"
     """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
     P = lambda s: datetime.datetime.fromisoformat(s)
     c = agency_got("CDEC", '[{"date": "2026-11-06 23:00", "value": 1012.34}, {"date": "2026-11-07 00:00", "value": -9999}]')
@@ -180,12 +181,12 @@ def main():
             if not (sid and stage and t):
                 bad.append("%s: cannot read gauge id, lake elevation or time from the page" % url)
             else:
-                pages[sid.group(1)] = {"url": url, "lake": True, "stage": float(stage.group(1)), "t": datetime.datetime.fromisoformat(t.group(1)), "lid": None, "cats": {}, "derived": set()}
+                pages[url] = {"sid": sid.group(1) or sid.group(2), "url": url, "lake": True, "stage": float(stage.group(1)), "t": datetime.datetime.fromisoformat(t.group(1)), "lid": None, "cats": {}, "derived": set()}
             continue
         if not (sid and flow and t):
             bad.append("%s: cannot read gauge id, flow or time from the page" % url)
             continue
-        pages[sid.group(1)] = {"url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
+        pages[url] = {"sid": sid.group(1) or sid.group(2), "url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
                                "t": datetime.datetime.fromisoformat(t.group(1)), "lid": (re.search(r"forecast point ([A-Z0-9]{5})", h) or [None, None])[1] if "forecast point" in h else None,
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)},
                                # derived NWS sentences: "NWS action stage X ft (D ft above the latest reading)", "Next NWS impact at X ft (D ft above the NWS reading of R ft, ...)"
@@ -235,7 +236,7 @@ def main():
             v_ = agency_verdict(ag, pt, float(st_.group(1)), got)
             if v_:
                 bad.append("%s: %s" % (u, v_))
-    ids = sorted(pages)
+    ids = sorted({pg["sid"] for pg in pages.values()})  # gate audit 2026-11-08: keyed by url, so two pages on one gauge (owner decision 7) are both compared
     latest = {}
     failed_ids = set()
     for i in range(0, len(ids), 40):
@@ -256,7 +257,8 @@ def main():
         except Exception as e:
             return lid, e
     nwps = dict(pmap(nws, sorted({pg["lid"] for pg in pages.values() if pg["lid"] and (pg["cats"] or pg["derived"])})))
-    for sid, pg in pages.items():
+    for pg in pages.values():
+        sid = pg["sid"]
         if pg.get("lake"):
             got = [latest[(sid, c)] for c in ("62614", "62615", "72020", "00062") if (sid, c) in latest]
             if not got:
@@ -283,6 +285,8 @@ def main():
                     bad.append("%s: stage %s on the page, %s at USGS" % (pg["url"], pg["stage"], s_[1]))
             elif pg["stage"] is not None:  # stage shown on the page but USGS has no stage at the page's timestamp: record as skipped, not silently ignored
                 skipped.append("%s: stage not verified (no USGS stage at the page's timestamp)" % pg["url"])
+        elif ut < pg["t"]:  # gate audit 2026-11-08: a page time after USGS's latest reading is a future time or a time-zone slip, never a pass (under 1 h: USGS's own answer may lag one reading)
+            (bad if (pg["t"] - ut).total_seconds() > 3600 else skipped).append("%s: page reading time %s is after USGS's latest %s (future time or wrong time zone)" % (pg["url"], pg["t"].isoformat(), ut.isoformat()))
         elif ut > pg["t"]:
             lag = (ut - pg["t"]).total_seconds() / 3600
             # a lagging page is stale, not WRONG (it shows its real age). A short lag is normal; only an extreme lag means our refresh is actually broken.
@@ -370,19 +374,6 @@ def tide_verdict(t, v, hilo):
 def per_page(urls):
     """True when every failing url is a gauge page, so each is carried or sent back and the rest ship; any other url (a hub, home) stops the publish. No count cap."""
     return all(u.startswith(("/river/", "/lake/", "/coast/")) for u in urls)
-
-
-def new_fail(d, u, msgs):
-    """Record a new page whose number did not match its source in <d>/_failed.json (the file check.py writes), as a page failure quarantine.py can send back."""
-    p = os.path.join(d, "_failed.json")
-    try:
-        f = json.load(open(p, encoding="utf-8"))
-    except (OSError, ValueError):
-        f = {"pages": {}, "site": []}
-    f.setdefault("pages", {})[u.strip("/") + "/index.html"] = msgs or ["numbers did not match the source"]
-    f["site"] = f.get("site") or []
-    json.dump(f, open(p, "w", encoding="utf-8"))
-    print("NEW PAGE FAILED", u, "(its numbers did not match the source; the second try sends it back to the queue)")
 
 
 sys.exit(selftest() if "--selftest" in sys.argv else main())

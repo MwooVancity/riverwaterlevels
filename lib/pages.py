@@ -70,11 +70,21 @@ def load_effective():
     for r in rows.values():
         r["hub_slug"] = ("lake-" + r["site"]) if r.get("lake") else r["river_slug"] + ("-" + r["state"].lower() if len(by_rs[r["river_slug"]]) > 1 else "")  # a lake is never grouped into a river hub
         hubs[(r["hub_slug"], r["state"])].append(r)
+    coast_n = collections.Counter(x["place_slug"] for x in rows.values() if x.get("coast"))  # gate audit 2026-11-08: Newport RI and Newport OR both became /coast/newport/ and one overwrote the other
+    coast_ns = collections.Counter((x["place_slug"], x["state"]) for x in rows.values() if x.get("coast"))
+    cslug = lambda x: x["place_slug"] + ("" if coast_n[x["place_slug"]] == 1 else "-" + x["state"].lower() + ("" if coast_ns[(x["place_slug"], x["state"])] == 1 else "-" + x["site"]))
     for g in hubs.values():
         seen = collections.Counter(x["place_slug"] for x in g)
         for x in g:
             x["place_final"] = x["place_slug"] + ("-" + x["site"] if seen[x["place_slug"]] > 1 or not x["place_slug"] else "")
-            base = ("/coast/%s/" % x["place_slug"]) if x.get("coast") else ("/lake/%s/" % (x["river_slug"] + ("" if lake_n[x["river_slug"]] == 1 else "-" + x["state"].lower() + "-" + x["site"]))) if x.get("lake") else "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
+            base = ("/coast/%s/" % cslug(x)) if x.get("coast") else ("/lake/%s/" % (x["river_slug"] + ("" if lake_n[x["river_slug"]] == 1 else "-" + x["state"].lower() + "-" + x["site"]))) if x.get("lake") else "/river/%s/%s/" % (x["hub_slug"], x["place_final"])
             x["hub_url"] = base if x.get("lake") else "/river/%s/" % x["hub_slug"]
             x["dashboard_url"], x["water_url"], x["forecast_url"] = base, base, base + "forecast/"  # one page per gauge; /water/ redirects here
+    taken = {}
+    for x in sorted(rows.values(), key=lambda x: x["site"]):  # never two gauges at one address (one page would overwrite the other): the later gets its id, said in the log
+        if x["dashboard_url"] in taken:
+            print("WARNING address clash: %s and %s both at %s; %s moves to its id" % (taken[x["dashboard_url"]], x["site"], x["dashboard_url"], x["site"]))
+            x["dashboard_url"] = x["water_url"] = x["dashboard_url"].rstrip("/") + "-" + x["site"] + "/"
+            x["forecast_url"] = x["dashboard_url"] + "forecast/"
+        taken[x["dashboard_url"]] = x["site"]
     return rows, hubs

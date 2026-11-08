@@ -38,7 +38,7 @@ def england(row, page):
     t = page_t(page)
     items = json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/stations/%s/readings?parameter=level&%s" % (urllib.parse.quote(sid), ("since=%s&_sorted&_limit=20" % t) if t else "latest")))["items"]
     live = next((i["value"] for i in items if i.get("measure", "").endswith("-level-stage-i-15_min-mASD") and (not t or str(i.get("dateTime", "")).replace("+00:00", "Z") == t)), None)
-    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.5  # no live stage proves nothing; "not reporting" is a true page
+    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # gate audit 2026-11-08: at the page's own minute the numbers must agree to rounding; 0.5 m only against "latest"; no live stage proves nothing; "not reporting" is a true page
     print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
     near = [f for f in json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/floods?lat=%.6f&long=%.6f&dist=0.01" % (row[2], row[3])))["items"] if f.get("severityLevel") in (1, 2, 3)]
     if near and "No flood warnings in force" in page:  # the agency's filter is wide (an area 1.3 km off Colwick came back, 2026-11-03): only an area the page's own rule covers is a fault
@@ -73,7 +73,7 @@ def check(row):
         t = page_t(page)
         fs = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&%sproperties=LEVEL" % (sid, ("datetime=%s&" % t) if t else "sortby=-DATETIME&")))["features"]
         live = fs[0]["properties"]["LEVEL"] if fs else None
-        ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.5  # "not reporting" is a true page; no feed value for the page's minute proves nothing
+        ok = not shown or live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # same minute: rounding only; "not reporting" is a true page; no feed value for the page's minute proves nothing
         print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
         near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&skipGeometry=true&properties=status_en&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
         live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled")]
@@ -90,7 +90,7 @@ def check(row):
         cur = next((m["value"] for m in ms if dt_.datetime.fromisoformat(m["timestamp"]) == t0), None)
     else:
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
-    ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= 50
+    ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= (2 if t else 50)  # same minute: rounding only (gate audit 2026-11-08)
     print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")
     return int(not ok) + wt_block(name, page, row)
 
@@ -177,17 +177,17 @@ def main():
                 faulty.append(row[1])
     print("world truth: %d fault(s)" % bad)
     if LOCAL and faulty:
-        return 0 if carry(faulty, len(rows)) else 1
+        return carry(faulty, len(rows))
     return 1 if bad else 0
 
 
 def carry(urls, n):
-    """Before deploy: each world page whose number does not match its agency keeps its live copy; a new page with none is left out of this build (the
-    next build tries again). More than max(3, 5%) of world pages is a parser or feed fault for everyone: the deploy stops. True when the rest may ship."""
-    import shutil
+    """Before deploy: each world page whose number does not match its agency keeps its live copy; a new page with none is recorded in _failed.json, so the
+    release's second try sends it back (tools/quarantine.py) and ships the rest. No count cap (owner 2026-11-08); many at once is said loudly.
+    Exit code: 0 the rest may ship, 1 a new page failed (second try), 1 a carry could not be made."""
     if len(urls) > max(3, n // 20):
-        print("world truth: %d pages disagree with their agency; the deploy stops" % len(urls))
-        return False
+        print("WARNING world truth: %d pages disagree with their agency at once (parser or feed fault?); each keeps its live copy or goes back to the queue" % len(urls))
+    newf = []
     cp = os.path.join(LOCAL, "_carried.json")
     try:
         done = set(json.load(open(cp)))
@@ -200,17 +200,20 @@ def carry(urls, n):
         except urllib.error.HTTPError as e:
             if e.code != 404:
                 print("world truth: could not carry", u, str(e)[:60])
-                return False
-            print("NEW WORLD PAGE FAILED", u, "(its number did not match the agency; no live copy; this try stops and the release's second try is built without the new gauges)")
-            return False  # release 2026-11-07: deleting a page left its links and sitemap entry and stopped the publish anyway
+                return 1
+            sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from lib.common import new_fail  # one writer of _failed.json (truth_live uses it too)
+            new_fail(LOCAL, u, ["%s: its number did not match the agency" % u])
+            newf.append(u)
+            continue
         except Exception as e:
             print("world truth: could not carry", u, str(e)[:60])
-            return False
+            return 1
         open(dst, "wb").write(html)
         done.add(u.strip("/") + "/index.html")
         print("CARRIED previous live page for", u, "(its number did not match the agency)")
     json.dump(sorted(done), open(cp, "w"))
-    return True
+    return 1 if newf else 0
 
 
 def selftest():
@@ -242,7 +245,17 @@ def selftest():
     assert check([0, "/c/", 49.8, -123.2, "Canada"]) == 0, "a right page read against a newer reading (river rising) counted as wrong"
     get = lambda u: pg if "/c/" in u else ('{"features": [{"properties": {"LEVEL": 3.046}}]}' if "hydrometric" in u else '{"features": []}')
     assert check([0, "/c/", 49.8, -123.2, "Canada"]) == 1, "a wrong number at the page's own minute passed"
-    assert carry(["/a/", "/b/", "/c/", "/d/"], 40) is False, "four of 40 world pages disagreeing did not stop the deploy"  # max(3, 5%) = 3
+    import tempfile, io
+    global LOCAL
+    real_open, real_local = urllib.request.urlopen, LOCAL
+    try:  # gate audit 2026-11-08: four new world pages failing undid the whole release (count cap, no _failed.json); now each is recorded for quarantine, no cap
+        urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(urllib.error.HTTPError("u", 404, "nf", {}, io.BytesIO()))
+        with tempfile.TemporaryDirectory() as td:
+            LOCAL = td
+            assert carry(["/a/x/", "/b/x/", "/c/x/", "/d/x/"], 40) == 1, "four failing new world pages did not ask for the second try"
+            assert sorted(json.load(open(os.path.join(td, "_failed.json")))["pages"]) == ["a/x/index.html", "b/x/index.html", "c/x/index.html", "d/x/index.html"], "a failing new world page was not recorded for quarantine"
+    finally:
+        urllib.request.urlopen, LOCAL = real_open, real_local
     get = real
     print("selftest OK")
 

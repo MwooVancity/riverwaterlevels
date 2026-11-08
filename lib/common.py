@@ -327,3 +327,17 @@ def dir_lv(G):
 def band_cls(p):
     """Colour class of a percentile, one cut for every page: 'la' under the 25th, 'lp' over the 75th, 'lb' between, '' unknown."""
     return "" if p is None else "la" if p < 25 else "lp" if p > 75 else "lb"
+
+
+def new_fail(d, u, msgs):
+    """Record a new page whose number did not match its source in <d>/_failed.json (the file check.py writes), as a page failure quarantine.py can send back."""
+    import json, os
+    p = os.path.join(d, "_failed.json")
+    try:
+        f = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        f = {"pages": {}, "site": []}
+    f.setdefault("pages", {})[u.strip("/") + "/index.html"] = msgs or ["numbers did not match the source"]
+    f["site"] = f.get("site") or []
+    json.dump(f, open(p, "w", encoding="utf-8"))
+    print("NEW PAGE FAILED", u, "(its numbers did not match the source; the second try sends it back to the queue)")

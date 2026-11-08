@@ -92,7 +92,7 @@ def page_checks(h, rel):
     passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
     u = "/" + os.path.dirname(rel).replace(os.sep, "/").replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
-    sid = re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # a lake page says "USGS lake gauge" (release 2026-11-08 stopped on 11 lakes)
+    sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
         out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
@@ -113,7 +113,7 @@ def datum_named(h, u):
 def stats_gap(h):
     """Wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo. One function for the site gate and
     tools/release.py page_check (release 2026-11-07: two new gauges passed the release's check and failed this one at the gate, undoing all 25)."""
-    sid = re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # a lake page says "USGS lake gauge" (release 2026-11-08 stopped on 11 lakes)
+    sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
     if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:
         return ["says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics"]
@@ -590,9 +590,13 @@ def check_dir(d):
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
     live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
-    for t, rels in titles.items():
+    for t, rels in titles.items():  # gate audit 2026-11-08: a page-level fault of one new page must hold that page, never the whole release
         if len(rels) > 1:
-            site_bad.append("duplicate title %r on %d pages" % (t[:50], len(rels)))
+            if all(kind_of(r_) in CARRYABLE for r_ in rels):
+                for r_ in rels:
+                    results[r_].append("duplicate title %r on %d pages" % (t[:50], len(rels)))
+            else:
+                site_bad.append("duplicate title %r on %d pages" % (t[:50], len(rels)))
     redirects = {}
     rp = os.path.join(d, "_redirects")
     if os.path.exists(rp):
@@ -697,11 +701,14 @@ def check_dir(d):
         pass
     kept |= {"/embed" + u for u in list(kept)}  # a kept gauge page keeps its embed panel too
     orphans = [u for u in urls if u not in depth and u not in kept]
-    if orphans:
-        site_bad.append("%d pages not reachable from home, e.g. %s" % (len(orphans), orphans[:3]))
     deep = [u for u, k in depth.items() if k > 4]
-    if deep:
-        site_bad.append("pages deeper than 4 clicks: %s" % deep[:3])
+    for what, us_ in (("not reachable from home", orphans), ("deeper than 4 clicks from home", deep)):  # a water page is held alone (carried or sent back); any other page is site-level
+        for u in us_:
+            if u in urls and kind_of(urls[u]) in CARRYABLE:
+                results[urls[u]].append("page %s" % what)
+        rest = [u for u in us_ if u not in urls or kind_of(urls[u]) not in CARRYABLE]
+        if rest:
+            site_bad.append("%d pages %s, e.g. %s" % (len(rest), what, rest[:3]))
     return results, site_bad, (max(depth.values()) if depth else 0)
 
 

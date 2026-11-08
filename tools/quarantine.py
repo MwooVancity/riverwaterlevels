@@ -10,6 +10,31 @@ from lib.pages import load_effective
 WAVES, ALLOW = os.path.join(ROOT, "data", "waves.csv"), os.path.join(ROOT, "data", "index-allow.json")
 
 
+WPP = os.path.join(ROOT, "data", "world-pages.json")
+
+
+def world_new():
+    """{published path: (page slug, station)} for each world gauge this release added (data/world-pages.json against HEAD)."""
+    from lib.directory import world_gauge_url
+    try:
+        head = json.loads(subprocess.check_output(["git", "show", "HEAD:data/world-pages.json"], cwd=ROOT, text=True, encoding="utf-8"))
+        cur = json.load(open(WPP, encoding="utf-8"))
+    except (OSError, ValueError, subprocess.CalledProcessError):
+        return {}
+    old = {(p["slug"], s) for p in head for s in p.get("gauge_pages") or []}
+    out = {}
+    for p in cur:
+        try:
+            title = {r["name"]: r.get("title") for r in json.load(open(os.path.join(ROOT, "cache", "_river-%s.json" % p["slug"]), encoding="utf-8"))["rows"]}
+        except (OSError, ValueError, KeyError):
+            title = {}
+        for s in p.get("gauge_pages") or []:
+            if (p["slug"], s) not in old:
+                for nm in {title.get(s) or s, s}:
+                    out[world_gauge_url(p, nm).strip("/") + "/index.html"] = (p["slug"], s)
+    return out
+
+
 def main():
     try:
         failed = json.load(open(os.path.join(ROOT, "dist_next", "_failed.json"), encoding="utf-8"))
@@ -25,6 +50,24 @@ def main():
     was = {r["site"] for r in csv.DictReader(subprocess.check_output(["git", "show", "HEAD:data/waves.csv"], cwd=ROOT, text=True, encoding="utf-8").splitlines()) if r["status"] == "live"}
     rows, _ = load_effective()
     rel = {rows[s]["dashboard_url"].strip("/") + "/index.html": s for s in rows}
+    wnew = world_new()  # gate audit 2026-11-08: a failing new world page undid all 25 picks; now it leaves world-pages.json alone
+    wbad = {k: v for k, v in pages.items() if k in wnew}
+    pages = {k: v for k, v in pages.items() if k not in wnew}
+    if wbad:
+        wp_ = json.load(open(WPP, encoding="utf-8"))
+        for k in wbad:
+            slug_, st_ = wnew[k]
+            for p_ in wp_:
+                if p_["slug"] == slug_:
+                    for f_ in ("stations", "gauge_pages"):
+                        if st_ in (p_.get(f_) or []):
+                            p_[f_].remove(st_)
+        raw = open(WPP, encoding="utf-8", newline="").read()
+        nl_ = "\r\n" if "\r\n" in raw else "\n"
+        open(WPP, "w", encoding="utf-8", newline="").write("[" + nl_ + ("," + nl_).join(" " + json.dumps(x, ensure_ascii=False) for x in wp_) + nl_ + "]" + nl_)
+        print("world gauges back out of this release: %s" % ", ".join("%s %s" % wnew[k] for k in sorted(wbad)))
+        if not pages:
+            return
     bad = {rel.get(k[6:] if k.startswith("embed/") else k): v for k, v in pages.items()}  # a gauge's embed page fails with it (2026-10-31)
     if None in bad or any(s in was for s in bad):
         sys.exit("a failing page is not a new gauge: %s" % sorted(pages)[:5])

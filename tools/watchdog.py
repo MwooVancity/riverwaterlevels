@@ -253,7 +253,7 @@ def main():
         print("  ok:", x)
     # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
     # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("site unreachable", "edge check failed", "edge stored copy", "cannot read", "world gauge readings", "feed dead", "Worker load unreadable", "data cache lost", "collect shards failed", "pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires")
+    SEVERE = ("site unreachable", "edge check failed", "edge stored copy", "cannot read", "world gauge readings", "feed dead", "Worker load unreadable", "data cache lost", "collect shards failed", "pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires", "carried as their old copy")  # gate audit 2026-11-08: mass_carry reached the log only
     alarm = [x for x in bad if any(k in x for k in SEVERE)]
     out = os.environ.get("GITHUB_OUTPUT")
     if out:
