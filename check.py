@@ -757,7 +757,10 @@ def ad_gaps(rel, h):
 
 
 def selftest():
-    W_ = {"/a/x/", "/b/y/", "/c/z/", "/d/w/"}
+    from lib import pages as pg_
+    rv_ = (set(), {"coast-live"})
+    assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
+    W_ ={"/a/x/", "/b/y/", "/c/z/", "/d/w/"}
     assert few_neighbours("/a/x/", {"/b/y/"}, W_) and not few_neighbours("/a/x/", {"/b/y/", "/c/z/", "/d/w/", "/a/x/"}, W_) and not few_neighbours("/a/x/", {"/b/y/"}, {"/a/x/", "/b/y/"}), "selftest: a water page with one neighbour link passed, or a two-page site was asked for three"
     ad ='<script>gtag("consent","default",{})</script><script src="adsbygoogle.js"></script>'
     assert not ad_gaps("a/index.html", ad) and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script><script>gtag("consent","default",{})</script>') and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script>'), "selftest: the consent order rule did not fire"

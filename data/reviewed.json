@@ -78,5 +78,10 @@
   "/lake/rough-river-lake/": "2026-11-07: first review by hater-first-2026-11-07g on code e324c7a50d4b",
   "/lake/richland-chambers-reservoir/": "2026-11-07: first review by hater-first-2026-11-07g on code e324c7a50d4b",
   "/coast/new-york/": "2026-11-07: first review by hater-first-2026-11-07g on code e324c7a50d4b"
+ },
+ "variants": {
+  "lake-usgs": "2026-11-08: owner 'fully automatic'; template passed in 30+ per-page phone reviews 2026-11-07 (Kerr, Hartwell, Lanier, Allatoona...); every page still runs every machine gate",
+  "lake-agency": "2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
+  "coast-live": "2026-11-08: template passed 40+ per-page phone reviews 2026-11-07 (San Diego, Norfolk, Seattle, Galveston...)"
  }
 }

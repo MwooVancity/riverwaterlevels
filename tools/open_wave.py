@@ -7,7 +7,6 @@ import csv, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IX = os.path.join(ROOT, "data", "index-allow.json")
-MIN_BLOCKS, MIN_YEARS, MIN_LAKE_YEARS = 15, 10, 5  # the pilot pages render 26 to 38 blocks; re-set after a sample of tail gauges has been built
 
 
 def load(p, default):
@@ -31,11 +30,10 @@ def main():
     live = set(load(os.path.join(D, "_urls.json"), {"urls": []})["urls"])
     have = set(cfg["allow"])
     pick = []
-    blocks = load(os.path.join(D, "_blocks.json"), {})
-    years = {r["site"]: int(r["years_record"] or 0) for r in csv.DictReader(open(os.path.join(ROOT, "data", "pages-all.csv"), encoding="utf-8"))}
-    skipped = {"gate": 0, "few blocks": 0, "short record": 0, "not reviewed": 0}
+    skipped = {"gate": 0, "not reviewed": 0}
     unreviewed = []  # live lake and coast pages waiting for their screenshot review: the next session's to-do
-    reviewed = set(load(os.path.join(ROOT, "data", "reviewed.json"), {"passed": {}})["passed"])  # url -> "date: what the reviewer read"; a missing file opens no lake or coast
+    from lib import pages as pages_
+    rv = pages_.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # urls and template variants that passed a phone review; a missing file opens no lake or coast
     stuck = []  # live pages held for a reason a fix can clear (not a river's short record, which is by design): the watchdog alarms on these (ChatGPT round 1: open_wave exited 0 while skipping every lake)
     for row in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")):
         u = row["url"]
@@ -45,30 +43,11 @@ def main():
         if row["status"] != "live":  # only a gauge actually marked live is deployed; a queue gauge must not enter the index
             skipped["gate"] += 1
             continue
-        if blocks.get(u, 0) < MIN_BLOCKS:
-            skipped["few blocks"] += 1
-            stuck.append("%s: %d blocks (minimum %d)" % (u, blocks.get(u, 0), MIN_BLOCKS))
-            continue
-        if u.startswith(("/lake/", "/coast/")) and u not in reviewed:  # CLAUDE.md: every new page kind is screenshotted at phone width before Google; a lake or coast opens only once its review passed (data/reviewed.json)
+        if not pages_.review_ok(row["site"], u, rv):  # CLAUDE.md: every new page kind is screenshotted at phone width before Google; a lake or coast opens only once its review passed (data/reviewed.json)
             skipped["not reviewed"] += 1
             unreviewed.append(u)
             continue
-        if u.startswith("/coast/"):  # a coast page compares with NOAA's tide predictions, not a multi-year record
-            pass
-        elif u.startswith("/lake/") and not row["site"][:1].isdigit():  # an agency lake (RISE-6123, TWDB-travis, CDEC-SHA) is never compared with USGS statistics: no USGS record to require
-            pass
-        elif u.startswith("/lake/"):  # lakes are not in pages-all.csv: the record is the years behind the USGS statistics the page compares with (Powell 7)
-            try:
-                yrs_ = max(v[0] for v in json.load(open(os.path.join(ROOT, "legacy", "stats", row["site"] + ".json")))["d"].values())
-            except (OSError, ValueError, KeyError):
-                yrs_ = 0
-            if yrs_ < MIN_LAKE_YEARS:
-                skipped["short record"] += 1
-                stuck.append("%s: %d years of USGS statistics (minimum %d)" % (u, yrs_, MIN_LAKE_YEARS))
-                continue
-        elif years.get(row["site"], 0) < MIN_YEARS:
-            skipped["short record"] += 1
-            continue
+        # owner 2026-11-08: "no such thing as thin content if it's literally a different river/lake": no block-count or years-of-record gate; the page says what it lacks
         pick.append((u, row["river"], row["place"], row["score"]))
         if len(pick) >= n:
             break

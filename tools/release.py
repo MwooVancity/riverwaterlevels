@@ -71,12 +71,11 @@ both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)]
 # that every machine check passed, so a new lake or coast is published only after its review passed (truth first: a false page is worse than none);
 # the review is run on a local preview (tools/hater_shots.mjs) before the release. Rivers, drilled for weeks, fill the other slots.
 UNREVIEWED_MAX = 0
-try:
-    import json as _json
-    _rev = set(_json.load(open(os.path.join(ROOT, "data", "reviewed.json"), encoding="utf-8"))["passed"])
-except (OSError, ValueError, KeyError):
-    _rev = set()
-_u = lambda x: x[1] == 1 and str(x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url") or "").startswith(("/lake/", "/coast/")) and (x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url")) not in _rev
+import json as _json
+from lib import pages as _pages
+_rv = _pages.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # owner 2026-11-08 fully automatic: a page passes when its url or its template variant passed a review
+_url = lambda x: str(x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url") or "")
+_u = lambda x: x[1] == 1 and not _pages.review_ok(x[3]["site"], _url(x), _rv)
 _k, _cut = [], 0
 for x in both:
     if len(_k) >= n:

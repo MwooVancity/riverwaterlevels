@@ -6,6 +6,37 @@ from lib.common import DATA, SITE_URL, prep_lower
 WAVE0 = "06893000 07010000 03294500 14105700 09380000 06192500 13334300 13317000 07109500 01463500 01646500 01358000 01576000 01636500 03185400 03192000 02336000 09498500 09506000 14103000 09085000 06041000 11447650 03011800 01555000".split()
 
 
+@__import__("functools").lru_cache(maxsize=1)
+def _pred_only():
+    return frozenset(r["site"] for r in csv.DictReader(open(os.path.join(DATA, "coasts.csv"), encoding="utf-8")) if r.get("level_from"))
+
+
+def variant(site, url):
+    """The page template a lake or coast review covers (owner 2026-11-08 fully automatic: review once per variant, not per page). None for a river or world page.
+    An agency lake id is not all digits (CDEC-SHA, RISE-6123, TWDB-travis); a prediction-only coast has level_from in data/coasts.csv."""
+    if url.startswith("/coast/"):
+        return "coast-prediction" if site in _pred_only() else "coast-live"
+    if url.startswith("/lake/"):
+        return "lake-usgs" if site[:1].isdigit() else "lake-agency"
+    return None
+
+
+def reviewed(path):
+    """(urls, variants) that passed a phone review, from data/reviewed.json; a missing or torn file reviews nothing."""
+    import json
+    try:
+        d = json.load(open(path, encoding="utf-8"))
+        return set(d.get("passed") or {}), set(d.get("variants") or {})
+    except (OSError, ValueError, AttributeError):
+        return set(), set()
+
+
+def review_ok(site, url, rv):
+    """True when the page needs no review (river, world) or its url or its variant passed one."""
+    v = variant(site, url)
+    return v is None or url in rv[0] or v in rv[1]
+
+
 def slug(s):
     s = s.lower().replace("&", " and ").replace("'", "")
     return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
