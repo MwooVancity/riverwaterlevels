@@ -14,6 +14,10 @@ on:
         description: "true = also practise the daily release (20 gauges), commits nothing"
         required: false
         default: "false"
+      review:
+        description: "site ids to collect, build and screenshot at phone width for a review (space separated); the shots are this run's artifact, nothing on the laptop"
+        required: false
+        default: ""
 
 concurrency:
   group: dryrun
@@ -64,6 +68,25 @@ jobs:
       - name: Every gate, no deploy
         continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
         run: python refresh.py --dry 2>&1 | tee refresh-out.log
+      - name: Review screenshots in the cloud (owner 2026-11-08 laptop minimum; PLAN fully automatic c)
+        if: github.event_name == 'workflow_dispatch' && inputs.review != ''
+        continue-on-error: true
+        env:
+          SITES: ${{ inputs.review }}
+        run: |
+          python -I collect.py $SITES > review-collect.log 2>&1 || tail -5 review-collect.log
+          python -I build.py $SITES | tail -2
+          python -I check.py dist_next 2>&1 | tail -20 > .review-check.txt || true
+          npm i --no-save --silent playwright@1.49.1 && npx playwright install --with-deps chromium > /dev/null
+          node tools/hater_shots.mjs $SITES
+          mkdir -p .cache/review && cp .review-check.txt .cache/review/check.txt
+      - name: Upload the review screenshots
+        if: github.event_name == 'workflow_dispatch' && inputs.review != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: review
+          path: .cache/review
+          retention-days: 3
       - name: Nightly practice keeps only the gates of picks that failed (the real release never meets them)
         if: github.event_name == 'schedule'
         continue-on-error: true
