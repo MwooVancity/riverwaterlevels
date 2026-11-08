@@ -92,6 +92,7 @@ GAUGE_ID = re.compile(r"USGS (?:lake )?gauge (\d+)")  # release 2026-11-08 stopp
 
 
 def selftest():
+    assert per_page(["/lake/l%d/" % i for i in range(11)] + ["/river/a/b/"]) and not per_page(["/river/a/b/", "/rivers/tx/"]), "11 failing gauge pages stopped the release (2026-11-08), or a failing hub did not"
     assert GAUGE_ID.search("USGS lake gauge 02334400").group(1) == "02334400" and GAUGE_ID.search("USGS gauge 06893000").group(1) == "06893000", "a lake or river page's gauge id was not read"
     """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
     P = lambda s: datetime.datetime.fromisoformat(s)
@@ -315,7 +316,9 @@ def main():
     if stale:
         print("truth_live: %d gauge(s) lagging USGS by 3 to %d h (warning only; the pages show their real age)" % (len(stale), STALE_FAIL_H))
     urls_ = sorted({b.split(": ", 1)[0] for b in bad})
-    if LOCAL and bad and len(urls_) <= max(3, len(pages) // 20) and all(u.startswith(("/river/", "/lake/", "/coast/")) for u in urls_):  # pipeline review #4: up to 3 gauges keep their live page; the rest of the site ships (lakes and coasts too since 2026-11-07: one CDEC or NOAA mismatch stopped every deploy)
+    if LOCAL and bad and len(urls_) > max(3, len(pages) // 20):  # many at once is a checker or feed fault: still page by page (a carried page is its verified live copy), but said loudly; the watchdog names release days that ship nothing
+        print("truth_live WARNING: %d of %d pages failed at once (checker wording or a feed outage?); each keeps its live copy or goes back to the queue" % (len(urls_), len(pages)))
+    if LOCAL and bad and per_page(urls_):  # owner 2026-11-08 "fully automatic": one page never stops the release (2026-11-08: 11 unreadable lake pages over the old cap of 10 undid all 20 US picks); every failing page keeps its live copy or is sent back
         cp = os.path.join(LOCAL, "_carried.json")
         try:
             carried = json.load(open(cp))
@@ -341,6 +344,11 @@ def main():
         json.dump(sorted(set(carried)), open(cp, "w"))
         return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
+
+
+def per_page(urls):
+    """True when every failing url is a gauge page, so each is carried or sent back and the rest ship; any other url (a hub, home) stops the publish. No count cap."""
+    return all(u.startswith(("/river/", "/lake/", "/coast/")) for u in urls)
 
 
 def new_fail(d, u, msgs):

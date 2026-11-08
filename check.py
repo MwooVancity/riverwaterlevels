@@ -1125,7 +1125,7 @@ def secret_scan(d):
     return bad
 
 
-CARRY_MAX = 10  # floor; the real limit is max(10, 5% of gauge pages): more than that is a template fault and the whole release stops
+CARRY_MAX = 10  # above max(10, 5% of gauge pages) failing at once a warning is printed; no count stops the release (owner 2026-11-08)
 
 
 def keep_old_times(d, rels):
@@ -1180,7 +1180,9 @@ def main():
     except (OSError, ValueError):
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
-    if "--carry" in sys.argv and fails and not site_bad and len(fails) <= max(CARRY_MAX, sum(1 for k in res if kind_of(k) in CARRYABLE) // 20) and all(kind_of(k) in CARRYABLE for k in fails):
+    if len(fails) > max(CARRY_MAX, sum(1 for k in res if kind_of(k) in CARRYABLE) // 20):  # a template or checker fault: said loudly, still page by page (owner 2026-11-08 fully automatic: no count stops the release)
+        print("WARNING: %d pages failed at once (template or checker fault?); each keeps its live copy or goes back to the queue" % len(fails))
+    if "--carry" in sys.argv and fails and not site_bad and all(kind_of(k) in CARRYABLE for k in fails):
         got = []
         if not carry(d, fails, got) and got:  # release 2026-11-07: pages that were carried are recorded even when a new one could not be, so quarantine.py sees them as shipped, not failed
             keep_old_times(d, set(got))

@@ -31,13 +31,15 @@ def hours_since(iso):
 
 
 def release_stall():
-    """A line when the daily release has added nothing for 3 days while gauges wait; its skips only ever reached the log."""
-    with open(os.path.join(ROOT, "data", "last-release.txt")) as f:
+    """A line when the daily release has added nothing for 2 days while gauges wait; its skips only ever reached the log.
+    Reads data/last-success.txt (written only when a release ships): last-release.txt is also stamped on a failed day, so 2026-11-07 and 11-08 shipped nothing and no alarm fired."""
+    p = os.path.join(ROOT, "data", "last-success.txt")
+    with open(p if os.path.exists(p) else os.path.join(ROOT, "data", "last-release.txt")) as f:
         last = datetime.date.fromisoformat(f.read().strip())
     days = (datetime.datetime.now(datetime.timezone.utc).date() - last).days
     with open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8") as f:
         waiting = sum(1 for r in csv.DictReader(f) if r["status"] == "queue" and not r["gate"])
-    return "no new gauges released for %d days, %d waiting" % (days, waiting) if days >= 3 and waiting else None
+    return "no new gauges released for %d days, %d waiting" % (days, waiting) if days >= 2 and waiting else None
 
 
 def open_stuck():
@@ -258,6 +260,11 @@ if "--selftest" in sys.argv:
         assert "days, 1 waiting" in release_stall(), "a stalled release went unreported"
         open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
         assert release_stall() is None, "a fresh release was reported"
+        ex_, os.path.exists = os.path.exists, lambda p: True
+        today_ = datetime.datetime.now(datetime.timezone.utc).date()
+        open = lambda p, *a, **k: __import__("io").StringIO((today_ - datetime.timedelta(days=2)).isoformat() if p.endswith("last-success.txt") else today_.isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
+        assert release_stall(), "two failed release days (last-release stamped today, last success 2 days ago) raised no alarm (2026-11-07/08)"
+        os.path.exists = ex_
         assert REBUILD_MIN > 112, "a normal gap between rebuilds would alarm"
         assert SLOW.get("world-normals", 50) > 720 and SLOW.get("world-access", 50) > 720, "a monthly source between fetches would alarm"
         assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
