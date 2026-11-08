@@ -35,9 +35,6 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 - New country: `PROVED` needs reading, time, alerts (a real live alert), unit, terms, water type seen live. England (`UNKNOWN_UNTIL_PROVEN`) ships first, alerts Unknown + GOV.UK link.
 - `COVER` answers each US block per country (have / none: reason / next); none fails `check.py`; next = a `TODO` in the gaps line, never a cap. `thin` holds only a new world page with no reading (time, unit); `missing` holds a new gauge lacking its data; outages never pull live pages. `world_rules` allowlists hosts, units.
 
-## HARD: rank #1 (owner 2026-11-08 "god of getting #1 in Google")
-Per money keyword, win the search: (1) read the top 3 results; our first screen answers the searcher's question in their words with more sourced numbers than #1, else no page; (2) title = the searcher's words, unique, no stale number; (3) phone speed, 90 KB, live number in static HTML; (4) real lastmod, every number sourced and timed; (5) internal links below; (6) earned links only: embed with its visible link (`lib/page.py` `embed_snippet`), open data.json, unique comparisons, owner outreach; trust pages; (7) weekly Search Console: position 4-20 on a money keyword = compare with #1 and close the gap, low CTR = title, no impressions in 4 weeks = wrong intent; (8) never doorway, cloaking, paid or hidden links, stuffing, mass AI text. Backlink plan: PLAN.md Backlinks.
-
 ## HARD: internal links (owner 2026-11-08: "godlike", written here so it is followed)
 Every page kind, block and generator obeys these; links come from data in code, never hand-wired. A link exists because a reader here would tap it next.
 1. Tree: home > country > state or region > river, lake or coast hub > gauge page. Every water page names its parents in the breadcrumb (BreadcrumbList, `crumb_ld`); every hub lists all its children; no page over 4 clicks from home, no orphans (`check.py`).
