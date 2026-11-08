@@ -153,7 +153,7 @@ def check_html(h, rel):
     if "<main" not in h:
         return bad + ["no <main>"]
     body = h.split("<main", 1)[1].split("</main>")[0]
-    text = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", body)))  # code samples (the embed snippet) are meant to show markup; a line or cell break is a break, not a space ("Truckee<br>Truckee River")
+    text = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code|textarea)\b.*?</\1>", " ", body)))  # code samples (the embed snippet, its copy box on each page) are meant to show markup; a line or cell break is a break, not a space ("Truckee<br>Truckee River")
     for mm in re.finditer(r"fetch\(\s*['\"](https?:)?//[^'\"]*waterdata\.usgs\.gov", h):  # USGS is the one keyed, metered API: readings come from our stored copy (NWS alerts are keyless and stay direct)
         bad.append("page script calls USGS directly (%r): live readings must come from our stored copy" % h[mm.start():mm.start() + 60])
     for pat in BANNED:

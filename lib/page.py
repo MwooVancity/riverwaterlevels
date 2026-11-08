@@ -107,6 +107,22 @@ def b_nearby(G, pages):
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 
 
+def embed_snippet(url, name):
+    """The code a club, marina or county page pastes (owner 2026-11-08 backlinks): the live panel in an iframe plus one plain, visible link under it,
+    because a link inside an iframe sits on our own domain and earns nothing. The anchor is the place's name, never stuffed keywords (Google: widget links
+    must be visible and natural)."""
+    return ('<iframe src="%s/embed%s" width="100%%" height="520" loading="lazy" title="%s"></iframe>\n<p><a href="%s%s">%s</a>, live from River Water Levels</p>'
+            % (SITE_URL, url, esc(name), SITE_URL, url, esc(name)))
+
+
+def embed_code(G):
+    """A closed fold under the official links with this page's own embed code, ready to copy. None on a world page: build.py writes no embed panel for it."""
+    if G.get("feed"):
+        return ""
+    name = "%s water level" % river_at(G["river"], G["place"])
+    return '<details class="srcd"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The link under the panel takes readers to this page.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
+
+
 def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
@@ -127,7 +143,7 @@ def b_official_links(G):
             links.append(("%s in %s (%s)" % (what, STATE_NAMES.get(G["row"]["state"], G["row"]["state"]), e["agency"]), e["url"]))
     links.append(("This page's data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)" if G.get("coast") else "This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
     links.append(("Put this gauge's live panel on your own site (free embed, links back here)", "/embed" + G["row"]["dashboard_url"]))
-    body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)
+    body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links) + embed_code(G)
     return block("official_links", "Official pages for this gauge", "agency", body, "Source: links to the agencies that publish the data on this page (USGS, NOAA National Weather Service); they open in a new tab.", "usgs")
 
 
