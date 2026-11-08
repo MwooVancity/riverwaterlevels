@@ -24,11 +24,11 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 
 ## Next steps (in order; full speed)
 1. FULLY AUTOMATIC (owner 2026-11-08: "publishing automatically for the rest of the queue"). Measured 2026-11-08: only US rivers publish alone (25/day, released 11-01 to 11-06); 11-07 and 11-08 released nothing (11-08: truth_live could not read 'USGS lake gauge' on 11 lake pages and undid all 20 US picks; fixed ea4f55a, on `check`); 86 queued lakes and coasts publish never (release UNREVIEWED_MAX = 0 until a person reviews each page); 12,109 of 20,000 queue rows have no gauge ("not checked") and only a session fills them. Do, in order:
-   a. One page never stops the release: a page that fails truth_live, check.py or quarantine is carried (live copy) or sent back (new); only a site-level fault (sitemap, files, Worker, limits) stops it. Fixture: one unreadable page, 24 good picks, release ships 24.
-   b. Review per template variant, not per page: data/reviewed.json keyed by variant (lake-usgs, lake-agency, coast-live, coast-prediction, each world feed); release publishes any page of a reviewed variant that passes every gate; a new variant waits for one review. Today: one review of each of the 4 US variants.
-   c. Screenshots in the cloud: dryrun.yml builds 1 sample page per variant plus every new variant and uploads phone screenshots as an artifact (step 'Review preview in the cloud' below); Claude reads the artifact, nothing on the laptop.
-   d. Queue filled by the cloud: a weekly job runs the strict matchers (tools/world_match.py, tools/coast_match.py exact-name mode) and commits matched rows; prediction-only tide keywords stay SERP-picked by a session (foreign namesakes).
-   e. Nobody watching for a week: watchdog alarms the owner when 2 days release nothing, with the failing gate's first line; picks that failed twice leave the head of the queue so one bad page never blocks the next 25.
+   a. DONE 3d347ef (no count cap in truth_live or check.py; per_page fixture). One page never stops the release: a page that fails truth_live, check.py or quarantine is carried (live copy) or sent back (new); only a site-level fault (sitemap, files, Worker, limits) stops it. Fixture: one unreadable page, 24 good picks, release ships 24.
+   b. DONE 089abd0 (lake-usgs, lake-agency, coast-live marked from the 2026-11-07 page reviews; coast-prediction waits; open_wave block-count and years gates deleted). Review per template variant, not per page: data/reviewed.json keyed by variant (lake-usgs, lake-agency, coast-live, coast-prediction, each world feed); release publishes any page of a reviewed variant that passes every gate; a new variant waits for one review. Today: one review of each of the 4 US variants.
+   c. DONE 3aeb698 (dryrun input 'review' = site ids; artifact 'review'). Screenshots in the cloud: dryrun.yml builds 1 sample page per variant plus every new variant and uploads phone screenshots as an artifact (step 'Review preview in the cloud' below); Claude reads the artifact, nothing on the laptop.
+   d. DONE 64fca32 (coast_match --apply before each release, joins all four queue files). Queue filled by the cloud: a weekly job runs the strict matchers (tools/world_match.py, tools/coast_match.py exact-name mode) and commits matched rows; prediction-only tide keywords stay SERP-picked by a session (foreign namesakes).
+   e. DONE 3d347ef (data/last-success.txt; alarm at 2 days). Nobody watching for a week: watchdog alarms the owner when 2 days release nothing, with the failing gate's first line; picks that failed twice leave the head of the queue so one bad page never blocks the next 25.
    Edge cases (how it breaks today / number at full size / test that fails without the guard):
    - one unreadable page stops all: 11 lakes undid 20 US picks 2026-11-08 / at 25 a day every new template wording breaks it / fixture in a.
    - a check reads wording that a later change rewords ('USGS gauge' vs 'USGS lake gauge') / every reworded label / one fixture per page kind in truth_live selftest.
@@ -58,6 +58,15 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 16. Unattended: a stall signal the owner sees at session start (watchdog report); sitemap entry of a dropped new page.
 17. England: remaining no-key sources (Defra UK-AIR, NRFA statistics, terms first).
 18. `/code-review high` before 2026-11-20, a runbook for an owner with no Claude, fresh website audit.
+
+## Backlinks (owner 2026-11-08: "the site needs to be so helpful, plus a backlink embed for sharing")
+Earned only: no paid, swapped, hidden or keyword-stuffed links (Google link-scheme rules; AdSense risk outranks any link).
+- Built cebd4d2: every US, lake and coast page carries its own embed code under Official pages: the live panel (iframe) plus one visible plain link to the page, anchor = the place name. A link inside an iframe is on our domain and earns nothing, so the plain line is the backlink. /embed/ explains it.
+- Who embeds: fishing and paddling clubs, outfitters, marinas, campgrounds, county emergency and parks pages, local news weather pages. They need a panel that stays current with no work: ours refreshes from the Worker, spends no visitor API calls, and says its age.
+- Linkable assets, in order: (1) the embed; (2) data.json per page (open, cite us); (3) the "how today compares" numbers no agency page shows; (4) per-state and per-river hubs a local site links as "all gauges on X".
+- Owner only (messages are sent by the owner, never by Claude): a short note to 10 clubs or outfitters per state where a page is live, offering the panel.
+- Measure: Search Console Links report monthly into Numbers; embeds seen = hosts in the Worker's referer log, if the Worker logs one without reading user data (not built).
+- Edge cases: an embed breaks the host page (fixed height iframe, no script on their page); stale numbers read as now (age shown); a pulled page leaves a dead embed (open_wave --pull only drops it from Google; the page and its embed stay up; a gauge removed from the site would 404 its embed: not yet guarded); spam sites embedding us (no harm, no action); many embeds vs 100k requests/day free (the panel is a static file from the edge cache).
 
 ## Competitor: Lakebrief (measured 2026-11-08)
 - Sitemap 3,805 URLs: 1,246 lakes, each at 3 addresses (`/lake/<slug>`, `/lake/<slug>/water`, `/lake/<slug>/forecast`), all in the sitemap. Lastmod values are real and vary (2,601 at 2026-10-20, 635 at 2026-11-07, 364 at 2026-11-06).
