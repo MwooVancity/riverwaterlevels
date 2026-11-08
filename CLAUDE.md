@@ -63,7 +63,9 @@ Links come from data in code; a link exists because a reader here would tap it n
 - Change: commit explicit paths, push `check` (`dryrun.yml`), read "refresh OK", push main (= deploy), `tools/index_live.py` 0 mismatches, read one live page and status.json `world.gaps`/`thin`; proof into PLAN.md.
 - New source: `data/sources.json` row (quoted terms, credit, `read_on`, evidence), `collect.py` `fetch_extras`, `tools/gen_cache_shape.py`, one `b_*` block, four states. Breakage: `docs/RUNBOOK.md`.
 - Cloud runs: `gh workflow run dryrun.yml --ref check -f review="<site ids>"` (phone shots, artifact `review`) and `-f speed="<paths>"` (Lighthouse mobile, log lines "speed").
+- HARD practice every kind (owner 2026-11-08 "don't miss a type"): the practice release (`-f release=true`, nightly) adds one queued page of each kind (`tools/release.py --every-kind`: river, lake-usgs, lake-great, each agency lake feed, coast-live, coast-prediction, each world feed). A new kind or feed joins that list the day it is added; a kind with no queued page is named in PLAN.md.
 
 ## Reviews
 - Phone screenshots once per template variant (`lib/pages.py` `variant`, `data/reviewed.json`) and every new block type, before Google, cost named; reviewer who did not build it reads `tools/review_brief.md`. A page of a reviewed variant publishes on machine gates alone.
 - A defect found twice becomes a `check.py` rule that batch; delete a gate with no catch in 10 runs. Checklist `tools/helpful_audit.md`.
+- Gates hold the one page that is wrong (carried or sent back, US and world alike); only a fault of the whole site (Worker, limits, sitemap, a hub) stops a deploy. A fresh gate audit after any new kind or feed.
