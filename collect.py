@@ -1278,6 +1278,7 @@ LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(
 COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
+COAST_LEVEL = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("level_from")}  # prediction-only tide stations (owner 2026-11-08): the one real reading is a NOAA live level within 25 km, named on the page with its distance
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
 NOUSGS = COASTS | set(AGENCY)  # ids USGS does not know: every USGS-id call is skipped for them
 
@@ -1454,6 +1455,8 @@ def fetch_coops(st):
     6-minute predictions (observed minus predicted is the page's 'compared with the tide forecast', our calculation), the next 3 days of
     high and low tide predictions, and the latest water temperature. 4 calls per station per run; a product the station lacks is an empty list."""
     t = lambda s: s.replace(" ", "T") + ":00+00:00"
+    lv = COAST_LEVEL.get(st)  # prediction-only station (no level of its own): readings, 6-minute predictions and water temperature come from the named nearby station; this station gives only its own high and low tides
+    own, st = st, (lv["id"] if lv else st)
     wl = coops_get(st, "product=water_level&datum=MLLW&range=72")
     if not wl:
         raise RuntimeError("no CO-OPS water level rows for %s" % st)
@@ -1466,8 +1469,8 @@ def fetch_coops(st):
             rows.append({"parameter_code": "00010", "time": t(r["t"]), "value": str(round((float(r["v"]) - 32) / 1.8, 2)), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Preliminary"})
     begin = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)).strftime("%Y%m%d %H:%M")
     pred = coops_get(st, "product=predictions&datum=MLLW&interval=6&begin_date=%s&range=96" % urllib.parse.quote(begin))
-    hilo = coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=72" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
-    return {"fetched_at": now_iso(), "rows": rows, "truncated": []}, {"fetched_at": now_iso(), "station": st, "pred": [[t(p["t"]), float(p["v"])] for p in pred], "hilo": [[t(p["t"]), float(p["v"]), p["type"]] for p in hilo], "wt_suspect": [min(vs), max(vs)] if suspect else None}
+    hilo = coops_get(own, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=72" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
+    return {"fetched_at": now_iso(), "rows": rows, "truncated": []}, {"fetched_at": now_iso(), "station": own, "level": lv, "pred": [[t(p["t"]), float(p["v"])] for p in pred], "hilo": [[t(p["t"]), float(p["v"]), p["type"]] for p in hilo], "wt_suspect": [min(vs), max(vs)] if suspect else None}
 
 
 def fetch_twdb(slug):

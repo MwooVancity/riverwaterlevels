@@ -106,11 +106,34 @@ def pred_main():
                      headers={"User-Agent": "riverwaterlevels.com coast_match"}), timeout=60).read())["stations"] if s.get("state")]
     have = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
     picks = list(csv.DictReader(open(os.path.join(ROOT, "data", "tide-picks.csv"), encoding="utf-8")))
-    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)
+    rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")))
+    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)  # owner 2026-11-08: a nearby page on the same feed is no reason to refuse a searched place; check.py's 80% rule judges real copies
     for k, s, lv, d in got:
-        print("PICK %-30s %s %s, %s (%s) level from %s %s, %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], s.get("type"), lv["id"], lv["name"], d))
+        near = min(rows, key=lambda r: km(s, {"lat": r["lat"], "lng": r["lon"]}))
+        print("PICK %-30s %s %s, %s (%s) level from %s %s, %.1f km; nearest coast page %s %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], s.get("type"), lv["id"], lv["name"], d, near["site"], km(s, {"lat": near["lat"], "lng": near["lon"]})))
     for k, w in sorted(why.items()):
         print("skip %-30s %s" % (k, w))
+    if "--apply" in sys.argv and got:  # the same four files a live-level coast joins by (Panama City, 6f560a3); release still waits for the phone review (data/reviewed.json)
+        cols = list(rows[0].keys()) + [c for c in ("level_from", "level_name", "level_km") if c not in rows[0]]
+        qp = os.path.join(ROOT, "data", "world-queue.csv")
+        q = list(csv.DictReader(open(qp, encoding="utf-8")))
+        for k, s, lv, d in got:
+            name = re.split(r"[,(]", s["name"])[0].strip()
+            rows.append({"site": s["id"], "state": s["state"], "name": name, "place": name, "lat": s["lat"], "lon": s["lng"], "raw_name": "%s, %s" % (s["name"], s["state"]),
+                         "level_from": lv["id"], "level_name": lv["name"], "level_km": d})
+            for r in q:
+                if r["keyword"] == k["keyword"]:
+                    r.update(place=name, region=s["state"], country="US", gauge=s["id"], feed="NOAA CO-OPS", ready="yes")
+            with open(os.path.join(ROOT, "data", "waves.csv"), "a", newline="", encoding="utf-8") as f:
+                csv.writer(f).writerow(["queue", "", s["id"], name, name, s["state"], "0", "", "", "0", "coast", "", "", "human", "/coast/%s/" % re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")])
+            with open(os.path.join(ROOT, "docs", "research", "priority", "picks.csv"), "a", newline="", encoding="utf-8") as f:
+                csv.writer(f).writerow([s["id"], name, name, s["state"], "ocean"])
+        for p, data, hd in ((os.path.join(ROOT, "data", "coasts.csv"), rows, cols), (qp, q, list(q[0].keys()))):
+            with open(p, "w", newline="", encoding="utf-8") as f:
+                w = csv.DictWriter(f, hd)
+                w.writeheader()
+                w.writerows(data)
+        print("applied %d prediction-only stations" % len(got))
 
 
 def selftest():

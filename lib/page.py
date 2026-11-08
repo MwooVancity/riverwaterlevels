@@ -112,6 +112,9 @@ def b_official_links(G):
     n = G["rec"].get("nwps") or {}
     lid = n.get("lid")
     links = [("NOAA Tides and Currents page for this station", "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % G["site"])] if G.get("coast") else [("USGS page for this gauge", "https://waterdata.usgs.gov/monitoring-location/USGS-%s/" % G["site"]), ("USGS WaterAlert: text or email when this gauge crosses a level you choose", "https://accounts.waterdata.usgs.gov/wateralert/")]
+    lv_ = (G["rec"].get("coops") or {}).get("level") if G.get("coast") else None
+    if lv_:
+        links.append(("NOAA Tides and Currents page for %s (%s), where this page's water level is read" % (lv_["name"], lv_["id"]), "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % lv_["id"]))
     if G.get("agy"):  # a CDEC id on a USGS address is a dead link
         links = [("%s page for %s %s" % (G["agy"]["short"], G["agy"]["label"].split()[-1], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
     if lid:
@@ -381,6 +384,15 @@ def lake_words(h, G):
         for a, b in (("gauge-local time", "station time"), ("live water temperature (no USGS temperature sensor at this station or within 40 mi on the rivers here)", "live water temperature (none in NOAA's water temperature feed for this station in the last 3 days)"), ("clarity (no USGS turbidity or water-quality sensor at this station)", "clarity (no NOAA water-quality sensor at this station)"), ("Hours are gauge-local;", "Hours are station time;"), ("how the percentile is calculated", "how the tide comparison is calculated"), ("a report nearby may not concern this river.", "a report nearby may not concern this stretch of coast."), ("Other gauges on this site (none on this river within 100 mi)", "Other gauges and stations on this site")):
             h = h.replace(a, b)
         h = re.sub(r"Percentile method: [^<]*", "Comparison method: the latest NOAA reading against NOAA's predicted tide for the same 6-minute time (our calculation).", h)
+        lv = (G["rec"].get("coops") or {}).get("level")
+        if lv:  # prediction-only station (owner 2026-11-08): every reading line names the nearby station it comes from; high and low tides stay this station's own
+            at = "NOAA station %s (%s), %.1f km from this station" % (esc(lv["id"]), esc(lv["name"]), lv["km"])
+            for a, b in (("Source: NOAA CO-OPS 6-minute water level above MLLW,", "Source: NOAA CO-OPS 6-minute water level above MLLW at %s," % at), ("Source: NOAA CO-OPS (preliminary)", "Source: NOAA CO-OPS (preliminary), readings at %s" % at),
+                         ("Tide comparison: NOAA CO-OPS 6-minute predictions for this station;", "Tide comparison: NOAA CO-OPS 6-minute predictions for %s, where the water level is read;" % at), ("NOAA sensor", "NOAA sensor at %s" % at),
+                         ("Latest NOAA water level", "Latest NOAA water level, at %s," % at), ("Solid line: NOAA readings (preliminary)", "Solid line: NOAA readings at %s (preliminary)" % at), ("dashed curve: NOAA predicted tide, next 24 h", "dashed curve: NOAA predicted tide there, next 24 h"),
+                         ("3-day water level readings (NOAA CO-OPS, preliminary)", "3-day water level readings at NOAA station %s (NOAA CO-OPS, preliminary)" % esc(lv["id"])),
+                         ("the latest NOAA reading against NOAA's predicted tide for the same 6-minute time", "the latest NOAA reading at %s against NOAA's predicted tide there for the same 6-minute time" % at)):
+                h = h.replace(a, b)
     return h
 
 

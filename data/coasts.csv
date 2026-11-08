@@ -1,42 +1,51 @@
-site,state,name,place,lat,lon,raw_name,buoy,buoy_owner,buoy_km
-9410170,CA,San Diego Bay,San Diego,32.7156,-117.1767,"San Diego, CA",46254,SCRIPPS,13.6
-8638610,VA,Sewells Point,Norfolk,36.94278,-76.32861,"Sewells Point, VA",,,
-8661070,SC,Springmaid Pier,Myrtle Beach,33.655,-78.9183,"Springmaid Pier, SC",,,
-8722956,FL,South Port Everglades,Fort Lauderdale,26.081667,-80.11667,"South Port Everglades, FL",41122,SCRIPPS,9.2
-8447435,MA,Chatham,Chatham,41.6885,-69.9511,"Chatham, MA",44020,NDBC,34.9
-9413450,CA,Monterey,Monterey,36.60889,-121.89139,"Monterey, CA",46236,SCRIPPS,17.5
-8729840,FL,Pensacola,Pensacola,30.4044,-87.2112,"Pensacola, FL",42012,NDBC,50.0
-8729210,FL,Panama City Beach,Panama City Beach,30.21375,-85.878586,"Panama City Beach, FL",,,
-9444090,WA,Port Angeles,Port Angeles,48.125,-123.44,"Port Angeles, WA",46267,SCRIPPS,12.9
-8518750,NY,The Battery,New York,40.700554,-74.01417,"The Battery, NY",,,
-8534720,NJ,Atlantic City,Atlantic City,39.356667,-74.41805,"Atlantic City, NJ",,,
-8443970,MA,Boston,Boston,42.35389,-71.05028,"Boston, MA",44013,NDBC,32.8
-8771450,TX,Galveston Pier 21,Galveston,29.31,-94.7933,"Galveston Pier 21, TX",42035,NDBC,38.1
-9455920,AK,Anchorage,Anchorage,61.2375,-149.8904,"Anchorage, AK",,,
-9439040,OR,Astoria,Astoria,46.207306,-123.7683,"Astoria, OR",,,
-8413320,ME,Bar Harbor,Bar Harbor,44.392193,-68.20428,"Bar Harbor, ME",,,
-8727520,FL,Cedar Key,Cedar Key,29.135,-83.0317,"Cedar Key, FL",,,
-8726724,FL,Clearwater Beach,Clearwater Beach,27.9783,-82.8317,"Clearwater Beach, FL",,,
-9419750,CA,Crescent City,Crescent City,41.74561,-124.18439,"Crescent City, CA",46027,NDBC,19.5
-8720030,FL,Fernandina Beach,Fernandina Beach,30.671356,-81.46584,"Fernandina Beach, FL",41112,SCRIPPS,17.1
-8725520,FL,Fort Myers,Fort Myers,26.647778,-81.87111,"Fort Myers, FL",,,
-9437540,OR,Garibaldi,Garibaldi,45.55453,-123.918945,"Garibaldi, OR",46278,SCRIPPS,5.6
-1612340,HI,Honolulu,Honolulu,21.303333,-157.86453,"Honolulu, HI",,,
-9452210,AK,Juneau,Juneau,58.2988,-134.4106,"Juneau, AK",,,
-9450460,AK,Ketchikan,Ketchikan,55.331944,-131.62611,"Ketchikan, AK",,,
-8720218,FL,Mayport Bar Pilots Dock,Mayport,30.398167,-81.42789,"Mayport (Bar Pilots Dock), FL",,,
-8725114,FL,Naples Bay North,Naples,26.1367,-81.7883,"Naples Bay, North, FL",,,
-8775237,TX,Port Aransas,Port Aransas,27.8397,-97.0725,"Port Aransas, TX",,,
-9444900,WA,Port Townsend,Port Townsend,48.11122,-122.759674,"Port Townsend, WA",,,
-9414290,CA,San Francisco,San Francisco,37.806305,-122.46589,"San Francisco, CA",46237,SCRIPPS,14.9
-8531680,NJ,Sandy Hook,Sandy Hook,40.4669,-74.0094,"Sandy Hook, NJ",,,
-9411340,CA,Santa Barbara,Santa Barbara,34.40459,-119.6925,"Santa Barbara, CA",,,
-9447130,WA,Seattle,Seattle,47.60264,-122.3393,"Seattle, WA",,,
-8779748,TX,South Padre Island CG Station,South Padre Island,26.0731,-97.1675,"South Padre Island CG Station, TX",,,
-9446484,WA,Tacoma,Tacoma,47.2667,-122.4133,"Tacoma, WA",,,
-8658163,NC,Wrightsville Beach,Wrightsville Beach,34.213306,-77.7867,"Wrightsville Beach, NC",,,
-9432780,OR,Charleston,Coos Bay,43.345,-124.322,"Charleston, OR",,,
-9418767,CA,North Spit,Eureka,40.766907,-124.21735,"North Spit, CA",46244,SCRIPPS,18.6
-8720226,FL,Southbank Riverwalk,Jacksonville,30.32,-81.6583,"Southbank Riverwalk, St Johns River, FL",,,
-8721604,FL,Trident Pier,Cocoa Beach,28.4158,-80.5931,"Trident Pier, Port Canaveral, FL",41113,SCRIPPS,6.1
-8729108,FL,Panama City,Panama City,30.149723,-85.664444,"Panama City, FL",,,
+site,state,name,place,lat,lon,raw_name,buoy,buoy_owner,buoy_km,level_from,level_name,level_km
+9410170,CA,San Diego Bay,San Diego,32.7156,-117.1767,"San Diego, CA",46254,SCRIPPS,13.6,,,
+8638610,VA,Sewells Point,Norfolk,36.94278,-76.32861,"Sewells Point, VA",,,,,,
+8661070,SC,Springmaid Pier,Myrtle Beach,33.655,-78.9183,"Springmaid Pier, SC",,,,,,
+8722956,FL,South Port Everglades,Fort Lauderdale,26.081667,-80.11667,"South Port Everglades, FL",41122,SCRIPPS,9.2,,,
+8447435,MA,Chatham,Chatham,41.6885,-69.9511,"Chatham, MA",44020,NDBC,34.9,,,
+9413450,CA,Monterey,Monterey,36.60889,-121.89139,"Monterey, CA",46236,SCRIPPS,17.5,,,
+8729840,FL,Pensacola,Pensacola,30.4044,-87.2112,"Pensacola, FL",42012,NDBC,50.0,,,
+8729210,FL,Panama City Beach,Panama City Beach,30.21375,-85.878586,"Panama City Beach, FL",,,,,,
+9444090,WA,Port Angeles,Port Angeles,48.125,-123.44,"Port Angeles, WA",46267,SCRIPPS,12.9,,,
+8518750,NY,The Battery,New York,40.700554,-74.01417,"The Battery, NY",,,,,,
+8534720,NJ,Atlantic City,Atlantic City,39.356667,-74.41805,"Atlantic City, NJ",,,,,,
+8443970,MA,Boston,Boston,42.35389,-71.05028,"Boston, MA",44013,NDBC,32.8,,,
+8771450,TX,Galveston Pier 21,Galveston,29.31,-94.7933,"Galveston Pier 21, TX",42035,NDBC,38.1,,,
+9455920,AK,Anchorage,Anchorage,61.2375,-149.8904,"Anchorage, AK",,,,,,
+9439040,OR,Astoria,Astoria,46.207306,-123.7683,"Astoria, OR",,,,,,
+8413320,ME,Bar Harbor,Bar Harbor,44.392193,-68.20428,"Bar Harbor, ME",,,,,,
+8727520,FL,Cedar Key,Cedar Key,29.135,-83.0317,"Cedar Key, FL",,,,,,
+8726724,FL,Clearwater Beach,Clearwater Beach,27.9783,-82.8317,"Clearwater Beach, FL",,,,,,
+9419750,CA,Crescent City,Crescent City,41.74561,-124.18439,"Crescent City, CA",46027,NDBC,19.5,,,
+8720030,FL,Fernandina Beach,Fernandina Beach,30.671356,-81.46584,"Fernandina Beach, FL",41112,SCRIPPS,17.1,,,
+8725520,FL,Fort Myers,Fort Myers,26.647778,-81.87111,"Fort Myers, FL",,,,,,
+9437540,OR,Garibaldi,Garibaldi,45.55453,-123.918945,"Garibaldi, OR",46278,SCRIPPS,5.6,,,
+1612340,HI,Honolulu,Honolulu,21.303333,-157.86453,"Honolulu, HI",,,,,,
+9452210,AK,Juneau,Juneau,58.2988,-134.4106,"Juneau, AK",,,,,,
+9450460,AK,Ketchikan,Ketchikan,55.331944,-131.62611,"Ketchikan, AK",,,,,,
+8720218,FL,Mayport Bar Pilots Dock,Mayport,30.398167,-81.42789,"Mayport (Bar Pilots Dock), FL",,,,,,
+8725114,FL,Naples Bay North,Naples,26.1367,-81.7883,"Naples Bay, North, FL",,,,,,
+8775237,TX,Port Aransas,Port Aransas,27.8397,-97.0725,"Port Aransas, TX",,,,,,
+9444900,WA,Port Townsend,Port Townsend,48.11122,-122.759674,"Port Townsend, WA",,,,,,
+9414290,CA,San Francisco,San Francisco,37.806305,-122.46589,"San Francisco, CA",46237,SCRIPPS,14.9,,,
+8531680,NJ,Sandy Hook,Sandy Hook,40.4669,-74.0094,"Sandy Hook, NJ",,,,,,
+9411340,CA,Santa Barbara,Santa Barbara,34.40459,-119.6925,"Santa Barbara, CA",,,,,,
+9447130,WA,Seattle,Seattle,47.60264,-122.3393,"Seattle, WA",,,,,,
+8779748,TX,South Padre Island CG Station,South Padre Island,26.0731,-97.1675,"South Padre Island CG Station, TX",,,,,,
+9446484,WA,Tacoma,Tacoma,47.2667,-122.4133,"Tacoma, WA",,,,,,
+8658163,NC,Wrightsville Beach,Wrightsville Beach,34.213306,-77.7867,"Wrightsville Beach, NC",,,,,,
+9432780,OR,Charleston,Coos Bay,43.345,-124.322,"Charleston, OR",,,,,,
+9418767,CA,North Spit,Eureka,40.766907,-124.21735,"North Spit, CA",46244,SCRIPPS,18.6,,,
+8720226,FL,Southbank Riverwalk,Jacksonville,30.32,-81.6583,"Southbank Riverwalk, St Johns River, FL",,,,,,
+8721604,FL,Trident Pier,Cocoa Beach,28.4158,-80.5931,"Trident Pier, Port Canaveral, FL",41113,SCRIPPS,6.1,,,
+8729108,FL,Panama City,Panama City,30.149723,-85.664444,"Panama City, FL",,,,,,
+9449211,WA,Bellingham,Bellingham,48.745,-122.495,"Bellingham, WA",,,,9449424,Cherry Point,23.3
+8775870,TX,Corpus Christi,Corpus Christi,27.579999923706055,-97.2166976928711,"Corpus Christi, Bob Hall Pier, TX",,,,8775792,Packery Channel,6.2
+9447427,WA,Edmonds,Edmonds,47.8133,-122.383,"Edmonds, WA",,,,9447130,Seattle,23.7
+9455558,AK,Homer,Homer,59.60139846801758,-151.4105987548828,"Homer, Coal Point, Kachemak Bay, AK",,,,9455500,Seldovia,25.0
+8558690,DE,Indian River Inlet,Indian River Inlet,38.61,-75.07,"Indian River Inlet (Coast Guard Station), DE",,,,8557380,Lewes,19.7
+8720291,FL,Jacksonville Beach,Jacksonville Beach,30.2833,-81.3867,"Jacksonville Beach, FL",,,,8720218,Mayport (Bar Pilots Dock),13.4
+8724991,FL,Marco,Marco,25.9717,-81.7283,"Marco, Big Marco River, FL",,,,8725114,"Naples Bay, North",19.3
+9434939,OR,Waldport,Waldport,44.43436111111111,-124.0580833333333,"Waldport, Alsea Bay, OR",,,,9435380,South Beach,21.3
+9410196,CA,Mission Bay,Mission Bay,32.793701171875,-117.22380065917969,"Mission Bay, Campland, CA",,,,9410230,La Jolla,8.7

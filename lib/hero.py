@@ -260,6 +260,17 @@ def _nt_txt(G):
     return ("%s %.1f ft at %s" % ("high" if nx[0][2] == "H" else "low", nx[0][1], tzl(parse_t(nx[0][0]), G["zone"], date=False))) if nx else "Unknown"
 
 
+def level_of(G):
+    """The nearby NOAA station a prediction-only tide page reads its water level from ({id, name, km}), or None (the station reads its own)."""
+    return (G["rec"].get("coops") or {}).get("level") if G.get("coast") else None
+
+
+def level_at(G):
+    """Edge case 3 (handoff 2026-11-08a): a reading from another place says which place, on the tile itself. check.py claims_vs_cache fails a page without it."""
+    lv = level_of(G)
+    return ('<small class="lvl">At NOAA station %s (%s), %.1f km away; this station has tide predictions only</small>' % (esc(lv["id"]), esc(lv["name"]), lv["km"])) if lv else ""
+
+
 def coast_anomaly(G):
     """(word, caption) comparing the latest NOAA water level with NOAA's predicted tide for the same 6-minute time; our calculation, said so.
     Within 0.25 ft reads 'Close to predicted'. None when no prediction matches the reading's time."""
@@ -269,7 +280,8 @@ def coast_anomaly(G):
     t, v = G["sg"][-1][0], G["sg"][-1][1]
     d = v - pr[t]
     word = "Close to predicted" if abs(d) < 0.25 else "Above predicted" if d > 0 else "Below predicted"
-    return word, "Observed %.2f ft against NOAA's predicted tide of %.2f ft at %s: %+.2f ft (our calculation)." % (v, pr[t], tzl(t, G["zone"], date=False), d)
+    lv = level_of(G)  # the comparison is made where the reading is, never at this page's place
+    return word, ("At %s, %.1f km away: o" % (lv["name"], lv["km"]) if lv else "O") + "bserved %.2f ft against NOAA's predicted tide of %.2f ft at %s: %+.2f ft (our calculation)." % (v, pr[t], tzl(t, G["zone"], date=False), d)
 
 
 def beyond(srow, v, unit="cfs"):
@@ -346,7 +358,7 @@ def hero(G, pages=None):
     if sg:
         tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
                          ui.spark([x[1] for x in sg if x[0] >= d24]) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))
-                         + (('<small>Reading of <span data-live="stageobs" data-t="%s">%s</span></small>' % (iso(sg[-1][0]), esc(tzl(sg[-1][0], G["zone"])))) if sg[-1][0] != G["lt"] else ""))
+                         + (('<small>Reading of <span data-live="stageobs" data-t="%s">%s</span></small>' % (iso(sg[-1][0]), esc(tzl(sg[-1][0], G["zone"])))) if sg[-1][0] != G["lt"] else "") + level_at(G))
     else:  # Memphis 2026-10-26: USGS publishes flow only; the NWS forecast point at the same place observes the stage
         o, n_ = nws_stage(G), G["rec"].get("nwps") or {}
         if o:

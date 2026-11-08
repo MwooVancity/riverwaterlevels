@@ -185,7 +185,7 @@ def main():
                                "derived": set(re.findall(r"(?:NWS (action|minor|moderate|major) stage|Next NWS impact at) ([\d.\-]+) ft \(([\d.]+) ft (above|below) (?:the latest reading|the NWS reading of ([\d.\-]+) ft)", h))}
     for u in [u for _, u, *_ in gauges if u.startswith("/coast/")]:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
         h = page(u)
-        sid, st_, t_ = re.search(r"NOAA tide station (\d+)", h), re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
+        sid, st_, t_ = re.search(r"At NOAA station (\d+) \(", h) or re.search(r"NOAA tide station (\d+)", h),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
         if not (sid and st_ and t_):
             bad.append("%s: cannot read station, water level or time from the page" % u)
             continue
