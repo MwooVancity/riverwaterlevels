@@ -957,9 +957,9 @@ def b_moon(G):
         return block("moon", "Moon today", "official", "<p>Unknown: the U.S. Naval Observatory's moon times for today were not read in this build.</p>", src + ".", "usno")
     ev = sorted((parse_t(t), ph) for d in u["days"] for ph, t in d["moon"])
     today_ = lambda ph: [t for t, p in ev if p == ph and d0 <= t < d1]
-    tm = lambda ts: ", ".join(esc(tzl(t, z, date=False)) for t in ts) or "None today"
+    tm = lambda ts, w: ", ".join(esc(tzl(t, z, date=False)) for t in ts) or "No %s today" % w  # "None" reads as a code leak (break gate 2026-11-07)
     cps = sorted({tuple(d["closest"]) for d in u["days"] if d.get("closest")}, key=lambda c: abs((parse_t(c[1]) - G["now"]).total_seconds()))
-    rows = "".join(tr([a, b], right=(1,)) for a, b in (("Moonrise today", tm(today_("Rise"))), ("Moonset today", tm(today_("Set"))),
+    rows = "".join(tr([a, b], right=(1,)) for a, b in (("Moonrise today", tm(today_("Rise"), "moonrise")), ("Moonset today", tm(today_("Set"), "moonset")),
                                                       ("Moon phase, nearest principal phase", ("%s, %s" % (esc(cps[0][0]), esc(tzl(parse_t(cps[0][1]), z)))) if cps else "Unknown")))
     return block("moon", "Moon today", "official", table(["Measure", esc(fdate(loc.date().isoformat()))], rows, right=(1,)),
                  src + ", read %s. USNO gives the times in UTC; station time is our conversion." % esc(tzl(parse_t(u["fetched_at"]), z)), "usno")

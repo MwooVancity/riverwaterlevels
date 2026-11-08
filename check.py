@@ -119,6 +119,12 @@ def stats_gap(h):
     return []
 
 
+def neg_zero(h):
+    """Phone reviews 2026-11-07 (Honolulu 1612340, Atlantic City 8518750): '-0.0 ft' printed for a tide low of -0.04 ft. Found twice, so a rule."""
+    m = re.search(r"(?<![\w.])[-−]0\.0+(?![\d])(?:\s|&nbsp;| )*(ft|m|cm|in|°)", h)
+    return "prints '%s' (negative zero): round first, then format" % m.group(0) if m else None
+
+
 def foreign_usgs(h):
     """A USGS label or link carrying an id USGS does not use (CDEC-SHA): the reading's source named wrongly, or a dead USGS link (agency lakes 2026-11-07)."""
     m = re.search(r"USGS(?:-| lake gauge | gauge | )(?!PAD-US)([A-Z]{2,}-[A-Za-z0-9]+)", h)  # review 2026-11-07 #4: TWDB ids are lower case
@@ -539,6 +545,8 @@ def hater_rules(h):
         bad.append("a direction word on a gauge that is not reporting (say 'Trend unknown (gauge not reporting)')")
     if foreign_usgs(h):
         bad.append(foreign_usgs(h))
+    if neg_zero(h):
+        bad.append(neg_zero(h))
     rt_ = re.search(r'class="tile rain(?![^"]*stale)[^"]*">.{0,400}?data-h="(\d+(?:\.\d+)?)"', h, re.S)
     if rt_ and float(rt_.group(1)) > 6:  # STALE_H["rain_totals"]
         bad.append("a rain tile shows an estimate older than 6 h as current (say 'Unknown: last estimate N ago')")
@@ -840,7 +848,7 @@ def selftest():
         Gm = lambda el: {"lake": "AGY", "zone": dt_.timezone.utc, "now": t0 + dt_.timedelta(hours=30), "sg": [(dt_.datetime(2026, 11, 5, 7, tzinfo=dt_.timezone.utc), el, {})], "rec": {"usbr_lc": lc}}
         mb = b3_.b_reservoir(Gm(1039.41))
         assert mb and "6,937,000 acre-ft" in mb["body"] and "26.6%" in mb["body"] and b3_.b_reservoir(Gm(1045.0)) is None, "selftest: Reclamation storage shown for another day or lake, or its percent is wrong"
-    if b3_.cleared("usno"):  # moon on coasts: valid, valid-empty ('None today'), Unknown when the window misses today; times are UTC instants shown in station time
+    if b3_.cleared("usno"):  # moon on coasts: valid, valid-empty ('No moonrise today'), Unknown when the window misses today; times are UTC instants shown in station time
         import zoneinfo as zi_
         un = {"fetched_at": "2026-11-07T10:00:00+00:00", "days": [{"date": "2026-11-0%d" % d, "moon": mo, "closest": ["New Moon", "2026-11-08T23:02:00+00:00"]} for d, mo in (
             (6, [["Rise", "2026-11-06T11:20:00+00:00"]]), (7, [["Rise", "2026-11-07T12:43:00+00:00"], ["Set", "2026-11-07T23:45:00+00:00"]]), (8, [["Rise", "2026-11-08T13:50:00+00:00"]]))]}
@@ -849,7 +857,7 @@ def selftest():
         assert mo_ and "4:43" in mo_["body"] and "3:45" in mo_["body"] and "New Moon" in mo_["body"], "selftest: USNO UTC moon times not shown in station time"
         assert "Unknown" in b3_.b_moon(Gn(un, dt_.datetime(2026, 11, 10, 20, tzinfo=dt_.timezone.utc)))["body"] and "Unknown" in b3_.b_moon(Gn({}, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))["body"], "selftest: old or missing moon data shown as today"
         em = {**un, "days": [dict(d, moon=[]) for d in un["days"]]}
-        assert "None today" in b3_.b_moon(Gn(em, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))["body"], "selftest: a day with no moonrise not said"
+        assert "No moonrise today" in b3_.b_moon(Gn(em, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)))["body"], "selftest: a day with no moonrise not said"
         assert b3_.b_moon({**Gn(un, dt_.datetime(2026, 11, 7, 20, tzinfo=dt_.timezone.utc)), "coast": False}) is None, "selftest: moon block on a river page"
     if b3_.cleared("glerl"):  # Great Lakes lake-wide temperature, four states: valid, stale (amber past 96 h), hidden past 10 days, unavailable = Unknown
         gs = {"date": "2026-11-05", "temp_f": 57.1, "avg_f": 51.2, "avg_from": "1995", "avg_to": "2025", "fetched_at": "2026-11-07T02:00:00+00:00"}
@@ -859,6 +867,7 @@ def selftest():
         assert old_ and old_["amber"] and gone_ is None and unk_ and "Unknown" in unk_["body"], "selftest: an old GLERL value was not marked or hidden, or a missing one was silent"
         assert b3_.b_lake_temp(Gt(gs, 30, "Lake Lanier")) is None, "selftest: a lake-wide Great Lakes temperature shown on another lake"
     assert "AKST" in b3_._aq_time({"date": "2026-11-06", "hour": "17:00", "tz": "KST"}), "selftest: AirNow's Alaska 'KST' printed as Korea time"
+    assert neg_zero("12:17 am low -0.0 ft") and neg_zero("−0.00 m") and not neg_zero("low 0.0 ft") and not neg_zero("-0.04 ft") and not neg_zero("10-0.0 ft"), "selftest: a negative zero passed (phone review 2026-11-07)"
     assert datum_named('<b data-live="stage">1062.6</b> ft', "/lake/x/") and not datum_named('<b data-live="stage">1062.6</b> ft above NAVD 1988', "/lake/x/") and not datum_named('<b data-live="stage">3.1</b>', "/river/x/y/"), "selftest: a lake elevation with no datum passed (ChatGPT audit 2026-11-05 item 1)"
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import info_gain  # the competitor gate release.py page_check runs: a page missing a core item must lose
