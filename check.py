@@ -92,7 +92,7 @@ def page_checks(h, rel):
     passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
     u = "/" + os.path.dirname(rel).replace(os.sep, "/").replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
-    sid = re.search(r"USGS gauge (\d{8,15})\b", h)
+    sid = re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # a lake page says "USGS lake gauge" (release 2026-11-08 stopped on 11 lakes)
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
         out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
@@ -113,7 +113,7 @@ def datum_named(h, u):
 def stats_gap(h):
     """Wave 3 2026-10-27: "is this normal" blank on 6 of 6 pages while the USGS statistics file was in the repo. One function for the site gate and
     tools/release.py page_check (release 2026-11-07: two new gauges passed the release's check and failed this one at the gate, undoing all 25)."""
-    sid = re.search(r"USGS gauge (\d{8,15})\b", h)
+    sid = re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # a lake page says "USGS lake gauge" (release 2026-11-08 stopped on 11 lakes)
     stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
     if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:
         return ["says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics"]

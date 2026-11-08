@@ -88,7 +88,11 @@ def coops_verdict(pt, pv, got):
     return None
 
 
+GAUGE_ID = re.compile(r"USGS (?:lake )?gauge (\d+)")  # release 2026-11-08 stopped: 11 lake pages say "USGS lake gauge", the old pattern read no id
+
+
 def selftest():
+    assert GAUGE_ID.search("USGS lake gauge 02334400").group(1) == "02334400" and GAUGE_ID.search("USGS gauge 06893000").group(1) == "06893000", "a lake or river page's gauge id was not read"
     """Review 2026-11-07 #10: each operator branch fails when its clock or value is read wrong."""
     P = lambda s: datetime.datetime.fromisoformat(s)
     c = agency_got("CDEC", '[{"date": "2026-11-06 23:00", "value": 1012.34}, {"date": "2026-11-07 00:00", "value": -9999}]')
@@ -159,7 +163,7 @@ def main():
         if '>Latest flow</span><b>Not published<' in h:  # ice: USGS publishes stage only, so no flow to compare; a page must never fail for saying so
             skipped.append("%s: flow not published by USGS" % url)
             continue
-        sid = re.search(r"USGS gauge (\d+)", h)
+        sid = GAUGE_ID.search(h)
         flow = re.search(r'data-live="flow">([\d,.\-]+)<', h)
         stage = re.search(r'data-live="stage">([\d.\-]+)<', h)
         stage_t = re.search(r'data-live="stageobs" data-t="([^"]+)"', h)
