@@ -51,7 +51,7 @@ def open_stuck():
 
 
 def world_short(s):
-    """A line when a world page lacks a block its data allows, or a quarter of listed gauges are held back (5 of 38 today: 4 Austrian gauges with no coordinates, 1 near-duplicate)."""
+    """A line when a world page lacks a block its data allows, or a quarter of listed gauges are held back (5 of 38 today: 4 Austrian gauges with no coordinates, 1 then held as a near-duplicate, a hold removed 2026-11-08)."""
     w = s.get("world") or {}
     thin = len(w.get("thin") or {})  # held under the floor of lib/world.py thin: expected while a country lacks sources, named in the ok line, never an alarm
     gaps, held = w.get("gaps") or {}, (w.get("listed") or 0) - (w.get("shown") or 0) - thin

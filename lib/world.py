@@ -385,18 +385,6 @@ def drop_held(pages, thin, today):
 
 
 GATE = True
-ALIKE = 0.75  # check.py fails a site over 0.80; held back at 0.75 here, so a gauge whose text drifts skips itself and never blocks a deploy
-
-
-def shingles(h):
-    """check.py's near-duplicate text: 5-word runs of the page body, numbers kept."""
-    b = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
-    w = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", b))).lower().split()
-    return {" ".join(w[i:i + 5]) for i in range(len(w) - 4)}
-
-
-def alike(a, b):
-    return bool(a and b) and len(a & b) / len(a | b) > ALIKE
 
 
 FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/services/water-overview/quantity/floods/forecasting-centres.html">provincial flood forecasting centres</a>', "pegelonline": '<a href="https://www.hochwasserzentralen.de/">German state flood portal</a>',
@@ -468,8 +456,8 @@ def thin(h):
 
 
 def choose(pages, now):
-    """Names per page that may publish: first pass over every gauge, a page too like one already kept waits. ponytail: all pairs, fine to about 3,000 world gauges; past that compare within a feed."""
-    kept, names, urls = [], {}, set()
+    """Names per page that may publish: first pass over every gauge; a second gauge on an address already taken waits."""
+    names, urls = {}, set()
     for p, d in pages:
         names[p["slug"]] = set()
         order = p.get("gauge_pages") or []  # the list's order is priority: a famous gauge wins over a quiet one
@@ -495,17 +483,12 @@ def choose(pages, now):
                 THIN[r["name"]] = short
                 print("world gauge held, thin page: %s %s" % (r["name"], "; ".join(short)))
                 continue
-            s = shingles(got[1])
-            if not live and any(alike(s, o) for o in kept):
-                THIN[r["name"]] = ["too like another page"]
-                print("world gauge held, too like another page: %s" % r["name"])
-                continue
+            # owner 2026-11-08: a page like another (same feed, same gauge, near-same text) is still the page a reader searched for; only the same address waits
             if got[0] in urls:  # two titles that slug alike: the second would overwrite the first page (review 2026-11-04); the list order decides, the second waits
                 THIN[r["name"]] = ["same address as another gauge: %s" % got[0]]
                 print("world gauge held, same address as another gauge: %s %s" % (r["name"], got[0]))
                 continue
             urls.add(got[0])
-            kept.append(s)
             names[p["slug"]].add(r["name"])
     return names
 

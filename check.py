@@ -256,56 +256,6 @@ def world_claims(h, rows):
     return [] if abs(shown - r["cm"]) <= tol else ["level on the page %s, the cached reading it was built from %s %s at the same time: a unit, conversion or station slip" % (v.group(1), r["cm"], r.get("unit") or "cm")]
 
 
-DUP_MAX = 0.80  # owner rule: no two pages over 80% the same (Google scaled-content policy), numbers included since 2026-11-02: a gauge's own readings are what it adds
-
-
-def shingles(h):
-    """5-word shingles of the visible <main> text numbers kept: the same words with other readings are two gauges, the same words and the same readings are one."""
-    b = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
-    t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", b))).lower()
-    w = (t).split()
-    return {hash(" ".join(w[i:i + 5])) for i in range(len(w) - 4)}
-
-
-BINS, ROWS = 320, 8  # 40 bands of 8: a pair at 80% slips past 6 in 10,000 runs, at 90% never in practice; live pages sit at 32-46% (2026-11-04), so about 1 pair in 100 is checked exactly
-
-
-def sketch(s):
-    """One-permutation MinHash: the smallest hash in each of BINS bins. 320 values a page instead of ~4,000 shingles held in memory."""
-    m = [None] * BINS
-    for x in s:
-        b, v = x % BINS, x // BINS
-        if m[b] is None or v < m[b]:
-            m[b] = v
-    return tuple(m)
-
-
-def dup_scope(h, rel):
-    """Pages the near-duplicate rule measures: world pages and indexable gauge pages with a hero. One rule for the gate and tools/release.py page_check."""
-    return kind_of(rel) == "world" or (kind_of(rel) == "gauge" and 'class="hero' in h and not re.search(r'<meta name="robots" content="noindex', h))
-
-
-def near_dupes(sh, load=None):
-    """Pairs of gauge pages sharing more than DUP_MAX of their text. sh maps url to a shingle set, or to a sketch with load(url) giving the set back.
-    Banding picks candidates, the exact Jaccard decides: all pairs took ~1 ms each and hit the 45-min brake near 2,000 pages.
-    ponytail: a bug making 1,000 identical pages costs 500k exact checks (~8 min); fine, the build already fails."""
-    sk = {u: s if isinstance(s, tuple) else sketch(s) for u, s in sh.items() if s}
-    cand = set()
-    for i in range(0, BINS, ROWS):
-        buck = {}
-        for u, m in sk.items():
-            buck.setdefault(m[i:i + ROWS], []).append(u)
-        cand.update(tuple(sorted((a, b))) for us in buck.values() if len(us) > 1 for k, a in enumerate(us) for b in us[k + 1:])
-    get, out = load or sh.get, []
-    for a, b in sorted(cand):
-        if sum(x == y for x, y in zip(sk[a], sk[b])) / BINS < DUP_MAX - 0.15:  # estimate error ~0.02 at 320 bins: 7 of them
-            continue
-        A, B = get(a), get(b)
-        if (j := len(A & B) / len(A | B)) > DUP_MAX:
-            out.append((a, b, j))
-    return out
-
-
 def cloak_risks(js):
     """Google's cloaking rule: crawlers and people must get the same page. The edge Worker therefore never reads the visitor's identity."""
     pat = r"""(?i)\b(?:req|request)\.(?:cf\b|headers\.get\(\s*["'](?:user-agent|sec-ch-ua[\w-]*|cf-ipcountry|cf-connecting-ip|x-forwarded-for|cf-bot[\w-]*)["'])"""
@@ -598,7 +548,7 @@ def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     results, titles, links_of, n_links, rel_of, noindex_of, vis_of = {}, collections.defaultdict(list), {}, {}, {}, {}, {}
-    gauge_sh, world_rows = {}, {}
+    world_rows = {}
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith(".html") and f != "404.html":
@@ -621,8 +571,6 @@ def check_dir(d):
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
-                if dup_scope(h, rel):
-                    gauge_sh[u] = sketch(shingles(h))
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
     site_bad = []
     urls = rel_of
@@ -635,14 +583,6 @@ def check_dir(d):
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
     live_now |= {r[0] for r in json.load(open(lsp, encoding="utf-8"))} if os.path.exists(lsp) else set()
-    dups = near_dupes(gauge_sh, lambda u: shingles(open(os.path.join(d, rel_of[u]), encoding="utf-8").read().replace(" ", " ")))
-    for a, b, j in dups:
-        msg = "near-duplicate pages: %s and %s share %.0f%% of their text (limit %.0f%%)" % (a, b, 100 * j, 100 * DUP_MAX)
-        if len(dups) > max(3, len(gauge_sh) // 20):  # many pairs at once is a template fault: the site stops
-            site_bad.append(msg)
-        else:  # scale debate 2026-11-07: one pair (two dead neighbours) stopped every deploy; the newer page fails alone and is carried or sent back
-            newer = b if os.path.exists(os.path.join(ROOT, "dist", rel_of[a])) or not os.path.exists(os.path.join(ROOT, "dist", rel_of[b])) else a
-            results.setdefault(rel_of[newer], []).append(msg)
     for t, rels in titles.items():
         if len(rels) > 1:
             site_bad.append("duplicate title %r on %d pages" % (t[:50], len(rels)))
@@ -939,7 +879,6 @@ def selftest():
     assert 'id="flow_chart"' in wh2 and 'id="world_history"' in wh2 and "Emergency in Germany" in wh2, "selftest: a world page lost flow, history or the emergency number"
     assert not world_rules(wh2) and "hourly_forecast" in wh2 and "10 °C (50 °F)" in wh2 and "16 km/h (10 mph)" in wh2 and "id=\"weather_forecast\"" in wh2, "selftest: a world page with weather lost a block or a unit: %s" % world_rules(wh2)
     assert not world.thin(wh) and not world.thin(wh2) and world.thin(wh.replace('id="alerts"', 'id="x"')), "selftest: ship test: a page with a reading and alerts was held (%s), or one with no alerts block shipped" % world.thin(wh)
-    assert world.alike({"a", "b", "c", "d"}, {"a", "b", "c", "d"}) and not world.alike({"a", "b"}, {"c", "d"}) and not world.alike(set(), {"a"}), "selftest: world near-duplicate test wrong"
     assert world.page(wp0, dict(wr_, lat=None), wn) is None, "selftest: a gauge with no coordinates must not build"
     assert world.page(wp0, dict(wr_, series=[]), wn) is None and world.page(wp0, dict(wr_, cm=None), wn) is None, "selftest: a world gauge page with no chart or no reading"
     assert world.page(wp0, dict(wr_, marks={}), wn), "selftest: a gauge with a reading but no marks must still ship"
@@ -1085,18 +1024,6 @@ def selftest():
     assert edge_drift(w_real.replace('"ft^3/s" : "ft"', '"m^3/s" : "m"')), "selftest: a worker that accepts another unit than lib/core.py UNIT_OF did not fire"
     from lib.core import series as series_
     assert not series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "7700", "unit_of_measure": "m^3/s"}]}}, "00060") and series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "272000", "unit_of_measure": "ft^3/s"}]}}, "00060"), "selftest: a flow in m^3/s was read as cfs (edge test 2026-11-07)"
-    wd = lambda i, p: p + "".join(chr(97 + int(c)) for c in str(i))  # digit-free words: numbers are masked before comparing
-    a = "<main>" + " ".join(wd(i, "w") for i in range(300)) + " flow 120 cfs</main>"
-    assert near_dupes({"/x/": shingles(a), "/y/": shingles(a)}), "selftest: a page with the same words and the same readings did not fire"
-    nums = "<main>" + " ".join("gauge reading %d cm at %d" % (i * 7, i) for i in range(60)) + "</main>"
-    assert not near_dupes({"/x/": shingles(nums), "/y/": shingles(re.sub(r"\d+", lambda m: str(int(m.group()) + 3), nums))}), "selftest: same words with other readings are two gauges"
-    assert not near_dupes({"/x/": shingles(a), "/y/": shingles("<main>" + " ".join(wd(i, "z") for i in range(300)) + "</main>")}), "selftest: distinct pages wrongly flagged"
-    tpl = " ".join(wd(i, "t") for i in range(1500))  # 200 template pages: shared words plus their own readings, like the live site (32-46% alike)
-    many = {"/g%d/" % k: shingles("<main>" + tpl + " " + " ".join("level %d at %d" % (k * 1000 + i, i) for i in range(500)) + "</main>") for k in range(200)}
-    twin = "<main>" + tpl + " " + " ".join("level %d at %d" % (7000 + i, i) for i in range(500)) + "</main>"  # page 7 with 1 reading in 12 changed: ~85% alike
-    many["/twin/"] = shingles(re.sub(r"level (\d+)", lambda m: "level %d" % (int(m.group(1)) + (int(m.group(1)) % 12 == 0)), twin))
-    got = near_dupes({u: sketch(s) for u, s in many.items()}, many.get)
-    assert [(a, b) for a, b, _ in got] == [("/g7/", "/twin/")], "selftest: banding missed or invented a near-duplicate among 200 template pages: %s" % got
     good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
