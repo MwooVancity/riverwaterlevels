@@ -21,3 +21,19 @@ Start: "read docs/handoffs/2026-11-08a-tide-prediction-pages.md and continue". O
 
 ## Lessons
 - Heredoc wrote a literal no-break space instead of " " again (release.py); fixed with a script file. Edit tool also cannot match a literal no-break space.
+
+## Edge cases (failures first; each with the test that fails without its guard)
+1. Subordinate station, interval=6 refused: fetch_coops raises today, page never builds. Guard: own station fetched hilo only. Test: fixture with empty pred and non-empty hilo builds.
+2. Own hilo empty or cut short (NOAA down): tide tiles blank. Guard: "Unknown" + previous cache kept; a page whose hilo window misses today says Unknown. Test: break_blocks variant hilo=[].
+3. Wrong place for the reading: hero says the level is at this place when it is 12 km away. Guard: hero and Source name the level station and "N km away". Test: check.py fails a page with level_from that lacks the level station name.
+4. Truth check queries the own station (no water level) and fails every page: truth_live must query level_from. Test: truth_live selftest row with level_from.
+5. Live refresh (Worker /live/<site>.json) keyed on own id that has no readings. Guard: live file for the page carries level_from readings. Test: worker_slice_test with a prediction-only site.
+6. Time zone: AK, HI, VI, PR, GU stations (lst_ldt is station local). Guard: page zone from station lat/lon as now; test: VI station times in AST.
+7. Distance rule measured from the wrong point (page lat vs own station). Guard: distance from own station to level station. Test: coast_match selftest.
+8. Level station dies or retires: real reading goes stale. Guard: existing stale rules (24 h not reporting); a NEW page without a live reading is held, a live one is never pulled. Test: existing stale fixture with level_from.
+9. Duplicate keywords to one station (cape may tides / tide times): one page. Guard: matcher dedups by station. Test: selftest.
+10. Two pages too close (subordinate offsets): own-page offset rule (>=15 min or >=max(0.3 ft, 10% range)) else nearby row. Test: fixture pair at 5 min fails.
+11. Foreign or other-US namesake: only SERP-proven picks in data/keyword-picks.csv. Test: unpicked keyword refused.
+12. Scale: +1 hilo call per page; fetched weekly (cache age >7 days), 25 pages/day x 3,264 max = 3,264 calls/week at full size; nearest search 3,264 x ~300 stations trivial. Files: 1 page + 1 live file each.
+13. Datum: own and level station heights both MLLW, named. Test: datum_named already covers /coast/.
+14. Negative zero on lows (-0.027 ft seen live): neg_zero rule live. Covered.
