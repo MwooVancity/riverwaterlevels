@@ -21,6 +21,9 @@ Every change states how it fails today and at 14,000 pages (calls, CPU, URL leng
 ## Reader
 At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boat, camp, guide, live, drive, rescue. Answer in order: dangerous now, water like, normal, coming, today vs past. One static page per gauge, official government data, English.
 
+## HARD: the basics (owner 2026-11-08 "drawing board 101"; links were missed for weeks)
+Every session start checks these, and a missing one goes to the top of PLAN.md: (1) reader and question; (2) answer on the first screen; (3) true, sourced numbers; (4) fast on a phone; (5) Google can crawl it (robots, sitemap, canonical); (6) internal links (below); (7) backlinks (PLAN.md Backlinks); (8) who runs the site: publisher, contact, about; (9) a home page that helps; (10) measured: Search Console and analytics read into PLAN.md Numbers.
+
 ## Page rules
 - Nothing that helps ranking but not the reader (stuffing, doorway, padding). The US factory publishes 25 a day alone; build time goes to `data/world-queue.csv`.
 - Count all a phone downloads, third-party too; cut the biggest, never river data. 90 KB gzipped (`check.py`).
