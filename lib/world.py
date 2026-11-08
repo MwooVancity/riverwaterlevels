@@ -576,11 +576,18 @@ def near_index(wpages, keep):
     return out
 
 
-def near(r, idx, skip, n=5, km=100):
-    """The n nearest gauges within km, skipping urls in skip. Squares 1 degree tall, searched 1 up and down and 2 east and west: 100 km is under 1 degree of latitude and under 2 of longitude below 63 degrees north (ponytail: north of that the search misses some; Arctic gauges are few)."""
+def near(r, idx, skip, n=5):
+    """The n nearest gauges at any distance, skipping urls in skip (owner 2026-11-08: every water page links its neighbours; live census: a Canada page linked no other gauge
+    because none was within 100 km). Rings of 1-degree squares widen until n are found or the whole index is searched; the distance is printed beside each.
+    ponytail: the n-th found in the first full ring may not be the true n-th nearest at a ring's corner; harmless for a 'nearest first' list."""
     la, lo = int(r["lat"] // 1), int(r["lon"] // 1)
-    got = [(wx.km(r["lat"], r["lon"], a, b), name, u, lev, lab) for i in range(la - 1, la + 2) for j in range(lo - 2, lo + 3) for a, b, name, u, lev, lab in idx.get((i, j), ()) if u not in skip]
-    return [(round(k), name, u, lev, lab) for k, name, u, lev, lab in sorted(got)[:n] if k <= km]
+    rad, got = 1, []
+    while True:
+        got = [(wx.km(r["lat"], r["lon"], a, b), name, u, lev, lab) for i in range(la - rad, la + rad + 1) for j in range(lo - 2 * rad, lo + 2 * rad + 1) for a, b, name, u, lev, lab in idx.get((i, j), ()) if u not in skip]
+        if len(got) >= n or rad > 180:
+            break
+        rad *= 2
+    return [(round(k), name, u, lev, lab) for k, name, u, lev, lab in sorted(got)[:n]]
 
 
 def page(p, r, now, rows=(), keep=(), idx=None):

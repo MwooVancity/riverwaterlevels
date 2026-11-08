@@ -35,6 +35,13 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 - New country: `PROVED` needs reading, time, alerts (a real live alert), unit, terms, water type seen live. England (`UNKNOWN_UNTIL_PROVEN`) ships first, alerts Unknown + GOV.UK link.
 - `COVER` answers each US block per country (have / none: reason / next); none fails `check.py`; next = a `TODO` in the gaps line, never a cap. `thin` holds only a new world page with no reading (time, unit); `missing` holds a new gauge lacking its data; outages never pull live pages. `world_rules` allowlists hosts, units.
 
+## HARD: internal links (owner 2026-11-08: "godlike", written here so it is followed)
+Every new page kind, block or generator obeys all of these; built from data in code, never hand-wired. Measure on the live site after each batch (census in PLAN.md).
+- Every water page (river, lake, coast, any country) links 3+ other water pages, nearest first, at any distance, distance shown; "Nearby" only within 100 km. `check.py` `few_neighbours` warns; `lib/world.py` `near`, `lib/page.py` nearby_gauges build it.
+- Same river, 2+ pages: link up and downstream, named as such. Rivers, lakes and coasts link each other's nearest pages both ways.
+- Every water page has a hub parent (river, state or country) in its breadcrumb; every hub lists all its children (`check.py` reciprocity). Home and state pages link the most-searched pages. No page over 4 clicks from home, no orphans (`check.py`).
+- Anchor text = the place name a searcher types, never "click here". Only links to built, indexable pages; a held page is never linked.
+
 ## System rules
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers.
 - Visitors spend no API calls: the Worker calls out only from its */3 cron; phones read `/live/<site>.json`.

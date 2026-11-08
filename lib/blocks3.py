@@ -734,12 +734,13 @@ def b_world_rate(G):
 
 
 def b_world_near(G):
-    """Up to five gauges on other rivers within 100 km, nearest first, each with its latest reading and a link: a reader whose river is quiet checks the next one over (the US page has had this since 2026-10-21)."""
+    """Up to five gauges on other rivers at any distance, nearest first, each with its latest reading and a link: a reader whose river is quiet checks the next one over (the US page has had this since 2026-10-21).
+    The heading says 'Nearby' only when every one is within 100 km; past that it would be false."""
     f = G["feed"]
     if not f.get("near"):
         return None
     rows = "".join(tr(['<a href="%s">%s</a>' % (u, esc(n)), "%d km" % k, lev or "–", lab], right=(1, 2)) for k, n, u, lev, lab in f["near"])
-    return block("nearby_gauges", "Nearby gauges on other rivers", "agency", table(["Gauge", "Distance", "Level", "Label"], rows, right=(1, 2)), "Source: each gauge's agency, latest reading as on that gauge's page; distance in a straight line.", f["src"])
+    return block("nearby_gauges", "Nearby gauges on other rivers" if all(x[0] <= 100 for x in f["near"]) else "Other gauges on this site, nearest first", "agency", table(["Gauge", "Distance", "Level", "Label"], rows, right=(1, 2)), "Source: each gauge's agency, latest reading as on that gauge's page; distance in a straight line.", f["src"])
 
 
 def b_world_forecast(G):

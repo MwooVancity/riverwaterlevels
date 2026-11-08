@@ -316,7 +316,8 @@ def england_page():
     hh =world.page(p, rh, now)[1]
     hist = sec(hh, "world_history")
     idx = {(52, -2): [(52.96, -1.10, "River Leen at Bulwell", "/england/river-leen-at-bulwell/", "1.00 m", "Normal")], (53, -2): [(53.9, -1.5, "Far River", "/england/far/", "2.00 m", "High")]}
-    assert [x[1] for x in world.near({"lat": 52.95, "lon": -1.08}, idx, set())] == ["River Leen at Bulwell"] and not world.near({"lat": 52.95, "lon": -1.08}, idx, {"/england/river-leen-at-bulwell/"}), "nearby gauges: the one 2 km away is missing, the one over 100 km away shows, or a skipped page shows"
+    assert [x[1] for x in world.near({"lat": 52.95, "lon": -1.08}, idx, set())] == ["River Leen at Bulwell", "Far River"] and [x[1] for x in world.near({"lat": 52.95, "lon": -1.08}, idx, {"/england/river-leen-at-bulwell/"})] == ["Far River"], "nearby gauges: not nearest first at any distance (owner 2026-11-08), or a skipped page shows"
+    assert [x[1] for x in world.near({"lat": 10.0, "lon": 10.0}, idx, set(), 1)] == ["River Leen at Bulwell"], "nearby gauges: a page with no gauge within 100 km linked none"
     hn = world.page(p, rh, now, (), (), idx)[1]
     hy = world.page(p, dict(rh, days=None, deciles=None), now)[1]
     rt = sec(hn, "rate_of_change") if 'id="rate_of_change"' in hn else ""
