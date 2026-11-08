@@ -349,7 +349,7 @@ def england_page():
     assert re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0).count('data-l="Hour"') == 8, "the hourly table is not 8 rows at 3-hour steps; 24 rows were 4 phone screens (UI review 2026-11-04)"
     assert 'data-l="Sky"' not in re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0), "a Sky column with no sky words showed blank on every row (live Colwick 2026-11-04)"
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
-    assert world.thin(h.replace('id="alerts"', 'id="x"')) == ["no alerts block"], "a page with no alerts block shipped"
+    assert world.thin(h.replace('id="alerts"', 'id="x"')) == [], "a page with a reading was held for a missing alerts block (owner 2026-11-08: only no reading holds)"
     world.THIN.clear()
 
 

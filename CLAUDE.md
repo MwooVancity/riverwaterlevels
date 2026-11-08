@@ -11,7 +11,7 @@ Every change states how it fails today and at 14,000 pages (calls, CPU, URL leng
 ## Owner decisions (2026)
 1. (11-01) Helpfulness decides page content; AdSense money decides build order.
 2. (11-01) One standard page, block states and gates for every water, any country; a missing source shows "Not issued" or "Unknown", never blank or a lighter template. Summary tables are hubs.
-3. (11-01) Ship test: a recent reading with unit, time, source ships, saying what is missing. Block only: no reading, no time, unit unknown, never reported, not a river or lake. (11-08) A NOAA tide station with predictions, no live level, ships; each tide labelled a prediction; thin gate applies.
+3. (11-01) Ship test: a recent reading with unit, time, source ships, saying what is missing. Block only: no reading, no time, unit unknown, never reported, not a river or lake. (11-08) A NOAA tide station with predictions, no live level, ships; each tide labelled a prediction. (11-08) No thin-content or duplicate gate: a different river, lake or place is its own page even with the same gauge, numbers or text ("someone is looking for that specific page for a reason").
 4. (11-01) World queue at full speed; never wait on traffic (Search Console reorders). Agency feed and reuse terms required. Never bulk-publish.
 5. (11-03, 11-05) One ranking of every keyword (US, world; rivers, lakes, oceans; Keyword Planner): searches x ad rate (`RATE`, `tools/release.py`). Compete with any site only with more sourced data; no info gain, no page.
 6. (11-05) Never a source whose terms bar ads, commercial use or caching; no permission requests; use another open official source, else link out. Takedowns and AdSense risk outrank any page. Gate `check.py` `reuse_barred`.
@@ -22,7 +22,7 @@ Every change states how it fails today and at 14,000 pages (calls, CPU, URL leng
 At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boat, camp, guide, live, drive, rescue. Answer in order: dangerous now, water like, normal, coming, today vs past. One static page per gauge, official government data, English.
 
 ## Page rules
-- Nothing that helps ranking but not the reader (stuffing, doorway, padding). Noindex never fixes a thin page. The US factory publishes 25 a day alone; build time goes to `data/world-queue.csv`.
+- Nothing that helps ranking but not the reader (stuffing, doorway, padding). The US factory publishes 25 a day alone; build time goes to `data/world-queue.csv`.
 - Count all a phone downloads, third-party too; cut the biggest, never river data. 90 KB gzipped (`check.py`).
 - Line 0: every reliable public dataset a reader here could use, exact source and time; withhold only if wrong, misleading, padding or no mechanism.
 - Non-US: own `data/sources.json` row, local unit + feet, agency low/high labels, no sailing verdict; a dead feed stales only its page.
@@ -33,7 +33,7 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 - Block states: valid, valid-empty (a sentence), unavailable ("Unknown", never "none"), stale (real age, marked). `SAFETY_BLOCKS` failing keeps the old page; other blocks hide alone, named in the gaps line.
 - Stale: flow 24 h "not reporting"; river forecast amber 24 h, hidden 72 h; weather obs 3 h/12 h; hourly forecast amber 12 h, hidden 72 h; alerts 3 h; rain 6 h; water temperature tile 24 h. Ignore NWS Test/Administrative alerts.
 - New country: `PROVED` needs reading, time, alerts (a real live alert), unit, terms, water type seen live. England (`UNKNOWN_UNTIL_PROVEN`) ships first, alerts Unknown + GOV.UK link.
-- `COVER` answers each US block per country (have / none: reason / next); none fails `check.py`; next = a `TODO` in the gaps line, never a cap. `thin` holds a new world page (no noindex); `room`: an all-thin country adds none; `missing` holds a new gauge lacking its data; outages never pull live pages. `world_rules` allowlists hosts, units.
+- `COVER` answers each US block per country (have / none: reason / next); none fails `check.py`; next = a `TODO` in the gaps line, never a cap. `thin` holds only a new world page with no reading (time, unit); `missing` holds a new gauge lacking its data; outages never pull live pages. `world_rules` allowlists hosts, units.
 
 ## System rules
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers.

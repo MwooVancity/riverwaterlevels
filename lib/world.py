@@ -450,9 +450,9 @@ def thin_stats(h):
 
 
 def thin(h):
-    """Why a world page cannot ship, or []. Owner 2026-11-03: no block count; a page carries everything its data allows (`missing` holds one that does not),
-    and only the ship test holds it here: a reading with time and unit, and the alerts block. History and weather are counted in thin_stats, never a hold."""
-    return [f for f in thin_stats(h)["faults"] if f in ("no reading with its time and unit", "no alerts block")]
+    """Why a world page cannot ship, or []. Owner 2026-11-08: "no such thing as thin content if it's literally a different river/lake"; only the ship test
+    holds a page: a reading with its time and unit. Alerts, history and weather are counted in thin_stats, never a hold (a missing one says Unknown)."""
+    return [f for f in thin_stats(h)["faults"] if f == "no reading with its time and unit"]
 
 
 def choose(pages, now):
