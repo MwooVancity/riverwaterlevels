@@ -54,7 +54,7 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
     if G["stats"]:
         for d in sorted({x[0].astimezone(zone).date() for x in pts}):
             rr = G["stats"].get(d.isoformat()[5:10])
-            if rr:
+            if rr and None not in (rr[4], rr[5], rr[6]):  # practice 2026-11-08 (Big Hole at Wisdom): a USGS stats row with a blank percentile crashed the chart and held the page
                 bp.append((d, rr[4], rr[6], rr[5]))
         for d, a, c, m in bp:
             vals += [a, c]

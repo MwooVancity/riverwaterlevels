@@ -93,6 +93,12 @@ if "--every-kind" in sys.argv:  # practice only (owner 2026-11-08 "practice run 
             _k.append(x)
             _have.add(_kind(x))
             print("  practice: one %s page added (%s)" % (_kind(x), x[3].get("site") or x[3].get("station")))
+    for r_ in live_.values():  # practice 2026-11-08 missed CDEC, RISE and Great Lakes: their only queued rows carry a gate; practice tests a kind even when its rows wait (the real release still honours the gate)
+        x = (0, 1, 0, dict(r_, category=r_.get("activity") or ""))
+        if r_["status"] == "queue" and _kind(x) not in _have and r_["site"] not in cached:
+            _k.append(x)
+            _have.add(_kind(x))
+            print("  practice: one %s page added despite its gate (%s: %s)" % (_kind(x), r_["site"], (r_.get("gate") or "")[:60]))
 both = _k
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
@@ -225,6 +231,11 @@ if failed:
     for s_, m_ in sorted(failed.items()):
         print("not released (%s): %s  %s" % ("truth contract" if m_.startswith("truth: ") else "page check", s_, m_))
     picks = [r for r in picks if r["site"] not in failed]
+    for s_ in failed:  # practice 2026-11-08: a sent-back pick kept its cache file, so the refresh built it anyway and truth_tests stopped the whole deploy
+        try:
+            os.remove(os.path.join(ROOT, "cache", s_ + ".json"))
+        except OSError:
+            pass
     rc = subprocess.call(PY + [os.path.join(ROOT, "build.py")], cwd=ROOT)
     if rc:
         sys.exit("rebuild failed (%d)" % rc)

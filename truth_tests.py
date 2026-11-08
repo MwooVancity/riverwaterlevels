@@ -63,7 +63,7 @@ def main(only=None):
                     fail(site, "answer strip trend %r differs from the trend chip %r" % (spans[ti], chip.group(1)))
                 nw = re.search(r'<div class="tile norm[^"]*">.*?<b>(.*?)</b>', h, re.S)
                 past_ = G["p"] is None and (beyond(G["srow"], G["basis"], "ft" if G.get("lake") else "cfs") or (G.get("coast") and coast_anomaly(G)))  # past the highest or lowest published percentile: a real comparison (Lake Powell 2026-11-06)
-                if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)).replace(" for this date", "") + (" now" if G.get("coast") else " for ")):
+                if nw and (G["p"] is not None or past_) and not spans[ni].startswith(re.sub(r"<[^>]+>", "", nw.group(1)).replace(" for this date", "") + (((" at %s" % ((G["rec"].get("coops") or {}).get("level") or {}).get("name")) if ((G["rec"].get("coops") or {}).get("level")) else "") + " now" if G.get("coast") else " for ")):  # practice 2026-11-08: a prediction-only tide page names the station its reading comes from
                     fail(site, "answer strip comparison %r differs from the comparison tile %r" % (spans[ni], nw.group(1)))
                 ca_ = render.cdec_avg(G) if G.get("agy") else None  # CDEC lake: the operator's own 1991-2020 monthly average is a real comparison; the strip must say exactly that calculation
                 if ca_ and ca_["avg"]:
@@ -307,8 +307,10 @@ def carry_bad(rows, n):
     for b_ in bad:
         s_, _, m_ = b_.partition(": ")
         by.setdefault(s_, []).append(m_)
-    if any(s_ not in rows for s_ in by) or len(by) > max(3, n // 20):
+    if any(s_ not in rows for s_ in by):
         return False
+    if len(by) > max(3, n // 20):  # owner 2026-11-08: no count stops the release; many at once is said loudly
+        print("WARNING truth tests: %d gauges failed at once (template or checker fault?); each keeps its live copy or goes back to the queue" % len(by))
     d = os.path.join(ROOT, "dist_next")
     ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
     exec(compile(open(os.path.join(ROOT, "check.py"), encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
@@ -319,8 +321,14 @@ def carry_bad(rows, n):
         if not rel or not os.path.exists(os.path.join(d, rel)):
             return False
         fails[rel] = ms
-    if not ck["carry"](d, fails):
-        return False
+    got = []
+    ck["carry"](d, fails, got)
+    new_ = [r for r in fails if r not in got]  # practice 2026-11-08: a new page has no live copy; it is recorded for quarantine.py (second try sends it back), never a stop of every page
+    if new_:
+        from lib.common import new_fail
+        for r in new_:
+            new_fail(d, "/" + r.replace("\\", "/").rsplit("index.html", 1)[0], ["truth: " + m for m in fails[r]][:3])
+    fails = {r: fails[r] for r in got}
     ck["keep_old_times"](d, set(fails))
     cp = os.path.join(d, "_carried.json")
     try:
@@ -328,8 +336,8 @@ def carry_bad(rows, n):
     except (OSError, ValueError):
         done = set()
     json.dump(sorted(done | {r.replace("\\", "/") for r in fails}), open(cp, "w"))
-    print("truth tests: %d gauge(s) kept their live page; the rest ship: %s" % (len(fails), ", ".join(sorted(by))))
-    return True
+    print("truth tests: %d gauge(s) kept their live page, %d new sent back; the rest ship: %s" % (len(fails), len(new_), ", ".join(sorted(by))))
+    return not new_
 
 
 if __name__ == "__main__":

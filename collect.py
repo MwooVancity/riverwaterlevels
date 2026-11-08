@@ -2612,6 +2612,9 @@ def main():
     if "--print-sites" in sys.argv:  # collect-shadow.yml: which gauges this shard owns
         print(chr(10).join(pick_sites(inv)))
         return
+    if "--world-only" in sys.argv:  # practice release (owner 2026-11-08 "don't miss a type"): the dry run never collects, so a new world gauge was never built or checked
+        fetch_world()
+        return
     if not sites:  # the hourly run: every live gauge, each source on its own timer (2026-10-26: one lane replaced the 30-min fast + 6-h full lanes)
         t0 = _time.time()
         fast(inv, pick_sites(inv))

@@ -83,6 +83,11 @@ def main():
     gone = {rows[s]["dashboard_url"] for s in bad}
     cfg["allow"] = [u for u in cfg["allow"] if u not in gone]
     json.dump(cfg, open(ALLOW, "w", encoding="utf-8"), indent=1)
+    for s in bad:  # practice 2026-11-08: a sent-back gauge kept its cache file, so the second try built it again and failed again
+        try:
+            os.remove(os.path.join(ROOT, "cache", s + ".json"))
+        except OSError:
+            pass
     print("back to the queue: %s" % ", ".join(sorted(bad)))
 
 

@@ -11,7 +11,7 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 
 BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "View all 1 gauges" on the live home page (crawl 2026-11-04)
           r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
-          r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
+          r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"(?<!ZIP )(?<!\d)-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
 NEIGHBOURS = 3  # internal links (owner 2026-11-08 "godlike"; CLAUDE.md Internal links): every water page links at least this many other water pages
@@ -115,6 +115,9 @@ def stats_gap(h):
     tools/release.py page_check (release 2026-11-07: two new gauges passed the release's check and failed this one at the gate, undoing all 25)."""
     sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     stp = os.path.join(ROOT, "legacy", "stats", sid.group(1) + ".json") if sid else None
+    lake_ = "USGS lake gauge" in h
+    if stp and lake_ and os.path.exists(stp) and json.load(open(stp)).get("code", "00060") == "00060":  # practice 2026-11-08: a lake's file of river-flow percentiles is never its elevation's (lib/hero.py stats_code rule); the page is right to say none
+        return []
     if stp and "no published statistics for this date" in h and os.path.exists(stp) and sum(1 for r in (json.load(open(stp)).get("d") or {}).values() if r[2] is not None and r[8] is not None) >= 300:
         return ["says 'no published statistics' while legacy/stats holds this gauge's USGS daily statistics"]
     return []
@@ -1090,6 +1093,7 @@ def selftest():
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
     assert check_html(good, rel) == [], check_html(good, rel)
+    assert check_html(good.replace("<p>x</p>", "<p>A daily forecast for ZIP 99901.</p>"), rel) == [], "selftest: a ZIP code (Ketchikan 99901) read as a sentinel value (practice 2026-11-08)"
     broken = {"no source line": good.replace('<p class="src">Source: USGS</p>', ""), "wrong canonical": good.replace("/river/a/b/", "/river/x/y/"),
               "banned undefined": good.replace("<p>x</p>", "<p>undefined</p>"), "no unit": good.replace("<small>cfs</small>", "<small></small>"), "no zone": good.replace("CDT", ""),
               "th without scope": good.replace("<p>x</p>", "<table><tr><th>A</th></tr></table>"),

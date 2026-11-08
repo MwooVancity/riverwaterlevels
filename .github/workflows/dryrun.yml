@@ -68,7 +68,7 @@ jobs:
       - name: Practice daily release (nightly, or on demand)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.release == 'true')
         continue-on-error: true
-        run: python -I tools/release.py 25 --every-kind && python -I tools/open_wave.py 40 --apply  # one page of every kind too (owner 2026-11-08), so a new kind meets every gate before the real release
+        run: python -I tools/release.py 25 --every-kind && python -I collect.py --world-only && python -I tools/open_wave.py 40 --apply  # one page of every kind too (owner 2026-11-08), so a new kind meets every gate before the real release
       - name: Every gate, no deploy
         continue-on-error: true  # no red runs, no owner email; the verdict is the "refresh OK" line
         run: python refresh.py --dry 2>&1 | tee refresh-out.log
