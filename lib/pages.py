@@ -17,7 +17,7 @@ def variant(site, url):
     if url.startswith("/coast/"):
         return "coast-prediction" if site in _pred_only() else "coast-live"
     if url.startswith("/lake/"):
-        return "lake-usgs" if site[:1].isdigit() else "lake-great" if site.startswith("COOPS-") else "lake-agency"  # review 2026-11-08: a Great Lakes page (IGLD, GLERL) is its own template
+        return "lake-usgs" if site[:1].isdigit() else "lake-great" if site.startswith("COOPS-") else "lake-agency-" + site.split("-")[0]  # one variant per agency feed (CDEC, RISE, TWDB): a new feed waits for its own review  # review 2026-11-08: a Great Lakes page (IGLD, GLERL) is its own template
     return None
 
 

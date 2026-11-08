@@ -234,6 +234,16 @@ def claims_vs_cache(h, rec, now=None):
     import datetime
     now = now or datetime.datetime.now(datetime.timezone.utc)
     bad = []
+    zl = re.search(r'<p class="sub">.*?observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M ([A-Z]{2,5})\b', h, re.S)
+    if zl and rec.get("tz"):  # gate audit 2026-11-08: the zone label was checked for existence only; it must be the gauge's own zone (standard or daylight)
+        import zoneinfo
+        try:
+            z_ = zoneinfo.ZoneInfo(rec["tz"])
+            ok_ = {datetime.datetime(now.year, m, 15, 12, tzinfo=z_).tzname() for m in (1, 7)} | {now.astimezone(z_).tzname()}
+            if zl.group(1) not in ok_:
+                bad.append("observed time labelled %s, but this gauge's zone %s is %s" % (zl.group(1), rec["tz"], "/".join(sorted(ok_))))
+        except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+            pass
     o = (rec.get("nwps") or {}).get("obs_stage") or {}
     try:
         fresh = (now - datetime.datetime.fromisoformat(o["t"].replace("Z", "+00:00"))).total_seconds() < 24 * 3600 and float(o["v"]) > -999
@@ -806,7 +816,7 @@ def selftest():
         dr_.publisher = pub_
     from lib import pages as pg_
     rv_ = (set(), {"coast-live"})
-    assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
+    assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency-CDEC"})) and not pg_.review_ok("USACE-X", "/lake/x/", (set(), {"lake-agency-CDEC"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
     W_ ={"/a/x/", "/b/y/", "/c/z/", "/d/w/"}
     assert few_neighbours("/a/x/", {"/b/y/"}, W_) and not few_neighbours("/a/x/", {"/b/y/", "/c/z/", "/d/w/", "/a/x/"}, W_) and not few_neighbours("/a/x/", {"/b/y/"}, {"/a/x/", "/b/y/"}), "selftest: a water page with one neighbour link passed, or a two-page site was asked for three"
     ad ='<script>gtag("consent","default",{})</script><script src="adsbygoogle.js"></script>'
@@ -1133,6 +1143,8 @@ def selftest():
     import datetime
     at = datetime.datetime(2026, 10, 26, 12, tzinfo=datetime.timezone.utc)
     assert claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at), "selftest: hidden NWS stage did not fire"
+    zp_ = '<p class="sub">USGS gauge 1 &middot; observed Nov 8, 1:00 PM %s &middot; 5 min old</p>'
+    assert any("labelled EST" in x for x in claims_vs_cache(zp_ % "EST", {"tz": "America/Denver"}, at)) and not claims_vs_cache(zp_ % "MST", {"tz": "America/Denver"}, at) and not claims_vs_cache(zp_ % "MDT", {"tz": "America/Denver"}, at) and not claims_vs_cache(zp_ % "MST", {"tz": "America/Phoenix"}, at), "selftest: a wrong zone label passed, or a right one (standard or daylight) failed (gate audit 2026-11-08)"
     assert not claims_vs_cache('<span>Gage height</span><b>1.60 <small>ft</small></b>', obs, at), "selftest: filled NWS stage wrongly failed"
     assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
     lvr = {"coops": {"level": {"id": "9449424", "name": "Cherry Point", "km": 23.3}, "station": "9449211"}}

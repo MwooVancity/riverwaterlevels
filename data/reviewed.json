@@ -81,8 +81,10 @@
  },
  "variants": {
   "lake-usgs": "2026-11-08: owner 'fully automatic'; template passed in 30+ per-page phone reviews 2026-11-07 (Kerr, Hartwell, Lanier, Allatoona...); every page still runs every machine gate",
-  "lake-agency": "2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
   "coast-live": "2026-11-08: template passed 40+ per-page phone reviews 2026-11-07 (San Diego, Norfolk, Seattle, Galveston...)",
-  "coast-prediction": "2026-11-08: fresh reviewer (cloud phone shots, run 42497077540) failed Mission Bay, Homer, Corpus Christi on 3 template blockers (own station id beside observed time, cite named own station, neighbour lists showed the neighbour's level as the place's) and 2 majors (no time in tile, sensors table unnamed); all 5 fixed and verified in the rebuilt text; check.py claims_vs_cache now fails blockers 1-2; minors open in PLAN"
+  "coast-prediction": "2026-11-08: fresh reviewer (cloud phone shots, run 42497077540) failed Mission Bay, Homer, Corpus Christi on 3 template blockers (own station id beside observed time, cite named own station, neighbour lists showed the neighbour's level as the place's) and 2 majors (no time in tile, sensors table unnamed); all 5 fixed and verified in the rebuilt text; check.py claims_vs_cache now fails blockers 1-2; minors open in PLAN",
+  "lake-agency-CDEC": "2026-11-08: split from lake-agency (Shasta passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
+  "lake-agency-RISE": "2026-11-08: split from lake-agency (Lake Mead passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
+  "lake-agency-TWDB": "2026-11-08: split from lake-agency (Lake Travis passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)"
  }
 }

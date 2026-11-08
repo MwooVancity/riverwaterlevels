@@ -154,8 +154,13 @@ def main():
         except Exception as e:
             print("station check skipped, no answer:", str(e)[:80])
     rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5])]
+    unknown = [r for r in every if not str(r[1]).startswith(("/river/", "/lake/", "/coast/")) and r not in rows]  # gate audit 2026-11-08: a page of a new country was skipped in silence; no truth check, no page
+    for r in unknown:
+        print(r[1], "FAULT no truth check for this country (%s): add one to tools/truth_world.py before its pages ship" % str(r[4:5])[:40])
+    bad += len(unknown)
+    faulty_unknown = [r[1] for r in unknown]
     start = int(time.time() // 3600) * BATCH % max(1, len(rows))
-    faulty = []
+    faulty = list(faulty_unknown)
     todo = rows[start:] + rows[:start] if LOCAL else (rows[start:] + rows[:start])[:BATCH]  # rotating start: a time limit never leaves the same tail unchecked every run (scale debate 2026-11-07)
 
     def one(row):
