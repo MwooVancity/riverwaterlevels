@@ -581,10 +581,10 @@ def near(r, idx, skip, n=5):
     because none was within 100 km). Rings of 1-degree squares widen until n are found or the whole index is searched; the distance is printed beside each.
     ponytail: the n-th found in the first full ring may not be the true n-th nearest at a ring's corner; harmless for a 'nearest first' list."""
     la, lo = int(r["lat"] // 1), int(r["lon"] // 1)
-    rad, got = 1, []
+    rad, got, total = 1, [], sum(len(v) for v in idx.values())  # review 2026-11-08: a small index stops as soon as every gauge is found
     while True:
         got = [(wx.km(r["lat"], r["lon"], a, b), name, u, lev, lab) for i in range(la - rad, la + rad + 1) for j in range(lo - 2 * rad, lo + 2 * rad + 1) for a, b, name, u, lev, lab in idx.get((i, j), ()) if u not in skip]
-        if len(got) >= n or rad > 180:
+        if len(got) >= min(n, total - len(skip & {e[3] for v in idx.values() for e in v})) or rad > 180:
             break
         rad *= 2
     return [(round(k), name, u, lev, lab) for k, name, u, lev, lab in sorted(got)[:n]]

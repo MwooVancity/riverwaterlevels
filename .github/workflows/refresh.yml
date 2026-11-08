@@ -128,7 +128,7 @@ jobs:
         run: |
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
-            date -u +%F > data/last-release.txt; date -u +%F > data/last-success.txt; git add -f docs/research/priority/picks.csv; git add data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
+            date -u +%F > data/last-release.txt; if git diff data/waves.csv | grep -q '^+live,'; then date -u +%F > data/last-success.txt; fi; git add -f docs/research/priority/picks.csv; git add data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour

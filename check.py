@@ -332,10 +332,7 @@ def rank_checks(h, url):
     if rep:
         g, n = max(rep, key=lambda x: x[1])
         bad.append("first screen says %r %d times (clutter on the screen that decides the click)" % (g, n))
-    others = {u for u in re.findall(r'href="(/(?:river|lake|coast)/[^"#?]+/)"', h) if u != url}  # a lake links lakes and rivers
-    if len(others) < 3:
-        bad.append("links only %d other gauge pages (at least 3: nearby, upstream, downstream)" % len(others))
-    return bad
+    return bad  # the links-to-3-others rule is check_dir few_neighbours, a warning (review 2026-11-08: two rules, one held pages)
 
 
 def css_truncation(css):
@@ -1034,7 +1031,7 @@ def selftest():
     assert not rank_checks(good_pg, "/river/lehigh-river/lehighton/"), "selftest: a page that answers the search wrongly failed: %s" % rank_checks(good_pg, "/river/lehigh-river/lehighton/")
     assert any("title" in x for x in rank_checks(pg("Gauge 01449000 data", "Lehigh River at Lehighton, PA", "x", 4), "/u/")), "selftest: a title missing the river and 'water level' did not fire"
     assert any("first screen says" in x for x in rank_checks(pg("Lehigh River, Lehighton: water level", "Lehigh River at Lehighton, PA", " ".join(["(as of the oct 26, 9:30 pm edt reading)"] * 3), 4), "/u/")), "selftest: a phrase stamped 3 times on the first screen did not fire"
-    assert any("other gauge pages" in x for x in rank_checks(pg("Lehigh River, Lehighton: water level", "Lehigh River at Lehighton, PA", "x", 1), "/u/")), "selftest: a page linking 1 other gauge did not fire"
+    assert not any("other gauge pages" in x for x in rank_checks(pg("Lehigh River, Lehighton: water level", "Lehigh River at Lehighton, PA", "x", 1), "/u/")), "selftest: a page linking 1 other gauge is held again (review 2026-11-08: few_neighbours warns, never holds)"
     assert css_truncation(".tile small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}"), "selftest: caption ellipsis did not fire"
     assert not rank_checks(pg("Madison River, Below Hebgen Lake Near Grayling: water level", "Madison River below Hebgen Lake Near Grayling, MT", "Home / MT / Madison River / Below Hebgen Lake Near Grayling USGS gauge 06038500 observed Oct 26. Cite: Madison River below Hebgen Lake Near Grayling, MT: water level 1.5 ft", 4), "/u/"), "selftest: the page's own name repeated in breadcrumb, H1 and cite wrongly flagged"
     assert not rank_checks(pg("Rio Grande, Albuquerque: water level", "Rio Grande at Albuquerque, NM", "x", 4), "/u/"), "selftest: a river named without the word river wrongly flagged"

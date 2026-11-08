@@ -9,6 +9,7 @@ DATA = os.path.join(ROOT, "data")
 BRAND = "River Water Levels"
 
 
+@__import__("functools").lru_cache(maxsize=1)
 def publisher():
     """data/publisher.json ({name, email}); {} when missing. The owner fills the email; /contact/ and its footer link appear only then (drawing board: trust)."""
     try:

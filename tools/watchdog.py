@@ -261,10 +261,12 @@ if "--selftest" in sys.argv:
         open = lambda p, *a, **k: __import__("io").StringIO(datetime.datetime.now(datetime.timezone.utc).date().isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
         assert release_stall() is None, "a fresh release was reported"
         ex_, os.path.exists = os.path.exists, lambda p: True
-        today_ = datetime.datetime.now(datetime.timezone.utc).date()
-        open = lambda p, *a, **k: __import__("io").StringIO((today_ - datetime.timedelta(days=2)).isoformat() if p.endswith("last-success.txt") else today_.isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
-        assert release_stall(), "two failed release days (last-release stamped today, last success 2 days ago) raised no alarm (2026-11-07/08)"
-        os.path.exists = ex_
+        try:
+            today_ = datetime.datetime.now(datetime.timezone.utc).date()
+            open = lambda p, *a, **k: __import__("io").StringIO((today_ - datetime.timedelta(days=2)).isoformat() if p.endswith("last-success.txt") else today_.isoformat() if p.endswith(".txt") else "status,gate\nqueue,\n")
+            assert release_stall(), "two failed release days (last-release stamped today, last success 2 days ago) raised no alarm (2026-11-07/08)"
+        finally:
+            os.path.exists = ex_
         assert REBUILD_MIN > 112, "a normal gap between rebuilds would alarm"
         assert SLOW.get("world-normals", 50) > 720 and SLOW.get("world-access", 50) > 720, "a monthly source between fetches would alarm"
         assert "1 gauges short" in world_short({"world": {"listed": 40, "shown": 40, "gaps": {"KAUB": ["alerts"]}}}), "a page gap went unreported"
