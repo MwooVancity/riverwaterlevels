@@ -135,7 +135,19 @@ def item_line(g, Gs):
     return "%s cfs%s%s" % (fmtc(dir_lv(G)), old_mark(G), "" if p is None else ", %s" % band_word(p).lower())
 
 
-def home(built, Gs):
+def waters_list(waters):
+    """Home sections for lakes and coasts (basics audit 2026-11-08: the home page linked rivers only, so no lake or coast page had a home link).
+    ponytail: up to 60 each by name; past that, per-state lake and coast hubs (PLAN: hubs from one generator) must take over, or the home link budget (300) breaks."""
+    out = ""
+    for head, rows in (("Lakes and reservoirs", [r for r in waters if not r.get("coast")]), ("Coasts and tides", [r for r in waters if r.get("coast")])):
+        if rows:
+            nm = lambda r: r["place"] if r.get("coast") else r["river"]  # a coast is searched by its place (Mission Bay), a lake by its own name
+            items = "".join('<li><a href="%s">%s</a> <small>%s</small></li>' % (r["water_url"], esc(nm(r)), esc(r["state"])) for r in sorted(rows, key=lambda r: nm(r).lower())[:60])
+            out += '<h2 class="bst">%s</h2><ul class="cols">%s</ul>' % (head, items)
+    return out
+
+
+def home(built, Gs, waters=()):
     cards = ""
     for r in sorted(featured(built), key=lambda r: -float(r["drainage_sqmi"] or 0))[:12]:
         G = Gs[r["site"]]
@@ -165,10 +177,13 @@ def home(built, Gs):
     tools = ('<div class="search"><input id="q" type="search" placeholder="Search rivers, places or states" aria-label="Search rivers, places or states"><span class="sub" id="gcount" style="margin:0">%d gauges</span></div>'
              '<p id="nomatch" class="sub" hidden>No rivers match that search.</p><div class="pills" aria-label="Filters"><button type="button" class="pill" data-f="large">Large rivers</button>'
              '<button type="button" class="pill" data-f="fc">Has river forecast</button><button type="button" class="pill" data-f="wq">Has water quality sensors</button></div>%s' % (len(built), jump))
-    body = ('<h1>River levels and flows</h1><p class="sub">Flow and water level at %d USGS gauges across the US, with National Weather Service forecasts and alerts%s.</p>'
-            '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
-            % (len(built), esc(plus_world()), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", secs, SEARCH_JS + NEAR_JS))
-    return shell("River levels and flows | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body)
+    nl, nc = sum(1 for r in waters if not r.get("coast")), sum(1 for r in waters if r.get("coast"))
+    extra = "".join(x for x, n in (("; water level at %d %s" % (nl, "lake or reservoir" if nl == 1 else "lakes and reservoirs"), nl), ("; tides and water level at %d coast station%s (NOAA)" % (nc, "" if nc == 1 else "s"), nc)) if n)
+    h1 = "River levels and flows" + (", lake levels" if nl else "") + (" and tides" if nc else "")  # the searcher's words for every water the site has, never one it lacks
+    body = ('<h1>%s</h1><p class="sub">Flow and water level at %d USGS river gauges across the US%s, with National Weather Service forecasts and alerts%s.</p>'
+            '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
+            % (esc(h1), len(built), esc(extra), esc(plus_world()), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", waters_list(waters), secs, SEARCH_JS + NEAR_JS))
+    return shell(h1 + " | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body)
 
 
 def world_pages():

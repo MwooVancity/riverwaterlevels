@@ -172,7 +172,7 @@ def main():
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
         rivers_ = [r for r in built if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
-        emit("/", directory.home(rivers_, Gs))
+        emit("/", directory.home(rivers_, Gs, [r for r in built if r.get("lake")]))  # lakes and coasts get their home link (basics audit 2026-11-08)
         state_data = {}
         for st in sorted({r["state"] for r in rivers_}):
             sp = os.path.join(ROOT, "cache", "state-%s.json" % st.lower())
