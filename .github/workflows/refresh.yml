@@ -102,6 +102,7 @@ jobs:
           if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
             python -I tools/world_match.py | head -3 || true
+            python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
             python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
           fi
       - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
@@ -127,7 +128,7 @@ jobs:
         run: |
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
-            date -u +%F > data/last-release.txt; date -u +%F > data/last-success.txt; git add data/last-success.txt data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
+            date -u +%F > data/last-release.txt; date -u +%F > data/last-success.txt; git add -f docs/research/priority/picks.csv; git add data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
