@@ -15,10 +15,10 @@ Done this session (all on main, deployed, refresh OK, read live):
 - Namesake rule from GeoNames in coast_match; review shots open toggles and the hourly grid.
 
 Next, in order:
-0. First-screen rule (PLAN 0g open) and the 11:00 UTC release read.
-1. Read the gate run for commit "truth_live: rain tile..." (refresh OK), then push main and read one live page.
-2. Plain-words pass on tile first lines (one idea per line); truth_live parses some sentences (derived NWS stages), so change both together.
-3. Hourly table 'Thunder' header clipped (read on the next screenshots).
-4. PLAN steps 6 (foreign namesakes) and 14 (refresh run time at scale); gate catch census.
+1. First-screen rule (PLAN 0g open): first phone screen = place, one plain status sentence, the number; a check for it.
+2. Read the 11:00 UTC release (first coast and tide-table pages): log, one live page of each, CARRIED lines.
+3. Plain-words pass on tile first lines; truth_live parses the derived NWS stage sentences, so change both together.
+4. Namesake rule for lake rows (needs a lake gazetteer, not towns); gate catch census.
+(Done since the first draft: rain label, Thunder header, refresh run time measured, coast namesake rule.)
 
 Owner only: Cloudflare > riverwaterlevels.com > Email Routing > Settings > "Add missing records" (contact@ forwarding; Claude's click was blocked). Then Claude sets data/publisher.json email. Send outreach notes.
