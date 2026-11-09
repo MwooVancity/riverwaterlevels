@@ -29,6 +29,7 @@ def run():
     assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
     from lib.core import tzl as tzl_
     ny_, U_ = zoneinfo.ZoneInfo("America/New_York"), datetime.timezone.utc
+    tzl_ = (lambda f: lambda *a: f(*a).replace(" ", " "))(tzl_)  # times use no-break spaces on the page
     assert (tzl_(datetime.datetime(2026, 11, 1, 5, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 11, 1, 6, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 3, 8, 7, 30, tzinfo=U_), ny_)) == ("Nov 1, 1:30 AM EDT", "Nov 1, 1:30 AM EST", "Mar 8, 3:30 AM EDT"), "time zone label wrong on a clock-change night (each reading must carry its own EDT/EST)"
     from lib import hero as hero_
     assert hero_.tile_ladder({"rec": {}, "lake": None, "coast": None, "feed": None, "sg": [], "lv": None}) == "", "gage tile flood bar: crashed or drew with no NWS stages (NameError ui, review run 42577733037: every page failed to build)"
