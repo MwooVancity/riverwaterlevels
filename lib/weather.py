@@ -201,12 +201,6 @@ def b_heatmap(G):
         pop[parse_t(p["startTime"]).replace(minute=0, second=0, microsecond=0)] = p.get("pop")
         sky[parse_t(p["startTime"]).replace(minute=0, second=0, microsecond=0)] = p.get("shortForecast")
     zone = G["zone"]
-    def head_of(hs):
-        out = '<th scope="col"></th>'
-        for h in hs:
-            d = parse_t(h["t"]).astimezone(zone)
-            out += '<th scope="col">%s</th>' % ("%s 12a" % d.strftime("%a") if d.hour == 0 else ("%s %d%s" % (d.strftime("%a"), d.hour % 12 or 12, "a" if d.hour < 12 else "p")) if h is hs[0] else "%d%s" % (d.hour % 12 or 12, "a" if d.hour < 12 else "p"))
-        return out
     mph = lambda k: (lambda v: None if v is None else km_mi(v))(k)
     spec = (("Temp &deg;F", lambda h: None if h.get("temp_c") is None else h["temp_c"] * 9 / 5 + 32, lambda v: (v - 20) / 90, "%.0f"),
             ("Wind mph", lambda h: mph(h.get("wind_kmh")), lambda v: v / 30, "%.0f"),
@@ -220,26 +214,6 @@ def b_heatmap(G):
             ("Rain/snow in/h", lambda h: None if h.get("qpf_mm") is None else h["qpf_mm"] / 25.4, lambda v: v / 0.1, "%.2f"),
             ("Rain/snow %", lambda h: pop.get(parse_t(h["t"])), lambda v: v / 100, "%.0f"))
     PEAK_ROWS = ("Wind mph", "Gust mph", "Thunder %", "Rain/snow in/h", "Rain/snow %")
-    def rows_of(groups, quiet):
-        out = ""
-        for lab, get, sc, f in spec:
-            vals = [get(h) for h in hrs]
-            if sum(v is None for v in vals) > len(vals) / 2 or (lab == "Visibility mi" and all(not v for v in vals)):
-                continue  # a row of dashes (or a grid that reports 0 mi visibility every hour) says nothing (hater 2026-10-27)
-            if quiet and lab in quiet:
-                continue  # zero all day: said once in the summary line instead
-            cells = ""
-            for grp in groups:
-                gv = [x for x in (get(h) for h in grp) if x is not None]
-                v = (max(gv) if gv else None) if lab in PEAK_ROWS and len(grp) > 1 else get(grp[0])
-                if v is None:
-                    cells += "<td>&ndash;</td>"
-                elif sc is None:
-                    cells += "<td>%s</td>" % compass(v)
-                else:
-                    cells += '<td style="background:%s">%s</td>' % (tint(sc(v)), (f % v) if not (lab == "Rain/snow in/h" and v < 0.01) else ("0" if v < 0.001 else "&lt;0.01"))
-            out += '<tr><th scope="row">%s</th>%s</tr>' % (lab, cells)
-        return out
     col = {lab: [v for v in (get(h) for h in hrs) if v is not None] for lab, get, sc, f in spec}
     quiet = {lab for lab in ("Thunder %", "Rain/snow in/h", "Heat index &deg;F") if col.get(lab) and max(col[lab]) < 0.005} | ({"Humidity %", "Cloud %"})
     def peak(lab):
@@ -268,7 +242,6 @@ def b_heatmap(G):
     per = [p for p in n.get("periods") or [] if p.get("pop") is not None and parse_t(p["startTime"]) <= parse_t(hrs[-1]["t"]) - datetime.timedelta(hours=6) and parse_t(p.get("endTime") or p["startTime"]) > max(G["now"], parse_t(hrs[0]["t"])) + datetime.timedelta(hours=6)]  # full review: "Tonight" from a 17 h old forecast
     big = max(per, key=lambda p: p["pop"]) if per else None
     popnote = ('<p class="src">The NWS gives %s a %d%% chance of rain or snow for the whole period; the highest single hour below is %d%%. A period chance counts rain or snow at any time in it, so it runs higher than any one hour.</p>' % (esc(big["name"]), big["pop"], max(hp))) if big and hp and big["pop"] > max(hp) + 15 else ""  # hater r5: "Tonight 93%" over hourly cells that peak at 69
-    grid = lambda gs, q: '<div class="scroll"><table class="hm"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (head_of([g_[0] for g_ in gs]), rows_of(gs, q))
     def gmax(lab, grp):
         v = [x for x in (spec_get[lab](h) for h in grp) if x is not None]
         return max(v) if v else None
@@ -278,12 +251,13 @@ def b_heatmap(G):
     sky_of = lambda grp: sky.get(parse_t(grp[0]["t"]).replace(minute=0, second=0, microsecond=0))
     has_s = any(sky_of(grp) for grp in every3)  # old caches without the NWS short forecast: no Sky column
     heads = ["Time", "Temp"] + (["Rain %"] if has_r else []) + ["Wind mph", "Gusts mph"] + (["Thunder %"] if has_t else []) + (["Visibility"] if has_v else []) + (["Sky"] if has_s else [])
-    lrows = ""
-    for grp in every3:
+    def list_of(groups):  # one row per time, top to bottom (owner 2026-11-09: "the Weather Channel wouldn't show it like this"; the sideways grid is gone)
+      lrows = ""
+      for grp in groups:
         d = parse_t(grp[0]["t"]).astimezone(zone)
         t0 = spec_get["Temp &deg;F"](grp[0])
         w, g_, dr = gmax("Wind mph", grp), gmax("Gust mph", grp), spec_get["Direction"](grp[0])
-        cells = ["%s%d %s" % (("%s " % d.strftime("%a")) if (d.hour < 3 or grp is every3[0]) else "", d.hour % 12 or 12, "AM" if d.hour < 12 else "PM"),
+        cells = ["%s%d %s" % (("%s " % d.strftime("%a")) if (d.hour < 3 or grp is groups[0]) else "", d.hour % 12 or 12, "AM" if d.hour < 12 else "PM"),
                  ("%.0f&deg;F" % t0) if t0 is not None else "&ndash;"]
         if has_r:
             r_ = gmax("Rain/snow %", grp)
@@ -298,6 +272,7 @@ def b_heatmap(G):
         if has_s:
             cells.append(esc(sky_of(grp) or "") or "&ndash;")
         lrows += tr(cells, right=tuple(range(1, len(cells) - has_s)))
-    lst = '<div class="scroll"><table class="hm hlist%s"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (" hsky" if has_s else "", "".join('<th scope="col">%s</th>' % h_ for h_ in heads), lrows)  # .hm never stacks into cards on a phone: one line per 3 hours
-    return block("hourly_heatmap", aged("hourly_heatmap", "Hourly weather %s, next 24 hours" % where_(G), g.get("updated"), age, G), "official", storm_line(G) + summary + popnote + lst + more("Every hour, every NWS value", grid([[h] for h in hrs], set())),
+      return '<div class="scroll"><table class="hm hlist%s"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (" hsky" if has_s else "", "".join('<th scope="col">%s</th>' % h_ for h_ in heads), lrows)  # .hm never stacks into cards on a phone: one line per 3 hours
+    lst = list_of(every3)
+    return block("hourly_heatmap", aged("hourly_heatmap", "Hourly weather %s, next 24 hours" % where_(G), g.get("updated"), age, G), "official", storm_line(G) + summary + popnote + lst + more("Every hour", list_of([[h] for h in hrs])),
                  "Source: National Weather Service gridpoint forecast, updated %s; chance of rain or snow from the NWS hourly point forecast. Amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Hours are gauge-local; each row covers 3 hours (temperature at its first hour; wind, gusts, rain and thunder the highest in the 3 hours; visibility the lowest; sky is the NWS hourly short forecast for the first hour; the arrow points where the wind blows), and every hour is one tap below. Darker cells mean a higher value in that row." % upd, "nws", amber=age)

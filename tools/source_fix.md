@@ -100,6 +100,18 @@ Edge cases (guard):
 - A shell heredoc turns a backslash escape (a CSS arrow code, a no-break space, a tab) into a raw byte / the toggle arrow drew a box / site-wide / check.py control_chars over site.css, worker and lib; write escapes with the Edit tool, never a heredoc.
 - Layout that differs page to page / an autistic reader loses their place / every page kind / one template, one block order (CLAUDE.md "Order"), variant reviews per template.
 
+## Tables a person can read (owner 2026-11-09: "so confusing and hard to read at a first glance")
+Why it went wrong: every gate measured truth and completeness, none measured reading; rules said "every dataset", none capped words; reviews were AI against a correctness list. Rules now:
+- No answer above the table / the reader decodes the grid / every block / one plain sentence first ("Next 24 h: 40 to 65°F, no rain"); the table is proof.
+- Time runs sideways (old hourly grid, 24 columns) / scrolling across, losing the row label / hourly / one row per time, top to bottom, like the Weather Channel (lib/weather.py list_of).
+- Too many columns / phone squeezes or stacks into cards / any table / at most 5 columns; more goes behind a toggle or into words.
+- SHOUTING CAPITAL headers / hard to scan / every table / sentence case.
+- Every cell shaded / nothing stands out / heat grids / shade only values worth a look (gusts 25+ mph, thunder 20+%, rain chance 30+%), never a scale on all cells.
+- All-zero rows (thunder 0 all day) / noise / weather tables / one sentence instead of the row.
+- Jargon labels (RFC, gage, cfs) / a newcomer stops / tiles and headers / plain words first, the term second if needed ("NWS estimate for this spot").
+- Same fact repeated in tile, strip, block / reading it three times / every page / say it once where it answers best.
+- The check: check.py readability census (tables over 5 columns, blocks without a lead sentence) printed every run; it warns, it does not block, until the census is near zero; then it becomes a gate.
+
 ## Never
 - A per-gauge exception list. If one gauge needs it, the rule is wrong: redefine what the rule matches.
 - A fix in the template that hides a bad value. The cache must hold the truth.

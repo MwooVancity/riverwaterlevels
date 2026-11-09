@@ -87,6 +87,19 @@ def ui_checks(body, plain=True):
     return bad
 
 
+READ = {"pages": 0, "wide": 0, "wide_pages": 0, "eg": ""}
+
+
+def readability(h, rel):
+    """Readability census (CLAUDE.md 'readable at a glance'): tables with more than 5 columns. Warns, never blocks, until near zero."""
+    n = sum(1 for t in re.findall(r"<thead><tr>(.*?)</tr></thead>", h, re.S) if t.count("<th") > 5)
+    READ["pages"] += 1
+    READ["wide"] += n
+    if n:
+        READ["wide_pages"] += 1
+        READ["eg"] = READ["eg"] or rel
+
+
 def control_chars(texts):
     """No control character in the stylesheet or the page code (2026-11-09, three times in one day: a shell heredoc turned a CSS or Python escape into a raw byte;
     the tile toggle drew a box instead of its arrow). texts: {name: text}."""
@@ -603,6 +616,7 @@ def check_dir(d):
                 p = os.path.join(root, f)
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
+                readability(h, rel)
                 results[rel] = page_checks(h, rel) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
                 if rel.replace("\\", "/") == "glossary/index.html":
                     results[rel] += glossary_gaps(h)
@@ -674,6 +688,7 @@ def check_dir(d):
         us_ = [u for u in water_ if kind_of(rel_of[u]) == k_]
         i_, o_ = sorted(inb[u] for u in us_), sorted(len({x for x in links_of[u] if x in water_ and x != u}) for u in us_)
         print("links census %s: %d pages, inbound min %d median %d, outbound min %d median %d, %d with under %d inbound" % (k_, len(us_), i_[0], i_[len(i_) // 2], o_[0], o_[len(o_) // 2], sum(1 for x in i_ if x < NEIGHBOURS), NEIGHBOURS))
+    print("readability census: %d pages, %d tables over 5 columns on %d pages%s" % (READ["pages"], READ["wide"], READ["wide_pages"], (", e.g. " + READ["eg"]) if READ["eg"] else ""))
     if few_:  # a warning, never a hold: a missing link shows the reader nothing wrong, and a new page with no live copy would stop the whole deploy; the generator (lib/world.py near, nearby_gauges) is the fix
         print("WARNING internal links: %d water pages link fewer than %d other water pages, e.g. %s" % (len(few_), NEIGHBOURS, sorted(few_)[:5]))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists

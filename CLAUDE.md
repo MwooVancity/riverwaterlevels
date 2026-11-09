@@ -24,6 +24,9 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 ## HARD: drawing board first (owner 2026-11-08)
 Before any build, and whenever asked "what's missing", answer each for THIS site: state (measured), owner, next action (PLAN.md "Drawing board"): 1 Demand (words, searches) 2 Intent (what wins today) 3 Better than #1 4 Trust 5 Links (who, by name) 6 Discovery (crawl, index) 7 Click 8 Experience (phone speed) 9 Proof (which number, when). "Not started", "nobody owns it" or "owner only, no plan" goes before ALL polish; an owner-only item gets a full plan, the owner only clicks.
 
+## HARD: readable at a glance (owner 2026-11-09: "I don't get it"; "the Weather Channel wouldn't show it like this")
+Correct is not enough: a page fails if a person can't say what the river is doing after 5 seconds on a phone. Layout reference is the Weather Channel / Apple Weather, not agency pages. First screen: place, one plain status sentence, the number. Each block: a one-sentence answer first, the table is proof; at most 5 columns, time runs down, no shouting capitals, shading only on values worth a look, all-zero rows said in one line. A new layout ships after one 5-second test by a person who is not Claude (owner or a friend). check.py prints a readability census every run (tools/source_fix.md "Tables a person can read").
+
 ## Page rules
 - Nothing that helps ranking but not the reader (stuffing, doorway, padding).
 - Phone download (third-party too) under 90 KB gzipped (`check.py`); cut the biggest, never river data.
