@@ -96,6 +96,7 @@ Readers and Google
 - G Verdict words ("safe", "runnable") / misleads / every page / check.py banned words.
 - G Thin or near-duplicate: owner rule 4 says no similarity gate; only a page with no data of its own is held.
 Unattended (a week with nobody)
+- G A code error crashes every page build (NameError in a new tile, review run 42577733037) / live pages keep their copy, the dry run stays green by design (verdict = the 'refresh OK' line, which was missing), main does not deploy / whole site / watchdog 'site rebuilt N min ago' over REBUILD_MIN heals and reports; edge_tests now calls every new tile helper.
 - G Release stops / no new pages / watchdog alarm at 2 days.
 - G Mass carry (pages ship old copies) / stale site / over 5% / watchdog mass_carry.
 - O Search Console or GA4 loses access or the API is disabled / weekly numbers stop silently / once / gsc_read exits non-zero and watchdog reports it (not wired yet: gsc_read runs by hand).
