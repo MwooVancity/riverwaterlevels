@@ -81,6 +81,7 @@ Two writers, two copies
 - G Two sessions on one file: global rule, one session per project; nothing a script can enforce.
 Who can't see it
 - G A new page kind no check reads (Great Lakes pages unreadable to truth_live 11-08) / the gate passes blind / any new kind / practice of every kind adds one page per kind nightly.
+- G A new check line the log filter hides (gates.py printed only lines starting truth_live:, so the new air, forecast and rain lines never showed in the cloud log 2026-11-09) / a check runs blind to readers of the log / every new summary line / gates.py census list names each line; add a new line there the same commit.
 - G Summary lines every run: truth_live prints compared/skipped counts per kind and the air line every run (0b2 DONE; 2026-11-09 log: 216 compared, 209 air). Lake Michigan proof waits for its first live Great Lakes page.
 The check itself is wrong
 - G Too loose: a match on a substring ('wind' in 'window') / passes everything / site-wide / fixtures in check.py selftest.
