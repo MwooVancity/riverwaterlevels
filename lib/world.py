@@ -245,7 +245,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_low_water": ("none: no national low-water thresholds", "none: mean low water is in official marks"),
     "b_impacts": (NO_GAUGE, NO_GAUGE), "b_camera": ("none: no national gauge camera feed", "none: no national gauge camera feed"), "b_tides": ("none: test gauges are inland", "none: gauges on the list are inland"),
     "b_snotel": ("none: snow pillows are provincial", "none: no gauge-linked snow feed"), "b_floodfreq": (NO_GAUGE, NO_GAUGE), "b_crests": (NO_GAUGE, NO_GAUGE), "b_flood_outlook": ("none: provincial", "none: state flood centres, no national open feed"),
-    "b_field_meas": (NO_GAUGE, NO_GAUGE), "b_rating": (NO_GAUGE, NO_GAUGE), "b_samples": (NO_GAUGE, NO_GAUGE), "b_attains": (US_ONLY, US_ONLY), "b_streamcat": (US_ONLY, US_ONLY), "b_land": (US_ONLY, US_ONLY),
+    "b_depth": ("none: no open channel-measurement feed known (not yet searched, 2026-11-09)", "none: no open channel-measurement feed known (not yet searched, 2026-11-09)"), "b_field_meas": (NO_GAUGE, NO_GAUGE), "b_rating": (NO_GAUGE, NO_GAUGE), "b_samples": (NO_GAUGE, NO_GAUGE), "b_attains": (US_ONLY, US_ONLY), "b_streamcat": (US_ONLY, US_ONLY), "b_land": (US_ONLY, US_ONLY),
     "b_heatmap": ("none: the feed has no hourly grid; the hourly table carries it", "none: covered by the hourly table"), "b_nwm": (US_ONLY, US_ONLY), "b_nwm_medium": (US_ONLY, US_ONLY), "b_noforecast": ("none: the river forecast tile says so", "none: the river forecast tile says so"),
     "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
 MET = "next: Met Office Global Spot rain amounts and map images, same key; fields not proven live"
@@ -273,7 +273,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_tides": "none: tidal gauges are kept off the site; a tide is never shown as a river level",
     "b_crests": "none: the agency's highest on record and highest recent level are in official marks",
     "b_flood_outlook": "next: Flood Forecasting Centre five-day flood risk on GOV.UK; no open feed read",
-    "b_field_meas": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_rating": "none: the flood-monitoring API reference lists no rating curves, read 2026-11-03",
+    "b_depth": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_field_meas": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_rating": "none: the flood-monitoring API reference lists no rating curves, read 2026-11-03",
     "b_samples": "next: Environment Agency Water Quality Archive sampling points, open; not read", "b_attains": "next: Environment Agency Catchment Data Explorer water body status, open; not read",
     "b_land": "next: UKCEH Land Cover Map; licence not read", "b_noforecast": COVER["b_noforecast"][0],
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}

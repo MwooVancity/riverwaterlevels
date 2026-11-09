@@ -636,7 +636,36 @@ def fetch_fieldmeas(site, h):
         elif q.get("parameter_code") == "00065":
             row["stage"] = v
     rows = sorted((r for r in visits.values() if r["flow"] is not None), key=lambda r: r["t"], reverse=True)[:12]
-    return {"fetched_at": now_iso(), "rows": rows} if rows else None
+    try:  # channel width, area and mean velocity from the same visits: answers "how deep is the river here" (Search Console 2026-11-09: 7 queries)
+        chan = chan_rows(thr_json(BASE + "channel-measurements/items?monitoring_location_id=USGS-%s&limit=100&sortby=-time&f=json" % site, h, 90, gap=1.0).get("features", []))
+    except Exception as e:
+        print("channel measurements failed", site, str(e)[:100])
+        chan = []  # shown like 'none within a mile' (no block); the weekly refresh retries, the early refresh does not loop hourly
+    out = {"fetched_at": now_iso(), "rows": rows, "chan": chan}
+    return out if rows or chan else None
+
+
+CHAN_MAX_FT = 5280  # a measurement more than a mile from the gauge describes another stretch (Omaha: all 8.5 mi downstream; Louisville: some 12 mi)
+
+
+def chan_rows(features):
+    """One row per site visit: [time, flow cfs, width ft, area sq ft, mean velocity ft/s, distance ft, direction]. The channel with the most flow is the
+    main channel (a visit can also hold a side channel or a repeat 'check' run). Kept only within CHAN_MAX_FT of the gauge, distance known, units feet."""
+    best = {}
+    for f in features:
+        q = f.get("properties") or {}
+        try:
+            fl, w, a, v = float(q["channel_flow"]), float(q["channel_width"]), float(q["channel_area"]), float(q["channel_velocity"])
+            dist = float(q["channel_location_distance"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if w <= 0 or a <= 0 or fl <= 0 or dist > CHAN_MAX_FT or (q.get("channel_width_unit"), q.get("channel_area_unit"), q.get("channel_flow_unit")) != ("ft", "ft^2", "ft^3/s"):
+            continue
+        k = q.get("field_visit_id") or str(q.get("time"))[:10]
+        rank = ("check" not in (q.get("channel_name") or "").lower(), fl)  # a 'check' run repeats the main measurement (Austin 2026-08-13: Check 106 cfs, Main 104)
+        if k not in best or rank > best[k][0]:
+            best[k] = (rank, [str(q.get("time")), fl, w, a, v, dist, q.get("channel_location_direction") or ""])
+    return sorted((r for _, r in best.values()), key=lambda r: r[0], reverse=True)[:40]
 
 
 def fetch_year(site, h):
@@ -1519,7 +1548,8 @@ def fetch_extras(site, rec, h, log):
         stamp = rec.setdefault("_fetched", {})
         if key in WEEKLY and USGS_OUT[0]:
             continue
-        if not want and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
+        early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
+        if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("related", "near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
             stamp[key] = now_iso()

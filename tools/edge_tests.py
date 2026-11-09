@@ -16,6 +16,14 @@ def run():
     assert directory.lake_state_page({"rows": {str(i): lk(i) for i in range(49)}}, {}, nw) is None, "a TWDB file cut short (under 50 reservoirs) still made the Texas page"
     tx = directory.lake_state_page({"fetched_at": "2026-11-07T17:00:00Z", "rows": dict({str(i): lk(i) for i in range(60)}, dry=lk(98, full_name="Addicks Reservoir", percent_full=None, elevation=76.38, conservation_pool_elevation=67.5), late=lk(99, full_name="Lake Old", timestamp="2026-11-01"))}, {}, nw)
     assert "677.15 ft" in tx and "3.85 ft below full pool" in tx and "Addicks Reservoir</td><td class=\"r\">Unknown" in tx and "8.88 ft above" not in tx and "6 days old" in tx, "Texas lake page: a published elevation was rounded, a dry flood dam got a pool figure, or an old row hid its age"
+    cm = lambda vid, fl, w, a, dist, **k: {"properties": dict({"field_visit_id": vid, "time": "2026-08-0%sT18:00:00+00:00" % vid, "channel_flow": str(fl), "channel_width": str(w), "channel_area": str(a), "channel_velocity": "2.1", "channel_location_distance": dist, "channel_location_direction": "Downstream", "channel_width_unit": "ft", "channel_area_unit": "ft^2", "channel_flow_unit": "ft^3/s"}, **k)}
+    ch = collect.chan_rows([cm("1", 71000, 1690, 33600, "5000.00"), cm("1", 900, 300, 600, "5000.00"), cm("1", 72000, 1700, 34000, "5000.00", channel_name="Check"), cm("2", 255000, 1780, 59000, "64000.00"), cm("3", 50, 20, 30, ""), cm("4", 10, 5, 0, "0"), cm("5", 10, 5, 9, "0", channel_width_unit="m")])
+    assert [(r[1], r[2], r[3]) for r in ch] == [(71000, 1690, 33600)], "depth: a measurement 12 mi away, a side channel, a blank distance, a zero area or metres got into the depth table (Louisville, Omaha 2026-11-09)"
+    from lib import blocks3
+    G = {"rec": {"fieldmeas": {"fetched_at": "2026-11-09T00:00:00Z", "chan": [["2026-08-04T18:49:06+00:00", 71000.0, 1690.0, 33600.0, 2.11, 5000.0, "Downstream"], ["2025-08-14T15:00:00+00:00", 48000.0, 1680.0, 17300.0, 1.9, 3000.0, "Downstream"]]}}, "lv": 48100.0, "zone": zoneinfo.ZoneInfo("America/New_York")}
+    h = blocks3.b_depth(G)["body"]
+    assert "average depth of 19.9 ft" in h and "Closest to today's flow (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
+    assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
     rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])
     assert {r["time"]: r["value"] for r in rows}["t1"] == "11000" and (add, fixed) == (1, 1), "a USGS correction to a reading we already had was dropped"
     assert collect.merge_rows([new], [dict(new)])[1:] == (0, 0), "an unchanged reading counted as a correction"

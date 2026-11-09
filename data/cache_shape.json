@@ -142,6 +142,7 @@
 "zones": "list"
 },
 "fieldmeas": {
+"chan": "list",
 "fetched_at": "iso",
 "rows": "list"
 },

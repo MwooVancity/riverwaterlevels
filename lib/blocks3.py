@@ -1,7 +1,7 @@
 """Blocks for the second wave of government sources (NWS forecast point facts, FEMA declarations, NCEI storm events, dams, Reclamation releases, ACIS rain, StreamCat, FEMA flood zones).
 Same registry rules as render.py and blocks2.py. Each block is gated by its source row in data/sources.json.
 """
-import collections, datetime, re
+import collections, datetime, math, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
 from lib.hero import cdec_avg
 
@@ -288,6 +288,35 @@ def b_field_meas(G):
     rows = "".join(tr([fdate(r["t"][:10]), "%s cfs" % fmtc(r["flow"]), ("%.2f ft" % r["stage"]) if r.get("stage") is not None else "–", esc(r.get("rating") or "–")], right=(1, 2)) for r in f["rows"][:10])
     return block("field_measurements", "USGS field measurements", "hist", table(["Date", "Measured flow", "Gage height", "USGS measurement quality"], rows, right=(1, 2)),
                  "Source: USGS Water Data API field measurements, the %d most recent site-visit measurements with a flow value, fetched %s. The measurement quality shown is the USGS measurement rating as published." % (min(10, len(f["rows"])), esc(tzl(parse_t(f["fetched_at"]), G["zone"]))), "usgs")
+
+
+def depth_rows(G):
+    """USGS channel measurements within a mile of the gauge (collect.chan_rows), newest first, plus the one whose flow is closest to the latest reading."""
+    c = (G["rec"].get("fieldmeas") or {}).get("chan")
+    if not c:
+        return None, None
+    lv = G.get("lv")
+    near = min(c, key=lambda r: abs(math.log(r[1] / lv))) if lv and lv > 0 else None
+    return c, near
+
+
+def b_depth(G):
+    """How deep and wide the river is at the gauge: USGS hydrographers' measured width and cross-section area; average depth = area / width is our math."""
+    c, near = depth_rows(G)
+    if c is None:
+        return None
+    if not c:  # USGS has measurements, none within a mile of the gauge with width and area
+        return None
+    d = lambda r: r[3] / r[2]
+    where = lambda r: "at the gauge" if r[5] < 50 else "%s ft %s" % (fmtc(r[5]), {"Upstream": "upstream", "Downstream": "downstream"}.get(r[6], "away"))
+    say = lambda r: "on %s, at %s cfs, USGS measured the river %s ft wide with an average depth of %.1f ft" % (fdate(r[0][:10]), fmtc(r[1]), fmtc(r[2]), d(r))
+    lead = "<p>Latest measurement: %s (%s).</p>" % (say(c[0]), where(c[0]))
+    if near and near is not c[0]:
+        lead += "<p>Closest to today's flow (%s cfs): %s (%s).</p>" % (fmtc(G["lv"]), say(near), where(near))
+    lead += "<p>Average depth is the cross-section area divided by the width; the deepest part of the channel is deeper, the edges shallower. Depth changes with the flow.</p>"
+    rows = "".join(tr([fdate(r[0][:10]), "%s cfs" % fmtc(r[1]), "%s ft" % fmtc(r[2]), "%.1f ft" % d(r), "%.1f ft/s" % r[4], where(r)], right=(1, 2, 3, 4)) for r in c[:10])
+    return block("depth", "How deep and wide the river is here", "hist", lead + table(["Date", "Flow", "Width", "Average depth", "Mean speed", "Where"], rows, right=(1, 2, 3, 4)),
+                 "Source: USGS Water Data API channel measurements (hydrographer site visits within a mile of the gauge; the main channel of each visit), fetched %s. Average depth = area &divide; width, our math." % esc(tzl(parse_t(G["rec"]["fieldmeas"]["fetched_at"]), G["zone"])), "usgs")
 
 
 def window_change(fl, lt, h):
