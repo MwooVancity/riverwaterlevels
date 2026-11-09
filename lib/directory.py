@@ -543,10 +543,14 @@ def sitemap(urls, lastmod):
 
 def llms(built):
     """llms.txt: what the site is, where the pages and the data files are, how to credit the sources."""
-    lines = ["# %s" % BRAND, "", "> One page per USGS river gauge: current flow and gage height, how today compares with the gauge's own record, NWS forecasts, alerts and flood record. Government data only (USGS, NOAA/NWS), every number with its observed time and source." + (" Also gauge pages from the official agencies of %s, linked from the home page." % " and ".join(world_countries()) if world_countries() else ""), "",
-             "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each gauge page has a machine-readable copy at <page URL>data.json (7-day flow and gage height, daily mean flow by year).", "- Embeddable panel per gauge at %s/embed/river/<river>/<place>/" % SITE_URL,
-             "- Credits: Data: U.S. Geological Survey; NOAA National Weather Service. Provisional USGS data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL), "", "## Gauge pages", ""]
-    lines += ["- [%s, %s](%s%s)" % (river_at(r["river"], r["place"]), r["state"], SITE_URL, r["dashboard_url"]) for r in sorted(built, key=lambda r: (r["state"], r["river"], r["place"]))]
+    kind = lambda r: "coast" if "/coast/" in r["dashboard_url"] else "lake" if "/lake/" in r["dashboard_url"] else "river"
+    lines = ["# %s" % BRAND, "", "> Live water levels for US rivers, lakes and reservoirs, and tide stations: one page per gauge with the latest reading and its observed time, how today compares with that gauge's own record, NWS forecasts and alerts. Official data only (USGS, NOAA National Weather Service, NOAA CO-OPS tides, and the lake's operator: CDEC, Reclamation, TWDB); every number names its source and time; tide predictions are labelled predictions." + (" Also gauge pages from the official agencies of %s." % " and ".join(world_countries()) if world_countries() else ""), "",
+             "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each gauge page has a machine-readable copy at <page URL>data.json.", "- Embeddable live panel per page: %s/embed<page path> (free, with a visible link to the page)." % SITE_URL,
+             "- Credits: U.S. Geological Survey; NOAA National Weather Service; NOAA CO-OPS; each lake's operator as named on its page. Provisional data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL)]
+    for k, head in (("river", "River gauges"), ("lake", "Lakes and reservoirs"), ("coast", "Tides and coastal water levels")):  # AI search cites by what people ask (lake level, tides): one list per kind (2026-11-08)
+        grp = [r for r in built if kind(r) == k]
+        if grp:
+            lines += ["", "## %s" % head, ""] + ["- [%s, %s](%s%s)" % (river_at(r["river"], r["place"]) if k == "river" else r["river"], r["state"], SITE_URL, r["dashboard_url"]) for r in sorted(grp, key=lambda r: (r["state"], r["river"], r["place"]))]
     return "\n".join(lines) + "\n"
 
 

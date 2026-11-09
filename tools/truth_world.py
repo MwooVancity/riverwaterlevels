@@ -75,8 +75,12 @@ def check(row):
         live = fs[0]["properties"]["LEVEL"] if fs else None
         ok = not shown or live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # same minute: rounding only; "not reporting" is a true page; no feed value for the page's minute proves nothing
         print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
-        near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&skipGeometry=true&properties=status_en&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
-        live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled")]
+        near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from lib import wx
+        rings_ = lambda g: [[(y, x) for x, y in p_[0]] for p_ in (g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]])] if g else []
+        # 2026-11-08: the box alone counted the next county's warning (Mountain View Co., 1 km off James River near Sundre) while the page's own point test was right; the carried old copy then showed an ended warning as active. Same point test as collect.py.
+        live_al = [f for f in near if f["properties"].get("status_en") not in ("ended", "cancelled") and wx.alerts_at(row[2], row[3], [{"rings": rings_(f.get("geometry")), "event": f["properties"].get("feature_name_en")}])]
         if live_al and "No active Environment Canada" in page:
             print(row[1], "FAULT page says no alerts, agency has", len(live_al))
             return 2 - bool(ok)

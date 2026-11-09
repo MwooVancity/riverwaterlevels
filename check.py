@@ -235,13 +235,15 @@ def claims_vs_cache(h, rec, now=None):
     now = now or datetime.datetime.now(datetime.timezone.utc)
     bad = []
     zl = re.search(r'<p class="sub">.*?observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M ([A-Z]{2,5})\b', h, re.S)
-    if zl and rec.get("tz"):  # gate audit 2026-11-08: the zone label was checked for existence only; it must be the gauge's own zone (standard or daylight)
+    from lib.core import usgs_tz
+    tzn_ = usgs_tz(rec) or rec.get("tz")  # the page's own rule (lib/hero.py ctx): the zone USGS publishes for the site first (northern Idaho County is Pacific; the coordinate lookup said Boise)
+    if zl and tzn_:  # gate audit 2026-11-08: the zone label was checked for existence only; it must be the gauge's own zone (standard or daylight)
         import zoneinfo
         try:
-            z_ = zoneinfo.ZoneInfo(rec["tz"])
+            z_ = zoneinfo.ZoneInfo(tzn_)
             ok_ = {datetime.datetime(now.year, m, 15, 12, tzinfo=z_).tzname() for m in (1, 7)} | {now.astimezone(z_).tzname()}
             if zl.group(1) not in ok_:
-                bad.append("observed time labelled %s, but this gauge's zone %s is %s" % (zl.group(1), rec["tz"], "/".join(sorted(ok_))))
+                bad.append("observed time labelled %s, but this gauge's zone %s is %s" % (zl.group(1), tzn_, "/".join(sorted(ok_))))
         except (zoneinfo.ZoneInfoNotFoundError, ValueError):
             pass
     o = (rec.get("nwps") or {}).get("obs_stage") or {}
