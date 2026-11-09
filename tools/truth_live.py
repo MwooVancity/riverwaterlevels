@@ -492,7 +492,7 @@ def fc_check(html, carried, bad, skipped):
     return n
 
 
-RAIN_TILE = re.compile(r'<span>Rain, last 24 h</span><b>([\d.]+) <small>in</small></b><small[^>]*>NWS RFC estimate to ([A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5})</small>')
+RAIN_TILE = re.compile(r'<span>Rain, last 24 h</span><b>([\d.]+) <small>in</small></b><small[^>]*>NWS estimate for this spot to ([A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5})</small>')
 QPE = "https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json"
 
 

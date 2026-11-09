@@ -552,9 +552,9 @@ def hero(G, pages=None):
     if c["rain"]:
         rn_ = c["rain"]
         if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"
-            strip += ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", '<small>Last estimate %s ago.</small><small class="old">Old value: %.2f in, NWS RFC estimate%s</small>' % (esc(rn_["ago"] or "time not stated"), rn_["in"], ((" to " + esc(rn_["to"])) if rn_["to"] else "")))
+            strip += ui.tile("rain stale", "drop", "Rain, last 24 h", "Unknown", '<small>Last estimate %s ago.</small><small class="old">Old value: %.2f in, NWS estimate for this spot%s</small>' % (esc(rn_["ago"] or "time not stated"), rn_["in"], ((" to " + esc(rn_["to"])) if rn_["to"] else "")))
         else:
-            strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % rn_["in"], '<small data-h="%.1f">NWS RFC estimate%s</small>' % (rn_["age_h"], (" to " + esc(rn_["to"])) if rn_["to"] else ""))
+            strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % rn_["in"], '<small data-h="%.1f">NWS estimate for this spot%s</small>' % (rn_["age_h"], (" to " + esc(rn_["to"])) if rn_["to"] else ""))
     if c["air"]:
         a = c["air"]
         wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
