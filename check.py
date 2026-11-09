@@ -243,6 +243,10 @@ def check_html(h, rel):
             bad.append("first screen: the is-this-normal tile is not marked dv (would show an old class under a swapped reading with no time)")
         if '<p class="answer"' in head and not re.search(r'class="a2 dv\b', head):
             bad.append("first screen: the summary class is not marked dv")
+        # owner 2026-11-09 "readable at a glance": place (H1), then one status sentence, then the numbers
+        a_, t_, h_ = head.find('<p class="answer"'), head.find('class="tile '), head.find("<h1")
+        if a_ < 0 or not (h_ < a_ < t_ or t_ < 0):
+            bad.append("first screen: the status sentence is missing or not between the place name and the tiles")
     # a tile's caption must say something its value does not (2026-10-25: "5p to 6p" / "5p to 6p: no thunder ...")
     for mm in re.finditer(r'<div class="tile [^"]*">(?:(?!</div>).)*?<b>(.*?)</b>((?:(?!</div>).)*)</div>', body, re.S):
         val = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", mm.group(1))).strip()
@@ -1157,7 +1161,7 @@ def selftest():
     assert edge_drift(w_real.replace('"ft^3/s" : "ft"', '"m^3/s" : "m"')), "selftest: a worker that accepts another unit than lib/core.py UNIT_OF did not fire"
     from lib.core import series as series_
     assert not series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "7700", "unit_of_measure": "m^3/s"}]}}, "00060") and series_({"usgs": {"rows": [{"parameter_code": "00060", "time": "2026-11-07T00:00:00+00:00", "value": "272000", "unit_of_measure": "ft^3/s"}]}}, "00060"), "selftest: a flow in m^3/s was read as cfs (edge test 2026-11-07)"
-    good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p>'
+    good = ('<!doctype html><title>T</title><meta name="description" content="A description that is long enough to pass the length rule."><meta property="og:title" content="t"><meta property="og:description" content="d"><meta property="og:url" content="u"><meta property="og:image" content="i"><link rel="canonical" href="%s/river/a/b/water/"><link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest"><main><h1>X</h1><p class="sub">USGS gauge 1 &middot; observed Oct 15, 7:00 PM CDT &middot; 5 min old</p><p class="answer"><span class="a2 dv lb">Typical for this date</span></p>'
             '<div class="hero"><div class="tile flow"><span>Latest flow</span><b>5 <small>cfs</small></b></div><div class="tile stage"></div><div class="tile norm dv"></div><div class="tile trend"></div></div>'
             '<section class="card blk" id="q"><h2>H</h2><p>x</p><p class="src">Source: USGS</p></section></main>' % SITE_URL)
     rel = os.path.join("river", "a", "b", "water", "index.html")
@@ -1198,7 +1202,9 @@ def selftest():
              "image after the first without loading=lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" decoding="async">'),
              "ok:first image eager, the rest lazy": good.replace("<p>x</p>", '<img src="/a.png" alt="a" width="5" height="5"><img src="/b.png" alt="b" width="5" height="5" loading="lazy" decoding="async">'),
              "&lt;/?[a-zA-Z]+": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p>For more information click &lt;a href=&quot;x.php&quot;&gt;here&lt;/a&gt;.</p>'),
-             "summary class is not marked dv": good.replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 lb">Typical for this date</span></p>')}
+             "summary class is not marked dv": good.replace('class="a2 dv lb"', 'class="a2 lb"'),
+             "status sentence is missing": good.replace('<p class="answer"><span class="a2 dv lb">Typical for this date</span></p>', ""),
+             "not between the place name and the tiles": good.replace('<p class="answer"><span class="a2 dv lb">Typical for this date</span></p>', "").replace('<div class="tile trend"></div>', '<div class="tile trend"></div><p class="answer"><span class="a2 dv lb">Typical for this date</span></p>')}
     obs = {"nwps": {"lid": "MEMT1", "obs_stage": {"t": "2026-10-26T10:00:00Z", "v": 1.6}}}
     import datetime
     at = datetime.datetime(2026, 10, 26, 12, tzinfo=datetime.timezone.utc)
