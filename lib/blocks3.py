@@ -507,10 +507,12 @@ def b_air_quality(G):
     a = dict(a, rows=[dict(r, site=r.get("site") if _aq_site(r.get("site")) != "not stated" else r.get("area")) for r in a["rows"]])  # hater r4: "MONITOR not stated" while AirNow names the reporting area
     pol = lambda r: esc(("PM2.5" if r["pollutant"] == "PM2.5" else (r["pollutant"] or "").title()) if r["pollutant"] not in ("OZONE", "PM10") else r["pollutant"].replace("OZONE", "Ozone"))
     one = len({(_aq_where(r), _aq_time(r)) for r in a["rows"]}) == 1  # phone review 2026-11-09: one monitor and time repeated on every row made 3 stacked cards; say them once
-    rows = "".join(tr([pol(r) + ("" if one else '<div class="src">%s, %s</div>' % (esc(_aq_where(r)), esc(_aq_time(r)))), str(r["aqi"]), esc(r["category"] or "")], right=(1,)) for r in a["rows"])  # always 3 columns
-    aq_tab = (('<p class="src">Monitor: %s &middot; observed %s</p>' % (esc(_aq_where(a["rows"][0])), esc(_aq_time(a["rows"][0])))) + table(["Pollutant", "AQI (of 500)", "EPA category"], rows, right=(1,))) if one else table(["Pollutant and monitor", "AQI (of 500)", "EPA category"], rows, right=(1,))
+    same_t = len({_aq_time(r) for r in a["rows"]}) == 1
+    rows = "".join(tr([pol(r) + ("" if one else '<br><small>%s%s</small>' % (esc(_aq_where(r)), "" if same_t else ", " + esc(_aq_time(r)))), str(r["aqi"]), esc(r["category"] or "")], right=(1,)) for r in a["rows"])  # always 3 columns; the time once when all readings share it
+    rows_note = '' if one or not same_t else '<p class="src">All observed %s.</p>' % esc(_aq_time(a["rows"][0]))
+    aq_tab = (('<p class="src">Monitor: %s &middot; observed %s</p>' % (esc(_aq_where(a["rows"][0])), esc(_aq_time(a["rows"][0])))) + table(["Pollutant", "AQI (of 500)", "EPA category"], rows, right=(1,))) if one else table(["Pollutant and monitor", "AQI (of 500)", "EPA category"], rows, right=(1,)) + rows_note
     worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
-    return block("air_quality", "Air quality now", "epa", '<p class="aq">AQI %s of 500 (EPA category: %s), %s%s</p>' % (esc(str(worst["aqi"])), esc(worst["category"] or ""), esc((worst["pollutant"] or "").replace("OZONE", "Ozone")), (", at " + esc(_aq_where(worst))) if _aq_site(worst.get("site")) != "not stated" else "") + aq_tab,
+    return block("air_quality", "Air quality now", "epa", '<p class="aq">%s: AQI %s of 500 (%s, EPA)</p>' % (esc(worst["category"] or "Not rated"), esc(str(worst["aqi"])), esc((worst["pollutant"] or "").replace("OZONE", "Ozone"))) + aq_tab,
                  "Source: EPA AirNow NowCast AQI, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
 
 
