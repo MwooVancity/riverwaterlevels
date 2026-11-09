@@ -250,7 +250,7 @@ def b_heatmap(G):
     has_r = bool(col.get("Rain/snow %"))
     sky_of = lambda grp: sky.get(parse_t(grp[0]["t"]).replace(minute=0, second=0, microsecond=0))
     has_s = any(sky_of(grp) for grp in every3)  # old caches without the NWS short forecast: no Sky column
-    heads = ["Time", "Temp"] + (["Rain %"] if has_r else []) + ["Wind mph", "Gusts mph"] + (["Thunder %"] if has_t else []) + (["Visibility"] if has_v else []) + (["Sky"] if has_s else [])
+    heads = ["Time", "Temp"] + (["Rain %"] if has_r else []) + ["Wind mph"] + (["Thunder %"] if has_t else []) + (["Visibility"] if has_v else []) + (["Sky"] if has_s else [])
     def list_of(groups):  # one row per time, top to bottom (owner 2026-11-09: "the Weather Channel wouldn't show it like this"; the sideways grid is gone)
       lrows = ""
       for grp in groups:
@@ -262,7 +262,7 @@ def b_heatmap(G):
         if has_r:
             r_ = gmax("Rain/snow %", grp)
             cells.append(("%.0f" % r_) if r_ is not None else "&ndash;")
-        cells += [(("%s " % wind_arrow(dr)) if dr is not None else "") + (("%.0f" % w) if w is not None else "&ndash;"), ("%.0f" % g_) if g_ is not None else "&ndash;"]
+        cells += [(("%s " % wind_arrow(dr)) if dr is not None else "") + (("%.0f" % w) if w is not None else "&ndash;") + (("&ndash;%.0f" % g_) if g_ is not None and w is not None and g_ > w else "")]  # wind to gust in one column (Weather Channel style, 5 columns)
         if has_t:
             th = gmax("Thunder %", grp)
             cells.append(("%.0f" % th) if th else "")
