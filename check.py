@@ -100,6 +100,12 @@ def readability(h, rel):
         READ["eg"] = READ["eg"] or rel
 
 
+def wide_tables(h):
+    """CLAUDE.md 'readable at a glance': at most 5 columns. Census reached 0 on 2026-11-09 (from 966), so it is a page rule now: a new block cannot bring a wide table back."""
+    n = [t.count("<th") for t in re.findall(r"<thead><tr>(.*?)</tr></thead>", h, re.S) if t.count("<th") > 5]
+    return ["table with %d columns (max 5: readable at a glance)" % n[0]] if n else []
+
+
 def control_chars(texts):
     """No control character in the stylesheet or the page code (2026-11-09, three times in one day: a shell heredoc turned a CSS or Python escape into a raw byte;
     the tile toggle drew a box instead of its arrow). texts: {name: text}."""
@@ -125,7 +131,7 @@ def page_checks(h, rel):
     """Every check that judges one page alone. The site gate and tools/release.py page_check both call this one function, so a new gauge the release
     passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
     u = "/" + os.path.dirname(rel).replace(os.sep, "/").replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
-    out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
+    out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else []) + wide_tables(h)
     sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
@@ -1140,6 +1146,7 @@ def selftest():
     assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
     css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
     assert control_chars({"x": "a" + chr(21) + "b"}) and not control_chars({"x": "a\tb\n"}), "selftest: a raw control byte in code passed, or a tab failed"
+    assert wide_tables("<thead><tr>" + "<th>a</th>" * 6 + "</tr></thead>") and not wide_tables("<thead><tr>" + "<th>a</th>" * 5 + "</tr></thead>"), "selftest: a 6-column table passed, or a 5-column one failed"
     from lib import ui as ui_
     cm_ = ui_.calm('<small>t</small><small class="dv">NWS: no flooding now or forecast</small><small>note</small>')
     assert "KJVY" in ui_.calm("<small>wind calm</small><small>Weather station KJVY, Nov 9, 1:30 AM EST</small><small>note</small>").split("<details")[0], "selftest: 'More' hid a reading time"

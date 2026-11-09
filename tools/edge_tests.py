@@ -364,8 +364,8 @@ def england_page():
         s = sec(hm, b)
         assert "Met Office" in s and "Environment Agency" not in s, "England weather is not credited to the Met Office: %s" % [x[max(0, x.find("Environment Agency") - 150):][:300] for x in [s]]
     assert "Powered by Met Office data" in re_.sub(r"<[^>]+>", " ", hm), "the Met Office attribution is missing"
-    assert re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0).count('data-l="Hour"') == 8, "the hourly table is not 8 rows at 3-hour steps; 24 rows were 4 phone screens (UI review 2026-11-04)"
-    assert 'data-l="Sky"' not in re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0), "a Sky column with no sky words showed blank on every row (live Colwick 2026-11-04)"
+    assert re_.search(r"<tbody>(.*?)</tbody>", re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0), re_.S).group(1).count("</tr>") == 8, "the hourly table is not 8 rows at 3-hour steps; 24 rows were 4 phone screens (UI review 2026-11-04)"
+    assert ">Sky</th>" not in re_.search(r'<section[^>]*id="hourly_forecast".*?</section>', hm, re_.S).group(0), "a Sky column with no sky words showed blank on every row (live Colwick 2026-11-04)"
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
     assert world.thin(h.replace('id="alerts"', 'id="x"')) == [], "a page with a reading was held for a missing alerts block (owner 2026-11-08: only no reading holds)"
     world.THIN.clear()

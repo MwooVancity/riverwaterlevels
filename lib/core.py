@@ -287,7 +287,7 @@ def render_block(b):
 def table(heads, rows, right=(), hide=(), stack=False):
     th = "".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
     names = ["hc%d" % i for i in hide]
-    if len(heads) - len(hide) >= 4 or stack:  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
+    if len(heads) - len(hide) > 5 or stack:  # owner 2026-11-09: stacked cards repeat every label and read worse than a 5-column table; tables are capped at 5 (check.py wide_tables)  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
         names.append("stk")
 
         def add(chunk):
