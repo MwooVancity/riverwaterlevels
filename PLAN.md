@@ -60,7 +60,7 @@ Input
 - G Wrong time zone label / time shown in the wrong zone / every page in a zone / check.py zone label = the gauge's zone. O the label is checked to exist, not to be right for DST changes (test: a page built on a DST night).
 - G Wrong unit (m vs ft, °C vs °F, m3/s vs cfs) / number off 3x / all non-US pages / truth_world unit compare.
 - G Flood stages that parse to 0 (or -9999, blank) / margins to 0 ft / any NWS point with an unset category / collect.nwps_cats keeps only stages above 0; edge_tests fixture (2026-11-09).
-- O Channel measurement far from the gauge (Louisville measurement 850 at 64,000 ft) / depth shown for another place / any gauge / step 0c rule: only measurements within 1,000 ft of the gauge count, or Unknown.
+- G Channel measurement far from the gauge (Louisville 64,000 ft, Omaha 8.5 mi) / depth for another stretch / any gauge / collect.chan_rows CHAN_MAX_FT one mile + edge_tests.
 - O Duplicate or same-name places (Kinsale, Botany Bay; two "Mio") / wrong country's page / thousands of queue rows / systemic namesake rule (step 6).
 - G Lower/upper case and accents in slugs (Ätran, Saint vs St) / two URLs for one place / every world page / slug-clash rule (coasts done; lakes step 13).
 Missing
@@ -71,16 +71,16 @@ Missing
 Scale
 - G USGS 1,000 calls/h per key / runs fail / ~6,000 gauges / release skips over 70% of limit.
 - G Cloudflare 1,000 KV writes/day, 20,000 files, 100k requests/day / deploy fails / 20,000 files at about 5,300 pages x files per page / limits table (Limits).
-- O Same download done twice (Worker and collect both call USGS for one gauge) / double calls / x2 at every scale / measure calls per gauge per hour from the logs.
+- G Same download twice, by design: the Worker reads USGS latest every 3 min for the live numbers, collect reads it hourly to build; two readers at two cadences, both batched (300 and 40 ids). Revisit only if USGS calls near 1,000/h.
 - O Run time of the hourly refresh grows linearly / misses its slot / about 3,600 gauges (step 14).
-- O URL length: query strings to USGS with many sites / 414 error / batches over ~200 sites / batch size cap test.
+- G URL length: USGS calls batch 40 (truth_live, collect latest), 12 (neighbours), 300 (Worker, about 5 KB) / checked 2026-11-09; the Worker moves to one national query past ~1,500 gauges (its CHUNK note).
 Two writers, two copies
 - G waves.csv written by the bot release and a session / lost rows / one file / sessions push to `check` only.
-- O One rule in two places: stale thresholds live in CLAUDE.md, check.py and lib/wx.py / they drift / every page / single constants module + test that reads them.
-- O Two sessions edit PLAN.md / overwrite / one file / one session per project (global rule).
+- G One rule in two places: stale limits live only in STALE_H/HIDE_H (lib/core.py); the Worker's copy of the age-chip limits is checked by check.py edge_drift (selftest); CLAUDE.md states them as orders, not code.
+- G Two sessions on one file: global rule, one session per project; nothing a script can enforce.
 Who can't see it
 - G A new page kind no check reads (Great Lakes pages unreadable to truth_live 11-08) / the gate passes blind / any new kind / practice of every kind adds one page per kind nightly.
-- O A list filtered for one tool hides items from another: summary lines print only on failure (Lake Michigan compare unproven) / blind pass / every kind / each check prints counts compared vs skipped per kind.
+- G Summary lines every run: truth_live prints compared/skipped counts per kind and the air line every run (0b2 DONE; 2026-11-09 log: 216 compared, 209 air). Lake Michigan proof waits for its first live Great Lakes page.
 The check itself is wrong
 - G Too loose: a match on a substring ('wind' in 'window') / passes everything / site-wide / fixtures in check.py selftest.
 - G Too strict: one page stops the deploy (11 lakes undid 20 picks) / nothing ships / at 25 a day / per-page carry (step 1a).
@@ -91,7 +91,7 @@ Readers and Google
 - G Germany: the current reading and the 8-day series come from two calls and can disagree at one time (Wuerzburg carried twice 2026-11-09, 144 vs 146 cm) / page held / any pegelonline gauge / collect.pegel_end + edge_tests fixture.
 - G Rain table day columns after the page's local date (UTC collect) / 'not reported' for tomorrow / every US page after 00:00 UTC / edge_tests acis fixture.
 - G 'A year earlier' under the normal tile used the latest daily mean date and said 'a day or two behind'; Louisville was 6 days / every gauge with a lagging daily mean / wording now '(USGS daily mean, the latest date USGS has published this year)'.
-- O Depth question unanswered (review 1) / searchers leave / 7 queries now, every big-river page / step 0c.
+- G Depth question answered: depth block live on 216 of 216 river pages 2026-11-09.
 - G lastmod and dateModified true (content hash, reading time) / checked 2026-11-09.
 - G Verdict words ("safe", "runnable") / misleads / every page / check.py banned words.
 - G Thin or near-duplicate: owner rule 4 says no similarity gate; only a page with no data of its own is held.
