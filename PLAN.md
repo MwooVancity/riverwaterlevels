@@ -66,7 +66,7 @@ Input
 Missing
 - G Feed down / Unknown or stale with real age; old page kept for SAFETY_BLOCKS / a whole agency / break_blocks fixtures.
 - G First run, no old copy (new page with no reading) / thin page / every new page / `thin` hold.
-- G Cache lost (cloud artifact expired) / every page refetches at once / 14,000 calls in one run / O cap first-collects per hour (step 14).
+- G Cache lost (cloud artifact expired) / every gauge refetches / 14,000 at once / collect.usgs_low reads the key's calls left each run and skips history sources under 300 (shared with the Worker's poll), so a lost cache refills over hours; latest readings stay batched (40 per call). Checked 2026-11-09.
 - G Never reported or stopped long ago / a live page stays (owner: outages never pull live pages) but shows the 'Gauge not reporting' banner with its real age and no 'live' in the title (lib/core.py offline rule); a new page needs a recent reading (ship test).
 Scale
 - G USGS 1,000 calls/h per key / runs fail / ~6,000 gauges / release skips over 70% of limit.
