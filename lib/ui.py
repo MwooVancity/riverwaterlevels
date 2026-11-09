@@ -70,7 +70,7 @@ def tile(kind, ico, label, value_html, sub_html, cls=""):
     return '<div class="tile %s%s"><i class="ic">%s</i><span>%s</span><b>%s</b>%s</div>' % (kind, (" " + cls) if cls else "", icon(ico), label, value_html, sub_html)
 
 
-def spark(values, w=150, h=34):
+def spark(values, w=150, h=34, live=None):
     """Tiny line of the last 24 hours inside a tile: no axes, the end point marked. Values are plain numbers in time order."""
     v = [x for x in values if x is not None]
     if len(v) < 6:
@@ -82,7 +82,8 @@ def spark(values, w=150, h=34):
     lo = (hi + lo) / 2 - span / 2
     pts = ["%.1f,%.1f" % (2 + i * (w - 4) / (len(v) - 1), 3 + (1 - (x - lo) / span) * (h - 6)) for i, x in enumerate(v)]
     ex, ey = pts[-1].split(",")
-    return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"/></svg>' % (w, h, w, h, " ".join(pts), ex, ey)
+    tag = (' data-k="%s" data-lo="%.4g" data-span="%.4g" data-h="%d"' % (live, lo, span, h)) if live else ""  # live: the edge Worker moves the end dot to the live reading (owner 2026-11-09: the line was build time under a 3-minute number)
+    return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"%s/></svg>' % (w, h, w, h, " ".join(pts), ex, ey, tag)
 
 
 def fc_curve(values, w=150, h=34):

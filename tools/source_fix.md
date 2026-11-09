@@ -37,6 +37,7 @@ A picture is drawn by ONE shared helper from the same cached value the tile's nu
 
 All pictures
 - Static picture vs live number: the Worker refreshes numbers every 3 min, the SVG is build time. A bar at 13.4 ft under a live "15.2 ft" is a false page. Guard: the picture carries its own time in its caption, or the live JS moves the marker with the number (data attributes), never neither.
+- A new rule covers OLD pictures too: when a line is added here, check every picture already on the page against it the same batch (the flow and gage 24 h lines predated the static-vs-live rule and broke it until 2026-11-09; the Worker now moves their end dots).
 - Missing data drawn as zero: a gap must be a gap (no bar, a break in the line), never a 0 bar or a flat line.
 - Axis that lies: no cropped axis that turns 0.1 ft into a cliff; minimum span rule (the stage chart already keeps 1 ft); zero-based bars only where zero means something.
 - Too few points: no picture under its minimum (line: 8 points; bars: 3 days; dots: 5 measurements). The tile shows the number alone, never an empty frame.

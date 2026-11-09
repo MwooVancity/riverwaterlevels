@@ -361,10 +361,10 @@ def hero(G, pages=None):
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:
-        tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
+        tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24], live="flow") + "@@DIR@@", bcls)
     if sg:
         tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                         ui.spark([x[1] for x in sg if x[0] >= d24]) + tile_ladder(G) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))
+                         ui.spark([x[1] for x in sg if x[0] >= d24], live="stage") + tile_ladder(G) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))
                          + (('<small>Reading of <span data-live="stageobs" data-t="%s">%s</span></small>' % (iso(sg[-1][0]), esc(tzl(sg[-1][0], G["zone"])))) if sg[-1][0] != G["lt"] else "") + level_at(G))
     else:  # Memphis 2026-10-26: USGS publishes flow only; the NWS forecast point at the same place observes the stage
         o, n_ = nws_stage(G), G["rec"].get("nwps") or {}

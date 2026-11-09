@@ -191,8 +191,11 @@ function rewrite(res, g, m) {
   const note = '<p id="lbn" class="src lf2">' + (stage0 ? "Flow and gage height" : "Flow") + " at the top updated " + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
   const stage = stage0 ? Number(g.h[0]).toFixed(2) : null;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
+  // a tile sparkline's end dot at the live value, on the build's own scale (lib/ui.py spark); off the scale it sits on the edge, the number says how far
+  const sparkDot = (v) => ({ element(e) { const lo = Number(e.getAttribute("data-lo")), sp = Number(e.getAttribute("data-span")), h = Number(e.getAttribute("data-h")); if (sp > 0 && h > 0 && Number.isFinite(v)) e.setAttribute("cy", Math.max(1, Math.min(h - 1, 3 + (1 - (v - lo) / sp) * (h - 6))).toFixed(1)); } });
   const out = new HTMLRewriter()
     .on('span[data-live="flow"]', text(flow)) // same rounding as fmtc() in lib/common.py
+    .on('circle[data-k="flow"]', sparkDot(fv)) // the tile's 24 h line ends at the live reading, not the build's (owner 2026-11-09)
     .on('span[data-live="lead"]', text(flow + " cfs"))
     // dv = text the build derived from its own reading (class word, trend, flood distance, forecast vs now): not recomputed here, so it carries its own time
     .on('span[data-live="obs"]', text(nowAt))
@@ -201,7 +204,7 @@ function rewrite(res, g, m) {
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
     .on("p.answer", { element(e) { e.after(note, { html: true }); } }); // said once, right under the answer it qualifies (was 5 stamps)
-  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)))
+  if (stage) out.on('circle[data-k="stage"]', sparkDot(Number(stage))).on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)))
     // the gage tile's flood bar: its tick follows the live stage (a static picture must never disagree with the live number); only ticks the build marked live (no datum gap)
     .on("b.lad-now[data-lo]", { element(e) { const lo = Number(e.getAttribute("data-lo")), sp = Number(e.getAttribute("data-span")); if (sp > 0) e.setAttribute("style", "left:" + Math.max(0, Math.min(100, (Number(stage) - lo) / sp * 100)).toFixed(2) + "%"); } });
   const r = out.transform(res);
