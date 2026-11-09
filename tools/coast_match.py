@@ -23,7 +23,44 @@ def stations():
     return [s for s in j["stations"] if s.get("state")]
 
 
-def match(rows, sts, have):
+GEONAMES = "https://download.geonames.org/export/dump/cities5000.zip"  # every populated place over 5,000 people, CC BY 4.0; read for matching only, nothing shown
+
+
+ABROAD_MIN = 20000
+
+
+def abroad(lines):
+    """Names whose biggest town outside the US is bigger than any US town of that name (PLAN step 6: a systemic namesake rule instead of a longer FOREIGN list).
+    lines: GeoNames cities rows (tab separated: 1 name, 2 ascii name, 8 country, 14 population). Plymouth UK 260k vs Plymouth MA 60k -> abroad."""
+    us, other = {}, {}
+    for ln in lines:
+        f = ln.rstrip("\n").split("\t")
+        if len(f) < 15:
+            continue
+        try:
+            pop = int(f[14] or 0)
+        except ValueError:
+            continue
+        d = us if f[8] == "US" else other
+        for nm in {norm(f[1]), norm(f[2])}:
+            if nm and pop > d.get(nm, -1):
+                d[nm] = pop
+    return {nm for nm, p in other.items() if p >= ABROAD_MIN and p >= 3 * us.get(nm, 0)}  # a small foreign town never outweighs a US place too small to be listed (Bandon OR vs Bandon IE 6,600: real run 2026-11-09)
+
+
+def gazetteer():
+    """abroad() over the GeoNames download (about 5 MB, once per weekly run); an empty set when it fails, and the hand FOREIGN list still applies."""
+    import io, zipfile
+    try:
+        raw = urllib.request.urlopen(urllib.request.Request(GEONAMES, headers={"User-Agent": "riverwaterlevels.com coast_match"}), timeout=120).read()
+        with zipfile.ZipFile(io.BytesIO(raw)) as z:
+            return abroad(io.TextIOWrapper(z.open(z.namelist()[0]), encoding="utf-8"))
+    except Exception as e:
+        print("GeoNames not read (%s): only the hand FOREIGN list applies this run" % str(e)[:80])
+        return set()
+
+
+def match(rows, sts, have, away=frozenset()):
     by = {}
     for s in sts:
         for nm in {norm(s["name"]), norm(re.split(r"[,(]", s["name"])[0])}:
@@ -39,6 +76,8 @@ def match(rows, sts, have):
         cands = by.get(place, [])
         if place in FOREIGN:
             why[r["keyword"]] = "name also a foreign tide place"
+        elif place in away:
+            why[r["keyword"]] = "a bigger town of this name is outside the US (GeoNames)"
         elif len({c["id"] for c in cands}) != 1:
             why[r["keyword"]] = "%d NOAA water-level stations carry this name" % len({c["id"] for c in cands})
         elif cands[0]["id"] in HELD:
@@ -53,7 +92,7 @@ def match(rows, sts, have):
 def main():
     q = list(csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), encoding="utf-8")))
     have = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
-    got, why = match(q, stations(), have)
+    got, why = match(q, stations(), have, gazetteer())
     for r, s in got:
         print("MATCH %-28s tier %-6s -> %s %s, %s (%.4f, %.4f)" % (r["keyword"], r["tier"], s["id"], s["name"], s["state"], s["lat"], s["lng"]))
     for k, w in sorted(why.items()):
@@ -165,6 +204,10 @@ def selftest():
     rows = [{"keyword": "biloxi tides", "tier": "5000", "gauge": ""}, {"keyword": "long beach tides", "tier": "5000", "gauge": ""},
             {"keyword": "portland tide times", "tier": "5000", "gauge": ""}, {"keyword": "biloxi tide chart", "tier": "50", "gauge": ""}]
     got, why = match(rows, sts, set())
+    gz = ["	".join(["1", n, n, "", "", "", "", "", c, "", "", "", "", "", str(p)]) for n, c, p in (("Plymouth", "GB", 260000), ("Plymouth", "US", 60000), ("Biloxi", "US", 46000), ("Kinsale", "IE", 5300), ("Bandon", "IE", 6600), ("Cork", "IE", 190000))]
+    assert abroad(gz) == {"plymouth", "cork"}, abroad(gz)
+    g2, w2 = match([{"keyword": "cork tides", "tier": "5000", "gauge": ""}, {"keyword": "biloxi tides", "tier": "5000", "gauge": ""}], sts + [{"id": "9", "name": "Cork", "state": "VA", "lat": 0, "lng": 0}], set(), abroad(gz))
+    assert [s["id"] for _, s in g2] == ["1"] and "GeoNames" in w2["cork tides"], (g2, w2)
     assert [s["id"] for _, s in got] == ["1"] and "2 NOAA" in why["long beach tides"] and "foreign" in why["portland tide times"], (got, why)
     print("coast_match selftest OK")
 
