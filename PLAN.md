@@ -57,7 +57,7 @@ Each line: case / how it breaks today / number at full size (~14,000 pages) / th
 Input
 - G Feed changes format (USGS legacy to OGC; NOAA field renamed) / block parses to nothing / every page of that feed at once / gen_cache_shape fixtures + `parsed to nothing = Unknown` (CLAUDE.md truth first).
 - G Reading time in the future (USGS 'latest' from 2010 on Selway) / false 'now' / any gauge / truth_live future-time rule; O build-side hold for US (gate audit 0a).
-- G Wrong time zone label / time shown in the wrong zone / every page in a zone / check.py zone label = the gauge's zone. O the label is checked to exist, not to be right for DST changes (test: a page built on a DST night).
+- G Wrong time zone label / time in the wrong zone / every page in a zone / check.py: label is the gauge's zone; edge_tests: each reading carries its own EDT/EST on a clock-change night (Nov 1 1:30 AM EDT then EST, Mar 8 3:30 AM EDT), 2026-11-09.
 - G Wrong unit (m vs ft, °C vs °F, m3/s vs cfs) / number off 3x / all non-US pages / truth_world unit compare.
 - G Flood stages that parse to 0 (or -9999, blank) / margins to 0 ft / any NWS point with an unset category / collect.nwps_cats keeps only stages above 0; edge_tests fixture (2026-11-09).
 - G Channel measurement far from the gauge (Louisville 64,000 ft, Omaha 8.5 mi) / depth for another stretch / any gauge / collect.chan_rows CHAN_MAX_FT one mile + edge_tests.

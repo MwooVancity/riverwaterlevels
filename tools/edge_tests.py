@@ -27,6 +27,9 @@ def run():
     h = blocks3.b_depth(G)["body"]
     assert "average depth of 19.9 ft" in h and "About 10 ft deep on average</b> at a flow like today's (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
     assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
+    from lib.core import tzl as tzl_
+    ny_, U_ = zoneinfo.ZoneInfo("America/New_York"), datetime.timezone.utc
+    assert (tzl_(datetime.datetime(2026, 11, 1, 5, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 11, 1, 6, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 3, 8, 7, 30, tzinfo=U_), ny_)) == ("Nov 1, 1:30 AM EDT", "Nov 1, 1:30 AM EST", "Mar 8, 3:30 AM EDT"), "time zone label wrong on a clock-change night (each reading must carry its own EDT/EST)"
     from lib import hero as hero_
     assert hero_.tile_ladder({"rec": {}, "lake": None, "coast": None, "feed": None, "sg": [], "lv": None}) == "", "gage tile flood bar: crashed or drew with no NWS stages (NameError ui, review run 42577733037: every page failed to build)"
     six = [["20%02d-08-04T18:00:00+00:00" % y, f, 1000.0, f / 3, 2.0, 0.0, "AtTheGage"] for y, f in zip(range(20, 26), (1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 40000.0))]
