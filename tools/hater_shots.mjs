@@ -47,6 +47,16 @@ for (const [site, url] of pages) {
   for (let y = 0, i = 1; y < H && i <= 30; y += SLICE, i++) {
     await p.screenshot({ path: path.join(dir, `phone-${String(i).padStart(2, '0')}.png`), clip: { x: 0, y, width: 390, height: Math.min(SLICE, H - y) }, fullPage: true });
   }
+  // what sits behind toggles is reviewed too (2026-11-09: the tiles' "More" lines and the full hourly grid were never seen): open the tile toggles, shoot the top; open the hourly grid, shoot it
+  await p.evaluate(() => document.querySelectorAll('details.tmore').forEach((d) => { d.open = true; }));
+  await p.evaluate(() => window.scrollTo(0, 0));
+  for (let i = 1; i <= 2; i++) await p.screenshot({ path: path.join(dir, `open-${String(i).padStart(2, '0')}.png`), clip: { x: 0, y: (i - 1) * SLICE, width: 390, height: SLICE }, fullPage: true });
+  const hm = await p.$('table.hm');
+  if (hm) {
+    await p.evaluate(() => { const t = document.querySelector('table.hm'); for (let e = t; e; e = e.parentElement) if (e.tagName === 'DETAILS') e.open = true; });
+    await hm.scrollIntoViewIfNeeded();
+    await (await hm.evaluateHandle((t) => t.closest('.scroll') || t)).asElement().screenshot({ path: path.join(dir, 'hourly-grid.png') });
+  }
   fs.writeFileSync(path.join(dir, 'text.txt'), await p.evaluate(() => document.querySelector('main') ? document.querySelector('main').innerText : document.body.innerText));
   await phone.close();
   const desk = await browser.newContext({ viewport: { width: 1280, height: 900 } });
