@@ -78,7 +78,8 @@ TABS = {
 
 
 KIND_NAME = {"river": "Nearest river gauge on this site", "lake": "Nearest lake on this site", "coast": "Nearest tide station on this site"}
-REV_N = 3  # CLAUDE.md internal links rule 4: a page nobody lists is added to the lists of its REV_N nearest pages (fixed size: links never grow with the site)
+REV_N = 3  # CLAUDE.md internal links rule 4: a page few list is added to the lists of its REV_N nearest pages within NEAR_MI (fixed size: links never grow with the site)
+NEAR_MI = 60  # owner 2026-11-09 "no forced internal links": a water page links another water page only within a short drive; farther pages are reached through the hubs
 _IX = {}
 
 
@@ -112,7 +113,7 @@ def link_index(pages, Gs=None):
     for s, p in sorted(built, key=lambda x: len(listers[x[0]])):  # neediest first, so a full list never drops the page with no other inbound link
         need = REV_N - len(listers[s])
         for mi, q in (nearest(p["_ll"], grid, {s} | listers[s], need + 10) if need > 0 else ()):
-            if need and len(_IX["rev"][q["site"]]) < REV_N:
+            if need and mi <= NEAR_MI and len(_IX["rev"][q["site"]]) < REV_N:
                 _IX["rev"][q["site"]].append((mi, p))
                 listers[s].add(q["site"])
                 need -= 1
@@ -139,20 +140,12 @@ def _base(ll, st, kind, skip):
     la, lo = int(ll[0] // 1), int(ll[1] // 1)
     # 60 mi is under 1 deg lat and ~2 deg lon in CONUS: only the 15 squares around the gauge are read
     box = [(dist(p), p) for i in range(la - 1, la + 2) for j in range(lo - 2, lo + 3) for s, p in _IX["grid"].get((i, j), ()) if s not in skip]
-    out = sorted((x for x in box if x[0] <= 60), key=lambda x: x[0])[:5]  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
-    same, far = [], []
-    if len(out) < 5:  # fewer than five truly-nearby: the dead-end backfill (Lakebrief comparison 2026-10-21); a full scan only where gauges are sparse
-        cand = [(dist(p), p) for v in _IX["grid"].values() for s, p in v if s not in skip]
-        if len(out) < 3:  # the nearest gauges in the same state, up to eight
-            seen = {id(p) for _, p in out}
-            same = sorted((x for x in cand if x[1].get("state") == st and id(x[1]) not in seen), key=lambda x: x[0])[:8]
-        shown = {id(p) for _, p in out + same}
-        far = sorted((x for x in cand if id(x[1]) not in shown), key=lambda x: x[0])[:max(0, 5 - len(out) - len(same))]  # pSEO check 2026-10-21: fill to five with the nearest anywhere, distance shown
-    shown = {p["site"] for _, p in out + same + far} | skip
-    groups = [(None, out), ("More gauges on this site, nearest first", same), ("Nearest gauges elsewhere on this site", far)]
-    for k, grid in sorted(_IX["kinds"].items()):  # links rule 3: rivers, lakes and coasts link the nearest of each other kind, both ways
+    out = sorted((x for x in box if x[0] <= NEAR_MI), key=lambda x: x[0])[:5]  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
+    shown = {p["site"] for _, p in out} | skip
+    groups = [(None, out)]  # owner 2026-11-09: no backfill to five from the same state or anywhere (a link a reader here would not tap); the breadcrumb hub lists the rest
+    for k, grid in sorted(_IX["kinds"].items()):  # links rule 3: rivers, lakes and coasts link the nearest of each other kind, both ways, within NEAR_MI
         if k != kind:
-            hit = nearest(ll, grid, shown, 1)
+            hit = [x for x in nearest(ll, grid, shown, 1) if x[0] <= NEAR_MI]
             if hit:
                 groups.append((KIND_NAME[k], hit))
                 shown.add(hit[0][1]["site"])
@@ -169,7 +162,7 @@ def nb_pick(G, pages):
     shown = {p["site"] for _, grp in groups for _, p in grp} | _skip(s, G)
     back = sorted((x for x in _IX["rev"].get(s, ()) if x[1]["site"] not in shown), key=lambda x: x[0])  # links rule 4
     if back:
-        groups = groups + [("More gauges nearby" if all(x[0] <= 60 for x in back) else "More gauges farther away", back)]
+        groups = groups + [("More gauges nearby", back)]
     return groups
 
 
@@ -192,9 +185,7 @@ def b_nearby(G, pages):
     for h, grp in groups:  # the same-state heading, not the state's name: a border gauge USGS files under SC sits in GA (hater review 2026-11-07)
         if h:
             lis += '</ul><p class="src">%s</p><ul class="nbr">' % h + li(grp)
-    base = [x[0] for h, grp in groups[:3] if h in (None, "More gauges on this site, nearest first", "Nearest gauges elsewhere on this site") for x in grp]
-    near_mi = min(base) if base else min(x[0] for _, grp in groups for x in grp)
-    head = "Other gauges nearby" if out else ("Other gauges on this site (none on this river within 100 mi)" if near_mi > 100 and len(skip) == 1 else "Other gauges on this site")
+    head = "Other water nearby (within %d mi)" % NEAR_MI  # every list is within NEAR_MI (owner 2026-11-09: no forced links)
     return block("nearby_gauges", head, "live", ('<ul class="nbr">%s</ul>' % lis).replace('<ul class="nbr"></ul>', ""),
                  "Source: USGS Water Data API latest readings at the gauges on this site, as of this page's build; the comparison is our estimate from USGS daily statistics for the date. Distance is straight-line from this gauge.", "usgs")
 

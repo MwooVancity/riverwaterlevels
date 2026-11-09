@@ -578,6 +578,7 @@ def near_index(wpages, keep):
 
 _REV = {}
 REV_N = 3
+NEAR_KM = 100  # same distance as lib/page.py NEAR_MI (60 mi)
 
 
 def near_rev(idx):
@@ -610,7 +611,7 @@ def near(r, idx, skip, n=5):
         if len(got) >= min(n, total - len(skip & {e[3] for v in idx.values() for e in v})) or rad > 180:
             break
         rad *= 2
-    return [(round(k), name, u, lev, lab) for k, name, u, lev, lab in sorted(got)[:n]]
+    return [(round(k), name, u, lev, lab) for k, name, u, lev, lab in sorted(got)[:n] if k <= NEAR_KM]  # owner 2026-11-09 "no forced internal links": only within a short drive; hubs reach the rest
 
 
 def page(p, r, now, rows=(), keep=(), idx=None):

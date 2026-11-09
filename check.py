@@ -14,7 +14,7 @@ BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "V
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"(?<!ZIP )(?<!\d)-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
-NEIGHBOURS = 3  # internal links (owner 2026-11-08 "godlike"; CLAUDE.md Internal links): every water page links at least this many other water pages
+NEIGHBOURS = 3  # census line only (owner 2026-11-09: no forced internal links; an isolated page links none and is reached through its hub)
 FLOOR = {"hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing. Owner 2026-11-08: no thin gate on a water page (gauge, world): a different river or lake is never thin; the floor stays only on hubs and site pages, where it catches a broken empty template.
 
 
@@ -396,7 +396,7 @@ def rank_checks(h, url):
     if rep:
         g, n = max(rep, key=lambda x: x[1])
         bad.append("first screen says %r %d times (clutter on the screen that decides the click)" % (g, n))
-    return bad  # the links-to-3-others rule is check_dir few_neighbours, a warning (review 2026-11-08: two rules, one held pages)
+    return bad
 
 
 def css_truncation(css):
@@ -609,11 +609,6 @@ def glossary_gaps(h):
     return [] if band_glossary() in t_ else ["the glossary does not state the band_word cut-offs (lib/common.py BAND_CUTS)"]
 
 
-def few_neighbours(u, links, water):
-    """A water page that links fewer than NEIGHBOURS other water pages (live census 2026-11-08: a Canada page linked none). Only when the site has that many to link."""
-    n = len({x for x in links if x in water and x != u})
-    return ["internal links: %d other water pages linked (min %d)" % (n, NEIGHBOURS)] if n < min(NEIGHBOURS, len(water) - 1) else []
-
 
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
@@ -692,15 +687,12 @@ def check_dir(d):
         if not noindex_of.get(u) and k in FLOOR and vis_of.get(u, 0) < FLOOR[k]:
             results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - enrich it (noindex is never the fix)" % (vis_of.get(u, 0), k, FLOOR[k]))
     water_ = {u for u in links_of if kind_of(rel_of[u]) in ("gauge", "world")}
-    few_ = [u for u in water_ if few_neighbours(u, links_of[u], water_)]
     inb = collections.Counter(v for u in water_ for v in links_of[u] if v in water_ and v != u)
     for k_ in sorted({kind_of(rel_of[u]) for u in water_}):  # links rule 7: inbound measured, not only outbound (census in every run's log)
         us_ = [u for u in water_ if kind_of(rel_of[u]) == k_]
         i_, o_ = sorted(inb[u] for u in us_), sorted(len({x for x in links_of[u] if x in water_ and x != u}) for u in us_)
         print("links census %s: %d pages, inbound min %d median %d, outbound min %d median %d, %d with under %d inbound" % (k_, len(us_), i_[0], i_[len(i_) // 2], o_[0], o_[len(o_) // 2], sum(1 for x in i_ if x < NEIGHBOURS), NEIGHBOURS))
     print("readability census: %d pages, %d tables over 5 columns on %d pages%s" % (READ["pages"], READ["wide"], READ["wide_pages"], (", e.g. " + READ["eg"]) if READ["eg"] else ""))
-    if few_:  # a warning, never a hold: a missing link shows the reader nothing wrong, and a new page with no live copy would stop the whole deploy; the generator (lib/world.py near, nearby_gauges) is the fix
-        print("WARNING internal links: %d water pages link fewer than %d other water pages, e.g. %s" % (len(few_), NEIGHBOURS, sorted(few_)[:5]))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
     for u in urls:
         parts = u.strip("/").split("/")
@@ -841,11 +833,11 @@ def selftest():
     from lib import page as pg_
     P_ = {s_: {"site": s_, "_built": True, "_ll": ll_, "_kind": k_, "state": "x", "water_url": "/%s/" % s_} for s_, ll_, k_ in
           [("a", (40.0, -100.0), "river"), ("b", (40.1, -100.0), "river"), ("c", (40.2, -100.0), "river"), ("d", (40.3, -100.0), "river"), ("e", (40.4, -100.0), "river"),
-           ("f", (40.5, -100.0), "river"), ("g", (40.6, -100.0), "river"), ("far", (48.0, -100.0), "river"), ("lk", (45.0, -100.0), "lake")]}
+           ("f", (40.5, -100.0), "river"), ("g", (40.6, -100.0), "river"), ("far", (48.0, -100.0), "river"), ("lk", (40.3, -99.9), "lake")]}
     pg_.link_index(P_)
     G_ = lambda s_: {"site": s_, "lat": P_[s_]["_ll"][0], "lon": P_[s_]["_ll"][1], "st": "x", "lake": P_[s_]["_kind"] == "lake", "rec": {}}
     inb_ = collections.Counter(v for s_ in P_ for v in pg_.nb_urls(G_(s_), P_))
-    assert inb_["/far/"] >= 3 and all(inb_[p_["water_url"]] >= 3 for p_ in P_.values()), "selftest: a remote page is listed by fewer than 3 pages (links rule 4): %s" % dict(inb_)
+    assert inb_["/far/"] == 0 and "/far/" not in pg_.nb_urls(G_("a"), P_) and all(inb_[p_["water_url"]] >= 3 for p_ in P_.values() if p_["site"] != "far"), "selftest: a page 500 mi away was forced into a nearby list, or a page with close neighbours got under 3 (owner 2026-11-09: no forced links): %s" % dict(inb_)
     assert "/lk/" in pg_.nb_urls(G_("a"), P_) and "/a/" in pg_.nb_urls(G_("lk"), P_) or "/g/" in pg_.nb_urls(G_("lk"), P_), "selftest: a river page does not list the nearest lake, or the lake no river (links rule 3)"
     assert all(len(pg_.nb_urls(G_(s_), P_)) == len(set(pg_.nb_urls(G_(s_), P_))) and "/%s/" % s_ not in pg_.nb_urls(G_(s_), P_) for s_ in P_), "selftest: a page lists itself or one page twice"
     before_ = pg_.nb_urls(G_("a"), P_)
@@ -860,7 +852,7 @@ def selftest():
         ix_.setdefault((int(e_[0] // 1), int(e_[1] // 1)), []).append(e_)
     rv_ = wd_.near_rev(ix_)
     win_ = collections.Counter(x[2] for e_ in pts_ for x in (lambda l_: l_ + [y for y in rv_.get(e_[3], ()) if y[2] not in {z[2] for z in l_} | {e_[3]}])(wd_.near({"lat": e_[0], "lon": e_[1]}, ix_, {e_[3]})))
-    assert min(win_[e_[3]] for e_ in pts_) >= 3 and all(len(v) <= wd_.REV_N for v in rv_.values()), "selftest: a world page is listed by fewer than 3 others, or a reverse list grew past REV_N (links rule 4)"
+    assert win_["/far/"] == 0 and min(win_[e_[3]] for e_ in pts_ if e_[3] != "/far/") >= 3 and all(len(v) <= wd_.REV_N for v in rv_.values()), "selftest: a world page 1,100 km away was forced into a list, a close group got under 3, or a reverse list grew past REV_N (owner 2026-11-09: no forced links)"
     from lib import directory as dr_
     pub_ = dr_.publisher
     try:
@@ -874,7 +866,6 @@ def selftest():
     rv_ = (set(), {"coast-live"})
     assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency-CDEC"})) and not pg_.review_ok("USACE-X", "/lake/x/", (set(), {"lake-agency-CDEC"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
     W_ ={"/a/x/", "/b/y/", "/c/z/", "/d/w/"}
-    assert few_neighbours("/a/x/", {"/b/y/"}, W_) and not few_neighbours("/a/x/", {"/b/y/", "/c/z/", "/d/w/", "/a/x/"}, W_) and not few_neighbours("/a/x/", {"/b/y/"}, {"/a/x/", "/b/y/"}), "selftest: a water page with one neighbour link passed, or a two-page site was asked for three"
     ad ='<script>gtag("consent","default",{})</script><script src="adsbygoogle.js"></script>'
     assert not ad_gaps("a/index.html", ad) and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script><script>gtag("consent","default",{})</script>') and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script>'), "selftest: the consent order rule did not fire"
     assert ad_gaps("privacy/index.html", "<p>none</p>"), "selftest: the privacy wording rule did not fire"

@@ -2,6 +2,9 @@
 
 Status: PLAN.md (history docs/plan-history.md). Calcscrape rules do not apply.
 
+## HARD, ABOVE ALL: the three tests (owner 2026-11-09)
+Only three things matter: (1) maximum helpfulness to the reader at this water, (2) information gain over what already ranks, (3) passing Google's helpful-content review (HCU). Every change, rule, gate, block and link is scrutinized under all three before it is built and again before it ships; a change that fails any one is not built, and an existing part that fails one is deleted. Say the three verdicts in one line per change ("Helpful: ... / Gain: ... / HCU: ..."). Nothing is done to satisfy a count, a census or a ranking trick: no forced internal links (a link only where a reader here would tap it next), no padding, no block that exists for Google but not the reader. Every other rule below serves these three; when one conflicts, these win.
+
 ## HARD: truth first (owner 2026-11-02)
 A false page is worse than none. Every fact proven on live agency data, else it does not ship or says Unknown. A feed down, cut short, out of area or parsed to nothing is Unknown, never safe. A wrong time, unit, place or gauge is the top defect. Our math says ours. A false-looking reading is held (future time) or marked (stuck, jump). Code: `lib/wx.py` `suspect`, `lib/world.py` `PROVED`, `tools/truth_world.py`.
 
@@ -40,15 +43,15 @@ Correct is not enough: a page fails if a person can't say what the river is doin
 - Stale: flow 24 h "not reporting"; river forecast amber 24 h, hidden 72 h; weather obs 3/12 h; hourly forecast amber 12 h, hidden 72 h; alerts 3 h; rain 6 h; water temperature 24 h. Ignore NWS Test/Administrative alerts.
 - New country: `PROVED` needs reading, time, a real live alert, unit, terms, water type seen live (England `UNKNOWN_UNTIL_PROVEN`: alerts Unknown + GOV.UK link). `COVER` answers each US block per country (have / none: reason / next; next = a `TODO` in the gaps line). `thin` holds only a new world page with no reading; `missing` a new gauge lacking its data; outages never pull live pages.
 
-## HARD: internal links (owner 2026-11-08 "godlike")
-Links come from data in code; a link exists because a reader here would tap it next.
+## HARD: internal links (owner 2026-11-08 "godlike"; 2026-11-09 "I don't want internal links if it's forced")
+Links come from data in code; a link exists only because a reader here would tap it next. Never add a link to reach a count: no backfill, no far-away fillers.
 1. Tree: home > country > state or region > hub > gauge page; breadcrumb on every water page (`crumb_ld`); hubs list all children; depth <= 4, no orphans (`check.py`).
-2. Out, 3+ water pages, nearest first, distance shown, any country or kind (`lib/page.py` `nb_pick`, `lib/world.py` `near`); "Nearby" only within 100 km / 60 mi.
-3. Same river: upstream and downstream named as such. Rivers, lakes and coasts list the nearest of each other kind, both ways.
-4. In, 3+ from other water pages: a page few list is added to its nearest pages' lists, neediest first (`link_index` `REV_N`).
+2. Out: up to 5 water pages within 60 mi / 100 km, nearest first, distance shown, any country or kind (`lib/page.py` `NEAR_MI`, `lib/world.py` `NEAR_KM`); none nearby = no list (the hub reaches the rest).
+3. Same river: upstream and downstream named as such. Rivers, lakes and coasts list the nearest of each other kind, both ways, within the same distance.
+4. In: a page few list is added to its nearest pages' lists within the same distance, neediest first (`link_index` `REV_N`); an isolated page is reached through its hub only.
 5. A page added or held rebuilds every page whose list changes, same run (`nb_urls` in `_built.json`). Only built, indexable pages are linked.
 6. Anchor = the name a searcher types plus the reading, never "click here" or a bare id. Fixed list sizes (`check.py` BUDGET).
-7. Proof: `check.py` prints "links census" (inbound/outbound min, median per kind) every run; copy it into PLAN.md Numbers after each batch. A new rule ships with its check.
+7. Proof: `check.py` prints "links census" (inbound/outbound min, median per kind) every run as information, never a target. A new rule ships with its check.
 
 ## System rules
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers.
