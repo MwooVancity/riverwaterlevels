@@ -747,6 +747,7 @@ def impact_cur(G, gap):
 def tile_ladder(G):
     """The flood bar in the gage-height tile (PLAN 0e, tools/source_fix.md 'Gage height: distance to flood'): only for a river gauge whose NWS stages are in ft, on the
     scale the impacts use; none for lakes, coasts, world pages and flow thresholds. On a datum gap the tick is the NWS reading and stays put (the Worker swaps USGS stage only)."""
+    from lib import ui  # imported where used, as hero() does (a module import is circular)
     if G.get("lake") or G.get("coast") or G.get("feed") or impact_flow(G):
         return ""
     n = G["rec"].get("nwps") or {}
