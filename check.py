@@ -92,6 +92,11 @@ def picture_vs_number(h):
     m, v = re.search(r'class="lad lad-mini" role="img" aria-label="Latest stage (-?[\d.]+) ft[^"]*"><div class="lad-bar">(?:(?!</div>).)*data-lo=', h, re.S), re.search(r'data-live="stage">(-?[\d.,]+)<', h)
     if m and v and abs(float(m.group(1)) - float(v.group(1).replace(",", ""))) > 0.011:
         return ["gage tile flood bar drawn at %s ft but the tile says %s ft" % (m.group(1), v.group(1))]
+    c, t = re.search(r'aria-label="NWS forecast from [^"]*?, high (-?[\d.]+)"', h), re.search(r'<div class="tile fcst[^"]*">(?:(?!</div>).)*?<b>(-?[\d.,]+) <small>', h, re.S)
+    if c and t:
+        hi, shown = float(c.group(1)), float(t.group(1).replace(",", ""))
+        if abs(hi - shown) > max(0.06, 0.011 * abs(hi)):
+            return ["forecast tile curve peaks at %s but the tile says %s" % (c.group(1), t.group(1))]
     return []
 
 
@@ -798,6 +803,8 @@ def ad_gaps(rel, h):
 
 def selftest():
     from lib import ui as ui_
+    fcc_ = '<div class="tile fcst"><i></i><span>NWS forecast</span><b>%s <small>ft</small></b>' + ui_.fc_curve([12.3, 12.0, 11.8, 11.0]) + "</div>"
+    assert not picture_vs_number(fcc_ % "12.3") and picture_vs_number(fcc_ % "14.0") and ui_.fc_curve([1, 2]) == "", "selftest: forecast tile curve vs its number, or a 2-point curve drawn"
     lad_ = ui_.ladder({"action": 53.0, "minor": 55.0, "major": 73.0}, 13.38, mini=True, live=True)
     assert 'data-lo="0.000"' in lad_ and "Latest stage 13.38 ft" in lad_ and not ui_.ladder({}, 13.38, mini=True), "selftest: tile flood bar lost its live tick data or drew with no stages"
     assert picture_vs_number(lad_ + '<span data-live="stage">14.10</span>') and not picture_vs_number(lad_ + '<span data-live="stage">13.38</span>') and not picture_vs_number(ui_.ladder({"action": 53.0}, 12.0, mini=True) + '<span data-live="stage">13.38</span>'), "selftest: a flood bar drawn at another stage than its tile passed, or a datum-gap bar (NWS reading, no live tick) failed"

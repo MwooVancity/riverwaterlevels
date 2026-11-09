@@ -462,6 +462,7 @@ def hero(G, pages=None):
         val = ('%.1f <small>ft</small>' % fcw["v"]) if unit == "ft" else ('%s <small>cfs</small>' % fmtc(fcw["v"]))
         _pn = nws_point_note(G)
         sub = '<small>%s%s &middot; NWS %s</small>' % ("first reached " if fcw["repeat"] else "", esc(fcw["t"]), (('forecast point named “%s”, not this gauge’s place' % esc((G["rec"].get("nwps") or {}).get("name") or "")) if _pn else esc(nws_pt(G["rec"].get("nwps")))))  # the point by name; the code stays in Source text
+        sub = ("" if G["osc"] else ui.fc_curve(fcw.get("series") or [])) + sub  # PLAN 0e #2; a tidal reach swings within the day, a daily curve would mislead
         _end = ("%.1f ft" % fcw["end_v"]) if unit == "ft" else ("%s cfs" % fmtc(fcw["end_v"]))
         _old = fcw.get("age_h") is not None and fcw["age_h"] > stale_after("river_forecast")  # the same 24 h as the River forecast block's amber tag
         _parts = ["issued %s%s" % (esc(fcw["issued"]), (", %s ago" % fcw["ago"]) if _old and fcw.get("ago") else "")] if fcw.get("issued") else []
