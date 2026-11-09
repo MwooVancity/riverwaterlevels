@@ -51,9 +51,9 @@ for (const [site, url] of pages) {
   await p.evaluate(() => document.querySelectorAll('details.tmore').forEach((d) => { d.open = true; }));
   await p.evaluate(() => window.scrollTo(0, 0));
   for (let i = 1; i <= 2; i++) await p.screenshot({ path: path.join(dir, `open-${String(i).padStart(2, '0')}.png`), clip: { x: 0, y: (i - 1) * SLICE, width: 390, height: SLICE }, fullPage: true });
-  const hm = await p.$('table.hm');
+  const hm = await p.$('table.hm:not(.hlist)');
   if (hm) {
-    await p.evaluate(() => { const t = document.querySelector('table.hm'); for (let e = t; e; e = e.parentElement) if (e.tagName === 'DETAILS') e.open = true; });
+    await p.evaluate(() => { const t = document.querySelector('table.hm:not(.hlist)'); for (let e = t; e; e = e.parentElement) if (e.tagName === 'DETAILS') e.open = true; });
     await hm.scrollIntoViewIfNeeded();
     await (await hm.evaluateHandle((t) => t.closest('.scroll') || t)).asElement().screenshot({ path: path.join(dir, 'hourly-grid.png') });
   }
