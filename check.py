@@ -686,15 +686,15 @@ def check_dir(d):
             car_ = {"/" + r.replace("\\", "/").rsplit("index.html", 1)[0] for r in json.load(open(os.path.join(d, "_carried.json")))}
         except (OSError, ValueError):
             car_ = set()
-        urls = [u for u in urls if u not in car_]
+        sm_urls = [u for u in urls if u not in car_]  # a new name: urls stays the url -> file map the orphan step below reads (review run 42543656099 crashed here)
         sm -= car_
-        want = {u for u in urls if not noindex_of.get(u)} if open_mode else set(urls)
+        want = {u for u in sm_urls if not noindex_of.get(u)} if open_mode else set(sm_urls)
         from lib import indexing
         cfg = indexing.load(ROOT)
         if bool(cfg["open"]) != open_mode:
             site_bad.append("data/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
         if open_mode:
-            ix_ = {u for u in urls if indexing.indexable(u, cfg)}
+            ix_ = {u for u in sm_urls if indexing.indexable(u, cfg)}
             if want != ix_:
                 site_bad.append("pages without a noindex tag differ from data/index-allow.json: no tag but not allowed %s; allowed but tagged %s" % (sorted(want - ix_)[:5], sorted(ix_ - want)[:5]))
         if sm != want:
