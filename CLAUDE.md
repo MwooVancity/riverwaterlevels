@@ -12,10 +12,10 @@ A false page is worse than none. Every fact proven on live agency data, else it 
 Every change states how it fails today and at 14,000 pages (calls, CPU, URL length, files, KV writes, run time, dead feed) and the breaking number. From 2026-11-20 Claude is on Pro: unattended work runs for weeks alone.
 
 ## Owner decisions (2026)
-1. (11-01) Helpfulness decides page content; AdSense money decides build order.
+1. (11-01) Helpfulness decides page content; AdSense money decides build order, only among items that pass the three tests.
 2. (11-01) One standard page, block states and gates for every water, any country; a missing source shows "Not issued" or "Unknown", never blank or a lighter template. Summary tables are hubs.
 3. (11-01) Ship test: a recent reading with unit, time, source ships, saying what is missing. Block only: no reading, no time, unit unknown, never reported, not a river or lake. (11-08) A NOAA tide station with predictions, no live level, ships; each tide labelled a prediction.
-4. (11-08) No thin-content or duplicate gate: a different river, lake or searched place is its own page even with the same feed, gauge, numbers or text ("someone is looking for that specific page for a reason"). Similarity never blocks, holds or returns a page (`tools/coast_match.py`, release).
+4. (11-08, narrowed 11-09 by the three tests) A different river, lake or searched place is its own page even when it shares a feed, gauge or numbers ("someone is looking for that specific page for a reason"), and similarity alone never blocks it. HCU limit: the page must carry something of its own for that place (its name and distance to the gauge, its own nearby water, weather point or access); a page that is another page word for word with only the name swapped is a doorway page and is not built.
 5. (11-01) World queue at full speed; never wait on traffic. Agency feed and reuse terms required. Never bulk-publish.
 6. (11-03, 11-05) One ranking of every keyword (US, world; rivers, lakes, oceans; Keyword Planner): searches x ad rate (`RATE`, `tools/release.py`). Compete only with more sourced data; no info gain, no page.
 7. (11-05) Never a source whose terms bar ads, commercial use or caching; no permission requests; another open official source, else link out. Takedowns and AdSense risk outrank any page (`check.py` `reuse_barred`).
