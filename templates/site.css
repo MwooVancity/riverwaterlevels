@@ -277,7 +277,7 @@ th{font:500 .72rem/1.3 system-ui,sans-serif;letter-spacing:.08em;text-transform:
 .jump a{border:1px solid var(--line);background:var(--card);padding:6px 12px}
 .rseg button{background:var(--card)}.rseg button.on{background:var(--soft);color:var(--accent);border-color:var(--accent)}
 .tabs a.on{background:var(--soft);border-radius:8px;color:var(--accent)}
-.themebtn{width:40px;height:40px;min-width:40px;min-height:40px;border-radius:99px;padding:0;font-size:1rem}
+.themebtn{width:40px;height:40px;min-width:40px;min-height:40px;border-radius:99px;padding:0;font-size:1.35rem;line-height:1;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 .abanner{border-radius:var(--r);background:var(--card);border:1px solid var(--warn);border-left:4px solid var(--warn);padding:10px 14px}
 .storm{border-radius:10px}.storm.ok{background:var(--bg);color:var(--ink)}
 html.tabsjs .gtabs button{border-radius:0}
@@ -287,6 +287,7 @@ html.tabsjs .gtabs button{border-radius:0}
   .tile,.cstrip .tile{padding:16px;min-height:132px}.tile b,.tile.flow b,.tile.stage b{font-size:2.4rem}.cstrip .tile b{font-size:2rem}
   .blk,.card.blk{padding:16px}.answer{font-size:.9rem}h1{font-size:1.6rem}
 }
+@media(max-width:600px){.cstrip{grid-template-columns:1fr}.cstrip .tile.fcst,.cstrip .tile.alrt,.cstrip .tile.air{grid-column:auto}}
 [hidden]{display:none!important}.tile.b-la,.tile.b-lb,.tile.b-lp{border-top:1px solid var(--line)}.answer .la,.answer .lb,.answer .lp,.answer .ay,.answer .an{background:transparent;border:0;color:var(--ink)}
 
 .cite{margin:6px 0 0;color:var(--mut);font-size:.8rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cite small{font-size:inherit}.cite .cp{font:inherit;font-size:.8rem;padding:2px 8px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--accent);cursor:pointer}

@@ -24,7 +24,7 @@ def run():
     from lib import blocks3
     G = {"rec": {"fieldmeas": {"fetched_at": "2026-11-09T00:00:00Z", "chan": [["2026-08-04T18:49:06+00:00", 71000.0, 1690.0, 33600.0, 2.11, 5000.0, "Downstream"], ["2025-08-14T15:00:00+00:00", 48000.0, 1680.0, 17300.0, 1.9, 3000.0, "Downstream"]]}}, "lv": 48100.0, "zone": zoneinfo.ZoneInfo("America/New_York")}
     h = blocks3.b_depth(G)["body"]
-    assert "average depth of 19.9 ft" in h and "Closest to today's flow (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
+    assert "average depth of 19.9 ft" in h and "About 10 ft deep on average</b> at a flow like today's (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
     assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
     ac = {"rec": {"acis": {"fetched_at": "2026-11-09T02:00:00Z", "days": ["2026-11-%02d" % d for d in range(3, 10)], "stations": [{"name": "TEST STN", "km": 3.0, "vals": ["0.10", "0.00", "T", "0.00", "0.00", "0.20", "M"]}]}}, "now": datetime.datetime(2026, 11, 9, 3, tzinfo=datetime.timezone.utc), "zone": zoneinfo.ZoneInfo("America/Chicago")}
     assert "not reported" not in blocks3.b_acis(ac)["body"], "rain table: a US page after midnight UTC showed tomorrow as 'not reported' (review 2026-11-09)"
