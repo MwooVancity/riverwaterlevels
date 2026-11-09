@@ -189,6 +189,8 @@ def b_acis(G):
     a = G["rec"].get("acis")
     if not a or not a.get("stations"):
         return None
+    keep = [i for i, d in enumerate(a["days"]) if d <= G["now"].astimezone(G["zone"]).date().isoformat()]  # collect asks ACIS up to today in UTC: after midnight UTC a US page showed tomorrow as 'not reported' (review 2026-11-09)
+    a = dict(a, days=[a["days"][i] for i in keep], stations=[dict(x, vals=[x["vals"][i] for i in keep if i < len(x["vals"])]) for x in a["stations"]])
     heads = ["Station", "Distance"] + [md(datetime.date.fromisoformat(d)) for d in a["days"]]
     cell = lambda v: (lambda w: "not reported" if w in ("M", "S", "A") else ("trace" if w == "T" else "%s in" % w if w.replace(".", "", 1).isdigit() else esc(w)))(v.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ") if v[:1].isdigit() else v)  # a trailing ACIS flag letter ("0.00A") is a source code, not part of the value
     _seen = set()
