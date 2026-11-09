@@ -94,6 +94,9 @@ GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  #
 def selftest():
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
     assert wt_verdict(T_, 54, [(T_, 12.0)]) is None and "USGS latest" in wt_verdict(T_, 60, [(T_, 12.0)]) and wt_verdict(T_, 60, [(T_ + datetime.timedelta(hours=1), 12.0)]) is None and wt_verdict(T_, None, [(T_, 12.0)]) is None and wt_verdict(T_, 60, [(T_, 12.0), (T_, 15.6)]) is None, "water temperature not compared with USGS"
+    assert air_verdict(43, 6.1) is None and air_verdict(43, None) is None and "NWS station" in air_verdict(50, 6.1), "air temperature compare: a 7°F gap passed, or a match failed"
+    m_ = AIR.search('<span data-wx="temp0">43</span>x<span hidden data-wxst="KJVY" data-t="2026-11-09T05:30:00+00:00"></span>')
+    assert m_ and m_.groups() == ("43", "KJVY", "2026-11-09T05:30:00+00:00"), "air tile not read from the page"
     assert tide_verdict(T_, 6.35, {T_: 6.35}) is None and "NOAA predicts" in tide_verdict(T_, 6.0, {T_: 6.35}) and "not a NOAA" in tide_verdict(T_ + datetime.timedelta(minutes=5), 6.35, {T_: 6.35}), "a tide page's next high/low was not checked against NOAA's list"
     assert per_page(["/lake/l%d/" % i for i in range(11)] + ["/river/a/b/"]) and not per_page(["/river/a/b/", "/rivers/tx/"]), "11 failing gauge pages stopped the release (2026-11-08), or a failing hub did not"
     gid = lambda h: (lambda m: m and (m.group(1) or m.group(2)))(GAUGE_ID.search(h))
@@ -344,7 +347,9 @@ def main():
                     ref = float(nref) if nref else pg["stage"]
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
+    n_air = air_check(html, carried, bad, skipped)
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
+    print("truth_live air: %d pages' air temperature compared with the NWS station report at the same time" % n_air)
     n_noaa = sum(1 for _, u, *_ in gauges if u.startswith("/coast/")) + len(great)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation, TWDB), %d coast and Great Lakes pages with NOAA (Great Lakes: %s), %d mismatches, %d skipped%s" % (
         len(pages), len(agency), n_noaa, ", ".join(great) or "none", len(bad), len(skipped), (": %s" % "; ".join(str(x)[:90] for x in skipped[:6])) if skipped else ""))
@@ -383,6 +388,40 @@ def main():
         json.dump(sorted(set(carried)), open(cp, "w"))
         return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
+
+
+AIR = re.compile(r'data-wx="temp0">(-?\d+)<.*?data-wxst="([A-Z0-9]+)" data-t="([^"]+)"', re.S)
+
+
+def air_verdict(page_f, obs_c):
+    """None when the page's air temperature (whole °F) is the NWS station's report at the same time (°C converted). obs_c: °C or None (no report at that time)."""
+    if obs_c is None or abs(obs_c * 9 / 5 + 32 - page_f) <= 1:
+        return None
+    return "air temperature %d°F on the page, NWS station %.1f°F at the same time" % (page_f, obs_c * 9 / 5 + 32)
+
+
+def air_check(html, carried, bad, skipped):
+    """Air temperature tile against api.weather.gov (gate audit 2026-11-08: air never compared with its source). One NWS call per page with the tile."""
+    todo = [(u, m) for u, h in html.items() if h and u not in carried for m in [AIR.search(h)] if m]
+    def one(x):
+        u, m = x
+        t = datetime.datetime.fromisoformat(m.group(3).replace("Z", "+00:00"))
+        q = "https://api.weather.gov/stations/%s/observations?start=%s&end=%s" % (m.group(2), (t - datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ"), (t + datetime.timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        try:
+            fs = json.loads(get(q, 30)).get("features") or []
+        except Exception as e:
+            return u, None, "air: NWS %s did not answer (%s)" % (m.group(2), str(e)[:40])
+        v = next((f["properties"]["temperature"]["value"] for f in fs if (f["properties"].get("temperature") or {}).get("value") is not None), None)
+        return u, air_verdict(int(m.group(1)), v), None if v is not None else "air: NWS %s has no report at %s (dropped or revised)" % (m.group(2), m.group(3))
+    n = 0
+    for u, verdict, skip in pmap(one, todo):
+        if skip:
+            skipped.append("%s: %s" % (u, skip))
+            continue
+        n += 1
+        if verdict:
+            bad.append("%s: %s" % (u, verdict))
+    return n
 
 
 def wt_verdict(pt, page_f, usgs):
