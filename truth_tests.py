@@ -233,7 +233,7 @@ def main(only=None):
             if word != w:
                 fail("band %s" % p, "word %r, expected %r" % (word, w))
             lower = p == -1 or p < 50
-            s_ = re.sub(r"^The 24 h average, [\d,]+ cfs, is ", "", sent).lower()  # the tile names the 24 h average when that is what it judged
+            s_ = re.sub(r"^24 h average [\d,]+ cfs: ", "", sent).lower()  # the tile names the 24 h average when that is what it judged
             if lower and not s_.startswith("lower than") or (not lower) and not s_.startswith("higher than"):
                 fail("band %s" % p, "sentence points the wrong way: %r" % sent)
             k = re.search(r"than (\d+)%", sent)
