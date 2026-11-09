@@ -197,10 +197,7 @@ def fetch_nwps(site, lat, lon, prev=None):
     if str(det.get("usgsId") or "") == site and det.get("lid"):
         x = {"lid": det["lid"]}
         if True:
-            cats = {}
-            for k, v in ((det.get("flood") or {}).get("categories") or {}).items():
-                if isinstance(v, dict) and isinstance(v.get("stage"), (int, float)) and v["stage"] > -990:
-                    cats[k] = v["stage"]
+            cats = nwps_cats(det)
             p0 = prev if isinstance(prev, dict) and prev.get("lid") == x["lid"] else {}  # a failed sub-request keeps the previous value
             fc = p0.get("forecast")
             try:
@@ -643,6 +640,11 @@ def fetch_fieldmeas(site, h):
         chan = []  # shown like 'none within a mile' (no block); the weekly refresh retries, the early refresh does not loop hourly
     out = {"fetched_at": now_iso(), "rows": rows, "chan": chan}
     return out if rows or chan else None
+
+
+def nwps_cats(det):
+    """NWS flood categories in ft. Missing is -9999; a stage of 0 or below is an unset category, never a flood level (edge list 2026-11-09: it passed and drew margins to 0 ft)."""
+    return {k: v["stage"] for k, v in ((det.get("flood") or {}).get("categories") or {}).items() if isinstance(v, dict) and isinstance(v.get("stage"), (int, float)) and v["stage"] > 0}
 
 
 def pegel_end(past, cur):

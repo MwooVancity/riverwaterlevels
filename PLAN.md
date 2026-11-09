@@ -59,7 +59,7 @@ Input
 - G Reading time in the future (USGS 'latest' from 2010 on Selway) / false 'now' / any gauge / truth_live future-time rule; O build-side hold for US (gate audit 0a).
 - G Wrong time zone label / time shown in the wrong zone / every page in a zone / check.py zone label = the gauge's zone. O the label is checked to exist, not to be right for DST changes (test: a page built on a DST night).
 - G Wrong unit (m vs ft, °C vs °F, m3/s vs cfs) / number off 3x / all non-US pages / truth_world unit compare.
-- O Flood stages that parse to 0 pass silently / "39.7 ft above action" style margins wrong / any NWS point with blank stages / fixture: stage 0 must show Unknown.
+- G Flood stages that parse to 0 (or -9999, blank) / margins to 0 ft / any NWS point with an unset category / collect.nwps_cats keeps only stages above 0; edge_tests fixture (2026-11-09).
 - O Channel measurement far from the gauge (Louisville measurement 850 at 64,000 ft) / depth shown for another place / any gauge / step 0c rule: only measurements within 1,000 ft of the gauge count, or Unknown.
 - O Duplicate or same-name places (Kinsale, Botany Bay; two "Mio") / wrong country's page / thousands of queue rows / systemic namesake rule (step 6).
 - G Lower/upper case and accents in slugs (Ätran, Saint vs St) / two URLs for one place / every world page / slug-clash rule (coasts done; lakes step 13).
