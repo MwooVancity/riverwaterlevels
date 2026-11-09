@@ -32,6 +32,57 @@ A page shows what the agency published, converted once, in one place. A wrong pa
 | First run, no old copy | new gauge | Ship test: recent reading, unit, time, or the page waits |
 | Scale: calls x gauges per hour | 14,000 gauges, 1,000 USGS calls/h | Weekly sources in `WEEKLY`, spread by hash; one early refresh only when a new field appears |
 
+## Pictures on tiles (owner 2026-11-09: "shouldn't everything be a visual")
+A picture is drawn by ONE shared helper from the same cached value the tile's number uses, never from a second fetch or a second calculation. It exists only when it shows a comparison the number can't (trend, range, danger line, time of day). The number stays as text above it. Before building any picture, check each line below; each needs a guard and a fixture.
+
+All pictures
+- Static picture vs live number: the Worker refreshes numbers every 3 min, the SVG is build time. A bar at 13.4 ft under a live "15.2 ft" is a false page. Guard: the picture carries its own time in its caption, or the live JS moves the marker with the number (data attributes), never neither.
+- Missing data drawn as zero: a gap must be a gap (no bar, a break in the line), never a 0 bar or a flat line.
+- Axis that lies: no cropped axis that turns 0.1 ft into a cliff; minimum span rule (the stage chart already keeps 1 ft); zero-based bars only where zero means something.
+- Too few points: no picture under its minimum (line: 8 points; bars: 3 days; dots: 5 measurements). The tile shows the number alone, never an empty frame.
+- Units: the picture uses the tile's unit (cm/m world pages, ft/cfs US); a world page never shows a ft axis on a cm number.
+- Time zone: every time on a picture is the gauge's local time, DST included; never the viewer's or UTC.
+- Stale source: same hide/amber limits as the number (STALE_H, HIDE_H). A hidden number hides its picture.
+- Colour: the site's one blue; danger lines dashed with a text label, never a new red/amber that means something only to some readers; works in dark mode.
+- Reading it without sight: every SVG has role="img" and a title with the numbers in words.
+- Bytes and files: under 1 KB inline SVG each, no script, no image file; 14,000 pages x 5 pictures must stay inside the 90 KB phone budget (check.py).
+- Phone width: readable at 320 px; labels never overlap (drop the middle label first).
+- A check that reads it: check.py compares each picture's data attributes with the tile's number (a picture that disagrees with its own number holds the page).
+
+Gage height: distance to flood
+- No NWS stages, or only some (action but no flood): draw only the lines that exist; none = no bar.
+- NWS and USGS read the river on different zero points (datum gap): margins already use the NWS reading; no NWS reading at that time = no bar.
+- Lake or high-elevation gauge (580 ft, flood 590): a bar from 0 makes it look full. Axis floor = the lowest reading of the past year, labelled.
+- Above major flood stage: bar full, arrow, "above major" in words.
+- Negative gage height: axis starts below zero.
+- Thresholds in flow, not stage (Boise): no stage bar.
+- World pages: the agency's own marks (MHW, HSW), named as the agency names them; never NWS words.
+- Coasts: tide datum (MLLW) and NWS coastal flood thresholds only where NWS publishes them for that station.
+
+Forecast curve
+- Forecast point is another place (McAlpine Lower for Louisville): label says so, as the tile does.
+- Forecast older than its limit: amber after 24 h, hidden after 72 h, the curve with it.
+- One forecast point, or forecast in flow while the tile is stage: no curve.
+- Forecast starts before the latest reading (overlap) or hours after it (gap): draw from the latest reading; a gap is shown as a gap.
+- Dam-controlled reach where the forecast is hours out of step (`_fc_offset`): show the offset note, never a smooth join that hides it.
+
+Rain bars (7 days)
+- Station day vs calendar day: ACIS observation days often end at 7 AM; label "observation day"; never past the page's local today (ACIS tomorrow bug).
+- Missing (M) is a gap, trace (T) a hairline, never 0.
+- Two sources (NWS RFC grid, ACIS stations) never mixed in one set of bars.
+- Snow: liquid equivalent, labelled.
+
+Daylight bar
+- Polar day or night (Alaska, northern Norway): no sunrise or sunset; say "sun up all day" or "sun down all day", no bar.
+- The "now" dot is build time on a static page: the live JS moves it, or it is left out.
+- DST change day: lengths from the computed times, not 24 h arithmetic.
+
+Depth dots (USGS channel measurements)
+- Under 5 measurements within a mile: no picture.
+- Flow spans 100x: log flow axis, labelled.
+- Today's flow outside every measurement: say "above (or below) every measured flow", never extrapolate a depth.
+- Old channel shape: use the last 15 years only; scour and fill change depth at the same flow.
+
 ## Never
 - A per-gauge exception list. If one gauge needs it, the rule is wrong: redefine what the rule matches.
 - A fix in the template that hides a bad value. The cache must hold the truth.
