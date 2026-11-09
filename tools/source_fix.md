@@ -110,6 +110,8 @@ Why it went wrong: every gate measured truth and completeness, none measured rea
 - All-zero rows (thunder 0 all day) / noise / weather tables / one sentence instead of the row.
 - Jargon labels (RFC, gage, cfs) / a newcomer stops / tiles and headers / plain words first, the term second if needed ("NWS estimate for this spot").
 - Same fact repeated in tile, strip, block / reading it three times / every page / say it once where it answers best.
+- Plural with a count ("over the last 1 days" on the clock-change test night) / grammar ban rule holds the page / any sentence with a count / always day/days by count.
+- Cutting a column trips a character floor (river hubs fell under the 700-char thin-hub floor when drainage left, 2026-11-09) / pages held / small hubs / move the fact into the row's small line instead of deleting it; never pad to pass a floor.
 - The check: check.py readability census (tables over 5 columns, blocks without a lead sentence) printed every run; it warns, it does not block, until the census is near zero; then it becomes a gate.
 
 ## Never

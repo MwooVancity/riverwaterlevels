@@ -339,8 +339,8 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         chg = None if (G.get("osc") or G["offline"]) else G["chg"]
         ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else chg_dash(G)
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
-        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), pv, ch, fcst)  # readable at a glance: 5 columns (time under the flow; drainage is on each gauge page)
+        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s%s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td></tr>' % (
+            r["water_url"], esc(r["place"]), r["site"], (" &middot; drains %s sq mi" % fmt(float(r["drainage_sqmi"]))) if float(r["drainage_sqmi"] or 0) > 0 else "", fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), pv, ch, fcst)  # readable at a glance: 5 columns (time under the flow; drainage is on each gauge page)
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
