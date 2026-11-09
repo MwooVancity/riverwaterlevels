@@ -514,7 +514,7 @@ def lake_words(h, G):
                          ('<p class="src">Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation.</p>', ""),
                          ("Water levels are preliminary until NOAA verifies them.", "NOAA tide predictions do not include wind, air pressure or river flow, so the water can be higher or lower than predicted."),
                          ("this station&#x27;s live panel", "this station&#x27;s tide panel"), ("Embed this live panel", "Embed this tide panel"), ("%s water level&lt;/a&gt;, live from River Water Levels" % esc(G["river"]), "%s tide times&lt;/a&gt;, from River Water Levels" % esc(G["river"])),
-                         (">Live station<", ">On this site<"), ("Water level and coastal flood risk", "Coastal flood alerts"), ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
+                         (">Live station<", ">On this site<"), ("Water level and coastal flood risk", "Weather and flood alerts"), ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
                          ("Water level is the water surface above mean lower low water", "Tide heights are above mean lower low water"), ("in feet; it is not depth.", "in feet; not water depth."), (", how the tide comparison is calculated", "")):
                 h = h.replace(a, b)
             h = re.sub(r'<p class="src">Comparison method: [^<]*</p>', "", h)

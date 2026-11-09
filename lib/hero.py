@@ -493,7 +493,7 @@ def hero(G, pages=None):
     elif G.get("coast"):  # coast review 2026-11-06: a dead river tile; today's NOAA tide predictions answer "what is coming"
         loc = lambda x: parse_t(x[0]).astimezone(G["zone"])
         today = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if loc(x).date() == G["now"].astimezone(G["zone"]).date()]
-        strip += ui.tile("fcst", "crest", "Today's tides (NOAA prediction)", "<br>".join('<span class="nb">%s %s %.1f ft</span>' % (loc(x).strftime("%-I:%M %p").lower() if os.name != "nt" else loc(x).strftime("%I:%M %p").lstrip("0").lower(), "high" if x[2] == "H" else "low", round(x[1], 1) + 0.0) for x in today) or "Unknown",
+        strip += ui.tile("fcst", "crest", "Today's tides (NOAA prediction)", "<br>".join('<span class="nb">%s %s %.1f&nbsp;ft</span>' % (loc(x).strftime("%-I:%M %p").lower() if os.name != "nt" else loc(x).strftime("%I:%M %p").lstrip("0").lower(), "high" if x[2] == "H" else "low", round(x[1], 1) + 0.0) for x in today) or "Unknown",
                          "<small>Times %s; heights above MLLW. Predictions, not readings.</small>" % esc(loc(today[0]).strftime("%Z")) if today else "<small>No NOAA prediction for today in the cache.</small>")
     else:
         strip += ui.tile("fcst none", "crest", "River forecast", "Not linked", '<small>The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.</small>')
