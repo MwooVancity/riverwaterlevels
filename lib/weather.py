@@ -250,7 +250,7 @@ def b_heatmap(G):
     has_r = bool(col.get("Rain/snow %"))
     sky_of = lambda grp: sky.get(parse_t(grp[0]["t"]).replace(minute=0, second=0, microsecond=0))
     has_s = any(sky_of(grp) for grp in every3)  # old caches without the NWS short forecast: no Sky column
-    heads = ["Time", "Temp"] + (["Rain %"] if has_r else []) + ["Wind mph"] + (["Thunder %"] if has_t else []) + (["Visibility"] if has_v else []) + (["Sky"] if has_s else [])
+    heads = ["Time", "Temp"] + (["Rain %"] if has_r else []) + ["Wind mph"] + ((["Sky"]) if has_s else ((["Thunder %"] if has_t else []) + (["Visibility"] if has_v else [])))
     def list_of(groups):  # one row per time, top to bottom (owner 2026-11-09: "the Weather Channel wouldn't show it like this"; the sideways grid is gone)
       lrows = ""
       for grp in groups:
@@ -263,14 +263,16 @@ def b_heatmap(G):
             r_ = gmax("Rain/snow %", grp)
             cells.append(("%.0f" % r_) if r_ is not None else "&ndash;")
         cells += [(("%s " % wind_arrow(dr)) if dr is not None else "") + (("%.0f" % w) if w is not None else "&ndash;") + (("&ndash;%.0f" % g_) if g_ is not None and w is not None and g_ > w else "")]  # wind to gust in one column (Weather Channel style, 5 columns)
-        if has_t:
-            th = gmax("Thunder %", grp)
-            cells.append(("%.0f" % th) if th else "")
-        if has_v:
-            vv = [x for x in (spec_get["Visibility mi"](h) for h in grp) if x is not None]
-            cells.append(("%.1f mi" % min(vv)) if vv else "&ndash;")
-        if has_s:
-            cells.append(esc(sky_of(grp) or "") or "&ndash;")
+        th = gmax("Thunder %", grp) if has_t else None
+        vv = [x for x in (spec_get["Visibility mi"](h) for h in grp) if x is not None] if has_v else []
+        extra = ([("thunder %.0f%%" % th)] if th else []) + ([("%.1f mi visibility" % min(vv))] if vv and min(vv) < 5 else [])
+        if has_s:  # thunder and low visibility ride in the sky words, so the list stays at 5 columns (readable at a glance)
+            cells.append(" &middot; ".join([esc(sky_of(grp) or "") or "&ndash;"] + extra))
+        else:
+            if has_t:
+                cells.append(("%.0f" % th) if th else "")
+            if has_v:
+                cells.append(("%.1f mi" % min(vv)) if vv else "&ndash;")
         lrows += tr(cells, right=tuple(range(1, len(cells) - has_s)))
       return '<div class="scroll"><table class="hm hlist%s"><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (" hsky" if has_s else "", "".join('<th scope="col">%s</th>' % h_ for h_ in heads), lrows)  # .hm never stacks into cards on a phone: one line per 3 hours
     lst = list_of(every3)
