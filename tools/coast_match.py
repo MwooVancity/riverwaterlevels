@@ -74,6 +74,7 @@ def join_queue(adds):
             continue
         have.add(s["id"])
         name = re.split(r"[,(]", s["name"])[0].strip()
+        name = name.title() if name.isupper() else name  # NOAA lists some stations in capitals (SAVANNAH, GA): a page title never shouts
         rows.append(dict({"site": s["id"], "state": s["state"], "name": name, "place": name, "lat": s["lat"], "lon": s["lng"], "raw_name": "%s, %s" % (s["name"], s["state"])}, **extra))
         for r in q:
             if r["keyword"] == kw:
@@ -98,7 +99,7 @@ def km(a, b):
 
 def pred_pick(picks, pred, wl, have, ref_km=10, level_km=25):
     """Prediction-only tide pages (owner 2026-11-08; handoff 2026-11-08a). Only SERP-proven picks (data/tide-picks.csv verdict US); the station must have
-    no live level of its own; a subordinate station only when no reference station is within ref_km; the page's one real reading is the nearest NOAA live
+    no live level of its own (a subordinate station too, even beside a reference station: owner decision 4); the page's one real reading is the nearest NOAA live
     water level within level_km of the station itself (edge case 7), named with its distance. One page per station (edge case 9)."""
     by = {s["id"]: s for s in pred}
     refs = [s for s in pred if s.get("type") == "R"]
@@ -112,8 +113,6 @@ def pred_pick(picks, pred, wl, have, ref_km=10, level_km=25):
             why[k["keyword"]] = "not a NOAA prediction station"
         elif s["id"] in wl_ids or s["id"] in have or s["id"] in seen:
             why[k["keyword"]] = "station already has a page or a live level"
-        elif s.get("type") == "S" and any(km(s, r) <= ref_km for r in refs):
-            why[k["keyword"]] = "subordinate with a reference station within %d km" % ref_km
         else:
             lv = min(wl, key=lambda w: km(s, w), default=None)
             if not lv or km(s, lv) > level_km:
@@ -146,8 +145,8 @@ def selftest():
     W = [{"id": "W1", "name": "Level", "state": "FL", "lat": 27.1, "lng": -82.0}, {"id": "W2", "name": "Level2", "state": "FL", "lat": 28.1, "lng": -82.0}]
     k = lambda kw, st, v="US": {"keyword": kw, "station": st, "verdict": v, "meant_place": "x"}
     got, why = pred_pick([k("ref tides", "R1"), k("ref tide times", "R1"), k("near tides", "S1"), k("far tides", "S2"), k("lonely tides", "R2"), k("kinsale tides", "R1", "FOREIGN")], P, W, set())
-    assert [(a["keyword"], c["id"]) for a, b, c, d in got] == [("ref tides", "W1"), ("far tides", "W2")], got
-    assert "subordinate" in why["near tides"] and "within 25" in why["lonely tides"] and "FOREIGN" in why["kinsale tides"] and "already" in why["ref tide times"], why
+    assert [(a["keyword"], c["id"]) for a, b, c, d in got] == [("ref tides", "W1"), ("near tides", "W1"), ("far tides", "W2")], got  # owner 2026-11-08: a searched place gets its page even beside a reference station (decision 4)
+    assert "within 25" in why["lonely tides"] and "FOREIGN" in why["kinsale tides"] and "already" in why["ref tide times"], why
     print("coast_match pred selftest OK")
     sts = [{"id": "1", "name": "Biloxi", "state": "MS", "lat": 30.4, "lng": -88.9}, {"id": "2", "name": "Long Beach", "state": "CA", "lat": 0, "lng": 0},
            {"id": "3", "name": "Long Beach", "state": "WA", "lat": 0, "lng": 0}, {"id": "4", "name": "Portland", "state": "ME", "lat": 0, "lng": 0}]
