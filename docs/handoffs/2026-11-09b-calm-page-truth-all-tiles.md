@@ -11,7 +11,11 @@ Done this session (all on main, deployed, refresh OK, read live):
 - Fixed at the source: pegelonline series vs current (Wuerzburg), NWS flood stage 0, ACIS tomorrow column, channel measurement distance/side channel.
 - Outreach list: 50 rows for the next 20 lakes in data/outreach.csv.
 
+- Readable tables (PLAN 0g): census 966 -> 0 wide tables, now a page rule; hourly like the Weather Channel.
+- Namesake rule from GeoNames in coast_match; review shots open toggles and the hourly grid.
+
 Next, in order:
+0. First-screen rule (PLAN 0g open) and the 11:00 UTC release read.
 1. Read the gate run for commit "truth_live: rain tile..." (refresh OK), then push main and read one live page.
 2. Plain-words pass on tile first lines (one idea per line); truth_live parses some sentences (derived NWS stages), so change both together.
 3. Hourly table 'Thunder' header clipped (read on the next screenshots).
