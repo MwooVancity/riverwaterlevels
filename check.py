@@ -1127,6 +1127,7 @@ def selftest():
     assert control_chars({"x": "a" + chr(21) + "b"}) and not control_chars({"x": "a\tb\n"}), "selftest: a raw control byte in code passed, or a tab failed"
     from lib import ui as ui_
     cm_ = ui_.calm('<small>t</small><small class="dv">NWS: no flooding now or forecast</small><small>note</small>')
+    assert "KJVY" in ui_.calm("<small>wind calm</small><small>Weather station KJVY, Nov 9, 1:30 AM EST</small><small>note</small>").split("<details")[0], "selftest: 'More' hid a reading time"
     assert "no flooding" in cm_.split("<details")[0] and "note" in cm_.split("<details")[1] and "<details" not in ui_.calm("<small>t</small><small>NWS: minor flood</small>"), "selftest: a tile's 'More' toggle hid a flood line, or kept a line it should fold"
     assert not colour_contrast(css_) and colour_contrast(css_.replace("--f-fc:#b45309", "--f-fc:#d97706")), "selftest: a colour-coded label under 4.5:1 on white passed, or the real colours failed: %s" % colour_contrast(css_)
     assert edge_drift(w_real.replace("m<2880", "m<2881")), "selftest: a worker age that drifted from AGE_FN did not fire"

@@ -89,7 +89,7 @@ def calm(sub_html):
     return sub_html[:cut] + "".join(keep) + '<details class="tmore"><summary>More</summary>%s</details>' % rest
 
 
-SAFE = re.compile(r"\b(?:flood|alert|warning|watch|advisory|closed|danger)", re.I)
+SAFE = re.compile(r"\b(?:flood|alert|warning|watch|advisory|closed|danger)|\b\d{1,2}:\d{2}\s*(?:AM|PM)\b", re.I)  # safety words, and a reading time: every number shows its time (CLAUDE.md)
 
 
 def spark(values, w=150, h=34, live=None):

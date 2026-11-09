@@ -90,6 +90,7 @@ Depth dots (USGS channel measurements)
 Rule: under each tile's number, its 24 h line or bar and one line of text; the rest behind one "More" toggle (lib/ui.py calm). Same order on every page, plain literal words, no motion when the phone asks, colour only beside a word.
 Edge cases (guard):
 - "More" hides a safety fact (forecast tile's "NWS: minor flooding forecast" was its second line) / a reader misses a flood / every forecast and gage tile / calm() keeps any line with flood, alert, warning, watch, advisory, closed or danger visible; check.py selftest.
+- "More" hides a reading time (air tile station and time, gage tile "Reading of") / a number without its time / every tile with a later time line / calm() keeps any line with a clock time visible; check.py selftest.
 - A tile with one line gets an empty toggle / noise / every simple tile / calm() adds no toggle under 2 lines or when nothing is left to fold.
 - Text moved out of the page / Google and screen readers lose it / all pages / details keeps it in the HTML; nothing is reworded or deleted.
 - Live numbers inside a folded line stop updating / stale number when opened / the Worker rewrites by selector, which reaches inside details.
