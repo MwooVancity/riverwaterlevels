@@ -260,6 +260,7 @@ def main():
     for name, xml in directory.sitemap_files([u for u in urls if indexing.sitemap_ok(u, ix)], {u: lm[u]["date"] for u in urls if u in lm}).items():
         open(os.path.join(nxt, name), "w", encoding="utf-8").write(xml)
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
+    open(os.path.join(nxt, "8a1906b9e99095f201fe1a3d6210c090.txt"), "w", encoding="utf-8").write("8a1906b9e99095f201fe1a3d6210c090")  # IndexNow key file (tools/indexnow.py KEY; public by design)
     open(os.path.join(nxt, "llms.txt"), "w", encoding="utf-8").write(directory.llms(built))
     open(os.path.join(nxt, "ads.txt"), "w", encoding="utf-8").write("google.com, pub-8997828618122077, DIRECT, f08c47fec0942fa0\n")  # AdSense authorized-sellers file (owner 2026-10-23)
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found(built))
