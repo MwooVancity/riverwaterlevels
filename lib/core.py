@@ -156,11 +156,13 @@ def series(rec, code):
     the number as cfs or ft; a row in any unit other than UNIT_OF's is never read as a number, so the page says not reporting instead of a wrong value."""
     out = []
     want = UNIT_OF.get(code)
+    late = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)  # gate audit 0a: a reading stamped in the future is wrong; it is dropped, never shown as now (world pages: wx.suspect)
     for r in rec["usgs"]["rows"]:
         if r["parameter_code"] == code and (want is None or str(r.get("unit_of_measure") or "").lower() == want):
             try:
-                if float(r["value"]) > -900:  # USGS sentinel values (-999999) are not readings
-                    out.append((parse_t(r["time"]), float(r["value"]), r))
+                t_ = parse_t(r["time"])
+                if float(r["value"]) > -900 and not (t_.tzinfo and t_ > late):  # USGS sentinel values (-999999) are not readings
+                    out.append((t_, float(r["value"]), r))
             except (TypeError, ValueError):
                 pass
     out.sort(key=lambda x: x[0])

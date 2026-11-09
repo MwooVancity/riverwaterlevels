@@ -11,7 +11,11 @@ def run():
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
     from lib import directory
-    nw = datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)
+    from lib import core as core_
+    iso = lambda d: d.isoformat()
+    fut = core_.series({"usgs": {"rows": [dict(new, time=iso(ago(minutes=30)), unit_of_measure="ft^3/s", value="900"), dict(new, time=iso(ago(minutes=-120)), unit_of_measure="ft^3/s", value="5000")]}}, "00060")
+    assert [v for _, v, _ in fut] == [900.0], "a US reading stamped 2 h in the future was kept as the latest (gate audit 0a)"
+    nw =datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)
     lk = lambda i, **k: dict({"full_name": "Lake %03d" % i, "short_name": "L%d" % i, "timestamp": "2026-11-07", "elevation": 677.15, "conservation_pool_elevation": 681.0, "percent_full": 93.5, "conservation_storage": 9.0, "conservation_capacity": 10.0}, **k)
     assert directory.lake_state_page({"rows": {str(i): lk(i) for i in range(49)}}, {}, nw) is None, "a TWDB file cut short (under 50 reservoirs) still made the Texas page"
     tx = directory.lake_state_page({"fetched_at": "2026-11-07T17:00:00Z", "rows": dict({str(i): lk(i) for i in range(60)}, dry=lk(98, full_name="Addicks Reservoir", percent_full=None, elevation=76.38, conservation_pool_elevation=67.5), late=lk(99, full_name="Lake Old", timestamp="2026-11-01"))}, {}, nw)
