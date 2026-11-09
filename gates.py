@@ -14,7 +14,7 @@ NPX = "npx.cmd" if os.name == "nt" else "npx"
 def census(out):
     """CLAUDE.md links rule 7: the links census reaches every run's log, pass or fail (refresh.py and gates.py both call this)."""
     for ln in out.splitlines():
-        if ln.startswith(("links census", "readability census", "WARNING internal links", "truth_live:", "truth_live air:", "truth_live forecast:", "truth_live rain:", "world truth:", "truth tests:", "truth_live WARNING", "WARNING", "CARRIED", "NEW PAGE FAILED", "NEW WORLD")) or " FAULT" in ln or "MISMATCH" in ln:  # what each truth check compared, pass or fail (practice 2026-11-08: Lake Michigan compared or skipped was unknowable)
+        if ln.startswith(("links census", "readability census", "doorway census", "truth_live:", "truth_live air:", "truth_live forecast:", "truth_live rain:", "world truth:", "truth tests:", "truth_live WARNING", "WARNING", "CARRIED", "NEW PAGE FAILED", "NEW WORLD")) or " FAULT" in ln or "MISMATCH" in ln:  # what each truth check compared, pass or fail (practice 2026-11-08: Lake Michigan compared or skipped was unknowable)
             print("      " + ln[:200], flush=True)
 
 
