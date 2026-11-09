@@ -1,0 +1,9 @@
+{
+ "id": "8722816",
+ "verdict": "FAIL",
+ "notes": "F6 phone-03: section heading 'Water level and coastal flood risk' sits over only a weather-alerts line ('No active National Weather Service alerts were returned'); no water level is under it | F3 phone-08: heading 'Official pages for this station' overlaps 'Embed this tide panel on your site' and 'Source' | F6 phone-07: 'Other gauges and stations on this site' badged 'LIVE STATION' lists 'Bandon, OR tide predictions - 2732 mi away'; 'Nearby gauges' chip (desktop-01) leads there | NOTES: 'Today's tides' tile shows only '8:21 pm high 2.2 ft' (earlier tides today omitted); boat ramps not ordered by distance ('Lee Road Boat Ramp 14.0 mi' first) and 'Lighthouse Point Marina 5.3 mi' listed twice; footer 'Data: USGS, NOAA, NWS' with no USGS data",
+ "by": "hater-full-tables-2026-11-09",
+ "at": "2026-11-09T01:15:58+00:00",
+ "template": "dcccee799d7a",
+ "level": "full"
+}

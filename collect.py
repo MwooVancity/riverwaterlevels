@@ -1457,7 +1457,7 @@ def fetch_coops(st):
     high and low tide predictions, and the latest water temperature. 4 calls per station per run; a product the station lacks is an empty list."""
     t = lambda s: s.replace(" ", "T") + ":00+00:00"
     if st in COAST_TABLES:  # tide tables: this station's own predictions only (6-minute curve where NOAA publishes one: reference stations; subordinate stations give highs and lows only). 2 calls
-        hilo = coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=168" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
+        hilo = coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=192" % (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)).strftime("%Y%m%d"))  # from yesterday UTC: today's early local tides too (review 2026-11-09: the tile showed only the rest of the day)
         if not hilo:
             raise RuntimeError("no CO-OPS tide predictions for %s" % st)
         pred = coops_get(st, "product=predictions&datum=MLLW&interval=6&begin_date=%s&range=48" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
@@ -1477,7 +1477,7 @@ def fetch_coops(st):
             rows.append({"parameter_code": "00010", "time": t(r["t"]), "value": str(round((float(r["v"]) - 32) / 1.8, 2)), "unit_of_measure": "degC", "qualifier": None, "approval_status": "Preliminary"})
     begin = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)).strftime("%Y%m%d %H:%M")
     pred = coops_get(st, "product=predictions&datum=MLLW&interval=6&begin_date=%s&range=96" % urllib.parse.quote(begin))
-    hilo = coops_get(own, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=72" % datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
+    hilo = coops_get(own, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&range=96" % (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)).strftime("%Y%m%d"))  # from yesterday UTC, so the whole local day is in the cache (review 2026-11-09)
     return {"fetched_at": now_iso(), "rows": rows, "truncated": []}, {"fetched_at": now_iso(), "station": own, "level": lv, "pred": [[t(p["t"]), float(p["v"])] for p in pred], "hilo": [[t(p["t"]), float(p["v"]), p["type"]] for p in hilo], "wt_suspect": [min(vs), max(vs)] if suspect else None}
 
 

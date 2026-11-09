@@ -789,6 +789,8 @@ def ad_gaps(rel, h):
 
 
 def selftest():
+    sg_ = '<link rel="canonical" href="https://riverwaterlevels.com/%s/x/"><script>var ID="USGS-01097000"</script> no published statistics for this date'
+    assert stats_gap(sg_ % "river") and not stats_gap(sg_ % "lake"), "selftest: stats_gap must fire on a river page with a USGS stats file and stay quiet on a lake (its file is often another parameter)"
     from lib import render as _rn  # render first: lib.page is imported through it (circular)
     from lib import page as pg_
     P_ = {s_: {"site": s_, "_built": True, "_ll": ll_, "_kind": k_, "state": "x", "water_url": "/%s/" % s_} for s_, ll_, k_ in

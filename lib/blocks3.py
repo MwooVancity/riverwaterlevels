@@ -93,7 +93,8 @@ def b_access(G):
         return None
     pri = {"Boat ramp": 0, "Whitewater put-in": 0, "Canoe/kayak put-in": 0, "Marina": 1}  # actual launch points before marinas, nearest first
     ordered = sorted(a["rows"], key=lambda x: (pri.get(x["type"], 2), x["mi"]))
-    named = [x for x in ordered if (x.get("name") or "").strip()]
+    seen_ = set()
+    named = [x for x in ordered if (x.get("name") or "").strip() and not (k_ := (x["name"].strip().lower(), x["type"], round(x["mi"], 1))) in seen_ and not seen_.add(k_)]  # review 2026-11-09: one marina mapped twice was listed twice
     unnamed = [x for x in ordered if not (x.get("name") or "").strip()]  # audit run 1, row 12: seven "(unnamed)" rows read as padding; they become one line
     rows = "".join(tr([esc(x["name"]), esc(x["type"]), "%.1f mi" % x["mi"]], right=(2,)) for x in named)
     body = table(["Name", "Type", "Distance"], rows, right=(2,)) if named else ""
@@ -962,14 +963,14 @@ def b_moon(G):
     dates = sorted(d["date"] for d in u.get("days") or [])
     covered = bool(dates) and datetime.datetime.fromisoformat(dates[0] + "T00:00:00+00:00") <= d0 and d1 <= datetime.datetime.fromisoformat(dates[-1] + "T00:00:00+00:00") + datetime.timedelta(days=1)
     if not covered:
-        return block("moon", "Moon today", "official", "<p>Unknown: the U.S. Naval Observatory's moon times for today were not read in this build.</p>", src + ".", "usno")
+        return block("moon", "Moon today", "agency", "<p>Unknown: the U.S. Naval Observatory's moon times for today were not read in this build.</p>", src + ".", "usno")
     ev = sorted((parse_t(t), ph) for d in u["days"] for ph, t in d["moon"])
     today_ = lambda ph: [t for t, p in ev if p == ph and d0 <= t < d1]
     tm = lambda ts, w: ", ".join(esc(tzl(t, z, date=False)) for t in ts) or "No %s today" % w  # "None" reads as a code leak (break gate 2026-11-07)
     cps = sorted({tuple(d["closest"]) for d in u["days"] if d.get("closest")}, key=lambda c: abs((parse_t(c[1]) - G["now"]).total_seconds()))
     rows = "".join(tr([a, b], right=(1,)) for a, b in (("Moonrise today", tm(today_("Rise"), "moonrise")), ("Moonset today", tm(today_("Set"), "moonset")),
                                                       ("Moon phase, nearest principal phase", ("%s, %s" % (esc(cps[0][0]), esc(tzl(parse_t(cps[0][1]), z)))) if cps else "Unknown")))
-    return block("moon", "Moon today", "official", table(["Measure", esc(fdate(loc.date().isoformat()))], rows, right=(1,)),
+    return block("moon", "Moon today", "agency", table(["Measure", esc(fdate(loc.date().isoformat()))], rows, right=(1,)),
                  src + ", read %s. USNO gives the times in UTC; station time is our conversion." % esc(tzl(parse_t(u["fetched_at"]), z)), "usno")
 
 

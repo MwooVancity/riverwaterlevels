@@ -212,7 +212,7 @@ def embed_code(G):
     if G.get("feed"):
         return ""
     name = "%s water level" % river_at(G["river"], G["place"])
-    return '<details class="srcd"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The link under the panel takes readers to this page.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
+    return '<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The link under the panel takes readers to this page.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
 
 
 def b_official_links(G):
@@ -514,7 +514,7 @@ def lake_words(h, G):
                          ('<p class="src">Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation.</p>', ""),
                          ("Water levels are preliminary until NOAA verifies them.", "NOAA tide predictions do not include wind, air pressure or river flow, so the water can be higher or lower than predicted."),
                          ("this station&#x27;s live panel", "this station&#x27;s tide panel"), ("Embed this live panel", "Embed this tide panel"), ("%s water level&lt;/a&gt;, live from River Water Levels" % esc(G["river"]), "%s tide times&lt;/a&gt;, from River Water Levels" % esc(G["river"])),
-                         ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
+                         (">Live station<", ">On this site<"), ("Water level and coastal flood risk", "Coastal flood alerts"), ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
                          ("Water level is the water surface above mean lower low water", "Tide heights are above mean lower low water"), ("in feet; it is not depth.", "in feet; not water depth."), (", how the tide comparison is calculated", "")):
                 h = h.replace(a, b)
             h = re.sub(r'<p class="src">Comparison method: [^<]*</p>', "", h)
