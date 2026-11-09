@@ -54,6 +54,7 @@ Links come from data in code; a link exists because a reader here would tap it n
 - `collect.py` is the only build-side network code; `build.py` reads `cache/` only. Keys: calcscrape `.env` only, never in pages, docs or output.
 - Pages enter Google only via `tools/open_wave.py`.
 - Cloudflare free, per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.
+- Wrong or odd number on any page: follow `tools/source_fix.md` (fix in the feed reader, every edge case, fixture, live proof).
 - A rule not in `gates.py`/`check.py` is a note; a new check ships a fixture (`--selftest`). What can heal never blocks; `tools/watchdog.py` heals hourly, alarms at most twice a day. Fix the cause, never loosen a check.
 - Windows: no `&&` in PowerShell; `MSYS_NO_PATHCONV=1` in Git Bash; `python -I`.
 
