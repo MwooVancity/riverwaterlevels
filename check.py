@@ -94,7 +94,7 @@ DOOR = collections.defaultdict(list)  # gauge id -> [(url, minhash)]; PLAN 0j
 def door_sig(h):
     """(gauge id, 64-value MinHash of the page's visible words with its own name words removed) or None. Small per page, so 14,000 pages fit in memory.
     Owner decision 4 (narrowed 2026-11-09): two places on one gauge are two pages, but one that is the other word for word with the name swapped is a doorway page."""
-    gid = re.search(r'var ID="([^"]+)"', h)
+    gid = re.search(r'<p class="sub">([^<&]+?)\s*&middot;', h)  # every kind names its station first: "USGS gauge 06041000", "NOAA tide station 8443970", "Gauge 4091" (first draft read var ID: US rivers only, so the census said 0)
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", h, re.S)
     if not gid or not h1:
         return None
@@ -102,7 +102,7 @@ def door_sig(h):
     body = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))).lower()
     w = [x for x in re.findall(r"[a-z]+", body) if x not in own]  # words only: the readings and times differ by build minute, not by page
     sh = {" ".join(w[i:i + 5]) for i in range(max(1, len(w) - 4))}
-    return gid.group(1), tuple(min(int(hashlib.md5((str(k) + s).encode()).hexdigest()[:8], 16) for s in sh) for k in range(64))
+    return gid.group(1).strip(), tuple(min(int(hashlib.md5((str(k) + s).encode()).hexdigest()[:8], 16) for s in sh) for k in range(64))
 
 
 def door_pairs(door, cut=0.95):
@@ -664,7 +664,8 @@ def check_dir(d):
                 rel_of[u] = rel
                 sig_ = door_sig(h) if kind_of(rel) in ("gauge", "world") else None
                 if sig_:
-                    DOOR[sig_[0]].append((u, sig_[1]))
+                    DOOR[(rel.replace("\\", "/").split("/")[0] if kind_of(rel) == "world" else "") + sig_[0]].append((u, sig_[1]))  # a world 'Gauge 4091' is per country feed
+                    READ["door_pages"] = READ.get("door_pages", 0) + 1
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
@@ -724,7 +725,7 @@ def check_dir(d):
         print("links census %s: %d pages, inbound min %d median %d, outbound min %d median %d, %d with under %d inbound" % (k_, len(us_), i_[0], i_[len(i_) // 2], o_[0], o_[len(o_) // 2], sum(1 for x in i_ if x < NEIGHBOURS), NEIGHBOURS))
     print("readability census: %d pages, %d tables over 5 columns on %d pages%s" % (READ["pages"], READ["wide"], READ["wide_pages"], (", e.g. " + READ["eg"]) if READ["eg"] else ""))
     dp_ = door_pairs(DOOR)
-    print("doorway census: %d gauges carry 2+ pages, %d page pairs 95%%+ the same text with the name removed%s" % (sum(1 for v in DOOR.values() if len(v) > 1), len(dp_), (", e.g. %s = %s (%.0f%%)" % (dp_[0][0], dp_[0][1], 100 * dp_[0][2])) if dp_ else ""))
+    print("doorway census: %d pages read, %d stations carry 2+ pages, %d page pairs 95%%+ the same text with the name removed%s" % (READ.get("door_pages", 0), sum(1 for v in DOOR.values() if len(v) > 1), len(dp_), (", e.g. %s = %s (%.0f%%)" % (dp_[0][0], dp_[0][1], 100 * dp_[0][2])) if dp_ else ""))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
     for u in urls:
         parts = u.strip("/").split("/")
@@ -859,7 +860,7 @@ def ad_gaps(rel, h):
 
 
 def selftest():
-    dpg_ = lambda name, extra: '<script>var ID="USGS-1"</script><h1>%s River at %s</h1><p>%s</p>' % (name, name, " ".join(["flow is steady today and the gauge reads normal for the date"] * 20) + extra)
+    dpg_ = lambda name, extra: '<h1>%s River at %s</h1><p class="sub">USGS gauge 1 &middot; observed</p><p>%s</p>' % (name, name, " ".join(["flow is steady today and the gauge reads normal for the date"] * 20) + extra)
     d_ = collections.defaultdict(list)
     for u_, n_, x_ in (("/a/", "Bandon", ""), ("/b/", "Coquille", ""), ("/c/", "Other", " ".join("unique local fact %s about access ramps camping weather point" % w_ for w_ in "abcdefghijklmnopqrstuvwxyz" * 3))):
         sg_ = door_sig(dpg_(n_, x_))
