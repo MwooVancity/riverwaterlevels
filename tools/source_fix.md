@@ -86,6 +86,18 @@ Depth dots (USGS channel measurements)
 - Today's flow outside every measurement: say "above (or below) every measured flow", never extrapolate a depth.
 - Old channel shape: use the last 15 years only; scour and fill change depth at the same flow.
 
+## Calm page (owner 2026-11-09: "pretty for someone who's ADHD and autistic")
+Rule: under each tile's number, its 24 h line or bar and one line of text; the rest behind one "More" toggle (lib/ui.py calm). Same order on every page, plain literal words, no motion when the phone asks, colour only beside a word.
+Edge cases (guard):
+- "More" hides a safety fact (forecast tile's "NWS: minor flooding forecast" was its second line) / a reader misses a flood / every forecast and gage tile / calm() keeps any line with flood, alert, warning, watch, advisory, closed or danger visible; check.py selftest.
+- A tile with one line gets an empty toggle / noise / every simple tile / calm() adds no toggle under 2 lines or when nothing is left to fold.
+- Text moved out of the page / Google and screen readers lose it / all pages / details keeps it in the HTML; nothing is reworded or deleted.
+- Live numbers inside a folded line stop updating / stale number when opened / the Worker rewrites by selector, which reaches inside details.
+- Checks that read tile text (check.py, truth_live) / a fold breaks a pattern / every gauge page / full gate run on check before main, read "refresh OK".
+- Colour as the only signal / colour-blind readers (about 1 in 12 men) / every colour-coded label / colour always beside its word; 4.5:1 minimum (check.py colour_contrast).
+- Motion / distraction and sensory load / site-wide / prefers-reduced-motion turns off animation, transition and smooth scroll.
+- Layout that differs page to page / an autistic reader loses their place / every page kind / one template, one block order (CLAUDE.md "Order"), variant reviews per template.
+
 ## Never
 - A per-gauge exception list. If one gauge needs it, the rule is wrong: redefine what the rule matches.
 - A fix in the template that hides a bad value. The cache must hold the truth.

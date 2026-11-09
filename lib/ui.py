@@ -80,7 +80,16 @@ def calm(sub_html):
     if len(parts) < 2:
         return sub_html
     cut = parts[1].start()
-    return sub_html[:cut] + '<details class="tmore"><summary>More</summary>%s</details>' % sub_html[cut:]
+    rest = sub_html[cut:]
+    keep = [m.group(0) for m in SMALL.finditer(rest) if SAFE.search(re.sub(r"<[^>]+>", " ", m.group(0)))]  # a safety line never hides (master prompt: "More" must not hide flood, alert or warning words)
+    for k in keep:
+        rest = rest.replace(k, "", 1)
+    if not SMALL.search(rest):
+        return sub_html
+    return sub_html[:cut] + "".join(keep) + '<details class="tmore"><summary>More</summary>%s</details>' % rest
+
+
+SAFE = re.compile(r"\b(?:flood|alert|warning|watch|advisory|closed|danger)", re.I)
 
 
 def spark(values, w=150, h=34, live=None):

@@ -1118,6 +1118,9 @@ def selftest():
     w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
     assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
     css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+    from lib import ui as ui_
+    cm_ = ui_.calm('<small>t</small><small class="dv">NWS: no flooding now or forecast</small><small>note</small>')
+    assert "no flooding" in cm_.split("<details")[0] and "note" in cm_.split("<details")[1] and "<details" not in ui_.calm("<small>t</small><small>NWS: minor flood</small>"), "selftest: a tile's 'More' toggle hid a flood line, or kept a line it should fold"
     assert not colour_contrast(css_) and colour_contrast(css_.replace("--f-fc:#b45309", "--f-fc:#d97706")), "selftest: a colour-coded label under 4.5:1 on white passed, or the real colours failed: %s" % colour_contrast(css_)
     assert edge_drift(w_real.replace("m<2880", "m<2881")), "selftest: a worker age that drifted from AGE_FN did not fire"
     assert edge_drift(w_real.replace("AGE_CHIP_MIN = [90, 360]", "AGE_CHIP_MIN = [90, 240]")), "selftest: a worker age-chip cut-off that drifted from STALE_H did not fire"
