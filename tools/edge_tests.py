@@ -27,6 +27,10 @@ def run():
     h = blocks3.b_depth(G)["body"]
     assert "average depth of 19.9 ft" in h and "About 10 ft deep on average</b> at a flow like today's (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
     assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
+    six = [["20%02d-08-04T18:00:00+00:00" % y, f, 1000.0, f / 3, 2.0, 0.0, "AtTheGage"] for y, f in zip(range(20, 26), (1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 40000.0))]
+    assert blocks3.depth_dots(six[:4], 5000.0, datetime.date(2026, 11, 9)) == "" and blocks3.depth_dots(six, 5000.0, datetime.date(2026, 11, 9)).count("<circle") == 6, "depth dots: drawn under 5 measurements, or a measurement dropped"
+    assert "is above every flow" in blocks3.depth_dots(six, 90000.0, datetime.date(2026, 11, 9)) and "is above" not in blocks3.depth_dots(six, 5000.0, datetime.date(2026, 11, 9)), "depth dots: today's flow outside the measured range not said, or said when inside"
+    assert blocks3.depth_dots([["1990" + r[0][4:]] + r[1:] for r in six], 5000.0, datetime.date(2026, 11, 9)) == "", "depth dots: measurements older than 15 years drawn"
     ac = {"rec": {"acis": {"fetched_at": "2026-11-09T02:00:00Z", "days": ["2026-11-%02d" % d for d in range(3, 10)], "stations": [{"name": "TEST STN", "km": 3.0, "vals": ["0.10", "0.00", "T", "0.00", "0.00", "0.20", "M"]}]}}, "now": datetime.datetime(2026, 11, 9, 3, tzinfo=datetime.timezone.utc), "zone": zoneinfo.ZoneInfo("America/Chicago")}
     assert "not reported" not in blocks3.b_acis(ac)["body"], "rain table: a US page after midnight UTC showed tomorrow as 'not reported' (review 2026-11-09)"
     rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])

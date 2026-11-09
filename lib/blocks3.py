@@ -302,6 +302,36 @@ def depth_rows(G):
     return c, near
 
 
+def depth_dots(c, lv, today):
+    """PLAN 0e #5 (tools/source_fix.md 'Depth dots'): average depth against flow, one dot per USGS visit in the last 15 years, log flow axis, today's flow as a line.
+    None under 5 visits. Today's flow outside every measured flow is said in words, never extrapolated."""
+    if today is not None:
+        c = [r for r in c if int(r[0][:4]) >= today.year - 15]
+    if len(c) < 5:
+        return ""
+    W, H, L, B = 340, 170, 34, 26
+    fx = [math.log10(r[1]) for r in c]
+    lo_x, hi_x = min(fx), max(fx)
+    if lv and lv > 0:
+        lo_x, hi_x = min(lo_x, math.log10(lv)), max(hi_x, math.log10(lv))
+    hi_x = hi_x if hi_x - lo_x > 0.1 else lo_x + 0.1
+    dy = [r[3] / r[2] for r in c]
+    top = max(dy) * 1.1
+    X = lambda v: L + (math.log10(v) - lo_x) / (hi_x - lo_x) * (W - L - 8)
+    Y = lambda v: 6 + (1 - v / top) * (H - B - 6)
+    dots = "".join('<circle cx="%.1f" cy="%.1f" r="3.2"/>' % (X(r[1]), Y(d_)) for r, d_ in zip(c, dy))
+    now = ""
+    note = ""
+    if lv and lv > 0:
+        now = '<line x1="%.1f" x2="%.1f" y1="4" y2="%d" class="dnow"/><text x="%.1f" y="14" class="dl">today</text>' % (X(lv), X(lv), H - B, min(X(lv) + 4, W - 34))
+        if lv > max(r[1] for r in c) * 1.05 or lv < min(r[1] for r in c) * 0.95:
+            note = "<p>Today's flow (%s cfs) is %s every flow USGS measured here in the last 15 years, so no depth is estimated for it.</p>" % (fmtc(lv), "above" if lv > max(r[1] for r in c) else "below")
+    axes = '<text x="%d" y="%d" class="dl">%s cfs</text><text x="%d" y="%d" class="dl" text-anchor="end">%s cfs</text><text x="2" y="12" class="dl">%.0f ft</text><text x="2" y="%d" class="dl">0 ft</text>' % (L, H - 8, fmtc(10 ** lo_x), W - 6, H - 8, fmtc(10 ** hi_x), top, H - B)
+    return ('<svg class="ddots" viewBox="0 0 %d %d" role="img" aria-label="Average depth against flow, %d USGS measurements since %s%s">%s%s%s</svg>'
+            '<p class="src">Each dot is one USGS measurement: flow across (log scale), average depth up. The line is today&rsquo;s flow.</p>%s' % (
+                W, H, len(c), c[-1][0][:4], (", today's flow %s cfs" % fmtc(lv)) if lv else "", axes, dots, now, note))
+
+
 def b_depth(G):
     """How deep and wide the river is at the gauge: USGS hydrographers' measured width and cross-section area; average depth = area / width is our math."""
     c, near = depth_rows(G)
@@ -318,6 +348,7 @@ def b_depth(G):
         lead += "<p>Latest measurement: %s (%s).</p>" % (say(c[0]), where(c[0]))
     lead += "<p>Average depth is the cross-section area divided by the width; the deepest part of the channel is deeper, the edges shallower. Depth changes with the flow.</p>"
     rows = "".join(tr([fdate(r[0][:10]), "%s cfs" % fmtc(r[1]), "%.1f ft" % d(r), "%s ft" % fmtc(r[2])], right=(1, 2, 3)) for r in c[:10])
+    lead += depth_dots(c, G.get("lv"), G["ldate"] if G.get("ldate") else None)
     return block("depth", "How deep and wide the river is here", "hist", lead + more("All %d recent measurements" % min(10, len(c)), table(["Date", "Flow", "Average depth", "Width"], rows, right=(1, 2, 3))),
                  "Source: USGS Water Data API channel measurements (hydrographer site visits within a mile of the gauge; the main channel of each visit), fetched %s. Average depth = area &divide; width, our math." % esc(tzl(parse_t(G["rec"]["fieldmeas"]["fetched_at"]), G["zone"])), "usgs")
 
