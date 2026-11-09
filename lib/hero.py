@@ -386,15 +386,15 @@ def hero(G, pages=None):
         word = band_word(p)  # single source of truth for the class label (was a duplicate of common.band_word that could drift)
         yrs = srow[0] if srow else 0
         on = md(G["ldate"])
-        plain = ("Lower than at least 95%% of the %d years in the USGS daily statistics for %s." % (yrs, on) if p == -1 else
-                 "Higher than at least 95%% of the %d years in the USGS daily statistics for %s." % (yrs, on) if p == 101 else
-                 "Lower than %d%% of the %d years in the USGS daily statistics for %s." % (100 - round(p), yrs, on) if p < 50 else
-                 "Higher than %d%% of the %d years in the USGS daily statistics for %s." % (round(p), yrs, on))
+        plain = ("Lower than at least 95%% of past years on %s (%d years of USGS records)." % (on, yrs) if p == -1 else
+                 "Higher than at least 95%% of past years on %s (%d years of USGS records)." % (on, yrs) if p == 101 else
+                 "Lower than %d%% of past years on %s (%d years of USGS records)." % (100 - round(p), on, yrs) if p < 50 else
+                 "Higher than %d%% of past years on %s (%d years of USGS records)." % (round(p), on, yrs))
         _de = (((G["rec"].get("meta") or {}).get("ts") or {}).get("flow_daily") or [None, None])[1]
         if _de and _de[:4].isdigit() and int(_de[:4]) < G["ldate"].year - 1:
             plain = plain.rstrip(".") + " (USGS daily record ended %s)." % fdate(_de)  # hater r4/r5: Freeport's record ends 2015
         if G["basis_mean"]:
-            plain = "The 24 h average, %s cfs, is %s" % (fmtc(G["basis"]), plain[0].lower() + plain[1:]) + latest_band_note(srow, G["lv"], word, tzl(G["lt"], G["zone"], date=False))  # hater r4: the latest reading sat in the band while the verdict said below
+            plain = "24 h average %s cfs: %s" % (fmtc(G["basis"]), plain[0].lower() + plain[1:]) + latest_band_note(srow, G["lv"], word, tzl(G["lt"], G["zone"], date=False))  # hater r4: the latest reading sat in the band while the verdict said below
     norm_word, norm_plain = word, plain  # the trend tile below reuses the name `word`
     pre, dir_chip, word_note = tiles, "", ""
     if G["osc"]:
