@@ -284,11 +284,11 @@ def state_page(st, rows, Gs, sd=None, lakes_hub=False):
             G = Gs[r["site"]]
             ch = chg_text(G) or chg_dash(G)
             fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
-            trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td><td>%s</td></tr>' % (
-                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), old_mark(G), band_word(G["p"]), ch, fcst, esc(G["obs"]))
+            trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
+                r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), band_word(G["p"]), ch, fcst)  # readable at a glance: the time sits under the flow (5 columns, was 6)
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
-            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs))  # ponytail: one lake hub so far; a dict when a second state gets one
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
@@ -339,11 +339,11 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         chg = None if (G.get("osc") or G["offline"]) else G["chg"]
         ch = ("%s %s" % ({"up": "&#9650;", "down": "&#9660;", "steady": "&#9644;"}[flow_dir(chg)],("%+d%%" % round(chg) if round(chg) else "0%"))) if chg is not None else chg_dash(G)
         fcst = "Yes" if ((G["rec"].get("nwps") or {}).get("forecast")) else "No"
-        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td><td>%s</td></tr>' % (
-            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), old_mark(G), pv, ch, (fmt(float(r["drainage_sqmi"])) if float(r["drainage_sqmi"] or 0) > 0 else "–"), fcst, esc(G["obs"]))
+        trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td></tr>' % (
+            r["water_url"], esc(r["place"]), r["site"], fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), pv, ch, fcst)  # readable at a glance: 5 columns (time under the flow; drainage is on each gauge page)
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
-            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col" class="r">Drainage sq mi</th><th scope="col" class="r">NWS river forecast</th><th scope="col">Observed</th></tr></thead><tbody>%s</tbody></table></div>' % (
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 st.lower(), esc(name), esc(river), esc(river), esc(name), len(rows), inv_count, esc(name), trs))
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))
 

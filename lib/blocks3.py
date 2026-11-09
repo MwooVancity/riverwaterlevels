@@ -196,8 +196,19 @@ def b_acis(G):
     _seen = set()
     a = dict(a, stations=[x for x in a["stations"] if not ((acis_name(x["name"]), round(x["km"], 1)) in _seen or _seen.add((acis_name(x["name"]), round(x["km"], 1))))])  # full review: one station twice, 0.00 vs trace
     _nm = collections.Counter(acis_name(x["name"]) for x in a["stations"])
-    rows = "".join(tr([esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % km_mi(x["km"]))) if _nm[acis_name(x["name"])] > 1 else "")), "%.0f mi" % km_mi(x["km"])] + [cell(v) for v in x["vals"]], right=tuple(range(1, 9))) for x in a["stations"])
-    return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", ('<p class="src">Each date is one station observation day, which often ends in the morning, so it does not line up with the rain totals for the gauge location above.</p>' if (G["rec"].get("rain") or {}).get("inches") else "") + table(heads, rows, right=tuple(range(1, 9))),
+    # owner 2026-11-09 ("hard to read at a first glance"): days run down, the 3 nearest stations across (was 5 stations x 7 days sideways), one answer sentence first
+    st3 = sorted(a["stations"], key=lambda x: x["km"])[:3]
+    nm = lambda x: esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % km_mi(x["km"]))) if _nm[acis_name(x["name"])] > 1 else ""))
+    heads = ["Day"] + ["%s, %.0f mi" % (nm(x), km_mi(x["km"])) for x in st3]
+    rows = "".join(tr([md(datetime.date.fromisoformat(d))] + [cell(x["vals"][i]) if i < len(x["vals"]) else "not reported" for x in st3], right=tuple(range(1, 4))) for i, d in reversed(list(enumerate(a["days"]))))
+    num = lambda v: (lambda w: float(w) if w.replace(".", "", 1).isdigit() else (0.0 if w == "T" else None))(v.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ") if v[:1].isdigit() else v)
+    got = [(d, num(v)) for d, v in zip(a["days"], st3[0]["vals"]) if num(v) is not None]
+    if got:
+        tot, wet = sum(v for _, v in got), max(got, key=lambda x: x[1])
+        lead = '<p class="lead">%s, %.0f mi away: %s over the last %d days%s.</p>' % (nm(st3[0]), km_mi(st3[0]["km"]), ("%.2f in" % tot) if tot >= 0.01 else "no measurable rain", len(got), (", most on %s (%.2f in)" % (md(datetime.date.fromisoformat(wet[0])), wet[1])) if wet[1] >= 0.01 else "")
+    else:
+        lead = '<p class="lead">%s, %.0f mi away: no reports in the last %d days.</p>' % (nm(st3[0]), km_mi(st3[0]["km"]), len(a["days"]))
+    return block("county_station_rain", "Measured daily rain at nearby weather stations", "obs", lead + ('<p class="src">Each date is one station observation day, which often ends in the morning, so it does not line up with the rain totals for the gauge location above.</p>' if (G["rec"].get("rain") or {}).get("inches") else "") + table(heads, rows, right=(1, 2, 3)),
                  "Source: NOAA Regional Climate Centers ACIS, daily precipitation at the nearest county weather stations, fetched %s. Each value is a 24-hour total for the station's observation day; trace means less than 0.01 in. Where ACIS lists two reports for one station, the first is shown." % esc(tzl(parse_t(a["fetched_at"]), G["zone"])), "acis")
 
 
