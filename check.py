@@ -87,6 +87,21 @@ def ui_checks(body, plain=True):
     return bad
 
 
+def colour_contrast(css):
+    """Colour coding by kind (tile labels, block dots) must be readable as small text: every light-mode --f-* family colour at least 4.5:1 on white (WCAG AA). Found 2026-11-09: forecast 3.19, area 3.77."""
+    def lum(h):
+        c = [int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        c = [x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in c]
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    light = re.search(r":root\{[^}]*--f-fc:#[0-9a-fA-F]{6}[^}]*\}", css)
+    bad = []
+    for name, hx in re.findall(r"--(f-[a-z]+):#([0-9a-fA-F]{6})", light.group(0) if light else ""):
+        r = (1.05) / (lum(hx) + 0.05)
+        if r < 4.5:
+            bad.append("colour %s #%s is %.2f:1 on white, under 4.5" % (name, hx, r))
+    return bad
+
+
 def page_checks(h, rel):
     """Every check that judges one page alone. The site gate and tools/release.py page_check both call this one function, so a new gauge the release
     passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
@@ -605,7 +620,7 @@ def check_dir(d):
     site_bad += ["%s missing from the build" % f for f in ("sw.js", "manifest.webmanifest", "icon-192.png", "icon-512.png") if not os.path.exists(os.path.join(d, f))]
     if os.path.exists(os.path.join(d, "sw.js")):
         site_bad += sw_drift(open(os.path.join(d, "sw.js"), encoding="utf-8").read())
-    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
+    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + colour_contrast(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
@@ -1102,6 +1117,8 @@ def selftest():
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
     w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
     assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
+    css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+    assert not colour_contrast(css_) and colour_contrast(css_.replace("--f-fc:#b45309", "--f-fc:#d97706")), "selftest: a colour-coded label under 4.5:1 on white passed, or the real colours failed: %s" % colour_contrast(css_)
     assert edge_drift(w_real.replace("m<2880", "m<2881")), "selftest: a worker age that drifted from AGE_FN did not fire"
     assert edge_drift(w_real.replace("AGE_CHIP_MIN = [90, 360]", "AGE_CHIP_MIN = [90, 240]")), "selftest: a worker age-chip cut-off that drifted from STALE_H did not fire"
     assert edge_drift(w_real.replace('"ft^3/s" : "ft"', '"m^3/s" : "m"')), "selftest: a worker that accepts another unit than lib/core.py UNIT_OF did not fire"

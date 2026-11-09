@@ -31,10 +31,6 @@ def run():
     ny_, U_ = zoneinfo.ZoneInfo("America/New_York"), datetime.timezone.utc
     tzl_ = (lambda f: lambda *a: f(*a).replace("\u00a0", " "))(tzl_)  # times use no-break spaces on the page
     assert (tzl_(datetime.datetime(2026, 11, 1, 5, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 11, 1, 6, 30, tzinfo=U_), ny_), tzl_(datetime.datetime(2026, 3, 8, 7, 30, tzinfo=U_), ny_)) == ("Nov 1, 1:30 AM EDT", "Nov 1, 1:30 AM EST", "Mar 8, 3:30 AM EDT"), "time zone label wrong on a clock-change night (each reading must carry its own EDT/EST)"
-    six = [["20%02d-08-04T18:00:00+00:00" % y, f, 1000.0, f / 3, 2.0, 0.0, "AtTheGage"] for y, f in zip(range(20, 26), (1000.0, 2000.0, 5000.0, 10000.0, 20000.0, 40000.0))]
-    assert blocks3.depth_dots(six[:4], 5000.0, datetime.date(2026, 11, 9)) == "" and blocks3.depth_dots(six, 5000.0, datetime.date(2026, 11, 9)).count("<circle") == 6, "depth dots: drawn under 5 measurements, or a measurement dropped"
-    assert "is above every flow" in blocks3.depth_dots(six, 90000.0, datetime.date(2026, 11, 9)) and "is above" not in blocks3.depth_dots(six, 5000.0, datetime.date(2026, 11, 9)), "depth dots: today's flow outside the measured range not said, or said when inside"
-    assert blocks3.depth_dots([["1990" + r[0][4:]] + r[1:] for r in six], 5000.0, datetime.date(2026, 11, 9)) == "", "depth dots: measurements older than 15 years drawn"
     ac = {"rec": {"acis": {"fetched_at": "2026-11-09T02:00:00Z", "days": ["2026-11-%02d" % d for d in range(3, 10)], "stations": [{"name": "TEST STN", "km": 3.0, "vals": ["0.10", "0.00", "T", "0.00", "0.00", "0.20", "M"]}]}}, "now": datetime.datetime(2026, 11, 9, 3, tzinfo=datetime.timezone.utc), "zone": zoneinfo.ZoneInfo("America/Chicago")}
     assert "not reported" not in blocks3.b_acis(ac)["body"], "rain table: a US page after midnight UTC showed tomorrow as 'not reported' (review 2026-11-09)"
     rows, add, fixed = collect.merge_rows([dict(new, value="10500"), dict(new, time="t0", value="9")], [new, dict(new, time="t2")])

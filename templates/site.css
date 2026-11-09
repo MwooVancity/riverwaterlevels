@@ -231,7 +231,7 @@ a.pl{opacity:0;transition:opacity .15s}h2:hover a.pl,a.pl:focus{opacity:.7}
 /* ---- ONE SYSTEM (2026-10-21, design review vs Lakebrief): one page colour, white 12 px cards, one label style, one numeral face, one line under each number, the data age said once. Everything above this line is the base; this block is the only skin. ---- */
 :root{--bg:#f4f8fc;--card:#fff;--ink:#0f1d2b;--mut:#5d6470;--line:#e3e6eb;--accent:#1d5fa8;--soft:#e8f1fa;--navy:#0f1d2b;--amber:#8a5a0f;--low:#a85a00;--hi:#6b3fa0;--warn:#b3261e;--good:#1b7f3b;--r:12px}
 :root:not([data-theme=light]){--bg:#0f1720;--card:#16202b;--ink:#e6edf3;--mut:#9aa7b4;--line:#263241;--accent:#6aa9ec;--soft:#1c2a3a;--navy:#e6edf3;--amber:#e0a84a;--low:#e0a84a;--hi:#b393e6;--warn:#f08a82;--good:#7fd28a}
-:root{--f-now:var(--accent);--f-fc:#d97706;--f-rec:#7c3aed;--f-area:#059669;--f-safe:#dc2626}
+:root{--f-now:var(--accent);--f-fc:#b45309;--f-rec:#7c3aed;--f-area:#047857;--f-safe:#dc2626}
 :root:not([data-theme=light]){--f-fc:#5fcad8;--f-rec:#b393e6;--f-area:#7fd28a;--f-safe:#f08a82}
 body{background:var(--bg)}
 h2,.hero b,details.fold>summary b,.fc b{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -309,4 +309,3 @@ table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last
 .tile b{overflow-wrap:normal;word-break:normal}
 
 .emb>summary{cursor:pointer;color:var(--accent);min-height:44px;line-height:44px}
-.ddots{display:block;width:100%;max-width:520px;height:auto;margin:8px 0 2px}.ddots circle{fill:var(--accent);opacity:.75}.ddots .dnow{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 3}.ddots .dl{font:11px system-ui,sans-serif;fill:var(--mut)}
