@@ -78,8 +78,7 @@ TABS = {
 
 
 KIND_NAME = {"river": "Nearest river gauge on this site", "lake": "Nearest lake on this site", "coast": "Nearest tide station on this site"}
-REV_N = 3  # CLAUDE.md internal links rule 4: a page few list is added to the lists of its REV_N nearest pages within NEAR_MI (fixed size: links never grow with the site)
-NEAR_MI = 60  # owner 2026-11-09 "no forced internal links": a water page links another water page only within a short drive; farther pages are reached through the hubs
+NEAR_MI = 60  # owner 2026-11-09 "no forced internal links": other water a reader here could drive to today (about an hour; reviewers called 107 and 127 mi not nearby); the same river at any distance is the upstream/downstream strip; farther pages are reached through the hubs
 _IX = {}
 
 
@@ -94,7 +93,7 @@ def _skip(s, G):
 def link_index(pages, Gs=None):
     """1-degree grid of the built pages (all kinds and per kind), every page's own lists, and the reverse lists; made once per build after every page's
     _built/_ll/_kind is set. Was an O(n) scan per page (14,000 pages = 196M distance tests a run); a grid query reads 15 squares.
-    Links rule 4: a page listed by fewer than REV_N pages is added to its nearest pages' 'More gauges' list, neediest first, REV_N per list at most."""
+    No reverse lists (owner 2026-11-09): a page is never added to another page's list because it needs inbound links."""
     grid, kinds = collections.defaultdict(list), collections.defaultdict(lambda: collections.defaultdict(list))
     built = [(s, p) for s, p in pages.items() if p.get("_built") and p.get("_ll")]
     for s, p in built:
@@ -102,21 +101,10 @@ def link_index(pages, Gs=None):
         grid[key].append((s, p))
         kinds[p.get("_kind", "river")][key].append((s, p))
     _IX.clear()
-    _IX.update(pages=id(pages), grid=grid, kinds=kinds, rev=collections.defaultdict(list), base={})
+    _IX.update(pages=id(pages), grid=grid, kinds=kinds, base={})
     _IX["members"] = {id(g): {s for v in g.values() for s, _ in v} for g in [grid] + list(kinds.values())}
-    listers = collections.defaultdict(set)
     for s, p in built:
         _IX["base"][s] = _base(p["_ll"], p.get("state"), p.get("_kind", "river"), _skip(s, (Gs or {}).get(s)))
-        for _, grp in _IX["base"][s]:
-            for _, q in grp:
-                listers[q["site"]].add(s)
-    for s, p in sorted(built, key=lambda x: len(listers[x[0]])):  # neediest first, so a full list never drops the page with no other inbound link
-        need = REV_N - len(listers[s])
-        for mi, q in (nearest(p["_ll"], grid, {s} | listers[s], need + 10) if need > 0 else ()):
-            if need and mi <= NEAR_MI and len(_IX["rev"][q["site"]]) < REV_N:
-                _IX["rev"][q["site"]].append((mi, p))
-                listers[s].add(q["site"])
-                need -= 1
     return _IX
 
 
@@ -158,12 +146,7 @@ def nb_pick(G, pages):
     if _IX.get("pages") != id(pages):
         link_index(pages)
     s = G["site"]
-    groups = _IX["base"].get(s) or _base((G["lat"], G["lon"]), G.get("st"), kind_of_g(G), _skip(s, G))
-    shown = {p["site"] for _, grp in groups for _, p in grp} | _skip(s, G)
-    back = sorted((x for x in _IX["rev"].get(s, ()) if x[1]["site"] not in shown), key=lambda x: x[0])  # links rule 4
-    if back:
-        groups = groups + [("More gauges nearby", back)]
-    return groups
+    return _IX["base"].get(s) or _base((G["lat"], G["lon"]), G.get("st"), kind_of_g(G), _skip(s, G))
 
 
 def nb_urls(G, pages):

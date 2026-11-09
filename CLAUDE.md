@@ -9,7 +9,7 @@ Only three things matter: (1) maximum helpfulness to the reader at this water, (
 A false page is worse than none. Every fact proven on live agency data, else it does not ship or says Unknown. A feed down, cut short, out of area or parsed to nothing is Unknown, never safe. A wrong time, unit, place or gauge is the top defect. Our math says ours. A false-looking reading is held (future time) or marked (stuck, jump). Code: `lib/wx.py` `suspect`, `lib/world.py` `PROVED`, `tools/truth_world.py`.
 
 ## Scale (owner 2026-11-01, 11-03)
-Every change states how it fails today and at 14,000 pages (calls, CPU, URL length, files, KV writes, run time, dead feed) and the breaking number. From 2026-11-20 Claude is on Pro: unattended work runs for weeks alone.
+A change to collect, build, the Worker or a scheduled job states how it fails today and at 14,000 pages (calls, CPU, URL length, files, KV writes, run time, dead feed) and the breaking number; a page-text change does not. From 2026-11-20 Claude is on Pro: unattended work runs for weeks alone.
 
 ## Owner decisions (2026)
 1. (11-01) Helpfulness decides page content; AdSense money decides build order, only among items that pass the three tests.
@@ -32,7 +32,7 @@ Correct is not enough: a page fails if a person can't say what the river is doin
 
 ## Page rules
 - Nothing that helps ranking but not the reader (stuffing, doorway, padding).
-- Phone download (third-party too) under 90 KB gzipped (`check.py`); cut the biggest, never river data.
+- Our page HTML under 90 KB gzipped (`check.py` MAX_GZ); ads and Analytics load after the page is readable. Cut the biggest, never river data.
 - Line 0: every reliable public dataset a reader here could use, exact source and time; withhold only if wrong, misleading, padding or no mechanism.
 - Non-US: own `data/sources.json` row, local unit + feet, agency low/high labels, no sailing verdict; a dead feed stales only its page.
 - UI: one colour, white cards, one label and numeral style, unit beside number, data age once.
@@ -46,9 +46,9 @@ Correct is not enough: a page fails if a person can't say what the river is doin
 ## HARD: internal links (owner 2026-11-08 "godlike"; 2026-11-09 "I don't want internal links if it's forced")
 Links come from data in code; a link exists only because a reader here would tap it next. Never add a link to reach a count: no backfill, no far-away fillers.
 1. Tree: home > country > state or region > hub > gauge page; breadcrumb on every water page (`crumb_ld`); hubs list all children; depth <= 4, no orphans (`check.py`).
-2. Out: up to 5 water pages within 60 mi / 100 km, nearest first, distance shown, any country or kind (`lib/page.py` `NEAR_MI`, `lib/world.py` `NEAR_KM`); none nearby = no list (the hub reaches the rest).
+2. Out: other water a reader here could go to today: up to 5 within 60 mi / 100 km (about an hour's drive; no road data, so straight line), nearest first, distance shown, any country or kind (`lib/page.py` `NEAR_MI`, `lib/world.py` `NEAR_KM`); none nearby = no list (the hub reaches the rest).
 3. Same river: upstream and downstream named as such. Rivers, lakes and coasts list the nearest of each other kind, both ways, within the same distance.
-4. In: a page few list is added to its nearest pages' lists within the same distance, neediest first (`link_index` `REV_N`); an isolated page is reached through its hub only.
+4. In: no reverse lists; a page is never added to another page's list because it needs inbound links (deleted 2026-11-09). An isolated page is reached through its hub.
 5. A page added or held rebuilds every page whose list changes, same run (`nb_urls` in `_built.json`). Only built, indexable pages are linked.
 6. Anchor = the name a searcher types plus the reading, never "click here" or a bare id. Fixed list sizes (`check.py` BUDGET).
 7. Proof: `check.py` prints "links census" (inbound/outbound min, median per kind) every run as information, never a target. A new rule ships with its check.

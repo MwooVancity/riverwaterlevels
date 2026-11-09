@@ -218,7 +218,6 @@ def main():
         wkeep = world.choose(wpages, wnow)
         wlisted = sum(len(p.get("gauge_pages") or []) for p in directory.world_pages())
         near = world.near_index(wpages, wkeep)
-        world.near_rev(near)  # links rule 4: every world page listed by 3 others
         for page, d in wpages:
             keep = wkeep[page["slug"]]
             for r in d["rows"]:

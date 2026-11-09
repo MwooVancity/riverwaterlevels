@@ -15,7 +15,13 @@ def run():
     iso = lambda d: d.isoformat()
     fut = core_.series({"usgs": {"rows": [dict(new, time=iso(ago(minutes=30)), unit_of_measure="ft^3/s", value="900"), dict(new, time=iso(ago(minutes=-120)), unit_of_measure="ft^3/s", value="5000")]}}, "00060")
     assert [v for _, v, _ in fut] == [900.0], "a US reading stamped 2 h in the future was kept as the latest (gate audit 0a)"
-    nw =datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)
+    from lib import render  # noqa: F401 (lib.page imports through render)
+    from lib import blocks2 as b2_
+    t0_ = datetime.datetime(2026, 11, 9, 15, tzinfo=datetime.timezone.utc)
+    fl_ = [(t0_ - datetime.timedelta(minutes=15 * k), 1160.0 if k == 0 else (1210.0 if k >= 96 else 1200.0), {}) for k in range(100, -1, -1)]
+    rb_ = str(b2_.b_rate({"fl": fl_, "sg": [], "zone": zoneinfo.ZoneInfo("America/Denver"), "offline": False, "osc": False, "site": "x"}))
+    assert "Last 1 to 12 h" in rb_ and rb_.count("Last 1 h") == 0 and "Last 24 h" in rb_ and "Full table" not in rb_, "rate of change: identical 1-12 h windows were printed four times, or the duplicate full table is back (fresh review 2026-11-09, Madison)"
+    nw = datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)
     lk = lambda i, **k: dict({"full_name": "Lake %03d" % i, "short_name": "L%d" % i, "timestamp": "2026-11-07", "elevation": 677.15, "conservation_pool_elevation": 681.0, "percent_full": 93.5, "conservation_storage": 9.0, "conservation_capacity": 10.0}, **k)
     assert directory.lake_state_page({"rows": {str(i): lk(i) for i in range(49)}}, {}, nw) is None, "a TWDB file cut short (under 50 reservoirs) still made the Texas page"
     tx = directory.lake_state_page({"fetched_at": "2026-11-07T17:00:00Z", "rows": dict({str(i): lk(i) for i in range(60)}, dry=lk(98, full_name="Addicks Reservoir", percent_full=None, elevation=76.38, conservation_pool_elevation=67.5), late=lk(99, full_name="Lake Old", timestamp="2026-11-01"))}, {}, nw)
@@ -29,7 +35,7 @@ def run():
     from lib import blocks3
     G = {"rec": {"fieldmeas": {"fetched_at": "2026-11-09T00:00:00Z", "chan": [["2026-08-04T18:49:06+00:00", 71000.0, 1690.0, 33600.0, 2.11, 5000.0, "Downstream"], ["2025-08-14T15:00:00+00:00", 48000.0, 1680.0, 17300.0, 1.9, 3000.0, "Downstream"]]}}, "lv": 48100.0, "zone": zoneinfo.ZoneInfo("America/New_York")}
     h = blocks3.b_depth(G)["body"]
-    assert "average depth of 19.9 ft" in h and "About 10 ft deep on average</b> at a flow like today's (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
+    assert "average depth of 19.9 ft" in h and "About 10 ft deep on average</b> at a flow like today's (48,100 cfs)" in h and "average depth of 10.3 ft" in h and "pools and the main channel are deeper" in h and "5,000 ft downstream" in h, "depth block: wrong area/width, nearest-flow pick or distance label"
     assert blocks3.b_depth(dict(G, rec={"fieldmeas": {"chan": []}})) is None and blocks3.b_depth(dict(G, rec={})) is None, "depth block shown with no measurement"
     from lib.core import tzl as tzl_
     ny_, U_ = zoneinfo.ZoneInfo("America/New_York"), datetime.timezone.utc

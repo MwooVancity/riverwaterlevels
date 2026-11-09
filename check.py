@@ -837,22 +837,21 @@ def selftest():
     pg_.link_index(P_)
     G_ = lambda s_: {"site": s_, "lat": P_[s_]["_ll"][0], "lon": P_[s_]["_ll"][1], "st": "x", "lake": P_[s_]["_kind"] == "lake", "rec": {}}
     inb_ = collections.Counter(v for s_ in P_ for v in pg_.nb_urls(G_(s_), P_))
-    assert inb_["/far/"] == 0 and "/far/" not in pg_.nb_urls(G_("a"), P_) and all(inb_[p_["water_url"]] >= 3 for p_ in P_.values() if p_["site"] != "far"), "selftest: a page 500 mi away was forced into a nearby list, or a page with close neighbours got under 3 (owner 2026-11-09: no forced links): %s" % dict(inb_)
+    assert inb_["/far/"] == 0 and "/far/" not in pg_.nb_urls(G_("a"), P_) and "/b/" in pg_.nb_urls(G_("a"), P_) and "/a/" in pg_.nb_urls(G_("b"), P_), "selftest: a page 500 mi away was forced into a nearby list, or two gauges 7 mi apart do not list each other (owner 2026-11-09: no forced links): %s" % dict(inb_)
     assert "/lk/" in pg_.nb_urls(G_("a"), P_) and "/a/" in pg_.nb_urls(G_("lk"), P_) or "/g/" in pg_.nb_urls(G_("lk"), P_), "selftest: a river page does not list the nearest lake, or the lake no river (links rule 3)"
     assert all(len(pg_.nb_urls(G_(s_), P_)) == len(set(pg_.nb_urls(G_(s_), P_))) and "/%s/" % s_ not in pg_.nb_urls(G_(s_), P_) for s_ in P_), "selftest: a page lists itself or one page twice"
     before_ = pg_.nb_urls(G_("a"), P_)
     P_["b"]["_built"] = False
     pg_.link_index(P_)
     assert "/b/" in before_ and "/b/" not in pg_.nb_urls(G_("a"), P_), "selftest: a held page stays in its neighbour's link set, so build.py would carry a broken link (links rule 5)"
-    assert all(len(pg_._IX["rev"][k_]) <= pg_.REV_N for k_ in pg_._IX["rev"]), "selftest: a reverse list grew past REV_N (links rule 6 fixed size)"
     from lib import world as wd_
     pts_ = [(50 + i * 0.01, 8.0, "g%d" % i, "/g%d/" % i, "1 m", "Normal") for i in range(8)] + [(60.0, 8.0, "far", "/far/", "1 m", "Normal")]
     ix_ = {}
     for e_ in pts_:
         ix_.setdefault((int(e_[0] // 1), int(e_[1] // 1)), []).append(e_)
-    rv_ = wd_.near_rev(ix_)
+    rv_ = {}  # no reverse lists (owner 2026-11-09)
     win_ = collections.Counter(x[2] for e_ in pts_ for x in (lambda l_: l_ + [y for y in rv_.get(e_[3], ()) if y[2] not in {z[2] for z in l_} | {e_[3]}])(wd_.near({"lat": e_[0], "lon": e_[1]}, ix_, {e_[3]})))
-    assert win_["/far/"] == 0 and min(win_[e_[3]] for e_ in pts_ if e_[3] != "/far/") >= 3 and all(len(v) <= wd_.REV_N for v in rv_.values()), "selftest: a world page 1,100 km away was forced into a list, a close group got under 3, or a reverse list grew past REV_N (owner 2026-11-09: no forced links)"
+    assert win_["/far/"] == 0 and min(win_[e_[3]] for e_ in pts_ if e_[3] != "/far/") >= 1, "selftest: a world page 1,100 km away was forced into a list, or a close gauge is listed by none of its neighbours (owner 2026-11-09: no forced links)"
     from lib import directory as dr_
     pub_ = dr_.publisher
     try:

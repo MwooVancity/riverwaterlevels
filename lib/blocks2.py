@@ -137,8 +137,8 @@ def b_rate(G):
     steps = sorted((fl[i][0] - fl[i - 1][0]).total_seconds() for i in range(1, len(fl)))
     tol = max(1200, 0.6 * steps[len(steps) // 2])
     t1 = fl[-1][0]
-    rows = ""
     cards = []
+    seen = None  # fresh review 2026-11-09 (Madison): 1, 3, 6 and 12 h rows all said -3.3%, -40 cfs; a window that repeats the one before it is said once
     for h in (1, 3, 6, 12, 24):
         fa = _at(fl, t1 - datetime.timedelta(hours=h), tol)
         if not fa:
@@ -149,16 +149,20 @@ def b_rate(G):
         pct = wc[2] if wc else (d / fa[1] * 100 if fa[1] else 0)
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
+        if seen and seen[1] == (fa[1], round(pct, 1), sd):
+            new = "Last %d to %d h" % (seen[2], h)
+            cards[-1] = cards[-1].replace(seen[0], new, 1)
+            seen = (new, seen[1], seen[2])
+            continue
+        seen = ("Last %d h" % h, (fa[1], round(pct, 1), sd), h)
         cards.append(card("Last %d h" % h, "%s %+.1f%%" % (_arrow(pct, d), pct), "%s%s cfs, from %s cfs%s" % ("+" if d >= 0 else "-", fmtc(abs(d)), fmtc(fa[1]), (", height %s" % sd) if sa else "")))
-        rows += tr(["%d h" % h, "%s cfs" % fmtc(fa[1]), "%s %s%s cfs (%+.1f%%)" % (_arrow(pct, d), "+" if d >= 0 else "-", fmtc(abs(d)), pct), ("%.2f ft" % sa[1]) if sa else "–", sd], right=(1, 2, 3, 4))
-    if not rows:
+    if not cards:
         return None
     week = [x for x in fl if x[0] >= t1 - datetime.timedelta(days=7)]
     hi, lo = max(week, key=lambda x: x[1]), min(week, key=lambda x: x[1])
     ago = lambda t: ("%.0f h earlier" % ((t1 - t).total_seconds() / 3600)) if (t1 - t).total_seconds() >= 3600 else "within the last hour"
-    ext = tr(["Highest reading", "%s cfs" % fmtc(hi[1]), esc(tzl(hi[0], G["zone"])), ago(hi[0])], right=(1,)) + tr(["Lowest reading", "%s cfs" % fmtc(lo[1]), esc(tzl(lo[0], G["zone"])), ago(lo[0])], right=(1,))
     from lib.render import flow_jitter
-    note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the Height change column.</p>' if flow_jitter(G) else ""
+    note = '<p class="src">Flow readings at this gauge swing without following the gage height (lock, tide or backwater effects): read the direction from the height change on each card.</p>' if flow_jitter(G) else ""
     f6, s6 = _at(fl, t1 - datetime.timedelta(hours=6), tol), (_at(sg, sg[-1][0] - datetime.timedelta(hours=6), tol) if sg else None)
     if not note and f6 and s6 and f6[1] and abs(fl[-1][1] / f6[1] - 1) >= 0.1 and abs(sg[-1][1] - s6[1]) >= 0.1 and (fl[-1][1] > f6[1]) != (sg[-1][1] > s6[1]):
         note = '<p class="src">Over the last 6 h the flow went %s (%+.0f%%) while the gage height went %s (%+.2f ft). Both are USGS readings as published; at a gauge near a dam or in a pool the level does not always follow the flow.</p>' % ("down" if fl[-1][1] < f6[1] else "up", 100 * (fl[-1][1] / f6[1] - 1), "up" if sg[-1][1] > s6[1] else "down", sg[-1][1] - s6[1])  # full review: Hudson -36% flow, +0.27 ft
@@ -166,9 +170,9 @@ def b_rate(G):
     from lib.core import age_words
     if G["offline"]:  # flow not reporting for over 24 h: the windows count back from the last report, not from now
         note = '<p class="lead">These changes end at the last report, %s ago; the river may have changed since.</p>' % age_words(G["lt"], G["now"]) + note
-    body = note + rail(cards, "Change over the last hours") + more("Full table", table(["Window", "Flow then", "Flow change", "Gage height then", "Height change"], rows, right=(1, 2, 3, 4), hide=(1, 3)) + "<h3>Last 7 days</h3>" + table(["Measure", "Flow", "Time", "Relative to latest reading"], ext, right=(1,), hide=(3,)))
+    body = note + rail(cards, "Change over the last hours")  # fresh review 2026-11-09: the "Full table" and "Last 7 days" table repeated these cards word for word
     return block("rate_of_change", "Rate of rise and fall", "live", body,
-                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each row compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is under 2%%, the same cut-off as the headline." % esc(tzl(t1, G["zone"])), "usgs")
+                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each card compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is under 2%%, the same cut-off as the headline." % esc(tzl(t1, G["zone"])), "usgs")
 
 
 def _xy_svg(pts, cur, W, Hh, fs, cls, label):
