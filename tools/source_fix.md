@@ -32,7 +32,9 @@ A page shows what the agency published, converted once, in one place. A wrong pa
 | First run, no old copy | new gauge | Ship test: recent reading, unit, time, or the page waits |
 | Scale: calls x gauges per hour | 14,000 gauges, 1,000 USGS calls/h | Weekly sources in `WEEKLY`, spread by hash; one early refresh only when a new field appears |
 
-## Pictures on tiles (owner 2026-11-09: "shouldn't everything be a visual")
+## Pictures (owner 2026-11-09: tried, then "maybe just the number is fine")
+Rule: a tile shows a number and its words. The only tile pictures are the flow and gage 24 h lines (their end dot follows the live reading in the Worker). Every other picture is a chart inside a section, drawn from history or an issued forecast, so it cannot fall behind a live number. Tried and removed the same day: a flood bar and a forecast curve on tiles; each repeated the tile's own sentence and needed live-sync code plus a picture check. A new picture must name the question it answers that no sentence on the page already answers. The list below applies to any section chart.
+
 A picture is drawn by ONE shared helper from the same cached value the tile's number uses, never from a second fetch or a second calculation. It exists only when it shows a comparison the number can't (trend, range, danger line, time of day). The number stays as text above it. Before building any picture, check each line below; each needs a guard and a fixture.
 
 All pictures
@@ -50,7 +52,7 @@ All pictures
 - Phone width: readable at 320 px; labels never overlap (drop the middle label first).
 - A check that reads it: check.py compares each picture's data attributes with the tile's number (a picture that disagrees with its own number holds the page).
 
-Gage height: distance to flood
+Gage height: distance to flood (the stage section ladder)
 - No NWS stages, or only some (action but no flood): draw only the lines that exist; none = no bar.
 - NWS and USGS read the river on different zero points (datum gap): margins already use the NWS reading; no NWS reading at that time = no bar.
 - Lake or high-elevation gauge (580 ft, flood 590): a bar from 0 makes it look full. Axis floor = the lowest reading of the past year, labelled.

@@ -309,5 +309,4 @@ table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last
 .tile b{overflow-wrap:normal;word-break:normal}
 
 .emb>summary{cursor:pointer;color:var(--accent);min-height:44px;line-height:44px}
-.lad-mini{margin:4px 0 2px}.lad-mini .lad-bar{height:10px;margin:10px 0 8px}.lad-mini .lad-now{top:-6px;height:22px}
 .ddots{display:block;width:100%;max-width:520px;height:auto;margin:8px 0 2px}.ddots circle{fill:var(--accent);opacity:.75}.ddots .dnow{stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 3}.ddots .dl{font:11px system-ui,sans-serif;fill:var(--mut)}

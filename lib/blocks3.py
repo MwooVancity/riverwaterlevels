@@ -442,7 +442,7 @@ def conditions(G, pages=None):
             end = fut[-1]
             first_hi = near[0]
             cur = fc_cur(G, gap) if unit == "ft" else G["lv"]  # the word, the tile and its margins judge one reading
-            out["fc"] = {"series": [v_ for _, v_ in fut], "v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated", "age_h": age, "ago": age_words(parse_t(f["issued"]), G["now"]) if f.get("issued") else None,
+            out["fc"] = {"v": hi[1], "unit": unit, "t": tzl(hi[0], zone), "lid": n.get("lid") or "", "repeat": peaks >= 2, "issued": tzl(parse_t(f["issued"]), zone) if f.get("issued") else "at a time not stated", "age_h": age, "ago": age_words(parse_t(f["issued"]), G["now"]) if f.get("issued") else None,
                          "falls": end[1] <= hi[1] - (0.5 if unit == "ft" else 0.1 * abs(hi[1])) and (end[0] - hi[0]).total_seconds() > 6 * 3600 and peaks < 2, "end_v": end[1], "end_t": tzl(end[0], zone),
                          "swing": (lo_f, tzl(end[0], zone)) if peaks >= 2 and hi[1] - lo_f >= (0.5 if unit == "ft" else 0.1 * abs(hi[1])) else None,
                          "datum": gap, "word": fc_word([v_ for _, v_ in fut], cur, unit),

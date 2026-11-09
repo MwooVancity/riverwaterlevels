@@ -86,20 +86,7 @@ def spark(values, w=150, h=34, live=None):
     return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" aria-hidden="true"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="%s" cy="%s" r="2.6" fill="currentColor"%s/></svg>' % (w, h, w, h, " ".join(pts), ex, ey, tag)
 
 
-def fc_curve(values, w=150, h=34):
-    """The NWS forecast tile's picture (PLAN 0e #2): the forecast itself, dashed, start to end; no observed line (it would join two zero points on a datum gap and
-    go stale beside the live number; the tile states the forecast's issue time). None under 3 points."""
-    v = [x for x in values if x is not None]
-    if len(v) < 3:
-        return ""
-    lo, hi = min(v), max(v)
-    span = max(hi - lo, 0.06 * (max(abs(hi), abs(lo)) or 1.0))  # same flat-river rule as spark
-    lo = (hi + lo) / 2 - span / 2
-    pts = ["%.1f,%.1f" % (2 + i * (w - 4) / (len(v) - 1), 3 + (1 - (x - lo) / span) * (h - 6)) for i, x in enumerate(v)]
-    return '<svg class="spark" viewBox="0 0 %d %d" preserveAspectRatio="none" width="%d" height="%d" role="img" aria-label="NWS forecast from %s to %s, high %s"><polyline vector-effect="non-scaling-stroke" points="%s" fill="none" stroke="currentColor" stroke-width="1.8" stroke-dasharray="5 4" stroke-linejoin="round"/></svg>' % (w, h, w, h, ("%g" % round(v[0], 2)), ("%g" % round(v[-1], 2)), ("%g" % round(max(v), 2)), " ".join(pts))
-
-
-def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high", mini=False, live=False):
+def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
     """Flood-stage scale for the stage block: a bar coloured by NWS category (action yellow, minor orange, moderate red, major purple) with a tick for the latest stage and one for the forecast high; the numbers sit in a key under the bar as ordinary text so they never overlap or shrink on a phone. cats = {name: ft}."""
     order = [(k, cats[k]) for k in ("action", "minor", "moderate", "major") if k in cats]
     if not order:
@@ -114,16 +101,14 @@ def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high", min
         end = order[i + 1][1] if i + 1 < len(order) else top
         segs += '<i style="left:%.2f%%;width:%.2f%%;background:%s"></i>' % (P(v), P(end) - P(v), cols[k])
     marks = ""
-    if cur is not None:  # live: the edge Worker moves the tick with the live stage (tools/source_fix.md: a static picture never disagrees with a live number)
-        marks += '<b class="lad-now" style="left:%.2f%%"%s></b>' % (P(cur), (' data-lo="%.3f" data-span="%.3f"' % (lo, span)) if live else "")
+    if cur is not None:
+        marks += '<b class="lad-now" style="left:%.2f%%"></b>' % P(cur)
     if fc is not None and cur is not None and abs(P(fc) - P(cur)) > 1.5:
         marks += '<u class="lad-fc" style="left:%.2f%%"></u>' % P(fc)
     key = "".join('<li><i style="background:%s"></i>%s <b>%.1f ft</b></li>' % (cols[k], k.capitalize(), v) for k, v in order)
     key += '<li class="now"><i class="lad-sw"></i>%s <b>%.2f ft</b></li>' % (esc_ui(now_label), cur) if cur is not None else ""
     if fc is not None:
         key += '<li class="fcl"><i class="lad-fsw"></i>%s <b>%.1f ft</b></li>' % (fc_label, fc)
-    if mini:  # the gage-height tile: bar only; its text already names the next stage and the distance, the stage block below has the key
-        return '<div class="lad lad-mini" role="img" aria-label="Latest stage %.2f ft; NWS %s"><div class="lad-bar">%s%s</div></div>' % (cur, ", ".join("%s %.1f ft" % (k, v) for k, v in order), segs, marks)
     txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; %s %.1f ft" % (fc_label.lower(), fc)) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
     return '<div class="lad" role="img" aria-label="%s"><div class="lad-bar">%s%s</div><ul class="lad-key">%s</ul></div>' % (txt, segs, marks, key)
 
