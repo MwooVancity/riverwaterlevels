@@ -94,6 +94,9 @@ GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  #
 def selftest():
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
     assert wt_verdict(T_, 54, [(T_, 12.0)]) is None and "USGS latest" in wt_verdict(T_, 60, [(T_, 12.0)]) and wt_verdict(T_, 60, [(T_ + datetime.timedelta(hours=1), 12.0)]) is None and wt_verdict(T_, None, [(T_, 12.0)]) is None and wt_verdict(T_, 60, [(T_, 12.0), (T_, 15.6)]) is None, "water temperature not compared with USGS"
+    fj_ = {"issuedTime": "2026-11-08T15:21:00Z", "primaryUnits": "ft", "secondaryUnits": "kcfs", "data": [{"primary": 12.34, "secondary": 50.1}, {"primary": 11.82, "secondary": 48.0}, {"primary": 11.0, "secondary": 45.0}]}
+    ny_ = "America/New_York"
+    assert fc_verdict(11.8, "ft", "Nov 8, 10:21 AM EST", ny_, fj_) == (None, None) and fc_verdict(13.5, "ft", "Nov 8, 10:21 AM EST", ny_, fj_)[0] and fc_verdict(13.5, "ft", "Nov 9, 4:00 AM EST", ny_, fj_)[1] and fc_verdict(48000, "cfs", "Nov 8, 10:21 AM EST", ny_, fj_) == (None, None), "river forecast compare: a value outside the forecast passed, a match failed, or another issuance was compared"
     assert air_verdict(43, 6.1) is None and air_verdict(43, None) is None and "NWS station" in air_verdict(50, 6.1), "air temperature compare: a 7°F gap passed, or a match failed"
     m_ = AIR.search('<span data-wx="temp0">43</span>x<span hidden data-wxst="KJVY" data-t="2026-11-09T05:30:00+00:00"></span>')
     assert m_ and m_.groups() == ("43", "KJVY", "2026-11-09T05:30:00+00:00"), "air tile not read from the page"
@@ -348,8 +351,10 @@ def main():
                     if ref is not None and (abs(abs(x - ref) - d) > 0.06 or (way == "above") != (x > ref)):
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     n_air = air_check(html, carried, bad, skipped)
+    n_fc = fc_check(html, carried, bad, skipped)
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
     print("truth_live air: %d pages' air temperature compared with the NWS station report at the same time" % n_air)
+    print("truth_live forecast: %d pages' river forecast compared with the same NWS issuance" % n_fc)
     n_noaa = sum(1 for _, u, *_ in gauges if u.startswith("/coast/")) + len(great)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation, TWDB), %d coast and Great Lakes pages with NOAA (Great Lakes: %s), %d mismatches, %d skipped%s" % (
         len(pages), len(agency), n_noaa, ", ".join(great) or "none", len(bad), len(skipped), (": %s" % "; ".join(str(x)[:90] for x in skipped[:6])) if skipped else ""))
@@ -421,6 +426,65 @@ def air_check(html, carried, bad, skipped):
         n += 1
         if verdict:
             bad.append("%s: %s" % (u, verdict))
+    return n
+
+
+FC_TILE = re.compile(r'<div class="tile fcst[^"]*">(?:(?!</div>).)*?<b>(-?[\d.,]+) <small>(ft|cfs)</small></b>(?:(?!</div>).)*?issued ([A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5})', re.S)
+FC_LID = re.compile(r"forecast point ([A-Z0-9]{5})")
+ZONE_JS = re.compile(r'Z="([A-Za-z_]+/[A-Za-z_/\-]+)"')
+
+
+def fc_verdict(val, unit, issued_txt, zone, j):
+    """(bad, skip) for the river forecast tile against the NWS forecast it names (gate audit 2026-11-08: the NWS forecast number was never compared with its source).
+    Same issuance only (its issue time, printed in the gauge's zone, must match); then the tile's number must be one of that forecast's values, as the tile rounds it."""
+    from lib.core import tzl
+    iss = j.get("issuedTime")
+    if not iss:
+        return None, "NWS forecast has no issue time"
+    if tzl(datetime.datetime.fromisoformat(iss.replace("Z", "+00:00")), zoneinfo.ZoneInfo(zone)).replace(" ", " ") != issued_txt:
+        return None, "NWS issued a newer forecast since the build"
+    pu, su = (j.get("primaryUnits") or "").lower(), (j.get("secondaryUnits") or "").lower()
+    vals = []
+    for p in j.get("data") or []:
+        for v, u in ((p.get("primary"), pu), (p.get("secondary"), su)):
+            if isinstance(v, (int, float)) and v > -900:
+                if unit == "ft" and u in ("ft", "feet"):
+                    vals.append(v)
+                elif unit == "cfs" and u in ("cfs", "kcfs"):
+                    vals.append(v * 1000 if u == "kcfs" else v)
+    if not vals:
+        return None, "NWS forecast has no %s values" % unit
+    ok = any(abs(round(v, 1) - val) <= 0.051 for v in vals) if unit == "ft" else any(abs(v - val) <= 0.006 * abs(v) + 1 for v in vals)
+    return (None if ok else "river forecast %s %s on the page is not a value of the NWS forecast issued %s" % (val, unit, issued_txt)), None
+
+
+def fc_check(html, carried, bad, skipped):
+    """The forecast tile of every compared page against NWPS stageflow/forecast (one call per forecast point)."""
+    todo = []
+    for u, h in html.items():
+        if not h or u in carried:
+            continue
+        h2 = h.replace(" ", " ")
+        m, lid, z = FC_TILE.search(h2), FC_LID.search(h2), ZONE_JS.search(h2)
+        if m and lid and z:
+            todo.append((u, float(m.group(1).replace(",", "")), m.group(2), m.group(3), z.group(1), lid.group(1)))
+    def one(x):
+        try:
+            return x, json.loads(get(NWPS % x[5] + "/stageflow/forecast", 30)), None
+        except Exception as e:
+            return x, None, str(e)[:40]
+    n = 0
+    for x, j, err in pmap(one, todo):
+        if err:
+            skipped.append("%s: forecast: NWS %s did not answer (%s)" % (x[0], x[5], err))
+            continue
+        b, s = fc_verdict(x[1], x[2], x[3], x[4], j)
+        if s:
+            skipped.append("%s: forecast: %s" % (x[0], s))
+            continue
+        n += 1
+        if b:
+            bad.append("%s: %s" % (x[0], b))
     return n
 
 

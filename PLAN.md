@@ -87,7 +87,7 @@ The check itself is wrong
 - O A gate with no catch in 10 runs is never deleted / slower runs / grows with each rule / a census of catches per gate (CLAUDE.md rule, no tool yet).
 Readers and Google
 - G Wrong number on the page / false page / any gauge / truth_live 216 pages 0 mismatches (flow, stage, water temp, tides).
-- G Air temperature tile vs the NWS station report at the same minute (truth_live air_check, selftest; live 2026-11-09: 209 pages compared, 0 mismatches). O Rain 24 h (NWS RFC estimate) and the NWS forecast numbers still never compared with the source.
+- G Air temperature tile vs the NWS station report at the same minute (truth_live air_check, selftest; live 2026-11-09: 209 pages compared, 0 mismatches). G NWS river forecast tile vs the same NWS issuance (truth_live fc_check: issue time must match in the gauge zone, then the tile value must be a value of that forecast; selftest; live 2026-11-09: 123 pages compared, 0 mismatches). O Rain 24 h (NWS RFC estimate) never compared with the source.
 - G Germany: the current reading and the 8-day series come from two calls and can disagree at one time (Wuerzburg carried twice 2026-11-09, 144 vs 146 cm) / page held / any pegelonline gauge / collect.pegel_end + edge_tests fixture.
 - G Rain table day columns after the page's local date (UTC collect) / 'not reported' for tomorrow / every US page after 00:00 UTC / edge_tests acis fixture.
 - G 'A year earlier' under the normal tile used the latest daily mean date and said 'a day or two behind'; Louisville was 6 days / every gauge with a lagging daily mean / wording now '(USGS daily mean, the latest date USGS has published this year)'.
