@@ -6,7 +6,7 @@ Rules per gauge page:
  - USGS has a newer reading: up to 12 hours behind is a warning, beyond STALE_FAIL_H fails (the Worker swaps the live numbers; carried pages are up to 2.5 h old)
  - flood stages shown on the page (Action, Minor, Moderate, Major) equal the NWS forecast point's categories within 0.05 ft
  - the NWS forecast point named on the page exists and answers"""
-import json, os, re, sys, urllib.request, urllib.error, datetime, zoneinfo
+import json, os, re, sys, urllib.request, urllib.error, urllib.parse, datetime, zoneinfo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers, new_fail  # new_fail: one writer of _failed.json, shared with truth_world
 
@@ -94,6 +94,8 @@ GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  #
 def selftest():
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
     assert wt_verdict(T_, 54, [(T_, 12.0)]) is None and "USGS latest" in wt_verdict(T_, 60, [(T_, 12.0)]) and wt_verdict(T_, 60, [(T_ + datetime.timedelta(hours=1), 12.0)]) is None and wt_verdict(T_, None, [(T_, 12.0)]) is None and wt_verdict(T_, 60, [(T_, 12.0), (T_, 15.6)]) is None, "water temperature not compared with USGS"
+    rj_ = {"results": [{"layerId": 7, "attributes": {"idp_issueddate": "11/9/2026 7:00:00 AM"}}, {"layerId": 8, "attributes": {"name": "nws_precip_last24hours_conus", "Service Pixel Value": "0.31"}}]}
+    assert rain_verdict(0.31, "Nov 9, 2:00 AM EST", "America/New_York", rj_) == (None, None) and rain_verdict(0.50, "Nov 9, 2:00 AM EST", "America/New_York", rj_)[0] and rain_verdict(0.50, "Nov 9, 3:00 AM EST", "America/New_York", rj_)[1], "rain compare: a wrong total passed, a match failed, or another valid-through time was compared"
     fj_ = {"issuedTime": "2026-11-08T15:21:00Z", "primaryUnits": "ft", "secondaryUnits": "kcfs", "data": [{"primary": 12.34, "secondary": 50.1}, {"primary": 11.82, "secondary": 48.0}, {"primary": 11.0, "secondary": 45.0}]}
     ny_ = "America/New_York"
     assert fc_verdict(11.8, "ft", "Nov 8, 10:21 AM EST", ny_, fj_) == (None, None) and fc_verdict(13.5, "ft", "Nov 8, 10:21 AM EST", ny_, fj_)[0] and fc_verdict(13.5, "ft", "Nov 9, 4:00 AM EST", ny_, fj_)[1] and fc_verdict(48000, "cfs", "Nov 8, 10:21 AM EST", ny_, fj_) == (None, None), "river forecast compare: a value outside the forecast passed, a match failed, or another issuance was compared"
@@ -352,9 +354,11 @@ def main():
                         bad.append("%s: '%.1f ft %s' %.1f ft, but %.1f - %.2f = %.2f" % (pg["url"], d, way, x, x, ref, x - ref))
     n_air = air_check(html, carried, bad, skipped)
     n_fc = fc_check(html, carried, bad, skipped)
+    n_rain = rain_check(html, carried, gauges, bad, skipped)
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
     print("truth_live air: %d pages' air temperature compared with the NWS station report at the same time" % n_air)
     print("truth_live forecast: %d pages' river forecast compared with the same NWS issuance" % n_fc)
+    print("truth_live rain: %d pages' 24 h rain compared with the NWS RFC estimate through the same time" % n_rain)
     n_noaa = sum(1 for _, u, *_ in gauges if u.startswith("/coast/")) + len(great)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation, TWDB), %d coast and Great Lakes pages with NOAA (Great Lakes: %s), %d mismatches, %d skipped%s" % (
         len(pages), len(agency), n_noaa, ", ".join(great) or "none", len(bad), len(skipped), (": %s" % "; ".join(str(x)[:90] for x in skipped[:6])) if skipped else ""))
@@ -481,6 +485,67 @@ def fc_check(html, carried, bad, skipped):
         b, s = fc_verdict(x[1], x[2], x[3], x[4], j)
         if s:
             skipped.append("%s: forecast: %s" % (x[0], s))
+            continue
+        n += 1
+        if b:
+            bad.append("%s: %s" % (x[0], b))
+    return n
+
+
+RAIN_TILE = re.compile(r'<span>Rain, last 24 h</span><b>([\d.]+) <small>in</small></b><small[^>]*>NWS RFC estimate to ([A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M [A-Z]{2,5})</small>')
+QPE = "https://mapservices.weather.noaa.gov/raster/rest/services/obs/rfc_qpe/MapServer/identify?geometry=%s&geometryType=esriGeometryPoint&sr=4326&layers=all:7,8,15,16,19,20,23,24,27,28,35,36,39,40&tolerance=1&mapExtent=-125,24,-66,50&imageDisplay=1000,500,96&returnGeometry=false&f=json"
+
+
+def rain_verdict(page_in, through_txt, zone, j):
+    """(bad, skip): the rain tile against the NWS RFC 24 h estimate at the gauge point, same valid-through time only (gate audit 2026-11-08: rain never compared)."""
+    from lib.core import tzl
+    v, lid, issued = None, None, {}
+    for r in j.get("results") or []:
+        a = r.get("attributes") or {}
+        if a.get("idp_issueddate"):  # footprint layer N-1 carries the issue time of image layer N (collect.fetch_rain)
+            for fmt in ("%m/%d/%Y %I:%M:%S %p", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y %I:%M %p"):
+                try:
+                    issued[r.get("layerId")] = datetime.datetime.strptime(a["idp_issueddate"], fmt).replace(tzinfo=datetime.timezone.utc)
+                    break
+                except ValueError:
+                    continue
+        elif a.get("name") == "nws_precip_last24hours_conus":
+            try:
+                v, lid = float(a.get("Service Pixel Value")), r.get("layerId")
+            except (TypeError, ValueError):
+                pass
+    iss = issued.get(lid - 1) if lid is not None else None
+    if v is None or v < 0 or iss is None:
+        return None, "NWS RFC estimate not readable at the gauge point"
+    if tzl(iss, zoneinfo.ZoneInfo(zone)).replace(" ", " ") != through_txt:
+        return None, "NWS RFC estimate moved on since the build"
+    return (None if abs(round(v, 2) - page_in) <= 0.005 else "rain %.2f in on the page, NWS RFC %.2f in through %s" % (page_in, v, through_txt)), None
+
+
+def rain_check(html, carried, gauges, bad, skipped):
+    ll = {g_[1]: (g_[2], g_[3]) for g_ in gauges if len(g_) > 3}
+    todo = []
+    for u, h in html.items():
+        if not h or u in carried or u not in ll:
+            continue
+        h2 = h.replace(" ", " ")
+        m, z = RAIN_TILE.search(h2), ZONE_JS.search(h2)
+        if m and z:
+            todo.append((u, float(m.group(1)), m.group(2), z.group(1), ll[u]))
+    def one(x):
+        g = urllib.parse.quote(json.dumps({"x": x[4][1], "y": x[4][0], "spatialReference": {"wkid": 4326}}))
+        try:
+            return x, json.loads(get(QPE % g, 30)), None
+        except Exception as e:
+            return x, None, str(e)[:40]
+    n = 0
+    for x, j, err in pmap(one, todo):
+        if err:
+            skipped.append("%s: rain: NWS RFC did not answer (%s)" % (x[0], err))
+            continue
+        b, s = rain_verdict(x[1], x[2], x[3], j)
+        if s:
+            skipped.append("%s: rain: %s" % (x[0], s))
             continue
         n += 1
         if b:
