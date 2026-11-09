@@ -42,10 +42,10 @@ def ga4(days):
     from google.analytics.data_v1beta.types import RunReportRequest, DateRange, Dimension, Metric
     c = BetaAnalyticsDataClient(credentials=creds("https://www.googleapis.com/auth/analytics.readonly"))
     r = c.run_report(RunReportRequest(property=GA4_PROPERTY, date_ranges=[DateRange(start_date=f"{days}daysAgo", end_date="today")],
-                                      dimensions=[Dimension(name="sessionSource")], metrics=[Metric(name="sessions")]))
-    rows = [(x.dimension_values[0].value, int(x.metric_values[0].value)) for x in r.rows]
-    print(f"GA4 last {days} days sessions by source: " + ", ".join(f"{k} {v}" for k, v in rows[:12]))
-    ai = sum(v for k, v in rows if any(a in k for a in AI))
+                                      dimensions=[Dimension(name="sessionSource")], metrics=[Metric(name="sessions"), Metric(name="userEngagementDuration")]))
+    rows = [(x.dimension_values[0].value, int(x.metric_values[0].value), float(x.metric_values[1].value)) for x in r.rows]
+    print(f"GA4 last {days} days sessions by source (engaged seconds per session): " + ", ".join(f"{k} {v} ({e / v:.0f} s)" for k, v, e in rows[:12]))
+    ai = sum(v for k, v, _ in rows if any(a in k for a in AI))
     print(f"AI assistant sessions: {ai}")
 
 
