@@ -921,6 +921,10 @@ def lc_day(G):
         return None
     v_ = G["sg"][-1][1]
     day_ = max((d for d, x in m["days"].items() if isinstance(x, list) and len(x) >= 2 and isinstance(x[0], (int, float)) and isinstance(x[1], (int, float)) and abs(x[0] - v_) <= 0.02), default=None)  # break test 2026-11-07: an empty row crashed the page
+    if not day_:  # the table was read before Reclamation added the day RISE already has (fetched 11:27 UTC, Nov 8 row missing): its own newest row, with its own date
+        day_ = max((d for d, x in m["days"].items() if isinstance(x, list) and len(x) >= 2 and isinstance(x[0], (int, float)) and isinstance(x[1], (int, float))), default=None)
+        if day_ and abs(m["days"][day_][0] - v_) > 0.5:  # Mead moves about 0.1 ft a day; a bigger gap is another lake or datum: hidden, never guessed
+            day_ = None
     return (day_, m["days"][day_][0], m["days"][day_][1]) if day_ else None
 
 
