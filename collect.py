@@ -645,6 +645,13 @@ def fetch_fieldmeas(site, h):
     return out if rows or chan else None
 
 
+def pegel_end(past, cur):
+    """The 8-day series ends on the agency's current measurement: the two calls can disagree at one timestamp (Wuerzburg 2026-11-09: series 144, current 146 cm),
+    and the page draws the series' last point while the row (and check.py world_claims) holds the current one."""
+    t = datetime.datetime.fromisoformat(cur["timestamp"])
+    return [p for p in past if datetime.datetime.fromisoformat(p["timestamp"]) < t] + [{"timestamp": cur["timestamp"], "value": cur["value"]}]
+
+
 CHAN_MAX_FT = 5280  # a measurement more than a mile from the gauge describes another stretch (Omaha: all 8.5 mi downstream; Louisville: some 12 mi)
 
 
@@ -2545,7 +2552,7 @@ def fetch_world():
                 st = retry_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
                 cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
-                past = retry_json(base + q + "/W/measurements.json?start=P8D", {}, 30)
+                past = pegel_end(retry_json(base + q + "/W/measurements.json?start=P8D", {}, 30), cur)
                 day_ago = datetime.datetime.fromisoformat(cur["timestamp"]) - datetime.timedelta(days=1)
                 then = next((p["value"] for p in past if datetime.datetime.fromisoformat(p["timestamp"]) >= day_ago), None)
                 past = past[-672:]  # the table's line stays 7 days

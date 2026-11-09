@@ -88,6 +88,7 @@ The check itself is wrong
 Readers and Google
 - G Wrong number on the page / false page / any gauge / truth_live 216 pages 0 mismatches (flow, stage, water temp, tides).
 - O Rain, air, NWS forecast numbers never compared with the source (gate audit 0a).
+- G Germany: the current reading and the 8-day series come from two calls and can disagree at one time (Wuerzburg carried twice 2026-11-09, 144 vs 146 cm) / page held / any pegelonline gauge / collect.pegel_end + edge_tests fixture.
 - G Rain table day columns after the page's local date (UTC collect) / 'not reported' for tomorrow / every US page after 00:00 UTC / edge_tests acis fixture.
 - G 'A year earlier' under the normal tile used the latest daily mean date and said 'a day or two behind'; Louisville was 6 days / every gauge with a lagging daily mean / wording now 'the same date as the latest USGS daily mean, which runs days behind today'.
 - O Depth question unanswered (review 1) / searchers leave / 7 queries now, every big-river page / step 0c.

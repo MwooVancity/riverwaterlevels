@@ -19,6 +19,8 @@ def run():
     cm = lambda vid, fl, w, a, dist, **k: {"properties": dict({"field_visit_id": vid, "time": "2026-08-0%sT18:00:00+00:00" % vid, "channel_flow": str(fl), "channel_width": str(w), "channel_area": str(a), "channel_velocity": "2.1", "channel_location_distance": dist, "channel_location_direction": "Downstream", "channel_width_unit": "ft", "channel_area_unit": "ft^2", "channel_flow_unit": "ft^3/s"}, **k)}
     ch = collect.chan_rows([cm("1", 71000, 1690, 33600, "5000.00"), cm("1", 900, 300, 600, "5000.00"), cm("1", 72000, 1700, 34000, "5000.00", channel_name="Check"), cm("2", 255000, 1780, 59000, "64000.00"), cm("3", 50, 20, 30, ""), cm("4", 10, 5, 0, "0"), cm("5", 10, 5, 9, "0", channel_width_unit="m")])
     assert [(r[1], r[2], r[3]) for r in ch] == [(71000, 1690, 33600)], "depth: a measurement 12 mi away, a side channel, a blank distance, a zero area or metres got into the depth table (Louisville, Omaha 2026-11-09)"
+    pe = collect.pegel_end([{"timestamp": "2026-11-09T05:00:00+01:00", "value": 141.0}, {"timestamp": "2026-11-09T05:15:00+01:00", "value": 144.0}], {"timestamp": "2026-11-09T04:15:00Z", "value": 146.0})
+    assert [p["value"] for p in pe] == [141.0, 146.0], "pegelonline: the series' last point disagreed with the current measurement at the same time (Wuerzburg carried twice 2026-11-09)"
     from lib import blocks3
     G = {"rec": {"fieldmeas": {"fetched_at": "2026-11-09T00:00:00Z", "chan": [["2026-08-04T18:49:06+00:00", 71000.0, 1690.0, 33600.0, 2.11, 5000.0, "Downstream"], ["2025-08-14T15:00:00+00:00", 48000.0, 1680.0, 17300.0, 1.9, 3000.0, "Downstream"]]}}, "lv": 48100.0, "zone": zoneinfo.ZoneInfo("America/New_York")}
     h = blocks3.b_depth(G)["body"]
