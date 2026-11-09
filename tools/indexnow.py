@@ -27,7 +27,7 @@ def send(urls):
         print("indexnow: nothing to send")
         return
     body = json.dumps(payload(urls)).encode()
-    req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8"})
+    req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "riverwaterlevels-indexnow"})  # the default Python client name is refused (403)
     try:
         print("indexnow: %d urls, HTTP %s" % (len(json.loads(body)["urlList"]), urllib.request.urlopen(req, timeout=30).status))
     except Exception as e:  # never fails a release: Bing learns from the sitemap anyway
