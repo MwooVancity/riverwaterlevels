@@ -96,6 +96,7 @@ Edge cases (guard):
 - Checks that read tile text (check.py, truth_live) / a fold breaks a pattern / every gauge page / full gate run on check before main, read "refresh OK".
 - Colour as the only signal / colour-blind readers (about 1 in 12 men) / every colour-coded label / colour always beside its word; 4.5:1 minimum (check.py colour_contrast).
 - Motion / distraction and sensory load / site-wide / prefers-reduced-motion turns off animation, transition and smooth scroll.
+- A shell heredoc turns a backslash escape (a CSS arrow code, a no-break space, a tab) into a raw byte / the toggle arrow drew a box / site-wide / check.py control_chars over site.css, worker and lib; write escapes with the Edit tool, never a heredoc.
 - Layout that differs page to page / an autistic reader loses their place / every page kind / one template, one block order (CLAUDE.md "Order"), variant reviews per template.
 
 ## Never

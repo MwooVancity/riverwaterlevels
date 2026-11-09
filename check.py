@@ -87,6 +87,12 @@ def ui_checks(body, plain=True):
     return bad
 
 
+def control_chars(texts):
+    """No control character in the stylesheet or the page code (2026-11-09, three times in one day: a shell heredoc turned a CSS or Python escape into a raw byte;
+    the tile toggle drew a box instead of its arrow). texts: {name: text}."""
+    return ["%s holds control character 0x%02x" % (n, ord(c)) for n, t in texts.items() for c in sorted(set(t)) if ord(c) < 32 and c not in "\n\r\t"]
+
+
 def colour_contrast(css):
     """Colour coding by kind (tile labels, block dots) must be readable as small text: every light-mode --f-* family colour at least 4.5:1 on white (WCAG AA). Found 2026-11-09: forecast 3.19, area 3.77."""
     def lum(h):
@@ -620,7 +626,7 @@ def check_dir(d):
     site_bad += ["%s missing from the build" % f for f in ("sw.js", "manifest.webmanifest", "icon-192.png", "icon-512.png") if not os.path.exists(os.path.join(d, f))]
     if os.path.exists(os.path.join(d, "sw.js")):
         site_bad += sw_drift(open(os.path.join(d, "sw.js"), encoding="utf-8").read())
-    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + colour_contrast(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read())
+    site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + colour_contrast(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + control_chars({f: open(os.path.join(ROOT, f), encoding="utf-8").read() for f in ["templates/site.css", "worker/index.js"] + ["lib/" + x for x in os.listdir(os.path.join(ROOT, "lib")) if x.endswith(".py")]})
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
     lsp = os.path.join(d, "live-sites.json")  # judge the gauge pages actually built, not only the list (2026-10-27: 22 queued gauges were built and published)
@@ -1118,6 +1124,7 @@ def selftest():
     w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
     assert not edge_drift(w_real), "selftest: %s" % edge_drift(w_real)
     css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+    assert control_chars({"x": "a" + chr(21) + "b"}) and not control_chars({"x": "a\tb\n"}), "selftest: a raw control byte in code passed, or a tab failed"
     from lib import ui as ui_
     cm_ = ui_.calm('<small>t</small><small class="dv">NWS: no flooding now or forecast</small><small>note</small>')
     assert "no flooding" in cm_.split("<details")[0] and "note" in cm_.split("<details")[1] and "<details" not in ui_.calm("<small>t</small><small>NWS: minor flood</small>"), "selftest: a tile's 'More' toggle hid a flood line, or kept a line it should fold"

@@ -309,5 +309,5 @@ table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last
 .tile b{overflow-wrap:normal;word-break:normal}
 
 .emb>summary{cursor:pointer;color:var(--accent);min-height:44px;line-height:44px}
-.tmore{margin-top:6px}.tmore>summary{cursor:pointer;color:var(--accent);font:500 .85rem system-ui,sans-serif;min-height:32px;line-height:32px;list-style:none}.tmore>summary::-webkit-details-marker{display:none}.tmore>summary::after{content:" BE"}.tmore[open]>summary::after{content:" B4"}
+.tmore{margin-top:6px}.tmore>summary{cursor:pointer;color:var(--accent);font:500 .85rem system-ui,sans-serif;min-height:32px;line-height:32px;list-style:none}.tmore>summary::-webkit-details-marker{display:none}.tmore>summary::after{content:" ▾"}.tmore[open]>summary::after{content:" ▴"}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
