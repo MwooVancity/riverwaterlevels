@@ -278,7 +278,11 @@ def embed_page(G, pages):
     h = h.split('<p class="src gloss"')[0]  # tiles only: no unit line, no strip
     title = "%s, %s: water level and flow (embed)" % (rp, st)
     desc = "Embeddable panel: current flow and gage height at USGS gauge %s, %s, %s, from riverwaterlevels.com." % (G["site"], rp, st)
+    if G.get("tables"):
+        title, desc = "%s, %s: tide times (embed)" % (rp, st), "Embeddable panel: NOAA high and low tide predictions at tide station %s, %s, %s, from riverwaterlevels.com." % (G["site"], rp, st)
     body = '<h1>%s, %s</h1><p class="sub">USGS gauge %s &middot; observed %s</p>%s<p class="src"><a href="%s" target="_top" rel="noopener">Live page with forecast, history and flood record on riverwaterlevels.com</a></p>' % (esc(rp), esc(st), G["site"], esc(G["obs"]), h, full)
+    if G.get("tables"):
+        body = body.replace("USGS gauge %s &middot; observed %s" % (G["site"], esc(G["obs"])), "NOAA tide station %s &middot; tide predictions" % G["site"]).replace("Live page with forecast, history and flood record", "Full page with the 7-day tide table")
     out = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>' % (
         esc(title), esc(desc), SITE_URL + "/embed" + row["dashboard_url"], HEAD_EXTRA + og_tags(title, desc, full), CSS, body))
     return lake_words(out, G) if G.get("lake") else out  # lake review #6: the embed copy said flow and gage height
@@ -505,6 +509,15 @@ def lake_words(h, G):
                          ("3-day water level readings (NOAA CO-OPS, preliminary)", "3-day water level readings at NOAA station %s (NOAA CO-OPS, preliminary)" % esc(lv["id"])),
                          ("the latest NOAA reading against NOAA's predicted tide for the same 6-minute time", "the latest NOAA reading at %s against NOAA's predicted tide there for the same 6-minute time" % at)):
                 h = h.replace(a, b)
+        if G.get("tables"):  # tide tables (owner decision 3): no reading here, so no reading words, comparison or embed of a 'live' level
+            for a, b in (("This page&#x27;s data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)", "This page&#x27;s data as JSON: 7 days of NOAA high and low tide predictions"),
+                         ('<p class="src">Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation.</p>', ""),
+                         ("Water levels are preliminary until NOAA verifies them.", "NOAA tide predictions do not include wind, air pressure or river flow, so the water can be higher or lower than predicted."),
+                         ("this station&#x27;s live panel", "this station&#x27;s tide panel"), ("Embed this live panel", "Embed this tide panel"), ("%s water level&lt;/a&gt;, live from River Water Levels" % esc(G["river"]), "%s tide times&lt;/a&gt;, from River Water Levels" % esc(G["river"])),
+                         ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
+                         ("Water level is the water surface above mean lower low water", "Tide heights are above mean lower low water"), ("in feet; it is not depth.", "in feet; not water depth."), (", how the tide comparison is calculated", "")):
+                h = h.replace(a, b)
+            h = re.sub(r'<p class="src">Comparison method: [^<]*</p>', "", h)
     return h
 
 
@@ -597,7 +610,7 @@ def build_tab(tab, G, pages):
     wt_ = bool(b3.conditions(G).get("wt"))
     title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, ", water temperature" if wt_ else "", G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
-        title = mk_title("%s tides, tide times and tide chart today: %s water level%s, %s (NOAA %s)" % (place, G["river"], " and water temperature" if wt_ else "", st, G["site"]))
+        title = mk_title("%s tides, tide times and tide chart today: %s %s%s, %s (NOAA %s)" % (place, G["river"], "tide table" if G.get("tables") else "water level", " and water temperature" if wt_ else "", st, G["site"]))
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
@@ -607,6 +620,8 @@ def build_tab(tab, G, pages):
             desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s." % (rp, st, live, G["site"])
         if G.get("stage_only"):
             desc = desc.replace("today's flow and water level", "today's water level")
+        if G.get("coast"):  # review 2026-11-09: coast descriptions said "flow"
+            desc = ("%s, %s: high and low tide times for the next 7 days, NOAA predictions for tide station %s." if G.get("tables") else "%s, %s: today's high and low tide times and the live water level from NOAA tide station %s.") % (rp, st, G["site"])
     else:
         desc = T["desc"] % (rp, st, G["site"])
     url = SITE_URL + row[tab + "_url"] if tab != "dashboard" else SITE_URL + row["dashboard_url"]
@@ -623,13 +638,18 @@ def build_tab(tab, G, pages):
     crumb = '<div class="crumb"><a href="/">Home</a> / %s%s%s</div>' % (('<a href="/rivers/%s/">%s</a> / ' % (G["st"].lower(), esc(G["st"]))) if st_hub else "", hub_part, esc(last))
     drain = (" &middot; drainage %s sq mi" % fmt(float(row["drainage_sqmi"]))) if float(row["drainage_sqmi"] or 0) > 0 else ""
     sub = 'USGS gauge %s%s &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab %s"><span data-live="age" data-t="%s">%s</span> old</span>%s' % (G["site"], drain, esc(G["obs"]), age_chip(G["age_min"]), iso(G["lt"]), age_text(G["lt"], G["now"]), amber)
+    if G.get("tables"):  # tide tables (owner decision 3): no reading, so no observed time; the age is the predictions' fetch
+        sub = 'NOAA tide station %s &middot; tide predictions, times in %s &middot; fetched %s &middot; <span class="ab %s">%s old</span>' % (G["site"], G["now"].astimezone(G["zone"]).strftime("%Z"), esc(G["obs"]), age_chip(G["age_min"]), age_text(G["lt"], G["now"]))
     ld_items = [("Home", "/")] + ([(G["st"], "/rivers/%s/" % G["st"].lower())] if st_hub else []) + ([] if row.get("_single") else [(river, row["hub_url"])]) + [(last, None)]
     fl7 = [x[0] for x in G["fl"]]
     ld = crumb_ld(ld_items) + '<script type="application/ld+json">%s</script>' % (lambda j: j.replace("</", "<\\/"))(json.dumps({
         "@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL, "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}},
         "about": {"@type": "Place", "name": "%s, %s" % (rp, st), "geo": {"@type": "GeoCoordinates", "latitude": round(G["lat"], 4), "longitude": round(G["lon"], 4)}},
-        "mainEntity": {"@type": "Dataset", "name": "USGS gauge %s, %s, %s: flow and gage height" % (G["site"], rp, st), "description": "7-day flow and gage height readings and daily mean flow by year at USGS gauge %s, provisional data subject to revision." % G["site"],
-                       "url": url, "license": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits", "creator": {"@type": "Organization", "name": "U.S. Geological Survey", "url": "https://www.usgs.gov/"},
+        "mainEntity": ({"@type": "Dataset", "name": "NOAA tide station %s, %s, %s: %s" % (G["site"], rp, st, "tide predictions" if G.get("tables") else "water level and tide predictions"),
+                        "description": ("7 days of high and low tide predictions at NOAA tide station %s; no water level is measured there." if G.get("tables") else "3-day water level readings above MLLW and tide predictions at NOAA tide station %s, preliminary data.") % G["site"],
+                        "creator": {"@type": "Organization", "name": "NOAA National Ocean Service, CO-OPS", "url": "https://tidesandcurrents.noaa.gov/"}} if G.get("coast") else  # review 2026-11-09: every coast page named USGS as the data's creator
+                       {"@type": "Dataset", "name": "USGS gauge %s, %s, %s: flow and gage height" % (G["site"], rp, st), "description": "7-day flow and gage height readings and daily mean flow by year at USGS gauge %s, provisional data subject to revision." % G["site"],
+                        "license": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits", "creator": {"@type": "Organization", "name": "U.S. Geological Survey", "url": "https://www.usgs.gov/"}}) | {"url": url,
                        "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}}))
     off_html = "".join(render_block(b) for b in shown if b["id"] == "gauge_not_reporting")  # the not-reporting banner sits right under the H1, above the tiles
     ids = {b["id"] for b in shown}

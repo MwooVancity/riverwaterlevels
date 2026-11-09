@@ -67,7 +67,7 @@ def join_queue(adds):
     data/world-queue.csv row (gauge, feed, ready) and docs/research/priority/picks.csv (tracked though its folder is ignored). adds: (keyword, station, extra columns)."""
     cp, qp = os.path.join(ROOT, "data", "coasts.csv"), os.path.join(ROOT, "data", "world-queue.csv")
     rows, q = list(csv.DictReader(open(cp, encoding="utf-8"))), list(csv.DictReader(open(qp, encoding="utf-8")))
-    cols = list(rows[0].keys()) + [c for c in ("level_from", "level_name", "level_km") if c not in rows[0]]
+    cols = list(rows[0].keys()) + [c for c in ("level_from", "level_name", "level_km", "tables") if c not in rows[0]]
     have = {r["site"] for r in rows}
     for kw, s, extra in adds:
         if s["id"] in have:
@@ -129,14 +129,26 @@ def pred_main():
     have = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
     picks = list(csv.DictReader(open(os.path.join(ROOT, "data", "tide-picks.csv"), encoding="utf-8")))
     rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")))
-    got, why = pred_pick(picks, get("tidepredictions"), get("waterlevels"), have)  # owner 2026-11-08: a nearby page on the same feed is no reason to refuse a searched place, even when the pages match
+    pred, wl = get("tidepredictions"), get("waterlevels")
+    got, why = pred_pick(picks, pred, wl, have)  # owner 2026-11-08: a nearby page on the same feed is no reason to refuse a searched place, even when the pages match
     for k, s, lv, d in got:
         near = min(rows, key=lambda r: km(s, {"lat": r["lat"], "lng": r["lon"]}))
         print("PICK %-30s %s %s, %s (%s) level from %s %s, %.1f km; nearest coast page %s %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], s.get("type"), lv["id"], lv["name"], d, near["site"], km(s, {"lat": near["lat"], "lng": near["lon"]})))
     for k, w in sorted(why.items()):
         print("skip %-30s %s" % (k, w))
+    by, far = {s["id"]: s for s in pred}, []
+    for k in picks:  # tide tables (owner decision 3, 2026-11-08): no live level within 25 km, so the page shows the station's own predictions only; level_* names the nearest live station (a link, never a reading)
+        if "within" in why.get(k["keyword"], "") and k["station"] not in {f[1]["id"] for f in far}:
+            s = by[k["station"]]
+            lv = min(wl, key=lambda w: km(s, w))
+            far.append((k, s, lv, round(km(s, lv), 1)))
+            print("TABLES %-28s %s %s, %s nearest live %s %s %.1f km" % (k["keyword"], s["id"], s["name"], s["state"], lv["id"], lv["name"], km(s, lv)))
+    if any(a.startswith("--tables") for a in sys.argv):
+        got = [(k, s, lv, d, "1") for k, s, lv, d in far[:int(next((a[9:] for a in sys.argv if a.startswith("--tables=")), "999"))]]
+    else:
+        got = [(k, s, lv, d, "") for k, s, lv, d in got]
     if "--apply" in sys.argv and got:  # release still waits for the variant review (data/reviewed.json variants: coast-prediction)
-        join_queue([(k["keyword"], s, {"level_from": lv["id"], "level_name": lv["name"], "level_km": d}) for k, s, lv, d in got])
+        join_queue([(k["keyword"], s, {"level_from": lv["id"], "level_name": lv["name"], "level_km": d, "tables": tb}) for k, s, lv, d, tb in got])
 
 
 def selftest():

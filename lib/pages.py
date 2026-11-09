@@ -8,14 +8,15 @@ WAVE0 = "06893000 07010000 03294500 14105700 09380000 06192500 13334300 13317000
 
 @__import__("functools").lru_cache(maxsize=1)
 def _pred_only():
-    return frozenset(r["site"] for r in csv.DictReader(open(os.path.join(DATA, "coasts.csv"), encoding="utf-8")) if r.get("level_from"))
+    rs = list(csv.DictReader(open(os.path.join(DATA, "coasts.csv"), encoding="utf-8")))
+    return frozenset(r["site"] for r in rs if r.get("level_from") and not r.get("tables")), frozenset(r["site"] for r in rs if r.get("tables"))
 
 
 def variant(site, url):
     """The page template a lake or coast review covers (owner 2026-11-08 fully automatic: review once per variant, not per page). None for a river or world page.
-    An agency lake id is not all digits (CDEC-SHA, RISE-6123, TWDB-travis); a prediction-only coast has level_from in data/coasts.csv."""
+    An agency lake id is not all digits (CDEC-SHA, RISE-6123, TWDB-travis); a prediction-only coast has level_from in data/coasts.csv; a tide-tables coast has tables=1."""
     if url.startswith("/coast/"):
-        return "coast-prediction" if site in _pred_only() else "coast-live"
+        return "coast-tables" if site in _pred_only()[1] else "coast-prediction" if site in _pred_only()[0] else "coast-live"  # tables: no live level within 25 km, predictions only
     if url.startswith("/lake/"):
         return "lake-usgs" if site[:1].isdigit() else "lake-great" if site.startswith("COOPS-") else "lake-agency-" + site.split("-")[0]  # one variant per agency feed (CDEC, RISE, TWDB): a new feed waits for its own review  # review 2026-11-08: a Great Lakes page (IGLD, GLERL) is its own template
     return None

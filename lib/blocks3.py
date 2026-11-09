@@ -508,6 +508,10 @@ def _tide_t(s, with_date):
 def b_tides(G):
     """High and low tide predictions at the nearest NOAA station, shown on reaches whose flow cycles within the day (tidal)."""
     t = G["rec"].get("tides")
+    if G.get("tables"):  # tide tables (owner decision 3): this station's own 7 days of NOAA highs and lows, not the 2-day nearest-station table
+        c = G["rec"]["coops"]
+        t = {"station": G["site"], "name": G["row"]["raw_name"].rsplit(",", 1)[0], "mi": 0, "fetched_at": c["fetched_at"],
+             "rows": [{"t": parse_t(x[0]).astimezone(G["zone"]).strftime("%Y-%m-%d %H:%M"), "v": x[1], "type": x[2]} for x in c["hilo"]]}
     if not t or not t.get("rows") or not (G.get("osc") or t.get("mi", 99) <= 10):  # tidal by the flow cycle, or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
         return None
     now_l = G["now"].astimezone(G["zone"]).strftime("%Y-%m-%d %H:%M")  # station local time; past rows dropped (hater 2026-10-27: past tides under "next two days")
@@ -519,7 +523,10 @@ def b_tides(G):
     stn = esc(t["name"] or t["station"])
     kind = "Tides" if G.get("osc") else "Tides nearby"
     fa = hours_old(t.get("fetched_at"), G["now"]) if t.get("fetched_at") else None
-    if len({r["t"][:10] for r in t["rows"]}) >= 2:
+    nd = len({r["t"][:10] for r in t["rows"]})
+    if G.get("tables") and nd >= 3:
+        head = "Tide table at %s, next %d days" % (stn, min(nd, 7))  # 168 h from midnight UTC: the rest of today and 7 days, the last one partly
+    elif nd >= 2:
         head = "%s at %s, next two days" % (kind, stn)
     elif t["rows"][0]["t"][:10] == now_l[:10] and not (fa is not None and fa > 12):  # an old fetch cannot say "rest of today": name the date
         head = "%s at %s, rest of today" % (kind, stn)
@@ -528,7 +535,7 @@ def b_tides(G):
     if fa is not None and fa > 12:
         head += " (fetched %d h ago)" % fa
     return block("tides", head, "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
-                 "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %.0f mi from the gauge, fetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), t["mi"], esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
+                 "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %sfetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), ("%.0f mi from the gauge, " % t["mi"]) if t["mi"] >= 0.5 else "", esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
 
 
 def b_wpc(G):

@@ -199,17 +199,21 @@ def main():
     for u in [u for _, u, *_ in gauges if u.startswith("/coast/")] + great:  # coast pages: the water level on the page against NOAA CO-OPS's latest reading for the same station
         h = page(u)
         sid, st_, t_ = re.search(r"At NOAA station (\d+), ", h) or re.search(r"NOAA tide station (\d+)", h) or re.search(r"COOPS-(\d+)", site_of.get(u, "")),re.search(r'data-live="stage">([\d.\-]+)<', h), re.search(r'data-live="age" data-t="([^"]+)"', h)
-        if not (sid and st_ and t_):
+        tables = "No sensor at this station. Nearest live NOAA water level" in h  # tide tables (owner decision 3): no reading to compare; only the next high or low below
+        if not tables and not (sid and st_ and t_):
             bad.append("%s: cannot read station, water level or time from the page" % u)
             continue
-        pt = datetime.datetime.fromisoformat(t_.group(1)).astimezone(datetime.timezone.utc)
+        if tables and not re.search(r'data-tide="', h):
+            bad.append("%s: tide-tables page shows no next tide to check" % u)
+            continue
+        pt = datetime.datetime.fromisoformat(t_.group(1)).astimezone(datetime.timezone.utc) if t_ else None
         try:  # scale debate 2026-11-07: the old 'latest' call matched the page's minute almost never (6-minute data), so no coast value was ever compared; now from the page's minute to now
-            rows_ = json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=%s&begin_date=%s&end_date=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
+            rows_ = [] if tables else json.loads(get("https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_level&station=%s&datum=%s&begin_date=%s&end_date=%s&time_zone=gmt&units=english&format=json&application=riverwaterlevels.com" % (
                 sid.group(1), "IGLD" if u in great else "MLLW", pt.strftime("%Y%m%d%%20%H:%M"), datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d%%20%H:%M"))))["data"]
         except Exception as e:
             (skipped if LOCAL else bad).append("%s: NOAA CO-OPS did not answer (%s)" % (u, str(e)[:60]))
             continue
-        v_ = coops_verdict(pt, float(st_.group(1)), {datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"): float(d["v"]) for d in rows_ if d.get("v") not in (None, "")})
+        v_ = None if tables else coops_verdict(pt, float(st_.group(1)), {datetime.datetime.fromisoformat(d["t"].replace(" ", "T") + ":00+00:00"): float(d["v"]) for d in rows_ if d.get("v") not in (None, "")})
         if v_:
             bad.append("%s: %s" % (u, v_))
         own, td_ = re.search(r"NOAA tide station (\d+)", h), re.search(r'data-tide="([^"|]+)\|([\d.\-]+)"', h)

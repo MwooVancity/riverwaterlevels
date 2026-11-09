@@ -218,7 +218,7 @@ def check_html(h, rel):
                 if unit not in mm.group(2) and re.search(r"\d", re.sub(r"<[^>]+>", "", mm.group(1))):  # a number needs its unit; "Not measured" has no number
                     bad.append("no unit on %s: %r" % (lab, mm.group(2)))
         sub = re.search(r'<p class="sub">(.*?)</p>', body, re.S)
-        if not sub or not re.search(r"observed [A-Z][a-z]{2} \d{1,2}(?:, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}| \([A-Za-z]+ daily (?:average|value)\))", re.sub(r"<[^>]+>", "", sub.group(1))):  # a daily average has a date, never a clock time (TWDB: lib/page.py agency_words)
+        if not sub or not re.search(r"(?:observed|tide predictions, times in [A-Z]{2,5} \S+ fetched) [A-Z][a-z]{2} \d{1,2}(?:, \d{1,2}:\d{2} [AP]M [A-Z]{2,5}| \([A-Za-z]+ daily (?:average|value)\))", re.sub(r"<[^>]+>", "", sub.group(1))):  # a daily average has a date, never a clock time (TWDB: lib/page.py agency_words)
             bad.append("observed time without gauge-local zone label")
     for r_ in re.findall(r"<tr>.*?</tr>", h, re.S):  # a row of a gauge that stopped reporting over 24 h ago must not carry a 24 h change
         if 'class="oldm"' in r_ and re.search(r'<td class="r"[^>]*>(?:&#\d+; )?(?:[+-]\d+|0)%</td>', r_):
@@ -234,7 +234,7 @@ def claims_vs_cache(h, rec, now=None):
     import datetime
     now = now or datetime.datetime.now(datetime.timezone.utc)
     bad = []
-    zl = re.search(r'<p class="sub">.*?observed [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M ([A-Z]{2,5})\b', h, re.S)
+    zl = re.search(r'<p class="sub">.*?(?:observed|fetched) [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M ([A-Z]{2,5})\b', h, re.S)
     from lib.core import usgs_tz
     tzn_ = usgs_tz(rec) or rec.get("tz")  # the page's own rule (lib/hero.py ctx): the zone USGS publishes for the site first (northern Idaho County is Pacific; the coordinate lookup said Boise)
     if zl and tzn_:  # gate audit 2026-11-08: the zone label was checked for existence only; it must be the gauge's own zone (standard or daylight)
@@ -261,6 +261,11 @@ def claims_vs_cache(h, rec, now=None):
     own = (rec.get("coops") or {}).get("station")
     if lv and own and ("NOAA tide station %s &middot; observed" % own in h or "(NOAA CO-OPS %s, observed" % own in h):  # review 2026-11-08 blockers 1-2: the own id beside an observed time
         bad.append("NOAA %s has predictions only, yet the page shows it beside an observed time" % own)
+    if (rec.get("coops") or {}).get("tables"):  # tide tables (owner decision 3): no reading here, so no observed time or reading number; the nearest live level is named, never shown
+        if re.search(r'<p class="sub">(?:(?!</p>).)*observed', h, re.S) or 'data-live="stage"' in h:
+            bad.append("tide-tables station %s shows an observed time or a reading" % rec["coops"].get("station"))
+        if "No sensor at this station. Nearest live NOAA water level:" not in h:
+            bad.append("tide-tables page does not name the nearest live NOAA water level")
     return bad
 
 
@@ -332,8 +337,9 @@ def rank_checks(h, url):
     if len(words) < 1 or len(h1.split()) < 3:  # "Rio Grande at Albuquerque, NM" has no word 'river' and is fine
         bad.append("H1 %r does not name the river and place" % h1)
     miss = [w for w in words if w.lower() not in title.lower()]
-    if miss or "water level" not in title.lower():
-        bad.append("title %r does not match the search (missing %s)" % (title[:80], ", ".join(miss + ([] if "water level" in title.lower() else ["water level"]))))
+    wl_ = "water level" in title.lower() or "tide table" in title.lower()  # a tide-tables page has no water level: its search is the tide table
+    if miss or not wl_:
+        bad.append("title %r does not match the search (missing %s)" % (title[:80], ", ".join(miss + ([] if wl_ else ["water level"]))))
     main = h.split("<main", 1)[1] if "<main" in h else h
     first = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", main.split('class="card blk"', 1)[0]))).lower()
     w = re.findall(r"[a-z0-9:.%]+", first)
@@ -1151,6 +1157,9 @@ def selftest():
     assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
     lvr = {"coops": {"level": {"id": "9449424", "name": "Cherry Point", "km": 23.3}, "station": "9449211"}}
     assert claims_vs_cache("<small>At NOAA station 9449424, Cherry Point</small> NOAA tide station 9449211 &middot; observed", lvr, at), "selftest: a prediction-only station shown beside an observed time passed"
+    tbr = {"coops": {"tables": True, "station": "9432373", "near": {"id": "9432780", "name": "Charleston", "km": 26.1}}}
+    tb_ok = '<p class="sub">NOAA tide station 9432373 &middot; tide predictions, times in PST &middot; fetched Nov 8, 4:49 PM PST</p><small>No sensor at this station. Nearest live NOAA water level: <a>Charleston</a></small>'
+    assert not claims_vs_cache(tb_ok, tbr, at) and claims_vs_cache(tb_ok.replace("fetched", "observed"), tbr, at) and claims_vs_cache(tb_ok.replace("No sensor at this station", "x"), tbr, at), "selftest: tide-tables page rule (no observed time, nearest live level named)"
     assert claims_vs_cache("<b>4.10</b>", lvr, at) and not claims_vs_cache("<small>At NOAA station 9449424, Cherry Point, 23.3 km away</small>", lvr, at), "selftest: a prediction-only page did not name the station its water level comes from"
     emb = good.replace('<link rel="stylesheet" href="/site.0123456789.css"><link rel="manifest" href="/manifest.webmanifest">', "<style>" + "a" * 5000 + "</style>")
     assert not any("stylesheet" in x or "manifest" in x or "inline <style>" in x for x in check_html(emb, os.path.join("embed", "river", "a", "b", "index.html"))), "selftest: an embed page was wrongly held to the shared-stylesheet rules"

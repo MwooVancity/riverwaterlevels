@@ -19,7 +19,10 @@ def cdec_avg(G):
 
 def ctx(site, row, rec, now):
     """Everything derived once per gauge; blocks only read this."""
-    if not (rec.get("usgs") or {}).get("rows"):  # a cache without USGS readings skips this gauge, never the whole build
+    tables = bool(row.get("coast")) and bool((rec.get("coops") or {}).get("tables"))  # tide tables (owner decision 3, 2026-11-08): NOAA predictions only, no reading; the page's time is when the predictions were fetched
+    if tables and not (rec.get("coops") or {}).get("hilo"):
+        raise CriticalFail("no NOAA tide predictions in cache")
+    if not tables and not (rec.get("usgs") or {}).get("rows"):  # a cache without USGS readings skips this gauge, never the whole build
         raise CriticalFail("no USGS readings in cache")
     rec = _normalise(rec)
     tzname = usgs_tz(rec) or rec.get("tz") or "UTC"
@@ -27,14 +30,17 @@ def ctx(site, row, rec, now):
     fl, sg = series(rec, "00060"), series(rec, "00065")
     lake = None
     if not sg or row.get("lake"):  # a lake or reservoir: the page lives on the elevation USGS publishes, with its datum named (plan 2026-11-05 step 1)
-        lake = next((c for c in (("MLLW",) if row.get("coast") else LAKE_CODES) if series(rec, c)), None)  # a coast page lives on the NOAA water level above MLLW
+        lake = next((c for c in (("MLLW",) if row.get("coast") else LAKE_CODES) if series(rec, c)), "MLLW" if tables else None)  # a coast page lives on the NOAA water level above MLLW
         sg = series(rec, lake) if lake else sg
     if row.get("lake") and not lake:  # lake review #11: a /lake/ address never carries a river page
         raise CriticalFail("lake listed in data/lakes.csv but USGS publishes no lake elevation")
     # ice: USGS withholds flow for weeks and keeps the stage (1,922 gauges in cold states); the page lives on the stage, never on an old flow
     month = datetime.timedelta(days=30)
     stage_only = bool(sg) and (now - sg[-1][0] < month or not fl) and (not fl or now - fl[-1][0] > month)  # break test 2026-11-07: a lake or coast with no flow, silent 40 days, crashed and kept its old page; it now builds with its real age and the not-reporting banner
-    if stage_only:
+    if tables:
+        fl, sg = [], []
+        lt, lv, lrow = parse_t(rec["coops"]["fetched_at"]), None, None
+    elif stage_only:
         fl = []
         lt, lv, lrow = sg[-1][0], None, sg[-1][2]
     elif not fl:
@@ -72,6 +78,7 @@ def ctx(site, row, rec, now):
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
             "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
     out["stage_only"] = stage_only
+    out["tables"] = tables
     out["lake"] = lake
     out["agy"] = AGENCIES.get((rec.get("usgs") or {}).get("agency"))  # CDEC and the like: no USGS line on this page
     out["agy_st"] = (rec.get("usgs") or {}).get("station")
@@ -364,6 +371,9 @@ def hero(G, pages=None):
         if o:
             tiles += ui.tile("stage", "stage", "Gage height", '%.2f <small>%s</small>' % (o[1], esc(n_.get("stage_units") or "ft")),
                              '<small>NWS observed at %s, %s; USGS reports no gage height here%s</small>' % (esc(n_.get("name") or "its forecast point"), esc(tzl(o[0], G["zone"])), "; below zero means under the gauge's fixed reference level, not a dry river" if o[1] < 0 else "") + (('<small class="dv">%s</small>' % next_impact(G)) if next_impact(G) else ""))
+        elif G.get("tables"):  # tide tables (owner decision 3): the nearest live NOAA level is named and linked, never shown as this place's reading
+            nr = G["rec"]["coops"]["near"]
+            tiles += ui.tile("stage", "stage", "Gage height", "Not measured", '<small>No sensor at this station. Nearest live NOAA water level: <a href="https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" rel="noopener">%s</a>, %.0f km (%.0f mi) away.</small>' % (esc(nr["id"]), esc(nr["name"]), nr["km"], nr["km"] / 1.609344))
         else:
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
@@ -433,6 +443,8 @@ def hero(G, pages=None):
     ca_t = cdec_avg(G) if G.get("agy") and p is None else None
     if ca_t and ca_t["avg"]:  # phone review 2026-11-07 (Shasta): the tile said "–" while the strip and the reservoir card gave CDEC's monthly-average comparison
         norm_word, norm_plain = ca_t["pct_avg"], "of the %s %s-%s average storage (CDEC; our calculation)" % (ca_t["mon"], ca_t["c"]["avg_from"], ca_t["c"]["avg_to"])
+    if G.get("tables"):  # tide tables: no reading, so nothing to compare with the predicted tide (the tile stays and says so: never a blank)
+        norm_word, norm_plain = "Not compared", "No water level is measured here to compare with NOAA's predicted tide."
     norm_html = ui.tile("norm", "map", "Compared with NOAA's predicted tide" if G.get("coast") else "Is this normal for %s?" % md(G["ldate"]), norm_word,
                      ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean%s).</small>' % (ly[1], fmtc(ly[0]), "" if ly[1].startswith(md(G["ldate"]) + ",") else "; USGS daily means run a day or two behind today")) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
@@ -528,6 +540,8 @@ def hero(G, pages=None):
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
     norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s at %s now" % (norm_word, level_of(G)["name"]) if level_of(G) else "%s now" % norm_word) if an_ else "No past-years comparison for this date"
+    if G.get("tables"):
+        norm_txt = "No live water level at this station"
     ca_ = cdec_avg(G) if G.get("agy") and p is None and not out_ else None
     if ca_ and ca_["avg"]:  # hater review 2026-11-07 (Shasta): "no past-years comparison" beside CDEC's own 1991-2020 monthly average
         norm_txt = "%s of the %s %s-%s average storage (CDEC; our calculation)" % (ca_["pct_avg"], ca_["mon"], ca_["c"]["avg_from"], ca_["c"]["avg_to"])
@@ -588,6 +602,11 @@ def cite_line(G):
     # Water level comes from the same source as the gage tile (Memphis 2026-10-27: tile showed the NWS stage, cite said "not measured").
     cite ='<p class="cite"><small>Cite: %s, %s: water level %s, flow %s (USGS %s, observed %s). %s. Data: USGS, NWS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
         esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), (('<span data-cs>%.2f</span> ft' % G["sg"][-1][1]) + ((" (gage height at %s)" % esc(tzl(G["sg"][-1][0], G["zone"]))) if G["sg"][-1][0] != G["lt"] else "")) if G["sg"] else (("%.2f ft (NWS %s)" % (nws_stage(G)[1], esc(nws_pt(G["rec"].get("nwps"))))) if nws_stage(G) else "not measured"), ('<span data-cf>%s</span> cfs' % fmtc(G["lv"])) if G["lv"] is not None else "not reporting", G["site"], '<span data-co>%s</span>' % esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
+    if G.get("tables"):  # tide tables: predictions, never a reading or an observed time
+        nx = [x for x in G["rec"]["coops"]["hilo"] if parse_t(x[0]) > G["now"]]
+        cite = '<p class="cite"><small>Cite: %s, %s: %s (NOAA CO-OPS %s tide predictions, fetched %s). %s. Data: NOAA CO-OPS.</small> <button type="button" class="cp" data-cite>Copy</button></p>' % (
+            esc(river_at(G["river"], G["place"])), esc(G.get("st_shown") or G["st"]), ("next %s tide %.1f ft above MLLW at %s" % ("high" if nx[0][2] == "H" else "low", nx[0][1], esc(tzl(parse_t(nx[0][0]), G["zone"])))) if nx else "no future tide prediction in the cache",
+            G["site"], esc(G["obs"]), SITE_URL + G["row"]["dashboard_url"])
     return cite
 
 

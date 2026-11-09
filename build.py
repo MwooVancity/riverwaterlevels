@@ -66,7 +66,7 @@ def main():
         r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
         r["_kind"] = pagelib.kind_of_g(g)  # links rule 3: the nearest lake, coast and river page of the other kinds
         lvl_ = (g["rec"].get("coops") or {}).get("level")  # review 2026-11-08 blocker 3: a prediction-only page's level is its neighbour's, named in every list
-        r["_val"] = ("%.2f ft%s" % (g["sg"][-1][1], " at %s" % lvl_["name"] if lvl_ else "")) if g.get("lake") and g["sg"] else None  # lake review: lists showed "– cfs" for a lake
+        r["_val"] = ("%.2f ft%s" % (g["sg"][-1][1], " at %s" % lvl_["name"] if lvl_ else "")) if g.get("lake") and g["sg"] else "tide predictions" if g.get("tables") else None  # lake review: lists showed "– cfs" for a lake; a tide-tables page has no reading
         key = (r["hub_slug"], r["state"])
         by_hub[key].append(r)
     pagelib.link_index(rows, Gs)  # one grid for every nearby list and the rebuild test below
@@ -162,8 +162,8 @@ def main():
         ur = G["rec"]["usgs"]["rows"]
         ser = lambda code: [[r["time"], float(r["value"])] for r in ur if r["parameter_code"] == code and r.get("value") not in (None, "")]
         my = G["rec"].get("multiyear") or {}
-        json.dump({"site": s, "name": river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], "page": SITE_URL + meta["url"], "observed": iso(G["lt"]), "units": {"flow": "cfs", "stage": "ft"}, "flow_7d": ser("00060"), "stage_7d": ser("00065"), **({"lake_elevation_7d": ser(G["lake"]), "storage_7d": ser("00054"), "lake_units": {"lake_elevation": "ft above " + lake_datum(G), "storage": "acre-ft"}} if G.get("lake") else {}),
-                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else G["agy"]["name"] if G.get("agy") else "U.S. Geological Survey", "built_at": iso(now)},
+        json.dump({"site": s, "name": river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], "page": SITE_URL + meta["url"], "observed": None if G.get("tables") else iso(G["lt"]), **({"tide_predictions_hilo_mllw_ft": G["rec"]["coops"]["hilo"]} if G.get("tables") else {}), "units": {"flow": "cfs", "stage": "ft"}, "flow_7d": ser("00060"), "stage_7d": ser("00065"), **({"lake_elevation_7d": ser(G["lake"]), "storage_7d": ser("00054"), "lake_units": {"lake_elevation": "ft above " + lake_datum(G), "storage": "acre-ft"}} if G.get("lake") else {}),
+                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS tide predictions above MLLW (no water level is measured at this station)" if G.get("tables") else "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else G["agy"]["name"] if G.get("agy") else "U.S. Geological Survey", "built_at": iso(now)},
                   open(os.path.join(nxt, meta["url"].strip("/"), "data.json"), "w"), separators=(",", ":"))
         block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
