@@ -87,11 +87,19 @@ def ui_checks(body, plain=True):
     return bad
 
 
+def picture_vs_number(h):
+    """A tile picture must say what its tile says (tools/source_fix.md 'Pictures on tiles'): the gage tile's live flood bar is drawn at the tile's own stage."""
+    m, v = re.search(r'class="lad lad-mini" role="img" aria-label="Latest stage (-?[\d.]+) ft[^"]*"><div class="lad-bar">(?:(?!</div>).)*data-lo=', h, re.S), re.search(r'data-live="stage">(-?[\d.,]+)<', h)
+    if m and v and abs(float(m.group(1)) - float(v.group(1).replace(",", ""))) > 0.011:
+        return ["gage tile flood bar drawn at %s ft but the tile says %s ft" % (m.group(1), v.group(1))]
+    return []
+
+
 def page_checks(h, rel):
     """Every check that judges one page alone. The site gate and tools/release.py page_check both call this one function, so a new gauge the release
     passes cannot fail the gate on a per-page rule (release 2026-11-07: the stats rule ran only at the gate and undid all 25 picks)."""
     u = "/" + os.path.dirname(rel).replace(os.sep, "/").replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
-    out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h)) if kind_of(rel) == "gauge" else [])
+    out = check_html(h, rel) + ((rank_checks(h, u) + hater_rules(h) + picture_vs_number(h)) if kind_of(rel) == "gauge" else [])
     sid = re.search(r'var ID="USGS-(\d{7,15})"', h) or re.search(r"USGS (?:lake )?gauge (\d{8,15})\b", h)  # gate audit 2026-11-08: visible wording differs by kind (coast "NOAA tide station", agency lakes), so their cache claims never ran; the page script's id is on every US kind
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
@@ -789,6 +797,10 @@ def ad_gaps(rel, h):
 
 
 def selftest():
+    from lib import ui as ui_
+    lad_ = ui_.ladder({"action": 53.0, "minor": 55.0, "major": 73.0}, 13.38, mini=True, live=True)
+    assert 'data-lo="0.000"' in lad_ and "Latest stage 13.38 ft" in lad_ and not ui_.ladder({}, 13.38, mini=True), "selftest: tile flood bar lost its live tick data or drew with no stages"
+    assert picture_vs_number(lad_ + '<span data-live="stage">14.10</span>') and not picture_vs_number(lad_ + '<span data-live="stage">13.38</span>') and not picture_vs_number(ui_.ladder({"action": 53.0}, 12.0, mini=True) + '<span data-live="stage">13.38</span>'), "selftest: a flood bar drawn at another stage than its tile passed, or a datum-gap bar (NWS reading, no live tick) failed"
     sg_ = '<link rel="canonical" href="https://riverwaterlevels.com/%s/x/"><script>var ID="USGS-01097000"</script> no published statistics for this date'
     assert stats_gap(sg_ % "river") and not stats_gap(sg_ % "lake"), "selftest: stats_gap must fire on a river page with a USGS stats file and stay quiet on a lake (its file is often another parameter)"
     from lib import render as _rn  # render first: lib.page is imported through it (circular)

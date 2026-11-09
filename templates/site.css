@@ -309,3 +309,4 @@ table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last
 .tile b{overflow-wrap:normal;word-break:normal}
 
 .emb>summary{cursor:pointer;color:var(--accent);min-height:44px;line-height:44px}
+.lad-mini{margin:4px 0 2px}.lad-mini .lad-bar{height:10px;margin:10px 0 8px}.lad-mini .lad-now{top:-6px;height:22px}

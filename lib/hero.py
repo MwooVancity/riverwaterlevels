@@ -364,7 +364,7 @@ def hero(G, pages=None):
         tiles = ui.tile("flow", "flow", "Latest flow", '<span data-live="flow">%s</span> <small><abbr title="cubic feet per second">cfs</abbr></small>' % fmtc(G["lv"]), ui.spark([x[1] for x in G["fl"] if x[0] >= d24]) + "@@DIR@@", bcls)
     if sg:
         tiles += ui.tile("stage", "stage", "Gage height", '<span data-live="stage">%s</span> <small>%s</small>' % (stage_txt, esc(stage_unit)),
-                         ui.spark([x[1] for x in sg if x[0] >= d24]) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))
+                         ui.spark([x[1] for x in sg if x[0] >= d24]) + tile_ladder(G) + '<small class="dv">%s</small>' % ((('<b class="qual">%s</b>' % qual_text(sg[-1][2])) if qual_text(sg[-1][2]) else "") or ((next_impact(G) + "</small><small>Height above the gauge's zero point, not water depth") if next_impact(G) else "") or ("Below the gauge\'s zero point, a fixed reference level, not the riverbed" if sg[-1][1] < 0 else "Height above the gauge's zero point, not water depth"))
                          + (('<small>Reading of <span data-live="stageobs" data-t="%s">%s</span></small>' % (iso(sg[-1][0]), esc(tzl(sg[-1][0], G["zone"])))) if sg[-1][0] != G["lt"] else "") + level_at(G))
     else:  # Memphis 2026-10-26: USGS publishes flow only; the NWS forecast point at the same place observes the stage
         o, n_ = nws_stage(G), G["rec"].get("nwps") or {}
@@ -741,6 +741,20 @@ def impact_cur(G, gap):
     if G.get("lake"):  # phone review 2026-11-07 (Barren River Lake): a lake's NWS statements mix rising and falling effects (ramps closed below a level), so "reached" and "next" cannot be told; quoted by level only
         return None
     return None if scale_clash(G) is not None else fc_cur(G, gap)
+
+
+def tile_ladder(G):
+    """The flood bar in the gage-height tile (PLAN 0e, tools/source_fix.md 'Gage height: distance to flood'): only for a river gauge whose NWS stages are in ft, on the
+    scale the impacts use; none for lakes, coasts, world pages and flow thresholds. On a datum gap the tick is the NWS reading and stays put (the Worker swaps USGS stage only)."""
+    if G.get("lake") or G.get("coast") or G.get("feed") or impact_flow(G):
+        return ""
+    n = G["rec"].get("nwps") or {}
+    cats = {k: v for k, v in (n.get("categories") or {}).items() if k in ("action", "minor", "moderate", "major") and isinstance(v, (int, float)) and v > 0}
+    gap = datum_gap(G)
+    cur = impact_cur(G, gap)
+    if not cats or cur is None or (n.get("stage_units") or "ft").lower() != "ft":
+        return ""
+    return ui.ladder(cats, cur, mini=True, live=not gap)
 
 
 def next_impact(G):

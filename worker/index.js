@@ -201,7 +201,9 @@ function rewrite(res, g, m) {
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
     .on("p.answer", { element(e) { e.after(note, { html: true }); } }); // said once, right under the answer it qualifies (was 5 stamps)
-  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)));
+  if (stage) out.on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)))
+    // the gage tile's flood bar: its tick follows the live stage (a static picture must never disagree with the live number); only ticks the build marked live (no datum gap)
+    .on("b.lad-now[data-lo]", { element(e) { const lo = Number(e.getAttribute("data-lo")), sp = Number(e.getAttribute("data-span")); if (sp > 0) e.setAttribute("style", "left:" + Math.max(0, Math.min(100, (Number(stage) - lo) / sp * 100)).toFixed(2) + "%"); } });
   const r = out.transform(res);
   const o = new Response(r.body, r);
   o.headers.delete("etag");
