@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from lib.common import usgs_headers, new_fail  # new_fail: one writer of _failed.json, shared with truth_world
 
 SITE = "https://riverwaterlevels.com"
-USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065,62614,62615,72020,00062&limit=1000&f=json"
+USGS = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items?monitoring_location_id=%s&parameter_code=00060,00065,62614,62615,72020,00062,00010&limit=1000&f=json"
 NWPS = "https://api.water.noaa.gov/nwps/v1/gauges/%s"
 H = {"User-Agent": "Mozilla/5.0 (truth-live)"}
 HU = dict(usgs_headers(), **H)  # with the key: anonymous calls from shared CI addresses get rate-limited and the check silently skips
@@ -93,6 +93,7 @@ GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  #
 
 def selftest():
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
+    assert wt_verdict(T_, 54, [(T_, 12.0)]) is None and "USGS latest" in wt_verdict(T_, 60, [(T_, 12.0)]) and wt_verdict(T_, 60, [(T_ + datetime.timedelta(hours=1), 12.0)]) is None and wt_verdict(T_, None, [(T_, 12.0)]) is None and wt_verdict(T_, 60, [(T_, 12.0), (T_, 15.6)]) is None, "water temperature not compared with USGS"
     assert tide_verdict(T_, 6.35, {T_: 6.35}) is None and "NOAA predicts" in tide_verdict(T_, 6.0, {T_: 6.35}) and "not a NOAA" in tide_verdict(T_ + datetime.timedelta(minutes=5), 6.35, {T_: 6.35}), "a tide page's next high/low was not checked against NOAA's list"
     assert per_page(["/lake/l%d/" % i for i in range(11)] + ["/river/a/b/"]) and not per_page(["/river/a/b/", "/rivers/tx/"]), "11 failing gauge pages stopped the release (2026-11-08), or a failing hub did not"
     gid = lambda h: (lambda m: m and (m.group(1) or m.group(2)))(GAUGE_ID.search(h))
@@ -191,7 +192,8 @@ def main():
         if not (sid and flow and t):
             bad.append("%s: cannot read gauge id, flow or time from the page" % url)
             continue
-        pages[url] = {"sid": sid.group(1) or sid.group(2), "url": url, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
+        wt_ = re.search(r"<span>Water temperature</span><b>(-?\d+)<small>&deg;F", h)
+        pages[url] = {"sid": sid.group(1) or sid.group(2), "url": url, "wt": int(wt_.group(1)) if wt_ else None, "flow": float(flow.group(1).replace(",", "")), "stage": float(stage.group(1)) if stage else None, "stage_t": stage_t.group(1) if stage_t else None,
                                "t": datetime.datetime.fromisoformat(t.group(1)), "lid": (re.search(r"forecast point ([A-Z0-9]{5})", h) or [None, None])[1] if "forecast point" in h else None,
                                "cats": {m[0].lower(): float(m[1]) for m in re.findall(r'<li><i style="background:#[0-9a-f]+"></i>(Action|Minor|Moderate|Major) <b>([\d.\-]+) ft</b></li>', h)},
                                # derived NWS sentences: "NWS action stage X ft (D ft above the latest reading)", "Next NWS impact at X ft (D ft above the NWS reading of R ft, ...)"
@@ -246,7 +248,7 @@ def main():
             if v_:
                 bad.append("%s: %s" % (u, v_))
     ids = sorted({pg["sid"] for pg in pages.values()})  # gate audit 2026-11-08: keyed by url, so two pages on one gauge (owner decision 7) are both compared
-    latest = {}
+    latest, wts = {}, {}
     failed_ids = set()
     for i in range(0, len(ids), 40):
         try:
@@ -259,7 +261,11 @@ def main():
             raise
         for f in j.get("features", []):
             p = f["properties"]
+            if p.get("value") in (None, ""):  # a sensor with no value (seen on 00010 2026-11-09) is no reading, never a crash of the whole check
+                continue
             latest[(p["monitoring_location_id"][5:], p["parameter_code"])] = (datetime.datetime.fromisoformat(p["time"]), float(p["value"]))
+            if p["parameter_code"] == "00010":  # a gauge can carry several temperature sensors: the page passes if it matches any of them
+                wts.setdefault(p["monitoring_location_id"][5:], []).append(latest[(p["monitoring_location_id"][5:], "00010")])
     def nws(lid):
         try:
             return lid, json.loads(get(NWPS % lid))
@@ -283,6 +289,9 @@ def main():
             (skipped if sid in failed_ids else bad).append("%s: USGS %s" % (pg["url"], "batch did not answer (skipped)" if sid in failed_ids else "returned no latest flow"))
             continue
         ut, uv = u
+        w_ = wt_verdict(pg["t"], pg.get("wt"), wts.get(sid))
+        if w_:
+            bad.append("%s: %s" % (pg["url"], w_))
         if ut == pg["t"]:
             if abs(uv - pg["flow"]) > max(1.0, 0.01 * abs(uv)):
                 bad.append("%s: flow %s on the page, %s at USGS for the same time %s" % (pg["url"], pg["flow"], uv, ut.isoformat()))
@@ -374,6 +383,14 @@ def main():
         json.dump(sorted(set(carried)), open(cp, "w"))
         return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
+
+
+def wt_verdict(pt, page_f, usgs):
+    """None when the page's water temperature (whole °F) is USGS's latest 00010 (°C) converted, or USGS's latest came after the page's reading time
+    (gate audit 2026-11-08: water temperature was never compared with its source). usgs: list of (time, °C), one per sensor, or None."""
+    if page_f is None or not usgs or any(t > pt or abs(v * 9 / 5 + 32 - page_f) <= 1 for t, v in usgs):
+        return None
+    return "water temperature %d°F on the page, USGS latest %s" % (page_f, ", ".join("%.1f°F (%s)" % (v * 9 / 5 + 32, t.isoformat()) for t, v in usgs))
 
 
 def tide_verdict(t, v, hilo):
