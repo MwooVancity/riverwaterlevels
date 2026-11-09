@@ -14,11 +14,11 @@ Done this session (all on main, deployed, refresh OK, read live):
 - Readable tables (PLAN 0g): census 966 -> 0 wide tables, now a page rule; hourly like the Weather Channel.
 - Namesake rule from GeoNames in coast_match; review shots open toggles and the hourly grid.
 
+Done after the first draft: first-screen rule in check.py; 11:31 UTC release opened 25 (11 coast incl. Boston read live, 11 lakes, 3 rivers; tide-table pages follow by tier); 'Is this normal' tile in plain words; lake namesake closed (cannot ship a wrong page, ranking only).
+
 Next, in order:
-1. First-screen rule (PLAN 0g open): first phone screen = place, one plain status sentence, the number; a check for it.
-2. Read the 11:00 UTC release (first coast and tide-table pages): log, one live page of each, CARRIED lines.
-3. Plain-words pass on tile first lines; truth_live parses the derived NWS stage sentences, so change both together.
-4. Namesake rule for lake rows (needs a lake gazetteer, not towns); gate catch census.
+1. Gate catch census: not run 2026-11-09. Most check.py rules are regression guards for one past defect (each with its selftest), so a quiet rule is the expected state; check.py takes seconds per run, so deleting rules moves no reader number and saves no run time worth measuring. Revisit if check.py run time passes 1 minute.
+2. Read the first tide-table page live when the daily release opens one.
 (Done since the first draft: rain label, Thunder header, refresh run time measured, coast namesake rule.)
 
 Owner only: Cloudflare > riverwaterlevels.com > Email Routing > Settings > "Add missing records" (contact@ forwarding; Claude's click was blocked). Then Claude sets data/publisher.json email. Send outreach notes.
