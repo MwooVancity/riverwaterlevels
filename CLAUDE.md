@@ -30,7 +30,7 @@ Before any build, and whenever asked "what's missing", answer each for THIS site
 - Line 0: every reliable public dataset a reader here could use, exact source and time; withhold only if wrong, misleading, padding or no mechanism.
 - Non-US: own `data/sources.json` row, local unit + feet, agency low/high labels, no sailing verdict; a dead feed stales only its page.
 - UI: one colour, white cards, one label and numeral style, unit beside number, data age once.
-- Order, nothing collapsed on Now: alert banner; H1, gauge id, one age chip; tiles (flow, gage height, is-this-normal, 6 h change, NWS forecast or "Not issued", water temperature, rain 24 h, air, sunset); water now; level, flow and flood risk; forecast; how today compares; closed folds.
+- Order, nothing collapsed on Now (except a tile's second and later lines behind "More": owner 2026-11-09, readers with ADHD or autism): alert banner; H1, gauge id, one age chip; tiles (flow, gage height, is-this-normal, 6 h change, NWS forecast or "Not issued", water temperature, rain 24 h, air, sunset); water now; level, flow and flood risk; forecast; how today compares; closed folds.
 - No verdicts ("safe", "runnable", "fishable"); only labels and attributed source text. Delete a sentence no source can check.
 - Every number has unit, time, Source line; a block shows only if its `data/sources.json` row is `quoted` or `owner-permission`.
 - Block states: valid, valid-empty, unavailable ("Unknown", never "none"), stale (real age). `SAFETY_BLOCKS` failing keeps the old page; other blocks hide alone, named in the gaps line.

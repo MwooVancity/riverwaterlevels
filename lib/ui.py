@@ -1,5 +1,5 @@
 """Small visual widgets for the gauge page: line icons, the percentile dial, stat tiles. Pure strings, no data access."""
-import math
+import math, re
 
 _I = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%s</svg>'
 ICONS = {
@@ -67,7 +67,20 @@ def rangebar(p):
 
 def tile(kind, ico, label, value_html, sub_html, cls=""):
     """One stat tile. The label and value keep the exact `<span>label</span><b>value</b>` shape that check.py and the live script read."""
-    return '<div class="tile %s%s"><i class="ic">%s</i><span>%s</span><b>%s</b>%s</div>' % (kind, (" " + cls) if cls else "", icon(ico), label, value_html, sub_html)
+    return '<div class="tile %s%s"><i class="ic">%s</i><span>%s</span><b>%s</b>%s</div>' % (kind, (" " + cls) if cls else "", icon(ico), label, value_html, calm(sub_html))
+
+
+SMALL = re.compile(r"<small\b(?:(?!</small>).)*</small>", re.S)
+
+
+def calm(sub_html):
+    """Owner 2026-11-09 (readers with ADHD or autism): under the number, the picture and the first line stay; every further line of small print goes behind one
+    'More' toggle, in the page (Google, screen readers and the live script still read it). Only top-level <small> lines move; nothing is reworded."""
+    parts = [m for m in SMALL.finditer(sub_html)]
+    if len(parts) < 2:
+        return sub_html
+    cut = parts[1].start()
+    return sub_html[:cut] + '<details class="tmore"><summary>More</summary>%s</details>' % sub_html[cut:]
 
 
 def spark(values, w=150, h=34, live=None):
