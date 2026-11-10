@@ -1429,6 +1429,30 @@ def fetch_glsea(letter):
     return {"fetched_at": now_iso(), "lake": letter, "date": day.isoformat(), "temp_f": val, "avg_f": avg, "avg_from": m.group(1), "avg_to": m.group(2)}
 
 
+IMI_HILO = "https://erddap.marine.ie/erddap/tabledap/IMI_TidePrediction_HighLow.csv?stationID%2Ctime%2Ctide_time_category%2CWater_Level_ODMalin&time%3E=now-1day&time%3C=now%2B7days&stationID=%22{}%22"
+
+
+def imi_hilo(csv_text, station):
+    """Marine Institute high/low tide predictions (CSV: header, units row, rows) -> [[iso UTC, metres above OD Malin, 'H'|'L']]. PLAN 7b.
+    The units row must say UTC and metres, else the feed changed and it raises (never a guessed unit); rows of another station are dropped."""
+    lines = [l.split(",") for l in csv_text.strip().splitlines()]
+    if len(lines) < 2 or lines[0][:4] != ["stationID", "time", "tide_time_category", "Water_Level_ODMalin"] or lines[1][1:4] != ["UTC", "", "metres"]:
+        raise RuntimeError("Marine Institute tide CSV changed shape")
+    out = []
+    for r in lines[2:]:
+        if len(r) >= 4 and r[0] == station and r[2] in ("HIGH", "LOW"):
+            out.append([r[1].replace("Z", "+00:00"), float(r[3]), r[2][0]])
+    return out
+
+
+def fetch_imi_hilo(station):
+    """Ireland (PLAN 7b): 8 days of high/low predictions for one Marine Institute station; CC BY 4.0, heights in metres above OD Malin. 1 call."""
+    hilo = imi_hilo(get_text(IMI_HILO.format(urllib.parse.quote(station))), station)
+    if not hilo:
+        raise RuntimeError("no Marine Institute predictions for %s" % station)
+    return {"fetched_at": now_iso(), "station": station, "datum": "OD Malin", "unit": "m", "hilo": hilo}
+
+
 def fetch_usno(lat, lon):
     """U.S. Naval Observatory one-day Sun and Moon data, asked in UTC (tz=0) for yesterday, today and tomorrow (UTC), so any US station's local today is
     inside the window: moonrise and moonset as UTC instants, the closest principal phase with its UTC time. 3 calls a coast a day. An answer not in UTC raises."""

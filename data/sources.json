@@ -578,6 +578,26 @@
    "read_on": "2026-11-09",
    "summary": "Barred (owner decision 7): clause 4.1 'You undertake to hold all data and all other information relating to the API and Data confidential and not at any time disclose the same ... to any third party without the consent of the Licensor'; clause 3.5 caching only temporary, under 30 days, and 'should not manipulate or aggregate'. Publishing NRFA statistics on a public page breaks both; England 'is this normal' stays Unknown with the GOV.UK link.",
    "blocks": []
+  },
+  {
+   "id": "imi",
+   "name": "Marine Institute (Ireland) ERDDAP tide predictions",
+   "status": "quoted",
+   "terms_url": "https://erddap.marine.ie/erddap/info/IMI_TidePrediction_HighLow/index.html",
+   "read_on": "2026-11-09",
+   "summary": "Dataset licence attribute: 'Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/)'. Heights Water_Level_ODMalin in metres, times UTC. Credit: Marine Institute. Live proof 2026-11-09: Kinsale HIGH 1.534 m 04:40 UTC.",
+   "blocks": [
+    "tides"
+   ]
+  },
+  {
+   "id": "meteireann",
+   "name": "Met Eireann open data",
+   "status": "quoted",
+   "terms_url": "https://www.met.ie/about-us/specialised-services/open-data",
+   "read_on": "2026-11-09",
+   "summary": "'Most datasets are available under a standard Creative Commons Attribution 4.0 licence'; data and derivatives must carry Met Eireann's five attribution statements (Copyright Met Eireann; Source met.ie; ...). Not yet read: which datasets (warnings, forecast) fall under it.",
+   "blocks": []
   }
  ]
 }
