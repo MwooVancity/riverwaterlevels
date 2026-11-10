@@ -7,6 +7,17 @@ The most useful page for a person deciding about this river today, anywhere (rea
 Scarce resource: Claude time. From 2026-11-20 the owner moves from Max to Pro (owner 2026-11-03): sessions continue but far fewer, so growth slows, never stops; everything must run alone between sessions, and the costly builds (world release, limits) belong before Nov 20.
 Bottleneck: AdSense approval, then readers. Earns $0 until approved; calcscrape and asmrregistry were rejected as low value content, so approval outranks page count.
 
+## Revenue goal (owner 2026-11-10): $1,500 a month by 2027-11-10
+Math (assumptions marked): $1,500 / page RPM $5-10 (ASSUMED until AdSense reports ours) = 150,000-300,000 page views a month. Measured 2026-11-10: ~200 sessions a month (ChatGPT 112, direct 60, Google 18), 241 gauge pages, Google position 13.1, 21 clicks in 28 days, AdSense 'Getting ready' (earns $0).
+Pages: 25 a day by the release = about 9,000 more by 2027-11. Each needs about 20-30 views a month (today under 1): ranking, not page count, decides it.
+Checkpoints (read monthly with tools/gsc_read.py; miss one = the next session works only the lever behind it):
+| Date | Pages | Views/month | Google clicks/month | Lever if missed |
+| 2027-01-10 | ~1,800 | 8,000 | 2,000 | AdSense approved? indexing (index_inspect) |
+| 2027-04-10 | ~4,000 | 40,000 | 12,000 | position: page-two pages vs top results, links |
+| 2027-07-10 | ~6,300 | 100,000 | 35,000 | CTR on pages at position 1-5 |
+| 2027-11-10 | ~9,000 | 200,000 | 70,000 | RPM: measure; more lakes and coasts (higher searches) |
+Order of levers: (1) AdSense approval (needs the contact address: owner's Cloudflare click) (2) indexing (daily Request-indexing job, IndexNow) (3) rank from page two to top five (three tests: better than #1; earned links: outreach, embed) (4) volume (release 25/day, biggest searches first) (5) ChatGPT/Bing (largest source today).
+
 ## Reader
 A person at or near this water today, on a phone, with 30 seconds (full text: CLAUDE.md "Reader"). One page per place people search for, even when it shows the same feed or gauge as another page (owner 2026-11-08).
 
