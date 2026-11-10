@@ -3,7 +3,7 @@ Usage: python -I tools/release.py N [--dry] [--list docs/research/priority/picks
 Steps: pick the first N rows of the list that have no cache yet -> mark them live in data/waves.csv -> python -I collect.py <sites> (full) -> python -I build.py
 -> print the new page URLs. A new page stays out of Google until `tools/open_wave.py N --apply` lists it. --dry prints the picks and stops.
 """
-import os, sys, csv, subprocess
+import os, re, sys, csv, subprocess
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -41,8 +41,25 @@ first_ = {}
 for r in q_:
     if r["keyword"] and r["gauge"] and r["keyword"] not in live_kw:
         first_.setdefault(r["keyword"], r["gauge"])
+def promise(k, g):
+    """PLAN 10 keyword promise table: a search whose last words ask for something the page cannot show scores 0, so it never opens on that search.
+    fishing report: never (no source reports fishing); surf report: needs buoy waves (no buoy reader yet); water temp(erature): the gauge's cache holds a
+    temperature series (USGS 00010, GLSEA lake surface or NOAA water temperature); dam release: the cache holds a dam outflow (dam_*). A missing cache = not ready."""
+    k = (k or "").lower()
+    if k.endswith(("fishing report", "surf report")):
+        return False
+    need = ('"00010"', '"glsea"', '"water_temperature"', '"wtemp"') if re.search(r"water temp(erature)?$", k) else ('"dam_',) if k.endswith("dam release") else None
+    if not need:
+        return True
+    p_ = os.path.join(ROOT, "cache", "%s.json" % g) if g else ""
+    t_ = open(p_, encoding="utf-8").read() if p_ and os.path.exists(p_) else ""
+    return any(x in t_ for x in need)
+
+
+assert promise("kern river fishing report", None) is False and promise("kern river level", None) is True and promise("lake mead water temperature", None) is False, "release: keyword promise table"  # no cache for None: a temperature search is not ready
+
 def share(t, k, g=None):
-    return 0 if not k else int(t or 0) * (1 if k not in live_kw and first_.get(k, g) == g else 0.05)  # a world row is the first gauge when no US gauge holds the keyword
+    return 0 if not k or not promise(k, g) else int(t or 0) * (1 if k not in live_kw and first_.get(k, g) == g else 0.05)  # a world row is the first gauge when no US gauge holds the keyword
 tier_ = {r["gauge"]: (0 if "|" in (r.get("country") or "") else share(r["tier"], r["keyword"], r["gauge"])) for r in q_ if r["gauge"]}
 wpp = os.path.join(ROOT, "data", "world-pages.json")
 wpages = _json.load(open(wpp, encoding="utf-8"))
