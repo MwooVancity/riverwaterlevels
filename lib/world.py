@@ -473,7 +473,7 @@ def thin_stats(h):
     main = h.split("<main", 1)[1].split("</main>")[0] if "<main" in h else h
     words = len(text(re.sub(r"(?is)<(nav|footer|header)\b.*?</\1>", " ", main)).split())
     faults = []
-    if not (re.search(r'class="hero[^"]*"[^>]*data-t="[^"]+"', h) and any(val(k) for k in ("Water level", "Gage height", "Flow", "Lake level"))):
+    if not (re.search(r'class="hero[^"]*"[^>]*data-t="[^"]+"', h) and any(val(k) for k in ("Water level", "Gage height", "Flow", "Lake level", "Sea level"))):  # Sea level: Irish tide gauges (2026-11-09: the rename held Dublin Port as 'no reading')
         faults.append("no reading with its time and unit")
     if 'id="alerts"' not in h:
         faults.append("no alerts block")

@@ -1466,7 +1466,7 @@ def imi_hilo(csv_text, station):
     return out
 
 
-IMI_LIVE = "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.csv?station_id%2Clongitude%2Clatitude%2Ctime%2CWater_Level_OD_Malin&time%3E=now-3days"
+IMI_LIVE = "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.csv?station_id%2Clongitude%2Clatitude%2Ctime%2CWater_Level_OD_Malin&time%3E=now-25hours"  # 3 days of all 22 stations timed out (504) 2026-11-09; 25 h keeps the 24 h-ago reading
 
 
 def imi_live(csv_text):
@@ -1487,7 +1487,7 @@ def imi_live(csv_text):
 
 
 def fetch_imi_live():
-    """All Irish live tide gauges, last 3 days, one call (about 20 stations x 432 rows)."""
+    """All Irish live tide gauges, last 25 hours, one call (about 22 stations x 300 rows)."""
     return {"fetched_at": now_iso(), "datum": "OD Malin", "unit": "m", "stations": imi_live(get_text(IMI_LIVE))}
 
 
@@ -1499,7 +1499,7 @@ def imi_row(name, stations):
     t, v = st["series"][-1]
     day_ago = datetime.datetime.fromisoformat(t) - datetime.timedelta(days=1)
     then = next((x[1] for x in st["series"] if datetime.datetime.fromisoformat(x[0]) >= day_ago), None)
-    return {"name": name, "number": name, "title": name, "lat": st["lat"], "lon": st["lon"], "cm": v, "unit": "m", "time": t, "then": then, "series": st["series"][-864:], "wx": {"no_weather": True}}
+    return {"name": name, "number": name, "title": name, "lat": st["lat"], "lon": st["lon"], "cm": v, "unit": "m", "time": t, "then": then, "series": st["series"][-300:], "wx": {"no_weather": True}}
 
 
 def fetch_imi_hilo(station):
