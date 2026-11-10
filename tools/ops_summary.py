@@ -68,6 +68,18 @@ def main():
         out += ["    " + x for x in lines] or ["    (no stop line found)"]
     out.append("")
 
+    out.append("## Daily release (new gauges)")
+    try:
+        last = open(os.path.join(ROOT, "data", "last-release.txt"), encoding="utf-8").read().strip()
+        ow = json.load(open(os.path.join(ROOT, "data", "open-wave-last.json"), encoding="utf-8"))
+        out.append("Last release %s; last batch opened to Google %s: %s page(s)%s." % (last, ow.get("at"), ow.get("opened"),
+                   (", %d unreviewed" % len(ow["unreviewed"])) if ow.get("unreviewed") else ""))
+        if last != now.strftime("%Y-%m-%d") and now.hour >= 13:
+            out.append("**No release today yet** (it runs from 11:00 UTC; a dropped release says why in the stop lines above).")
+    except Exception as e:
+        out.append("Unknown: %s" % str(e)[:100])
+    out.append("")
+
     out.append("## Pages held back in the live build (old copy kept, or not built)")
     held = []
     if not st.get("_error"):
