@@ -14,6 +14,9 @@ AI = ("chatgpt", "perplexity", "copilot", "gemini", "claude", "bing.com/chat")
 
 def creds(scope):
     from google.oauth2 import service_account
+    if os.environ.get("GSC_KEY_JSON"):  # GitHub secret (owner 2026-11-10: the key may live in GitHub secrets for the post-release sitemap resubmit)
+        import json
+        return service_account.Credentials.from_service_account_info(json.loads(os.environ["GSC_KEY_JSON"]), scopes=[scope])
     env = dict(l.split("=", 1) for l in ENV.read_text().splitlines() if "=" in l and not l.startswith("#"))
     path = env["GSC_CREDENTIALS_PATH"].strip().strip('"')
     if not os.path.isabs(path):

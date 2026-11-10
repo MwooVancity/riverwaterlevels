@@ -125,6 +125,8 @@ jobs:
       - name: Keep the day's new gauges only if the refresh passed
         if: steps.rel.outputs.released == '1'
         continue-on-error: true
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}  # owner 2026-11-10: Search Console key as a GitHub secret, for the sitemap resubmit only
         run: |
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
@@ -133,6 +135,7 @@ jobs:
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
             python -I tools/indexnow.py --new || true  # tell Bing the pages that just opened (PLAN 0h); never fails the release
+            pip install -q google-api-python-client google-auth >/dev/null 2>&1; python -I tools/gsc_submit.py || true  # tell Google the sitemap changed (Search Console API; needs the service account at Full)
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
             echo "release DROPPED: the release was undone or the refresh did not pass"
             git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/

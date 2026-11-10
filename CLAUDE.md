@@ -57,7 +57,7 @@ Links come from data in code; a link exists only because a reader here would tap
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers.
 - Visitors spend no API calls: the Worker calls out only from its */3 cron; phones read `/live/<site>.json`.
 - HARD laptop (owner 2026-11-08 "downloading data at the absolute minimum"): collect, build, screenshots and speed tests run in the cloud; Claude reads their output, never re-downloads. Local only to debug one gauge, deleted that session; `cache/` + `dist*/` capped at 50 MB.
-- `collect.py` is the only build-side network code; `build.py` reads `cache/` only. Keys: calcscrape `.env` only, never in pages, docs or output.
+- `collect.py` is the only build-side network code; `build.py` reads `cache/` only. Keys: calcscrape `.env`, plus the Search Console service-account key as GitHub secret `GSC_KEY_JSON` for the post-release sitemap resubmit (owner 2026-11-10); never in pages, docs, commits or output.
 - Pages enter Google only via `tools/open_wave.py`.
 - Cloudflare free, per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.
 - Wrong or odd number on any page: follow `tools/source_fix.md` (fix in the feed reader, every edge case, fixture, live proof).
