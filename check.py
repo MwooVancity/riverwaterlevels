@@ -1021,6 +1021,9 @@ def selftest():
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
     assert "ft. Height above" in wh and "Low, WSV label" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
+    assert not world.page_faults(wu, wh), "selftest: a good new world page is held by the pre-check: %s" % world.page_faults(wu, wh)[:3]
+    assert world.page_faults(wu, wh + "<p>USGS</p>"), "selftest: a failing new world page was not held by the pre-check (Dublin Port 2026-11-10)"
+    assert not world.page_faults(wu, wh.replace("</main>", "<p>low -0.0 ft</p></main>")), "selftest: the pre-check held a negative zero that build.py write() fixes"
     assert not world_rules(wh.replace("River forecast", "Tide forecast")) and not world_rules(wh.replace("River forecast", "Next tide (prediction)")) and world_rules(wh.replace("River forecast", "Xx")), "selftest: tide forecast tile labels (Dublin Port 2026-11-10)"
     assert not world.proof_faults(world.listing(world_pages()), world.proved(world_pages())) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]

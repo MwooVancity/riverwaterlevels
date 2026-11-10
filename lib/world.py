@@ -490,6 +490,25 @@ def thin(h):
     return [f for f in thin_stats(h)["faults"] if f == "no reading with its time and unit"]
 
 
+_CK = {}
+
+
+def page_faults(url, h):
+    """check.py's own per-page rules on a world page that was never published (2026-11-10 Dublin Port: a failing page with no live copy
+    to carry stopped every deploy). Held here like a thin page instead: not built, not linked, named in the log. A checker that cannot load
+    holds nothing (check.py still runs on the whole build)."""
+    try:
+        if not _CK:
+            ck = {"__file__": os.path.join(common.ROOT, "check.py"), "__name__": "check"}
+            exec(compile(open(ck["__file__"], encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
+            _CK.update(ck)
+        h = common.NEG_ZERO.sub(r"\1", h).replace(" ", " ")  # as build.py writes it and check_dir reads it
+        return _CK["page_checks"](h, url.strip("/") + "/index.html") + _CK["world_rules"](h) + _CK["one_latest"](h)
+    except Exception as e:
+        print("world page pre-check could not run: %s" % str(e)[:100])
+        return []
+
+
 def choose(pages, now):
     """Names per page that may publish: first pass over every gauge; a second gauge on an address already taken waits."""
     names, urls = {}, set()
@@ -513,7 +532,7 @@ def choose(pages, now):
                 THIN[r["name"]] = gone  # every hold of a new page counts in room(), so held pages never keep spending the daily slots (review 2026-11-03)
                 print("world gauge held, page lacks what its data allows: %s %s" % (r["name"], ", ".join(gone)))
                 continue
-            short = [] if live else thin(got[1])  # the per-page floor that replaced the country cap (owner 2026-11-03): a thin page is held, never shipped and never noindexed
+            short = [] if live else (thin(got[1]) or page_faults(got[0], got[1]))  # the per-page floor that replaced the country cap (owner 2026-11-03): a thin page is held, never shipped and never noindexed; a new page failing check.py's page rules is held the same way (a live one is carried by check.py instead)
             if short:
                 THIN[r["name"]] = short
                 print("world gauge held, thin page: %s %s" % (r["name"], "; ".join(short)))

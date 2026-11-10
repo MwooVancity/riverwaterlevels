@@ -14,9 +14,6 @@ from lib.blocks2 import flow_behind
 FILE_BUDGET = 95000 if os.environ.get("WORKERS_PAID") else 19000
 
 
-NEG_ZERO = re.compile(r"(?<![\w.])[-−](0\.0+)(?![\d])(?=(?:\s|&nbsp;| )*(?:ft|m|cm|in|°))")  # the same pattern as check.py neg_zero
-
-
 def write(root, url, html):
     path = os.path.join(root, url.strip("/"), "index.html") if url != "/" else os.path.join(root, "index.html")
     os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -127,6 +127,14 @@ Rejected: holding lake pages without full pool (owner decision 3 ships a page wi
 ## Watch: Duesseldorf 26 vs 13 (2026-11-09)
 World truth caught /rhine/duesseldorf/ built at 26 cm while PEGELONLINE had 13 for the same minute (dryrun runs 42749458915, 42749780706); the page kept its live copy (correct, 13). The feed never read above 21 cm in 2 days; a local rebuild from the live feed prints 13, so the cloud cache row is the suspect. The fault line now prints the page time; read it on the next fault.
 
+## Site frozen 4 h, release dropped (2026-11-10, found by the fixed daily report)
+Every hourly refresh from 11:00 UTC stopped while GitHub showed green; the live site kept the 10:16 build and today's 25-gauge release was undone. Four faults, each fixed at its root and proven by a test (proof of the live site rebuilding goes here when the next refresh reports):
+- truth_tests.py crashed on a gauge with no latest flow (`None < 0`): now requires the page to say "not reporting" and moves on.
+- A page opened by the release was carried with its old noindex tag while the sitemap listed it (Allatoona, Belton lakes; check.py SITE FAIL): build.py rebuilds a carried page whose robots tag no longer matches its index state (read from the carried file, so old build records need no new field; tested on the live Allatoona and Santee pages).
+- Healdsburg printed '-0.0 ft': fixed once in build.py write() for every page (lib/common NEG_ZERO, 8 cases), not per formatter.
+- Dublin Port (never published, no live copy to carry) failed "missing River forecast" and stopped every promote: the world check accepts tide labels, and lib/world.py choose() now holds any never-published world page that fails check.py's page rules, like a thin page (check.py selftest: good page passes, failing page held, negative zero not held).
+Edge cases left by design: a live page that fails is carried (unchanged); the pre-check builds each new world page twice (49 pages now; only never-published pages pay).
+
 ## Gate hole closed 2026-11-09
 World pages are site pages, so a feed listed in data/world-pages.json was indexable at once, without the phone review open_wave demands for lakes and coasts. Now an entry with "hold" keeps its hub and pages noindex and off the sitemap (lib/indexing.py held; check.py selftest). Ireland is on hold until its review passes.
 

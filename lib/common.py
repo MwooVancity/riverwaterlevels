@@ -6,6 +6,7 @@ ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
 CACHE = os.path.join(ROOT, "cache")
 DIST = os.path.join(ROOT, "dist")
 DATA = os.path.join(ROOT, "data")
+NEG_ZERO = re.compile(r"(?<![\w.])[-−](0\.0+)(?![\d])(?=(?:\s|&nbsp;| )*(?:ft|m|cm|in|°))")  # '-0.0 ft' (a -0.04 reading) -> '0.0 ft'; the same pattern as check.py neg_zero; applied by build.py write() to every page (2026-11-10)
 BRAND = "River Water Levels"
 
 
