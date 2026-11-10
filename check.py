@@ -676,6 +676,9 @@ def check_dir(d):
     site_bad += ["%s missing from the build" % f for f in ("sw.js", "manifest.webmanifest", "icon-192.png", "icon-512.png") if not os.path.exists(os.path.join(d, f))]
     if os.path.exists(os.path.join(d, "sw.js")):
         site_bad += sw_drift(open(os.path.join(d, "sw.js"), encoding="utf-8").read())
+    wps_ = json.load(open(os.path.join(ROOT, "data", "world-pages.json"), encoding="utf-8"))
+    wsl_ = [p_["slug"] for p_ in (wps_ if isinstance(wps_, list) else wps_.get("pages", []))]
+    site_bad += slug_clash(wsl_, {rel_.replace("\\", "/").split("/")[0] for rel_ in results if "/" in rel_.replace("\\", "/") and kind_of(rel_) not in ("world", "country")})
     site_bad += cloak_risks(wjs) + visitor_calls(wjs) + edge_drift(wjs) + css_truncation(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + colour_contrast(open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()) + control_chars({f: open(os.path.join(ROOT, f), encoding="utf-8").read() for f in ["templates/site.css", "worker/index.js"] + ["lib/" + x for x in os.listdir(os.path.join(ROOT, "lib")) if x.endswith(".py")]})
     import csv as _csv
     live_now = {r["site"] for r in _csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
@@ -844,6 +847,12 @@ def file_limit(n):
     return ["%d files in the deploy (Cloudflare refuses past 20,000; this check fails at 19,000): drop the embed copies or serve data.json from the Worker" % n] if n > 19000 else []
 
 
+def slug_clash(world_slugs, other_tops):
+    """PLAN 13: world pages live at /<slug>/ beside site sections (/river/, /lakes/, /status/); a slug that repeats or equals a section would put one page over another."""
+    seen = collections.Counter(world_slugs)
+    return ["world address clash: /%s/ %s" % (s, "used by two world pages" if seen[s] > 1 else "is also a site section") for s in sorted(seen) if seen[s] > 1 or s in other_tops]
+
+
 def redirect_limit(n):
     """Cloudflare refuses the whole deploy past 100 rules once one is dynamic; the build passes and the live site freezes (2026-11-01)."""
     return ["%d rules in _redirects (Cloudflare refuses the deploy past 100): put them in single-rivers.json" % n] if n > 100 else []
@@ -860,6 +869,7 @@ def ad_gaps(rel, h):
 
 
 def selftest():
+    assert slug_clash(["main", "rhine"], {"river", "lakes"}) == [] and slug_clash(["main", "main"], set()) and slug_clash(["status"], {"status"}), "selftest: a world address clash (repeat or site section) passed, or a clean set failed"
     dpg_ = lambda name, extra: '<h1>%s River at %s</h1><p class="sub">USGS gauge 1 &middot; observed</p><p>%s</p>' % (name, name, " ".join(["flow is steady today and the gauge reads normal for the date"] * 20) + extra)
     d_ = collections.defaultdict(list)
     for u_, n_, x_ in (("/a/", "Bandon", ""), ("/b/", "Coquille", ""), ("/c/", "Other", " ".join("unique local fact %s about access ramps camping weather point" % w_ for w_ in "abcdefghijklmnopqrstuvwxyz" * 3))):
