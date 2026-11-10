@@ -28,6 +28,8 @@ def run():
         raise AssertionError("Ireland tides: a changed unit row was read as metres")
     except RuntimeError:
         pass
+    lv_ = collect.imi_live("station_id,longitude,latitude,time,Water_Level_OD_Malin\n,degrees_east,degrees_north,UTC,metres\nGalway Port,-9.048,53.269,2026-11-10T02:20:00Z,0.409\nGalway Port 2,-9.047911,53.26926,2026-11-10T02:20:00Z,0.534\nGalway Port,-9.048,53.269,2026-11-10T02:10:00Z,0.38\nHowth Water Level 2,-6.06,53.39,2026-11-10T02:20:00Z,NaN\n")
+    assert lv_["Galway Port"]["series"] == [["2026-11-10T02:10:00+00:00", 0.38], ["2026-11-10T02:20:00+00:00", 0.409]] and lv_["Galway Port 2"]["series"][-1][1] == 0.534 and "Howth Water Level 2" not in lv_, "Irish live tides: sensors mixed, order wrong, or a NaN kept"
     from lib import blocks3 as b3_
     up_ = {"office": "SAM", "loc": "Buford", "fetched_at": "2026-11-10T03:17:03+00:00", "NGVD29": {"ft": 1070.346, "estimated": False}, "NAVD88": {"ft": 1070.571, "estimated": True}}
     ug_ = lambda lake, vd, alt, lv: {"lake": lake, "sg": [(t0_, lv, {})], "rec": {"usace_pool": up_, "meta": {"loc": {"vertical_datum": vd, "altitude": alt}}}}

@@ -1466,6 +1466,31 @@ def imi_hilo(csv_text, station):
     return out
 
 
+IMI_LIVE = "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.csv?station_id%2Clongitude%2Clatitude%2Ctime%2CWater_Level_OD_Malin&time%3E=now-3days"
+
+
+def imi_live(csv_text):
+    """Irish National Tide Gauge Network (PLAN 7c-1): {station: {"lat", "lon", "series": [[iso UTC, metres above OD Malin], ...]}}, oldest first.
+    The units row must read UTC and metres; NaN rows are skipped; 'Galway Port' and 'Galway Port 2' stay separate sensors."""
+    lines = [l.split(",") for l in csv_text.strip().splitlines()]
+    if len(lines) < 2 or lines[0][:5] != ["station_id", "longitude", "latitude", "time", "Water_Level_OD_Malin"] or lines[1][3:5] != ["UTC", "metres"]:
+        raise RuntimeError("Irish tide gauge CSV changed shape")
+    out = {}
+    for r in lines[2:]:
+        if len(r) < 5 or r[4] in ("", "NaN"):
+            continue
+        st = out.setdefault(r[0], {"lat": float(r[2]), "lon": float(r[1]), "series": []})
+        st["series"].append([r[3].replace("Z", "+00:00"), float(r[4])])
+    for st in out.values():
+        st["series"].sort()
+    return out
+
+
+def fetch_imi_live():
+    """All Irish live tide gauges, last 3 days, one call (about 20 stations x 432 rows)."""
+    return {"fetched_at": now_iso(), "datum": "OD Malin", "unit": "m", "stations": imi_live(get_text(IMI_LIVE))}
+
+
 def fetch_imi_hilo(station):
     """Ireland (PLAN 7b): 8 days of high/low predictions for one Marine Institute station; CC BY 4.0, heights in metres above OD Malin. 1 call."""
     hilo = imi_hilo(get_text(IMI_HILO.format(urllib.parse.quote(station))), station)
