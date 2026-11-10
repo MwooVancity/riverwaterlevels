@@ -1,1 +1,2 @@
 docs/research/FRESH-REVIEW-*.md -text
+*.sh text eol=lf
