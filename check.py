@@ -836,7 +836,8 @@ def world_rules(h):
     bare = re.findall(r"(?<![(\d.])\b\d[\d,.]* ?(?:cfs|mph|mi|inHg|acres?|sq mi)\b", re.sub(r"\([^()]*\)", " ", t)) + re.findall(r"\d(?: |<small>)*(?:°F|&deg;F)", re.sub(r"\([^()]*\)", " ", t))
     if bare:
         return ["world gauge page shows a US unit with no local one: %s" % bare[:4]]
-    miss = [x for x in ("Water level", "Is this normal", "24 h change", ("Level forecast" if "Level forecast" in t else "River forecast"), 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
+    fc_ = next((x for x in ("Level forecast", "Tide forecast", "Next tide (prediction)") if x in t), "River forecast")  # 2026-11-10: a tide page (Ireland) names its forecast tile for the tide; "River forecast" alone held a correct Dublin Port page
+    miss = [x for x in ("Water level", "Is this normal", "24 h change", fc_, 'id="alerts"', 'id="official_links"', "<svg") if x not in t]
     if '"name":"ZZ"' in h:
         return ["world gauge page carries the placeholder state in its breadcrumb markup"]
     left = [x for x in ("USGS", "NWS", "National Weather", "NOAA", " cfs", "weather.gov", "Delaware", "California") if x in t]
@@ -1020,6 +1021,7 @@ def selftest():
     assert not world_rules(wh), "selftest: a good world gauge page failed: %s" % world_rules(wh)
     assert "ft. Height above" in wh and "Low, WSV label" in wh and "How today compares" in wh and ">Low<" in wh and "Not issued" in wh, "selftest: a world gauge page lost its label, marks or a block state"
     assert world_rules(wh + "<p>USGS</p>") and world_rules(wh.replace('id="alerts"', "x")), "selftest: world page rule missed US wording or a missing block"
+    assert not world_rules(wh.replace("River forecast", "Tide forecast")) and not world_rules(wh.replace("River forecast", "Next tide (prediction)")) and world_rules(wh.replace("River forecast", "Xx")), "selftest: tide forecast tile labels (Dublin Port 2026-11-10)"
     assert not world.proof_faults(world.listing(world_pages()), world.proved(world_pages())) and world.proof_faults(["x"], {}) and world.proof_faults(["eccc"], {"eccc": {"reading": "tools/truth_world.py ok"}}), "selftest: a country with no proof on file"
     assert not world.cover_faults(us_blocks(), world_pages()), "selftest: country table: %s" % world.cover_faults(us_blocks(), world_pages())[:3]
     one = lambda t: [b for b in check_html('<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t, "x") if "banned" in b and "gauges" in b + t]
