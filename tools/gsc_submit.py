@@ -1,6 +1,6 @@
 """Resubmit the sitemap to Google Search Console (the one official, scriptable 'come and read my new pages' signal; Google has no API for
-'Request indexing' outside job postings and livestreams, and retired the sitemap ping in 2023). Run by the daily scheduled task on the
-owner's PC (the key lives only in calcscrape .env, never in GitHub). Needs the service account at Full permission in Search Console.
+'Request indexing' outside job postings and livestreams, and retired the sitemap ping in 2023). Run by refresh.yml after each release
+(key from GitHub secret GSC_KEY_JSON; locally from calcscrape .env). Needs the service account at Full permission in Search Console.
 
 python -I tools/gsc_submit.py   -> prints "sitemap resubmitted" or why not (never raises)
 """
