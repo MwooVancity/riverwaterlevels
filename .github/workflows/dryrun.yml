@@ -24,11 +24,12 @@ on:
         default: ""
 
 concurrency:
-  group: dryrun
+  group: dryrun-${{ github.sha }}  # fresh review 2026-11-09: one group for all runs cancelled the earlier push's gate, so sessions pushed one change at a time
   cancel-in-progress: true
 
 permissions:
-  contents: write  # only the nightly practice commits data/waves.csv (the gates of picks that failed)
+  contents: write  # the nightly practice commits data/waves.csv (the gates of picks that failed); a passing push to check is promoted to main
+  actions: write  # promote: start refresh.yml on main (a push made with this token starts no workflow by itself)
 
 jobs:
   dryrun:
@@ -42,6 +43,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # promote merges main's bot commits before pushing
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -111,3 +114,15 @@ jobs:
           if ! git diff --quiet data/waves.csv; then
             git add data/waves.csv && git commit -m "practice release: picks that failed go back to the queue until tomorrow ($(date -u +%F))" && git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "practice gates committed"
           fi
+      - name: "Promote a passing push on check to main and deploy (fresh review 2026-11-09, sessions stopped to wait 25 min for this chain)"
+        if: github.event_name == 'push' && github.ref == 'refs/heads/check'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! grep -q "refresh OK" refresh-out.log; then echo "promote: no refresh OK, main untouched"; exit 0; fi
+          git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
+          git checkout -q -- . && git clean -fdq -e refresh-out.log
+          git fetch -q origin main
+          if ! git merge -q --no-edit origin/main; then git merge --abort; echo "promote skipped: check and main conflict, a session merges"; exit 0; fi
+          git push origin HEAD:main && gh workflow run refresh.yml --ref main && echo "promoted $(git rev-parse --short HEAD) to main; refresh started"

@@ -67,7 +67,8 @@ Links come from data in code; a link exists only because a reader here would tap
 ## Commands and every change
 - Session start: `python -I tools/watchdog.py`. Gates: `python -I gates.py` once per batch.
 - Release: daily in the cloud (`refresh.yml`); by hand `tools/release.py N`, `tools/open_wave.py N --apply`, `tools/index_live.py`. Pull: `open_wave.py --pull <url>`.
-- Change: commit explicit paths, push `check`, read "refresh OK", push main (= deploy), `tools/index_live.py` 0 mismatches, read one live page; proof into PLAN.md.
+- Change (fresh review 2026-11-09, sessions stopped to wait): batch every finished item into one push to `check`, then start the next item at once; never wait on the run. A passing run ("refresh OK") promotes itself to main and starts the deploy (dryrun.yml promote step); a later push never cancels an earlier run. Read the live page and index_live when a run's notice arrives, proof into PLAN.md. A conflict with main is merged by the session.
+- PLAN.md markers: DONE, LIVE, CLOSED, DECIDED, and WAITING <date> or OWNER for an item nothing can move today; the Stop hook pushes a session on while any other item is open.
 - New source: `data/sources.json` row (quoted terms, credit, `read_on`, evidence), `collect.py` `fetch_extras`, `tools/gen_cache_shape.py`, one `b_*` block, four states. Breakage: `docs/RUNBOOK.md`.
 - Cloud runs: `gh workflow run dryrun.yml --ref check -f review="<site ids>"` (phone shots, artifact `review`) and `-f speed="<paths>"` (Lighthouse mobile, log lines "speed").
 - HARD practice every kind (owner 2026-11-08 "don't miss a type"): the practice release (`-f release=true`, nightly) adds one queued page of each kind, gated or not (`tools/release.py --every-kind`), and collects world feeds. A new kind or feed joins the day it is added; a kind with none queued is named in PLAN.md.

@@ -3,7 +3,7 @@ A stall shows here the first time anyone opens a session, with its age; nothing 
 import datetime, os, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FINISHED = re.compile(r"^(DONE|LIVE|CLOSED|DECIDED)\b")
+FINISHED = re.compile(r"^(DONE|LIVE|CLOSED|DECIDED|WAITING|OWNER)\b")  # same markers as ~/.claude/hooks/plan-gate.mjs
 
 
 def open_steps(txt):
