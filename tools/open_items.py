@@ -29,4 +29,7 @@ if __name__ == "__main__":
         steps = open_steps(open(os.path.join(ROOT, "PLAN.md"), encoding="utf-8").read())
         lp = os.path.join(ROOT, "data", "last-success.txt")
         last = open(lp, encoding="utf-8").read().strip() if os.path.exists(lp) else ""
-        print("RIVER PLAN: %d open next steps. %s. First: %s" % (len(steps), release_line(datetime.date.today(), last), " | ".join(steps[:3])))
+        import subprocess
+        age = subprocess.run([sys.executable, "-I", os.path.join(ROOT, "tools", "reindex.py"), "age"], capture_output=True, text=True).stdout.strip()
+        ri = "Request-indexing job: never ran" if age in ("", "-1") else "Request-indexing job: last %s day(s) ago%s" % (age, " STALLED: open Chrome and the Claude app, or run the task by hand" if age.isdigit() and int(age) >= 2 else "")
+        print("RIVER PLAN: %d open next steps. %s. %s. First: %s" % (len(steps), release_line(datetime.date.today(), last), ri, " | ".join(steps[:3])))
