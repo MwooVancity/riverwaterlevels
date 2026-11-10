@@ -52,6 +52,18 @@ def england(row, page):
     return int(not ok)
 
 
+def ireland(row, page):
+    """An Irish tide page against the Marine Institute ERDDAP at the page's own minute (PLAN 7c): sea level above OD Malin, agreeing to rounding (0.02 m)."""
+    sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
+    t = page_t(page)
+    q = "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.csv?time%%2CWater_Level_OD_Malin&station_id=%%22%s%%22&time=%s" % (urllib.parse.quote(sid), t) if t else None
+    lines = get(q).strip().splitlines()[2:] if q else []
+    live = float(lines[0].split(",")[1]) if lines and lines[0].split(",")[1] not in ("", "NaN") else None
+    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.02
+    print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
+    return int(not ok)
+
+
 def page_t(page):
     """The page's reading time as the feeds write it (2026-11-07T13:35:00Z), or None. Each feed is asked for that same minute: against the newest value,
     a river rising in rain (Squamish, 1.3 m in hours) read as a wrong page, and the older live copy would have replaced a right one."""
@@ -68,6 +80,8 @@ def check(row):
     page = get("https://riverwaterlevels.com" + row[1])
     if "England" in str(row[4:5]):
         return england(row, page)
+    if "Ireland" in str(row[4:5]):
+        return ireland(row, page)
     if canada:
         sid, shown = re.search(r'data-n="([^"]+)"', page).group(1), re.search(r'data-live="stage">(-?[\d.]+)', page)
         t = page_t(page)
@@ -157,7 +171,7 @@ def main():
             bad += moved(every)
         except Exception as e:
             print("station check skipped, no answer:", str(e)[:80])
-    rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5])]
+    rows = [r for r in every if "Europe" in str(r[4:5]) or "Canada" in str(r[4:5]) or "England" in str(r[4:5]) or "Ireland" in str(r[4:5])]
     unknown = [r for r in every if not str(r[1]).startswith(("/river/", "/lake/", "/coast/")) and r not in rows]  # gate audit 2026-11-08: a page of a new country was skipped in silence; no truth check, no page
     for r in unknown:
         print(r[1], "FAULT no truth check for this country (%s): add one to tools/truth_world.py before its pages ship" % str(r[4:5])[:40])

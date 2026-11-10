@@ -24,7 +24,12 @@ FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and 
          # PLAN 7c: Irish harbour tide gauges; sea level, so the page says tide, never river
          "imi": {"agency": "Marine Institute", "name": "Marine Institute (Ireland), Irish National Tide Gauge Network", "api": "Marine Institute ERDDAP", "unit": "m", "zone": "Europe/Dublin", "src": "imi",
                  "emergency": "Emergency in Ireland: 112 or 999; at sea ask for the Coast Guard.", "wx": "Met Eireann", "wx_site": "met.ie", "wx_credit": "Weather warnings: see Met Eireann (met.ie).",
-                 "swap": (("River flood warnings are not on this page.", "Weather warnings are not on this page yet."), ("Weather at the river", "Weather at the harbour"), (" water level today", " tide and sea level today"))}}
+                 "swap": (("River flood warnings are not on this page.", "Weather warnings are not on this page yet."), ("Weather at the river", "Weather at the harbour"), (" water level today", " tide and sea level today"),
+                          ("<span>Water level</span>", "<span>Sea level</span>"),
+                          ("Below the gauge's zero point, a fixed reference level, not the riverbed", "Below Ordnance Datum Malin, Ireland's mean-sea-level reference; not depth"),
+                          ("Above the gauge's zero point, a fixed reference level, not the riverbed", "Above Ordnance Datum Malin, Ireland's mean-sea-level reference; not depth"),
+                          ("<span>River forecast</span><b>Not issued</b><small>No river forecast is shown for this gauge.</small>", "<span>Tide forecast</span><b>Not shown yet</b><small>Marine Institute predicted high and low tides are coming to this page.</small>"),
+                          ("No official alert feed is connected for this gauge. Check local authorities.", "Met Eireann weather warnings are not on this page yet: check met.ie/warnings."))}}
 LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 MARKS = (("HHW", "Highest on record"), ("HREC", "Highest in recent years (agency: typically the last 5 years)"), ("TRH", "Top of normal range (Environment Agency)"), ("TRL", "Bottom of normal range (Environment Agency)"), ("HW", "Agency reference high (HW)"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
          ("MW", "Average level"), ("MNW", "Mean low water"), ("GlW", "Equivalent low water (GlW)"), ("NW", "Agency reference low (NW)"), ("NNW", "Lowest on record"), ("MMAX", "Highest monthly mean for this month"), ("MAVG", "Average monthly mean for this month"), ("MMIN", "Lowest monthly mean for this month"))
@@ -636,6 +641,8 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     rec["feed"]["lake"] = p.get("lake")
     rec["feed"]["gaps"] = [w for w, have in (("rain total", (r.get("wx") or {}).get("rain")), ("water temperature", (r.get("also") or {}).get("WT")), ("river forecast", r.get("fc")), ("flow", r.get("flow"))) if not have]
     rec["feed"]["later"] = todo(p.get("feed", "pegelonline"))  # every COVER next item, named for the reader: a to-do, never a cap
+    if p.get("feed") == "imi":  # a tide gauge measures sea level only; rain and forecasts are Met Eireann 'next' items (in later), never 'not published'
+        rec["feed"]["gaps"] = []
     if p.get("feed") == "ea":  # England publishes some forecasts we do not show yet: never "not published"
         wt = (r.get("ea") or {}).get("wt")
         rec["feed"]["gaps"] = [w for w, have in (("water temperature", wt), ("flow", (r.get("ea") or {}).get("flow"))) if not have]
@@ -668,4 +675,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
         html = html.replace("Source: National Weather Service hourly point forecast", "Source: Met Office Global Spot hourly forecast for the gauge location, Powered by Met Office data").replace("Source: National Weather Service point forecast", "Source: Met Office Global Spot daily forecast for the gauge location, Powered by Met Office data")
         html = html.replace('<div class="tile sun', ea_rain_tile((r.get("wx") or {}).get("ea_rain"), now, rec["feed"]["zone"]) + '<div class="tile sun', 1)
     html = html.replace("Height above the gauge's zero point, not water depth", "%.1f ft. %s" %(to_ft(r["cm"], rec["feed"]["unit"]), "On this gauge's own scale, often a height above sea level, not water depth" if rec["feed"]["src"] == "eccc" else "Height above the gauge's zero point, not water depth"), 1)
+    if p.get("feed") == "imi":  # over 24 h a tide compares two points of its cycle: '+0.60 m in 24 h' reads as a rising sea (PLAN 7c), so the summary does not say it
+        html = re.sub(r'<span class="a1 dv">[+\-][\d.]+ m in 24 h</span>', "", html, count=1)
+        html = re.sub(r'<div class="tile trend"><i class="ic">.*?</svg></i><span>24 h change</span>.*?</div>', "", html, count=1, flags=re.S)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))

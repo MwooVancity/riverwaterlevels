@@ -1491,6 +1491,17 @@ def fetch_imi_live():
     return {"fetched_at": now_iso(), "datum": "OD Malin", "unit": "m", "stations": imi_live(get_text(IMI_LIVE))}
 
 
+def imi_row(name, stations):
+    """A world-page row for one Irish tide gauge (lib/world.py page reads: name, cm = newest level in the feed's unit, unit, time, series, lat, lon)."""
+    st = stations.get(name)
+    if not st or not st["series"]:
+        raise RuntimeError("no live Irish tide reading for %s" % name)
+    t, v = st["series"][-1]
+    day_ago = datetime.datetime.fromisoformat(t) - datetime.timedelta(days=1)
+    then = next((x[1] for x in st["series"] if datetime.datetime.fromisoformat(x[0]) >= day_ago), None)
+    return {"name": name, "number": name, "title": name, "lat": st["lat"], "lon": st["lon"], "cm": v, "unit": "m", "time": t, "then": then, "series": st["series"][-864:], "wx": {"no_weather": True}}
+
+
 def fetch_imi_hilo(station):
     """Ireland (PLAN 7b): 8 days of high/low predictions for one Marine Institute station; CC BY 4.0, heights in metres above OD Malin. 1 call."""
     hilo = imi_hilo(get_text(IMI_HILO.format(urllib.parse.quote(station))), station)
@@ -2417,6 +2428,9 @@ def wx_fill(page, rows, old, ctx):
     for r in rows:
         if r["name"] not in (page.get("gauge_pages") or []) or r.get("lat") is None or r.get("tidal"):
             continue
+        if page.get("feed") == "imi":  # Met Eireann weather is a COVER 'next'; nothing else is fetched for an Irish tide gauge yet
+            r["wx"] = {"no_weather": True}
+            continue
         w = dict((old.get(r["name"]) or {}).get("wx") or {})
         try:
             {"eccc": wx_canada, "ea": wx_england}.get(page.get("feed"), wx_germany)(r, w, ctx)
@@ -2617,6 +2631,13 @@ def fetch_world():
                 feed = page.get("feed", "pegelonline")
                 if miss.get(feed, 0) >= 3:
                     raise RuntimeError("feed down this run")
+                if feed == "imi":  # PLAN 7c: one network call per run serves every Irish gauge
+                    if "imi-live" not in ctx:
+                        ctx["imi-live"] = fetch_imi_live()["stations"]
+                    rows.append(imi_row(name, ctx["imi-live"]))
+                    miss[feed] = 0
+                    note("imi", "ok")
+                    continue
                 if page.get("feed") in ("eccc", "ea"):
                     rows.append((fetch_eccc if page["feed"] == "eccc" else fetch_ea)(name, old.get(name)))
                     miss[feed] = 0

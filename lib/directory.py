@@ -202,7 +202,7 @@ def world_name(p):
     return p["river"] if p.get("lake") or p.get("flat") else p["river"] + " river"
 
 
-COUNTRY = {None: "Germany", "pegelonline": "Germany", "eccc": "Canada", "ea": "England"}
+COUNTRY = {None: "Germany", "pegelonline": "Germany", "eccc": "Canada", "ea": "England", "imi": "Ireland"}
 
 
 def world_countries():
