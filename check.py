@@ -89,6 +89,7 @@ def ui_checks(body, plain=True):
 
 READ = {"pages": 0, "wide": 0, "wide_pages": 0, "eg": ""}
 DOOR = collections.defaultdict(list)  # gauge id -> [(url, minhash)]; PLAN 0j
+DOOR_SALTS = [int(hashlib.md5(b"salt%d" % k).hexdigest()[:8], 16) for k in range(64)]
 
 
 def door_sig(h):
@@ -101,8 +102,8 @@ def door_sig(h):
     own = set(re.findall(r"[a-z0-9]+", html.unescape(re.sub(r"<[^>]+>", " ", h1.group(1))).lower()))
     body = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))).lower()
     w = [x for x in re.findall(r"[a-z]+", body) if x not in own]  # words only: the readings and times differ by build minute, not by page
-    sh = {" ".join(w[i:i + 5]) for i in range(max(1, len(w) - 4))}
-    return gid.group(1).strip(), tuple(min(int(hashlib.md5((str(k) + s).encode()).hexdigest()[:8], 16) for s in sh) for k in range(64))
+    hs = [int(hashlib.md5(" ".join(w[i:i + 5]).encode()).hexdigest()[:8], 16) for i in range(max(1, len(w) - 4))]  # one md5 per shingle; the 64 hash functions are XOR salts (code review 2026-11-09: 64 md5s per shingle = billions at 14,000 pages)
+    return gid.group(1).strip(), tuple(min(x ^ salt for x in hs) for salt in DOOR_SALTS)
 
 
 def door_pairs(door, cut=0.95):

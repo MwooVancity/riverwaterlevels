@@ -19,25 +19,47 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 9455920,Anchorage,Anchorage,AK,ocean
 9439040,Astoria,Astoria,OR,ocean
 8534720,Atlantic City,Atlantic City,NJ,ocean
+9432373,Bandon,Bandon,OR,ocean
 8413320,Bar Harbor,Bar Harbor,ME,ocean
 03312900,Barren River Lake,Finney,KY,lake
+9449211,Bellingham,Bellingham,WA,ocean
+8532337,Belmar,Belmar,NJ,ocean
 08102000,Belton Lake,Belton,TX,lake
+8722816,Boca Raton,Boca Raton,FL,ocean
 8443970,Boston,Boston,MA,ocean
+8726247,Bradenton,Bradenton,FL,ocean
+8465233,Branford,Branford,CT,ocean
+8535962,Cape May,Cape May,NJ,ocean
 8727520,Cedar Key,Cedar Key,FL,ocean
 9432780,Charleston,Coos Bay,OR,ocean
 8447435,Chatham,Chatham,MA,ocean
+8726706,Clearwater,Clearwater,FL,ocean
 8726724,Clearwater Beach,Clearwater Beach,FL,ocean
+8775870,Corpus Christi,Corpus Christi,TX,ocean
 9419750,Crescent City,Crescent City,CA,ocean
+8446166,Duxbury,Duxbury,MA,ocean
+8667630,Edisto Beach,Edisto Beach,SC,ocean
+9447427,Edmonds,Edmonds,WA,ocean
+8725747,Englewood,Englewood,FL,ocean
+9447659,Everett,Everett,WA,ocean
 02087182,Falls Lake,Falls,NC,lake
 8720030,Fernandina Beach,Fernandina Beach,FL,ocean
+9434032,Florence,Florence,OR,ocean
 8725520,Fort Myers,Fort Myers,FL,ocean
+8722219,Fort Pierce,Fort Pierce,FL,ocean
 8771450,Galveston Pier 21,Galveston,TX,ocean
 9437540,Garibaldi,Garibaldi,OR,ocean
 10010000,Great Salt Lake,Saltair Boat Harbor,UT,lake
 03305990,Green River Lake,Campbellsville,KY,lake
+8731439,Gulf Shores,Gulf Shores,AL,ocean
+9455558,Homer,Homer,AK,ocean
 1612340,Honolulu,Honolulu,HI,ocean
+8558690,Indian River Inlet,Indian River Inlet,DE,ocean
+8720291,Jacksonville Beach,Jacksonville Beach,FL,ocean
 02098197,Jordan Lake,Moncure,NC,lake
 9452210,Juneau,Juneau,AK,ocean
+8722499,Jupiter,Jupiter,FL,ocean
+8722495,Jupiter Inlet,Jupiter Inlet,FL,ocean
 9450460,Ketchikan,Ketchikan,AK,ocean
 08143000,Lake Brownwood,Brownwood,TX,lake
 04294500,Lake Champlain,Burlington,VT,lake
@@ -49,33 +71,58 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11149300,Lake Nacimiento,Bradley,CA,lake
 08164525,Lake Texana,Edna,TX,lake
 08060500,Lavon Lake,Lavon,TX,lake
+8532591,Manasquan Inlet,Manasquan Inlet,NJ,ocean
+8724991,Marco,Marco,FL,ocean
+8724967,Marco Island,Marco Island,FL,ocean
+8720692,Matanzas Inlet,Matanzas Inlet,FL,ocean
 8720218,Mayport Bar Pilots Dock,Mayport,FL,ocean
+9410196,Mission Bay,Mission Bay,CA,ocean
 03372400,Monroe Lake,Harrodsburg,IN,lake
 9413450,Monterey,Monterey,CA,ocean
+8444601,Nantasket Beach,Nantasket Beach,MA,ocean
 8725114,Naples Bay North,Naples,FL,ocean
+8727001,New Port Richey,New Port Richey,FL,ocean
+8721164,New Smyrna Beach,New Smyrna Beach,FL,ocean
 03310900,Nolin Lake,Kyrock,KY,lake
+8660642,North Myrtle Beach,North Myrtle Beach,SC,ocean
 9418767,North Spit,Eureka,CA,ocean
+8659182,Oak Island,Oak Island,NC,ocean
+9446969,Olympia,Olympia,WA,ocean
 8729108,Panama City,Panama City,FL,ocean
 8729210,Panama City Beach,Panama City Beach,FL,ocean
 8729840,Pensacola,Pensacola,FL,ocean
+8721138,Ponce Inlet,Ponce Inlet,FL,ocean
 9444090,Port Angeles,Port Angeles,WA,ocean
 8775237,Port Aransas,Port Aransas,TX,ocean
 9444900,Port Townsend,Port Townsend,WA,ocean
+8446121,Provincetown,Provincetown,MA,ocean
 08064550,Richland-Chambers Reservoir,Kerens,TX,lake
+9415316,Rio Vista,Rio Vista,CA,ocean
 03318005,Rough River Lake,Falls of Rough,KY,lake
 08039300,Sam Rayburn Reservoir,Jasper,TX,lake
 9414290,San Francisco,San Francisco,CA,ocean
 8531680,Sandy Hook,Sandy Hook,NJ,ocean
 9411340,Santa Barbara,Santa Barbara,CA,ocean
+8726083,Sarasota,Sarasota,FL,ocean
+8670681,Savannah,Savannah,GA,ocean
+8445138,Scituate,Scituate,MA,ocean
 9447130,Seattle,Seattle,WA,ocean
+8726034,Siesta Key,Siesta Key,FL,ocean
 08109900,Somerville Lake,Somerville,TX,lake
 8779748,South Padre Island CG Station,South Padre Island,TX,ocean
 8722956,South Port Everglades,Fort Lauderdale,FL,ocean
 8720226,Southbank Riverwalk,Jacksonville,FL,ocean
+8722357,Stuart,Stuart,FL,ocean
 9446484,Tacoma,Tacoma,WA,ocean
+8726668,Tampa,Tampa,FL,ocean
 8518750,The Battery,New York,NY,ocean
 02193900,Thurmond Lake,Plum Branch,SC,lake
+9437331,Tillamook,Tillamook,OR,ocean
 8721604,Trident Pier,Cocoa Beach,FL,ocean
+9411189,Ventura,Ventura,CA,ocean
+8720554,Vilano Beach,Vilano Beach,FL,ocean
+9434939,Waldport,Waldport,OR,ocean
+8446613,Wellfleet,Wellfleet,MA,ocean
 8658163,Wrightsville Beach,Wrightsville Beach,NC,ocean
 06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,100
 04122001,Muskegon River,Bridge Street At Newaygo,MI,85
@@ -7398,50 +7445,3 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06153800,Milk River,Merrill Road Near Harlem,MT,10
 09192750,New Fork River,Above New Fork Lakes Near Cora,WY,10
 16605500,Wailuku River,Iao Valley Road Maui,HI,10
-9449211,Bellingham,Bellingham,WA,ocean
-8775870,Corpus Christi,Corpus Christi,TX,ocean
-9447427,Edmonds,Edmonds,WA,ocean
-9455558,Homer,Homer,AK,ocean
-8558690,Indian River Inlet,Indian River Inlet,DE,ocean
-8720291,Jacksonville Beach,Jacksonville Beach,FL,ocean
-8724991,Marco,Marco,FL,ocean
-9434939,Waldport,Waldport,OR,ocean
-9410196,Mission Bay,Mission Bay,CA,ocean
-8726247,Bradenton,Bradenton,FL,ocean
-8465233,Branford,Branford,CT,ocean
-8535962,Cape May,Cape May,NJ,ocean
-8726706,Clearwater,Clearwater,FL,ocean
-8444601,Nantasket Beach,Nantasket Beach,MA,ocean
-8660642,North Myrtle Beach,North Myrtle Beach,SC,ocean
-8670681,Savannah,Savannah,GA,ocean
-8726668,Tampa,Tampa,FL,ocean
-9437331,Tillamook,Tillamook,OR,ocean
-9432373,Bandon,Bandon,OR,ocean
-8532337,Belmar,Belmar,NJ,ocean
-8722816,Boca Raton,Boca Raton,FL,ocean
-8446166,Duxbury,Duxbury,MA,ocean
-8667630,Edisto Beach,Edisto Beach,SC,ocean
-8725747,Englewood,Englewood,FL,ocean
-9447659,Everett,Everett,WA,ocean
-9434032,Florence,Florence,OR,ocean
-8722219,Fort Pierce,Fort Pierce,FL,ocean
-8731439,Gulf Shores,Gulf Shores,AL,ocean
-8722499,Jupiter,Jupiter,FL,ocean
-8722495,Jupiter Inlet,Jupiter Inlet,FL,ocean
-8532591,Manasquan Inlet,Manasquan Inlet,NJ,ocean
-8724967,Marco Island,Marco Island,FL,ocean
-8720692,Matanzas Inlet,Matanzas Inlet,FL,ocean
-8727001,New Port Richey,New Port Richey,FL,ocean
-8721164,New Smyrna Beach,New Smyrna Beach,FL,ocean
-8659182,Oak Island,Oak Island,NC,ocean
-9446969,Olympia,Olympia,WA,ocean
-8721138,Ponce Inlet,Ponce Inlet,FL,ocean
-8446121,Provincetown,Provincetown,MA,ocean
-9415316,Rio Vista,Rio Vista,CA,ocean
-8726083,Sarasota,Sarasota,FL,ocean
-8445138,Scituate,Scituate,MA,ocean
-8726034,Siesta Key,Siesta Key,FL,ocean
-8722357,Stuart,Stuart,FL,ocean
-9411189,Ventura,Ventura,CA,ocean
-8720554,Vilano Beach,Vilano Beach,FL,ocean
-8446613,Wellfleet,Wellfleet,MA,ocean

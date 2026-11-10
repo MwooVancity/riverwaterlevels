@@ -150,7 +150,7 @@ def b_rate(G):
         sa = _at(sg, sg[-1][0] - datetime.timedelta(hours=h), tol) if sg else None
         sd = ("%+.2f ft" % (sg[-1][1] - sa[1])) if sa else "–"
         if seen and seen[1] == (fa[1], round(pct, 1), sd):
-            new = "Last %d to %d h" % (seen[2], h)
+            new = "Last %d h (same for %d to %d h)" % (seen[2], seen[2], h)  # code review 2026-11-09: 'Last 1 to 12 h' read as one span; the card keeps its own window and says the longer ones match
             cards[-1] = cards[-1].replace(seen[0], new, 1)
             seen = (new, seen[1], seen[2])
             continue

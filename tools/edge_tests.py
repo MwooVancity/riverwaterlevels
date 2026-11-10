@@ -20,7 +20,7 @@ def run():
     t0_ = datetime.datetime(2026, 11, 9, 15, tzinfo=datetime.timezone.utc)
     fl_ = [(t0_ - datetime.timedelta(minutes=15 * k), 1160.0 if k == 0 else (1210.0 if k >= 96 else 1200.0), {}) for k in range(100, -1, -1)]
     rb_ = str(b2_.b_rate({"fl": fl_, "sg": [], "zone": zoneinfo.ZoneInfo("America/Denver"), "offline": False, "osc": False, "site": "x"}))
-    assert "Last 1 to 12 h" in rb_ and rb_.count("Last 1 h") == 0 and "Last 24 h" in rb_ and "Full table" not in rb_, "rate of change: identical 1-12 h windows were printed four times, or the duplicate full table is back (fresh review 2026-11-09, Madison)"
+    assert "Last 1 h (same for 1 to 12 h)" in rb_ and rb_.count("Last 3 h") == 0 and "Last 24 h" in rb_ and "Full table" not in rb_, "rate of change: identical 1-12 h windows were printed four times, or the duplicate full table is back (fresh review 2026-11-09, Madison)"
     from lib import blocks3 as b3_
     lcg_ = lambda days: {"lake": True, "sg": [(t0_, 1039.66, {})], "rec": {"usbr_lc": {"days": days, "cap_af": 26120000, "cap_elev_ft": 1219.6}}}
     assert b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000], "2026-11-08": [1039.66, 6954000]})) == ("2026-11-08", 1039.66, 6954000) and b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000]})) == ("2026-11-07", 1039.55, 6947000), "Lake Mead storage: the matching day was not used, or a table one day behind RISE left storage Unknown (live 2026-11-09)"

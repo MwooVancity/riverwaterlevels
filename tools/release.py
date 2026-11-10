@@ -41,6 +41,10 @@ first_ = {}
 for r in q_:
     if r["keyword"] and r["gauge"] and r["keyword"] not in live_kw:
         first_.setdefault(r["keyword"], r["gauge"])
+import functools
+
+
+@functools.lru_cache(maxsize=None)  # code review 2026-11-09: share() runs per row and per pick; one cache read per (keyword, gauge)
 def promise(k, g):
     """PLAN 10 keyword promise table: a search whose last words ask for something the page cannot show scores 0, so it never opens on that search.
     fishing report: never (no source reports fishing); surf report: needs buoy waves (no buoy reader yet); water temp(erature): the gauge's cache holds a

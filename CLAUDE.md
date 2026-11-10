@@ -46,7 +46,7 @@ Correct is not enough: a page fails if a person can't say what the river is doin
 ## HARD: internal links (owner 2026-11-08 "godlike"; 2026-11-09 "I don't want internal links if it's forced")
 Links come from data in code; a link exists only because a reader here would tap it next. Never add a link to reach a count: no backfill, no far-away fillers.
 1. Tree: home > country > state or region > hub > gauge page; breadcrumb on every water page (`crumb_ld`); hubs list all children; depth <= 4, no orphans (`check.py`).
-2. Out: other water a reader here could go to today: up to 5 within 60 mi / 100 km (about an hour's drive; no road data, so straight line), nearest first, distance shown, any country or kind (`lib/page.py` `NEAR_MI`, `lib/world.py` `NEAR_KM`); none nearby = no list (the hub reaches the rest).
+2. Out: other water a reader here could go to today: up to 5 within 60 mi / 100 km (about an hour's drive; no road data, so straight line), same watershed (USGS HUC8) first, then nearest, distance shown, any country or kind (`lib/page.py` `NEAR_MI`, `lib/world.py` `NEAR_KM`); none nearby = no list (the hub reaches the rest).
 3. Same river: upstream and downstream named as such. Rivers, lakes and coasts list the nearest of each other kind, both ways, within the same distance.
 4. In: no reverse lists; a page is never added to another page's list because it needs inbound links (deleted 2026-11-09). An isolated page is reached through its hub.
 5. A page added or held rebuilds every page whose list changes, same run (`nb_urls` in `_built.json`). Only built, indexable pages are linked.

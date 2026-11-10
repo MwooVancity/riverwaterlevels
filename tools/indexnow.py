@@ -16,10 +16,17 @@ def payload(urls):
     return {"host": HOST, "key": KEY, "keyLocation": "https://%s/%s.txt" % (HOST, KEY), "urlList": urls}
 
 
+def allow_at(rev):
+    out = subprocess.run(["git", "show", "%s:data/index-allow.json" % rev], cwd=ROOT, capture_output=True, text=True).stdout
+    try:
+        return set(json.loads(out).get("allow") or [])
+    except ValueError:  # file missing at that commit: nothing was allowed
+        return set()
+
+
 def new_pages():
-    """Paths added to the allow list by the last commit (git diff), so a run with no release sends nothing."""
-    d = subprocess.run(["git", "diff", "HEAD~1", "HEAD", "--", "data/index-allow.json"], cwd=ROOT, capture_output=True, text=True).stdout
-    return [l.strip().lstrip("+").strip().strip('",') for l in d.splitlines() if l.startswith("+ ") and '"/' in l]
+    """Paths in the allow list now but not one commit ago (code review 2026-11-09: diff lines resent a re-commaed entry and missed unindented ones)."""
+    return sorted(allow_at("HEAD") - allow_at("HEAD~1"))
 
 
 def send(urls):

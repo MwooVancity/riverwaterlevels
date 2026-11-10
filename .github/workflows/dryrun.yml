@@ -24,7 +24,7 @@ on:
         default: ""
 
 concurrency:
-  group: dryrun-${{ github.sha }}  # fresh review 2026-11-09: one group for all runs cancelled the earlier push's gate, so sessions pushed one change at a time
+  group: dryrun-${{ github.event_name }}-${{ github.event_name == 'push' && github.sha || github.run_id }}  # code review 2026-11-09: a review dispatch on the same commit cancelled the push run and its promote; fresh review 2026-11-09: one group for all runs cancelled the earlier push's gate, so sessions pushed one change at a time
   cancel-in-progress: true
 
 permissions:
@@ -43,8 +43,6 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0  # promote merges main's bot commits before pushing
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -123,6 +121,11 @@ jobs:
           if ! grep -q "refresh OK" refresh-out.log; then echo "promote: no refresh OK, main untouched"; exit 0; fi
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout -q -- . && git clean -fdq -e refresh-out.log
-          git fetch -q origin main
-          if ! git merge -q --no-edit origin/main; then git merge --abort; echo "promote skipped: check and main conflict, a session merges"; exit 0; fi
-          git push origin HEAD:main && gh workflow run refresh.yml --ref main && echo "promoted $(git rev-parse --short HEAD) to main; refresh started"
+          git fetch -q --unshallow origin 2>/dev/null || true  # full history only here (the checkout stays shallow for every other run)
+          for try in 1 2 3; do  # two runs promoting at once: the loser fetches the winner's main and tries again (code review 2026-11-09)
+            git fetch -q origin main
+            if ! git merge -q --no-edit origin/main; then git merge --abort; echo "promote skipped: check and main conflict, a session merges"; exit 0; fi
+            if git push -q origin HEAD:main; then gh workflow run refresh.yml --ref main && echo "promoted $(git rev-parse --short HEAD) to main; refresh started"; exit 0; fi
+            sleep 20
+          done
+          echo "PROMOTE FAILED after 3 tries: main moved; a session pushes main"
