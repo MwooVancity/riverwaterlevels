@@ -79,11 +79,16 @@ jobs:
         env:
           SITES: ${{ inputs.review }}
         run: |
-          python -I collect.py $SITES > review-collect.log 2>&1 || tail -5 review-collect.log
-          python -I build.py $SITES | tail -2
-          python -I check.py dist_next 2>&1 | tail -20 > .review-check.txt || true
+          LIVE=""
+          if [ -z "$(printf '%s\n' $SITES | grep -v '^/')" ]; then  # only page paths (a world page, 2026-11-09): shoot the deployed page, no collect or build
+            LIVE="--live"; echo "review of live paths: $SITES" > .review-check.txt
+          else
+            python -I collect.py $SITES > review-collect.log 2>&1 || tail -5 review-collect.log
+            python -I build.py $SITES | tail -2
+            python -I check.py dist_next 2>&1 | tail -20 > .review-check.txt || true
+          fi
           npm i --no-save --silent playwright@1.49.1 && npx playwright install --with-deps chromium > /dev/null
-          node tools/hater_shots.mjs $SITES
+          node tools/hater_shots.mjs $SITES $LIVE
           mkdir -p .cache/review && cp .review-check.txt .cache/review/check.txt
       - name: Phone speed of live pages (drawing board 8; the PageSpeed API quota ran out 2026-11-08)
         if: github.event_name == 'workflow_dispatch' && inputs.speed != ''
