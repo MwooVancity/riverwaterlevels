@@ -109,7 +109,7 @@ def check(row):
     else:
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
     ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= (2 if t else 50)  # same minute: rounding only (gate audit 2026-11-08)
-    print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT")
+    print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT", "page time", t or "none")  # 2026-11-09: Duesseldorf built 26 against feed 13 twice in the cloud while a rebuild from the live feed gives 13; the time shows whether a stale cache row was built
     return int(not ok) + wt_block(name, page, row)
 
 
