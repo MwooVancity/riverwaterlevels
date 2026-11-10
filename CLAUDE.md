@@ -66,6 +66,7 @@ Links come from data in code; a link exists only because a reader here would tap
 
 ## Commands and every change
 - Session start: `python -I tools/watchdog.py`. Gates: `python -I gates.py` once per batch.
+- Owner dashboard (owner 2026-11-10): the hourly watchdog run's Summary tab (`tools/ops_summary.py`): is the site deploying and why not, pages held, live pages not open to Google and why. Private to the repo; never a public page.
 - Release: daily in the cloud (`refresh.yml`); by hand `tools/release.py N`, `tools/open_wave.py N --apply`, `tools/index_live.py`. Pull: `open_wave.py --pull <url>`.
 - Change (fresh review 2026-11-09, sessions stopped to wait): batch every finished item into one push to `check`, then start the next item at once; never wait on the run. A passing run ("refresh OK") promotes itself to main and starts the deploy (dryrun.yml promote step); a later push never cancels an earlier run. Read the live page and index_live when a run's notice arrives, proof into PLAN.md. A conflict with main is merged by the session.
 - PLAN.md markers: DONE, LIVE, CLOSED, DECIDED, and WAITING <date> or OWNER for an item nothing can move today; the Stop hook pushes a session on while any other item is open.

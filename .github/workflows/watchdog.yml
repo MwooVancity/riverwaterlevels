@@ -33,7 +33,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           WORKERS_PAID: ${{ vars.WORKERS_PAID }}
-        run: python tools/watchdog.py
+        run: python tools/watchdog.py | tee watchdog-out.txt
       - name: Heal - roll our own code back to the live build's version when new code has failed every refresh for 3 h (tools/rollback.py; once, then a person)
         id: rollback
         continue-on-error: true
@@ -60,6 +60,12 @@ jobs:
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: python tools/truth_world.py
+      - name: Owner dashboard (this run's Summary tab; tools/ops_summary.py)
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -I tools/ops_summary.py watchdog-out.txt >> "$GITHUB_STEP_SUMMARY"
       - name: Keep the schedules on (GitHub turns them off after 60 days with no commit; the daily release normally commits)
         run: |
           if [ $(( $(date +%s) - $(git log -1 --format=%ct) )) -gt 3888000 ] || [ "${{ github.event.inputs.test_keepalive }}" = "true" ]; then
