@@ -202,6 +202,8 @@ def b_official_links(G):
         links = [("%s page for %s %s" % (G["agy"]["short"], G["agy"]["label"].split()[-1], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
     if G.get("agy") and G["agy"].get("short") == "Reclamation" and re.search(r"\b(Mead|Powell)\b", G.get("river") or ""):  # PLAN 0i: the official projection of these two lakes is a monthly PDF whose tables move; linked, never copied (truth first)
         links.append(("Reclamation 24-Month Study: projected end-of-month elevations of Lake Powell and Lake Mead", "https://www.usbr.gov/lc/region/g4000/24mo/index.html"))
+    if str(G.get("site", "")).startswith("COOPS-") and G.get("lake"):  # PLAN 8b: the lake-wide average (all coordinated gauges) is monthly on NOAA GLERL's page; linked, not copied
+        links.append(("NOAA GLERL Great Lakes water levels: lake-wide averages and long-term records", "https://www.glerl.noaa.gov/data/wlevels/"))
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
