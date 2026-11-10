@@ -1,7 +1,21 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(bash tools/daily_report.sh)",
+      "Bash(bash tools/index_job.sh next)",
+      "Bash(bash tools/index_job.sh done:*)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__tabs_create_mcp",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__browser_batch",
+      "mcp__claude-in-chrome__tabs_close_mcp"
+    ]
+  },
   "hooks": {
     "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "python -I tools/open_items.py --brief" } ] }
+      { "hooks": [ { "type": "command", "command": "\"$(ls -d /c/Users/mwoo7/AppData/Local/Python/pythoncore-3.*-64/python.exe | sort -V | tail -1)\" -I tools/open_items.py --brief" } ] }
     ]
   }
 }
