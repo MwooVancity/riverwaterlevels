@@ -127,6 +127,11 @@ def selftest():
         new_fail(td, "/lake/x/", ["/lake/x/: level 1 on the page, 2 at USGS"])
         f = json.load(open(os.path.join(td, "_failed.json")))
         assert f["pages"] == {"lake/x/index.html": ["/lake/x/: level 1 on the page, 2 at USGS"]} and f["site"] == [], "a new page's mismatch was not recorded for quarantine (release 2026-11-07)"
+    so = {"/river/a/": "1", "/river/b/": "2", "/river/c/": "3"}
+    new_, old_ = "2026-11-10T23:00:00+00:00", "2026-11-10T22:00:00+00:00"
+    assert unchanged(list(so), so, {"1": {"at": new_}, "2": {"at": old_}, "/germany/x/": {"at": "2026-11-11"}}) == (["/river/a/", "/river/c/"], 1), "selftest: a carried page was checked, or a page with no build record was skipped"
+    assert unchanged(list(so), so, {"1": {"at": new_}, "2": {"at": new_}, "3": {"at": new_}}) == (list(so), 0), "selftest: a full rebuild skipped pages"
+    assert unchanged(list(so), so, {})[0] == list(so), "selftest: an empty build record skipped pages"
     print("truth_live selftest OK")
 
 
@@ -152,6 +157,19 @@ def record(status, compared, bad, skipped):
     json.dump({"checked_at": now, "status": status, "compared": compared, "skipped": skipped, "mismatches": bad[:10], "last_ok_at": last_ok}, open(os.path.join(root, "_truth.json"), "w", encoding="utf-8"))
 
 
+def unchanged(urls, site_of, built=None):
+    """(urls built this run, count left out). This run's pages share the newest "at" in _built.json; an older "at" is a copy build.py carried
+    from the published site. No record, unreadable file, or a page with no build record: checked (never skipped by doubt)."""
+    try:
+        built = built if built is not None else json.load(open(os.path.join(LOCAL, "_built.json"), encoding="utf-8"))
+        ats = {s: (b or {}).get("at") for s, b in built.items() if not s.startswith("/")}
+        new = max(a for a in ats.values() if a)
+    except (OSError, ValueError, AttributeError):
+        return urls, 0
+    keep = [u for u in urls if ats.get(site_of.get(u)) in (None, new)]
+    return keep, len(urls) - len(keep)
+
+
 def main():
     bad = []
     skipped = []
@@ -169,6 +187,9 @@ def main():
         urls = (urls + urls)[k:k + SAMPLE]
     great = []  # Great Lakes pages (NOAA CO-OPS, IGLD)
     site_of = {g_[1]: str(g_[4]).split()[-1] for g_ in gauges if len(g_) > 4}  # gauges.json: [name, url, lat, lon, "State ST site"]
+    n_same = 0
+    if LOCAL:  # only what changed (run-time ledger 2026-11-10: 0.2 s a page passes the 45-min brake near 12,000 pages): a page build.py carried byte for byte passed this gate when it was built
+        urls, n_same = unchanged(urls, site_of)
     html = dict(pmap(lambda u: (u, None if u in carried else page(u)), urls))
     for url in urls:
         if url in carried:
@@ -362,6 +383,8 @@ def main():
     n_noaa = sum(1 for _, u, *_ in gauges if u.startswith("/coast/")) + len(great)
     print("truth_live: %d gauge pages compared with USGS and NWS, %d with their operator (CDEC, Reclamation, TWDB), %d coast and Great Lakes pages with NOAA (Great Lakes: %s), %d mismatches, %d skipped%s" % (
         len(pages), len(agency), n_noaa, ", ".join(great) or "none", len(bad), len(skipped), (": %s" % "; ".join(str(x)[:90] for x in skipped[:6])) if skipped else ""))
+    if n_same:
+        print("truth_live: %d pages carried unchanged from the published site, checked when they were built" % n_same)
     for b in bad[:25]:
         print("  MISMATCH", b)
     for s in stale[:25]:
