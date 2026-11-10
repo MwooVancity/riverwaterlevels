@@ -47,12 +47,12 @@ import functools
 @functools.lru_cache(maxsize=None)  # code review 2026-11-09: share() runs per row and per pick; one cache read per (keyword, gauge)
 def promise(k, g):
     """PLAN 10 keyword promise table: a search whose last words ask for something the page cannot show scores 0, so it never opens on that search.
-    fishing report: never (no source reports fishing); surf report: needs buoy waves (no buoy reader yet); water temp(erature): the gauge's cache holds a
+    fishing report: never (no source reports fishing); surf report: the coast's cache holds its offshore buoy (fetch_buoy); water temp(erature): the gauge's cache holds a
     temperature series (USGS 00010, GLSEA lake surface or NOAA water temperature); dam release: the cache holds a dam outflow (dam_*). A missing cache = not ready."""
     k = (k or "").lower()
-    if k.endswith(("fishing report", "surf report")):
+    if k.endswith("fishing report"):
         return False
-    need = ('"00010"', '"glsea"', '"water_temperature"', '"wtemp"') if re.search(r"water temp(erature)?$", k) else ('"dam_',) if k.endswith("dam release") else None
+    need = ('"buoy"',) if k.endswith("surf report") else ('"00010"', '"glsea"', '"water_temperature"', '"wtemp"') if re.search(r"water temp(erature)?$", k) else ('"dam_',) if k.endswith("dam release") else None
     if not need:
         return True
     p_ = os.path.join(ROOT, "cache", "%s.json" % g) if g else ""
@@ -60,7 +60,7 @@ def promise(k, g):
     return any(x in t_ for x in need)
 
 
-assert promise("kern river fishing report", None) is False and promise("kern river level", None) is True and promise("lake mead water temperature", None) is False, "release: keyword promise table"  # no cache for None: a temperature search is not ready
+assert promise("kern river fishing report", None) is False and promise("oceanside surf report", None) is False and promise("kern river level", None) is True and promise("lake mead water temperature", None) is False, "release: keyword promise table"  # no cache for None: a temperature search is not ready
 
 def share(t, k, g=None):
     return 0 if not k or not promise(k, g) else int(t or 0) * (1 if k not in live_kw and first_.get(k, g) == g else 0.05)  # a world row is the first gauge when no US gauge holds the keyword
