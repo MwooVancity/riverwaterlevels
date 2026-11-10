@@ -78,6 +78,7 @@ TABS = {
 
 
 KIND_NAME = {"river": "Nearest river gauge on this site", "lake": "Nearest lake on this site", "coast": "Nearest tide station on this site"}
+TITLE_TODAY = {"08330000"}  # Rio Grande at Albuquerque; one page, so the change can be measured
 NEAR_MI = 60  # owner 2026-11-09 "no forced internal links": other water a reader here could drive to today (about an hour; reviewers called 107 and 127 mi not nearby); the same river at any distance is the upstream/downstream strip; farther pages are reached through the hubs
 _IX = {}
 
@@ -583,6 +584,8 @@ def build_tab(tab, G, pages):
     # The title names water temperature only while the tile shows it (fresh under 24 h, Celsius, not held as suspect): never a promise the page breaks.
     wt_ = bool(b3.conditions(G).get("wt"))
     title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, ", water temperature" if wt_ else "", G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
+        title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
         title = mk_title("%s tides, tide times and tide chart today: %s %s%s, %s (NOAA %s)" % (place, G["river"], "tide table" if G.get("tables") else "water level", " and water temperature" if wt_ else "", st, G["site"]))
     if tab == "dashboard":
