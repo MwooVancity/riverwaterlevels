@@ -18,7 +18,7 @@ REBUILD_MIN = 120     # the Worker rebuilds on the hour only when the last build
 EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
 # a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
 HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
-SLOW = {"world-normals": 750, "world-access": 750}  # fetched only when 720 h old (collect.py world_extras): 50 h called them dead (2026-11-07: world-normals "94 h")
+SLOW = {"world-normals": 750, "world-access": 750, "access": 750, "land": 750, "cdec_res": 750}  # fetched only when 720 h old (collect.py world_extras, collect.py MONTHLY): 50 h called them dead (2026-11-07: world-normals "94 h"; 2026-11-10: cdec_res "75 h", one gauge fetched fine on 11-07). A failing run still alarms (the failed-share rule below)
 
 
 def get(path, raw=False):
