@@ -20,7 +20,11 @@ FEEDS = {"pegelonline": {"agency": "WSV", "name": "German Federal Waterways and 
                 "swap": (("No active Environment Agency weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed.", "No Environment Agency flood warning or flood alert is in force for an area that holds this gauge or lies within 150 m of it."),
                          ("No active Environment Agency weather alerts", "No flood warnings in force"), ("<h2>Weather alerts", "<h2>Flood warnings and alerts"), ("Link to Weather alerts", "Link to Flood warnings and alerts"), ("Environment Agency message valid until not stated", "No end time stated by the Environment Agency"),
                          ("<span>River forecast</span><b>Not issued</b><small>No river forecast is shown for this gauge.</small>", "<span>River forecast</span><b>Not shown</b><small>GOV.UK Check for flooding shows an agency forecast at some stations.</small>"),
-                         ("Source: Environment Agency alerts for the gauge location", "Source: Environment Agency flood warnings and alerts in force, for warning areas that hold the gauge or lie within 150 m of it, from each area's map"))}}
+                         ("Source: Environment Agency alerts for the gauge location", "Source: Environment Agency flood warnings and alerts in force, for warning areas that hold the gauge or lie within 150 m of it, from each area's map"))},
+         # PLAN 7c: Irish harbour tide gauges; sea level, so the page says tide, never river
+         "imi": {"agency": "Marine Institute", "name": "Marine Institute (Ireland), Irish National Tide Gauge Network", "api": "Marine Institute ERDDAP", "unit": "m", "zone": "Europe/Dublin", "src": "imi",
+                 "emergency": "Emergency in Ireland: 112 or 999; at sea ask for the Coast Guard.", "wx": "Met Eireann", "wx_site": "met.ie", "wx_credit": "Weather warnings: see Met Eireann (met.ie).",
+                 "swap": (("River flood warnings are not on this page.", "Weather warnings are not on this page yet."), ("Weather at the river", "Weather at the harbour"), (" water level today", " tide and sea level today"))}}
 LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 MARKS = (("HHW", "Highest on record"), ("HREC", "Highest in recent years (agency: typically the last 5 years)"), ("TRH", "Top of normal range (Environment Agency)"), ("TRL", "Bottom of normal range (Environment Agency)"), ("HW", "Agency reference high (HW)"), ("HSW", "Highest level for shipping"), ("M_II", "High-water shipping mark II"), ("M_I", "High-water shipping mark I"), ("MHW", "Mean high water"),
          ("MW", "Average level"), ("MNW", "Mean low water"), ("GlW", "Equivalent low water (GlW)"), ("NW", "Agency reference low (NW)"), ("NNW", "Lowest on record"), ("MMAX", "Highest monthly mean for this month"), ("MAVG", "Average monthly mean for this month"), ("MMIN", "Lowest monthly mean for this month"))
@@ -62,6 +66,8 @@ def to_rec(page, r):
         rng = r.get("range")
         label, marks = LABEL.get(r.get("state"), "Unknown"), r.get("marks") or {}
         note = ("Environment Agency label, against its normal range for this gauge, %s to %s: on record, the level is above %s about 95%% of the time and above %s about 5%% of the time." %(fmt_level(rng[0], "m"), fmt_level(rng[1], "m"), fmt_level(rng[0], "m"), fmt_level(rng[1], "m"))) if rng else "The Environment Agency publishes no normal range for this gauge."
+    elif key == "imi":  # a tide gauge has no normal range: the sea rises and falls about twice a day (never a made-up label)
+        label, note, marks = "Tidal", "Sea level at a harbour tide gauge, above Ordnance Datum Malin; it rises and falls with the tide about twice a day, so no normal range applies.", {}
     else:
         label, note, marks = LABEL.get(r.get("state"), "Unknown"), "%s label, against this gauge's mean low and mean high water." % f["agency"], r.get("marks") or {}
     rows = [{"parameter_code": "00065", "time": t, "value": str(round(to_ft(v, f["unit"]), 3)), "unit_of_measure": "ft", "qualifier": None, "approval_status": "Provisional"} for t, v in r["series"]]
@@ -84,11 +90,14 @@ def to_rec(page, r):
     if key == "ea":
         links = ([("Official station page (Environment Agency, GOV.UK Check for flooding)", "https://check-for-flooding.service.gov.uk/station/%s" % r["rloi"])] if r.get("rloi") else []) + [
             ("Flood warnings and alerts in force in England (GOV.UK)", "https://check-for-flooding.service.gov.uk/alerts-and-warnings"), ("Sign up for free flood warnings by phone, text or email (GOV.UK)", "https://www.gov.uk/sign-up-for-flood-warnings")]
+    elif key == "imi":
+        links = [("Irish National Tide Gauge Network (Marine Institute)", "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.html"),  # the dataset page itself (the marine.ie overview URL 404ed 2026-11-09)
+                 ("Weather warnings for Ireland (Met Eireann)", "https://www.met.ie/warnings")]
     else:
         links = [("Official gauge page (%s)" % f["agency"], "https://wateroffice.ec.gc.ca/report/real_time_e.html?stn=%s" % r["name"] if key == "eccc" else "https://www.pegelonline.wsv.de/gast/stammdaten?pegelnr=%s" % r.get("number"))] if key == "eccc" or r.get("number") else []
         links.append(("Weather warnings (%s)" % f["wx"], w.get("city_url") or ("https://weather.gc.ca/" if key == "eccc" else "https://dwd.de/warnungen")))
     return {"site": f["agency"] + "-" + world_slug(r["name"]), "lat": r["lat"], "lon": r["lon"], "tz": f["zone"], "usgs": {"fetched_at": r["time"], "rows": rows, "truncated": False}, "_fetched": {}, "access": r.get("access"), "nws": w, "rain": {} if key == "ea" else w.get("rain") or {},  # England's rain tile is drawn in mm by ea_rain_tile, never through inches
-            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm="%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"]), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), peaks=r.get("peaks"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
+            "feed": dict(f, flood=FLOOD["abroad" if w.get("abroad") else key], emergency="Emergency: call the local emergency number." if w.get("abroad") else f["emergency"], label=label, label_note=note, norm=("Tidal: rises and falls about twice a day" if key == "imi" else "%s, %s" % (label, "our calculation" if key == "eccc" else "%s label" % f["agency"])), ship=r.get("ship"), marks=marks, mark_dates=r.get("mark_dates") or {}, station=r["name"], wt30=r.get("wt30"), normals=r.get("normals"), drought=r.get("drought"), drought_map=r.get("drought_map"), normals_by="Environment and Climate Change Canada" if key == "eccc" else "Deutscher Wetterdienst", normals_src="eccc" if key == "eccc" else "dwd", fc=r.get("fc"), flow=r.get("flow"), days=r.get("days"), deciles=r.get("deciles"), day_years=r.get("day_years"), years=r.get("years"), peaks=r.get("peaks"), aq=w.get("aq"), links=links, no_weather=w.get("no_weather"))}
 
 
 def to_row(page, r):
@@ -168,10 +177,13 @@ PROVED = {  # what a person or script saw on live data, one line each; a country
     "ea": {"reading": "Colwick 1.049, Kingston 4.421, Ross-on-Wye 0.41 m built pages = API latest = GOV.UK station pages within one reading, 2026-11-03", "time": "API 02:45Z shown 2:45 AM GMT; BST and both 2026 clock changes rendered right by zoneinfo Europe/London",
            "alerts": "", "unit": "metres above the stage datum (mASD), the gauge's own zero, as GOV.UK shows it", "terms": "OGL v3.0 and the agency's attribution, API reference and licence read 2026-11-03",
            "water": "rivers only: Gainsborough held by the tide test on its readings, Keadby by its tidal measure, live 2026-11-03"},  # alerts stays empty here: collect.py ea_probe records it when a real level 1 to 3 warning holds an English station (proved() reads it); until then England pages say Unknown (UNKNOWN_UNTIL_PROVEN), never none
+    "imi": {"reading": "ERDDAP IrishNationalTideGaugeNetwork read 2026-11-09: 22 stations, Dublin Port -0.409 m OD Malin at 03:10Z (collect.py fetch_imi_live)", "time": "feed times in UTC (units row 'UTC'); pages show Europe/Dublin (GMT in winter, IST in summer) through zoneinfo",
+            "alerts": "", "unit": "metres above Ordnance Datum Malin (the units row says metres; the column names the datum)", "terms": "CC BY 4.0 from the dataset's own licence attribute, read 2026-11-09",
+            "water": "sea level at harbour tide gauges: these pages are tide pages, never shown as a river"},
     "eccc": {"reading": "tools/truth_world.py 0 faults 2026-11-02", "time": "Squamish 02:05Z feed against page; BC is permanent UTC-7 since 2026 (IANA 2026b), shown as PT", "alerts": "real fog advisory at Berens River hit the point test 2026-11-02; status words are issued and continued", "unit": "metres; Ottawa on a survey datum, not gauge zero", "terms": "open licence, read 2026-11-01", "water": "inland rivers; test gauges not tidal"}}
 
 
-UNKNOWN_UNTIL_PROVEN = ("ea",)  # owner 2026-11-03: England ships before a live warning proves the point test; until then its alert block says Unknown with the GOV.UK link (page below), never none
+UNKNOWN_UNTIL_PROVEN = ("ea", "imi")  # owner 2026-11-03: England ships before a live warning proves the point test; until then its alert block says Unknown with the GOV.UK link (page below), never none
 
 
 def proof_faults(feeds, proved):
@@ -278,7 +290,23 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_land": "next: UKCEH Land Cover Map; licence not read", "b_noforecast": COVER["b_noforecast"][0],
     "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
-ORDER = ("eccc", "pegelonline", "ea")  # the column order of COVER
+IMI_NONE = "none: the Marine Institute tide gauge network publishes sea level only (read 2026-11-09)"
+MET_IE = "next: Met Eireann open data (CC BY 4.0, read 2026-11-09); not wired"
+IRELAND = dict({b: IMI_NONE for b in COVER}, **{  # PLAN 7c, Irish live tide gauges (Marine Institute ERDDAP, CC BY 4.0); each have/none read 2026-11-09
+    "b_offline": "have", "b_stage_chart": "have", "b_official_links": "have", "b_rate": "have", "b_about": "have", "b_key_facts": "have", "b_nearby": "have", "b_access": "none: no Irish open access-point feed read",
+    "b_alerts": "next: Met Eireann warnings JSON (warning_IRELAND.json) read 2026-11-09 with no warning in force; shown Unknown with the met.ie link until a real warning is parsed",
+    "b_hourly": MET_IE, "b_weather": MET_IE, "b_air": MET_IE, "b_qpf": MET_IE, "b_rain": MET_IE, "b_acis": MET_IE, "b_radar": MET_IE, "b_heatmap": "none: covered by the hourly table",
+    "b_air_quality": "next: EPA Ireland air quality index; terms not read",
+    "b_tides": "next: Marine Institute high/low predictions for the same stations (collect.py fetch_imi_hilo); not on the page yet",
+    "b_official_marks": "none: the network publishes no station marks; heights are above OD Malin",
+    "b_flow_behind": COVER["b_flow_behind"][0], "b_map": COVER["b_map"][0], "b_noforecast": COVER["b_noforecast"][0],
+    "b_attains": US_ONLY, "b_streamcat": US_ONLY, "b_land": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY,
+    "b_moon": "next: USNO moon phase works anywhere; not wired for world pages", "b_waves": "next: Marine Institute Irish weather buoy network (M2-M6); not read"})
+COVER = {b: row + (IRELAND[b],) for b, row in COVER.items()}
+ORDER = ("eccc", "pegelonline", "ea", "imi")  # the column order of COVER
+TODO_IE = {MET_IE: "weather, rain and forecasts (Met Eireann)", IRELAND["b_alerts"]: "weather warnings (Met Eireann; see met.ie until one is proven here)",
+           IRELAND["b_air_quality"]: "air quality (EPA Ireland)", IRELAND["b_tides"]: "predicted high and low tides (Marine Institute)",
+           IRELAND["b_moon"]: "moon phase", IRELAND["b_waves"]: "offshore waves (Marine Institute weather buoys)"}
 TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)",
         MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
@@ -286,6 +314,7 @@ TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)",
         NRFA: "flow statistics and yearly peaks (UK National River Flow Archive)", IMPACT: "flood impact levels (GOV.UK Check for flooding lists them per station)",
         ENGLAND["b_drought"]: "drought status (Environment Agency)", ENGLAND["b_flood_outlook"]: "five-day flood risk (Flood Forecasting Centre)", ENGLAND["b_samples"]: "water quality samples (Environment Agency)",
         ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
+TODO.update(TODO_IE)
 
 
 SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_stage_years": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain'}  # the world block that answers the US block's question, reviewed once 2026-11-04
@@ -388,10 +417,12 @@ GATE = True
 
 
 FLOOD = {"eccc": '<a href="https://www.canada.ca/en/environment-climate-change/services/water-overview/quantity/floods/forecasting-centres.html">provincial flood forecasting centres</a>', "pegelonline": '<a href="https://www.hochwasserzentralen.de/">German state flood portal</a>',
-         "ea": '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">Environment Agency flood warnings on GOV.UK</a>', "abroad": "local flood authority"}
+         "ea": '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">Environment Agency flood warnings on GOV.UK</a>', "abroad": "local flood authority",
+         "imi": '<a href="https://www.met.ie/warnings">Met Eireann weather warnings</a> and <a href="https://www.floodinfo.ie/">floodinfo.ie</a>'}
 TERMS = {"eccc": 'Terms: <a href="https://eccc-msc.github.io/open-data/licence/readme_en/">ECCC data</a>, <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence - Canada</a>.',
          "pegelonline": 'Terms: <a href="https://www.pegelonline.wsv.de/gast/nutzungsbedingungen">PEGELONLINE</a>, <a href="https://creativecommons.org/licenses/by/4.0/">DWD, CC BY 4.0</a>, <a href="https://www.govdata.de/dl-de/by-2-0">Umweltbundesamt, dl-de/by-2-0</a>.',
-         "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). This uses Environment Agency rainfall data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.'}
+         "ea": 'This uses Environment Agency flood and river level data from the real-time data API (Beta). This uses Environment Agency rainfall data from the real-time data API (Beta). Terms: <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.',
+         "imi": 'Tide data: Marine Institute, Irish National Tide Gauge Network. Terms: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.'}
 EA_LINK = '<a href="https://check-for-flooding.service.gov.uk/alerts-and-warnings">flood warnings and alerts in force in England on GOV.UK</a>'
 EA_UNPROVEN_LINE = '<p class="gaps" data-flood><b>Flood warnings: Unknown on this page.</b> See %s.</p>' % EA_LINK  # the why is in the alerts block; four long Unknowns above the data read unfinished (UI review 2026-11-04)
 EA_UNPROVEN = (("<p>Alerts could not be loaded at the last fetch.</p>", "<p>Unknown. This page does not show Environment Agency flood warnings yet: our check of warning areas against this gauge has not been seen working on a real warning. See %s. This is not a statement that conditions are safe.</p>" % EA_LINK),
