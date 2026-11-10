@@ -43,6 +43,10 @@ def main(only=None):
             base = G
         c = render.b3.conditions(G, None)
         h = render.hero(G, None)
+        if G.get("coast") and G["lv"] is None and not G["sg"]:  # owner 2026-11-08: a NOAA tide station with predictions and no live level ships, each tide labelled a prediction; the flow and comparison checks below have nothing to read (2026-11-10: 9 such stations crashed, then failed, this script)
+            if "No live water level at this station" not in h or "prediction" not in h.lower():
+                fail(site, "tide station with no live level does not say so, or does not label its tides as predictions")
+            continue
         # 21. the one-line answer says what the tiles say: same trend chip, same comparison word, same alert state
         ans = re.search(r'<p class="answer"[^>]*>(.*?)</p>', h, re.S)
         if not ans:
