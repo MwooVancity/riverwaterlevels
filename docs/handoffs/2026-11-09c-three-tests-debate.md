@@ -11,7 +11,7 @@ Done today and live (gate refresh OK, index_live 0 mismatches, pages read): firs
 Pushed, verify live: Albuquerque title test ("water level and flow today", read clicks 2026-12-07); the promote step.
 Owner's Chrome 11-09: Request indexing for /rivers/ca co az mt mo ky ga id, /about/, /methodology/ (Google confirmed); Bing sitemap resubmitted (Bing: 0 impressions so far). Service account -> Full was blocked (permission grant): owner.
 
-Open (PLAN Next steps, 9 items): 0i/9a full pool and % full: next step = National Inventory of Dams (NID) terms row + reader for USGS lakes (Lanier shows none; NWS action 1071 ft is not a pool); Reclamation 24-Month Study; 7a-7d Ireland; 8a-8d Great Lakes, buoys; 10 keyword promise table; 11a-11c hubs; 12 same basin first; 17a-17b England; 18 /code-review high before 11-20.
+Open (PLAN Next steps, 1 item): 7c/7d Ireland Kinsale page on the world generator, spec in PLAN item 7 (reader collect.fetch_imi_hilo is built and tested). Everything else is DONE, DECIDED, WAITING or OWNER as of the late 11-09 batch: 10 keyword promise, 11 hubs (waiting second lake state), 12 watershed order, 13 slug clash, 15, 16, 17 (NRFA barred), 18 code review (9 fixes), 0i 24-Month link, 8 GLERL link + buoys already built.
 WAITING: 0h next 10 Request-indexing clicks 2026-11-10 (81 left); 0l tide-table check 2026-12-21; 0 first tide-table page; 14 scale items.
 
 Owner only: Search Console service account Restricted -> Full; Cloudflare Email Routing "Add missing records" (no MX yet); outreach notes; 5-second test.
