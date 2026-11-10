@@ -111,6 +111,8 @@ def main():
             return "new"
         if b.get("tpl") != tpl or rows[s]["dashboard_url"] not in old_blocks:
             return "code"
+        if (indexing.robots_meta(rows[s]["dashboard_url"], ix) == "") != ('name="robots"' not in open(os.path.join(D, u, "index.html"), encoding="utf-8").read(30000).split("</head>")[0]):  # 2026-11-10: a page opened (or pulled) by open_wave was carried with its old robots tag while the sitemap listed it, and check.py stopped the release; the carried file is the truth, so old build records need no new field  # ponytail: reads the <head> of each carried page (robots tag sits ~4 KB in; 14,000 pages = a few seconds)
+            return "index"
         if pagelib.nb_urls(G, rows) != b.get("nb"):  # links rule 5: a page added, held or pulled changes its neighbours' lists in the same run
             return "links"
         if sig(G) != b.get("sig") or abs(G.get("chg") or 0) > 20:  # a new NWS forecast issue or a changed alert set, not merely one existing (48 of 74 were "hot")
