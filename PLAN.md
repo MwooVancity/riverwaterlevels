@@ -133,6 +133,8 @@ Every hourly refresh from 11:00 UTC stopped while GitHub showed green; the live 
 - A page opened by the release was carried with its old noindex tag while the sitemap listed it (Allatoona, Belton lakes; check.py SITE FAIL): build.py rebuilds a carried page whose robots tag no longer matches its index state (read from the carried file, so old build records need no new field; tested on the live Allatoona and Santee pages).
 - Healdsburg printed '-0.0 ft': fixed once in build.py write() for every page (lib/common NEG_ZERO, 8 cases), not per formatter.
 - Dublin Port (never published, no live copy to carry) failed "missing River forecast" and stopped every promote: the world check accepts tide labels, and lib/world.py choose() now holds any never-published world page that fails check.py's page rules, like a thin page (check.py selftest: good page passes, failing page held, negative zero not held).
+- 9 NOAA prediction-only tide stations (owner 11-08) were what crashed truth_tests, then failed it: now checked for "No live water level" plus prediction wording.
+LIVE 2026-11-10 15:04 UTC (read in this session): status.json built_at 15:04 from f7019d7 after the gate passed (303 gauges, 0 truth failures); /lake/allatoona-lake/ and /lake/belton-lake/ carry no robots tag and are in the sitemap; Healdsburg prints no '-0.0 ft'. Owner dashboard: the watchdog run Summary (tools/ops_summary.py); morning report task paused (owner reads the dashboard daily).
 Edge cases left by design: a live page that fails is carried (unchanged); the pre-check builds each new world page twice (49 pages now; only never-published pages pay).
 
 ## Gate hole closed 2026-11-09
