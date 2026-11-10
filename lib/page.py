@@ -200,6 +200,8 @@ def b_official_links(G):
         links.append(("NOAA Tides and Currents page for %s (%s), where this page's water level is read" % (lv_["name"], lv_["id"]), "https://tidesandcurrents.noaa.gov/stationhome.html?id=%s" % lv_["id"]))
     if G.get("agy"):  # a CDEC id on a USGS address is a dead link
         links = [("%s page for %s %s" % (G["agy"]["short"], G["agy"]["label"].split()[-1], G["agy_st"]), G["agy"]["page"] % G["agy_st"])]
+    if G.get("agy") and G["agy"].get("short") == "Reclamation" and re.search(r"\b(Mead|Powell)\b", G.get("river") or ""):  # PLAN 0i: the official projection of these two lakes is a monthly PDF whose tables move; linked, never copied (truth first)
+        links.append(("Reclamation 24-Month Study: projected end-of-month elevations of Lake Powell and Lake Mead", "https://www.usbr.gov/lc/region/g4000/24mo/index.html"))
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))

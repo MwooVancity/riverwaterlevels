@@ -569,6 +569,15 @@
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
+  },
+  {
+   "id": "nrfa",
+   "name": "UK National River Flow Archive (UKCEH) API",
+   "status": "off",
+   "terms_url": "https://eidc.ceh.ac.uk/licences/nrfa-data-terms-and-conditions-for-api-access-to-time-series-data-and-metadata",
+   "read_on": "2026-11-09",
+   "summary": "Barred (owner decision 7): clause 4.1 'You undertake to hold all data and all other information relating to the API and Data confidential and not at any time disclose the same ... to any third party without the consent of the Licensor'; clause 3.5 caching only temporary, under 30 days, and 'should not manipulate or aggregate'. Publishing NRFA statistics on a public page breaks both; England 'is this normal' stays Unknown with the GOV.UK link.",
+   "blocks": []
   }
  ]
 }
