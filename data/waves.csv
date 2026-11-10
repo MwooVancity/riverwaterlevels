@@ -9105,7 +9105,7 @@ live,,08179500,Medina Lake,San Antonio,TX,0,,,0,lake,"retry after 2026-11-07: re
 live,,02187010,Lake Hartwell,Anderson,SC,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/lake-hartwell/
 live,,02334400,Lake Lanier,Buford,GA,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/lake-lanier/
 live,,02079490,Kerr Lake,Boydton,VA,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/kerr-lake/
-queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,,,human,/lake/great-salt-lake/
+queue,,10010000,Great Salt Lake,Saltair Boat Harbor,UT,0,,,0,lake,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/lake/great-salt-lake/
 live,,09379900,Lake Powell,Glen Canyon Dam,AZ,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/lake-powell/
 live,,9410170,San Diego Bay,San Diego,CA,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/san-diego/
 live,,8638610,Sewells Point,Norfolk,VA,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/norfolk/
@@ -9119,7 +9119,7 @@ queue,,9444090,Port Angeles,Port Angeles,WA,0,,,0,coast,,,human,/coast/port-ange
 queue,,8518750,The Battery,New York,NY,0,,,0,coast,,,human,/coast/new-york/
 live,,8534720,Atlantic City,Atlantic City,NJ,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/atlantic-city/
 live,,8443970,Boston,Boston,MA,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/boston/
-queue,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,,,human,/coast/galveston/
+queue,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/galveston/
 live,,CDEC-SHA,Shasta Lake,Shasta Dam,CA,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/shasta-lake/
 live,,RISE-6123,Lake Mead,Hoover Dam,AZ,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/lake-mead/
 live,,TWDB-travis,Lake Travis,Austin,TX,0,,,0,lake,"retry after 2026-11-07: release undone 2026-11-07, the refresh did not pass with it",,human,/lake/lake-travis/
@@ -9127,11 +9127,11 @@ live,,9455920,Anchorage,Anchorage,AK,0,,,0,coast,"retry after 2026-11-08: releas
 live,,9439040,Astoria,Astoria,OR,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/astoria/
 live,,8413320,Bar Harbor,Bar Harbor,ME,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/bar-harbor/
 live,,8727520,Cedar Key,Cedar Key,FL,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/cedar-key/
-queue,,8726724,Clearwater Beach,Clearwater Beach,FL,0,,,0,coast,,,human,/coast/clearwater-beach/
-queue,,9419750,Crescent City,Crescent City,CA,0,,,0,coast,,,human,/coast/crescent-city/
-queue,,8720030,Fernandina Beach,Fernandina Beach,FL,0,,,0,coast,,,human,/coast/fernandina-beach/
-queue,,8725520,Fort Myers,Fort Myers,FL,0,,,0,coast,,,human,/coast/fort-myers/
-queue,,9437540,Garibaldi,Garibaldi,OR,0,,,0,coast,,,human,/coast/garibaldi/
+queue,,8726724,Clearwater Beach,Clearwater Beach,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/clearwater-beach/
+queue,,9419750,Crescent City,Crescent City,CA,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/crescent-city/
+queue,,8720030,Fernandina Beach,Fernandina Beach,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/fernandina-beach/
+queue,,8725520,Fort Myers,Fort Myers,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/fort-myers/
+queue,,9437540,Garibaldi,Garibaldi,OR,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/garibaldi/
 queue,,1612340,Honolulu,Honolulu,HI,0,,,0,coast,,,human,/coast/honolulu/
 queue,,9452210,Juneau,Juneau,AK,0,,,0,coast,,,human,/coast/juneau/
 queue,,9450460,Ketchikan,Ketchikan,AK,0,,,0,coast,,,human,/coast/ketchikan/
@@ -9153,9 +9153,9 @@ queue,,8721604,Trident Pier,Cocoa Beach,FL,0,,,0,coast,,,human,/coast/cocoa-beac
 live,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/allatoona-lake/
 live,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/barren-river-lake/
 live,,08102000,Belton Lake,Belton,TX,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/belton-lake/
-queue,,02087182,Falls Lake,Falls,NC,0,,,0,lake,,,human,/lake/falls-lake/
+queue,,02087182,Falls Lake,Falls,NC,0,,,0,lake,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/lake/falls-lake/
 queue,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/
-queue,,03305990,Green River Lake,Campbellsville,KY,0,,,0,lake,,,human,/lake/green-river-lake/
+queue,,03305990,Green River Lake,Campbellsville,KY,0,,,0,lake,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/lake/green-river-lake/
 queue,,02098197,Jordan Lake,Moncure,NC,0,,,0,lake,,,human,/lake/jordan-lake/
 queue,,08143000,Lake Brownwood,Brownwood,TX,0,,,0,lake,,,human,/lake/lake-brownwood/
 queue,,04294500,Lake Champlain,Burlington,VT,0,,,0,lake,,,human,/lake/lake-champlain/
@@ -9175,19 +9175,19 @@ queue,,08109900,Somerville Lake,Somerville,TX,0,,,0,lake,,,human,/lake/somervill
 queue,,02193900,Thurmond Lake,Plum Branch,SC,0,,,0,lake,,,human,/lake/thurmond-lake/
 queue,,COOPS-9087031,Lake Michigan,Holland,MI,0,,,0,lake,"held 2026-11-07: Great Lakes page passed a first review; re-shoot after the storage tile fix, then clear",,human,/lake/lake-michigan/
 queue,,8729108,Panama City,Panama City,FL,0,,,0,coast,,,human,/coast/panama-city/
-queue,,9449211,Bellingham,Bellingham,WA,0,,,0,coast,,,human,/coast/bellingham/
-queue,,8775870,Corpus Christi,Corpus Christi,TX,0,,,0,coast,,,human,/coast/corpus-christi/
-queue,,9447427,Edmonds,Edmonds,WA,0,,,0,coast,,,human,/coast/edmonds/
+queue,,9449211,Bellingham,Bellingham,WA,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bellingham/
+queue,,8775870,Corpus Christi,Corpus Christi,TX,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/corpus-christi/
+queue,,9447427,Edmonds,Edmonds,WA,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/edmonds/
 queue,,9455558,Homer,Homer,AK,0,,,0,coast,,,human,/coast/homer/
 queue,,8558690,Indian River Inlet,Indian River Inlet,DE,0,,,0,coast,,,human,/coast/indian-river-inlet/
 queue,,8720291,Jacksonville Beach,Jacksonville Beach,FL,0,,,0,coast,,,human,/coast/jacksonville-beach/
 queue,,8724991,Marco,Marco,FL,0,,,0,coast,,,human,/coast/marco/
 queue,,9434939,Waldport,Waldport,OR,0,,,0,coast,,,human,/coast/waldport/
 queue,,9410196,Mission Bay,Mission Bay,CA,0,,,0,coast,,,human,/coast/mission-bay/
-queue,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,,,human,/coast/bradenton/
-queue,,8465233,Branford,Branford,CT,0,,,0,coast,,,human,/coast/branford/
+queue,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bradenton/
+queue,,8465233,Branford,Branford,CT,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/branford/
 queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,,,human,/coast/cape-may/
-queue,,8726706,Clearwater,Clearwater,FL,0,,,0,coast,,,human,/coast/clearwater/
+queue,,8726706,Clearwater,Clearwater,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/clearwater/
 queue,,8444601,Nantasket Beach,Nantasket Beach,MA,0,,,0,coast,,,human,/coast/nantasket-beach/
 queue,,8660642,North Myrtle Beach,North Myrtle Beach,SC,0,,,0,coast,,,human,/coast/north-myrtle-beach/
 queue,,8670681,Savannah,Savannah,GA,0,,,0,coast,,,human,/coast/savannah/
