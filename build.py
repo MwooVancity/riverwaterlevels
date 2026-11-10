@@ -65,6 +65,7 @@ def main():
         g = Gs[r["site"]]
         r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
         r["_kind"] = pagelib.kind_of_g(g)  # links rule 3: the nearest lake, coast and river page of the other kinds
+        r["_huc"] = str(((g["rec"].get("meta") or {}).get("loc") or {}).get("hydrologic_unit_code") or "")[:8]  # PLAN 12: same watershed listed first
         lvl_ = (g["rec"].get("coops") or {}).get("level")  # review 2026-11-08 blocker 3: a prediction-only page's level is its neighbour's, named in every list
         r["_val"] = ("%.2f ft%s" % (g["sg"][-1][1], " at %s" % lvl_["name"] if lvl_ else "")) if g.get("lake") and g["sg"] else "tide predictions" if g.get("tables") else None  # lake review: lists showed "– cfs" for a lake; a tide-tables page has no reading
         key = (r["hub_slug"], r["state"])

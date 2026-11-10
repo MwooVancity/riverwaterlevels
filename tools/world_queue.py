@@ -21,8 +21,11 @@ def load(name):
     return list(csv.DictReader(open(os.path.join(ROOT, "data", name), encoding="utf-8")))
 
 
+LEVEL = re.compile(r"\b(water|river|lake) levels?\b")  # PLAN 12 (keyword debate): "danube water levels" 50,000 is a gauge search, not trivia; only these phrasings pass CAP
+
+
 def tiers():
-    return {norm(r["keyword"]): min(int(r["tier"]), CAP) for r in load("keyword-tiers.csv")}
+    return {norm(r["keyword"]): (int(r["tier"]) if LEVEL.search(norm(r["keyword"])) else min(int(r["tier"]), CAP)) for r in load("keyword-tiers.csv")}
 
 
 def best(tier, keywords):
@@ -191,7 +194,8 @@ def main():
     water = water_rows()
     rows = sorted(us + world + water, key=lambda r: (r["group"], -r["tier"], r["ready"] != "yes", -r["score"], r["river"]))[:TOTAL]
     assert len(rows) == TOTAL, len(rows)
-    assert all(r["tier"] <= CAP for r in rows if r["category"] not in ("lake", "ocean", "hub"))
+    assert all(r["tier"] <= CAP or LEVEL.search(norm(r.get("keyword") or "")) for r in rows if r["category"] not in ("lake", "ocean", "hub"))
+    assert LEVEL.search("danube water levels") and not LEVEL.search("yellow river flow"), "world_queue: the level-phrase exception matches the wrong words"
     built = {x["site"] for x in load("waves.csv") if x["status"] in ("live", "queue")} & {r["site"] for f in ("lakes.csv", "coasts.csv") for r in load(f)}
     assert built <= {r["gauge"] for r in rows if r["ready"] == "yes"}, "a built lake or coast fell out of the queue: %s" % sorted(built - {r["gauge"] for r in rows})
     assert all(r["group"] == 8 or r["ready"] == "yes" or r["tier"] for r in rows)

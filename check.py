@@ -894,8 +894,11 @@ def selftest():
     P_["b"]["_built"] = False
     pg_.link_index(P_)
     assert "/b/" in before_ and "/b/" not in pg_.nb_urls(G_("a"), P_), "selftest: a held page stays in its neighbour's link set, so build.py would carry a broken link (links rule 5)"
+    P2_ = {s_: {"site": s_, "_built": True, "_ll": ll_, "_kind": "river", "state": "x", "water_url": "/%s/" % s_, "_huc": h_} for s_, ll_, h_ in [("a", (40.0, -100.0), "1001"), ("b", (40.05, -100.0), "2002"), ("c", (40.3, -100.0), "1001")]}
+    pg_.link_index(P2_)
+    assert [p_["site"] for _, p_ in pg_._IX["base"]["a"][0][1]] == ["c", "b"], "selftest: the same-watershed gauge is not listed first (PLAN 12)"
     from lib import world as wd_
-    pts_ = [(50 + i * 0.01, 8.0, "g%d" % i, "/g%d/" % i, "1 m", "Normal") for i in range(8)] + [(60.0, 8.0, "far", "/far/", "1 m", "Normal")]
+    pts_ =[(50 + i * 0.01, 8.0, "g%d" % i, "/g%d/" % i, "1 m", "Normal") for i in range(8)] + [(60.0, 8.0, "far", "/far/", "1 m", "Normal")]
     ix_ = {}
     for e_ in pts_:
         ix_.setdefault((int(e_[0] // 1), int(e_[1] // 1)), []).append(e_)

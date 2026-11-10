@@ -105,7 +105,7 @@ def link_index(pages, Gs=None):
     _IX.update(pages=id(pages), grid=grid, kinds=kinds, base={})
     _IX["members"] = {id(g): {s for v in g.values() for s, _ in v} for g in [grid] + list(kinds.values())}
     for s, p in built:
-        _IX["base"][s] = _base(p["_ll"], p.get("state"), p.get("_kind", "river"), _skip(s, (Gs or {}).get(s)))
+        _IX["base"][s] = _base(p["_ll"], p.get("state"), p.get("_kind", "river"), _skip(s, (Gs or {}).get(s)), p.get("_huc", ""))
     return _IX
 
 
@@ -123,13 +123,13 @@ def nearest(ll, grid, skip, n):
         rad *= 2
 
 
-def _base(ll, st, kind, skip):
+def _base(ll, st, kind, skip, huc=""):
     """A page's own lists: up to five within 60 miles, the same-state and anywhere backfill where gauges are sparse, and the nearest page of each other kind."""
     dist = lambda p: miles_between(ll[0], ll[1], p["_ll"][0], p["_ll"][1])
     la, lo = int(ll[0] // 1), int(ll[1] // 1)
     # 60 mi is under 1 deg lat and ~2 deg lon in CONUS: only the 15 squares around the gauge are read
     box = [(dist(p), p) for i in range(la - 1, la + 2) for j in range(lo - 2, lo + 3) for s, p in _IX["grid"].get((i, j), ()) if s not in skip]
-    out = sorted((x for x in box if x[0] <= NEAR_MI), key=lambda x: x[0])[:5]  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
+    out = sorted((x for x in box if x[0] <= NEAR_MI), key=lambda x: (not (huc and x[1].get("_huc") == huc), x[0]))[:5]  # PLAN 12: the same watershed (USGS HUC8) first, then by distance; an angler moving within a basin shares its weather and runoff  # nearby means a short drive: the first reviews called 107 and 127 miles not nearby
     shown = {p["site"] for _, p in out} | skip
     groups = [(None, out)]  # owner 2026-11-09: no backfill to five from the same state or anywhere (a link a reader here would not tap); the breadcrumb hub lists the rest
     for k, grid in sorted(_IX["kinds"].items()):  # links rule 3: rivers, lakes and coasts link the nearest of each other kind, both ways, within NEAR_MI
