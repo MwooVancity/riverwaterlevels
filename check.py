@@ -1286,6 +1286,8 @@ def selftest():
     assert not [b for b in hater_rules('<section id="about_gauge"></section>' + kf) if "Key facts" in b], "selftest: a good Key facts block failed"
     assert any("no Key facts" in b for b in hater_rules('<section id="about_gauge"></section>')), "selftest: a page with a station record and no Key facts passed"
     assert any("live reading" in b for b in hater_rules(kf.replace("in Y County.", 'flows <b data-live="flow">5</b> cfs now.'))), "selftest: Key facts holding the live reading passed"
+    from lib.coverage import country
+    assert [country(x) for x in ("lake/belton-lake/index.html", "coast\\x\\index.html", "river/a/index.html", "rhine/koeln/index.html", "ireland/dublin-port/index.html")] == ["US", "US", "US", "Germany", "Ireland"], "selftest: coverage counts a page under the wrong country"
     import tools.edge_tests
     tools.edge_tests.run()
     import runpy
