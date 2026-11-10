@@ -29,6 +29,10 @@ def run():
     except RuntimeError:
         pass
     from lib import blocks3 as b3_
+    up_ = {"office": "SAM", "loc": "Buford", "fetched_at": "2026-11-10T03:17:03+00:00", "NGVD29": {"ft": 1070.346, "estimated": False}, "NAVD88": {"ft": 1070.571, "estimated": True}}
+    ug_ = lambda lake, vd, alt, lv: {"lake": lake, "sg": [(t0_, lv, {})], "rec": {"usace_pool": up_, "meta": {"loc": {"vertical_datum": vd, "altitude": alt}}}}
+    assert b3_.usace_full(ug_("00062", "NAVD88", 0.0, 1062.5)) == (1070.571, "NAVD88", True, 1062.5 - 1070.571) and b3_.usace_full(ug_("62614", "", None, 1062.5))[1] == "NGVD29", "Lanier full pool: the gauge's datum was not matched to USACE's value in that datum"
+    assert b3_.usace_full(ug_("00062", "NAVD88", 812.4, 30.1)) is None and b3_.usace_full(ug_("00062", "NAVD88", 0.0, 1020.0)) is None, "full pool shown for a gauge datum with an offset, or a 50 ft gap (another project)"
     lcg_ = lambda days: {"lake": True, "sg": [(t0_, 1039.66, {})], "rec": {"usbr_lc": {"days": days, "cap_af": 26120000, "cap_elev_ft": 1219.6}}}
     assert b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000], "2026-11-08": [1039.66, 6954000]})) == ("2026-11-08", 1039.66, 6954000) and b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000]})) == ("2026-11-07", 1039.55, 6947000), "Lake Mead storage: the matching day was not used, or a table one day behind RISE left storage Unknown (live 2026-11-09)"
     nw = datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)

@@ -1142,7 +1142,7 @@ def default_sites():
 
 # Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
 # computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc", "usno"}
+DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc", "usno", "usace_pool"}
 WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
 MONTHLY = {"access", "land", "cdec_res"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
@@ -1429,7 +1429,28 @@ def fetch_glsea(letter):
     return {"fetched_at": now_iso(), "lake": letter, "date": day.isoformat(), "temp_f": val, "avg_f": avg, "avg_from": m.group(1), "avg_to": m.group(2)}
 
 
-IMI_HILO = "https://erddap.marine.ie/erddap/tabledap/IMI_TidePrediction_HighLow.csv?stationID%2Ctime%2Ctide_time_category%2CWater_Level_ODMalin&time%3E=now-1day&time%3C=now%2B7days&stationID=%22{}%22"
+LAKE_USACE = {"02334400": ("SAM", "Buford"), "02187010": ("SAS", "Hartwell"), "02393500": ("SAM", "Allatoona"), "03312900": ("LRL", "Barren")}  # PLAN 9a, probed 2026-11-09: each CWMS project with a 'Top of Conservation' level (Buford's aliases name USGS 02334400; the rest matched by project name and checked on the page by distance)
+
+
+def usace_level(js):
+    """(value ft, parameter text) of the newest point of a CWMS location-level reply, or raises (never a guessed value)."""
+    x = js["location-levels"]["location-levels"][0]
+    return float(x["values"]["segments"][-1]["values"][-1][1]), x["values"]["parameter"]
+
+
+def fetch_usace_pool(office, loc):
+    """USACE CWMS 'Top of Conservation' (the normal full pool, seasonal) in NGVD29 and USACE's own NAVD88 conversion; preliminary, USACE. 2 calls a day."""
+    out = {"fetched_at": now_iso(), "office": office, "loc": loc}
+    for datum in ("NGVD29", "NAVD88"):
+        url = "https://cwms-data.usace.army.mil/cwms-data/levels?office=%s&level-id-mask=%s&unit=EN&format=json%s" % (office, urllib.parse.quote(loc + ".Elev.Inst.0.Top of Conservation"), "" if datum == "NGVD29" else "&datum=NAVD88")
+        v, par = usace_level(json.loads(get_text(url, headers={"Accept": "application/json;version=2"})))
+        if datum not in par:
+            raise RuntimeError("CWMS returned %r for %s" % (par, datum))
+        out[datum] = {"ft": v, "estimated": "estimated" in par}
+    return out
+
+
+IMI_HILO ="https://erddap.marine.ie/erddap/tabledap/IMI_TidePrediction_HighLow.csv?stationID%2Ctime%2Ctide_time_category%2CWater_Level_ODMalin&time%3E=now-1day&time%3C=now%2B7days&stationID=%22{}%22"
 
 
 def imi_hilo(csv_text, station):
@@ -1571,6 +1592,7 @@ def fetch_extras(site, rec, h, log):
                     *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),
                     *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
                     *((("usbr_lc", fetch_lc_mead),) if AGENCY.get(site) == "rise:6123" else ()),
+                    *((("usace_pool", lambda: fetch_usace_pool(*LAKE_USACE[site])),) if site in LAKE_USACE else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     ("multiyear", lambda: multiyear(fetch_daily(site, h)))):

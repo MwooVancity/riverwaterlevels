@@ -928,6 +928,22 @@ def lc_day(G):
     return (day_, m["days"][day_][0], m["days"][day_][1]) if day_ else None
 
 
+def usace_full(G):
+    """(full pool ft, datum, USACE estimate?, latest - full) for a USGS lake gauge whose datum USACE also publishes, or None. PLAN 9a.
+    The gauge's own datum decides (00062 at 0 ft above NAVD88 or NGVD29, 62614 NGVD29, 62615 NAVD88); any other datum, or a gap over 30 ft
+    (another project or a scale mismatch), shows nothing: a full-pool number on the wrong datum is a wrong number."""
+    p = G["rec"].get("usace_pool")
+    if not G.get("lake") or not p or not G.get("sg") or not cleared("usace_cwms"):
+        return None
+    loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
+    vd = str(loc.get("vertical_datum") or "").replace(" ", "").upper()
+    datum = {"62614": "NGVD29", "62615": "NAVD88"}.get(G["lake"]) or (vd if G["lake"] == "00062" and vd in ("NAVD88", "NGVD29") and loc.get("altitude") is not None and abs(float(loc["altitude"])) < 0.05 else None)  # 0.0 ft is a real altitude (falsy-zero caught by the fixture)
+    full = (p.get(datum) or {}) if datum else {}
+    if full.get("ft") is None or abs(G["sg"][-1][1] - full["ft"]) > 30:
+        return None
+    return full["ft"], datum, bool(full.get("estimated")), G["sg"][-1][1] - full["ft"]
+
+
 def b_reservoir(G):
     """How full a reservoir is, on the operator's or state's own basis (plan 2026-11-05 step 3). Texas: TWDB's daily estimate, whose percent is
     conservation storage / conservation capacity; a percent is never shown without that basis named. No source for this lake: no block."""
@@ -939,6 +955,15 @@ def b_reservoir(G):
             ("%s average storage, %s-%s (CDEC)" % (mon, c["avg_from"], c["avg_to"]), "{:,.0f} acre-ft".format(avg) if avg else "Unknown"), ("Percent of the %s average (our calculation)" % mon, ca["pct_avg"])))
         return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(tzl(t_, G["zone"]))], rows, right=(1,)),
                      "Source: California Data Exchange Center reservoir profile for station %s (capacity, %s-%s monthly averages, read %s) and its hourly storage. The two percents are our calculation: storage divided by CDEC's capacity, and by CDEC's average for the month." % (esc(G.get("agy_st") or ""), c["avg_from"], c["avg_to"], esc(fdate(c["fetched_at"][:10]))), "cdec")
+    uf = usace_full(G)
+    if uf:  # PLAN 9a: USACE's normal full pool (top of conservation; it moves with the season)
+        ft, dat, est, gap = uf
+        lead = '<p class="lead">%.2f ft %s full pool today (US Army Corps of Engineers).</p>' % (abs(gap), "below" if gap < 0 else "above")
+        rows = "".join(tr([a, b], right=(1,)) for a, b in (("Full pool today: USACE top of conservation, ft %s%s" % (dat, ", USACE's own estimate" if est else ""), "{:,.2f} ft".format(ft)),
+                                                          ("Latest reading (USGS)", "{:,.2f} ft".format(G["sg"][-1][1])),
+                                                          ("Difference (our calculation)", "%+.2f ft" % gap)))
+        return block("reservoir", "How full the lake is", "agency", lead + table(["Measure", "Value"], rows, right=(1,)),
+                     "Source: US Army Corps of Engineers, Corps Water Management System, %s %s 'Top of Conservation', fetched %s; preliminary, for general information only. The lake reading is USGS's on the same datum; the difference is our calculation." % (esc(G["rec"]["usace_pool"]["office"]), esc(G["rec"]["usace_pool"]["loc"]), esc(fdate(G["rec"]["usace_pool"]["fetched_at"][:10]))), "usace_cwms")
     hit = lc_day(G)
     if hit:  # Lake Mead: Reclamation Lower Colorado Region's daily table
         m = dict(G["rec"]["usbr_lc"], date=hit[0], elev_ft=hit[1], content_af=hit[2])
