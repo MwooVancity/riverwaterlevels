@@ -10,7 +10,8 @@ if [ -z "$W" ] || ! [[ "$W" =~ ^[0-9]+\  ]]; then
   echo "HEALTH: UNKNOWN (gh failed: ${W:-no watchdog run}; if it says auth or login, the PC's GitHub login expired)"
 else
   echo "watchdog run: $W (now $(date -u +%FT%TZ))"
-  timeout 60 gh run view "${W%% *}" -R $R --log 2>/dev/null | grep -E "SITE HEALTH|PROBLEM" | sed 's/^.*Z //' || echo "HEALTH: UNKNOWN (log read timed out)"
+  H=$(timeout 60 gh run view "${W%% *}" -R $R --log 2>&1 | grep -E "SITE HEALTH|PROBLEM|HTTP [0-9]{3}" | sed 's/^.*Z //')
+  case "$H" in *"SITE HEALTH"*) echo "$H";; *) echo "HEALTH: UNKNOWN (log not readable: ${H:-timed out or empty})";; esac  # GitHub log downloads can 503 ("Egress is over the account limit")
 fi
 echo "--- status.json"
 S=$(curl -s -m 20 https://riverwaterlevels.com/status.json | head -c 300)

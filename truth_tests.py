@@ -95,6 +95,10 @@ def main(only=None):
         vals = [x[1] for x in G["fl"]]
         if any(v <= -900 or v >= 1e7 for v in vals):
             fail(site, "flow series holds a sentinel or impossible value (%s)" % [v for v in vals if v <= -900 or v >= 1e7][:2])
+        if G["lv"] is None:  # 2026-11-10: one gauge with no latest flow crashed this script and stopped every deploy for 4 h; the page must say so, the other checks need a flow
+            if "not reporting" not in h:
+                fail(site, "no latest flow but the page does not say 'not reporting'")
+            continue
         if G["lv"] < 0 and not G["osc"] and render.NEG_FLOW_NOTE not in h:
             fail(site, "latest flow is negative (%s cfs) at a gauge that is not tidal or oscillating and the page does not say it is moving upstream" % G["lv"])
         if G["sg"] and any(x[1] <= -900 for x in G["sg"]):
