@@ -2634,7 +2634,12 @@ def fetch_world():
                 if feed == "imi":  # PLAN 7c: one network call per run serves every Irish gauge
                     if "imi-live" not in ctx:
                         ctx["imi-live"] = fetch_imi_live()["stations"]
-                    rows.append(imi_row(name, ctx["imi-live"]))
+                    row_ = imi_row(name, ctx["imi-live"])
+                    try:  # predicted highs and lows: the prediction dataset names stations with underscores (Dublin_Port)
+                        row_["hilo"] = fetch_imi_hilo(name.replace(" ", "_"))["hilo"]
+                    except Exception as e:
+                        note("imi-hilo", "failed", e)
+                    rows.append(row_)
                     miss[feed] = 0
                     note("imi", "ok")
                     continue

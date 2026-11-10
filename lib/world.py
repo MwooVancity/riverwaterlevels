@@ -302,7 +302,7 @@ IRELAND = dict({b: IMI_NONE for b in COVER}, **{  # PLAN 7c, Irish live tide gau
     "b_alerts": "next: Met Eireann warnings JSON (warning_IRELAND.json) read 2026-11-09 with no warning in force; shown Unknown with the met.ie link until a real warning is parsed",
     "b_hourly": MET_IE, "b_weather": MET_IE, "b_air": MET_IE, "b_qpf": MET_IE, "b_rain": MET_IE, "b_acis": MET_IE, "b_radar": MET_IE, "b_heatmap": "none: covered by the hourly table",
     "b_air_quality": "next: EPA Ireland air quality index; terms not read",
-    "b_tides": "next: Marine Institute high/low predictions for the same stations (collect.py fetch_imi_hilo); not on the page yet",
+    "b_tides": "have",  # the next three Marine Institute highs and lows, in the forecast tile (page(); 2026-11-09)
     "b_official_marks": "none: the network publishes no station marks; heights are above OD Malin",
     "b_flow_behind": COVER["b_flow_behind"][0], "b_map": COVER["b_map"][0], "b_noforecast": COVER["b_noforecast"][0],
     "b_attains": US_ONLY, "b_streamcat": US_ONLY, "b_land": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY,
@@ -310,8 +310,7 @@ IRELAND = dict({b: IMI_NONE for b in COVER}, **{  # PLAN 7c, Irish live tide gau
 COVER = {b: row + (IRELAND[b],) for b, row in COVER.items()}
 ORDER = ("eccc", "pegelonline", "ea", "imi")  # the column order of COVER
 TODO_IE = {MET_IE: "weather, rain and forecasts (Met Eireann)", IRELAND["b_alerts"]: "weather warnings (Met Eireann; see met.ie until one is proven here)",
-           IRELAND["b_air_quality"]: "air quality (EPA Ireland)", IRELAND["b_tides"]: "predicted high and low tides (Marine Institute)",
-           IRELAND["b_moon"]: "moon phase", IRELAND["b_waves"]: "offshore waves (Marine Institute weather buoys)"}
+           IRELAND["b_air_quality"]: "air quality (EPA Ireland)",            IRELAND["b_moon"]: "moon phase", IRELAND["b_waves"]: "offshore waves (Marine Institute weather buoys)"}
 TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)",
         MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
@@ -322,7 +321,7 @@ TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)",
 TODO.update(TODO_IE)
 
 
-SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_stage_years": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain'}  # the world block that answers the US block's question, reviewed once 2026-11-04
+SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_stage_years": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain', "b_tides": 'class="tile fcst"'}  # the world block that answers the US block's question, reviewed once 2026-11-04
 ONLY_WHEN = {"b_offline": "shows only while the gauge is not reporting"}  # a have that is a state, not a block a page always owes
 
 
@@ -558,7 +557,7 @@ def fresh(w, key, t, bid):
 def owed(r):
     """Block ids this gauge's data entitles a reader to. Age counts: past the US hide limit a block is rightly gone, so an outage never pulls a page. A gauge the weather collect never reached owes it all."""
     w = r.get("wx")
-    if not w or (not w.get("fetched_at") and not w.get("periods")):
+    if not w or (not w.get("no_weather") and not w.get("fetched_at") and not w.get("periods")):  # Ireland: weather is a COVER 'next', never 'not collected'
         return ["weather not collected yet"]
     rain = r.get("ea") is not None or ((w.get("rain") or {}).get("inches") or {}).get("last_24h") is not None  # England's tile has four states and always shows; elsewhere a total shows its tile, fresh or marked old. Canada has none (live 2026-11-04: 14 pages named for a tile they could not have)
     out = ["alerts", "official_links", "stage_chart"] + (['class="tile rain'] if rain else []) + (["along_river"] if r.get("_along") else []) + (["nearby_gauges"] if r.get("_near") else []) + ["about_gauge", "key_facts"]
@@ -573,6 +572,8 @@ def owed(r):
         out.append("official_marks")
     if r.get("also"):
         out.append("also_measured")
+    if any(parse_t(x[0]) > datetime.datetime.now(datetime.timezone.utc) for x in r.get("hilo") or []):  # Ireland: a station with predictions owes the next-tide tile
+        out.append('class="tile fcst"')
     if len(r.get("flow") or []) >= 8:
         out.append("flow_chart")
     if len(r.get("series") or []) >= 8:
@@ -678,4 +679,10 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     if p.get("feed") == "imi":  # over 24 h a tide compares two points of its cycle: '+0.60 m in 24 h' reads as a rising sea (PLAN 7c), so the summary does not say it
         html = re.sub(r'<span class="a1 dv">[+\-][\d.]+ m in 24 h</span>', "", html, count=1)
         html = re.sub(r'<div class="tile trend"><i class="ic">.*?</svg></i><span>24 h change</span>.*?</div>', "", html, count=1, flags=re.S)
+        nxt_ = [x for x in (r.get("hilo") or []) if datetime.datetime.fromisoformat(x[0]) > now][:3]
+        if nxt_:  # Marine Institute predictions, labelled as predictions, times in Irish time
+            z_ = zoneinfo.ZoneInfo("Europe/Dublin")
+            w_ = lambda x: "%s %.2f m (%.1f ft) at %s" % ("High" if x[2] == "H" else "Low", x[1], x[1] * 3.28084, render.tzl(datetime.datetime.fromisoformat(x[0]), z_, date=False))
+            html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "Next tide (prediction)", "%s %.2f <small>m</small>" % ("High" if nxt_[0][2] == "H" else "Low", nxt_[0][1]),
+                          "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1, flags=re.S)
     return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
