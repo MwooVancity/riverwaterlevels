@@ -181,10 +181,11 @@
    "name": "USACE National Inventory of Dams",
    "status": "off",
    "terms_url": "https://nid.sec.usace.army.mil/",
-   "summary": "No terms page found; reporting says some dam details are restricted. Off until the terms are read.",
+   "summary": "Read 2026-11-09 in the owner's Chrome: the gate is the standard DoD system-use banner ('USG-authorized use only'; monitoring consent), no data-reuse licence. Off on merit, not terms: NID has normal storage and surface area but no full-pool elevation, so it cannot say how full a lake is (three tests: no gain over Lakebrief).",
    "blocks": [
     "dams_nearby"
-   ]
+   ],
+   "read_on": "2026-11-09"
   },
   {
    "id": "stocking",
@@ -597,6 +598,15 @@
    "terms_url": "https://www.met.ie/about-us/specialised-services/open-data",
    "read_on": "2026-11-09",
    "summary": "'Most datasets are available under a standard Creative Commons Attribution 4.0 licence'; data and derivatives must carry Met Eireann's five attribution statements (Copyright Met Eireann; Source met.ie; ...). Not yet read: which datasets (warnings, forecast) fall under it.",
+   "blocks": []
+  },
+  {
+   "id": "usace_cwms",
+   "name": "USACE Corps Water Management System (CWMS) data dissemination",
+   "status": "quoted",
+   "terms_url": "https://water.usace.army.mil/",
+   "read_on": "2026-11-09",
+   "summary": "Read 2026-11-09 in the owner's Chrome: 'The CWMS Data Dissemination website is a public accessible map based repository of water resources data that includes elevation, precipitation, storage, and flow status'; 'All data contained herein is preliminary in nature and therefore subject to change. The data is for general information purposes ONLY'. Plus the DoD website banner (monitoring consent). No bar on reuse, ads or caching. Label every value preliminary, USACE.",
    "blocks": []
   }
  ]
