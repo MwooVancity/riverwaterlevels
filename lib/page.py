@@ -191,6 +191,14 @@ def embed_code(G):
     return '<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The credit line under the panel is optional.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
 
 
+# Each URL fetched 2026-11-11 by the PLAN 8 research; a state not listed had no verified program page.
+BEACH_WATER = {"TX": ("Texas Beach Watch (General Land Office)", "https://www.texasbeachwatch.com/"),
+               "FL": ("Florida Healthy Beaches (Department of Health)", "https://www.floridahealth.gov/HealthyBeaches"),
+               "NJ": ("NJ Beaches (NJ Department of Environmental Protection)", "https://njbeaches.org/"),
+               "WA": ("Swimming safety and the BEACH program (Washington Department of Ecology)", "https://ecology.wa.gov/water-shorelines/water-monitoring-research/swimming-safety"),
+               "HI": ("Clean Water Branch (Hawaii Department of Health)", "https://health.hawaii.gov/cwb/")}
+
+
 def b_official_links(G):
     """Where to go next: the source pages for this gauge, opened in a new tab."""
     n = G["rec"].get("nwps") or {}
@@ -210,6 +218,9 @@ def b_official_links(G):
     if lid:
         links.append(("NWS river page for the %s" % nws_pt(n), "https://water.noaa.gov/gauges/%s" % lid))
     links.append(("NWS forecast and active alerts for this location", "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (G["lat"], G["lon"])))
+    bw = BEACH_WATER.get(G["row"]["state"]) if G.get("coast") else None  # PLAN 8: swimmers ask "can I swim today?"; the state's own advisories, linked (TX terms bar reuse, FL is HTML only, CA's open file is months old)
+    if bw:
+        links.append(("Swim advisories and beach water samples: %s" % bw[0], bw[1]))
     from lib.directory import STATE_NAMES  # here, not at the top: directory imports render
     for k, what in (("fish", "Fishing rules"), ("boat", "Boating rules")):  # owner 2026-10-29: the official state page an angler or boater needs next (data/state-rules.json, each URL from a search result and curl-checked)
         e = None if G.get("coast") else (STATE_RULES.get(G["row"]["state"]) or {}).get(k)  # coast review: the state list holds the freshwater agency; saltwater rules are another agency's, not read yet
