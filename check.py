@@ -426,17 +426,20 @@ def google_rules(h, body):
     """The Google rules a page itself can break (GOOGLE above). One finding each, empty when clean."""
     bad = []
     t = re.sub(r"\s+", " ", (re.search(r"<title>(.*?)</title>", h, re.S) or [None, ""])[1]).lower()
-    t = re.sub(r"\b([a-z][a-z ]+?) at \1\b", r"\1", t)  # "Penns Creek at Penns Creek": the town carries the creek's name, not a stuffed phrase
-    words = re.findall(r"[a-z]{3,}", re.split(r"\(|\|", t)[0])
-    pairs = collections.Counter(zip(words, words[1:]))
-    rep = [" ".join(p) for p, n in pairs.items() if n > 1]
+    # Stuffing is the search words repeated, or the place named again among them ("Clearwater Beach tides ...: Clearwater Beach water level").
+    # The name before the first colon may repeat itself: "Penns Creek at Penns Creek", "Middle Fork Salmon River at Middle Fork Lodge" (release 2026-11-11 false alarm).
+    head, _, tail = re.split(r"\(|\|", t)[0].partition(":")
+    bg = lambda s: list(zip(*(lambda w: (w, w[1:]))(re.findall(r"[a-z]{3,}", s))))
+    hp, tp = set(bg(head)), collections.Counter(bg(tail))
+    rep = [" ".join(p) for p, n in tp.items() if n > 1 or p in hp]
     if rep:
         bad.append("Google keyword stuffing: the title repeats %r" % rep[0])
     for code in re.findall(r"<textarea[^>]*>(.*?)</textarea>", h, re.S):
         if "&lt;a " in code and "nofollow" not in code:
             bad.append("Google link spam: embed code carries a followed link (widget links must be nofollow)")
     lv = re.search(r'class="lvl">At NOAA station (\w+)', body)
-    if lv and not any(lv.group(1) in ld and "Dataset" in ld for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S)):
+    lds = [ld for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S) if "Dataset" in ld]
+    if lv and lds and not any(lv.group(1) in ld for ld in lds):  # an embed panel carries no Dataset markup: nothing to mismatch (release 2026-11-11 false alarm)
         bad.append("Google structured data: the readings come from station %s but the Dataset markup does not name it" % lv.group(1))
     return bad
 
@@ -1394,6 +1397,8 @@ def selftest():
     assert cloak_risks('const ua = req.headers.get("User-Agent");'), "selftest: worker reading the user agent did not fire"
     assert google_rules("<title>Clearwater Beach tides, tide chart today: Clearwater Beach water level, FL</title>", ""), "selftest: a title repeating the place (black-hat 2026-11-11) passed"
     assert not google_rules("<title>Penns Creek at Penns Creek, PA: live water level and flow</title>", ""), "selftest: a town named after its creek read as stuffing"
+    assert not google_rules("<title>Middle Fork Salmon River at Middle Fork Lodge near Yellow Pine, ID: live water level and flow (USGS 13309220)</title>", ""), "selftest: a lodge named after its river read as stuffing (release 2026-11-11)"
+    assert not google_rules("<html>", '<small class="lvl">At NOAA station 9447130,'), "selftest: an embed panel without Dataset markup flagged (release 2026-11-11)"
     assert google_rules('<textarea>&lt;a href="x"&gt;Yuba River water level&lt;/a&gt;</textarea>', ""), "selftest: a followed keyword link in embed code passed"
     assert google_rules('<script type="application/ld+json">{"@type":"Dataset","description":"station 8726706"}</script>', '<small class="lvl">At NOAA station 8726724,'), "selftest: markup naming the wrong station passed"
     import datetime as _dtm
