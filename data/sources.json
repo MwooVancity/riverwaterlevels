@@ -218,14 +218,19 @@
   },
   {
    "id": "nid",
-   "name": "USACE National Inventory of Dams",
-   "status": "off",
-   "terms_url": "https://nid.sec.usace.army.mil/",
-   "summary": "Read 2026-11-09 in the owner's Chrome: the gate is the standard DoD system-use banner ('USG-authorized use only'; monitoring consent), no data-reuse licence. Off on merit, not terms: NID has normal storage and surface area but no full-pool elevation, so it cannot say how full a lake is (three tests: no gain over Lakebrief).",
+   "name": "USACE National Inventory of Dams (NID), public feature service",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://nid.sec.usace.army.mil/nid/",
+   "read_on": "2026-11-10",
+   "summary": "Read live 2026-11-10 (NID web app text served at nid.sec.usace.army.mil/nid/): 'The NID is publicly available. Regular users include: ... Engineering and construction companies ... Media ... The insurance industry ... Dam and reservoir users'; 'Some dam information is publicly available, while some dam regulatory and oversight programs may restrict access to some of the information' (restricted fields are not in the public service; we read only the public one). The site's only disclaimer is the DoD information-system banner (monitoring consent), with no limit on reuse, advertising, commercial use or caching. 33 U.S.C. 467d: the Secretary 'shall make the inventory ... publicly available'. USACE is a federal agency (17 U.S.C. 105: no copyright in U.S. Government works). Field units from the NID data dictionary in the same app: surface area 'in acres ... at its normal retention level'; normal and maximum storage 'in acre-feet'; dam height 'in feet'; NID height = the largest of dam, structural and hydraulic height. Hazard potential rates the harm if the dam failed, not its condition: not shown. Earlier row (2026-11-09) was off on merit: NID has no full-pool elevation, so it cannot say how full a lake is; this block shows only what NID states about the dam itself and computes no percent full.",
+   "credit": "Data: U.S. Army Corps of Engineers, National Inventory of Dams",
+   "evidence": "nid.sec.usace.army.mil/nid/ app bundle (FAQ 'Who Uses the NID?', disclaimer modal, field definitions) read 2026-11-10; geospatial.sec.usace.army.mil/dls/rest/services/NID/National_Inventory_of_Dams_Public_Service/FeatureServer/0 queried 2026-11-10 (Buford Dam GA00824); law.cornell.edu/uscode/text/33/467d",
    "blocks": [
-    "dams_nearby"
-   ],
-   "read_on": "2026-11-09"
+    "dam_facts"
+   ]
   },
   {
    "id": "stocking",

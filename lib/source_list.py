@@ -11,6 +11,6 @@ UNIVERSAL = {"meta", "nws", "rain", "wpc", "cpc", "cpc610", "usdm", "acis"}
 CONDITIONAL = {"related", "nwps", "nwm", "peaks", "wtemp", "snotel", "attains", "fieldmeas",
                "floodfreq", "tides", "cameras", "airnow", "ridb", "near_wtemp", "streamcat",
                "stocking", "access", "rating", "wqp", "uv", "dam_rise", "dam_cwms",
-               "year", "multiyear", "record", "land"}
+               "year", "multiyear", "record", "land", "nid"}
 
 ALL_SOURCES = UNIVERSAL | CONDITIONAL

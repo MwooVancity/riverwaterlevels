@@ -341,6 +341,7 @@ def run():
     assert nt and render.parse_t(nt.group(1)) > n0 and nt.group(3) == "Low" and nt.group(2).count(";") == 1 and "data-tides" in render.TIDE_JS, "audit #15: the next tide is not after the build time, or the tile carries no tide list for the browser to step forward"
     assert "No NOAA tide prediction after this page was built" in render.hero(dict(cst, rec=dict(cst["rec"], coops=dict(cst["rec"]["coops"], hilo=[hl_(-1, 8.0, "H")]))), None), "audit #15: no future tide prediction did not say so"
     world_hub()
+    nid_facts()
 
 
 def world_hub():
@@ -608,6 +609,35 @@ def probe(warn, square, pages):
     assert not re.search(r"&lt;/?[a-zA-Z]|<p>Monday|\b(safe|open now)\b", h) and len(re.findall(r"<th ", h)) <= 5, "RIDB: HTML shown as text, a verdict, or more than 5 columns"
     old = {"fetched_at": "2026-11-09T00:00:00Z", "radius_mi": 15, "sites": [{"name": "OLD", "type": "Campground", "mi": 2.0, "activities": [], "water": [], "phone": "", "url": ""}]}
     assert "Unknown" in b3r.b_recreation({"rec": {"ridb": old}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"], "RIDB: a cache from before the fee field claimed 'Fee not stated'"
+
+
+def nid_facts():
+    """NID dam facts (2026-11-10): match by name and distance, never a guess; a missing NID value is a missing row, never zero."""
+    from lib import blocks3 as b3n
+    nw = datetime.datetime.now(datetime.timezone.utc)
+    bu = {"NIDID": "GA00824", "NAME": "Buford Dam", "OTHER_NAMES": "Lake Sidney Lanier", "IS_ASSOCIATED_STRUCTURE": "No", "LATITUDE": 34.1603, "LONGITUDE": -84.0739, "YEAR_COMPLETED": 1958,
+          "FED_AGENCY_OWNERS": "US Army Corps of Engineers", "PURPOSES": "Flood Risk Reduction, Hydroelectric, Recreation", "NID_HEIGHT": 231, "SURFACE_AREA": 47182.0, "MAX_STORAGE": 2554000.0, "NORMAL_STORAGE": 1917000.0, "DATA_UPDATED": 1789473600000}
+    dike = dict(bu, NAME="Buford Dam - Saddle Dike 1", OTHER_NAMES="Lake Sidney Lanier", IS_ASSOCIATED_STRUCTURE="Yes", LATITUDE=34.1627, LONGITUDE=-84.0755)
+    pond = {"NIDID": "GA00597", "NAME": "Dover Dam", "IS_ASSOCIATED_STRUCTURE": "No", "LATITUDE": 34.1024, "LONGITUDE": -83.9165}
+    m, why = collect.nid_match([pond, dike, bu], 34.1627, -84.0755, "lake", collect.nid_words("Lake Lanier"))
+    assert m and m["id"] == "GA00824" and m["normal_af"] == 1917000.0 and m["year"] == 1958 and m["mi"] < 1, "NID: Lake Lanier did not match Buford Dam (saddle dike or pond taken instead): %s" % why
+    assert collect.nid_match([pond, dike], 34.1627, -84.0755, "lake", collect.nid_words("Lake Lanier"))[0] is None, "NID: no named dam matched a saddle dike or another dam"
+    twin = dict(bu, NIDID="GA99999", LATITUDE=34.1650, LONGITUDE=-84.0770)
+    assert collect.nid_match([bu, twin], 34.1627, -84.0755, "lake", {"lanier"})[0] is None, "NID: two equally near dams named for the lake: one was guessed"
+    assert collect.nid_match([dict(bu, LATITUDE=35.0)], 34.1627, -84.0755, "lake", {"lanier"})[0] is None, "NID: a dam outside the radius matched"
+    assert collect.nid_key("x", {"river_name": "CHATTAHOOCHEE RIVER AT BUFORD DAM, NEAR BUFORD, GA"}) == ("dam", {"buford"}) and collect.nid_key("x", {"river_name": "CHATTAHOOCHEE RIVER NEAR NORCROSS, GA"}) is None, "NID: a river gauge's dam was not read from its name, or a gauge with no dam got a lookup"
+    gap = collect.nid_match([dict(bu, NORMAL_STORAGE=None, SURFACE_AREA=None, YEAR_COMPLETED=0)], 34.1627, -84.0755, "lake", {"lanier"})[0]
+    Gd = lambda mm: {"now": nw, "rec": {"nid": {"fetched_at": collect.now_iso(), "match": mm}}}
+    if b3n.cleared("nid"):
+        h = b3n.b_dam_facts(Gd(m))
+        assert h and "1,917,000 acre-ft" in h["body"] and "47,182 acres" in h["body"] and "231 ft" in h["body"] and "GA00824" in h["source"] and "hazard" not in h["body"].lower(), "NID: Buford Dam facts not shown as NID states them"
+        h = b3n.b_dam_facts(Gd(gap))
+        assert "Normal storage" not in h["body"] and "Surface area" not in h["body"] and "Year completed" not in h["body"] and "acre-ft" in h["body"], "NID: a missing NID value showed a row (or zero) instead of being left out"
+        assert b3n.b_dam_facts(Gd(None)) is None and b3n.b_dam_facts({"now": nw, "rec": {}}) is None, "NID: no match or no fetch showed a dam block"
+        bare = {k: None for k in m} | {"id": "X1", "name": "Bare Dam", "mi": 2.0}
+        assert b3n.b_dam_facts(Gd(bare))["empty"], "NID: a record with no facts was drawn as a full card"
+        old = {"now": nw, "rec": {"nid": {"fetched_at": (nw - datetime.timedelta(days=80)).isoformat(), "match": m}}}
+        assert b3n.b_dam_facts(old)["amber"] and not b3n.b_dam_facts(Gd(m))["amber"], "NID: an 80-day-old record was not marked old"
 
 
 if __name__ == "__main__":

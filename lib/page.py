@@ -232,8 +232,8 @@ def tab_blocks(tab, G, pages):
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
         lead = ([sc, b3.b_tides(G), b3.b_waves(G), b3.b_moon(G), b3.b_key_facts(G)] if coast else
-                [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_waves(G)] if lake else
-                [b3.b_key_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
+                [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_waves(G)] if lake else
+                [b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + lead + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), None if coast else b3.b_tides(G),
