@@ -115,9 +115,9 @@
    "id": "osm",
    "name": "OpenStreetMap via Overpass",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://www.openstreetmap.org/copyright",
    "summary": "OpenStreetMap boat ramps, put-ins and marinas near the gauge via the Overpass API; open data under ODbL, used with attribution.",
    "blocks": [
@@ -125,8 +125,10 @@
     "access_points"
    ],
    "credit": "Access points: © OpenStreetMap contributors (ODbL)",
-   "read_on": "2026-10-23",
-   "evidence": "search-result"
+   "read_on": "2026-11-11",
+   "evidence": "WebFetch of the official copyright page 2026-11-11; ODbL is a named open licence (share-alike applies only to a redistributed altered database)",
+   "evidence_url": "https://www.openstreetmap.org/copyright",
+   "evidence_phrase": "OpenStreetMap is open data, licensed under the Open Data Commons Open Database License (ODbL). You are free to copy, distribute, transmit and adapt our data, as long as you credit OpenStreetMap and its contributors."
   },
   {
    "id": "ridb",
@@ -205,16 +207,19 @@
    "id": "usdm",
    "name": "U.S. Drought Monitor",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
    "summary": "Permission page (map): 'The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.' No separate data terms; data page footer is '©2026 - National Drought Mitigation Center'. Same credit applied to web-service values.",
-   "credit": "The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map courtesy of NDMC.",
+   "credit": "The U.S. Drought Monitor is jointly produced by the National Drought Mitigation Center at the University of Nebraska-Lincoln, the United States Department of Agriculture, the National Oceanic and Atmospheric Administration and the National Aeronautics and Space Administration. Map / Data courtesy of NDMC.",
    "blocks": [
     "drought_monitor"
    ],
-   "read_on": "2026-10-20"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://droughtmonitor.unl.edu/About/Permission.aspx",
+   "evidence_phrase": "The U.S. Drought Monitor map and associated data are available and authorized for use by third parties, including by commercial and non-commercial entities.",
+   "evidence": "WebFetch of the NDMC permission page 2026-11-11; credit line on that page ends 'Map / Data courtesy of NDMC'"
   },
   {
    "id": "nid",
@@ -242,29 +247,33 @@
    "terms_url": "https://fwp-gis.mt.gov/arcgis/rest/services/fish/fishViewer/MapServer/38",
    "summary": "Public state ArcGIS stocking layers (no auth), credited to the issuing agency. Shown as released species, date and count near the gauge; a release event, not a measure of fish now present.",
    "credit": "Stocking: state fish and wildlife agency",
-   "read_on": "2026-10-22",
-   "evidence": "search-result",
+   "read_on": "2026-11-11",
+   "evidence": "WebFetch 2026-11-11. Montana FWP terms grant personal or informational use only and say nothing on ads or commercial use; the MT, MD and ND ArcGIS layers carry empty copyrightText and no use constraints. Not barred, not allowed: unread",
    "blocks": [
     "stocking"
-   ]
+   ],
+   "evidence_url": "https://fwp.mt.gov/terms-of-use",
+   "evidence_phrase": "Anyone may view, copy, or distribute information found within these web pages ... for personal or informational use without owing an obligation to FWP if the documents are not modified"
   },
   {
    "id": "uv",
    "name": "U.S. EPA Envirofacts hourly UV index",
    "status": "owner-permission",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
-   "read_on": "2026-10-23",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "read_on": "2026-11-11",
    "permission": "owner 2026-10-29",
-   "evidence": "search-result",
+   "evidence": "WebFetch of the EPA Standard Open Data License 2026-11-11 (the licence data.gov names for EPA Envirofacts API records); no attribution required",
    "off_reason_was": "2026-10-25: the hourly UV service we called by LATITUDE/LONGITUDE now returns 404 (verified across gauges); the DAILY service works but is keyed by ZIP (getEnvirofactsUVDAILY/ZIP/<zip>/JSON), so a keyless lat/lon->ZIP step must be wired before UV returns. Documented gap, not a silent failure.",
    "terms_url": "https://www.epa.gov/enviro/envirofacts-data-service-api",
    "summary": "EPA Envirofacts daily UV index by ZIP (data.epa.gov), ZIP from the Census geocoder; no auth. Today's value only, credited to EPA; category from the published EPA UV Index scale.",
    "credit": "UV index: U.S. Environmental Protection Agency",
    "blocks": [
     "uv_index"
-   ]
+   ],
+   "evidence_url": "https://edg.epa.gov/EPA_Data_License.html",
+   "evidence_phrase": "Unless otherwise specified, all data produced by the U.S EPA is by default in the public domain and is not subject to domestic copyright protection under 17 U.S.C. § 105"
   },
   {
    "id": "hdsc",
@@ -288,16 +297,19 @@
    "id": "openfema",
    "name": "FEMA OpenFEMA API (Disaster Declarations Summaries)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://www.fema.gov/about/openfema/terms-conditions",
    "summary": "OpenFEMA terms: \"This product uses the Federal Emergency Management Agency's OpenFEMA API, but is not endorsed by FEMA.\" is the requested notice; cite the endpoint and version; do not modify content while claiming FEMA as the source; no FEMA or DHS logos. Quote extracted by a summarising tool; re-read in a browser.",
    "credit": "Declarations: FEMA OpenFEMA (not endorsed by FEMA)",
    "blocks": [
     "flood_declarations"
    ],
-   "read_on": "2026-10-17"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://www.fema.gov/about/openfema/terms-conditions",
+   "evidence_phrase": "Data accessed through FEMA's API does not include controls over its end use.",
+   "evidence": "WebFetch of the OpenFEMA terms 2026-11-11; conditions kept in credit: the not-endorsed notice, cite the endpoint, do not modify while naming FEMA, no FEMA or DHS logos, no re-identification"
   },
   {
    "id": "ncei",
@@ -340,15 +352,16 @@
    "ads": "unread",
    "commercial": "unread",
    "cache": "unread",
-   "read_on": "2026-10-29",
+   "read_on": "2026-11-11",
    "permission": "owner 2026-10-29",
-   "evidence": "owner-permission",
+   "evidence": "2026-11-11: the CDA page carries no terms; usace.army.mil copyright page answered 403; the GitHub repo licence (MIT) covers the software, not the data. No official data terms read: unread",
    "terms_url": "https://cwms-data.usace.army.mil/cwms-data/",
    "credit": "Dam release: U.S. Army Corps of Engineers (CWMS)",
    "summary": "Latest outflow (cfs) of hand-matched Northwest dams (data/dams.json); no auth.",
    "blocks": [
     "dam_releases"
-   ]
+   ],
+   "evidence_url": "https://cwms-data.usace.army.mil/cwms-data/"
   },
   {
    "id": "fema_nfhl",
@@ -373,7 +386,10 @@
    "blocks": [
     "county_station_rain"
    ],
-   "read_on": "2026-10-20"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://www.rcc-acis.org/disclaimer.html",
+   "evidence_phrase": "Through use of the data services through the ACIS website, you automatically agree to the terms of use and disclaimer.",
+   "evidence": "WebFetch 2026-11-11 of the whole Terms of Use page: only a preliminary-data disclaimer, no licence, no sentence on ads, commercial use or caching: unread"
   },
   {
    "id": "nwm",
@@ -412,14 +428,17 @@
    "status": "quoted",
    "ads": "unread",
    "commercial": "unread",
-   "cache": "unread",
+   "cache": "allowed",
    "terms_url": "https://docs.airnowapi.org/faq",
    "summary": "AirNow API FAQ: access 'is available to the public'; 'These data are not fully verified or validated and should be considered preliminary and subject to change'; each key has a call limit per service. Service: /aq/observation/current/ziplatlong/ (the 2026-10-01 replacement; the latLong service answers 410). Key: AIRNOW_API_KEY. Evidence: search-result 2026-10-21 and a live call read 2026-10-21.",
    "credit": "Air quality: EPA AirNow and the reporting agency named on the row (preliminary data)",
    "blocks": [
     "air_quality"
    ],
-   "read_on": "2026-10-21"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://docs.airnowapi.org/faq",
+   "evidence_phrase": "we recommend users cache daily or hourly air quality observation or forecast data retrieved via web services",
+   "evidence": "WebFetch of the AirNow API FAQ 2026-11-11 (caching recommended). Ads and commercial use rest on the AirNow Data Use Guidelines PDF (docs.airnowapi.org/docs/DataUseGuidelines.pdf), whose text did not extract (embedded fonts); data also come from state and local agencies, so the EPA public-domain licence is not assumed: unread"
   },
   {
    "id": "ncwsa",
@@ -434,8 +453,8 @@
    "blocks": [
     "water_temp_months"
    ],
-   "read_on": "2026-10-21",
-   "evidence": "search-result",
+   "read_on": "2026-11-11",
+   "evidence": "WebFetch 2026-11-11: page footer is only '© National Center for Cold Water Safety 2012-2026', no terms or reuse permission. We show a short attributed quotation with a link; no grant to quote: unread",
    "evidence_phrase": "labels 50-60F as 'Very Dangerous / Immediately Life-threatening'; categorizes 60-70F as Dangerous; advises caution below 70F and recommends thermal protection like wetsuits or drysuits",
    "evidence_url": "https://www.coldwatersafety.org/water-temperature-safety-guide"
   },
@@ -446,30 +465,34 @@
    "ads": "unread",
    "commercial": "unread",
    "cache": "unread",
-   "read_on": "2026-10-23",
+   "read_on": "2026-11-11",
    "permission": "owner 2026-10-29",
-   "evidence": "search-result",
+   "evidence": "2026-11-11: waterqualitydata.us home and description pages carry no terms, licence or disclaimer; the USGS tool page's 'Public Domain' caption covers its screenshot only; results come from 400+ state, tribal and local providers. No official terms read: unread",
    "terms_url": "https://www.waterqualitydata.us/",
    "credit": "Water samples: Water Quality Portal (EPA, USGS, states)",
    "summary": "E. coli results at stations on this river's own channel (USGS NLDI upstream and downstream navigation, 15 km), last 3 years, last 3 samples; no verdict.",
    "blocks": [
     "water_samples"
-   ]
+   ],
+   "evidence_url": "https://www.waterqualitydata.us/"
   },
   {
    "id": "pegelonline",
    "name": "PEGELONLINE, German Federal Waterways and Shipping Administration (WSV)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://www.pegelonline.wsv.de/gast/nutzungsbedingungen",
    "summary": "Data licence Germany Zero 2.0 (DL-DE-Zero-2.0): no attribution required, liability disclaimed. Read 2026-10-31.",
    "credit": "Data: WSV, PEGELONLINE",
    "blocks": [
     "world_pages"
    ],
-   "read_on": "2026-10-31"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://www.pegelonline.wsv.de/gast/nutzungsbedingungen",
+   "evidence_phrase": "Die bereitgestellten Daten und Metadaten dürfen für die kommerzielle und nicht kommerzielle Nutzung ... in interne und externe Geschäftsprozesse, Produkte und Anwendungen (DL-DE->Zero-2.0)",
+   "evidence": "WebFetch of the WSV Nutzungsbedingungen 2026-11-11: licence DL-DE-Zero-2.0, commercial and non-commercial use; no storage limit on the gauge data"
   },
   {
    "id": "eccc",
@@ -522,39 +545,45 @@
    "id": "dwd",
    "name": "Deutscher Wetterdienst (DWD)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://www.dwd.de/DE/service/rechtliche_hinweise/rechtliche_hinweise.html",
    "summary": "Freely available geodata and high-value datasets, including all weather and climate information with a location, may be reused under CC BY 4.0 with a source note. Read 2026-11-02.",
    "credit": "Deutscher Wetterdienst (DWD), CC BY 4.0",
    "blocks": [
     "world_pages"
    ],
-   "read_on": "2026-11-02"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://www.dwd.de/DE/service/rechtliche_hinweise/rechtliche_hinweise.html",
+   "evidence_phrase": "Alle frei zugänglichen Geodaten und Geodatendienste ... dürfen unter den Bedingungen der Lizenz Creative Commons BY 4.0 (CC BY 4.0) unter Beigabe eines Quellenvermerks weiterverwendet werden.",
+   "evidence": "WebFetch of the DWD legal notice 2026-11-11; geodata include all weather and climate information with a location; CC BY 4.0 is a named open licence (source note in credit)"
   },
   {
    "id": "uba",
    "name": "Umweltbundesamt (German Environment Agency)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
-   "terms_url": "https://gdk.gdi-de.org/geonetwork/srv/api/records/18829865-f4b5-4ac4-80bd-9e0481ed50c1",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://luftdaten.umweltbundesamt.de/en/disclaimer-privacy-policy-and-copyright",
    "summary": "Luftdaten API catalogue record names Datenlizenz Deutschland Namensnennung 2.0, no access limits; record is for API v4, v3 evidence indirect. Credit wording from the UBA interface description. Read 2026-11-02.",
    "credit": "Umweltbundesamt mit Daten der Messnetze der Länder und des Bundes",
    "blocks": [
     "world_pages"
    ],
-   "read_on": "2026-11-02"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://luftdaten.umweltbundesamt.de/en/disclaimer-privacy-policy-and-copyright",
+   "evidence_phrase": "The data and metadata provided may be used for commercial and non-commercial purposes",
+   "evidence": "WebFetch of the Luftdaten portal copyright section 2026-11-11: data use permitted under Section 12a EGovG, listed uses include copying, adaptation and merging with own data; UBA must be in the source citation and changes marked. The GDI-DE catalogue record (DL-DE/BY-2.0) did not load (connection reset)"
   },
   {
    "id": "aafc",
    "name": "Agriculture and Agri-Food Canada, Canadian Drought Monitor",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://open.canada.ca/data/en/dataset/292646cd-619f-4200-afb1-8b2c52f984a2",
    "summary": "Open Canada record lists the licence as 'Open Government Licence - Canada'. Monthly GeoJSON in EPSG:3857; classes D0 to D4 named on the AAFC page. Evidence: pages read 2026-11-02.",
    "credit": "Contains information licensed under the Open Government Licence - Canada",
@@ -562,7 +591,10 @@
     "world_pages",
     "drought_monitor"
    ],
-   "read_on": "2026-11-02"
+   "read_on": "2026-11-11",
+   "evidence_url": "https://open.canada.ca/en/open-government-licence-canada",
+   "evidence_phrase": "a worldwide, royalty-free, perpetual, non-exclusive licence to use the Information, including for commercial purposes",
+   "evidence": "WebFetch 2026-11-11: dataset record 292646cd-... names 'Open Government Licence - Canada'; licence page read the same day; default attribution sentence kept in credit"
   },
   {
    "id": "met-office-spot",
@@ -686,15 +718,19 @@
    "id": "imi",
    "name": "Marine Institute (Ireland) ERDDAP tide predictions",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://erddap.marine.ie/erddap/info/IMI_TidePrediction_HighLow/index.html",
-   "read_on": "2026-11-09",
+   "read_on": "2026-11-11",
    "summary": "Dataset licence attribute: 'Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/)'. Heights Water_Level_ODMalin in metres, times UTC. Credit: Marine Institute. Live proof 2026-11-09: Kinsale HIGH 1.534 m 04:40 UTC.",
    "blocks": [
     "tides"
-   ]
+   ],
+   "credit": "Tide predictions: Marine Institute (Ireland), CC BY 4.0",
+   "evidence_url": "https://erddap.marine.ie/erddap/info/IMI_TidePrediction_HighLow/index.html",
+   "evidence_phrase": "license: Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/); institution: Marine Institute",
+   "evidence": "WebFetch of the ERDDAP dataset info 2026-11-11; CC BY 4.0 is a named open licence"
   },
   {
    "id": "meteireann",
