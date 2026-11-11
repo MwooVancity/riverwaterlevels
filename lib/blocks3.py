@@ -554,9 +554,45 @@ def b_recreation(G):
     r = dict(r, sites=[dict(x, phone=_phone(x.get("phone")), type=("Day-use area" if x.get("type") == "Campground" and re.search(r"(?i)picnic|day use|pavilion|shelter", x["name"]) else x.get("type"))) for x in r["sites"]])
     if not r["sites"]:
         return None  # hater r5: Memphis showed a heading with no rows after the hotel left
-    rows = "".join(tr([('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), esc(_ridb_name(x["name"])))) if str(x.get("url") or "").startswith("https://") else esc(_ridb_name(x["name"])), esc(x["type"] or ""), "%.1f mi" % x["mi"], esc(", ".join(x["water"] or x["activities"][:3]) or "not listed"), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(2,)) for x in r["sites"])
-    return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency", table(["Site", "Type", "Distance", "Activities listed", "Phone"], rows, right=(2,)),
-                 "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Distances are straight-line from the gauge.%s Fetched %s." % ("", esc(tzl(parse_t(r["fetched_at"]), G["zone"]))), "ridb")  # was a table row that phones showed as a fake site card (hater 2026-10-27)
+    r = dict(r, sites=[x for x in r["sites"] if x["mi"] <= r["radius_mi"]])  # a facility farther than the stated radius is never listed under it
+    if not r["sites"]:
+        return None
+    rows = "".join(tr([_ridb_site(x), "%.1f mi" % x["mi"], _ridb_fee(x), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(1,)) for x in r["sites"])
+    return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency",
+                 '<p>%d federal site%s within %d miles, nearest %s at %.1f mi. Fees, reservations and directions are as Recreation.gov lists them.</p>' % (len(r["sites"]), "" if len(r["sites"]) == 1 else "s", r["radius_mi"], esc(_ridb_name(r["sites"][0]["name"])), r["sites"][0]["mi"])
+                 + table(["Site", "Distance", "Fees and reservations", "Phone"], rows, right=(1,)),
+                 "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Fees, reservations, addresses, directions and descriptions are Recreation.gov's own words. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")  # was a table row that phones showed as a fake site card (hater 2026-10-27)
+
+
+def _ridb_ok(t):
+    """RIDB text a page can carry: check.py BANNED holds a page on a bare 'None' and on the word licence (builder jargon), so a field saying either is left out, never reworded."""
+    return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().upper() not in ("NONE", "N/A", "NA", "TBD")  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
+
+
+def _ridb_site(x):
+    """Name (linked to its Recreation.gov page when there is one), type and agency, activities; the rest of what RIDB says behind More."""
+    nm = esc(_ridb_name(x["name"]))
+    h = ('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), nm)) if str(x.get("url") or "").startswith("https://") else nm
+    h += "<br><small>%s</small>" % " &middot; ".join(esc(v) for v in (x.get("type"), x.get("org")) if v)
+    acts = ", ".join(x.get("water") or (x.get("activities") or [])[:3])
+    h += "<br><small>%s</small>" % esc(("Activities: " + acts) if acts else "Activities not listed")
+    det = [("About", x.get("about")), ("Address", x.get("address")), ("Directions", x.get("directions"))]
+    det = "".join("<p><b>%s:</b> %s</p>" % (k, esc(v)) for k, v in det if _ridb_ok(v))
+    if x.get("email"):
+        det += '<p><b>Email:</b> <a href="mailto:%s">%s</a></p>' % (esc(x["email"]), esc(x["email"]))
+    return h + ('<details class="tmore"><summary>More</summary>%s</details>' % det if det else "")
+
+
+def _ridb_fee(x):
+    """RIDB's fee text as written (or that it states none), then what it says about reservations: no verdict, no reworded price."""
+    if "fee" not in x:  # a cache written before 2026-11-10 never asked: Unknown, never "not stated"
+        return "Unknown"
+    fee = x["fee"]  # None = stated but too long to show whole
+    f = esc(fee) if _ridb_ok(fee) else "Fee not stated by Recreation.gov" if fee is not None and (not fee or fee.strip().upper() in ("NONE", "N/A", "NA", "TBD")) else "Fees: see the site on Recreation.gov"
+    if not x.get("reservable"):
+        return f + "<br><small>Not listed as reservable</small>"
+    u = x.get("res_url") or ""
+    return f + "<br><small>%s</small>" % (('<a href="%s" rel="noopener">Reservable on Recreation.gov</a>' % esc(u)) if u.startswith("https://") else "Recreation.gov lists it as reservable")
 
 
 def _tide_t(s, with_date):

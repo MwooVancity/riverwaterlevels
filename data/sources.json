@@ -132,16 +132,17 @@
    "id": "ridb",
    "name": "Recreation.gov RIDB (federal recreation facilities)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
-   "cache": "unread",
-   "terms_url": "https://catalog.data.gov/dataset/?tags=ridb",
-   "summary": "data.gov catalog lists the Recreation Information Database under 'Creative Commons Attribution'; 'available to the public for various other uses'; federal agencies 'are responsible for the quality of data' and 'some data may be missing or incomplete'. Key: RIDB_API_KEY, header 'apikey', 50 requests a minute. Evidence: search-result 2026-10-21; the RIDB developer portal terms page could not be fetched (JavaScript app).",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://www.recreation.gov/use-our-data",
+   "summary": "Read live 2026-11-10. data.gov catalog entry (publisher U.S. Forest Service): License 'https://creativecommons.org/licenses/by/4.0/' (CC BY 4.0 permits copying, redistribution and commercial use, so ads and caching, with credit); 'This data is used on Recreation.gov and is available to the public for various other uses.' Recreation.gov Use Our Data page: 'is available for free to anyone who envisions a variety of uses'; 'there's no need to contact us before incorporating Recreation.gov data into your system'; 'You are invited to use Recreation.gov data via the RIDB website in your publication/web application/computer system' and 'to get automatic updates as frequently as needed'; credit asked: 'Data Source: Recreation.gov' with a link. ads: allowed (CC BY 4.0 commercial use; no clause on ads). commercial: allowed (CC BY 4.0). cache: allowed ('incorporating Recreation.gov data into your system', bulk updates). Fields shown: FacilityUseFeeDescription, Reservable, FacilityReservationURL, FacilityDirections, FACILITYADDRESS, ORGANIZATION, FacilityPhone, FacilityEmail, ACTIVITY, FacilityDescription (first sentence). Key: RIDB_API_KEY, header 'apikey', 50 requests a minute. The RIDB developer portal (ridb.recreation.gov/docs) is a JavaScript app and could not be read.",
    "blocks": [
     "recreation_sites"
    ],
    "credit": "Recreation sites: Recreation.gov (RIDB)",
-   "read_on": "2026-10-21"
+   "read_on": "2026-11-10",
+   "evidence": "page-read https://www.recreation.gov/use-our-data and https://catalog.data.gov/dataset/recreation-information-database-ridb, 2026-11-10"
   },
   {
    "id": "hivis",
