@@ -16,6 +16,9 @@
   "hooks": {
     "SessionStart": [
       { "hooks": [ { "type": "command", "command": "\"$(ls -d /c/Users/mwoo7/AppData/Local/Python/pythoncore-3.*-64/python.exe | sort -V | tail -1)\" -I tools/open_items.py --brief" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "\"$(ls -d /c/Users/mwoo7/AppData/Local/Python/pythoncore-3.*-64/python.exe | sort -V | tail -1)\" -I tools/deploy_gate.py", "timeout": 120 } ] }
     ]
   }
 }

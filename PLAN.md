@@ -34,6 +34,7 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 ## Black-hat review 2026-11-11 (tools/blackhat_review.md; verdict: not a spam site, no cloaking, lastmod honest)
 - DONE (commit a8b91de, on check): embed credit line optional, "River Water Levels" + nofollow (Google names keyword links in widgets as link spam); Clearwater data.json and Dataset name the measuring station 8726724; coast series key `water_level_7d`; dam estimate names the National Inventory of Dams; "L&D", "The Dalles" casing; home world anchors plain; gauge air temperature labelled apart from the weather tile; hub titles say their gauge count. Also: Lake Michigan lake-great PASS; world hubs' source line and "None in force" (6 hubs were carried as old copies).
 - Found by the way: the short coast title (audit #27) dropped H1 words, break_blocks failed, and no check run promoted to main all day (27 commits) while every run showed green. Title fixed; the owner dashboard now shows "Code changes waiting to go live" with the stop lines.
+- Deploy gate (owner "improve it"): tools/deploy_gate.py, a project Stop hook, blocks a session from stopping while check has code main lacks and the newest finished check run failed or hit a merge conflict, quoting its stop lines (self-test passes).
 - KEEP: sitemap lastmod moves with weather text (honest: the page did change).
 - Outreach: hold until the nofollow embed is LIVE (it is what the emails offer).
 
