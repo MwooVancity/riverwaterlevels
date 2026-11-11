@@ -583,8 +583,8 @@ def fc_top(f, now):
     pts = [p for p in c.get("pts") or [] if parse_t(p[0]) >= now]
     if not pts or age is None or age > HIDE_H["river_forecast"]:
         return None
-    t, v, _ = max(pts, key=lambda p: p[1])
-    return parse_t(t).astimezone(zoneinfo.ZoneInfo(f["zone"])).strftime("%b %-d, %-I %p" if os.name != "nt" else "%b %#d, %#I %p"), v
+    t, v, typ = max(pts, key=lambda p: p[1])  # typ: PEGELONLINE's own row type; an estimate is said as one (full audit #9)
+    return parse_t(t).astimezone(zoneinfo.ZoneInfo(f["zone"])).strftime("%b %-d, %-I %p" if os.name != "nt" else "%b %#d, %#I %p"), v, "estim" in str(typ or "").lower()
 
 
 def fresh(w, key, t, bid):
@@ -708,7 +708,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
     top = fc_top(rec["feed"], now)
     if top:
-        html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast, %s. Federal Institute of Hydrology</small>" % esc(top[0])), html, count=1, flags=re.S)
+        html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast%s, %s. Federal Institute of Hydrology</small>" % (" (an estimate)" if top[2] else "", esc(top[0]))), html, count=1, flags=re.S)
     if p.get("feed") == "ea":  # the weather is the Met Office's, never the Environment Agency's (localize names feed["wx"] for every NWS word)
         html = html.replace("Source: National Weather Service hourly point forecast", "Source: Met Office Global Spot hourly forecast for the gauge location, Powered by Met Office data").replace("Source: National Weather Service point forecast", "Source: Met Office Global Spot daily forecast for the gauge location, Powered by Met Office data")
         html = html.replace('<div class="tile sun', ea_rain_tile((r.get("wx") or {}).get("ea_rain"), now, rec["feed"]["zone"]) + '<div class="tile sun', 1)

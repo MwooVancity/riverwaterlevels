@@ -1859,6 +1859,7 @@ def fast(inv, sites):
                     cu_, rec["coops"] = fetch_coops(s)
                     new[s] = cu_["rows"]
                     rec["buoy"] = fetch_buoy(s)
+                    note("coops", "ok")  # audit #38: success was never recorded, so the watchdog said "coops never worked"
                 except Exception as e:
                     log.append("coops FAILED (%s), kept previous" % str(e)[:60])
                     note("coops", "failed", e)

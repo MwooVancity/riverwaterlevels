@@ -1,4 +1,4 @@
-"""Indexing state of the LIVE site must equal data/index-allow.json (run after every deploy and by the watchdog; network).
+"""Indexing state of the LIVE site must equal data/index-allow.json (run by hand; nothing in the cloud runs it; network).
 Usage: python -I tools/index_live.py        exit 1 and print each mismatch
 Rules:
  - open false: every sampled page sends noindex (header or meta) and the sitemap may list anything

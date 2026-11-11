@@ -19,7 +19,8 @@ EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with
 # a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
 HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
 EMPTY_MIN = 5  # gauges answered empty, all of them, before a source counts as a feed answering empty
-SLOW = {"world-normals": 750, "world-access": 750, "access": 750, "land": 750, "cdec_res": 750}  # fetched only when 720 h old (collect.py world_extras, collect.py MONTHLY): 50 h called them dead (2026-11-07: world-normals "94 h"; 2026-11-10: cdec_res "75 h", one gauge fetched fine on 11-07). A failing run still alarms (the failed-share rule below)
+from lib.cadence import MONTHLY  # one list (audit #48)
+SLOW = {**{s: 750 for s in MONTHLY}, "world-normals": 750, "world-access": 750}  # fetched only when 720 h old (collect.py world_extras, lib/cadence.py MONTHLY): 50 h called them dead (2026-11-07: world-normals "94 h"; 2026-11-10: cdec_res "75 h", one gauge fetched fine on 11-07). A failing run still alarms (the failed-share rule below)
 
 
 def get(path, raw=False):
