@@ -383,9 +383,9 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s%s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td></tr>' % (
             r["water_url"], esc(r["place"]), r["site"], (" &middot; drains %s sq mi" % fmt(float(r["drainage_sqmi"]))) if float(r["drainage_sqmi"] or 0) > 0 else "", fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), pv, ch, fcst)  # readable at a glance: 5 columns (time under the flow; drainage is on each gauge page)
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
-    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1>' + hub_summary(rows, Gs).replace("%", "%%") + '<p class="sub">%d of %d gauges in %s are on this site, listed upstream to downstream (smallest drainage area first). Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
+    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1>%s<p class="sub">%d of %d gauges in %s are on this site, listed upstream to downstream (smallest drainage area first). Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                st.lower(), esc(name), esc(river), esc(river), esc(name), len(rows), inv_count, esc(name), trs))
+                st.lower(), esc(name), esc(river), esc(river), esc(name), hub_summary(rows, Gs), len(rows), inv_count, esc(name), trs))
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))
 
 

@@ -32,6 +32,10 @@ def run():
     assert "Marianna is typical" in hs and "falling" in hs and "Altha is much above normal and rising" in hs.lower().replace("altha", "Altha") and "Blountstown is not reporting" in hs and "Flood Warning (Altha)" in hs, "edge: river hub summary wrong: %s" % hs
     assert not re.search(r"\d+ ?(cfs|ft|%)", hs), "edge: hub summary carries a number the live table can contradict"
     assert hub_summary(hr[:1], {"1": hg(chg=None, p=None)}) == "", "edge: hub with nothing known says something"
+    from lib.directory import hub_page  # the whole hub page builds (2026-11-11: the summary broke the page's own string formatting and stopped the build)
+    hp_ = hub_page("chipola-river", "FL", [dict(r, river="Chipola River", drainage_sqmi="464", water_url="/river/chipola-river/x/") for r in hr[:2]],
+                   2, {"1": hg(obs="Nov 10, 8:00 PM CST", lv=274.0, flow=274.0), "2": hg(obs="Nov 10, 8:00 PM CST", lv=706.0, flow=706.0)})
+    assert "Right now: Marianna is" in hp_ and "2 of 2 gauges in Florida" in hp_, "edge: river hub page did not build with its summary"
     from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
                       ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
