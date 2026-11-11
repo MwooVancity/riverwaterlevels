@@ -2,7 +2,7 @@
 import os, re, csv, json, math, datetime, collections, zoneinfo
 from lib import ui
 from lib.common import *
-from lib.core import SOURCES_READ_ON, tzl, fdate, age_chip, STALE_H, age_text, hours_old, stale_after, age_words
+from lib.core import SOURCES_READ_ON, live_alerts, tzl, fdate, age_chip, STALE_H, age_text, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -345,6 +345,32 @@ def lake_state_page(d, linked, now):
                  "/lakes/tx/", body, ld=crumb_ld([("Home", "/"), ("Texas", "/rivers/tx/"), ("Lake levels", None)]))
 
 
+def hub_summary(rows, Gs):
+    """The river in one or two plain sentences above its gauge table (Search Console 2026-11-11: four 2-row river hubs 'crawled, not indexed'; reader audit #7):
+    how each gauge compares with normal and which way it is moving, from the same labels the table shows, plus any NWS alert in force at a gauge.
+    No number (the table under it carries them, with their times); a gauge not reporting is named as such; nothing known = no sentence."""
+    parts, alerts = [], []
+    for r in rows:
+        G = Gs[r["site"]]
+        if G["offline"]:
+            parts.append("%s is not reporting" % r["place"])
+            continue
+        chg = None if G.get("osc") else G["chg"]
+        dw = {"up": "rising", "down": "falling", "steady": "steady"}.get(flow_dir(chg)) if chg is not None else None
+        bw = band_word(G["p"])
+        bw = bw[:1].lower() + bw[1:] if bw and bw not in ("–", "-") and not bw.startswith(("Unknown", "Not")) else None
+        if bw or dw:
+            parts.append("%s is %s" % (r["place"], " and ".join(x for x in (bw, dw) if x)))
+        for a in live_alerts(G) or []:
+            alerts.append("%s (%s)" % (a.get("event") or "NWS alert", r["place"]))
+    if not parts:
+        return ""
+    s = "Right now: " + "; ".join(parts) + "."
+    if alerts:
+        s += " Active NWS alerts: " + "; ".join(dict.fromkeys(alerts)) + "."
+    return '<p class="status dv">%s</p>' % esc(s)
+
+
 def hub_page(hub_slug, st, rows, inv_count, Gs):
     rows = sorted(rows, key=lambda r: float(r["drainage_sqmi"] or 0))
     trs = ""
@@ -357,7 +383,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
         trs += '<tr><td><a href="%s">%s</a><div class="src">USGS %s%s</div></td><td class="r">%s cfs%s<div class="src">%s</div></td><td class="r">%s</td><td class="r">%s</td><td class="r">%s</td></tr>' % (
             r["water_url"], esc(r["place"]), r["site"], (" &middot; drains %s sq mi" % fmt(float(r["drainage_sqmi"]))) if float(r["drainage_sqmi"] or 0) > 0 else "", fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), pv, ch, fcst)  # readable at a glance: 5 columns (time under the flow; drainage is on each gauge page)
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
-    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1><p class="sub">%d of %d gauges in %s are on this site. Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
+    body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1>' + hub_summary(rows, Gs).replace("%", "%%") + '<p class="sub">%d of %d gauges in %s are on this site, listed upstream to downstream (smallest drainage area first). Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
                 st.lower(), esc(name), esc(river), esc(river), esc(name), len(rows), inv_count, esc(name), trs))
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))

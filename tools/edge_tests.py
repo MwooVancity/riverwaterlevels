@@ -1,5 +1,5 @@
 """Fixtures for paths only a rare real event reaches: an ice flag, a frozen feed, an outage over a live page, a lost cache in a new year. Run by check.py --selftest."""
-import datetime, email.utils, json, os, sys, tempfile, types, zoneinfo
+import datetime, email.utils, json, os, re, sys, tempfile, types, zoneinfo
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 import collect
@@ -24,6 +24,14 @@ def run():
     finally:
         collect.thr_json = real
     from lib import render  # noqa: F401  (build import order)
+    from lib.directory import hub_summary  # river hub summary (Search Console 2026-11-11: thin 2-row hubs not indexed)
+    nw = datetime.datetime.now(datetime.timezone.utc)
+    hg = lambda **k: dict({"offline": False, "osc": False, "chg": -5.0, "p": 50, "now": nw, "rec": {"nws": {"alerts": []}}}, **k)
+    hr = [{"site": "1", "place": "Marianna"}, {"site": "2", "place": "Altha"}, {"site": "3", "place": "Blountstown"}]
+    hs = hub_summary(hr, {"1": hg(), "2": hg(chg=12.0, p=95, rec={"nws": {"alerts": [{"event": "Flood Warning", "ends": (nw + datetime.timedelta(hours=5)).isoformat()}]}}), "3": hg(offline=True)})
+    assert "Marianna is typical" in hs and "falling" in hs and "Altha is much above normal and rising" in hs.lower().replace("altha", "Altha") and "Blountstown is not reporting" in hs and "Flood Warning (Altha)" in hs, "edge: river hub summary wrong: %s" % hs
+    assert not re.search(r"\d+ ?(cfs|ft|%)", hs), "edge: hub summary carries a number the live table can contradict"
+    assert hub_summary(hr[:1], {"1": hg(chg=None, p=None)}) == "", "edge: hub with nothing known says something"
     from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
                       ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
