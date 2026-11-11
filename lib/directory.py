@@ -2,7 +2,7 @@
 import os, re, csv, json, math, datetime, collections, zoneinfo
 from lib import ui
 from lib.common import *
-from lib.core import SOURCES_READ_ON, live_alerts, tzl, fdate, age_chip, STALE_H, age_text, hours_old, stale_after, age_words
+from lib.core import SOURCES_READ_ON, live_alerts, fc_points, table, tr, YCOL, YDASH, tzl, fdate, age_chip, STALE_H, age_text, hours_old, stale_after, age_words
 from lib.render import robots_meta, CSS_LINK, PWA_HEAD, css_asset, SOURCES, DISCLAIMER, nav, footer, TABS, HEAD_EXTRA, crumb_ld, series, LABELS, og_tags
 
 STATE_NAMES = {"AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California", "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia", "FL": "Florida",
@@ -371,6 +371,56 @@ def hub_summary(rows, Gs):
     return '<p class="status dv">%s</p>' % esc(s)
 
 
+def _sec(bid, heading, body, src):
+    return '<section class="card blk" id="%s"><h2>%s</h2>%s<p class="src">%s</p></section>' % (bid, esc(heading), body, src)
+
+
+def hub_blocks(river, rows, Gs):
+    """What only the river page can show (owner 2026-11-11, option 2: thin river hubs get data of their own, nothing a gauge page already shows alone):
+    every gauge's last 7 days on one chart (a rise seen moving downstream), each gauge's NWS forecast crest, and the river's access points with their nearest gauge.
+    Built from data each gauge page already carries: no new fetch, no new claim. Each section has its source and time; a section with nothing to show is left out."""
+    from lib.charts import river_svg
+    out = ""
+    live = [(r, Gs[r["site"]]) for r in rows if not Gs[r["site"]]["offline"] and Gs[r["site"]].get("fl")]
+    if len(live) >= 2:  # one gauge = the gauge page's own chart; nothing gained
+        shown = live[:4]
+        series = [(r["place"], [(t, v) for t, v, *_ in G["fl"] if v is not None]) for r, G in shown]
+        series = [s for s in series if len(s[1]) >= 2]
+        if len(series) >= 2:
+            zone = shown[0][1]["zone"]
+            leg = '<p class="legend">%s</p>' % " &nbsp; ".join('<b><span style="color:%s" aria-hidden="true">%s</span>&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(p)) for n, (p, _) in enumerate(series))
+            out += _sec("river_flow", "Flow along the river, last 7 days",
+                        river_svg(series, zone, 760, 260, 11, 7, "cw") + river_svg(series, zone, 340, 260, 12, 4, "cn") + leg,
+                        "Source: USGS Water Data API (continuous flow), each gauge observed to the time in the table above. Lines run upstream to downstream%s; a rise usually reaches the lower gauges later." % (
+                            " (the first 4 of %d gauges)" % len(live) if len(live) > 4 else ""))
+    fr = []
+    for r in rows:
+        f = (Gs[r["site"]]["rec"].get("nwps") or {}).get("forecast") or {}
+        pts = [p for p in fc_points(f) if p[0] >= Gs[r["site"]]["now"]] if f else []
+        top = max(pts, key=lambda p: (p[1] if p[1] is not None else -1e9, p[2] or 0)) if pts else None
+        if top:
+            fr.append(tr(['<a href="%s">%s</a>' % (r["water_url"], esc(r["place"])), ("%.1f ft" % top[1]) if top[1] is not None else ("%s cfs" % fmtc(top[2])), esc(tzl(top[0], Gs[r["site"]]["zone"])),
+                          esc(tzl(parse_t(f["issued"]), Gs[r["site"]]["zone"])) if f.get("issued") else "not stated"], right=(1,)))
+    if fr:
+        out += _sec("river_forecast_all", "NWS river forecast at each gauge", table(["Gauge", "Highest forecast", "When", "Forecast issued"], "".join(fr), right=(1,)) +
+                    ("<p>No NWS river forecast is issued for the other %d gauge%s.</p>" % (len(rows) - len(fr), "" if len(rows) - len(fr) == 1 else "s") if len(fr) < len(rows) else ""),
+                    "Source: National Weather Service river forecasts (NWPS). Stages are on each NWS forecast point's own scale.")
+    acc, seen = [], {}
+    for r in rows:
+        for x in ((Gs[r["site"]]["rec"].get("access") or {}).get("rows") or []):
+            nm = (x.get("name") or "").strip()
+            if not nm or x.get("mi") is None:
+                continue
+            k = (nm.lower(), x.get("type"))
+            if k not in seen or x["mi"] < seen[k][2]:
+                seen[k] = (nm, x.get("type") or "", x["mi"], r["place"])
+    acc = sorted(seen.values(), key=lambda a: a[2])[:15]
+    if acc:
+        out += _sec("river_access", "Boat ramps, put-ins and marinas along the river", table(["Name", "Type", "Nearest gauge"], "".join(tr([esc(a[0]), esc(a[1]), "%s, %.1f mi" % (esc(a[3]), a[2])]) for a in acc)),
+                    "Source: OpenStreetMap, within about 15 miles of each gauge, nearest 15 named places. &copy; OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate.")
+    return out
+
+
 def hub_page(hub_slug, st, rows, inv_count, Gs):
     rows = sorted(rows, key=lambda r: float(r["drainage_sqmi"] or 0))
     trs = ""
@@ -385,7 +435,7 @@ def hub_page(hub_slug, st, rows, inv_count, Gs):
     river, name = rows[0]["river"], STATE_NAMES.get(st, st)
     body = ('<div class="crumb"><a href="/">Home</a> / <a href="/rivers/%s/">%s</a> / %s</div><h1>%s in %s</h1>%s<p class="sub">%d of %d gauges in %s are on this site, listed upstream to downstream (smallest drainage area first). Source: USGS Water Data API; percentile estimated from USGS daily statistics.</p>'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                st.lower(), esc(name), esc(river), esc(river), esc(name), hub_summary(rows, Gs), len(rows), inv_count, esc(name), trs))
+                st.lower(), esc(name), esc(river), esc(river), esc(name), hub_summary(rows, Gs), len(rows), inv_count, esc(name), trs)) + hub_blocks(river, rows, Gs)
     return shell("%s in %s: gauges, levels and flows | %s" % (river, name, BRAND), "Every %s gauge in %s on this site, with current flow." % (river, name), "/river/%s/" % hub_slug, body, ld=crumb_ld([("Home", "/"), (name, "/rivers/%s/" % st.lower()), (river, None)]))
 
 

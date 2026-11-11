@@ -5,6 +5,27 @@ from lib.core import *
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
+def river_svg(series, zone, W, Hh, fs, nx, cls):
+    """Several gauges' last 7 days on one time axis (river hub, owner 2026-11-11 option 2): series = [(label, [(datetime, cfs), ...])], up to 4 lines.
+    Same axis rules as the gauge chart: round ticks, labels in the gauge's own time zone. ponytail: linear axis; a log axis if a river's gauges differ 100-fold."""
+    pts = [p for _, s in series for p in s]
+    t0, t1 = min(p[0] for p in pts), max(p[0] for p in pts)
+    span = (t1 - t0).total_seconds() or 1
+    vmin, vmax, ticks = nice_ticks(min(p[1] for p in pts), max(p[1] for p in pts))
+    L, B = (56, 30) if W > 500 else (46, 28)
+    L = axis_l(L, fs, ticks)
+    X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
+    Y = lambda v: 12 + (1 - (v - vmin) / ((vmax - vmin) or 1)) * (Hh - B - 12)
+    grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (
+        L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks)
+    xl = "".join('<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (
+        X(t0 + datetime.timedelta(seconds=span * k / (nx - 1))), Hh - 8, fs, "start" if k == 0 else "end" if k == nx - 1 else "middle",
+        (t0 + datetime.timedelta(seconds=span * k / (nx - 1))).astimezone(zone).strftime("%b %d").replace(" 0", " ")) for k in range(nx))
+    lines = "".join('<polyline points="%s" fill="none" stroke="%s" stroke-width="2.2"%s/>' % (
+        " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in s), YCOL[n], (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "") for n, (_, s) in enumerate(series))
+    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs at %d gauges over the last 7 days">%s%s%s</svg>' % (cls, W, Hh, len(series), grid, xl, lines)
+
+
 def axis_l(L, fs, ticks):
     """Left margin wide enough for the widest tick label (hater w3: "400,000" clipped)."""
     return max(L, 10 + int(0.6 * fs * max(len(tf(tv, ticks)) for tv in ticks)))

@@ -36,6 +36,18 @@ def run():
     hp_ = hub_page("chipola-river", "FL", [dict(r, river="Chipola River", drainage_sqmi="464", water_url="/river/chipola-river/x/") for r in hr[:2]],
                    2, {"1": hg(obs="Nov 10, 8:00 PM CST", lv=274.0, flow=274.0), "2": hg(obs="Nov 10, 8:00 PM CST", lv=706.0, flow=706.0)})
     assert "Right now: Marianna is" in hp_ and "2 of 2 gauges in Florida" in hp_, "edge: river hub page did not build with its summary"
+    assert 'id="river_flow"' not in hp_ and 'id="river_forecast_all"' not in hp_ and 'id="river_access"' not in hp_, "edge: hub sections drawn with no data"
+    # owner 2026-11-11 option 2: the hub's own data (all gauges' 7 days on one chart, each forecast crest, access along the river with its nearest gauge)
+    zn = zoneinfo.ZoneInfo("America/Chicago")
+    fl_ = lambda base: [(nw - datetime.timedelta(hours=h), base + h, None) for h in range(48, -1, -6)]
+    fc_ = {"issued": (nw - datetime.timedelta(hours=3)).isoformat(), "primary_units": "ft", "points": [{"t": (nw + datetime.timedelta(hours=h)).isoformat(), "primary": 5.0 + h / 10, "secondary": None} for h in (6, 12, 18)]}
+    ac_ = lambda mi: {"rows": [{"name": "Hwy 20 Landing", "type": "Boat ramp", "mi": mi}, {"name": "", "type": "Boat ramp", "mi": 1.0}]}
+    hp2 = hub_page("chipola-river", "FL", [dict(r, river="Chipola River", drainage_sqmi="464", water_url="/river/chipola-river/x/") for r in hr[:2]], 2,
+                   {"1": hg(obs="x", lv=274.0, flow=274.0, fl=fl_(270.0), zone=zn, rec={"nws": {"alerts": []}, "nwps": {"forecast": fc_}, "access": ac_(3.2)}),
+                    "2": hg(obs="x", lv=706.0, flow=706.0, fl=fl_(700.0), zone=zn, rec={"nws": {"alerts": []}, "access": ac_(1.4)})})
+    assert 'id="river_flow"' in hp2 and hp2.count("<polyline") == 4, "edge: hub flow chart missing (2 gauges, 2 sizes)"
+    assert 'id="river_forecast_all"' in hp2 and "6.8 ft" in hp2 and "No NWS river forecast is issued for the other 1 gauge." in hp2, "edge: hub forecast table wrong"
+    assert 'id="river_access"' in hp2 and hp2.count("Hwy 20 Landing") == 1 and "Altha, 1.4 mi" in hp2, "edge: hub access list not deduplicated to the nearest gauge"
     from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
                       ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
