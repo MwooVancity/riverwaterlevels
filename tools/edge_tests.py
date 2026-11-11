@@ -276,8 +276,11 @@ def run():
     with tempfile.TemporaryDirectory() as d:
         for i in range(20):
             os.makedirs(os.path.join(d, "river", str(i)))
-            open(os.path.join(d, "river", str(i), "index.html"), "w").write('<div class="hero hero2"><section data-g="now" class="card blk" data-f="x" id="%s"></section>' % ("a" if i < 5 else "b"))
+            open(os.path.join(d, "river", str(i), "index.html"), "w").write('"BreadcrumbList"<div class="hero hero2"><section data-g="now" class="card blk" data-f="x" id="%s"></section>' % ("a" if i < 5 else "b"))
+            os.makedirs(os.path.join(d, "embed", "river", str(i)))
+            open(os.path.join(d, "embed", "river", str(i), "index.html"), "w").write('<div class="hero hero2">')
         got = coverage.scan(d, {"best": {"US": {"a": 0.9}}})
+        assert "Germany" not in got["shares"], "embed panels were counted as German gauge pages"
         assert got["shares"]["US"]["blocks"]["a"] == 0.25 and "US a" in got["drops"][0], "a block vanishing across pages went unseen"
         assert not coverage.scan(d, {"best": {"US": {"a": 0.25}}})["drops"], "a steady block alarmed"
         assert not coverage.scan(d, {"best": {"US": {"a": 0.4}}})["drops"], "a block that comes and goes with the weather alarmed"

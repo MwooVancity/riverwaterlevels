@@ -18,7 +18,7 @@ def scan(root, old=None):
     seen = {}
     for p in glob.glob(os.path.join(root, "**", "index.html"), recursive=True):
         h = open(p, encoding="utf-8", errors="ignore").read()
-        if 'class="hero hero2' not in h:
+        if 'class="hero hero2' not in h or '"BreadcrumbList"' not in h:  # a reader's gauge page; embed panels share the hero but no breadcrumb (264 US panels were counted as Germany, 2026-11-11)
             continue
         c = country(os.path.relpath(p, root))
         d = seen.setdefault(c, {"pages": 0, "blocks": {}})
