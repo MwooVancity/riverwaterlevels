@@ -304,7 +304,7 @@ def state_page(st, rows, Gs, sd=None, lakes_hub=False, waters=()):
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>%s' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs, state_waters(st, waters)))  # ponytail: one lake hub so far; a dict when a second state gets one
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs, state_blocks(rows, Gs) + state_waters(st, waters)))  # ponytail: one lake hub so far; a dict when a second state gets one
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
@@ -375,6 +375,49 @@ def _sec(bid, heading, body, src):
     return '<section class="card blk" id="%s"><h2>%s</h2>%s<p class="src">%s</p></section>' % (bid, esc(heading), body, src)
 
 
+def forecast_section(rows, Gs, label, cap=40):
+    """Each gauge's highest NWS forecast stage still ahead, when, and when issued (river and state hubs). Gauges with none are counted in one line; none at all = no section."""
+    fr = []
+    for r in rows:
+        G = Gs[r["site"]]
+        f = (G["rec"].get("nwps") or {}).get("forecast") or {}
+        pts = [p for p in fc_points(f) if p[0] >= G["now"]] if f else []
+        top = max(pts, key=lambda p: (p[1] if p[1] is not None else -1e9, p[2] or 0)) if pts else None
+        if top:
+            fr.append((top[1] if top[1] is not None else -1e9, tr(['<a href="%s">%s</a>' % (r["water_url"], esc(label(r))), ("%.1f ft" % top[1]) if top[1] is not None else ("%s cfs" % fmtc(top[2])), esc(tzl(top[0], G["zone"])),
+                                                                      esc(tzl(parse_t(f["issued"]), G["zone"])) if f.get("issued") else "not stated"], right=(1,))))
+    if not fr:
+        return ""
+    more = "<p>%d more forecast gauges are listed on their own pages.</p>" % (len(fr) - cap) if len(fr) > cap else ""
+    rest = len(rows) - len(fr)
+    return _sec("river_forecast_all", "NWS river forecast at each gauge", table(["Gauge", "Highest forecast", "When", "Forecast issued"], "".join(x[1] for x in fr[:cap]), right=(1,)) + more +
+                ("<p>No NWS river forecast is issued for the other %d gauge%s.</p>" % (rest, "" if rest == 1 else "s") if rest else ""),
+                "Source: National Weather Service river forecasts (NWPS). Stages are on each NWS forecast point's own scale.")
+
+
+def state_blocks(rows, Gs):
+    """The state today (owner 2026-11-11, every page its own): where flow is furthest above and below normal, what is rising and falling fastest, every NWS forecast.
+    From its gauges' own labels and readings, no new fetch. A ranking needs 4 gauges with data (fewer is the table above); nothing to rank = no section."""
+    nm = lambda r: river_at(r["river"], r["place"])
+    lk = lambda r: '<a href="%s">%s</a>' % (r["water_url"], esc(nm(r)))
+    live = [(r, Gs[r["site"]]) for r in rows if not Gs[r["site"]]["offline"]]
+    out = ""
+    ranked = sorted([x for x in live if x[1]["p"] is not None], key=lambda x: x[1]["p"])
+    if len(ranked) >= 4:
+        hi, lo = ranked[::-1][:5], ranked[:5]
+        out += _sec("state_extremes", "Furthest above and below normal right now", table(["Highest against normal", "", "Lowest against normal", ""],
+                    "".join(tr([lk(a[0]), band_word(a[1]["p"]), lk(b[0]), band_word(b[1]["p"])]) for a, b in zip(hi, lo))),
+                    "Source: USGS Water Data API; each gauge's latest flow compared with USGS daily statistics for this date at that gauge (percentile). %d of %d gauges have a comparison for today." % (len(ranked), len(rows)))
+    mv = sorted([x for x in live if not x[1].get("osc") and x[1]["chg"] is not None], key=lambda x: x[1]["chg"])
+    if len(mv) >= 4:
+        up, dn = [x for x in mv[::-1][:5] if x[1]["chg"] > 0], [x for x in mv[:5] if x[1]["chg"] < 0]
+        rows_ = "".join(tr([lk(r), chg_text(G)], right=(1,)) for r, G in up) + "".join(tr([lk(r), chg_text(G)], right=(1,)) for r, G in dn)
+        if rows_:
+            out += _sec("state_movers", "Rising and falling fastest, last 24 hours", table(["Gauge", "24 h change in flow"], rows_, right=(1,)),
+                        "Source: USGS Water Data API; change between each gauge's latest flow and its reading 24 hours earlier.")
+    return out + forecast_section(rows, Gs, nm)
+
+
 def hub_blocks(river, rows, Gs):
     """What only the river page can show (owner 2026-11-11, option 2: thin river hubs get data of their own, nothing a gauge page already shows alone):
     every gauge's last 7 days on one chart (a rise seen moving downstream), each gauge's NWS forecast crest, and the river's access points with their nearest gauge.
@@ -393,18 +436,7 @@ def hub_blocks(river, rows, Gs):
                         river_svg(series, zone, 760, 260, 11, 7, "cw") + river_svg(series, zone, 340, 260, 12, 4, "cn") + leg,
                         "Source: USGS Water Data API (continuous flow), each gauge observed to the time in the table above. Lines run upstream to downstream%s; a rise usually reaches the lower gauges later." % (
                             " (the first 4 of %d gauges)" % len(live) if len(live) > 4 else ""))
-    fr = []
-    for r in rows:
-        f = (Gs[r["site"]]["rec"].get("nwps") or {}).get("forecast") or {}
-        pts = [p for p in fc_points(f) if p[0] >= Gs[r["site"]]["now"]] if f else []
-        top = max(pts, key=lambda p: (p[1] if p[1] is not None else -1e9, p[2] or 0)) if pts else None
-        if top:
-            fr.append(tr(['<a href="%s">%s</a>' % (r["water_url"], esc(r["place"])), ("%.1f ft" % top[1]) if top[1] is not None else ("%s cfs" % fmtc(top[2])), esc(tzl(top[0], Gs[r["site"]]["zone"])),
-                          esc(tzl(parse_t(f["issued"]), Gs[r["site"]]["zone"])) if f.get("issued") else "not stated"], right=(1,)))
-    if fr:
-        out += _sec("river_forecast_all", "NWS river forecast at each gauge", table(["Gauge", "Highest forecast", "When", "Forecast issued"], "".join(fr), right=(1,)) +
-                    ("<p>No NWS river forecast is issued for the other %d gauge%s.</p>" % (len(rows) - len(fr), "" if len(rows) - len(fr) == 1 else "s") if len(fr) < len(rows) else ""),
-                    "Source: National Weather Service river forecasts (NWPS). Stages are on each NWS forecast point's own scale.")
+    out += forecast_section(rows, Gs, lambda r: r["place"])
     acc, seen = [], {}
     for r in rows:
         for x in ((Gs[r["site"]]["rec"].get("access") or {}).get("rows") or []):

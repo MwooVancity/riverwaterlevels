@@ -47,6 +47,15 @@ def run():
                     "2": hg(obs="x", lv=706.0, flow=706.0, fl=fl_(700.0), zone=zn, rec={"nws": {"alerts": []}, "access": ac_(1.4)})})
     assert 'id="river_flow"' in hp2 and hp2.count("<polyline") == 4, "edge: hub flow chart missing (2 gauges, 2 sizes)"
     assert 'id="river_forecast_all"' in hp2 and "6.8 ft" in hp2 and "No NWS river forecast is issued for the other 1 gauge." in hp2, "edge: hub forecast table wrong"
+    # state hub: the state today (rankings need 4 gauges with data; a gauge not reporting is never ranked)
+    from lib.directory import state_blocks
+    sr = [{"site": str(i), "place": "P%d" % i, "river": "R%d River" % i, "water_url": "/river/r%d/p/" % i} for i in range(6)]
+    sg = {str(i): hg(p=p, chg=c) for i, (p, c) in enumerate(((95, 40.0), (50, 0.0), (5, -30.0), (80, 10.0), (20, -5.0), (99, 90.0)))}
+    sg["5"]["offline"] = True
+    sb = state_blocks(sr, sg)
+    assert 'id="state_extremes"' in sb and sb.index("R0 River") < sb.index("R3 River") and "P5" not in sb.split('id="state_movers"')[0], "edge: state ranking wrong or ranks a silent gauge"
+    assert 'id="state_movers"' in sb and "+40%" in sb and "-30%" in sb and "0%" not in re.sub(r"[+-]\d+%", "", sb), "edge: state movers wrong (a steady gauge listed as a mover)"
+    assert state_blocks(sr[:3], {k: sg[k] for k in ("0", "1", "2")}) == "", "edge: a state ranking drawn from 3 gauges"
     assert 'id="river_access"' in hp2 and hp2.count("Hwy 20 Landing") == 1 and "Altha, 1.4 mi" in hp2, "edge: hub access list not deduplicated to the nearest gauge"
     from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
