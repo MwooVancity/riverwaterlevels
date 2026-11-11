@@ -164,12 +164,17 @@ jobs:
       - name: Keep the day's new gauges only if the refresh passed
         if: ${{ inputs.live && steps.rel.outputs.released == '1' }}
         continue-on-error: true
+        env:
+          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}  # owner 2026-11-10: Search Console key, sitemap resubmit only
         run: |
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
-            date -u +%F > data/last-release.txt; if git diff data/waves.csv | grep -q '^+live,'; then date -u +%F > data/last-success.txt; fi; git add -f docs/research/priority/picks.csv; git add data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
+            python -I tools/reindex.py --queue || true  # audit 2026-11-10: these three after-release steps lived only in refresh.yml's job, which never runs while pipeline.json says sharded
+            date -u +%F > data/last-release.txt; if git diff data/waves.csv | grep -q '^+live,'; then date -u +%F > data/last-success.txt; fi; git add -f docs/research/priority/picks.csv; git add data/reindex-new.txt data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
             git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
+            python -I tools/indexnow.py --new || true  # tell Bing the pages that just opened; never fails the release
+            pip install -q google-api-python-client google-auth >/dev/null 2>&1; python -I tools/gsc_submit.py || true  # tell Google the sitemap changed (needs the service account at Full)
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
             echo "release DROPPED: the release was undone or the refresh did not pass"
             git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
