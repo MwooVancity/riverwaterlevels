@@ -1199,4 +1199,4 @@ def b_key_facts(G):
     if not lines:
         return None
     return block("key_facts", "Key facts", "hist", "<ul class=\"facts\">%s</ul>" % "".join("<li>%s</li>" % esc(l) for l in lines),
-                 "Sources: %s. These facts change rarely; the reading for this hour is in the tiles above." % "; ".join(srcs), "eccc" if G["feed"] and G["feed"].get("src") == "eccc" else (G["feed"]["src"] if G["feed"] else "usgs"))
+                 "Sources: %s." %"; ".join(srcs), "eccc" if G["feed"] and G["feed"].get("src") == "eccc" else (G["feed"]["src"] if G["feed"] else "usgs"))
