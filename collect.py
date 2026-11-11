@@ -821,6 +821,8 @@ def fetch_nws(lat, lon, prev=None, site=""):
     except Exception as e:
         note("nws.alerts", "failed", e)
     try:
+        if NEXT and not obs_due(out.get("obs"), site, out["alerts"]):  # PLAN limit 3: on the page's 2 h rebuild slot; the kept one is carried
+            raise StopIteration
         st = S["station"]
         o = thr_json(st["id"] + "/observations?limit=8", NWS_H)
         obs = [f["properties"] for f in o.get("features", []) if (f["properties"].get("temperature") or {}).get("value") is not None]
@@ -830,6 +832,8 @@ def fetch_nws(lat, lon, prev=None, site=""):
             old = next((y for y in obs if (y.get("barometricPressure") or {}).get("value") is not None and (parse_t(x["timestamp"]) - parse_t(y["timestamp"])).total_seconds() >= 2.5 * 3600), None)
             out["obs"] = {"name": st.get("name"), "ll": st.get("ll"), "station": st["id"].rsplit("/", 1)[-1], "timestamp": x["timestamp"], "temp_c": v("temperature"), "wind_kmh": v("windSpeed"), "wind_dir": v("windDirection"), "gust_kmh": v("windGust"),
                           "pressure_pa": v("barometricPressure"), "pressure_prev_pa": (old.get("barometricPressure") or {}).get("value") if old else None, "visibility_m": v("visibility")}
+    except StopIteration:
+        pass
     except Exception as e:
         note("nws.obs", "failed", e)
     return out
@@ -2656,6 +2660,17 @@ def fetch_census():
     print("census", json.dumps(out)[:300])
 
 
+def pegel_bulk(base, names):
+    """PLAN limit 9: one PEGELONLINE call for every station's current reading and marks on a page (stations.json?ids=, checked live 2026-11-11:
+    mixed case and umlauts answer, an unknown id is left out), {shortname: station}. A station missing from the reply, or the call failing ({}),
+    is asked on its own as before. The 8-day series stays one call per station."""
+    try:  # ponytail: one URL per page, about 15 bytes a station: split the list when a page nears 500 stations (8 KB URL)
+        return {s["shortname"]: s for s in retry_json(base[:-1] + ".json?ids=" + ",".join(urllib.parse.quote(n) for n in names) + "&includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)}
+    except Exception as e:
+        note("pegelonline", "failed", e)
+        return {}
+
+
 def fetch_world():
     """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Each collect shard fetches its own pages (my_shard). A gauge that fails keeps its last row;
     three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
@@ -2672,6 +2687,7 @@ def fetch_world():
         except (OSError, ValueError, KeyError):
             old = {}
         rows = []
+        bulk = pegel_bulk(base, page["stations"]) if page.get("feed", "pegelonline") == "pegelonline" and miss.get("pegelonline", 0) < 3 else {}
         for name in page["stations"]:
             q = urllib.parse.quote(name)
             try:
@@ -2695,7 +2711,7 @@ def fetch_world():
                     miss[feed] = 0
                     note(page["feed"], "ok")
                     continue
-                st = retry_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
+                st = bulk.get(name) or retry_json(base + q + ".json?includeTimeseries=true&includeCurrentMeasurement=true&includeCharacteristicValues=true", {}, 30)
                 w = next(t for t in st["timeseries"] if t["shortname"] == "W")
                 cur, marks = w["currentMeasurement"], {c["shortname"]: c["value"] for c in w.get("characteristicValues") or []}
                 past = pegel_end(retry_json(base + q + "/W/measurements.json?start=P8D", {}, 30), cur)

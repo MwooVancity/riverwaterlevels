@@ -317,6 +317,28 @@ def week_due(ts, site, now=None):
     return age > 336 or (age > 24 and now.weekday() * 24 + now.hour == zlib.crc32(site.encode()) % 168)
 
 
+ROLL_H = 2  # build.py rolling rebuild: a page's static parts (weather observations among them) are rebuilt every ROLL_H hours in its own slot
+
+
+def roll_slot(site, now):
+    """This gauge's rebuild hour (build.py) and its weather-observation hour (collect.py fetch_nws): one rule, so the observation is fresh when the page is built."""
+    return int(__import__("hashlib").md5(site.encode()).hexdigest(), 16) % ROLL_H == now.hour % ROLL_H
+
+
+def obs_due(obs, site, alerts, now=None):
+    """PLAN limit 3: the NWS station observation is fetched in the page's rebuild slot, every ROLL_H hours, not every hour (off-slot fetches no page
+    showed). Always fetched: no observation yet, alerts unknown (None) or active (a page rebuilt 'hot' during a storm shows the latest), or the one kept
+    is over 150 min old (a station that lags; obs turn amber at 3 h)."""
+    if not obs or alerts is None or alerts:
+        return True
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        age = (now - datetime.datetime.fromisoformat(obs["timestamp"].replace("Z", "+00:00"))).total_seconds() / 60
+    except (KeyError, TypeError, AttributeError, ValueError):
+        return True
+    return age > 150 or roll_slot(site, now)
+
+
 def day_due(ts, site, now=None):
     """Daily USGS work (8-day re-pull, neighbour list) in the gauge's own hour of the day, so the key's 1,000 calls an hour are never spent in one
     burst (was 09-12 UTC for every gauge: about 650 gauges filled the hour). A new gauge is due at once; a skipped run costs one day (36 h is due on any run)."""

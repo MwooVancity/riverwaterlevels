@@ -706,8 +706,27 @@ def attribute(us, urls, results, why):
     return rest
 
 
-def check_dir(d):
-    """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
+def carried_unchanged(d):
+    """PLAN limit 5: gauge pages (and their embeds) build.py copied unchanged from the published site this run, as "/"-free paths. Same rule as
+    tools/truth_live.py unchanged(): this run's pages share the newest "at" in _built.json; an older "at" is a carried copy, which passed every page
+    rule when it was built (at most ROLL_H + 0.5 h ago, build.py). No record, unreadable file, or a gauge with no record: checked (never skipped by doubt)."""
+    try:
+        built = json.load(open(os.path.join(d, "_built.json"), encoding="utf-8"))
+        ats = {s: (b or {}).get("at") for s, b in built.items() if not s.startswith("/")}
+        new = max(a for a in ats.values() if a)
+        live = json.load(open(os.path.join(d, "live-sites.json"), encoding="utf-8"))
+    except (OSError, ValueError, AttributeError, TypeError):
+        return set()
+    old = [x[1].strip("/") for x in live if ats.get(x[0]) not in (None, new)]
+    return {u + "/index.html" for u in old} | {"embed/" + u + "/index.html" for u in old}
+
+
+def check_dir(d, only_rebuilt=False):
+    """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes.
+    only_rebuilt (--carry): the one-page rules skip pages build.py carried unchanged; every site-level check (titles, links, sitemap, index state,
+    reachability, censuses) still reads every page."""
+    skip = carried_unchanged(d) if only_rebuilt else set()
+    READ["same"] = len(skip)
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
     results, titles, links_of, n_links, rel_of, noindex_of, vis_of = {}, collections.defaultdict(list), {}, {}, {}, {}, {}
     world_rows = {}
@@ -718,7 +737,7 @@ def check_dir(d):
                 rel = os.path.relpath(p, d)
                 h = open(p, encoding="utf-8").read().replace("\u00a0", " ")  # times use no-break spaces for wrapping
                 readability(h, rel)
-                results[rel] = page_checks(h, rel) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
+                results[rel] = [] if rel.replace("\\", "/") in skip else page_checks(h, rel) + (world_rules(h) + one_latest(h) if kind_of(rel) == "world" else [])
                 if rel.replace("\\", "/") == "glossary/index.html":
                     results[rel] += glossary_gaps(h)
                 if kind_of(rel) == "world":
@@ -1043,6 +1062,14 @@ def selftest():
         urllib.request.urlopen = _real_open
         globals()["ROOT"] = _root
     assert too_many(11, 100) and not too_many(10, 100) and too_many(51, 1000) and not too_many(50, 1000), "selftest: the one carry warning threshold moved"
+    with tempfile.TemporaryDirectory() as td_:  # PLAN limit 5: per-page rules only on pages this build rebuilt (same rule as tools/truth_live.py unchanged())
+        ls_ = [["1", "/river/a/b/"], ["2", "/lake/c/"], ["3", "/river/e/f/"]]
+        json.dump(ls_, open(os.path.join(td_, "live-sites.json"), "w"))
+        assert carried_unchanged(td_) == set(), "selftest: a build with no build record skipped pages"
+        json.dump({"1": {"at": "2026-11-10T12:00:00+00:00"}, "2": {"at": "2026-11-10T10:00:00+00:00"}, "/germany/x/": {"at": "2026-11-11T00:00:00+00:00"}}, open(os.path.join(td_, "_built.json"), "w"))
+        assert carried_unchanged(td_) == {"lake/c/index.html", "embed/lake/c/index.html"}, "selftest: a carried gauge page was checked again, a rebuilt or unrecorded one was skipped: %s" % carried_unchanged(td_)
+        json.dump({"1": {"at": "x"}, "2": {"at": "x"}}, open(os.path.join(td_, "_built.json"), "w"))
+        assert carried_unchanged(td_) == set(), "selftest: a full rebuild skipped pages"
     assert queue_over([{"rank": "1", "keyword": "x tides", "tier": "50000"}], {"x tides": "5000"}) and not queue_over([{"rank": "1", "keyword": "x tides", "tier": "500"}], {"x tides": "5000"}), "selftest: a queue row above its Keyword Planner tier passed"
     _kt = {}
     for _f in ("keyword-tiers.csv", "keyword-tiers-water.csv"):
@@ -1113,6 +1140,11 @@ def selftest():
     at2 = dt_.datetime(2026, 11, 2, hs, tzinfo=dt_.timezone.utc)
     assert day_due(None, "01", at2) and day_due((at2 - dt_.timedelta(hours=20)).isoformat(), "01", at2) and day_due((at2 - dt_.timedelta(hours=37)).isoformat(), "01", at2 + dt_.timedelta(hours=1)), "selftest: daily USGS work not due when new, in its hour, or after 36 h"
     assert not day_due((at2 - dt_.timedelta(hours=2)).isoformat(), "01", at2) and not day_due((at2 - dt_.timedelta(hours=20)).isoformat(), "01", at2 + dt_.timedelta(hours=1)), "selftest: daily USGS work due just after a fetch or outside its hour"
+    from lib.common import obs_due, roll_slot  # PLAN limit 3: NWS weather observations on the page's 2 h rebuild rhythm; alerts stay hourly
+    on_ = next(dt_.datetime(2026, 11, 2, h_, tzinfo=dt_.timezone.utc) for h_ in range(24) if roll_slot("01", dt_.datetime(2026, 11, 2, h_, tzinfo=dt_.timezone.utc)))
+    off_, ob_ = on_ + dt_.timedelta(hours=1), lambda m_: {"timestamp": (on_ - dt_.timedelta(minutes=m_)).isoformat()}
+    assert not roll_slot("01", off_) and obs_due(ob_(40), "01", [], on_) and not obs_due(ob_(40), "01", [], off_), "selftest: observations off the build slot, or skipped in it"
+    assert obs_due(None, "01", [], off_) and obs_due(ob_(40), "01", None, off_) and obs_due(ob_(40), "01", [{"event": "Flood Warning"}], off_) and obs_due(ob_(100), "01", [], off_) and obs_due({"timestamp": "x"}, "01", [], off_), "selftest: observations skipped for a new gauge, an unknown or active alert set, an observation over 2.5 h old, or a bad time"
     from lib.directory import world_page, world_pages
     rn = dt_.datetime(2026, 11, 1, 12, tzinfo=dt_.timezone.utc)
     rr = {"name": "KAUB", "km": 546.2, "cm": 21.0, "time": "2026-11-01T12:00:00+01:00", "state": "low", "then": 30.0, "glw": 77.0, "nnw": 25.0}
@@ -1524,7 +1556,8 @@ def main():
     if "--selftest" in sys.argv:
         return selftest()
     d = next((a for a in sys.argv[1:] if not a.startswith("--")), os.path.join(ROOT, "dist_next"))
-    res, site_bad, maxd = check_dir(d)
+    res, site_bad, maxd = check_dir(d, "--carry" in sys.argv)
+    print("page rules: %d carried-unchanged pages skipped (checked when built); site checks read all %d" % (READ.get("same", 0), len(res)))
     try:  # pages already carried (gate 1 or truth_live) are the live ones
         done = {r.replace("/", os.sep) for r in json.load(open(os.path.join(d, "_carried.json")))}
     except (OSError, ValueError):
@@ -1536,7 +1569,7 @@ def main():
         got = []  # release 2026-11-07: pages that were carried are recorded (carry writes _carried.json) even when a new one could not be, so quarantine.py sees them as shipped
         if carry(d, fails, got):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
-            res, site_bad, maxd = check_dir(d)
+            res, site_bad, maxd = check_dir(d, True)
             fails = {k: v for k, v in res.items() if v and k not in carried and k not in done}  # a carried page is the live one: it passed the checks of its own release
     for k, v in fails.items():
         print("FAIL", k)

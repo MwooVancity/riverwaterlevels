@@ -118,6 +118,15 @@ def run():
     assert collect.nwps_cats({"flood": {"categories": {"action": {"stage": 0}, "minor": {"stage": 55.0}, "major": {"stage": -9999}, "moderate": {"stage": None}}}}) == {"minor": 55.0}, "NWS flood stage 0, -9999 or blank kept as a flood level"
     pe = collect.pegel_end([{"timestamp": "2026-11-09T05:00:00+01:00", "value": 141.0}, {"timestamp": "2026-11-09T05:15:00+01:00", "value": 144.0}], {"timestamp": "2026-11-09T04:15:00Z", "value": 146.0})
     assert [p["value"] for p in pe] == [141.0, 146.0], "pegelonline: the series' last point disagreed with the current measurement at the same time (Wuerzburg carried twice 2026-11-09)"
+    real, asked = collect.retry_json, []  # PLAN limit 9: one PEGELONLINE call for every station's current reading and marks of a page
+    try:
+        collect.retry_json = lambda u, *a, **k: asked.append(u) or [{"shortname": "KÖLN"}, {"shortname": "Trier UP"}]
+        b_ = collect.pegel_bulk("https://x/stations/", ["KÖLN", "Trier UP", "NOPE"])
+        assert set(b_) == {"KÖLN", "Trier UP"} and len(asked) == 1 and "ids=K%C3%96LN,Trier%20UP,NOPE&" in asked[0] and asked[0].startswith("https://x/stations.json?"), "pegelonline bulk: not one call for the page, a name not quoted, or a station keyed wrongly: %s" % asked
+        collect.retry_json = lambda u, *a, **k: (_ for _ in ()).throw(OSError("down"))
+        assert collect.pegel_bulk("https://x/stations/", ["KÖLN"]) == {}, "pegelonline bulk: a failed call did not fall back to one call per station"
+    finally:
+        collect.retry_json = real
     from lib import blocks3
     G = {"rec": {"fieldmeas": {"fetched_at": "2026-11-09T00:00:00Z", "chan": [["2026-08-04T18:49:06+00:00", 71000.0, 1690.0, 33600.0, 2.11, 5000.0, "Downstream"], ["2025-08-14T15:00:00+00:00", 48000.0, 1680.0, 17300.0, 1.9, 3000.0, "Downstream"]]}}, "lv": 48100.0, "zone": zoneinfo.ZoneInfo("America/New_York")}
     h = blocks3.b_depth(G)["body"]
