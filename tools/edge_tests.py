@@ -44,7 +44,8 @@ def run():
     ac_ = lambda mi: {"rows": [{"name": "Hwy 20 Landing", "type": "Boat ramp", "mi": mi}, {"name": "", "type": "Boat ramp", "mi": 1.0}]}
     hp2 = hub_page("chipola-river", "FL", [dict(r, river="Chipola River", drainage_sqmi="464", water_url="/river/chipola-river/x/") for r in hr[:2]], 2,
                    {"1": hg(obs="x", lv=274.0, flow=274.0, fl=fl_(270.0), zone=zn, rec={"nws": {"alerts": []}, "nwps": {"forecast": fc_}, "access": ac_(3.2)}),
-                    "2": hg(obs="x", lv=706.0, flow=706.0, fl=fl_(700.0), zone=zn, rec={"nws": {"alerts": []}, "access": ac_(1.4)})})
+                    "2": hg(obs="x", lv=706.0, flow=706.0, fl=fl_(700.0), zone=zn, rec={"nws": {"alerts": []}, "access": ac_(1.4), "related": {"items": [{"site": "1", "relation": "upstream", "lag_h": 9, "lag_r": 0.93}]}})})
+    assert 'id="river_lag"' in hp2 and "about 9 h" in hp2 and "not a measured travel time" in hp2, "edge: hub lag between neighbouring gauges missing or claims a travel time"
     assert 'id="river_flow"' in hp2 and hp2.count("<polyline") == 4, "edge: hub flow chart missing (2 gauges, 2 sizes)"
     assert 'id="river_forecast_all"' in hp2 and "6.8 ft" in hp2 and "No NWS river forecast is issued for the other 1 gauge." in hp2, "edge: hub forecast table wrong"
     # state hub: the state today (rankings need 4 gauges with data; a gauge not reporting is never ranked)

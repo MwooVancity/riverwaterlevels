@@ -437,6 +437,14 @@ def hub_blocks(river, rows, Gs):
                         "Source: USGS Water Data API (continuous flow), each gauge observed to the time in the table above. Lines run upstream to downstream%s; a rise usually reaches the lower gauges later." % (
                             " (the first 4 of %d gauges)" % len(live) if len(live) > 4 else ""))
     out += forecast_section(rows, Gs, lambda r: r["place"])
+    lags = []  # PLAN 'Every page its own' item 2: how far behind each gauge's flow follows the one above it (collect.py best_lag: the best-matching shift over 8 days, r >= 0.85; not a measured travel time, and said so)
+    for up, dn in zip(rows, rows[1:]):
+        x = next((i for i in ((Gs[dn["site"]]["rec"].get("related") or {}).get("items") or []) if i.get("site") == up["site"] and i.get("lag_h")), None)
+        if x:
+            lags.append(tr([esc(up["place"]), esc(dn["place"]), "about %d h" % x["lag_h"]], right=(2,)))
+    if lags:
+        out += _sec("river_lag", "How long changes take to pass down the river", table(["From", "To", "Changes show up later by"], "".join(lags), right=(2,)),
+                    "Our calculation from USGS hourly flow over the last 8 days at both gauges: the shift that best lines up their rises and falls (correlation 0.85 or more). An estimate from recent readings, not a measured travel time; it changes with flow. Gauges with no clear match are left out.")
     acc, seen = [], {}
     for r in rows:
         for x in ((Gs[r["site"]]["rec"].get("access") or {}).get("rows") or []):
