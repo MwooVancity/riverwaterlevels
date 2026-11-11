@@ -75,6 +75,7 @@ Links come from data in code; a link exists only because a reader here would tap
 - HARD practice every kind (owner 2026-11-08 "don't miss a type"): the practice release (`-f release=true`, nightly) adds one queued page of each kind, gated or not (`tools/release.py --every-kind`), and collects world feeds. A new kind or feed joins the day it is added; a kind with none queued is named in PLAN.md.
 
 ## Reviews
+- Full audit (owner 2026-11-10): "run the full audit" = `tools/full_audit.md` (8 fresh reviewers, report only, findings into PLAN.md).
 - Phone shots once per template variant (`lib/pages.py` `variant`, `data/reviewed.json`) and new block type, before Google; a fresh reviewer reads `tools/review_brief.md`. A reviewed variant publishes on machine gates alone.
 - A defect found twice becomes a `check.py` rule that batch; delete a gate with no catch in 10 runs. Checklist `tools/helpful_audit.md`.
 - Gates hold only the wrong page (carried or sent back, US and world); only a whole-site fault stops a deploy. Fresh gate audit after a new kind or feed.
