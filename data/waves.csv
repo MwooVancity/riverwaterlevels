@@ -9151,7 +9151,7 @@ queue,,9418767,North Spit,Eureka,CA,0,,,0,coast,,,human,/coast/eureka/
 queue,,8720226,Southbank Riverwalk,Jacksonville,FL,0,,,0,coast,,,human,/coast/jacksonville/
 queue,,8721604,Trident Pier,Cocoa Beach,FL,0,,,0,coast,,,human,/coast/cocoa-beach/
 live,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/allatoona-lake/
-live,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/barren-river-lake/
+live,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,,,human,/lake/barren-river-lake/
 live,,08102000,Belton Lake,Belton,TX,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/belton-lake/
 queue,,02087182,Falls Lake,Falls,NC,0,,,0,lake,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/lake/falls-lake/
 queue,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/
