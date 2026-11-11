@@ -28,6 +28,10 @@ def run():
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
                       ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
         assert acis_name(raw) == want, "edge: station name %r gave %r" % (raw, acis_name(raw))
+    from lib.world import fc_top  # full audit #9: a BfG row PEGELONLINE marks as an estimate is said as one in the tile
+    nw_ = datetime.datetime.now(datetime.timezone.utc)
+    f_ = lambda typ: {"fc": {"at": nw_.isoformat(), "pts": [[(nw_ + datetime.timedelta(hours=6)).isoformat(), 57.0, typ], [(nw_ + datetime.timedelta(hours=3)).isoformat(), 40.0, "forecast"]]}, "zone": "Europe/Berlin"}
+    assert fc_top(f_("estimate"), nw_)[1:] == (57.0, True) and fc_top(f_("forecast"), nw_)[2] is False and fc_top(f_(None), nw_)[2] is False, "edge: a BfG estimate shown as a forecast"
     # PLAN 0i: lakes read their past years in their own elevation code; never as flow, never in another datum than the page shows
     assert collect.lake_code({"usgs": {"rows": [{"parameter_code": "00062"}, {"parameter_code": "00065"}]}}) == "00062", "edge: lake history not in the lake's code"
     assert collect.lake_code({"usgs": {"rows": [{"parameter_code": "00060"}, {"parameter_code": "00062"}]}}) == "00060", "edge: a gauge with flow lost its flow history"
