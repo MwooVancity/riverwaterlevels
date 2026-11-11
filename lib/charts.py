@@ -5,7 +5,7 @@ from lib.core import *
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
-def river_svg(series, zone, W, Hh, fs, nx, cls):
+def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs"):
     """Several gauges' last 7 days on one time axis (river hub, owner 2026-11-11 option 2): series = [(label, [(datetime, cfs), ...])], up to 4 lines.
     Same axis rules as the gauge chart: round ticks, labels in the gauge's own time zone. ponytail: linear axis; a log axis if a river's gauges differ 100-fold."""
     pts = [p for _, s in series for p in s]
@@ -23,7 +23,7 @@ def river_svg(series, zone, W, Hh, fs, nx, cls):
         (t0 + datetime.timedelta(seconds=span * k / (nx - 1))).astimezone(zone).strftime("%b %d").replace(" 0", " ")) for k in range(nx))
     lines = "".join('<polyline points="%s" fill="none" stroke="%s" stroke-width="2.2"%s/>' % (
         " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in s), YCOL[n], (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "") for n, (_, s) in enumerate(series))
-    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs at %d gauges over the last 7 days">%s%s%s</svg>' % (cls, W, Hh, len(series), grid, xl, lines)
+    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s at %d gauges over the last 7 days">%s%s%s</svg>' % (cls, W, Hh, what, len(series), grid, xl, lines)
 
 
 def axis_l(L, fs, ticks):

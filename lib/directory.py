@@ -375,6 +375,10 @@ def _sec(bid, heading, body, src):
     return '<section class="card blk" id="%s"><h2>%s</h2>%s<p class="src">%s</p></section>' % (bid, esc(heading), body, src)
 
 
+def _legend(series):
+    return '<p class="legend">%s</p>' % " &nbsp; ".join('<b><span style="color:%s" aria-hidden="true">%s</span>&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(p)) for n, (p, _) in enumerate(series))
+
+
 def forecast_section(rows, Gs, label, cap=40):
     """Each gauge's highest NWS forecast stage still ahead, when, and when issued (river and state hubs). Gauges with none are counted in one line; none at all = no section."""
     fr = []
@@ -431,7 +435,7 @@ def hub_blocks(river, rows, Gs):
         series = [s for s in series if len(s[1]) >= 2]
         if len(series) >= 2:
             zone = shown[0][1]["zone"]
-            leg = '<p class="legend">%s</p>' % " &nbsp; ".join('<b><span style="color:%s" aria-hidden="true">%s</span>&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(p)) for n, (p, _) in enumerate(series))
+            leg = _legend(series)
             out += _sec("river_flow", "Flow along the river, last 7 days",
                         river_svg(series, zone, 760, 260, 11, 7, "cw") + river_svg(series, zone, 340, 260, 12, 4, "cn") + leg,
                         "Source: USGS Water Data API (continuous flow), each gauge observed to the time in the table above. Lines run upstream to downstream%s; a rise usually reaches the lower gauges later." % (
@@ -479,32 +483,111 @@ def prose_page(title, url, html_body, desc):
 WSV_LABEL = {"low": "Low", "normal": "Normal", "high": "High"}
 HUB_SRC = {"eccc": "Label: our calculation, today's level against past monthly means; Canada publishes no normal range. Source: Water Survey of Canada, Environment and Climate Change Canada,",
            "pegelonline": "WSV label: compares the reading with this gauge's mean low water and mean high water marks. River km is the agency's own. Source: PEGELONLINE, German Federal Waterways and Shipping Administration (WSV),",
-           "ea": "Label: the Environment Agency's own, against each gauge's normal range. This uses Environment Agency flood and river level data from the real-time data API (Beta), Open Government Licence v3.0. Source: Environment Agency,"}
+           "ea": "Label: the Environment Agency's own, against each gauge's normal range. This uses Environment Agency flood and river level data from the real-time data API (Beta), Open Government Licence v3.0. Source: Environment Agency,",
+           "imi": "Label: Tidal, sea level rises and falls about twice a day, so no normal range applies. Level in metres above Ordnance Datum Malin. Source: Marine Institute, Irish National Tide Gauge Network, CC BY 4.0,"}
+
+
+def world_live(r, now):
+    """A reading under 24 hours old: the only kind a hub table, chart or ranking uses (older = 'Not reporting', named, never drawn)."""
+    return r.get("cm") is not None and bool(r.get("time")) and (now - parse_t(r["time"].replace("Z", "+00:00"))).total_seconds() <= 24 * 3600
+
+
+def world_order(page, rows):
+    """(rows, by_km). A river hub runs upstream to downstream by the agency's river kilometre, in the direction the page lists its stations
+    (the Danube counts its km from the mouth, the Rhine from Lake Constance). A country or lake page, or any row without km, keeps the listed order."""
+    if page.get("flat") or page.get("lake") or len(rows) < 2 or not all(isinstance(r.get("km"), (int, float)) for r in rows):
+        return rows, False
+    s = sorted(rows, key=lambda r: r["km"])
+    return (s[::-1] if rows[0]["km"] > rows[-1]["km"] else s), True
+
+
+def world_blocks(page, rows, now):
+    """What only the hub can show (PLAN 'Every page its own' item 4), from rows already in cache, no new fetch: every gauge's last 7 days on one chart (river hubs only:
+    a country hub's gauges stand on different rivers and zero points), each gauge's warning in force, each BfG forecast high. A section with nothing true to show is left out."""
+    from lib.charts import river_svg
+    from lib.world import FEEDS, FLOOD, EA_LINK, alerts_proven, fc_top
+    feed = page.get("feed") or "pegelonline"
+    F = FEEDS[feed]
+    nm = lambda r: r.get("title") or r["name"].replace(" UP", "").title()
+    zn = lambda r: zoneinfo.ZoneInfo(r.get("zone", F["zone"]))
+    out = ""
+    drawn = [r for r in rows if world_live(r, now) and len(r.get("series") or []) >= 2]
+    if not (page.get("flat") or page.get("lake")) and len(drawn) >= 2 and len({r.get("unit", "cm") for r in drawn}) == 1:  # one axis needs one unit
+        pick = [drawn[round(i * (len(drawn) - 1) / 3)] for i in range(4)] if len(drawn) > 4 else drawn  # PEGELONLINE marks no reference gauge in our rows: evenly spaced along the km order
+        since, series = now - datetime.timedelta(days=7), []
+        for r in pick:
+            s = [(parse_t(t.replace("Z", "+00:00")), v) for t, v in r["series"] if v is not None]
+            s = [p for p in s if p[0] >= since][::-1]
+            series.append((nm(r), s[::max(1, len(s) // 200)][::-1]))  # about 200 points a line, newest kept: page weight stays flat at any feed interval
+        series = [x for x in series if len(x[1]) >= 2]
+        if len(series) >= 2:
+            u, z = drawn[0].get("unit", "cm"), zn(drawn[0])
+            out += _sec("world_level_chart", "Water level along the river (%s), last 7 days" % u,
+                        river_svg(series, z, 760, 260, 11, 7, "cw", "Water level in " + u) + river_svg(series, z, 340, 260, 12, 4, "cn", "Water level in " + u) + _legend(series),
+                        "Source: %s, %s; water level in %s at each gauge, to the times in the table above. Each line is on its own gauge's zero point, so compare when the river rose or fell, not the heights. "
+                        "Lines run upstream to downstream%s." % (F["api"], esc(F["name"]), u, (" (4 of %d reporting gauges, spread along the river)" % len(drawn)) if len(drawn) > 4 else ""))
+    words = {"pegelonline": ("DWD weather warning", "Deutscher Wetterdienst (DWD) weather warnings for each gauge's location, CC BY 4.0. River flood warnings: %s." % FLOOD["pegelonline"]),
+             "eccc": ("Environment Canada weather alert", "Environment and Climate Change Canada weather alerts for each gauge's location. Environment Canada issues no river flood warnings; they come from the %s." % FLOOD["eccc"]),
+             "ea": ("Environment Agency flood warning or flood alert", "Environment Agency flood warnings and alerts in force, for warning areas that hold the gauge or lie within 150 m of it.")}.get(feed)
+    if words and not alerts_proven(page):  # owner 2026-11-03: England says Unknown until a live warning proves the point test; never 'none'
+        out += _sec("world_alerts", "Warnings in force", "<p>Unknown. Our check of warning areas against these gauges has not yet been seen working on a real warning, so this page does not list them. See %s. This is not a statement that conditions are safe.</p>" % EA_LINK,
+                    "Source: Environment Agency flood warnings and alerts (real-time data API, Beta).")
+    elif words:
+        hits, unknown, ts = "", [], []
+        for r in rows:
+            w = r.get("wx") or {}
+            if w.get("alerts") is None or not w.get("fetched_at") or hours_old(w["fetched_at"], now) > stale_after("alerts"):  # same rule as the gauge page: an old check is Unknown
+                unknown.append("%s (%s)" % (nm(r), "outside Germany, where DWD does not warn" if w.get("abroad") else "no check in the last %d hours" % stale_after("alerts")))
+                continue
+            ts.append(parse_t(w["fetched_at"]))
+            for a in live_alerts({"rec": {"nws": w}, "now": now}) or []:
+                end = a.get("ends") or a.get("expires")
+                hits += tr([esc(nm(r)), esc(a.get("event") or "Warning"), esc(tzl(parse_t(end), zn(r))) if end else "not stated"])
+        if ts:  # no gauge checked = the feed is down: the section hides, the table stays
+            n = len(rows) - len(unknown)
+            body = table(["Gauge", "In force", "Until"], hits) if hits else "<p>None in force: no %s at any of the %d gauge%s checked.</p>" % (words[0], n, "" if n == 1 else "s")
+            body += ("<p>Unknown at %s.</p>" % esc("; ".join(unknown))) if unknown else ""
+            out += _sec("world_alerts", "Warnings in force at these gauges", body, "Source: %s Checked %s." % (words[1], esc(tzl(min(ts), zn(rows[0])))))
+    if feed == "pegelonline":
+        fr = []
+        for r in rows:
+            top = fc_top({"fc": r.get("fc"), "zone": r.get("zone", F["zone"])}, now) if r.get("fc") else None
+            if top:
+                fr.append(tr([esc(nm(r)), '<span style="white-space:nowrap">%s</span><div class="src">%.1f ft</div>' % (world_level(top[1], r), world_ft(top[1], r)), esc(top[0]) + (" (estimate)" if top[2] else "")], right=(1,)))
+        if fr:
+            rest = len(rows) - len(fr)
+            out += _sec("world_forecast", "Highest forecast level at each gauge", table(["Gauge", "Highest forecast", "When (German time)"], "".join(fr), right=(1,)) +
+                        (("<p>No forecast is published for the other %d gauge%s.</p>" % (rest, "" if rest == 1 else "s")) if rest else ""),
+                        "Source: Federal Institute of Hydrology (BfG) water level forecasts, published through PEGELONLINE (WSV), on each gauge's own scale. Estimate: PEGELONLINE marks that value as an estimate, not a forecast. Forecasts change with rain and releases.")
+    return out
 
 
 def world_page(page, d, now, linked=None):
-    """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official WSV gauges in cm and feet, no verdict. None without data."""
+    """/<slug>/ from data/world-pages.json, outside the gauge pipeline: official gauges in their own unit and feet, no verdict. None without data."""
     rows = [r for r in (d or {}).get("rows") or [] if not r.get("tidal")]  # a tidal gauge is never listed as a river level
     if not rows:
         return None
-    trs = ""
+    rows, by_km = world_order(page, rows)
+    trs, tide = "", page.get("feed") == "imi"
     for r in rows:
-        t =datetime.datetime.fromisoformat(r["time"].replace("Z", "+00:00"))
+        t = parse_t(r["time"].replace("Z", "+00:00"))
         zone = zoneinfo.ZoneInfo(r.get("zone", "Europe/Berlin"))
-        old = (now - t).total_seconds() > 24 * 3600
+        old = not world_live(r, now)
         cm = "Not reporting" if old else '<span style="white-space:nowrap">%s</span><div class="src">%.1f ft</div>' % (world_level(r["cm"], r), world_ft(r["cm"], r))
-        chg = "–" if old or r.get("then") is None else ("%+.2f m" if r.get("unit") == "m" else "%+.0f cm") % (r["cm"] - r["then"])
-        label = "–" if old else WSV_LABEL.get(r.get("state"), "Unknown")
+        chg = "–" if old or tide or r.get("then") is None else ("%+.2f m" if r.get("unit") == "m" else "%+.0f cm") % (r["cm"] - r["then"])  # a tide over 24 h compares two points of its cycle (as on the gauge page)
+        label = "–" if old else "Tidal" if tide else WSV_LABEL.get(r.get("state"), "Unknown")
         gauge = esc(r.get("title") or r["name"].replace(" UP", "").title())
         if r["name"] in (linked or []):
             gauge = '<a href="%s">%s</a>' % (world_gauge_url(page, r.get("title") or r["name"]), gauge)
         trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
-            gauge, "" if page.get("lake") or page.get("flat") else "<div class=\"src\">km %.0f</div>" % r["km"], cm, chg, label, esc(tzl(t, zone)))
+            gauge, "<div class=\"src\">km %.0f</div>" % r["km"] if by_km else "", cm, chg, label, esc(tzl(t, zone)))
+    order = "Listed upstream to downstream by the agency's river kilometre." if by_km else "" if page.get("flat") or len(rows) < 2 else "Listed in the agency's order."
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
-            '<p class="sub">%s A gauge reading is not the depth of the water.</p>'
-            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Label</th>'
-            '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>'
-            '<p class="src">%s fetched %s. The site rebuilds about once an hour.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"]), trs, HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone))))
+            '<p class="sub">%s A gauge reading is not the depth of the water.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"])) +
+            _sec("world_gauges", "Every gauge now", '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Compared with normal</th>'
+                 '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>' % trs,
+                 "%s %s fetched %s. The site rebuilds about once an hour." % (order, HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone)))) +
+            world_blocks(page, rows, now))
     n = len(rows)
     return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)
 
