@@ -31,14 +31,23 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 - Google: Search Console validation restarted 2026-11-11 for the 308 noindex-era pages (owner asked); reindex queue in inspection order; index_inspect parallel in daily slices; Ireland rate fixed; Keyword Planner bids rank the queue.
 - Speed 2026-11-11 (Lighthouse mobile, cloud): Lake Lanier 89, Rhine Kaub 90, San Diego coast 89, CLS 0 on all three.
 
-## Next steps (every item WAITING its date; nothing can move today)
-1. WAITING 2026-11-12: read the Lake Michigan re-shoot and the speed run (lines below).
-2. WAITING 2026-11-18: lake past years live, then the lake phone review.
-3. OWNER: the clicks under Owner only (Email Routing, Cloudflare token, outreach, 5-second test).
+## Black-hat review 2026-11-11 (tools/blackhat_review.md; verdict: not a spam site, no cloaking, lastmod honest)
+- DONE (commit a8b91de, on check): embed credit line optional, "River Water Levels" + nofollow (Google names keyword links in widgets as link spam); Clearwater data.json and Dataset name the measuring station 8726724; coast series key `water_level_7d`; dam estimate names the National Inventory of Dams; "L&D", "The Dalles" casing; home world anchors plain; gauge air temperature labelled apart from the weather tile; hub titles say their gauge count. Also: Lake Michigan lake-great PASS; world hubs' source line and "None in force" (6 hubs were carried as old copies).
+- Found by the way: the short coast title (audit #27) dropped H1 words, break_blocks failed, and no check run promoted to main all day (27 commits) while every run showed green. Title fixed; the owner dashboard now shows "Code changes waiting to go live" with the stop lines.
+- KEEP: sitemap lastmod moves with weather text (honest: the page did change).
+- Outreach: hold until the nofollow embed is LIVE (it is what the emails offer).
+
+## Next steps
+1. Read the next check run: "refresh OK" and promotion to main; then the live Clearwater data.json (`water_level_station`), a coast title, /embed/.
+   Edge cases: break_blocks fails on another coast title (test: rank_checks on San Diego and Clearwater titles, run in session, passes); a tide-table page title (swap turns "water level" into "tide table": rank_checks accepts it).
+2. Boilerplate (black-hat #5): 95 sentences identical on every river page. Move each method or source note that repeats on every page to /methodology/ once, keep one link and the gauge's own sentences. Delete, never reword.
+   Edge cases: a note carrying this gauge's number or time looks generic but is not (test: masked-number diff of 10 live pages lists only fully identical sentences); a safety line (not for navigation, provisional data) must stay on the page (stays: the disclaimer rule); check.py source-line rule still met per block.
+3. Clearwater (black-hat #3): its first screen leads with its own tide predictions (8726706), the borrowed level labelled as the Beach gauge with a link.
+   Edge cases: every coast with a borrowed level, not only Clearwater (test: pages where `level_of(G)` is set); a doorway census pair stays flagged until it differs.
+4. WAITING 2026-11-18: lake past years live, then the lake phone review.
+5. OWNER: the clicks under Owner only (Email Routing, Cloudflare token, outreach, 5-second test). Black-hat #7: no named operator or contact is the site's largest rater gap; the contact page waits on Email Routing.
 
 ## Waiting (nothing to do before the date)
-- 2026-11-12: Lake Michigan re-shoot review (run 42953307901) after the lake-wording fix; on PASS add lake-great to data/reviewed.json and clear its waves.csv gate.
-- 2026-11-12: speed run 42953063045 (home, Chipola hub, Georgia hub, Rhine hub): read the scores.
 - 2026-11-18: lake past-years block appears as the weekly fetch reaches each lake; read /lake/lake-lanier/, then one phone review of the lake variant.
 - 2026-11-25: Search Console validation result for the noindex-era pages.
 - 2026-12-06: refresh run time alarm projected near 1,011 pages (ledger); build "only what changed" for the next stage then.
