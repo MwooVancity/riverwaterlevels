@@ -409,7 +409,7 @@ def world_hub():
     # a country hub with mixed units: each in its own unit plus feet, no chart across different rivers and zero points, none in force said once
     ca = {"slug": "canada", "river": "Canada", "lead": "Official gauges.", "feed": "eccc", "flat": True}
     c = world_page(ca, {"fetched_at": iso(1), "rows": [g("01AB", 0, cm=1.25, then=1.2, unit="m", zone="America/Toronto"), g("02CD", 0, cm=125.0, zone="America/Toronto")]}, nw, ())
-    assert "1.25 m" in c and "4.1 ft" in c and "125 cm" in c and 'id="world_level_chart"' not in c and "None in force" in c and "provincial flood forecasting centres" in c, "world hub: mixed units, a cross-river chart, or Canada's no-alert line wrong"
+    assert "1.25 m" in c and "4.1 ft" in c and "125 cm" in c and 'id="world_level_chart"' not in c and "No Environment Canada weather alert in force" in c and "provincial flood forecasting centres" in c, "world hub: mixed units, a cross-river chart, or Canada's no-alert line wrong"
 
 
 def england(ago):
