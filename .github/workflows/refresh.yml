@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v7
       - id: p
         run: |
-          n=$(python3 -c "import json; print(int(json.load(open('data/pipeline.json'))['shards']))") || n=20
+          n=$(python3 -c "import json; print(int(json.load(open('data/pipeline.json'))['shards']))") || n=16
           echo "shards=$n" >> "$GITHUB_OUTPUT"
           go=true
           if [ "${{ github.event_name }}" = "schedule" ]; then

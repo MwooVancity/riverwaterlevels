@@ -100,8 +100,7 @@ def main():
     # hot (NWS alert, NWS river forecast, flow moved over 20% in 24 h), its slot this hour, or older than ROLL_H + 0.5 h (GitHub skipped runs).
     # Otherwise the published copy in dist/ is carried. dist/_built.json says when each page was built and from which code; it travels with dist/,
     # so a failed publish can never make it lie. No dist/ (first run, lost cache) or --full: everything is built.
-    ROLL_H = 2
-    tpl = template_hash()
+    tpl = template_hash()  # ROLL_H and roll_slot: lib/common.py (collect.py fetches weather observations in the same slot)
     D = os.path.join(ROOT, "dist")
     try:
         was = json.load(open(os.path.join(D, "_built.json"), encoding="utf-8"))
@@ -129,7 +128,7 @@ def main():
         if sig(G) != b.get("sig") or abs(G.get("chg") or 0) > 20:  # a new NWS forecast issue or a changed alert set, not merely one existing (48 of 74 were "hot")
             return "hot"
         age_h = (now - datetime.datetime.fromisoformat(b["at"])).total_seconds() / 3600
-        if int(hashlib.md5(s.encode()).hexdigest(), 16) % ROLL_H == now.hour % ROLL_H or age_h >= ROLL_H + 0.5:
+        if roll_slot(s, now) or age_h >= ROLL_H + 0.5:
             return "slot"
         return None
 

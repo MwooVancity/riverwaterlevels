@@ -7,7 +7,7 @@ name: sharded
 on:
   workflow_call:
     inputs:
-      shards: {type: string, default: "20"}
+      shards: {type: string, default: "16"}
 
 jobs:
   plan:
