@@ -140,10 +140,18 @@ def b_stocking(G):
 
 
 def acis_name(n):
-    """ACIS station names arrive in capitals: title-case the place, keep the compass suffix ("CHEVY CHASE 1.2 SW" -> "Chevy Chase 1.2 SW")."""
+    """ACIS station names arrive in capitals and code: plain words for a reader (PLAN 0b, tide re-review: "San Diego 6.6 S" read as jargon).
+    "CHEVY CHASE 1.2 SW" -> "1.2 mi southwest of Chevy Chase"; "NORTH ISLAND NAS" -> "North Island Naval Air Station"; "X AP" -> "X Airport"."""
     import re
-    t = re.sub(r"\bWfo\b", "NWS office", re.sub(r"\bAp\b", "Airport", (n or "").title()))
-    return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)
+    t = (n or "").title()
+    for a, b in ((r"\bWfo\b", "NWS office"), (r"\bAp\b", "Airport"), (r"\bIntl\b", "International"), (r"\bNas\b", "Naval Air Station"), (r"\bAfb\b", "Air Force Base"), (r"\bMcas\b", "Marine Corps Air Station"), (r"\bRs\b", "Ranger Station"), (r"\bCo-?Op\b", "co-op station")):
+        t = re.sub(a, b, t)
+    words = {"N": "north", "S": "south", "E": "east", "W": "west", "NE": "northeast", "NW": "northwest", "SE": "southeast", "SW": "southwest", "NNE": "north-northeast", "ENE": "east-northeast", "ESE": "east-southeast", "SSE": "south-southeast", "SSW": "south-southwest", "WSW": "west-southwest", "WNW": "west-northwest", "NNW": "north-northwest"}
+    m = re.fullmatch(r"(.+?) (\d+(?:\.\d+)?) ([NSEW]{1,3})", t, flags=re.I)
+    d = words.get(m.group(3).upper()) if m else None
+    if d:
+        return "%s mi %s of %s" % (m.group(2), d, m.group(1))
+    return re.sub(r"\b(\d+(?:\.\d+)?) ([NSEW]{1,3})\b", lambda m: m.group(1) + " " + m.group(2).upper(), t, flags=re.I)  # 'NNE' and other three-letter points stay as the agency writes them
 
 
 def b_dam(G):
@@ -199,7 +207,7 @@ def b_acis(G):
     # owner 2026-11-09 ("hard to read at a first glance"): days run down, the 3 nearest stations across (was 5 stations x 7 days sideways), one answer sentence first
     st3 = sorted(a["stations"], key=lambda x: x["km"])[:3]
     nm = lambda x: esc(acis_name(x["name"]) + ((" (%s)" % (x.get("sid") or x.get("id") or "%.1f mi" % km_mi(x["km"]))) if _nm[acis_name(x["name"])] > 1 else ""))
-    heads = ["Day"] + ["%s, %.0f mi" % (nm(x), km_mi(x["km"])) for x in st3]
+    heads = ["Day"] + ["%s (%.0f mi away)" % (nm(x), km_mi(x["km"])) for x in st3]
     rows = "".join(tr([md(datetime.date.fromisoformat(d))] + [cell(x["vals"][i]) if i < len(x["vals"]) else "not reported" for x in st3], right=tuple(range(1, 4))) for i, d in reversed(list(enumerate(a["days"]))))
     num = lambda v: (lambda w: float(w) if w.replace(".", "", 1).isdigit() else (0.0 if w == "T" else None))(v.rstrip("ABCDEFGHIJKLMNOPQRSTUVWXYZ") if v[:1].isdigit() else v)
     got = [(d, num(v)) for d, v in zip(a["days"], st3[0]["vals"]) if num(v) is not None]

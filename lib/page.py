@@ -54,6 +54,7 @@ def b_land(G):
             uniq.append((u, t[1], t[2]))
     if not uniq:
         return None
+    uniq.sort(key=lambda r: {"OA": 0, "RA": 1, "XA": 3}.get((r[2] or "").upper(), 2))  # PLAN 0b (weak rows): land a reader can walk onto first, closed land (military, utility) last; PAD-US order otherwise
     known = any(PADMAN.get(m, m) not in ("Unknown manager", "Unknown", None, "") for _, m, _ in uniq[:12])
     rows = "".join(tr([esc(u)] + ([esc(PADMAN.get(m, m or "n/a"))] if known else []) + [esc(ACCESS.get(a, a or "n/a"))]) for u, m, a in uniq[:12])
     return block("public_land", "Public land at this gauge", "map", table(["Unit"] + (["Managed by"] if known else []) + ["Public access"], rows),

@@ -23,6 +23,11 @@ def run():
             pass
     finally:
         collect.thr_json = real
+    from lib import render  # noqa: F401  (build import order)
+    from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
+    for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
+                      ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
+        assert acis_name(raw) == want, "edge: station name %r gave %r" % (raw, acis_name(raw))
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
     from lib import directory
