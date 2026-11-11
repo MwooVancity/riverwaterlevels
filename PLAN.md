@@ -42,7 +42,7 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
    Edge cases: break_blocks fails on another coast title (test: rank_checks on San Diego and Clearwater titles, run in session, passes); a tide-table page title (swap turns "water level" into "tide table": rank_checks accepts it).
 2. Boilerplate (black-hat #5): 95 sentences identical on every river page. Move each method or source note that repeats on every page to /methodology/ once, keep one link and the gauge's own sentences. Delete, never reword.
    Edge cases: a note carrying this gauge's number or time looks generic but is not (test: masked-number diff of 10 live pages lists only fully identical sentences); a safety line (not for navigation, provisional data) must stay on the page (stays: the disclaimer rule); check.py source-line rule still met per block.
-3. Clearwater (black-hat #3): its first screen leads with its own tide predictions (8726706), the borrowed level labelled as the Beach gauge with a link.
+3. DONE 2026-11-11 (code, on check): Clearwater (black-hat #3): its first screen leads with its own tide predictions (8726706), the borrowed level labelled as the Beach gauge with a link.
    Edge cases: every coast with a borrowed level, not only Clearwater (test: pages where `level_of(G)` is set); a doorway census pair stays flagged until it differs.
 4. WAITING 2026-11-18: lake past years live, then the lake phone review.
 5. OWNER: the clicks under Owner only (Email Routing, Cloudflare token, outreach, 5-second test). Black-hat #7: no named operator or contact is the site's largest rater gap; the contact page waits on Email Routing.
