@@ -63,6 +63,7 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 12. NOAA CO-OPS: 4 calls per coast per hour, no published limit (300 coasts = 28,800 a day): watch 429s. RISE and CDEC publish no limit.
 
 ## Owner only
+- Request-indexing job stalled since 2026-11-09 (runs 11-10 and 11-11 "succeeded" but requested 0: Chrome asked for site permission and nobody answered): in Chrome, open the Claude extension, allow search.google.com once ("Always allow"). The 9:28 job then runs alone.
 - Links (drawing board 5, 0 sent until now): 40 emails ready in docs/outreach-emails.md, one per organization for the 13 live lake pages, each offering the free embed panel. Send after Email Routing is on (so they can reply to a site address); tell Claude which went and it dates them in data/outreach.csv. Proof: referring domains in Search Console Links, read 2026-12-11.
 - Owner alone decides: publisher name and contact email; pages opened to Google beyond the daily 25; ads and consent; Search Console; source keys; domain renewal; Cloudflare plan; outside uptime monitor; cutting any block.
 - Workers Paid ($5/mo), then GitHub variable `WORKERS_PAID`=1: 100,000 files; free is 100,000 requests a day shared, past it error 1027 until midnight UTC. Needed before ~5,300 gauges.
