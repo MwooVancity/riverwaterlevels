@@ -57,6 +57,15 @@ def run():
     assert 'id="state_extremes"' in sb and sb.index("R0 River") < sb.index("R3 River") and "P5" not in sb.split('id="state_movers"')[0], "edge: state ranking wrong or ranks a silent gauge"
     assert 'id="state_movers"' in sb and "+40%" in sb and "-30%" in sb and "0%" not in re.sub(r"[+-]\d+%", "", sb), "edge: state movers wrong (a steady gauge listed as a mover)"
     assert state_blocks(sr[:3], {k: sg[k] for k in ("0", "1", "2")}) == "", "edge: a state ranking drawn from 3 gauges"
+    zc = zoneinfo.ZoneInfo("America/Chicago")
+    fresh, stale = (nw - datetime.timedelta(minutes=20)).isoformat(), (nw - datetime.timedelta(hours=5)).isoformat()
+    fw = {"event": "Flood Warning", "severity": "Severe", "ends": (nw + datetime.timedelta(hours=10)).isoformat()}
+    sa = {"0": hg(zone=zc, rec={"nws": {"fetched_at": fresh, "alerts": [fw, {"event": "Test Message"}, dict(fw, event="Flood Watch", ends=(nw - datetime.timedelta(hours=1)).isoformat())]}}),
+          "1": hg(zone=zc, rec={"nws": {"fetched_at": stale, "alerts": [dict(fw, event="Old Warning")]}}), "2": hg(zone=zc, rec={"nws": {"fetched_at": fresh, "alerts": None}}), "3": hg(zone=zc, rec={"nws": {"fetched_at": fresh, "alerts": []}})}
+    sb2 = state_blocks(sr[:4], sa)
+    assert 'id="state_alerts"' in sb2 and sb2.count("Flood Warning") == 1 and "R0 River" in sb2.split('id="state_alerts"')[1], "edge: state hub misses an NWS alert in force at a gauge"
+    assert "Test Message" not in sb2 and "Flood Watch" not in sb2 and "Old Warning" not in sb2 and "unknown for 2 gauges" in sb2, "edge: state hub shows a test, ended or stale alert, or counts a failed check as no alert"
+    assert 'id="state_alerts"' not in state_blocks(sr[:4], {k: hg(zone=zc, rec={"nws": {"fetched_at": fresh, "alerts": []}}) for k in "0123"}), "edge: state hub draws an empty alert section"
     assert 'id="river_access"' in hp2 and hp2.count("Hwy 20 Landing") == 1 and "Altha, 1.4 mi" in hp2, "edge: hub access list not deduplicated to the nearest gauge"
     from lib.blocks3 import acis_name  # PLAN 0b: station codes in plain words
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),

@@ -175,7 +175,7 @@ def b_rate(G):
         note = '<p class="lead">These changes end at the last report, %s ago; the river may have changed since.</p>' % age_words(G["lt"], G["now"]) + note
     body = note + rail(cards, "Change over the last hours")  # fresh review 2026-11-09: the "Full table" and "Last 7 days" table repeated these cards word for word
     return block("rate_of_change", "Rate of rise and fall", "live", body,
-                 "Source: computed from USGS continuous readings (Water Data API) to %s. Each card compares the latest reading with the reading closest to that many hours earlier; the arrow is steady (&rarr;) when the change is under 2%%, the same cut-off as the headline." % esc(tzl(t1, G["zone"])), "usgs")
+                 "Source: computed from USGS continuous readings (Water Data API) to %s. <a href=\"/methodology/#rate\">How the changes are computed</a>." % esc(tzl(t1, G["zone"])), "usgs")  # 'Every page its own' 1: the 32-word method note lives once on /methodology/#rate
 
 
 def _xy_svg(pts, cur, W, Hh, fs, cls, label):

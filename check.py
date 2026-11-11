@@ -1460,6 +1460,25 @@ def selftest():
     import runpy
     runpy.run_path(os.path.join(ROOT, "lib", "census.py"), run_name="__main__")  # the coverage census counts every official site
     runpy.run_path(os.path.join(ROOT, "lib", "ledger.py"), run_name="__main__")  # the run-time ledger names a stage before it hits its limit
+    from lib.page import data_meta
+    from lib.core import SOURCES as SR_
+    from lib.common import AGENCIES as AG_
+    dm_ = data_meta({}, "X River at Y, ZZ", "https://x/y/", "2026-11-10T05:00:00+00:00")
+    assert dm_["credit"] == SR_["usgs"]["credit"] and dm_["terms"] == SR_["usgs"]["terms_url"] and "observed 2026-11-10T05:00:00+00:00" in dm_["cite"] and dm_["cite"].endswith("https://x/y/"), "selftest: data.json lost its verbatim credit, terms page or citation line: %s" % dm_
+    dc_ = data_meta({"agy": AG_["cdec"], "agy_st": "ORO"}, "Lake Oroville, CA", "https://x/l/", None)
+    assert dc_["credit"] == SR_["cdec"]["credit"] and "observed" not in dc_["cite"] and "ORO" in dc_["source"], "selftest: a CDEC lake's data.json credits USGS, or a missing time says observed: %s" % dc_
+    assert data_meta({"coast": True, "tables": True}, "T", "u", None)["terms"] == SR_["coops"]["terms_url"], "selftest: a tide station's data.json names the wrong terms page"
+    from lib.directory import llms
+    ll_ = llms([{"dashboard_url": "/river/a/b/", "river": "A River", "place": "B", "state": "OR"}], [["Rhine at Koeln", "/rhine/koeln/", 50.9, 6.9, "Germany Europe"]])
+    assert "](https://riverwaterlevels.com/rhine/koeln/)" in ll_.replace("http://", "https://") or "/rhine/koeln/)" in ll_, "selftest: llms.txt leaves out the world pages"
+    assert "Each US gauge page" in ll_ and "Outside the US" in ll_ and "Outside the US" not in llms([], []), "selftest: llms.txt claims data.json on world pages, or prints an empty world list"
+    from lib.directory import trust_pages
+    meth_ = trust_pages(0, [])["/methodology/"]
+    anchors_ = set(re.findall(r"/methodology/#([\w-]+)", "".join(open(f, encoding="utf-8").read() for f in glob.glob(os.path.join(ROOT, "lib", "*.py")))))
+    assert anchors_ and all('id="%s"' % a in meth_ for a in anchors_), "selftest: a page links a /methodology/ note that is not there: %s" % sorted(a for a in anchors_ if 'id="%s"' % a not in meth_)
+    from tools.gsc_read import by_kind
+    bk_ = by_kind([("/river/a/b/", 3, 90.0), ("/river/a/c/?x=1", 1, 30.0), ("/river/a/", 2, 10.0), ("/", 1, 5.0), ("(not set)", 1, 0.0)])
+    assert bk_ == "gauge 4 sessions (30 s), hub 2 sessions (5 s), home 1 sessions (5 s), other 1 sessions (0 s)", "selftest: GA4 engagement by page kind misfiles a landing page: " + bk_
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 

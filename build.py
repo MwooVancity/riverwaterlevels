@@ -176,7 +176,7 @@ def main():
         ser = lambda code: [[r["time"], float(r["value"])] for r in ur if r["parameter_code"] == code and r.get("value") not in (None, "")]
         my = G["rec"].get("multiyear") or {}
         json.dump({"site": s, "name": river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], "page": SITE_URL + meta["url"], "observed": None if G.get("tables") else iso(G["lt"]), **({"tide_predictions_hilo_mllw_ft": G["rec"]["coops"]["hilo"]} if G.get("tables") else {}), "units": {"flow": "cfs", "stage": "ft"}, "flow_7d": ser("00060"), "stage_7d": ser("00065"), **({"lake_elevation_7d": ser(G["lake"]), "storage_7d": ser("00054"), "lake_units": {"lake_elevation": "ft above " + lake_datum(G), "storage": "acre-ft"}} if G.get("lake") else {}),
-                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, "source": "NOAA CO-OPS tide predictions above MLLW (no water level is measured at this station)" if G.get("tables") else "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast") else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision", "credit": "NOAA National Ocean Service, CO-OPS" if G.get("coast") else G["agy"]["name"] if G.get("agy") else "U.S. Geological Survey", "built_at": iso(now)},
+                   "daily_mean_flow": {"as_of": my.get("as_of"), "days": my.get("span"), "by_year": my.get("series")}, **pagelib.data_meta(G, river_at(rows[s]["river"], rows[s]["place"]) + ", " + rows[s]["state"], SITE_URL + meta["url"], None if G.get("tables") else iso(G["lt"])), "built_at": iso(now)},
                   open(os.path.join(nxt, meta["url"].strip("/"), "data.json"), "w"), separators=(",", ":"))
         block_counts[meta["url"]] = len(meta["blocks"])
         report["gauges"].append({"site": s, "url": rows[s]["dashboard_url"], "age_min": round(G["age_min"]), "percentile": G["p"]})
@@ -276,7 +276,7 @@ def main():
         open(os.path.join(nxt, name), "w", encoding="utf-8").write(xml)
     open(os.path.join(nxt, "robots.txt"), "w", encoding="utf-8").write(directory.robots())
     open(os.path.join(nxt, "8a1906b9e99095f201fe1a3d6210c090.txt"), "w", encoding="utf-8").write("8a1906b9e99095f201fe1a3d6210c090")  # IndexNow key file (tools/indexnow.py KEY; public by design)
-    open(os.path.join(nxt, "llms.txt"), "w", encoding="utf-8").write(directory.llms(built))
+    open(os.path.join(nxt, "llms.txt"), "w", encoding="utf-8").write(directory.llms([r for r in built if indexing.sitemap_ok(r["dashboard_url"], ix)], [w for w in world_rows if indexing.sitemap_ok(w[1], ix)]))  # only pages open to Google: llms.txt never lists a held page
     open(os.path.join(nxt, "ads.txt"), "w", encoding="utf-8").write("google.com, pub-8997828618122077, DIRECT, f08c47fec0942fa0\n")  # AdSense authorized-sellers file (owner 2026-10-23)
     open(os.path.join(nxt, "404.html"), "w", encoding="utf-8").write(directory.not_found(built))
     open(os.path.join(nxt, "favicon.svg"), "w", encoding="utf-8").write(directory.FAVICON)

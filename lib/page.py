@@ -219,6 +219,16 @@ def b_official_links(G):
     return block("official_links", "Official pages for this gauge", "agency", body, "Source: links to the agencies that publish the data on this page (USGS, NOAA National Weather Service); they open in a new tab.", "usgs")
 
 
+def data_meta(G, name, page_url, observed):
+    """data.json's source, terms, credit and citation (backlinks asset 2: open, cite us). Credit and terms are the register's own (data/sources.json), verbatim."""
+    sid = "coops" if G.get("coast") else G["agy"]["src"] if G.get("agy") else "usgs"
+    src = ("NOAA CO-OPS tide predictions above MLLW (no water level is measured at this station)" if G.get("tables") else "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast")
+           else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision")
+    s = SOURCES.get(sid) or {}
+    return {"source": src, "credit": s.get("credit") or "", "terms": s.get("terms_url") or "",
+            "cite": "%s water data, %s. %s%s. %s" % (name, BRAND, src, (", observed %s" % observed) if observed else "", page_url)}
+
+
 def tab_blocks(tab, G, pages):
     if tab == "dashboard" and G.get("feed"):  # a gauge outside the US: same page, only the blocks its feed can fill; each country's sources join this list
         has_al = bool(live_alerts(G))
@@ -552,7 +562,6 @@ def merge_charts(blocks):
     return out
 
 
-WINDOW_KEY = "Windows used: today's date in past years (Typical for this date), the last 7 and 28 days, this month, and all days on record (how often each flow is reached)."
 
 
 def build_tab(tab, G, pages):
@@ -670,7 +679,7 @@ def build_tab(tab, G, pages):
         if isinstance(b, str) and b.startswith("SEC:"):
             flush()
             grp[0] = "weather" if b[4:].startswith("Forecast") else "history" if b[4:].startswith("How today") else "now" if b[4:].startswith(("What the water", "Level, flow")) else grp[0]
-            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0]) + (gtag('<p class="src wkey">%s</p>' % WINDOW_KEY, grp[0]) if b[4:].startswith("How today") and not G.get("lake") else "")  # phone review 2026-11-07 (Falls Lake): a lake page has no flow windows; the key promised what the section did not hold
+            pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0])  # 'Every page its own' 1 (2026-11-11): the 30-word window key repeated what each card already names; it lives once on /methodology/#windows
             continue
         if isinstance(b, str) and b.startswith("FOLD:"):
             flush()
