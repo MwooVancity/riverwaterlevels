@@ -9186,21 +9186,21 @@ queue,,9434939,Waldport,Waldport,OR,0,,,0,coast,,,human,/coast/waldport/
 queue,,9410196,Mission Bay,Mission Bay,CA,0,,,0,coast,,,human,/coast/mission-bay/
 queue,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bradenton/
 queue,,8465233,Branford,Branford,CT,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/branford/
-queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,,,human,/coast/cape-may/
+queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/cape-may/
 queue,,8726706,Clearwater,Clearwater,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/clearwater/
 queue,,8444601,Nantasket Beach,Nantasket Beach,MA,0,,,0,coast,,,human,/coast/nantasket-beach/
 queue,,8660642,North Myrtle Beach,North Myrtle Beach,SC,0,,,0,coast,,,human,/coast/north-myrtle-beach/
 queue,,8670681,Savannah,Savannah,GA,0,,,0,coast,,,human,/coast/savannah/
 queue,,8726668,Tampa,Tampa,FL,0,,,0,coast,,,human,/coast/tampa/
 queue,,9437331,Tillamook,Tillamook,OR,0,,,0,coast,,,human,/coast/tillamook/
-queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,,,human,/coast/bandon/
-queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,,,human,/coast/belmar/
-queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,,,human,/coast/boca-raton/
-queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,,,human,/coast/duxbury/
-queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,,,human,/coast/edisto-beach/
-queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,,,human,/coast/englewood/
+queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/bandon/
+queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/belmar/
+queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/boca-raton/
+queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/duxbury/
+queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/edisto-beach/
+queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/englewood/
 queue,,9447659,Everett,Everett,WA,0,,,0,coast,,,human,/coast/everett/
-queue,,9434032,Florence,Florence,OR,0,,,0,coast,,,human,/coast/florence/
+queue,,9434032,Florence,Florence,OR,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/florence/
 queue,,8722219,Fort Pierce,Fort Pierce,FL,0,,,0,coast,,,human,/coast/fort-pierce/
 queue,,8731439,Gulf Shores,Gulf Shores,AL,0,,,0,coast,,,human,/coast/gulf-shores/
 queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,,,human,/coast/jupiter/
@@ -9215,7 +9215,7 @@ queue,,9446969,Olympia,Olympia,WA,0,,,0,coast,,,human,/coast/olympia/
 queue,,8721138,Ponce Inlet,Ponce Inlet,FL,0,,,0,coast,,,human,/coast/ponce-inlet/
 queue,,8446121,Provincetown,Provincetown,MA,0,,,0,coast,,,human,/coast/provincetown/
 queue,,9415316,Rio Vista,Rio Vista,CA,0,,,0,coast,,,human,/coast/rio-vista/
-queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,,,human,/coast/sarasota/
+queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/sarasota/
 queue,,8445138,Scituate,Scituate,MA,0,,,0,coast,,,human,/coast/scituate/
 queue,,8726034,Siesta Key,Siesta Key,FL,0,,,0,coast,,,human,/coast/siesta-key/
 queue,,8722357,Stuart,Stuart,FL,0,,,0,coast,,,human,/coast/stuart/
