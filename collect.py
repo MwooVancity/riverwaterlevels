@@ -1129,12 +1129,32 @@ def fetch_ridb(lat, lon, radius_mi=15):
         typ = f.get("FacilityTypeDescription") or ""
         if not water and typ not in ("Campground",) and "ramp" not in (f.get("FacilityName") or "").lower():
             continue
+        mi = round(haversine(lat, lon, flat, flon), 1)
+        if mi > radius_mi or any(x["id"] == f.get("FacilityID") for x in out):  # RIDB's radius is its own; a farther or repeated facility is not listed
+            continue
         addr = (f.get("FACILITYADDRESS") or [{}])[0]
-        out.append({"name": f.get("FacilityName"), "type": typ, "mi": round(haversine(lat, lon, flat, flon), 1), "activities": acts[:8], "water": water[:6],
-                    "city": addr.get("City"), "phone": (f.get("FacilityPhone") or "").strip(), "url": f.get("FacilityReservationURL") or ("https://www.recreation.gov/camping/campgrounds/%s" % f["FacilityID"] if typ == "Campground" and f.get("FacilityID") else ""),
-                    "id": f.get("FacilityID")})
+        city = (addr.get("City") or "").strip()
+        city = city.title() if city.isupper() else city
+        street = (addr.get("FacilityStreetAddress1") or "").strip()  # ZIP left out: RIDB lists Bolding Mill GA as 50506 (an Iowa ZIP), 2026-11-10
+        desc = _ridb_text(re.sub(r"(?is)<h\d[^>]*>.*?</h\d>", " ", f.get("FacilityDescription") or ""))
+        m = re.match(r"(.{20,220}?[.!?])(\s|$)", desc)
+        out.append({"name": f.get("FacilityName"), "type": typ, "mi": mi, "activities": acts[:8], "water": water[:6],
+                    "city": city, "phone": (f.get("FacilityPhone") or "").strip(), "url": f.get("FacilityReservationURL") or ("https://www.recreation.gov/camping/campgrounds/%s" % f["FacilityID"] if typ == "Campground" and f.get("FacilityID") else ""),
+                    "id": f.get("FacilityID"),
+                    "fee": _ridb_text(f.get("FacilityUseFeeDescription"), 300), "reservable": f.get("Reservable") is True, "res_url": (f.get("FacilityReservationURL") or "").strip(),
+                    "address": ", ".join(x for x in ((street.title() if street.isupper() else street), city, (addr.get("AddressStateCode") or "").strip()) if x),
+                    "directions": _ridb_text(f.get("FacilityDirections"), 600), "org": ((f.get("ORGANIZATION") or [{}])[0].get("OrgName") or "").strip(),
+                    "email": (f.get("FacilityEmail") or "").strip() if re.fullmatch(r"[^@\s]+@[^@\s]+\.[A-Za-z]{2,}", (f.get("FacilityEmail") or "").strip()) else "",
+                    "about": m.group(1) if m else (desc if len(desc) <= 220 else "")})
     out.sort(key=lambda x: x["mi"])
     return {"fetched_at": now_iso(), "radius_mi": radius_mi, "sites": out[:12]} if out else None
+
+
+def _ridb_text(s, cap=None):
+    """RIDB free text (fees, directions, descriptions) as plain words: tags and entities out, spaces collapsed; '' when RIDB states nothing.
+    Longer than cap = None, "stated but not shown": a cut-off fee or set of directions would mislead, and the page stays under its size limit."""
+    t = demoji(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(str(s or "")))).strip())
+    return None if cap and len(t) > cap else t
 
 
 def fetch_cameras(site, h):

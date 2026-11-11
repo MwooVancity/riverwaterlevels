@@ -579,6 +579,36 @@ def probe(warn, square, pages):
     assert run(level(2), [st()]), "a real level 2 warning over an active river station did not unlock England"
     assert "level 2" in json.load(open(seen, encoding="utf-8"))["ea"]["alerts"] and "4009" in json.load(open(seen, encoding="utf-8"))["ea"]["alerts"], "the proof does not name its warning and station"
 
+    # RIDB facility details (2026-11-10): fee, reservations, address, directions, agency, email, first sentence, in RIDB's own words
+    fac = lambda **k: dict({"FacilityID": "1", "FacilityName": "BOLDING MILL", "FacilityTypeDescription": "Campground", "FacilityLatitude": 34.30, "FacilityLongitude": -83.95, "ACTIVITY": [{"ActivityName": "BOATING"}],
+                            "FacilityUseFeeDescription": "<p>Monday through Friday - $45.00</p>\n<p>Saturday and Sunday - $75.00</p>", "Reservable": True, "FacilityReservationURL": "", "FacilityPhone": "770-534-6960",
+                            "FacilityEmail": "ranger@usace.army.mil", "ORGANIZATION": [{"OrgName": "US Army Corps of Engineers"}], "FacilityDirections": "<p>Take SR 400 north &amp; turn right.</p>",
+                            "FACILITYADDRESS": [{"FacilityStreetAddress1": "4055 CHESTATEE ROAD", "City": "GAINESVILLE", "AddressStateCode": "GA", "PostalCode": "50506-0567"}],
+                            "FacilityDescription": "<h2>Overview</h2>\nBolding Mill is on the lake.  <br/><br/>It has a beach. More text."}, **k)
+    recs = [fac(), fac(), fac(FacilityID="2", FacilityName="Far Ramp", FacilityLatitude=36.0), fac(FacilityID="3", FacilityName="Shoal Creek Ramp", FacilityUseFeeDescription="", Reservable=False, FacilityEmail="not an email", FacilityDescription="Fishing license required."),
+            fac(FacilityID="4", FacilityName="Long Fee Ramp", FacilityUseFeeDescription="x" * 400, FacilityReservationURL="https://www.recreation.gov/x")]
+    real_gt, real_sec = collect.get_text, collect.secret
+    collect.get_text, collect.secret = (lambda *a, **k: json.dumps({"RECDATA": recs})), (lambda n: "k")
+    try:
+        rd = collect.fetch_ridb(34.25, -84.0)
+    finally:
+        collect.get_text, collect.secret = real_gt, real_sec
+    names = [s["name"] for s in rd["sites"]]
+    assert names.count("BOLDING MILL") == 1 and "Far Ramp" not in names, "RIDB: a repeated facility listed twice, or one past 15 mi listed: %s" % names
+    bm = rd["sites"][names.index("BOLDING MILL")]
+    assert bm["fee"] == "Monday through Friday - $45.00 Saturday and Sunday - $75.00" and bm["directions"] == "Take SR 400 north & turn right." and bm["about"] == "Bolding Mill is on the lake.", "RIDB HTML not stripped to plain words: %r" % bm
+    assert bm["address"] == "4055 Chestatee Road, Gainesville, GA" and "50506" not in json.dumps(bm) and bm["org"] == "US Army Corps of Engineers" and bm["reservable"] is True, "RIDB address, ZIP or agency wrong: %r" % bm
+    from lib import blocks3 as b3r
+    h = b3r.b_recreation({"rec": {"ridb": rd}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
+    rows = [t for t in re.findall(r"<tr>.*?</tr>", h, re.S) if "<td" in t]
+    assert len(rows) == 3 and h.count("Bolding Mill<") == 1, "RIDB: wrong row count %d" % len(rows)
+    assert "Recreation.gov lists it as reservable" in rows[0] and "href=\"https://www.recreation.gov/x\"" not in rows[0] and "$45.00" in rows[0], "RIDB: reservable with no URL must say so with no link"
+    assert "Fee not stated by Recreation.gov" in h and "Not listed as reservable" in h and "not an email" not in h and "license" not in h, "RIDB: missing fee, not reservable, a bad email or a BANNED word mishandled"
+    assert "Fees: see the site on Recreation.gov" in h and "x" * 400 not in h and '<a href="https://www.recreation.gov/x" rel="noopener">Reservable on Recreation.gov</a>' in h, "RIDB: a fee too long to show whole was cut, or a reservation URL not linked"
+    assert not re.search(r"&lt;/?[a-zA-Z]|<p>Monday|\b(safe|open now)\b", h) and len(re.findall(r"<th ", h)) <= 5, "RIDB: HTML shown as text, a verdict, or more than 5 columns"
+    old = {"fetched_at": "2026-11-09T00:00:00Z", "radius_mi": 15, "sites": [{"name": "OLD", "type": "Campground", "mi": 2.0, "activities": [], "water": [], "phone": "", "url": ""}]}
+    assert "Unknown" in b3r.b_recreation({"rec": {"ridb": old}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"], "RIDB: a cache from before the fee field claimed 'Fee not stated'"
+
 
 if __name__ == "__main__":
     run()
