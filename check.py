@@ -736,6 +736,7 @@ def check_dir(d, only_rebuilt=False):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes.
     only_rebuilt (--carry): the one-page rules skip pages build.py carried unchanged; every site-level check (titles, links, sitemap, index state,
     reachability, censuses) still reads every page."""
+    OWN.clear()  # code review 2026-11-11: --carry runs check_dir twice; the census is the last pass only
     skip = carried_unchanged(d) if only_rebuilt else set()
     READ["same"] = len(skip)
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"

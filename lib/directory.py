@@ -396,7 +396,7 @@ def forecast_section(rows, Gs, label, cap=40):
     rest = len(rows) - len(fr)
     return _sec("river_forecast_all", "NWS river forecast at each gauge", table(["Gauge", "Highest forecast", "When", "Forecast issued"], "".join(x[1] for x in fr[:cap]), right=(1,)) + more +
                 ("<p>No NWS river forecast is issued for the other %d gauge%s.</p>" % (rest, "" if rest == 1 else "s") if rest else ""),
-                "Source: National Weather Service river forecasts (NWPS). Stages are on each NWS forecast point's own scale.")
+                "Source: National Weather Service river forecasts (NWPS). Stages are on each NWS forecast point's own scale, which can differ from the USGS gage height in the table above; each gauge page shows both.")
 
 
 def state_blocks(rows, Gs):

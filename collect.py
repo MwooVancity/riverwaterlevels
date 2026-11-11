@@ -1470,7 +1470,7 @@ def nid_match(rows, lat, lon, kind, words):
     c = sorted(best.values(), key=lambda x: x[0])
     if not c:
         return None, "no NID dam named %s within %d mi" % (" ".join(sorted(words)), NID_MI[kind])
-    if len(c) > 1 and (c[1][0] - c[0][0] < 1 or c[1][0] < 1.5 * c[0][0]):
+    if len(c) > 1 and (c[1][0] - c[0][0] < 1 and c[1][0] < 1.5 * c[0][0]):
         return None, "ambiguous: %s and %s" % (c[0][1]["NIDID"], c[1][1]["NIDID"])
     mi, a = c[0]
     num = lambda k: a[k] if isinstance(a.get(k), (int, float)) and not isinstance(a.get(k), bool) and a[k] >= 0 else None  # NID: unknown is blank, never zero

@@ -638,7 +638,7 @@ def hero(G, pages=None):
     if G.get("tide_cycle") and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = daily_swing(G) + future_note(G) + ("" if G["feed"] else GLOSS) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
-    lbn = '<p id="lbn" class="src lf2">Flow at the top is as of the page build, %s.</p>' % esc(tzl(G["now"], G["zone"])) if not (G.get("lake") or G.get("stage_only") or G.get("coast") or G.get("feed")) else ""  # audit #6: the line the live update rewrites is in place from the start, so updating it never pushes the tiles down; it says what is true until then
+    lbn = '<p id="lbn" class="src lf2">Charts, tables and comparisons below are as of the page build, %s.</p>' % esc(tzl(G["now"], G["zone"])) if not (G.get("lake") or G.get("stage_only") or G.get("coast") or G.get("feed")) else ""  # audit #6: the line the live update rewrites is in place from the start, so updating it never pushes the tiles down; it says what is true until then
     return ban + answer + lbn + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 
 
