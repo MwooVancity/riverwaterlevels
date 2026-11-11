@@ -10,7 +10,7 @@ from lib.common import *
 from lib import wx
 import zoneinfo
 
-CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054"  # last five: lake elevation (62614 and 72020 NGVD29, 62615 NAVD88, 00062 above the reservoir datum) and storage
+CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054,72036"  # last six: lake elevation (62614 and 72020 NGVD29, 62615 NAVD88, 00062 above the reservoir datum) and storage (00054 acre-ft, 72036 thousand acre-ft: Lanier and Allatoona publish only 72036, audit 2026-11-10 #4)
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 NWS_H = {"User-Agent": "riverwaterlevels.com (https://riverwaterlevels.com/about/)", "Accept": "application/geo+json"}
 NWPS = "https://api.water.noaa.gov/nwps/v1/"
@@ -302,7 +302,10 @@ def multiyear(rows, span=50, back=3):
         out[str(end.year)] = [val.get((end - datetime.timedelta(days=span - 1 - i)).isoformat()) for i in range(span)]
     if sum(1 for v in out[str(last.year)] if v is not None) < span * 0.8 or sum(1 for y, s in out.items() if y != str(last.year) and sum(1 for v in s if v is not None) >= span * 0.8) < 1:
         return None
-    return {"as_of": last.isoformat(), "span": span, "series": out}
+    yb = lambda d: d.replace(year=d.year - 1, day=28) if (d.month, d.day) == (2, 29) else d.replace(year=d.year - 1)
+    a, b = yb(last), yb(max(last, datetime.date.today())) + datetime.timedelta(days=10)  # audit 2026-11-10 #3: last year's same date runs to today (+10 days: fetched weekly), not to this year's newest daily mean (Nehalem: Nov 4 shown, USGS had Nov 10)
+    ly = {(a + datetime.timedelta(days=i)).isoformat(): val[(a + datetime.timedelta(days=i)).isoformat()] for i in range((b - a).days + 1) if (a + datetime.timedelta(days=i)).isoformat() in val}
+    return {"as_of": last.isoformat(), "span": span, "series": out, "ly": ly}
 
 
 hav_km = km  # lib/common.km

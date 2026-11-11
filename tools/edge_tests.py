@@ -240,6 +240,51 @@ def run():
             assert json.load(open(os.path.join(d, "_archive-rhine-2027.json"))) == {}, "a year never archived did not stay empty"
         finally:
             collect.CACHE, collect.http_raw, collect.datetime = keep
+    # full audit 2026-11-10 (tools/full_audit_last.md items 2-5, 7, 8, 10, 11, 15): synthetic US gauges through the real ctx and hero
+    import math as m_, re as r_
+    n0 = datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
+    n0 -= datetime.timedelta(minutes=n0.minute % 15)
+    rw = lambda code, f, unit: [{"parameter_code": code, "time": (n0 - datetime.timedelta(minutes=15 * k)).isoformat(), "value": "%.3f" % f(k), "unit_of_measure": unit} for k in range(8 * 96)]
+    def mk(flow, stage, extra=None, row=None, codes=()):
+        rec = dict({"site": "1", "lat": 46.0, "lon": -122.0, "tz": "America/Los_Angeles", "usgs": {"rows": (rw("00060", flow, "ft^3/s") if flow else []) + rw("62614" if (row or {}).get("lake") else "00065", stage, "ft") + [x for c in codes for x in rw(*c)], "truncated": []}}, **(extra or {}))
+        return render.ctx("1", dict({"river": "Test River", "place": "Kosmos", "state": "WA", "raw_name": "TEST RIVER NEAR KOSMOS, WA", "dashboard_url": "/river/t/k/", "hub_url": "/river/t/"}, **(row or {})), rec, n0)
+    tides = {"tides": {"station": "9440000", "name": "Somewhere", "mi": 30, "fetched_at": n0.isoformat(), "rows": [{"t": (n0 + datetime.timedelta(hours=hh)).strftime("%Y-%m-%d %H:%M"), "v": 5.0, "type": "H"} for hh in (2, 14)]}}
+    pulse = lambda k: 3000 if ((k // 4) % 24) in (6, 7, 8, 16, 17, 18, 19) else 800  # a dam's two releases a day (Cowlitz at Kosmos: osc True, lib/wx.py tidal False on live USGS data 2026-11-10)
+    dam = mk(pulse, lambda k: pulse(k) / 600, tides)
+    tide = mk(lambda k: 5000 + 3000 * m_.sin(2 * m_.pi * k * 15 / 745.2), lambda k: 5 + 2 * m_.sin(2 * m_.pi * k * 15 / 745.2), tides)
+    assert dam["osc"] and not dam["tidal"] and render.b3.b_tides(dam) is None and "Tidal reach" not in render.hero(dam, None) and tide["tidal"], "audit #2: a dam's daily release cycle near a tide station read as tidal with a tide table (Cowlitz at Kosmos), or a 12.4 h tide did not read as tidal"
+    rows_ = [[(datetime.date.today() - datetime.timedelta(days=3 + i)).isoformat(), 100.0 + i] for i in range(3700, -1, -1)]
+    my_ = collect.multiyear(rows_)
+    tdy = datetime.date.today()
+    lyd = tdy.replace(year=tdy.year - 1, day=28) if (tdy.month, tdy.day) == (2, 29) else tdy.replace(year=tdy.year - 1)
+    assert my_ and lyd.isoformat() in my_["ly"], "audit #3: the daily window stops last year at this year's newest daily mean, not at today's date"
+    d3 = dam["ldate"]
+    ly3 = d3.replace(year=d3.year - 1, day=28) if (d3.month, d3.day) == (2, 29) else d3.replace(year=d3.year - 1)
+    G3 = dict(dam, rec=dict(dam["rec"], multiyear={"as_of": (d3 - datetime.timedelta(days=6)).isoformat(), "span": 50, "series": {str(ly3.year): [111.0] * 50}, "ly": {ly3.isoformat(): 2280.0, (ly3 - datetime.timedelta(days=6)).isoformat(): 111.0}}))
+    assert render.last_year_flow(G3) == (2280.0, "%s, %d" % (render.md(ly3), ly3.year)) and "newest daily mean USGS has published" not in render.hero(G3, None), "audit #3: last year's value taken from another day (Nehalem: Nov 4 for Nov 10), or the false 'newest USGS has published' line is back"
+    assert render.last_year_flow(dict(G3, rec=dict(G3["rec"], multiyear=dict(G3["rec"]["multiyear"], ly={})))) is None, "audit #3: a missing last-year day was filled from another date"
+    lake_row = {"lake": "1", "river": "Lake Lanier", "place": "Buford Dam"}
+    h4 = render.hero(mk(None, lambda k: 1062.4, row=lake_row, codes=[("72036", lambda k: 1643, "Kacre-ft")]), None)
+    assert "1,643,000" in h4 and "publishes no storage" not in h4 and r_.findall(r'<div class="tile (\w+)', h4)[0] == "flow", "audit #4: USGS storage published as 72036 (thousand acre-ft) not read; the page said USGS publishes none (Lanier, Allatoona)"
+    h8 = render.hero(mk(None, lambda k: 1062.4, row=lake_row), None)
+    assert r_.findall(r'<div class="tile (\w+)', h8)[0] == "stage" and "publishes no storage" in h8 and r_.search(r'class="tile wtemp[^"]*">(?:(?!</div>).)*<b>Unknown</b>', h8, r_.S), "audit #8: an empty storage tile leads the lake page, or a missing water temperature has no word"
+    G5 = dict(dam, sg=[(n0, 1.69, {"unit_of_measure": "ft"})], rec=dict(dam["rec"], nwps={"lid": "BAXG1", "name": "Baxley", "stage_units": "ft", "categories": {"action": 72.5, "minor": 74.5}, "obs_stage": {"t": n0.isoformat(), "v": 63.2}}))
+    assert "11.0 ft on the USGS gauge scale" in render.next_impact(G5), "audit #5: an NWS stage shown beside a USGS gage height on another zero point without the conversion (Baxley 1.66 vs 72.5 ft)"
+    ni0 = render.next_impact(dict(G5, rec=dict(G5["rec"], nwps=dict(G5["rec"]["nwps"], obs_stage=None))))
+    assert "above" not in ni0 and "Unknown" in ni0, "audit #5: with no NWS reading to compare zero points, a distance from the USGS reading to an NWS stage was printed"
+    md7 = n0.astimezone(zoneinfo.ZoneInfo("America/Los_Angeles")).date().isoformat()[5:10]
+    G7 = mk(lambda k: 500, lambda k: 2.0, {"stats": {md7: [40, 100, 200, 300, 400, 800, 1500, 1800, 2500, 3000]}, "streamcat": {"vals": {"damdensws": 0.1}}}, row={"drainage_sqmi": "1000"})
+    h7 = render.hero(G7, None)
+    assert r_.match(r'<p class="status dv">The river here is typical for \w+ \d+ and steady\.</p><p class="answer"', h7), "audit #7: no plain status sentence above the answer strip"
+    assert "About 259 dams upstream (our estimate: EPA StreamCat" in h7, "audit #11: the dams-upstream count does not name EPA StreamCat or say it is our arithmetic"
+    hl_ = lambda hh, v, k: [(n0 + datetime.timedelta(hours=hh)).isoformat(), v, k]
+    cst = mk(None, lambda k: 3.2, {"coops": {"fetched_at": n0.isoformat(), "pred": [[(n0 + datetime.timedelta(minutes=6 * i)).isoformat(), 4.0] for i in range(-10, 240)], "hilo": [hl_(-1, 8.0, "H"), hl_(5, 1.0, "L"), hl_(11, 9.1, "H")]}},
+             row={"coast": "1", "river": "Astoria", "place": "Astoria", "state": "OR"}, codes=[("MLLW", lambda k: 3.2, "ft")])
+    sc = render.b2.b_stage_chart(cst)["source"]
+    assert "NOAA CO-OPS predicted tide" in sc and "National Weather Service forecast point" not in sc, "audit #10: the coast chart source names a blank NWS forecast point for NOAA's predicted tide"
+    nt = r_.search(r'data-tide="([^"|]+)\|[^"]*" data-tides="([^"]*)">(\w+)', render.hero(cst, None))
+    assert nt and render.parse_t(nt.group(1)) > n0 and nt.group(3) == "Low" and nt.group(2).count(";") == 1 and "data-tides" in render.TIDE_JS, "audit #15: the next tide is not after the build time, or the tile carries no tide list for the browser to step forward"
+    assert "No NOAA tide prediction after this page was built" in render.hero(dict(cst, rec=dict(cst["rec"], coops=dict(cst["rec"]["coops"], hilo=[hl_(-1, 8.0, "H")]))), None), "audit #15: no future tide prediction did not say so"
 
 
 def england(ago):
@@ -410,6 +455,7 @@ def england_page():
     assert not world.thin(h), "an England page with a reading and the alerts block was held for lacking weather: %s" % world.thin(h)
     assert world.thin(h.replace('id="alerts"', 'id="x"')) == [], "a page with a reading was held for a missing alerts block (owner 2026-11-08: only no reading holds)"
     world.THIN.clear()
+
 
 
 def probe(warn, square, pages):

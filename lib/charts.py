@@ -154,7 +154,7 @@ def b_record(G):
     else:
         cards.append(card("Last day as high as this week's %s cfs (daily average)" % fmtc(pk["value"]), "Highest since records began", "record begins %d" % r["first_year"]))
     if r.get("last_p90"):
-        cards.append(card("Before these 7 days, last day flow was this high or higher (top 10% of days, above the 90th percentile)", fdate(r["last_p90"]["date"]), "%s before that 7-day high" % human_span(r["last_p90"]["days_before"])))
+        cards.append(card("Last day in the top 10% of flows (above the 90th percentile) before this week", fdate(r["last_p90"]["date"]), "%s before this week's high" % human_span(r["last_p90"]["days_before"])))  # audit 2026-11-10 #11: "Before these 7 days, last day flow was..." read backwards
     if r.get("above_p75"):
         cards.append(card("Days above the 75th percentile", "%s of %s" % (format(r["above_p75"]["n"], ","), format(r["above_p75"]["of"], ",")), "last %s days" % format(r["above_p75"]["of"], ",")))
     if r.get("month"):

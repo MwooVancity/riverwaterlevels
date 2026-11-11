@@ -147,7 +147,7 @@ def stage_is_ft(row):
     return (row.get("unit_of_measure") or "ft").lower() in ("ft", "feet")
 
 
-UNIT_OF = {"00060": "ft^3/s", "00065": "ft", "62614": "ft", "62615": "ft", "00062": "ft", "72020": "ft", "MLLW": "ft", "IGLD": "ft", "AGY": "ft", "00054": "acre-ft",
+UNIT_OF = {"00060": "ft^3/s", "00065": "ft", "62614": "ft", "62615": "ft", "00062": "ft", "72020": "ft", "MLLW": "ft", "IGLD": "ft", "AGY": "ft", "00054": "acre-ft", "72036": "kacre-ft",
            "00010": "degc", "00095": "us/cm", "00045": "in", "00300": "mg/l", "99133": "mg/l", "63680": "_fnu", "00400": "ph units", "72255": "ft/s", "00480": "ppt"}  # every unit the caches held on 2026-11-07
 
 
@@ -166,6 +166,8 @@ def series(rec, code):
             except (TypeError, ValueError):
                 pass
     out.sort(key=lambda x: x[0])
+    if code == "00054" and not out:  # audit 2026-11-10 #4: Lanier and Allatoona publish storage only as 72036, in thousand acre-feet
+        out = [(t_, v * 1000, r) for t_, v, r in series(rec, "72036")]
     return out
 
 

@@ -14,7 +14,7 @@ def b_flood_stages(G):
     o = nws_stage(G)
     if o:
         rows += tr(["Latest NWS reading, %s" % esc(tzl(o[0], G["zone"])), "%.2f ft (%.1f ft below %s)" % (o[1], cats[min(cats, key=cats.get)] - o[1], min(cats, key=cats.get))], right=(1,)) if o[1] < min(cats.values()) else tr(["Latest NWS reading, %s" % esc(tzl(o[0], G["zone"])), "%.2f ft" % o[1]], right=(1,))
-    return block("flood_stages", "Flood stages", "official", FLOOD_LEVELS + table(["Category", "Gage height (ft)"], rows, right=(1,)),
+    return block("flood_stages", "Flood stages", "official", (FLOOD_LEVELS.replace("on this gauge's scale", "on the NWS stage scale, a different zero point from the USGS gage height") if datum_gap(G) else FLOOD_LEVELS) + table(["Category", "Gage height (ft)"], rows, right=(1,)),
                  "Source: National Weather Service forecast point %s (%s), fetched %s. Compare with the gage height above; thresholds belong to that forecast point." % (esc(n.get("lid") or ""), esc(n.get("name") or ""), esc(tzl(parse_t(n["fetched_at"]), G["zone"]))), "nwps")
 
 

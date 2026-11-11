@@ -3,6 +3,7 @@ import statistics, os, re, json, math, collections, hashlib, datetime, zoneinfo
 from lib.common import *
 from lib.core import *
 from lib.core import _normalise
+from lib import wx
 
 
 def cdec_avg(G):
@@ -76,7 +77,8 @@ def ctx(site, row, rec, now):
         _pn["name"] = re.sub(r"\s*\(IN MLLW\)", "", _pn["name"], flags=re.I)  # a datum note in the NWS point name is not part of the place
     out = {"site": site, "row": row, "rec": rec, "now": now, "zone": zone, "tzname": tzname, "fl": fl, "sg": sg, "lt": lt, "lv": lv, "lrow": lrow, "age_min": age_min, "stats": stats, "ldate": ldate,
             "srow": srow, "p": p, "method": method, "chg": chg, "obs": tzl(lt, zone), "flow_then24": (wc24[1] if (not osc) and wc24 else None), "river": row["river"], "place": usgs_place(row, rec)[0], "st": row["state"], "st_shown": usgs_place(row, rec)[1],
-            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tidal": osc and bool((rec.get("tides") or {}).get("rows")), "basis": basis, "basis_mean": method.startswith("trailing")}
+            "lat": rec["lat"], "lon": rec["lon"], "has_forecast": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "fc_page": bool(((rec.get("nwps") or {}).get("forecast") or {}).get("points")), "offline": flow_is_old(age_min), "osc": osc, "tide_cycle": osc and tide_cycle(fl), "basis": basis, "basis_mean": method.startswith("trailing")}
+    out["tidal"] = out["tide_cycle"] and bool((rec.get("tides") or {}).get("rows"))  # audit 2026-11-10 #2: a dam's daily release cycle near a tide station (Cowlitz at Kosmos) is not a tide
     out["stage_only"] = stage_only
     out["tables"] = tables
     out["lake"] = lake
@@ -93,6 +95,11 @@ def ctx(site, row, rec, now):
     if fl and flow_jitter(out):
         out["chg"] = None  # flow that does not follow the gage height gives no honest 24 h percent
     return out
+
+
+def tide_cycle(fl):
+    """True only when the flow repeats every 12.4 h and reverses at half that: the world pages' tide test (lib/wx.py tidal), never a daily swing plus a nearby tide station."""
+    return bool(fl) and wx.tidal([(t.isoformat(), v) for t, v, _ in fl]) is True
 
 
 TAILWATER = re.compile(r"\b(below|bl|blw|downstream of)\b.*\b(dam|lake|lk|reservoir|res|powerplant|power plant)\b|\btailwater\b", re.I)
@@ -256,6 +263,18 @@ def tile_dir_word(chip):
     return m.group(1) if m else chip
 
 
+def status_line(G, norm, dirw):
+    """One plain sentence above the numbers (owner 2026-11-09 "readable at a glance"; audit 2026-11-10 #7), built only from the comparison and direction labels the tiles show.
+    No number in it, so the Worker's newer reading never contradicts it; dv, so it is read as of the build. Nothing to say (no comparison, no clear direction, gauge silent, coast): no sentence."""
+    if G.get("offline") or G.get("coast"):
+        return ""
+    d = dirw.lower() if re.match(r"(?:(?:Rising|Falling)(?: fast)?(?:, leveling off)?|Steady)$", dirw or "") else ""
+    n = norm[:1].lower() + norm[1:] if norm else ""
+    if not (n or d):
+        return ""
+    return '<p class="status dv">The %s here is %s.</p>' % ("lake" if G.get("lake") else "river", esc(" and ".join(x for x in (n, d) if x)))
+
+
 def strip_dir_word(chip):
     """The trend chip without its leading direction word: the answer strip says the change, the flow tile and the change card say the word."""
     return re.sub(r"^(?:Steady|Rising(?: fast)?|Falling(?: fast)?|Unsteady|Unclear)(?:, leveling off)?: ", "", chip)
@@ -335,29 +354,38 @@ def hero(G, pages=None):
     chg = G["chg"]
     ndam = upstream_dams(G)
     if p is not None and ndam >= 1:
-        cap += (" A dam upstream may have changed flows during this record." if ndam == 1 else " %s dams upstream may have changed flows during this record." % format(ndam, ","))
+        cap += " About %s upstream (our estimate: EPA StreamCat dam density times the drainage area) may have changed flows during this record." % ("1 dam" if ndam == 1 else "%s dams" % format(ndam, ","))  # audit 2026-11-10 #11: the count is our arithmetic, said so with its source
     if p is not None and G["osc"]:
         cap += " " + osc_word(G, "cap") + ": the comparison uses the daily mean."
     if p is not None and TAILWATER.search(G["row"].get("raw_name") or ""):
         cap += " This gauge is below a dam, so flow follows releases, and the record may include years before the dam."
     d24 = G["lt"] - datetime.timedelta(hours=24)
     cmp_ = None  # tiles are assembled flow, stage, direction, comparison, then the rest
-    strip = ""
+    strip, late_ = "", ""
     bcls = band_cls(p) and "b-" + band_cls(p)
     if G["feed"]:
         tiles = ""  # this agency publishes level only: no flow tile to explain
     elif G.get("coast"):  # a coast page leads with the next NOAA tide prediction (predictions, never readings)
         nx = [x for x in ((G["rec"].get("coops") or {}).get("hilo") or []) if parse_t(x[0]) > G["now"]]
-        tiles = ui.tile("flow", "flow", "Next tide (NOAA prediction)", ('<span data-tide="%s|%.3f">%s</span> <small>%.1f ft</small>' % (esc(nx[0][0]), nx[0][1], "High" if nx[0][2] == "H" else "Low", round(nx[0][1], 1) + 0.0)) if nx else "Unknown",  # data-tide: tools/truth_live.py checks it against NOAA's own high/low list
-                        ("<small>%s, above MLLW. A prediction, not a reading.</small>" % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction in the cache for the coming hours.</small>")
+        tl_ = ";".join("%s|%.3f|%s" % (esc(x[0]), x[1], x[2]) for x in nx[:12])  # audit 2026-11-10 #15: TIDE_JS (lib/page.py) moves the tile to the next of these once the shown one has passed
+        tiles = ui.tile("flow", "flow", "Next tide (NOAA prediction)", ('<span data-tide="%s|%.3f" data-tides="%s">%s</span> <small data-tideh>%.1f ft</small>' % (esc(nx[0][0]), nx[0][1], tl_, "High" if nx[0][2] == "H" else "Low", round(nx[0][1], 1) + 0.0)) if nx else "Unknown",  # data-tide: tools/truth_live.py checks it against NOAA's own high/low list
+                        ('<small><span data-tidet>%s</span>, above MLLW. A prediction, not a reading.</small>' % esc(tzl(parse_t(nx[0][0]), G["zone"]))) if nx else "<small>No NOAA tide prediction after this page was built is in the cache.</small>")
     elif G.get("lake"):  # a lake has no river flow: the tile shows the storage USGS publishes, or says it does not
         st_ = series(G["rec"], "00054")
         tw_, lc_ = G["rec"].get("twdb") or {}, b3.lc_day(G)  # hater review 2026-11-07: "Not published" beside the page's own TWDB or Reclamation storage table
         alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Total storage, all pools, TWDB daily estimate, %s (conservation storage is in the table below)" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
-        tiles = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
-                 ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
-                 ui.tile("flow", "flow", "Storage", ('%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1])) if st_ else ("Unknown" if G.get("agy") else "Not published"),  # phone review 2026-11-07 (Mead): the operator publishes storage we could not use this build; "Not published" was false
-                         ("<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))) if st_ else "<small>USGS publishes no storage for this lake.</small>"))  # no "Last 24 hours" under a tile with no series
+        uf_ = None if st_ or alt_ else b3.usace_full(G)
+        if st_ or alt_:
+            tiles = (ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
+                     ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1]), "<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))))
+        elif uf_:  # audit 2026-11-10 #8: what lake searchers check, from the USACE row the reservoir block already shows
+            tiles = ui.tile("flow", "flow", "Compared with full pool", '%.2f <small>ft %s</small>' % (abs(uf_[3]), "below" if uf_[3] < 0 else "above"),
+                            "<small>USACE full pool today %s ft %s%s; the difference from the USGS reading is our calculation.</small>" % ("{:,.2f}".format(uf_[0]), esc(uf_[1]), " (USACE estimate)" if uf_[2] else ""))
+        else:  # audit 2026-11-10 #8: a tile with no number never leads; it follows the elevation
+            tiles = ""
+            late_ = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
+                     ui.tile("flow", "flow", "Storage", "Unknown" if G.get("agy") or (G["rec"].get("usgs") or {}).get("truncated") else "Not published",
+                             "<small>%s</small>" % ("The operator's storage could not be read this build." if G.get("agy") else "The USGS answer was cut short this run." if (G["rec"].get("usgs") or {}).get("truncated") else "USGS publishes no storage for this lake.")))  # phone review 2026-11-07 (Mead): "Not published" was false for an operator's lake
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:
@@ -377,7 +405,8 @@ def hero(G, pages=None):
         else:
             tiles += ui.tile("stage", "stage", "Gage height", "Not measured", "<small>%s</small>" % (
                 ("USGS reports none here; NWS %s has no reading in the last 24 h" % esc(nws_pt(n_))) if n_.get("lid") else "USGS reports no gage height here and no NWS forecast point is linked"))
-    an_ = coast_anomaly(G) if G.get("coast") and p is None else None
+    tiles += late_
+    an_ =coast_anomaly(G) if G.get("coast") and p is None else None
     if p is None:
         word, plain = G["feed"].get("label") or (band_word(int(re.sub(r"\D", "", out_[0])) + (0.5 if out_[0].startswith("above") else -0.5)) if out_ else "–"), G["feed"].get("label_note") or ""  # lake review 2026-11-06: past the published range read "–" beside a caption that compares
         if an_:
@@ -446,7 +475,7 @@ def hero(G, pages=None):
     if G.get("tables"):  # tide tables: no reading, so nothing to compare with the predicted tide (the tile stays and says so: never a blank)
         norm_word, norm_plain = "Not compared", "No water level is measured here to compare with NOAA's predicted tide."
     norm_html = ui.tile("norm", "map", "Compared with NOAA's predicted tide" if G.get("coast") else "Is this normal for %s?" % md(G["ldate"]), norm_word,
-                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>%s</small>' % (("A year earlier, on %s: %s cfs (USGS daily mean)." % (ly[1], fmtc(ly[0]))) if ly[1].startswith(md(G["ldate"]) + ",") else ("Last year: %s cfs on %s, the newest daily mean USGS has published for last year." % (fmtc(ly[0]), ly[1])))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
+                     ('<small class="nt">%s</small>' % esc(norm_plain) if norm_plain else "") + ui.rangebar(p) + (('<small>A year earlier, on %s: %s cfs (USGS daily mean).</small>' % (ly[1], fmtc(ly[0]))) if (ly := last_year_flow(G)) is not None else "") + '<small id="pcap">%s</small>' % esc(cap), ("wide dv " + bcls).strip())
     nwl = nws_pt(G["rec"].get("nwps")) if (G["rec"].get("nwps") or {}).get("lid") else None  # the point by name; the code stays in Source text (audit run 1, row 9)
     trend_html = tiles[len(pre):]
     if G["osc"]:  # a tidal reach has no 6 h direction: the day's range is the honest trend line, on the tile and in the answer alike
@@ -515,6 +544,11 @@ def hero(G, pages=None):
         if not (G.get("lake") and not _same):  # phone review 2026-11-07 (Allatoona): river water below the dam is not the lake's water
             _lab = "Water temperature nearby" if _same else "Water temperature, %s (not this river), %.0f mi" % (esc(re.split(r"\s(?:at|near|nr|below|above|bl|ab)\s", _nm, 1, re.I)[0]), nw["mi"])  # a creek's temperature must not read as this river's
             strip += ui.tile("wtemp near", "thermo", _lab, '%.0f<small>&deg;F</small>' % nw["f"], '<small>Measured at %s, %.0f mi away%s, %s. This gauge has no temperature sensor.</small>' % (esc(_nm), nw["mi"], "" if _same else " (a different river)", esc(tzl(parse_t(nw["t"]), G["zone"]))))
+    lk_wt = bool(G.get("lake")) and G["lake"] != "IGLD" and not G.get("coast") and 'class="tile wtemp' not in strip
+    if lk_wt:  # audit 2026-11-10 #8: a lake searcher looks for the water temperature; its absence is said on the tile, with the reason (a Great Lake has GLERL's lake-wide block)
+        _nwf = bool(nw and nw.get("t") and isinstance(nw.get("mi"), (int, float)) and (G["now"] - parse_t(nw["t"])).total_seconds() < NEAR_WTEMP_H * 3600)
+        strip += ui.tile("wtemp", "thermo", "Water temperature", "Unknown", "<small>%s</small>" % (("Last USGS reading %s ago, too old to show as now." % c["old"]["wt"]) if c["old"].get("wt") else
+                                                                                               "No current USGS water temperature for this lake%s." % ((": the nearest sensor, %.0f mi away, is not in the lake" % nw["mi"]) if _nwf else "")))
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
@@ -549,6 +583,7 @@ def hero(G, pages=None):
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
         ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+    answer = status_line(G, norm_txt if (p is not None or out_) and not G["feed"] else "", tile_dir_word(dir_chip) if dir_chip else "") + answer
     if c["rain"]:
         rn_ = c["rain"]
         if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"
@@ -571,7 +606,9 @@ def hero(G, pages=None):
         strip += ui.tile("sun", "sun", "Sunset today", '%s <small>%s</small>' % (esc(sh), esc(sz)), '<small>Sunrise %s%s &middot; %s, %.0f%% lit &middot; computed from location and date</small>' % (esc(tzl(st_[0], G["zone"], date=False)), (" &middot; last light " + esc(tzl(ct_[1], G["zone"], date=False))) if (ct_ := sun_times(G["lat"], G["lon"], td_, -6.0)) else "", moon_phase(td_)[0].lower(), moon_phase(td_)[1]))
     # "Calm daylight hours" tile deleted 2026-10-27: "calm" was our own threshold, not a source's; it failed 3 of 6 hater pages (gusts ignored, an hour past sunset). The hourly table shows wind, gusts and thunder per hour.
     gone = []
-    if c["old"].get("wt"):  # hidden for age: name it with the age and where the reading still is
+    if lk_wt:
+        pass  # the lake's water temperature tile already says Unknown and why
+    elif c["old"].get("wt"):  # hidden for age: name it with the age and where the reading still is
         gone.append("water temperature at this gauge: last reading %s ago, shown below under Water quality sensors" % c["old"]["wt"])
     elif not c["wt"] and not series(G["rec"], "00010") and not (nw and nw.get("t") and (G["now"] - parse_t(nw["t"])).total_seconds() < NEAR_WTEMP_H * 3600):
         gone.append("live water temperature (no USGS temperature sensor at this gauge or within 40 mi on this river%s)" % ("; monthly history is shown below" if (G["rec"].get("wtemp") or {}).get("months") else ""))
@@ -590,7 +627,7 @@ def hero(G, pages=None):
         gone.append("hourly weather (no NWS hourly forecast for this location)")
     if b3.lro_ended(G):
         gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
-    if G["osc"] and not (G["rec"].get("tides") or {}).get("rows"):
+    if G.get("tide_cycle") and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
     strip_html = daily_swing(G) + ("" if G["feed"] else GLOSS) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     return ban + answer + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
@@ -611,26 +648,20 @@ def cite_line(G):
 
 
 def last_year_flow(G):
-    """Daily mean flow on this date a year ago from the multi-year window (USGS daily means); None when the window does not cover it."""
+    """(USGS daily mean flow, "Nov 10, 2025") on this calendar date one year ago; None when USGS has no value for that exact date in the cache.
+    Audit 2026-11-10 #3: never another day (the old code took the window's last day, Nov 4 for Nov 10) and never a claim that USGS has not published it."""
     m = G["rec"].get("multiyear") or {}
-    ser, span, as_of = m.get("series") or {}, m.get("span"), m.get("as_of")
-    if not ser or not span or not as_of:
-        return None
-    try:
-        off = (datetime.date.fromisoformat(as_of) - G["ldate"]).days
-    except ValueError:
-        return None
-    idx = span - 1 - off
-    row = ser.get(str((datetime.date.fromisoformat(as_of) if off < 0 else G["ldate"]).year - 1))
-    if row is None:
-        return None
-    if off < 0 and len(row):  # the daily window ends at as_of (USGS daily means lag a day or two): use its last day and name the date
-        idx, when = len(row) - 1, datetime.date.fromisoformat(as_of)
-    else:
-        when = G["ldate"]
-    if not (0 <= idx < len(row)) or row[idx] is None:
-        return None
-    return row[idx], "%s, %d" % (md(when), when.year - 1)  # `when` is this year's date; the value is last year's
+    d = G["ldate"]
+    ly = d.replace(year=d.year - 1, day=28) if (d.month, d.day) == (2, 29) else d.replace(year=d.year - 1)
+    v = (m.get("ly") or {}).get(ly.isoformat())
+    if v is None and m.get("series") and m.get("span") and m.get("as_of"):  # a cache from before "ly": the aligned window, only when it holds that exact date
+        try:
+            idx = m["span"] - 1 - (datetime.date.fromisoformat(m["as_of"]) - d).days
+        except ValueError:
+            return None
+        row = m["series"].get(str(ly.year)) or []
+        v = row[idx] if 0 <= idx < len(row) else None
+    return (v, "%s, %d" % (md(ly), ly.year)) if v is not None else None
 
 
 def gage_rate(G):
@@ -752,14 +783,18 @@ def next_impact(G):
         return ""
     unit = (n.get("stage_units") or "ft").lower()
     _ref = ("the NWS reading of %.2f %s, on a different zero point from USGS" % (cur, unit)) if gap else "the latest reading"  # full review: Suwannee distances from 53.51 beside a 54.34 headline
+    usg = (lambda v: "; %.1f %s on the USGS gauge scale" % (v - gap[0] + gap[1], esc(unit))) if gap else (lambda v: "")  # audit 2026-11-10 #5 (Baxley 1.66 ft beside 72.5 ft): each NWS stage also on the tile's own scale, by the offset the page measured
     by = impact_list(G)  # the same list the impacts block shows (full review: tile 10.0 ft, block 7.0 ft)
     if impact_flow(G):  # thresholds published as flow: compared with the flow reading, never with the gage height
         up_ = [s_ for s_ in sorted(by) if G["lv"] is not None and s_ > G["lv"]]
         return ("Next NWS impact at %s cfs (%s cfs above the latest flow)" % (fmtc(up_[0]), fmtd(up_[0] - G["lv"]))) if up_ else ""
+    if not gap and G["sg"] and stage_is_ft(G["sg"][-1][2]) and stage_pair(G) is None:  # no NWS reading to measure the two zero points against: no distance, never a USGS reading against an NWS stage
+        cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and v > 0}
+        return ("NWS %s stage %.1f %s, on the NWS stage scale; whether it shares this gauge's zero point is Unknown (no NWS reading to compare)" % (min(cats, key=cats.get), min(cats.values()), esc(unit))) if cats else ""
     ahead = [s_ for s_ in sorted(by) if s_ > cur]
     if not ahead:
         cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and v > cur}
-        return ("NWS %s stage %.1f %s (%.1f %s above %s)" % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), _ref)) if cats else ""  # full review: Moody showed no distance to its action stage
+        return ("NWS %s stage %.1f %s (%.1f %s above %s%s)" % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), _ref, usg(min(cats.values())))) if cats else ""  # full review: Moody showed no distance to its action stage
     i = {"stage": ahead[0]}
     txt = " / ".join(by[ahead[0]])
     end = next(iter(sent_ends(txt)), -1)
@@ -769,8 +804,8 @@ def next_impact(G):
         cut = txt.rfind(" ", 0, 157)
         txt = txt[:cut if cut > 40 else 157] + "\u2026"
     cats = {k: v for k, v in (n.get("categories") or {}).items() if isinstance(v, (int, float)) and cur < v < i["stage"]}
-    pre = ("NWS %s stage %.1f %s (%.1f %s above %s); " % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), "the NWS reading" if gap else "the latest reading")) if cats else ""  # full review: Salt River showed the 42 ft impact, not Action 24 / Minor 30
-    base = pre + "Next NWS impact at %.1f %s (%.1f %s above %s)" % (i["stage"], esc(unit), r1(i["stage"] - cur), esc(unit), _ref)
+    pre = ("NWS %s stage %.1f %s (%.1f %s above %s%s); " % (min(cats, key=cats.get), min(cats.values()), esc(unit), r1(min(cats.values()) - cur), esc(unit), "the NWS reading" if gap else "the latest reading", usg(min(cats.values())))) if cats else ""  # full review: Salt River showed the 42 ft impact, not Action 24 / Minor 30
+    base = pre + "Next NWS impact at %.1f %s (%.1f %s above %s%s)" % (i["stage"], esc(unit), r1(i["stage"] - cur), esc(unit), _ref, usg(i["stage"]))
     gr = gage_rate(G)  # time-to-flood: pure arithmetic from the rate of rise already on the page, labelled "at the current rate", no verdict
     fpk = max((s_ for _, s_, _ in fc_points(n.get("forecast") or {}) if s_ is not None), default=None) if (n.get("forecast") or {}).get("points") else None
     if gr and gr > 0 and not daily_swing(G) and not G.get("osc") and (fpk is None or fpk >= i["stage"]):  # full review: "12 h away" beside an NWS forecast that falls (Hudson)
