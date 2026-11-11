@@ -132,6 +132,8 @@ function slice(text, site) {
 }
 
 // the cron: ask USGS what changed since the cursor, merge, write once if anything changed
+function future(t, now) { return t > now + 15 * 60000; } // gate audit 0a: a reading stamped over 15 min ahead is a wrong time, as lib/core.py series drops it
+
 async function poll(env) {
   const list = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json();
   const ids = list.map((x) => x[0]).filter((s) => /^\d+$/.test(s)); // agency lakes (CDEC-SHA, TWDB-travis) are on the list for the Python tools; USGS gets only its own ids
@@ -158,7 +160,7 @@ async function poll(env) {
         if (p.last_modified && (!cur || p.last_modified > cur)) cur = p.last_modified;
         const k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
         const s = String(p.monitoring_location_id || "").slice(5);
-        if (!k || isNaN(v) || isNaN(t) || t < cutoff || !want.has(s)) continue; // national rows of gauges we do not publish are dropped
+        if (!k || isNaN(v) || isNaN(t) || t < cutoff || future(t, Date.now()) || !want.has(s)) continue; // national rows of gauges we do not publish are dropped; a future time would stick forever (never steps back)
         if (String(p.unit_of_measure || "").toLowerCase() !== (k === "f" ? "ft^3/s" : "ft")) continue; // edge test 2026-11-07: a unit change at USGS would swap m^3/s into a cfs page; same allow-list as lib/core.py UNIT_OF
         const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
         g[s] = g[s] || {};

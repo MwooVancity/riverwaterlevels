@@ -161,7 +161,9 @@ def series(rec, code):
         if r["parameter_code"] == code and (want is None or str(r.get("unit_of_measure") or "").lower() == want):
             try:
                 t_ = parse_t(r["time"])
-                if float(r["value"]) > -900 and not (t_.tzinfo and t_ > late):  # USGS sentinel values (-999999) are not readings
+                if t_.tzinfo and t_ > late:
+                    rec.setdefault("held_future", []).append(code)  # a list, so a cached rec stays JSON; the page says a newer reading was held (lib/hero.py future_note)
+                elif float(r["value"]) > -900:  # USGS sentinel values (-999999) are not readings
                     out.append((t_, float(r["value"]), r))
             except (TypeError, ValueError):
                 pass

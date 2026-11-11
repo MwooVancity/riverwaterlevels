@@ -8,6 +8,16 @@ from lib import wx as wx_mod
 
 
 def run():
+    import gates as g_  # gate catch census: a page gate counts each caught page, a self-test only its own failure (fixtures print FAULT on purpose)
+    out_ = "FAIL river/a/index.html\n    no Source line\nCARRIED previous live page for b\n  MISMATCH c: 5 vs 6\nKAUB FAULT page says no alerts\nworld truth: 1 fault(s)\npages 9, failing 1"
+    assert g_.catches("page checks", out_, 1) == 4 and g_.catches("truth fixtures", out_, 0) == 0 and g_.catches("truth fixtures", "", 1) == 1 and g_.catches("built pages vs USGS/NWS", "truth_live: 0 mismatches", 0) == 0, "edge: gate catches miscounted"
+    from tools import world_queue as wq_  # PLAN step 6: two same-name lakes in two states; a bare keyword credits neither, a keyword naming the state credits that one
+    two_ = {wq_.core("clear lake"): {"CA", "IA"}, wq_.core("lake mead"): {"NV"}}
+    assert wq_.namesake(wq_.core("clear lake"), "IA", "clear lake level", two_).startswith("held: 2 states"), "edge: a bare same-name keyword was credited to one state's lake"
+    assert wq_.namesake(wq_.core("clear lake"), "IA", "clear lake iowa water level", two_) == "" and wq_.namesake(wq_.core("clear lake"), "CA", "clear lake ca", two_) == "", "edge: a keyword naming the state was held"
+    assert wq_.namesake(wq_.core("clear lake"), "CA", "clear lake iowa water level", two_).startswith("held"), "edge: Iowa's search credited to California's Clear Lake"
+    assert wq_.namesake(wq_.core("lake mead"), "NV", "lake mead water level", two_) == "", "edge: a one-state name was held"
+    assert wq_.namesake(wq_.core("clear lake"), "KS", "clear lake arkansas", {wq_.core("clear lake"): {"KS", "AR"}}).startswith("held"), "edge: 'arkansas' read as naming Kansas"
     # full audit 2026-11-10: a coast station on a pier sits outside every marine zone; the nearest zone within the ring is used, an NWS outage raises
     real = collect.thr_json
     try:
@@ -93,7 +103,12 @@ def run():
     from lib import core as core_
     iso = lambda d: d.isoformat()
     fut = core_.series({"usgs": {"rows": [dict(new, time=iso(ago(minutes=30)), unit_of_measure="ft^3/s", value="900"), dict(new, time=iso(ago(minutes=-120)), unit_of_measure="ft^3/s", value="5000")]}}, "00060")
+    fr_ = {"usgs": {"rows": [dict(new, time=iso(ago(minutes=30)), unit_of_measure="ft^3/s", value="900"), dict(new, time=iso(ago(minutes=-120)), unit_of_measure="ft^3/s", value="5000")]}}
+    fut = core_.series(fr_, "00060")
     assert [v for _, v, _ in fut] == [900.0], "a US reading stamped 2 h in the future was kept as the latest (gate audit 0a)"
+    from lib import hero as hero_
+    assert "held as a likely clock error" in hero_.future_note({"rec": fr_, "lake": None}) and not hero_.future_note({"rec": {"held_future": ["00010"]}, "lake": None}) and not hero_.future_note({"rec": {}, "lake": None}), "a held future reading was not said on the page, or a water-temperature slip was (gate audit 0a)"
+    __import__("json").dumps(fr_)  # the held mark keeps a rec JSON
     from lib import render  # noqa: F401 (lib.page imports through render)
     from lib import blocks2 as b2_
     t0_ = datetime.datetime(2026, 11, 9, 15, tzinfo=datetime.timezone.utc)

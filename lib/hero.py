@@ -154,6 +154,13 @@ def daily_swing(G):
         len(big), *map(fmtc, max(big, key=lambda x: x[1] / x[0])))
 
 
+def future_note(G):
+    """Gate audit 0a: USGS sent a reading stamped later than now; it is held and the page shows the last good one, at its real time, and says why."""
+    if not set(G["rec"].get("held_future") or ()) & {"00060", "00065", G.get("lake")}:  # only the series the first screen reads (a water-temperature slip is not the headline)
+        return ""
+    return '<p class="src">USGS sent a newer reading stamped later than the current time; it is held as a likely clock error, and the reading shown is the latest with a valid time.</p>'
+
+
 def model_gap(G, first):
     """A note when the model's first hour is more than 20% away from the measured flow: read its shape, not its numbers."""
     lv = G.get("lv")
@@ -630,7 +637,7 @@ def hero(G, pages=None):
         gone.append("NWS long-range flood outlook: none current (last one produced %s)" % b3.lro_ended(G))
     if G.get("tide_cycle") and not (G["rec"].get("tides") or {}).get("rows"):
         gone.append("tide predictions (no NOAA station within 50 mi)")
-    strip_html = daily_swing(G) + ("" if G["feed"] else GLOSS) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
+    strip_html = daily_swing(G) + future_note(G) + ("" if G["feed"] else GLOSS) + (('<div class="cstrip" role="group" aria-label="Conditions at the gauge" tabindex="0">%s</div>' % strip) if strip else "") + (('<p class="gaps">Not available for this gauge: %s.</p>' % "; ".join(gone)) if gone else "")
     lbn = '<p id="lbn" class="src lf2">Flow at the top is as of the page build, %s.</p>' % esc(tzl(G["now"], G["zone"])) if not (G.get("lake") or G.get("stage_only") or G.get("coast") or G.get("feed")) else ""  # audit #6: the line the live update rewrites is in place from the start, so updating it never pushes the tiles down; it says what is true until then
     return ban + answer + lbn + '<div class="hero hero2" data-t="%s">%s</div>' % (iso(G["lt"]), tiles) + strip_html
 

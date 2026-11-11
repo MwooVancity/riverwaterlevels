@@ -5,7 +5,8 @@ import os, sys, subprocess, datetime, shutil, time, json
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
-from gates import PY, NPX, GATES, census  # the one list of gates (gates.py)
+from gates import PY, NPX, GATES, census, catches  # the one list of gates (gates.py)
+GATE_NAMES = {n_ for _, g in GATES for n_, _c in g}
 
 os.makedirs(os.path.join(ROOT, "runs"), exist_ok=True)
 # the break test feeds invented data to test CODE: it runs in dry runs only; on a deploy it could only freeze real, good pages (2026-10-30)
@@ -29,6 +30,7 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
         n_pages = 0
     t_run = time.time()
     checked = None
+    caught = {}  # gate -> what it caught this run; a gate the run never reached is not counted
     for name, s in STEPS:
         t0 = time.time()
         if name == "publish" and checked == carried():
@@ -36,6 +38,8 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))
         census(p.stdout)
+        if name in GATE_NAMES:
+            caught[name] = catches(name, p.stdout, p.returncode)
         if name == "page checks" and not p.returncode:
             checked = carried()
         if not DRY:
@@ -46,6 +50,7 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
             break
 if not DRY:
     ledger.add("refresh total", time.time() - t_run, n_pages)
+    ledger.add_catches(caught)  # build.py puts the last 10 runs in status.json; watchdog and ops_summary name a gate that caught nothing
 for d in os.listdir(os.path.join(ROOT, "runs")):  # keep 14 days of per-run folders
     p = os.path.join(ROOT, "runs", d)
     if os.path.isdir(p) and time.time() - os.path.getmtime(p) > 14 * 86400:

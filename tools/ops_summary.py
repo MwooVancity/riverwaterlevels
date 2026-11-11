@@ -68,6 +68,10 @@ def main():
         out += ["    " + x for x in lines] or ["    (no stop line found)"]
     out.append("")
 
+    sys.path.insert(0, ROOT)
+    from lib.ledger import catch_line
+    out += ["## Gates", catch_line(None if st.get("_error") else st.get("catches")), ""]
+
     out.append("## Daily release (new gauges)")
     try:
         last = open(os.path.join(ROOT, "data", "last-release.txt"), encoding="utf-8").read().strip()

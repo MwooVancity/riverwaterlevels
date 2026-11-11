@@ -81,6 +81,60 @@ def world_thin(s):
     return "%d world gauges held as thin pages (under the floor): %s" % (len(t), "; ".join("%s: %s" % (k, ", ".join(v)) for k, v in list(t.items())[:3])) if t else None
 
 
+def gsc_check(call, have_key):
+    """(line, is a problem) for Search Console access (PLAN edge list: the weekly numbers must never stop silently). No key here = Unknown, never a problem.
+    A refused or broken key, a lost permission or a disabled API is a problem; a missing library or a network blip proves nothing, so Unknown. Error text is cut and never holds the key."""
+    if not have_key:
+        return "Search Console access: Unknown (no key in this environment)", False
+    try:
+        lvl = call()
+        return "Search Console access: read (%s)" % lvl, False
+    except ImportError as e:
+        return "Search Console access: Unknown (library missing: %s)" % str(e)[:60], False
+    except Exception as e:
+        code = getattr(getattr(e, "resp", None), "status", None)  # googleapiclient HttpError: 401/403/404 = access gone or API off; 5xx = Google's outage
+        if type(e).__name__ in ("RefreshError", "DefaultCredentialsError") or (type(e).__name__ == "HttpError" and code in (400, 401, 403, 404)) or isinstance(e, (ValueError, KeyError)):
+            return "Search Console access lost: %s: %s (re-add the service account in Search Console, or replace the GitHub secret GSC_KEY_JSON)" % (type(e).__name__, str(e)[:100]), True
+        return "Search Console access: Unknown (%s: %s)" % (type(e).__name__, str(e)[:60]), False
+
+
+def gsc_call():
+    from tools import gsc_read
+    from googleapiclient.discovery import build
+    s = build("searchconsole", "v1", credentials=gsc_read.creds("https://www.googleapis.com/auth/webmasters.readonly"), cache_discovery=False)
+    return s.sites().get(siteUrl=gsc_read.SITE).execute().get("permissionLevel")
+
+
+def gsc_key():
+    from tools import gsc_read
+    return bool(os.environ.get("GSC_KEY_JSON")) or gsc_read.ENV.exists()
+
+
+def publisher_email():
+    try:
+        return (json.load(open(os.path.join(ROOT, "data", "publisher.json"), encoding="utf-8")).get("email") or "").strip()
+    except (OSError, ValueError):
+        return ""
+
+
+def mx_lookup(domain):
+    """MX hosts of a domain from Cloudflare's DNS-over-HTTPS JSON answer; [] = no MX. A network failure raises."""
+    j = json.load(http_open("https://cloudflare-dns.com/dns-query?name=%s&type=MX" % domain, {"Accept": "application/dns-json", "User-Agent": UA["User-Agent"]}, 20))
+    return [a.get("data", "") for a in j.get("Answer") or [] if a.get("type") == 15]
+
+
+def mx_check(email, lookup):
+    """None while no address is published (data/publisher.json email empty); else (line, is a problem). No MX, or a null MX ('0 .'), means every reader's mail bounces."""
+    if "@" not in email:
+        return None
+    dom = email.rsplit("@", 1)[1].lower()
+    try:
+        mx = [m for m in lookup(dom) if m.split()[-1:] not in (["."], [])]
+    except Exception as e:
+        return "mail to %s: Unknown (DNS not read: %s)" % (email, str(e)[:50]), False
+    return ("mail to %s is accepted (MX %s)" % (email, ", ".join(mx[:3])), False) if mx else ("mail to %s bounces: %s has no MX record (add the mail DNS records in Cloudflare)" %(email, dom), True)
+
+
 def main():
     ok, bad, heal = [], [], []
     out_ = os.environ.get("GITHUB_OUTPUT")
@@ -116,6 +170,8 @@ def main():
             ok.append("coverage census: %s USGS flow gauges (%s built); our code cannot build %s USGS (level-only %s, lakes %s, tidal %s) and %s NOAA tide stations%s" % (
                 format(u_.get("flow", 0), ","), u_.get("built"), format(u_.get("code_cannot", 0), ","), u_.get("stage_only"), u_.get("lake"), u_.get("tidal"), t_.get("code_cannot", "Unknown"),
                 ("; states Unknown: " + ", ".join(u_["unknown"])) if u_.get("unknown") else ""))
+        from lib.ledger import catch_line
+        ok.append(catch_line(s.get("catches")))  # information, never a problem: a gate is deleted by a person reading this, not by code
         for x in (s.get("ledger") or {}).get("soon") or []:  # machinery audit: a stage that passes its time limit within 30 days of growth
             bad.append("run time: " + x)
         if s.get("cache_lost"):
@@ -257,6 +313,12 @@ def main():
             (bad if cut >= LIMIT and not os.environ.get("WORKERS_PAID") else ok).append("Cloudflare stopped the Worker %d times in 24 h%s" % (cut, " (Workers Paid is due: readers got error pages; then set the GitHub variable WORKERS_PAID, RUNBOOK)" if cut >= LIMIT else ""))
     except (OSError, ValueError, KeyError, AttributeError) as e:
         bad.append("no new gauges released: release record unreadable (%s)" % str(e)[:60])
+    if not out_ or datetime.datetime.now(datetime.timezone.utc).hour == 12:  # once a day in CI (watchdog.yml installs the Google library that hour) and at every session start
+        line_, is_bad = gsc_check(gsc_call, gsc_key())
+        (bad if is_bad else ok).append(line_)
+        mx_ = mx_check(publisher_email(), mx_lookup)
+        if mx_:
+            (bad if mx_[1] else ok).append(mx_[0])
     print("SITE HEALTH %s: %d problem(s)" % (datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"), len(bad)))
     for x in bad:
         print("  PROBLEM:", x)
@@ -269,6 +331,22 @@ def main():
 
 if "--selftest" in sys.argv:
     assert empty_answer("nwm.medium", 113)[1] and not empty_answer("fieldmeas", 1)[1] and not empty_answer("stocking", 4)[1] and empty_answer("x", 5)[1], "selftest: an empty answer judged wrong (a problem from 5 gauges, never for 1 to 4)"
+    class HttpError(Exception):
+        resp = type("R", (), {"status": 403})()
+    class RefreshError(Exception):
+        pass
+    def raise_(e):
+        def f(*a):
+            raise e
+        return f
+    assert gsc_check(None, False) == ("Search Console access: Unknown (no key in this environment)", False), "selftest: no key read as a problem"
+    assert gsc_check(lambda: "siteFullUser", True) == ("Search Console access: read (siteFullUser)", False)
+    assert gsc_check(raise_(HttpError("User does not have sufficient permission")), True)[1] and gsc_check(raise_(RefreshError("invalid_grant")), True)[1] and gsc_check(raise_(ValueError("bad key JSON")), True)[1], "selftest: lost Search Console access was not a problem"
+    assert not gsc_check(raise_(ImportError("googleapiclient")), True)[1] and not gsc_check(raise_(OSError("timed out")), True)[1], "selftest: a missing library or a network blip was a problem"
+    assert mx_check("", None) is None, "selftest: no published address still checked mail"
+    assert mx_check("contact@riverwaterlevels.com", lambda d: []) [1] and mx_check("contact@x.com", lambda d: ["0 ."])[1], "selftest: no MX (or a null MX) was not a bounce"
+    assert mx_check("contact@x.com", lambda d: ["10 route1.mx.cloudflare.net."]) == ("mail to contact@x.com is accepted (MX 10 route1.mx.cloudflare.net.)", False)
+    assert mx_check("contact@x.com", raise_(OSError("down"))) == ("mail to contact@x.com: Unknown (DNS not read: down)", False), "selftest: DNS down read as a bounce"
     assert mass_carry(12, 216) and not mass_carry(2, 216) and not mass_carry(10, 216) and not mass_carry(0, 0), "selftest: the mass-carry line fired wrong (5% of gauge pages, min 3)"
     real = open
     try:
