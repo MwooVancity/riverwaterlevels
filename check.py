@@ -176,7 +176,18 @@ def page_checks(h, rel):
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
         out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
-    return out + ad_gaps(rel, h) + stats_gap(h) + datum_named(h, u)
+    return out + ad_gaps(rel, h) + stats_gap(h) + datum_named(h, u) + lake_wording(h, u)
+
+
+def lake_wording(h, u):
+    """Lake Michigan phone review 2026-11-11 (FAIL): river words leaked onto a lake page, one of them false ("storage readings" on a lake whose own tile says
+    it has no storage). Lake and coast pages: no "river access", and no claim of storage readings when the page says it has none."""
+    if not u.startswith(("/lake/", "/coast/")):
+        return []
+    out = ["river wording on a lake or coast page: 'river access not confirmed'"] if "river access not confirmed" in h else []
+    if "storage readings" in h and re.search(r"A Great Lake has no reservoir storage|publishes no storage for this lake|>Storage<[^<]*</span><b>(?:Not applicable|Not published)<", h):
+        out.append("data link says 'storage readings' on a lake page that says it has no storage")
+    return out
 
 
 DATUMS = ("mean lower low water", "NAVD 1988", "NGVD 1929", "IGLD 1985", "the reservoir's own datum", "the reservoir&#x27;s own datum", "the datum the operator uses", "the gauge datum", "Ordnance Datum Malin")
@@ -1408,6 +1419,8 @@ def selftest():
     assert res_["lake/new-lake/index.html"] == ["in the sitemap but noindexed"] and left_ == ["/ghost/"], "selftest: a mismatch on one water page was not held on that page alone, or a missing page was not left site-level"
     oc = own_census({"/a/": ("hub", False, 0), "/b/": ("hub", False, 3), "/c/": ("hub", True, 0), "/d/": ("state", False, 0), "/e/": ("trust", False, 0)})
     assert oc == "own-data census: hub 1 of 2 with no data section of their own, state 1 of 1 with no data section of their own", "selftest: own-data census miscounts (noindex or prose pages counted): " + oc
+    assert lake_wording("7-day lake elevation and storage readings. A Great Lake has no reservoir storage.", "/lake/lake-michigan/") and lake_wording("Public land (mapped); river access not confirmed", "/coast/x/"), "selftest: river wording on a lake page passed"
+    assert not lake_wording("7-day lake elevation readings. A Great Lake has no reservoir storage.", "/lake/lake-michigan/") and not lake_wording("river access not confirmed", "/river/a/b/"), "selftest: correct lake wording, or a river page, failed"
     from lib.coverage import country
     assert [country(x) for x in ("lake/belton-lake/index.html", "coast\\x\\index.html", "river/a/index.html", "rhine/koeln/index.html", "ireland/dublin-port/index.html")] == ["US", "US", "US", "Germany", "Ireland"], "selftest: coverage counts a page under the wrong country"
     import tools.edge_tests

@@ -440,8 +440,10 @@ def lake_words(h, G):
     al = re.search(r'<section class="card blk[^"]*" data-f="[^"]*" id="alerts">.*?</section>', h, re.S)  # lake review #13: quoted NWS alert text is never reworded
     if al:
         return lake_words(h[:al.start()], G) + al.group(0) + lake_words(h[al.end():], G)
-    h = re.sub(r"7-day flow and gage height readings(?:,| and) daily mean flow by year", "7-day lake elevation and storage readings", h)  # lake review #8: data.json and JSON-LD said flow
-    h = h.replace("flow and gage height", "lake elevation and storage")
+    st_ = bool(series(G["rec"], "00054"))  # 72036 (thousand acre-ft) counts: lib/core.py series
+    sto = " and storage" if st_ else ""  # Lake Michigan review 2026-11-11 (blocker): "storage readings" on a lake with no storage contradicted its own tile
+    h = re.sub(r"7-day flow and gage height readings(?:,| and) daily mean flow by year", "7-day lake elevation%s readings" % sto, h)  # lake review #8: data.json and JSON-LD said flow
+    h = h.replace("flow and gage height", "lake elevation" + sto)
     h = h.replace(", flow not reporting (USGS", " above %s (USGS" % d)  # lake review #13: the cite line said flow is not reporting; a lake has none
     h = re.sub(r"cfs = cubic feet of water passing the gauge each second\. Gage height is the gauge(?:’|&rsquo;|')s own scale, not water depth\.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d, h)
     h = re.sub(r" About (?:1 dam|[\d,]+ dams) upstream \(our estimate: [^)]*\) may have changed flows during this record\.", "", h)  # a reservoir is itself the dam
@@ -449,8 +451,10 @@ def lake_words(h, G):
         h = re.sub(r"<tr><td>Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point</td><td>[^<]*</td></tr>", "", h)
     if G["lake"] == "00062":  # only this code is read above the gauge datum; 62614, 62615 and 72020 are above sea-level datums, so the row keeps its own true label
         h = re.sub(r"Altitude of the gauge(?:'|&#x27;|&#39;|’|&rsquo;)s zero point", "Gauge datum (lake readings are heights above it)", h)
-    st_ = bool(series(G["rec"], "00054"))  # 72036 (thousand acre-ft) counts: lib/core.py series
-    for a, b in (("water level and flow", "water level, elevation and storage" if st_ else "water level and elevation"),  # release gate: the title names the search ("water level"); storage only where USGS publishes it
+    for a, b in (("river access not confirmed", "shore access not confirmed"), ("Every stage and reading in a table", "Every reading in a table"),  # Lake Michigan review 2026-11-11: river words on a lake page
+                 ("how the percentile is calculated", "how the percentile is calculated" if G.get("p") is not None else "how each number is calculated"),
+                 ("Data: USGS, NOAA, NWS.", "Data: NOAA, NWS." if G["lake"] == "IGLD" else "Data: USGS, NOAA, NWS."),  # a Great Lake page reads no USGS data
+                 ("water level and flow", "water level, elevation and storage" if st_ else "water level and elevation"),  # release gate: the title names the search ("water level"); storage only where USGS publishes it
                  ("E. coli results at stations on this river within", "E. coli results at stations on the rivers within"), ("E. coli samples on this stretch", "E. coli samples nearby"), ("within 40 mi on this river", "within 40 mi on the rivers here"), ("for this stretch", "near this lake"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
                  ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
                  ("cfs = cubic feet of water passing the gauge each second. Gage height is the gauge’s own scale, not water depth.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d),
