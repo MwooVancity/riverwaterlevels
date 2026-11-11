@@ -756,8 +756,27 @@ def nws_static(lat, lon, prev):
     return out
 
 
+RING = [(r * dy, r * dx) for r in (0.05, 0.1, 0.2) for dy, dx in ((0, -1), (0, 1), (1, 0), (-1, 0), (1, -1), (-1, -1), (1, 1), (-1, 1))]
+
+
+def marine_zone(lat, lon, ring=False):
+    """The NWS marine zone at the point, else (ring=True, coast pages) the nearest within about 20 km: tide stations sit on piers and in harbours
+    outside every zone (full audit 2026-11-10: Astoria showed 'No active NWS alerts' under a Columbia River Bar gale warning). "" = looked, none.
+    Raises when NWS does not answer, so the caller keeps the old answer instead of storing 'none'."""
+    for dy, dx in [(0, 0)] + (RING if ring else []):
+        f = thr_json("https://api.weather.gov/zones?type=marine&point=%.4f,%.4f" % (lat + dy, lon + dx), NWS_H).get("features") or []
+        if f:
+            return f[0]["properties"]["id"]
+    return ""
+
+
 def fetch_nws(lat, lon, prev=None, site=""):
     S = nws_static(lat, lon, prev)
+    if site in COASTS and "marine" not in S:  # weekly with the rest of static; coast pages only (COASTS is data/coasts.csv)
+        try:
+            S["marine"] = marine_zone(lat, lon, ring=True)
+        except Exception as e:
+            note("nws.marine", "failed", e)
     pt = S["points"]
     out = {"fetched_at": now_iso(), "static": S, "tz": pt.get("timeZone"), "county_ugc": (pt.get("county") or "").rsplit("/", 1)[-1], "radar": pt.get("radarStation"), "radar_ll": S["radar_ll"], "periods": [], "alerts": None, "obs": None}
     p0 = prev if isinstance(prev, dict) else {}
@@ -796,6 +815,9 @@ def fetch_nws(lat, lon, prev=None, site=""):
         note("nws.grid", "failed", e)
     try:
         a = thr_json("https://api.weather.gov/alerts/active?point=%.4f,%.4f" % (lat, lon), NWS_H)
+        if S.get("marine"):  # the water beside a coast station: gale, small craft, hazardous seas
+            seen = {x.get("id") for x in a.get("features", [])}
+            a["features"] = a.get("features", []) + [x for x in thr_json("https://api.weather.gov/alerts/active?zone=%s" % S["marine"], NWS_H).get("features", []) if x.get("id") not in seen]
         out["alerts"] = [dict({k: (x["properties"].get(k)) for k in ("event", "severity", "areaDesc", "headline", "ends", "expires", "senderName")},
                               states=sorted({u[:2] for u in ((x["properties"].get("geocode") or {}).get("UGC") or [])})) for x in a.get("features", [])]
     except Exception as e:

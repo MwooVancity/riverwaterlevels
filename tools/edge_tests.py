@@ -8,6 +8,21 @@ from lib import wx as wx_mod
 
 
 def run():
+    # full audit 2026-11-10: a coast station on a pier sits outside every marine zone; the nearest zone within the ring is used, an NWS outage raises
+    real = collect.thr_json
+    try:
+        collect.thr_json = lambda u, *a, **k: {"features": [{"properties": {"id": "PZZ210"}}]} if "point=46.2073,-123.8683" in u else {"features": []}
+        assert collect.marine_zone(46.2073, -123.7683, ring=True) == "PZZ210", "edge: coast station outside its marine zone found no zone"
+        assert collect.marine_zone(46.2073, -123.7683) == "", "edge: a river gauge searched the ring"
+        assert collect.marine_zone(10.0, 10.0, ring=True) == "", "edge: no zone nearby is not ''"
+        collect.thr_json = lambda u, *a, **k: (_ for _ in ()).throw(OSError("down"))
+        try:
+            collect.marine_zone(46.2, -123.7, ring=True)
+            raise AssertionError("edge: NWS down was stored as 'no marine zone'")
+        except OSError:
+            pass
+    finally:
+        collect.thr_json = real
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
     from lib import directory
