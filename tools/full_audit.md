@@ -79,6 +79,9 @@ Run: tell Claude "run the full audit" in this folder. It reads this file and fol
    - What is the next country or kind by money, and is it blocked?
    - Read PLAN.md "Drawing board" items 1-9: state, owner and next action for each, each with a measured number.
 
+9. **The ex-black-hat reviewer (owner 2026-11-11)**
+   - A former cheater now on our side reads the site the way Google's spam systems and a skeptical rater would, and names everything that looks like a trick even when built honestly. Brief: `tools/blackhat_review.md`.
+
 ## Then (Claude, in this session)
 1. Merge the findings. Drop duplicates and anything without proof. Check the top 5 FIX items yourself with one read each.
 2. Write `tools/full_audit_last.md`: date, one line per finding, ranked by harm to readers first, then money, then owner time. Overwrite the previous one: one file, never a pile of them.
