@@ -50,6 +50,21 @@ def ga4(days):
     print(f"GA4 last {days} days sessions by source (engaged seconds per session): " + ", ".join(f"{k} {v} ({e / v:.0f} s)" for k, v, e in rows[:12]))
     ai = sum(v for k, v, _ in rows if any(a in k for a in AI))
     print(f"AI assistant sessions: {ai}")
+    r = c.run_report(RunReportRequest(property=GA4_PROPERTY, date_ranges=[DateRange(start_date=f"{days}daysAgo", end_date="today")],
+                                      dimensions=[Dimension(name="landingPage")], metrics=[Metric(name="sessions"), Metric(name="userEngagementDuration")], limit=10000))
+    print("GA4 engaged seconds per session by page kind (helpful-content 6, long clicks; copy weekly into PLAN Numbers): " + by_kind((x.dimension_values[0].value, int(x.metric_values[0].value), float(x.metric_values[1].value)) for x in r.rows))
+
+
+def by_kind(rows):
+    """'gauge 40 sessions (31 s), hub 3 sessions (12 s)' from (landing path, sessions, engaged seconds); kinds as check.py kind_of names them."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from check import kind_of
+    tot = {}
+    for path, n, e in rows:
+        p = path.split("?")[0].strip("/")
+        k = "other" if path in ("(not set)", "") else kind_of((p + "/index.html") if p else "index.html")
+        tot[k] = [tot.get(k, [0, 0])[0] + n, tot.get(k, [0, 0])[1] + e]
+    return ", ".join(f"{k} {n} sessions ({e / n:.0f} s)" for k, (n, e) in sorted(tot.items(), key=lambda kv: -kv[1][0]) if n) or "no sessions"
 
 
 if __name__ == "__main__":

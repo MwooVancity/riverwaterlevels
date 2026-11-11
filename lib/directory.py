@@ -419,7 +419,29 @@ def state_blocks(rows, Gs):
         if rows_:
             out += _sec("state_movers", "Rising and falling fastest, last 24 hours", table(["Gauge", "24 h change in flow"], rows_, right=(1,)),
                         "Source: USGS Water Data API; change between each gauge's latest flow and its reading 24 hours earlier.")
-    return out + forecast_section(rows, Gs, nm)
+    return out + state_alerts(rows, Gs, lk) + forecast_section(rows, Gs, nm)
+
+
+def state_alerts(rows, Gs, lk, cap=40):
+    """Every NWS alert in force at a gauge in the state ('Every page its own' 3): one row per gauge and alert, the same live_alerts the gauge page shows.
+    A gauge whose alert check failed or is older than 3 h is counted as unknown, never as 'no alert'. No alert at any gauge = no section (the statewide count above says so)."""
+    got, unknown = [], 0
+    for r in rows:
+        G = Gs[r["site"]]
+        fa = (G["rec"].get("nws") or {}).get("fetched_at")
+        al = live_alerts(G)
+        if al is None or not fa or hours_old(fa, G["now"]) > stale_after("alerts"):
+            unknown += 1
+            continue
+        for a in al:
+            end = a.get("ends") or a.get("expires")
+            got.append(tr([lk(r), esc(a.get("event") or "NWS alert"), esc(a.get("severity") or "not stated"), esc(tzl(parse_t(end), G["zone"])) if end else "not stated"]))
+    if not got:
+        return ""
+    more = "<p>%d more alert rows are on the gauges' own pages.</p>" % (len(got) - cap) if len(got) > cap else ""
+    return _sec("state_alerts", "NWS alerts in force at a gauge", table(["Gauge", "Alert", "Severity", "Until"], "".join(got[:cap])) + more +
+                ("<p>Alert check unknown for %d gauge%s (failed or older than 3 h).</p>" % (unknown, "" if unknown == 1 else "s") if unknown else ""),
+                "Source: National Weather Service alerts (api.weather.gov) for each gauge location, as on each gauge page. No alert shown does not mean conditions are safe.")
 
 
 def hub_blocks(river, rows, Gs):
@@ -701,7 +723,8 @@ def trust_pages(built_count, built_rows):
         '<h2 id="hourly">Hourly weather table</h2><p>Each row covers 3 hours in the gauge&rsquo;s local time (station time on coast pages). Temperature is the first hour; wind, gusts, rain and thunder are the highest in the 3 hours; visibility is the lowest; sky is the NWS hourly short forecast for the first hour; the wind arrow points where the wind blows. Rain amounts are liquid water, the NWS 6-hour totals spread evenly over each hour. A day or night forecast chance covers the whole period, so it can be higher than any single hour. Darker cells mean a higher value in that row. Every hour is one tap below the table.</p>'
         "<h2>Comparison with the gauge's record</h2><p>Computed from the USGS daily mean flow record : the highest daily mean of the last 7 days, the last day before those 7 days with a daily mean that high or higher, the last day before those 7 days above the 90th percentile for its date, the days above the 75th percentile in the last 30 days, and the rank of this month's mean among the same days in other years (years with at least 80% of days).</p>"
         "<h2>Earlier years, annual peaks and the rating</h2><p>The same 50 days in earlier years are USGS daily means shifted to the same calendar dates. Annual peaks are USGS annual peak streamflow, with the median and largest peak by decade for decades with at least five peaks. The rating curve is the USGS gage height to flow table for the gauge, thinned for display; the dot is the latest reading. The 12-month chart is USGS daily means with the 25th to 75th percentile band and median for each date.</p>"
-        "<h2>Rate of rise and fall</h2><p>The latest reading minus the reading closest to 1, 3, 6, 12 and 24 hours earlier (within 20 minutes or 60% of the reporting interval). The arrow is steady when the flow changed by 1% or less. Where flow cycles several times a day within a tide the change is not shown, because it would compare two phases of a cycle; the 24-hour range is shown instead. Where flow readings swing without following the gage height (lock-and-dam or backwater effects), the headline uses the gage height and says so; the table still lists the flow changes.</p>"
+        "<h2 id=\"windows\">How today compares: the windows</h2><p>Each comparison names its window: today's date in past years (Typical for this date), the last 7 and 28 days, this month, and all days on record (how often each flow is reached).</p>"
+        "<h2 id=\"rate\">Rate of rise and fall</h2><p>Each card is the latest reading minus the reading closest to 1, 3, 6, 12 and 24 hours earlier (within 20 minutes or 60% of the reporting interval). The arrow is steady when the flow changed by less than " + str(FLAT_PCT) + "% or less than " + str(FLAT_CFS) + " cfs, the same cut-off as the headline word. Where flow cycles several times a day within a tide the change is not shown, because it would compare two phases of a cycle; the 24-hour range is shown instead. Where flow readings swing without following the gage height (lock-and-dam or backwater effects), the headline uses the gage height and says so; the table still lists the flow changes.</p>"
         "<h2>Flood stages, crests, impacts and outlook</h2><p>Flood stages, historic crests, impact statements, the long-range flood outlook and river forecasts are National Weather Service products for the forecast point linked to the USGS gauge, shown as published. Crest dates that the NWS gives without a time are shown as that date. Dashed lines on the gage height chart are drawn only where they fall inside the chart's range.</p>"
         "<h2>Rain</h2><p>Recent rain totals are NWS River Forecast Center multisensor estimates on an about 2.5-mile grid at the gauge location. The 24-hour product is hourly; the 2-day and 3-day products are daily, so each window shows its own end time. Forecast rain totals and the hourly heatmap come from the NWS gridpoint forecast.</p>"
         "<h2>Snow, water temperature, outlook, watershed</h2><p>Snow water equivalent is from the three nearest USDA SNOTEL stations within 37 miles; a station may not drain to the gauge. Water temperature by month is the mean of all published daily mean values in each calendar month; months with fewer than 150 values are marked. The 8 to 14 day and 6 to 10 day outlooks are NOAA Climate Prediction Center products at the gauge location. Watershed characteristics and water quality assessments are U.S. EPA StreamCat and ATTAINS values for the reach and for assessment units within about a quarter mile of the gauge, shown as published.</p>"
@@ -756,16 +779,18 @@ def sitemap(urls, lastmod):
     return '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">%s</urlset>' % items
 
 
-def llms(built):
-    """llms.txt: what the site is, where the pages and the data files are, how to credit the sources."""
+def llms(built, world=()):
+    """llms.txt: what the site is, where the pages and the data files are, how to credit the sources. `built` and `world` ([title, url, lat, lon, country]) are the indexable pages only (build.py filters with sitemap_ok)."""
     kind = lambda r: "coast" if "/coast/" in r["dashboard_url"] else "lake" if "/lake/" in r["dashboard_url"] else "river"
     lines = ["# %s" % BRAND, "", "> Live water levels for US rivers, lakes and reservoirs, and tide stations: one page per gauge with the latest reading and its observed time, how today compares with that gauge's own record, NWS forecasts and alerts. Official data only (USGS, NOAA National Weather Service, NOAA CO-OPS tides, and the lake's operator: CDEC, Reclamation, TWDB); every number names its source and time; tide predictions are labelled predictions." + (" Also gauge pages from the official agencies of %s." % " and ".join(world_countries()) if world_countries() else ""), "",
-             "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each gauge page has a machine-readable copy at <page URL>data.json.", "- Embeddable live panel per page: %s/embed<page path> (free, with a visible link to the page)." % SITE_URL,
-             "- Credits: U.S. Geological Survey; NOAA National Weather Service; NOAA CO-OPS; each lake's operator as named on its page. Provisional data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL)]
+             "- Sitemap: %s/sitemap.xml" % SITE_URL, "- Each US gauge page has a machine-readable copy at <page URL>data.json (readings with units and times, the source, its terms page, the credit line and a citation line). Pages outside the US have none yet.", "- Embeddable live panel per US page: %s/embed<page path> (free, with a visible link to the page)." % SITE_URL,
+             "- Credits: U.S. Geological Survey; NOAA National Weather Service; NOAA CO-OPS; each lake's operator and each non-US agency as named on its page. Provisional data are subject to revision.", "- Methodology: %s/methodology/ ; data sources and terms: %s/data-sources/" % (SITE_URL, SITE_URL)]
     for k, head in (("river", "River gauges"), ("lake", "Lakes and reservoirs"), ("coast", "Tides and coastal water levels")):  # AI search cites by what people ask (lake level, tides): one list per kind (2026-11-08)
         grp = [r for r in built if kind(r) == k]
         if grp:
             lines += ["", "## %s" % head, ""] + ["- [%s, %s](%s%s)" % (river_at(r["river"], r["place"]) if k == "river" else r["river"], r["state"], SITE_URL, r["dashboard_url"]) for r in sorted(grp, key=lambda r: (r["state"], r["river"], r["place"]))]
+    if world:  # helpful-content 4 (2026-11-11): the world pages were missing from the list AI assistants read
+        lines += ["", "## Outside the US", ""] + ["- [%s, %s](%s%s)" % (w[0], w[4], SITE_URL, w[1]) for w in sorted(world, key=lambda w: (w[4], w[0]))]
     return "\n".join(lines) + "\n"
 
 
