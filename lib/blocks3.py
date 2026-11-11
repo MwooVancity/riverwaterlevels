@@ -375,19 +375,24 @@ def b_limits(G):
     if not rows:
         return None
     now_v = {"cfs": G.get("lv") if not G.get("stage_only") else None, "ft": G["sg"][-1][1] if G.get("sg") else None}
-    out = ""
+    out, used = "", set()
     for r in rows:
         v = now_v.get(r["unit"]) if r["agency_gauge"] == G["site"] else None
         thr = float(r["threshold"]) if r.get("threshold") else None
         cmp_ = ""
-        if v is not None and thr is not None:
-            cmp_ = " Now at this gauge: %s %s, %s the %s %s in this rule (%s)." % (fmtc(v) if r["unit"] == "cfs" else "%.2f" % v, r["unit"], "above" if v > thr else "below" if v < thr else "at", fmtc(thr) if r["unit"] == "cfs" else "%.2f" % thr, r["unit"], esc(G["obs"]))
+        if v is not None and thr is not None:  # phone review 2026-11-11: the reading and its time once in the lead, one short word per rule, the agency's own number
+            used.add(r["unit"])
+            cmp_ = " <i>Now %s %s %s.</i>" % ("above" if v > thr else "below" if v < thr else "at", esc(r["threshold"]), r["unit"])
         elif r["agency_gauge"] and r["agency_gauge"] != G["site"]:
             cmp_ = " This rule names %s, not this gauge." % esc(r["agency_gauge"])
         out += '<p><b>%s</b> (%s%s): &ldquo;%s&rdquo;%s</p>' % (esc(r["source_name"]), esc(r["activity"]), (", " + esc(r["season"])) if r.get("season") else "", esc(r["quote"]), cmp_)
+    lead = "%d rule%s from %s." % (len(rows), "" if len(rows) == 1 else "s", " and ".join(sorted({r["source_name"] for r in rows})))
+    for u in sorted(used):
+        lead += " Now at this gauge: %s %s (%s)." % (fmtc(now_v[u]) if u == "cfs" else "%.2f" % now_v[u], u, esc(G["obs"]))
+    out = "<p><b>%s</b> The agency's own words; rules change, so check the source before you go.</p>" % lead + out
     src = "; ".join('<a href="%s" rel="noopener">%s</a> (%s, read %s)' % (esc(r["source_url"]), esc(r["source_name"]), esc(r["page_date"] or "no date on the page"), esc(fdate(r["read_on"]))) for r in {r["source_url"]: r for r in rows}.values())  # one source line per agency page, however many rules it carries
     return block("limits", "Rules the agencies publish for this water", "agency",
-                 "<p>The agency's own words; rules change, so check the source before you go.</p>" + out,
+                 out,
                  "Source: %s. Quoted word for word." % src, "local_rules")
 
 

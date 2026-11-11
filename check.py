@@ -1411,7 +1411,7 @@ def selftest():
     _keep, _b3._LIMITS = _b3._LIMITS, [_lr, dict(_lr, agency_gauge="USGS 2", quote="Q2"), dict(_lr, until="2020-01-01", quote="old")]
     _bd = _b3.b_limits({"site": "1", "lv": 412.0, "sg": [], "obs": "now"})["body"]
     _b3._LIMITS = _keep
-    assert "412 cfs, below the 700 cfs" in _bd and "names USGS 2, not this gauge" in _bd and "old" not in _bd, "selftest: limits block: %s" % _bd
+    assert "Now at this gauge: 412 cfs (now)" in _bd and "Now below 700 cfs" in _bd and _bd.count("412") == 1 and "names USGS 2, not this gauge" in _bd and "old" not in _bd, "selftest: limits block: %s" % _bd
     assert len(_tp) == 61 and _tp[0].split(";")[2] == "5.00 ft" and _tp[-1].split(";")[2] == "6.50 ft (forecast)", "selftest: chart readout points wrong: %s" % _tp[-1]
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
