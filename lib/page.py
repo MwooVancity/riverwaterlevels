@@ -179,8 +179,8 @@ def embed_snippet(url, name):
     """The code a club, marina or county page pastes (owner 2026-11-08 backlinks): the live panel in an iframe plus one plain, visible link under it,
     because a link inside an iframe sits on our own domain and earns nothing. The anchor is the place's name, never stuffed keywords (Google: widget links
     must be visible and natural)."""
-    return ('<iframe src="%s/embed%s" width="100%%" height="520" loading="lazy" title="%s"></iframe>\n<p><a href="%s%s">%s</a>, live from River Water Levels</p>'
-            % (SITE_URL, url, esc(name), SITE_URL, url, esc(name)))
+    return ('<iframe src="%s/embed%s" width="100%%" height="520" loading="lazy" title="%s"></iframe>\n<p>Live data from <a href="%s%s" rel="nofollow">River Water Levels</a></p>'
+            % (SITE_URL, url, esc(name), SITE_URL, url))
 
 
 def embed_code(G):
@@ -188,7 +188,7 @@ def embed_code(G):
     if G.get("feed"):
         return ""
     name = "%s water level" % river_at(G["river"], G["place"])
-    return '<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The link under the panel takes readers to this page.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
+    return '<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The credit line under the panel is optional.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
 
 
 def b_official_links(G):
@@ -222,7 +222,10 @@ def b_official_links(G):
 def data_meta(G, name, page_url, observed):
     """data.json's source, terms, credit and citation (backlinks asset 2: open, cite us). Credit and terms are the register's own (data/sources.json), verbatim."""
     sid = "coops" if G.get("coast") else G["agy"]["src"] if G.get("agy") else "usgs"
-    src = ("NOAA CO-OPS tide predictions above MLLW (no water level is measured at this station)" if G.get("tables") else "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast")
+    lv = level_of(G) if G.get("coast") else None
+    src = ("NOAA CO-OPS tide predictions above MLLW (no water level is measured at this station)" if G.get("tables") else
+           "NOAA CO-OPS water level above MLLW at station %s, %s, %.1f km away (this station has tide predictions only), preliminary data not yet quality-checked by NOAA" % (lv["id"], lv["name"], lv["km"]) if lv else
+           "NOAA CO-OPS water level above MLLW, preliminary data not yet quality-checked by NOAA" if G.get("coast")
            else ("%s station %s, provisional" % (G["agy"]["name"], G["agy_st"])) if G.get("agy") else "USGS Water Data API, provisional data subject to revision")
     s = SOURCES.get(sid) or {}
     return {"source": src, "credit": s.get("credit") or "", "terms": s.get("terms_url") or "",
@@ -509,7 +512,7 @@ def lake_words(h, G):
             for a, b in (("This page&#x27;s data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)", "This page&#x27;s data as JSON: 7 days of NOAA high and low tide predictions"),
                          ('<p class="src">Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation.</p>', ""),
                          ("Water levels are preliminary until NOAA verifies them.", "NOAA tide predictions do not include wind, air pressure or river flow, so the water can be higher or lower than predicted."),
-                         ("this station&#x27;s live panel", "this station&#x27;s tide panel"), ("Embed this live panel", "Embed this tide panel"), ("%s water level&lt;/a&gt;, live from River Water Levels" % esc(G["river"]), "%s tide times&lt;/a&gt;, from River Water Levels" % esc(G["river"])),
+                         ("this station&#x27;s live panel", "this station&#x27;s tide panel"), ("Embed this live panel", "Embed this tide panel"),
                          (">Live station<", ">On this site<"), ("title=&quot;%s water level&quot;" % esc(G["river"]), "title=&quot;%s tide times&quot;" % esc(G["river"])), ("tide times and water level", "tide times and tide table"),
                          ("Water level is the water surface above mean lower low water", "Tide heights are above mean lower low water"), ("in feet; it is not depth.", "in feet; not water depth."), (", how the tide comparison is calculated", "")):
                 h = h.replace(a, b)
@@ -607,9 +610,7 @@ def build_tab(tab, G, pages):
     if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
         title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
-        title = mk_title("%s tides today: tide times and chart, %s" % (place, st))  # audit #27: was up to 141 characters (Google cuts near 60); the searched words first, station id and water level are on the page
-        if len(title) > 60:
-            title = mk_title("%s tides today, %s" % (place, st))
+        title = mk_title("%s tides: tide times and water level%s, %s" % (place, ", water temperature" if wt_ else "", st))  # audit #27: was up to 141 characters with the place twice; searched words first. Must keep every H1 word (check.py rank_checks: the 60-char cut broke the gate 2026-11-11); a tide-table page's swap turns "tide times and water level" into "tide times and tide table"
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
@@ -646,7 +647,9 @@ def build_tab(tab, G, pages):
         "@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "dateModified": iso(G["lt"]), "isPartOf": {"@type": "WebSite", "name": BRAND, "url": SITE_URL, "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}},
         "about": {"@type": "Place", "name": "%s, %s" % (rp, st), "geo": {"@type": "GeoCoordinates", "latitude": round(G["lat"], 4), "longitude": round(G["lon"], 4)}},
         "mainEntity": ({"@type": "Dataset", "name": "NOAA tide station %s, %s, %s: %s" % (G["site"], rp, st, "tide predictions" if G.get("tables") else "water level and tide predictions"),
-                        "description": ("7 days of high and low tide predictions at NOAA tide station %s; no water level is measured there." if G.get("tables") else "3-day water level readings above MLLW and tide predictions at NOAA tide station %s, preliminary data.") % G["site"],
+                        "description": ("7 days of high and low tide predictions at NOAA tide station %s; no water level is measured there." % G["site"] if G.get("tables") else
+                                        "Tide predictions at NOAA tide station %s and 3-day water level readings above MLLW from NOAA station %s, %s, %.1f km away, preliminary data." % (G["site"], level_of(G)["id"], level_of(G)["name"], level_of(G)["km"]) if level_of(G) else
+                                        "3-day water level readings above MLLW and tide predictions at NOAA tide station %s, preliminary data." % G["site"]),  # black-hat review 2026-11-11: Clearwater named the predictions-only station as the readings' source
                         "creator": {"@type": "Organization", "name": "NOAA National Ocean Service, CO-OPS", "url": "https://tidesandcurrents.noaa.gov/"}} if G.get("coast") else  # review 2026-11-09: every coast page named USGS as the data's creator
                        {"@type": "Dataset", "name": "USGS gauge %s, %s, %s: flow and gage height" % (G["site"], rp, st), "description": "7-day flow and gage height readings and daily mean flow by year at USGS gauge %s, provisional data subject to revision." % G["site"],
                         "license": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits", "creator": {"@type": "Organization", "name": "U.S. Geological Survey", "url": "https://www.usgs.gov/"}}) | {"url": url,

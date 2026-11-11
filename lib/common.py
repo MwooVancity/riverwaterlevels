@@ -218,7 +218,8 @@ def ordinal(n):
 
 def prep_lower(place):
     """USGS names put 'Near', 'At', 'Above', 'Below' (and river names 'Of', 'The', 'And') in capitals inside a name ('Glenwood Bridge Near Boise', 'Red River Of The North'): as small words they are lower case."""
-    return re.sub(r"(?<=\S )(Near|At|Above|Below|Of|The|And)(?= \S)", lambda m: m.group(1).lower(), place or "")
+    s = re.sub(r"(?<=\S )(Near|At|Above|Below|Of|The|And)(?= \S)", lambda m: m.group(1).lower(), place or "")
+    return re.sub(r"\bthe (?=Dalles|Woodlands)", "The ", s).replace("L&d", "L&D")  # black-hat review 2026-11-11: "at the Dalles", "Claiborne L&d" read as scraped; display only, slugs are lower case
 
 
 def river_at(river, place):

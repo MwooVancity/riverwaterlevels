@@ -222,7 +222,7 @@ def plus_world():
 def world_links():
     """Only pages that exist: a river with no cache file yet has no page to link to."""
     on = [p for p in world_pages() if os.path.exists(os.path.join(ROOT, "cache", "_river-%s.json" % p["slug"]))]
-    return ('<p class="sub">%s</p>' % " &middot; ".join('<a href="/%s/">%s water levels</a>' % (p["slug"], esc(world_name(p))) for p in on)) if on else ""
+    return ('<p class="sub">Outside the US: %s</p>' % " &middot; ".join('<a href="/%s/">%s</a> (%s)' % (p["slug"], esc(world_name(p)), COUNTRY.get(p.get("feed"), "")) for p in on)) if on else ""  # black-hat review 2026-11-11: "X river water levels" x10 read as keyword anchors
 
 
 def demand():
@@ -305,7 +305,7 @@ def state_page(st, rows, Gs, sd=None, lakes_hub=False, waters=()):
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
             '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>%s' % (
                 esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs, state_blocks(rows, Gs) + state_waters(st, waters)))  # ponytail: one lake hub so far; a dict when a second state gets one
-    return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
+    return shell("%s river levels and flows: %d gauge%s | %s" % (name, len(rows), "" if len(rows) == 1 else "s", BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 
 def lake_state_page(d, linked, now):
@@ -620,7 +620,7 @@ def world_page(page, d, now, linked=None):
                  "Source: %s fetched %s. The site rebuilds about once an hour. %s %s" % (agency, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone)), label, order)) +
             world_blocks(page, rows, now))
     n = len(rows)
-    return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)
+    return shell("%s water levels today: %d gauge%s | %s" % (world_name(page), n, "" if n == 1 else "s", BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)
 
 
 def world_slug(name):
@@ -672,9 +672,9 @@ def trust_pages(built_count, built_rows):
     t["/embed/"] = prose_page("Add to your site", "/embed/", (
         "<p>Every gauge page has a small live panel you can put on your own site: the current flow, gage height, how today compares with the record, and any active NWS alert, rebuilt about every 30 minutes. It is free; the panel links back to the full page.</p>"
         "<h2>How</h2><p>Open the gauge page you want, click <b>Put this gauge's live panel on your own site</b> under Official pages, and copy its address. Then paste this where you want the panel, with that address:</p>"
-        "<p>Each page has its own code, ready to copy, under <b>Embed this live panel on your site</b>. It looks like this:</p><pre class=\"card\">&lt;iframe src=\"%s/embed/river/&lt;river&gt;/&lt;place&gt;/\" width=\"100%%\" height=\"520\" loading=\"lazy\" title=\"River conditions from %s\"&gt;&lt;/iframe&gt;<br>&lt;p&gt;&lt;a href=\"https://riverwaterlevels.com/river/&lt;river&gt;/&lt;place&gt;/\"&gt;&lt;River at place&gt; water level&lt;/a&gt;, live from River Water Levels&lt;/p&gt;</pre>"
+        "<p>Each page has its own code, ready to copy, under <b>Embed this live panel on your site</b>. It looks like this:</p><pre class=\"card\">&lt;iframe src=\"%s/embed/river/&lt;river&gt;/&lt;place&gt;/\" width=\"100%%\" height=\"520\" loading=\"lazy\" title=\"River conditions from %s\"&gt;&lt;/iframe&gt;<br>&lt;p&gt;Live data from &lt;a href=\"https://riverwaterlevels.com/river/&lt;river&gt;/&lt;place&gt;/\" rel=\"nofollow\"&gt;River Water Levels&lt;/a&gt;&lt;/p&gt;</pre>"
         "<p>Example for the Potomac River at Little Falls: <code>%s/embed/river/potomac-river-md/little-falls/</code>.</p>"
-        "<h2>Terms</h2><p>Free for any site. Please keep the line under the panel: it links your readers to the full page with the forecast and history. The data stays the agencies' (USGS, NOAA National Weather Service), shown with its observed time; it is not a flood warning.</p>" % (SITE_URL, esc(BRAND), SITE_URL)), "Put a free live panel of a river gauge (flow, gage height, alerts) on your own site with one iframe.")
+        "<h2>Terms</h2><p>Free for any site. The credit line under the panel is optional; the panel itself links to the full page with the forecast and history. The data stays the agencies' (USGS, NOAA National Weather Service), shown with its observed time; it is not a flood warning.</p>" % (SITE_URL, esc(BRAND), SITE_URL)), "Put a free live panel of a river gauge (flow, gage height, alerts) on your own site with one iframe.")
     t["/privacy/"] = prose_page("Privacy", "/privacy/", "<p>Updated 2 November 2026.</p><p>This site uses Google Analytics, which sets cookies, to count visits and see which pages are used. Google receives your IP address and browser details. You can opt out with Google's browser add-on (<a href=\"https://tools.google.com/dlpage/gaoptout\" rel=\"nofollow noopener\">tools.google.com/dlpage/gaoptout</a>).</p><p>This site shows advertising served by Google AdSense. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this website and other websites. Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to this site and other sites on the internet.</p>"
                                 "<p>In the European Economic Area, the UK and Switzerland, advertising and analytics cookies wait for your answer to Google's consent message. See <a href=\"https://policies.google.com/technologies/partner-sites\" rel=\"nofollow noopener\">how Google uses information from sites that use its services</a>.</p><p>You can opt out of personalized advertising by visiting Google Ads Settings (<a href=\"https://adssettings.google.com\" rel=\"nofollow noopener\">adssettings.google.com</a>). You can opt out of a third-party vendor's use of cookies for personalized advertising at <a href=\"https://www.aboutads.info\" rel=\"nofollow noopener\">aboutads.info</a>. The site is served by Cloudflare, which keeps standard server logs (your IP address and browser details, as with any web request).</p>"
                                 "<p>On US pages, your browser contacts government servers directly when a page loads: radar images from radar.weather.gov, camera images from USGS (usgs-nims-images.s3.amazonaws.com), map images from basemap.nationalmap.gov, and, to show the newest readings and alerts, the USGS Water Data API (api.waterdata.usgs.gov) and the National Weather Service API (api.weather.gov). Those servers receive your IP address and browser details, as with any web request.</p>"

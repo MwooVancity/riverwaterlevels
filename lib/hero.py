@@ -295,7 +295,7 @@ def _nt_txt(G):
 
 def level_of(G):
     """The nearby NOAA station a prediction-only tide page reads its water level from ({id, name, km}), or None (the station reads its own)."""
-    return (G["rec"].get("coops") or {}).get("level") if G.get("coast") else None
+    return ((G.get("rec") or {}).get("coops") or {}).get("level") if G.get("coast") else None
 
 
 def level_at(G):
@@ -361,7 +361,7 @@ def hero(G, pages=None):
     chg = G["chg"]
     ndam = upstream_dams(G)
     if p is not None and ndam >= 1:
-        cap += " About %s upstream (our estimate: EPA StreamCat dam density times the drainage area) may have changed flows during this record." % ("1 dam" if ndam == 1 else "%s dams" % format(ndam, ","))  # audit 2026-11-10 #11: the count is our arithmetic, said so with its source
+        cap += " About %s upstream (our estimate: EPA StreamCat&rsquo;s density of National Inventory of Dams entries in this watershed, times the drainage area) may have changed flows during this record." % ("1 dam" if ndam == 1 else "%s dams" % format(ndam, ","))  # audit 2026-11-10 #11: the count is our arithmetic, said so with its source
     if p is not None and G["osc"]:
         cap += " " + osc_word(G, "cap") + ": the comparison uses the daily mean."
     if p is not None and TAILWATER.search(G["row"].get("raw_name") or ""):

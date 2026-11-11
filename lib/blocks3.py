@@ -815,7 +815,7 @@ def b_official_marks(G):
 def b_also(G):
     """What else the agency measures at this gauge right now: flow, water temperature, air temperature."""
     f = G["feed"]
-    words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
+    words = {"Q": "Flow", "WT": "Water temperature", "LT": "Air temperature at the gauge (the weather tile is the nearest weather station)", "DFH": "Clearance under the bridge", "VA": "Flow speed", "VM": "Flow speed", "LF": "Conductivity", "PH": "pH", "O2": "Oxygen", "TR": "Turbidity"}
     own = lambda v: (", %s" % esc(tzl(parse_t(v[3]), G["zone"]))) if len(v) > 3 and v[3] and G["sg"] and parse_t(v[3]) != G["sg"][-1][0] else ""  # a reading of another time than the level names its own time, never the level's
     rows = "".join(tr([words.get(k, esc(v[2])) + own(v), "%s %s" % (fmt(v[0]), esc(v[1] or ""))], right=(1,)) for k, v in sorted(f.get("also", {}).items()) if isinstance(v[0], (int, float)))
     if f.get("ship") in ("low", "normal", "high"):

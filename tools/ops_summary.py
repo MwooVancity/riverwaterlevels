@@ -27,10 +27,10 @@ def capped(lines):
     return lines[:CAP] + (["- ... and %d more" % (len(lines) - CAP)] if len(lines) > CAP else [])
 
 
-def stop_reason():
-    """The newest refresh run's stop lines (STOPPED, FAIL, SITE FAIL, Traceback tail) from its finish job; None when unreadable."""
+def stop_reason(wf="refresh.yml"):
+    """The newest run's (refresh, or dryrun for code waiting on check) stop lines (STOPPED, FAIL, SITE FAIL, Traceback tail) from its finish job; None when unreadable."""
     try:
-        run = json.loads(subprocess.run(["gh", "run", "list", "--workflow", "refresh.yml", "--limit", "1", "--json", "databaseId,createdAt"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60).stdout)[0]
+        run = json.loads(subprocess.run(["gh", "run", "list", "--workflow", wf, "--limit", "1", "--json", "databaseId,createdAt"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60).stdout)[0]
         jobs = json.loads(subprocess.run(["gh", "run", "view", str(run["databaseId"]), "--json", "jobs"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60).stdout)["jobs"]
         job = next((j for j in jobs if "finish" in j["name"]), jobs[-1])
         log = subprocess.run(["gh", "run", "view", "--job", str(job["databaseId"]), "--log"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
@@ -67,6 +67,17 @@ def main():
             out.append("Newest refresh run %s (%s), why it did not deploy:" % (run["databaseId"], run["createdAt"]))
         out += ["    " + x for x in lines] or ["    (no stop line found)"]
     out.append("")
+    try:  # 2026-11-11: every check run was green while its gates failed, so 27 commits sat unpromoted all day and nobody saw it
+        ahead = int(subprocess.run(["gh", "api", "repos/{owner}/{repo}/compare/main...check", "-q", ".ahead_by"], capture_output=True, text=True, timeout=60).stdout.strip())
+    except Exception:
+        ahead = None
+    if ahead:
+        run, lines = stop_reason("dryrun.yml")
+        if not any(x.startswith("refresh OK") for x in lines):
+            out.append("## Code changes waiting to go live")
+            out.append("**%d commit(s) on check are not on main: the newest check run did not pass, so nothing was promoted.**%s" % (ahead, " Run %s:" % run["databaseId"] if run else ""))
+            out += ["    " + x for x in lines if not x.startswith("CARRIED")] or ["    (no stop line found)"]
+            out.append("")
 
     sys.path.insert(0, ROOT)
     from lib.ledger import catch_line
