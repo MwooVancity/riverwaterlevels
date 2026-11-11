@@ -561,16 +561,16 @@ def b_tides(G):
         c = G["rec"]["coops"]
         t = {"station": G["site"], "name": G["row"]["raw_name"].rsplit(",", 1)[0], "mi": 0, "fetched_at": c["fetched_at"],
              "rows": [{"t": parse_t(x[0]).astimezone(G["zone"]).strftime("%Y-%m-%d %H:%M"), "v": x[1], "type": x[2]} for x in c["hilo"]]}
-    if not t or not t.get("rows") or not (G.get("osc") or t.get("mi", 99) <= 10):  # tidal by the flow cycle, or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
+    if not t or not t.get("rows") or not (G.get("tidal") or G.get("coast") or t.get("mi", 99) <= 10):  # tidal by the 12.4 h test (audit 2026-11-10 #2: a dam's daily cycle is not a tide), or a NOAA prediction station within 10 mi (Hudson at Green Island sits 2.5 mi from the Troy station below the Federal Dam)
         return None
     now_l = G["now"].astimezone(G["zone"]).strftime("%Y-%m-%d %H:%M")  # station local time; past rows dropped (hater 2026-10-27: past tides under "next two days")
     t = dict(t, rows=[r for r in t["rows"] if r["t"] >= now_l])
     if not t["rows"]:
         return None
     rows = "".join(tr([esc(_tide_t(r["t"], i == 0 or r["t"][:10] != t["rows"][i - 1]["t"][:10])), "High tide" if r["type"] == "H" else "Low tide", "%.1f ft" % (r["v"] + 0.0 if round(r["v"], 1) else 0.0)], right=(2,)) for i, r in enumerate(t["rows"]))
-    near = "" if G.get("osc") else '<p class="src">The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, %.0f mi away, where the river is tidal.</p>' % t["mi"]
+    near = "" if G.get("tidal") or G.get("coast") else '<p class="src">The flow at this gauge shows no tidal cycle; the table is for the nearest NOAA tide station, %.0f mi away, where the river is tidal.</p>' % t["mi"]
     stn = esc(t["name"] or t["station"])
-    kind = "Tides" if G.get("osc") else "Tides nearby"
+    kind = "Tides" if G.get("tidal") else "Tides nearby"
     fa = hours_old(t.get("fetched_at"), G["now"]) if t.get("fetched_at") else None
     nd = len({r["t"][:10] for r in t["rows"]})
     if G.get("tables") and nd >= 3:
@@ -987,7 +987,7 @@ def b_reservoir(G):
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
         ("Share of conservation capacity", "%.1f%%" % t["pct_cons"] if t.get("pct_cons") is not None else "Unknown"),
         ("Conservation storage", "{:,.0f} acre-ft".format(t["cons_storage_af"]) if t.get("cons_storage_af") is not None else "Unknown"),  # the agency's own figure, never rounded to 3 figures (owner 2026-11-07)
-        ("Total storage, all pools" + ("" if any(r.get("parameter_code") == "00054" for r in ((G["rec"].get("usgs") or {}).get("rows") or [])) else " (the first-screen tile)"),"{:,.0f} acre-ft".format(t["storage_af"]) if t.get("storage_af") is not None else "Unknown"),  # phone review 2026-11-07 (Georgetown, Texana, Lavon): the tile's TWDB total and this table's conservation storage differed with nothing naming which was which
+        ("Total storage, all pools" + ("" if ((G["rec"].get("usgs") or {}).get("rows") and series(G["rec"], "00054")) else " (the first-screen tile)"),"{:,.0f} acre-ft".format(t["storage_af"]) if t.get("storage_af") is not None else "Unknown"),  # phone review 2026-11-07 (Georgetown, Texana, Lavon): the tile's TWDB total and this table's conservation storage differed with nothing naming which was which
         ("Conservation capacity", "{:,.0f} acre-ft".format(t["cons_cap_af"]) if t.get("cons_cap_af") is not None else "Unknown"),
         ("Surface area", "{:,.0f} acres".format(t["area_ac"]) if t.get("area_ac") is not None else "Unknown"),
         ("Water level (TWDB daily)", "%.2f ft" % t["elev_ft"] if t.get("elev_ft") is not None else "Unknown")))
@@ -1099,8 +1099,13 @@ def b_key_facts(G):
     else:
         loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
         where = ", ".join(x for x in (loc.get("county_name"), loc.get("state_name")) if x)
+        da = loc.get("drainage_area") or G["row"].get("drainage_sqmi")  # the inventory's area when station metadata lacks it (audit 2026-11-10 #7: no longer on the first screen)
+        try:
+            da = float(da) if da and float(da) > 0 else None
+        except (TypeError, ValueError):
+            da = None
         if where:
-            lines.append("%s is USGS gauge %s in %s%s." % (rp, G["site"], where, ("; it drains %s square miles" % fmt(loc["drainage_area"])) if loc.get("drainage_area") else ""))
+            lines.append("%s is USGS gauge %s in %s%s." % (rp, G["site"], where, ("; it drains %s square miles" % fmt(da)) if da else ""))
         fd = ((G["rec"].get("meta") or {}).get("ts") or {}).get("flow_daily")
         if fd:
             lines.append("USGS daily flow records here run from %s to %s." % (fdate(fd[0]), fdate(fd[1])))
