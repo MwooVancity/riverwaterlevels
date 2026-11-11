@@ -1941,11 +1941,18 @@ def fast(inv, sites):
     t_phase = _time.time()
     fetch_states(sites)  # statewide alerts + drought for each state hub
     _tick("phase state hubs", _time.time() - t_phase)
-    if not any(a.startswith("--shard=") and not a.startswith("--shard=0/") for a in sys.argv):
+    if my_shard()[0] == 0:
         fetch_twdb_state()
-        fetch_world()
-        write_health("run", len(sites))  # world feeds run last: without this no alarm could see them
+    fetch_world()  # each shard fetches its own world pages (my_shard; audit 2026-11-10 #37: all on shard 0 took 553 s against 90-180 s)
+    write_health("run", len(sites))  # world feeds run last: without this no alarm could see them
+    if my_shard()[0] == 0:
         fetch_census()
+
+
+def my_shard():
+    """(i, n) from --shard=i/n; (0, 1) without it (a run by hand, the dry run's --world-only)."""
+    a = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--shard=")), None)
+    return tuple(map(int, a.split("/"))) if a else (0, 1)
 
 
 STATE_FIPS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08", "CT": "09", "DE": "10", "DC": "11", "FL": "12", "GA": "13", "HI": "15", "ID": "16", "IL": "17", "IN": "18", "IA": "19", "KS": "20", "KY": "21", "LA": "22", "ME": "23", "MD": "24", "MA": "25", "MI": "26", "MN": "27", "MS": "28", "MO": "29", "MT": "30", "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39", "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49", "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
@@ -2634,12 +2641,14 @@ def fetch_census():
 
 
 def fetch_world():
-    """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Shard 0 only. A gauge that fails keeps its last row;
+    """cache/_river-<slug>.json for the pages in data/world-pages.json: PEGELONLINE (WSV), no key. Each collect shard fetches its own pages (my_shard). A gauge that fails keeps its last row;
     three failures in a row stop asking, so a dead feed stales only these pages and never holds the shard for minutes."""
     base, miss, ctx = "https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/", {}, {}  # failures in a row per feed: a dead PEGELONLINE once skipped Canada and England too (review 2026-11-04)
     if os.path.exists(os.path.join(CACHE, "_rhine.json")) and not os.path.exists(os.path.join(CACHE, "_river-rhine.json")):
         os.replace(os.path.join(CACHE, "_rhine.json"), os.path.join(CACHE, "_river-rhine.json"))
     pages = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))
+    i_, n_ = my_shard()
+    pages = [p for j, p in enumerate(pages) if (j + 1) % n_ == i_]  # page j on shard j+1: shard 0 keeps the Texas and census files; ponytail: one shard per river page, split a river's stations when one nears the shard's hour
     for page in pages:
         path = os.path.join(CACHE, "_river-%s.json" % page["slug"])
         try:

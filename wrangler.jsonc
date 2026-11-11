@@ -17,6 +17,10 @@
     { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }
   ],
   "triggers": { "crons": ["*/3 * * * *"] },
+  // Workers Logs (audit 2026-11-10 #41): poll, build-trigger and fallback errors are console.error lines in the dashboard (Workers > riverwaterlevels > Logs).
+  // Free plan: 200,000 log events a day, 3 days kept. Every request is one event and the free plan stops at 100,000 requests a day, plus 480 cron runs,
+  // so sampling every invocation fits; past the daily cap Cloudflare only drops logs, never a page. ponytail: on Workers Paid lower the rate when requests near its 20 million included log events a month.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "routes": [
     { "pattern": "riverwaterlevels.com", "custom_domain": true }
   ]

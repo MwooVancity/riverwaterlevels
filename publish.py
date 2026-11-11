@@ -47,7 +47,9 @@ if kept:  # the carried pages keep their sitemap entry and their place in _urls.
         json.dump(d_, open(uj, "w", encoding="utf-8"))
 if kept:
     print("kept the previous page (before the checks, so links to it stay valid) for %d gauge(s) whose build failed: %s" % (len(kept), ", ".join(kept[:5])))
-rc = subprocess.call([sys.executable, "-I", os.path.join(ROOT, "check.py"), N, "--carry"])
+# --checked (refresh.py, audit 2026-11-10 #35): the gate's check.py --carry passed on this same dist_next and no later gate carried a page in.
+# Run by hand, or after copying failed gauges' old pages in above, the checks run here.
+rc = 0 if "--checked" in sys.argv and not kept else subprocess.call([sys.executable, "-I", os.path.join(ROOT, "check.py"), N, "--carry"])
 if rc:
     sys.exit("checks failed: release NOT published, dist/ unchanged")
 shutil.rmtree(P, ignore_errors=True)

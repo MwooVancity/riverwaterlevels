@@ -108,9 +108,16 @@ def main():
     out.append("")
 
     if len(sys.argv) > 1 and os.path.isfile(sys.argv[1]):
-        probs = [ln.strip() for ln in open(sys.argv[1], encoding="utf-8", errors="replace") if "PROBLEM" in ln]
+        lines = open(sys.argv[1], encoding="utf-8", errors="replace").read().splitlines()
+        probs = [ln.strip() for ln in lines if "PROBLEM" in ln]
         out.append("## Health check problems (%d)" % len(probs))
         out += capped(["- " + p.replace("PROBLEM: ", "") for p in probs]) or ["None."]
+        out.append("")
+        # audit 2026-11-10 #12: the hourly live-number checks (watchdog.yml appends their output to the same file); a MISMATCH is a live page showing a number its agency does not
+        wrong = [ln.strip() for ln in lines if "MISMATCH" in ln or " FAULT" in ln or "WARNING" in ln]
+        out.append("## Live pages whose numbers disagree with the agency now (%d)" % len(wrong))
+        ran = [ln.strip()[:160] for ln in lines if ln.startswith(("truth_live:", "world truth:"))]
+        out += capped(["- " + w for w in wrong]) or ["None (%s)." % "; ".join(ran) if ran else "**Unknown: the live checks printed no result this hour.**"]
     print("\n".join(out))
 
 

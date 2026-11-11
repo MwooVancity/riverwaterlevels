@@ -8,13 +8,17 @@
 
 const LATEST = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/latest-continuous/items";
 const UA = "riverwaterlevels.com (https://riverwaterlevels.com/about/)";
-const CHUNK = 300; // ids per call; ponytail: past ~1,500 gauges switch to one national query filtered in code (Phase 0: 1 call, 804 KB / 10 min)
+const CHUNK = 300; // ids per call
+// Past 5 chunks (1,500 gauges) one national "what changed" query, filtered here, replaces ids/300 calls a poll (audit 2026-11-10 #29: 47 calls a poll,
+// 940 an hour of the key's 1,000, at 14,000 gauges). Measured 2026-11-11: 2,396 rows, 1.0 MB for a 5-min window, sorted by last_modified, so a page cap
+// never skips a row. ponytail: parsing 1 MB needs more than the free 10 ms CPU; Workers Paid is due before 1,500 gauges anyway (wrangler.jsonc).
+const NATIONAL = 5 * CHUNK;
 const OVERLAP_MS = 120000; // the cursor steps back 2 min so a row USGS commits late is not missed (the merge drops repeats)
 
 export default {
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(poll(env));
-    ctx.waitUntil(build(env, new Date(event.scheduledTime)));
+    ctx.waitUntil(poll(env).catch((e) => console.error("poll failed:", String(e)))); // Workers Logs (wrangler.jsonc observability, audit #41)
+    ctx.waitUntil(build(env, new Date(event.scheduledTime)).catch((e) => console.error("build trigger failed:", String(e))));
   },
 
   async fetch(req, env, ctx) {
@@ -39,7 +43,7 @@ export default {
         if (to) return secure(new Response(null, { status: 301, headers: { location: to } }), url);
       }
       if (res.status !== 304 && (!res.ok || !(res.headers.get("content-type") || "").includes("text/html"))) return secure(res, url);
-      const m = (await sites(env))[url.pathname], L = m ? await stored(env, m[0]) : null; // sites() is cached per isolate; only a gauge page reads the stored copy
+      const m = siteOf(await sites(env), url.pathname), L = m ? await stored(env, m[0]) : null; // sites() is cached per isolate; only a gauge page reads the stored copy
       const g = m && L && L.g && L.g[m[0]];
       // never swap a flagged (Ice, Equipment, ...) or sentinel reading: the built page prints the flag in words, the edge does not
       if (!g || !g.f || !(Date.parse(g.f[1]) > Date.parse(m[1]) || (Date.parse(g.f[1]) === Date.parse(m[1]) && g.f[0] !== m[3])) || g.f[2] || !(g.f[0] > -999)) return secure(tag(res, m ? "static" : "static-unknown", L), url);
@@ -51,6 +55,7 @@ export default {
       }
       return secure(tag(rewrite(res, g, m), "swapped", L), url);
     } catch (e) {
+      console.error("edge fallback to the static page:", url.pathname, String(e));
       return env.ASSETS.fetch(req);
     }
   },
@@ -61,7 +66,7 @@ function perm(res) {
   return res.status === 307 ? new Response(null, { status: 301, headers: { location: res.headers.get("location") } }) : res;
 }
 
-let SITES = null; // url -> [site, built reading time, time zone], from the built live-sites.json; kept for the life of this isolate
+let SITES = null; // the built live-sites.json as text, kept for the life of this isolate; siteOf() reads one row out of it
 
 // The hourly build (2026-10-26 review: GitHub's own schedule ran 7 of 52 refreshes in a day; this cron runs on time). Once an hour, at the
 // first tick of the hour, when the deployed build is over 40 min old, ask GitHub to start refresh.yml. GitHub's one-run-at-a-time group
@@ -84,11 +89,26 @@ async function start(env, file) { // called only from build(): the cron
 }
 
 async function sites(env) {
-  if (!SITES) {
-    const list = await (await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json")).json(); // [[site, url, built iso, tz]]
-    SITES = Object.fromEntries(list.map((x) => [x[1], [x[0], x[2], x[3], x[4]]]));
+  if (SITES === null) {
+    const r = await env.ASSETS.fetch("https://riverwaterlevels.com/live-sites.json");
+    if (!r.ok) throw new Error("live-sites.json " + r.status); // never keep an error page as the list: the next request tries again
+    SITES = await r.text();
   }
   return SITES;
+}
+
+// One page's row of live-sites.json without parsing the whole list (audit 2026-11-10 #30: a JSON.parse of every row per isolate passes the 10 ms CPU
+// near 1,500-3,000 gauges). build.py writes [[site,url,built iso,tz,built flow],...] with no spaces and no "[" or "]" inside a value, so the row is
+// the brackets around '","<url>",'. Returns [site, built iso, tz, built flow], as the old url map did, or null.
+function siteOf(text, path) {
+  const i = text.indexOf('","' + path + '",');
+  if (i < 0) return null;
+  try {
+    const x = JSON.parse(text.slice(text.lastIndexOf("[", i), text.indexOf("]", i) + 1));
+    return x[1] === path ? [x[0], x[2], x[3], x[4]] : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 // One gauge out of the stored copy without parsing all of it (scale debate 2026-11-07: a whole-copy JSON.parse on every page request grows with the
@@ -121,20 +141,24 @@ async function poll(env) {
   const since = prev.cur ? new Date(Date.parse(prev.cur) - OVERLAP_MS).toISOString() : null; // first run: everything
   const cutoff = Date.now() - 8 * 86400000; // the service returns decades-old values for dead sensors
   let changed = 0, cur = prev.cur || null, rem = prev.rem;
-  for (let i = 0; i < ids.length; i += CHUNK) {
-    let next = LATEST + "?monitoring_location_id=" + ids.slice(i, i + CHUNK).map((x) => "USGS-" + x).join(",") + "&parameter_code=00060,00065"
-      + (since ? "&last_modified=" + since + "/.." : "") + "&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier,last_modified,unit_of_measure&limit=10000&f=json";
+  const national = since && ids.length > NATIONAL, want = new Set(ids); // the first run (no cursor) stays per chunk: a national "everything" is ~20,000 rows
+  const groups = [];
+  if (national) groups.push("");
+  else for (let i = 0; i < ids.length; i += CHUNK) groups.push("monitoring_location_id=" + ids.slice(i, i + CHUNK).map((x) => "USGS-" + x).join(",") + "&");
+  for (const grp of groups) {
+    let next = LATEST + "?" + grp + "parameter_code=00060,00065"
+      + (since ? "&last_modified=" + since + "/.." : "") + "&skipGeometry=true&properties=monitoring_location_id,parameter_code,value,time,qualifier,last_modified,unit_of_measure" + (national ? "&sortby=last_modified" : "") + "&limit=10000&f=json";
     for (let page = 0; next && page < 5; page++) {
       const r = await fetch(next, { headers: env.USGS_API_KEY ? { "X-Api-Key": env.USGS_API_KEY, "User-Agent": UA } : { "User-Agent": UA } });
       if (r.headers.get("x-ratelimit-remaining")) rem = Number(r.headers.get("x-ratelimit-remaining"));
-      if (!r.ok) return; // keep the stored copy and the cursor as they are; the next poll retries
+      if (!r.ok) { console.error("poll: USGS answered", r.status, "; stored copy and cursor kept"); return; } // the next poll retries
       const j = await r.json();
       for (const f of j.features || []) {
         const p = f.properties || {}, v = parseFloat(p.value), t = Date.parse(p.time);
         if (p.last_modified && (!cur || p.last_modified > cur)) cur = p.last_modified;
         const k = p.parameter_code === "00060" ? "f" : p.parameter_code === "00065" ? "h" : null;
         const s = String(p.monitoring_location_id || "").slice(5);
-        if (!k || isNaN(v) || isNaN(t) || t < cutoff) continue;
+        if (!k || isNaN(v) || isNaN(t) || t < cutoff || !want.has(s)) continue; // national rows of gauges we do not publish are dropped
         if (String(p.unit_of_measure || "").toLowerCase() !== (k === "f" ? "ft^3/s" : "ft")) continue; // edge test 2026-11-07: a unit change at USGS would swap m^3/s into a cfs page; same allow-list as lib/core.py UNIT_OF
         const q = Array.isArray(p.qualifier) ? p.qualifier.join(",") : (p.qualifier || "");
         g[s] = g[s] || {};
