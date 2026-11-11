@@ -28,6 +28,18 @@ def run():
     for raw, want in (("SAN DIEGO 6.6 S", "6.6 mi south of San Diego"), ("NORTH ISLAND NAS", "North Island Naval Air Station"), ("SAN DIEGO INTL AP", "San Diego International Airport"),
                       ("CHEVY CHASE 1.2 SW", "1.2 mi southwest of Chevy Chase"), ("BOULDER 2 NNE", "2 mi north-northeast of Boulder"), ("ZZ 3 XQ", "Zz 3 Xq"), ("", "")):
         assert acis_name(raw) == want, "edge: station name %r gave %r" % (raw, acis_name(raw))
+    # PLAN 0i: lakes read their past years in their own elevation code; never as flow, never in another datum than the page shows
+    assert collect.lake_code({"usgs": {"rows": [{"parameter_code": "00062"}, {"parameter_code": "00065"}]}}) == "00062", "edge: lake history not in the lake's code"
+    assert collect.lake_code({"usgs": {"rows": [{"parameter_code": "00060"}, {"parameter_code": "00062"}]}}) == "00060", "edge: a gauge with flow lost its flow history"
+    assert collect.lake_code({}) == "00060", "edge: empty record"
+    from lib.charts import b_multiyear
+    from lib.hero import last_year_flow
+    td = datetime.date.today()
+    my = {"as_of": td.isoformat(), "span": 3, "series": {str(td.year): [1000.0, 1001.0, 1002.0], str(td.year - 1): [990.0, 991.0, 992.0]}, "pc": "00062"}
+    bl = b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "00062"})
+    assert bl and "1001.00 ft" in bl["body"] and "cfs" not in bl["body"] + bl["source"], "edge: lake past years not shown in ft"
+    assert b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "62614"}) is None, "edge: lake history in another datum than the page"
+    assert last_year_flow({"rec": {"multiyear": my}, "ldate": td}) is None, "edge: a lake level read as last year's flow"
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
     from lib import directory

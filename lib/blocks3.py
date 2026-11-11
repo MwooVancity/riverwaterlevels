@@ -49,6 +49,8 @@ def sustained_pct(G, days):
     """Average percentile of the last N daily mean flows vs USGS daily statistics for those dates: 'has flow sat low/normal/high over the week/month', for irrigators and anglers."""
     rec = G["rec"]
     stats, m = rec.get("stats"), rec.get("multiyear") or {}
+    if m.get("pc", "00060") != "00060":  # flow statistics only; a lake's elevation series (PLAN 0i) is never compared with them
+        return None
     if not stats or not m.get("as_of"):
         return None
     as_of = datetime.date.fromisoformat(m["as_of"])

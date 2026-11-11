@@ -651,6 +651,8 @@ def last_year_flow(G):
     """(USGS daily mean flow, "Nov 10, 2025") on this calendar date one year ago; None when USGS has no value for that exact date in the cache.
     Audit 2026-11-10 #3: never another day (the old code took the window's last day, Nov 4 for Nov 10) and never a claim that USGS has not published it."""
     m = G["rec"].get("multiyear") or {}
+    if m.get("pc", "00060") != "00060":  # a lake's elevation series (PLAN 0i) is never a flow
+        return None
     d = G["ldate"]
     ly = d.replace(year=d.year - 1, day=28) if (d.month, d.day) == (2, 29) else d.replace(year=d.year - 1)
     v = (m.get("ly") or {}).get(ly.isoformat())

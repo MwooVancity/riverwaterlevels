@@ -165,7 +165,7 @@ def b_record(G):
                      r["first_year"], r["last_year"], "{:,}".format(r["n_days"]), fdate(r["as_of"])), "usgs")
 
 
-def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls):
+def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls, what="Daily mean flow in cfs"):
     L, B = (56, 30) if W > 500 else (46, 28)
     vals = [v for y in years for v in ser[y] if v is not None]
     vmin, vmax, ticks = nice_ticks(min(vals), max(vals))
@@ -193,7 +193,7 @@ def _multi_svg(ser, years, asof, span, W, Hh, fs, nx, cls):
             segs.append(seg)
         for s in segs:
             lines += '<polyline points="%s" fill="none" stroke="%s" stroke-width="%s"%s/>' % (" ".join(s), YCOL[n], "2.8" if n == 0 else "1.8", (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "")
-    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Daily mean flow in cfs for the same %d-day window in %d years">%s%s%s</svg>' % (cls, W, Hh, span, len(years), grid, xl, lines)
+    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s for the same %d-day window in %d years">%s%s%s</svg>' % (cls, W, Hh, what, span, len(years), grid, xl, lines)
 
 
 def b_multiyear(G):
@@ -207,16 +207,22 @@ def b_multiyear(G):
     asof = datetime.date.fromisoformat(m["as_of"])
     if (G["ldate"] - asof).days > 10:
         return None
-    svg = _multi_svg(ser, years, asof, span, 760, 260, 11, 6, "cw") + _multi_svg(ser, years, asof, span, 340, 260, 12, 4, "cn")
+    pc = m.get("pc", "00060")
+    lake = pc != "00060"
+    if lake and pc != G.get("lake"):  # PLAN 0i: the history must be in the same code and datum as the level the page shows, never another
+        return None
+    what, unit, val = ("Daily mean lake level in ft", "ft", lambda x: "%.2f ft" % x) if lake else ("Daily mean flow in cfs", "cfs", lambda x: "%s cfs" % fmtc(x))
+    svg = _multi_svg(ser, years, asof, span, 760, 260, 11, 6, "cw", what) + _multi_svg(ser, years, asof, span, 340, 260, 12, 4, "cn", what)
     legend = '<p class="legend">%s</p>' % " &nbsp; ".join('<b><span style="color:%s" aria-hidden="true">%s</span>&nbsp;%s</b>' % (YCOL[n], "&#9473;" if not YDASH[n] else "&#9548;", esc(y)) for n, y in enumerate(years))
     rows = ""
     for y in years:
         v = [x for x in ser[y] if x is not None]
         if len(v) >= 0.8 * span:
-            rows += tr([esc(y), "%s cfs" % fmtc(sum(v) / len(v)), "%s cfs" % fmtc(max(v))], right=(1, 2))
+            rows += tr([esc(y), val(sum(v) / len(v)), val(max(v))], right=(1, 2))
     start = asof - datetime.timedelta(days=span - 1)
-    return block("multi_year", "The same %d days in earlier years" % span, "hist", svg + legend + table(["Year", "Mean flow", "Highest day"], rows, right=(1, 2)),
-                 "Source: USGS daily mean flows (Water Data API). Each line is the %d days from %s to %s, shifted to the same calendar dates in earlier years; gaps are days without a published value. Recent days are provisional." % (
+    src = ("Source: USGS daily mean lake elevation (Water Data API, parameter %s, %s). " % (esc(pc), esc(LAKE_DATUM.get(pc, "the gauge's own datum"))) if lake else "Source: USGS daily mean flows (Water Data API). ")
+    return block("multi_year", "The same %d days in earlier years" % span, "hist", svg + legend + table(["Year", "Mean level" if lake else "Mean flow", "Highest day"], rows, right=(1, 2)),
+                 src + "Each line is the %d days from %s to %s, shifted to the same calendar dates in earlier years; gaps are days without a published value. Recent days are provisional." % (
                      span, md(start), md(asof)), "usgs")
 
 

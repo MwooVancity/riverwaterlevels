@@ -922,16 +922,23 @@ def fetch_land(lat, lon):
     return {"downloaded": datetime.date.today().isoformat(), "rows": rows} if rows else None
 
 
-def fetch_daily(site, h):
-    """Full daily-mean flow record, pulled at most once per 20 h per gauge and stored gzipped under cache/daily/. The summary below is derived from it."""
+def lake_code(rec):
+    """The USGS code a gauge's daily history is read in: flow where USGS measures flow, else the lake's own elevation code (the one its page shows,
+    lib/common LAKE_CODES order). PLAN 0i: lakes asked for flow history and got none, so no lake page showed past years."""
+    codes = {r.get("parameter_code") for r in ((rec or {}).get("usgs") or {}).get("rows") or []}
+    return "00060" if "00060" in codes else next((c for c in LAKE_CODES if c in codes and c.isdigit()), "00060")
+
+
+def fetch_daily(site, h, pc="00060"):
+    """Full daily-mean record of one USGS code (flow by default; a lake's elevation code for lakes), pulled at most once per 20 h per gauge and stored gzipped under cache/daily/. The summary below is derived from it."""
     import gzip
-    p = os.path.join(CACHE, "daily", site + ".json.gz")
+    p = os.path.join(CACHE, "daily", site + ("" if pc == "00060" else "-" + pc) + ".json.gz")  # one file per code: a lake's levels never mix with flow
     if os.path.exists(p) and (datetime.datetime.now().timestamp() - os.path.getmtime(p)) < 20 * 3600:
         return json.load(gzip.open(p, "rt"))
     rows = []
 
     def pull(extra):
-        d = thr_json(BASE + "daily/items?monitoring_location_id=USGS-%s&parameter_code=00060&statistic_id=00003&limit=50000&f=json%s" % (site, extra), h, 240)
+        d = thr_json(BASE + "daily/items?monitoring_location_id=USGS-%s&parameter_code=%s&statistic_id=00003&limit=50000&f=json%s" % (site, pc, extra), h, 240)
         feats = d.get("features", [])
         for f in feats:
             q = f["properties"]
@@ -1641,7 +1648,7 @@ def fetch_extras(site, rec, h, log):
                     *((("usace_pool", lambda: fetch_usace_pool(*LAKE_USACE[site])),) if site in LAKE_USACE else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
-                    ("multiyear", lambda: multiyear(fetch_daily(site, h)))):
+                    ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:
             continue
         if site in NOUSGS and key not in COAST_KEYS:
