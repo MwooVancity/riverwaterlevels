@@ -176,6 +176,7 @@ Keyword Planner worldwide (Oct 2025 to Sep 2026, account livedatacalc) plus Wiki
 12. NOAA CO-OPS: 4 calls per coast per hour, no published limit (300 coasts = 28,800 a day): watch 429s. RISE and CDEC publish no limit.
 
 ## Owner only
+- Links (drawing board 5, 0 sent until now): 40 emails ready in docs/outreach-emails.md, one per organization for the 13 live lake pages, each offering the free embed panel. Send after Email Routing is on (so they can reply to a site address); tell Claude which went and it dates them in data/outreach.csv. Proof: referring domains in Search Console Links, read 2026-12-11.
 - Owner alone decides: publisher name and contact email; pages opened to Google beyond the daily 25; ads and consent; Search Console; source keys; domain renewal; Cloudflare plan; outside uptime monitor; cutting any block.
 - Workers Paid ($5/mo), then GitHub variable `WORKERS_PAID`=1: 100,000 files; free is 100,000 requests a day shared, past it error 1027 until midnight UTC. Needed before ~5,300 gauges.
 - Publisher name and contact address; `data/publisher.json` email is empty.
