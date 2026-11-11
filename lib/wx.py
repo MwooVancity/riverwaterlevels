@@ -369,14 +369,24 @@ def suspect(series, unit, now):
     if not series:
         return False, ""
     pts = [(datetime.datetime.fromisoformat(t.replace("Z", "+00:00")), v) for t, v in series]
-    if pts[-1][0] > now + datetime.timedelta(hours=1):
+    if pts[-1][0] > now + FUTURE_SKEW:
         return True, "reading time is in the future"
     big = 50 if unit == "cm" else 0.5
     if len(pts) >= 2 and abs(pts[-1][1] - pts[-2][1]) > big and (pts[-1][0] - pts[-2][0]).total_seconds() <= 7200:
         return False, "Latest reading jumped sharply from the one before; it may be a sensor fault. "
-    if len(pts) >= 96 and (pts[-1][0] - pts[0][0]).days >= 6 and len({v for _, v in pts}) == 1:
-        return False, "Reading has not changed in %d days; the sensor may be stuck. " % (pts[-1][0] - pts[0][0]).days
+    step = 1 if unit == "cm" else 0.01  # one display step (1 cm, 0.01 m or ft): a river that moves less than that in 2 days is a sensor to doubt (full audit #16: only 6 identical days fired)
+    i = len(pts) - 1
+    lo = hi = pts[-1][1]
+    while i > 0 and max(hi, pts[i - 1][1]) - min(lo, pts[i - 1][1]) < step:
+        i -= 1
+        lo, hi = min(lo, pts[i][1]), max(hi, pts[i][1])
+    flat = pts[-1][0] - pts[i][0]
+    if len(pts) - i >= 24 and flat >= datetime.timedelta(hours=48):
+        return False, "Reading has not changed by %s or more in %s; the sensor may be stuck. " % ("1 cm" if unit == "cm" else "0.01 %s" % unit, ("%d days" % flat.days) if flat.days >= 3 else "%d hours" % (flat.total_seconds() // 3600))
     return False, ""
+
+
+FUTURE_SKEW = datetime.timedelta(minutes=10)  # full audit #13: a reading stamped later than now by more than an agency clock's skew is a wrong time (1 h let a daylight-saving slip through)
 
 
 def day_stats(feats):
@@ -446,6 +456,12 @@ def demo():
     assert "jumped" in suspect([[at(-1), 10], [at(0), 200]], "cm", t0)[1] and not suspect([[at(-1), 10], [at(0), 200]], "cm", t0)[0], "a jump shows, marked"
     assert "not changed" in suspect([[at(-i), 10] for i in range(168, -1, -1)], "cm", t0)[1], "a flat week is marked"
     assert suspect([[at(-i), 10 + i % 3] for i in range(168, -1, -1)], "cm", t0) == (False, "")
+    assert suspect([[at(1), 10]], "cm", t0)[0] and not suspect([[at(0.1), 10]], "cm", t0)[0], "full audit #13: a reading 1 h in the future (daylight-saving slip) did not hold, or 6 min of agency clock skew did"
+    q_ = lambda h: (t0 + datetime.timedelta(minutes=15 * h)).isoformat()
+    assert "not changed by 0.01 m" in suspect([[q_(-i), 1.234 + (i % 2) * 0.004] for i in range(200, -1, -1)], "m", t0)[1], "full audit #16: 50 h within 0.4 cm (no exact repeat) was not marked"
+    assert "not changed by 1 cm" in suspect([[at(-i), 10] for i in range(49, -1, -1)], "cm", t0)[1] and "49 hours" in suspect([[at(-i), 10] for i in range(49, -1, -1)], "cm", t0)[1], "full audit #16: two flat days were not marked"
+    assert suspect([[at(-i), 10] for i in range(40, -1, -1)], "cm", t0) == (False, "") and suspect([[q_(-i), 1.234 + i * 0.0002] for i in range(200, -1, -1)], "m", t0) == (False, ""), "full audit #16: 40 flat hours, or a river moving 4 cm in 2 days, was called stuck"
+    assert suspect([[at(-i), 10 if i < 50 else 20] for i in range(100, -1, -1)], "cm", t0)[1].startswith("Reading has not changed") and not suspect([[at(-i), 10 if i < 40 else 20] for i in range(100, -1, -1)], "cm", t0)[1].startswith("Reading has not"), "full audit #16: the flat stretch is not counted back from the newest reading"
     assert canada_alerts({"numberMatched": 1, "features": [{"properties": {"status_en": "issued"}, "geometry": None}]}) is None, "alerts with no shapes are unknown"
     arc = {}
     for v in (5, 9, 2):

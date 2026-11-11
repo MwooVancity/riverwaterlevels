@@ -515,9 +515,11 @@ def page_faults(url, h):
     holds nothing (check.py still runs on the whole build)."""
     try:
         if not _CK:
-            ck = {"__file__": os.path.join(common.ROOT, "check.py"), "__name__": "check"}
-            exec(compile(open(ck["__file__"], encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
-            _CK.update(ck)
+            import sys
+            if common.ROOT not in sys.path:
+                sys.path.insert(0, common.ROOT)
+            import check  # a module since full audit #47 (its main() runs only as a script)
+            _CK.update(vars(check))
         h = common.NEG_ZERO.sub(r"\1", h).replace(" ", " ")  # as build.py writes it and check_dir reads it
         return _CK["page_checks"](h, url.strip("/") + "/index.html") + _CK["world_rules"](h) + _CK["one_latest"](h)
     except Exception as e:

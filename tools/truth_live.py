@@ -132,6 +132,23 @@ def selftest():
     assert unchanged(list(so), so, {"1": {"at": new_}, "2": {"at": old_}, "/germany/x/": {"at": "2026-11-11"}}) == (["/river/a/", "/river/c/"], 1), "selftest: a carried page was checked, or a page with no build record was skipped"
     assert unchanged(list(so), so, {"1": {"at": new_}, "2": {"at": new_}, "3": {"at": new_}}) == (list(so), 0), "selftest: a full rebuild skipped pages"
     assert unchanged(list(so), so, {})[0] == list(so), "selftest: an empty build record skipped pages"
+    assert slipped(T_, 1.0, T_) and slipped(T_, 0.5, T_) and not slipped(T_, 0.25, T_) and not slipped(T_, 30, T_) and slipped(T_ + datetime.timedelta(minutes=20), 30, T_), "full audit #13: an exact 1 h daylight-saving slip passed, or USGS's latest lagging one reading failed"
+    global get
+    real_get = get
+    try:
+        lyp = 'var ID="USGS-01646500" <small>A year earlier, on Nov 8, 2025: 1,230 cfs (USGS daily mean).</small>'
+        tdp = 'var ID="USGS-01651750" <small>This gauge is tidal</small>'
+        import math
+        wave = lambda amp: json.dumps({"features": [{"properties": {"time": (T_ - datetime.timedelta(minutes=15 * i)).isoformat(), "value": 1000 + amp * math.sin(i * 15 / 60 * 2 * math.pi / 12.4)}} for i in range(192)]})
+        for dv, iv, want in ((1230.4, wave(800), ""), (1500.0, wave(800), "last year"), (1230.0, wave(0), "tidal")):
+            get = lambda u, t=60, dv=dv, iv=iv: json.dumps({"features": [{"properties": {"value": dv}}]}) if "/daily/" in u else iv
+            b_, s_ = [], []
+            assert spot_check({"/river/a/": lyp, "/river/t/": tdp, "/river/c/": lyp}, {"/river/c/"}, b_, s_, 0) == 2 and len(b_) == bool(want) and (not want or want in b_[0]), "full audit #13: spot check (last-year flow vs USGS daily mean, tidal label vs USGS flow) wrong for %r: %s" % (want, b_)
+        get = lambda u, t=60: (_ for _ in ()).throw(OSError("down"))
+        b_, s_ = [], []
+        assert spot_check({"/river/a/": lyp, "/river/t/": tdp}, set(), b_, s_, 0) == 0 and not b_ and len(s_) == 2, "full audit #13: a USGS outage passed or failed the spot check instead of skipping it"
+    finally:
+        get = real_get
     print("truth_live selftest OK")
 
 
@@ -334,7 +351,7 @@ def main():
                 skipped.append("%s: stage not verified (no USGS stage at the page's timestamp)" % pg["url"])
         elif ut < pg["t"]:  # gate audit 2026-11-08: a page time after USGS's latest is a future time or a time-zone slip. Practice: Selway's USGS 'latest' is from 2010 (the page reads another series), so only a real slip (1-26 h) or a time past now fails
             gap_h = (pg["t"] - ut).total_seconds() / 3600
-            (bad if pg["t"] > datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15) or 1 < gap_h <= 26 else skipped).append("%s: page reading time %s is after USGS's latest %s (future time or wrong time zone)" % (pg["url"], pg["t"].isoformat(), ut.isoformat()))
+            (bad if slipped(pg["t"], gap_h) else skipped).append("%s: page reading time %s is after USGS's latest %s (future time or wrong time zone)" % (pg["url"], pg["t"].isoformat(), ut.isoformat()))
         elif ut > pg["t"]:
             lag = (ut - pg["t"]).total_seconds() / 3600
             # a lagging page is stale, not WRONG (it shows its real age). A short lag is normal; only an extreme lag means our refresh is actually broken.
@@ -376,6 +393,7 @@ def main():
     n_air = air_check(html, carried, bad, skipped)
     n_fc = fc_check(html, carried, bad, skipped)
     n_rain = rain_check(html, carried, gauges, bad, skipped)
+    print("truth_live spot check: %d derived value(s) compared with USGS (last-year daily mean, tidal label)" % spot_check(html, carried, bad, skipped))
     record("mismatch" if bad else ("skipped" if len(skipped) > max(3, len(pages) // 20) else "ok"), len(pages), bad, skipped)
     print("truth_live air: %d pages' air temperature compared with the NWS station report at the same time" % n_air)
     print("truth_live forecast: %d pages' river forecast compared with the same NWS issuance" % n_fc)
@@ -392,32 +410,16 @@ def main():
     if stale:
         print("truth_live: %d gauge(s) lagging USGS by 3 to %d h (warning only; the pages show their real age)" % (len(stale), STALE_FAIL_H))
     urls_ = sorted({b.split(": ", 1)[0] for b in bad})
-    if LOCAL and bad and len(urls_) > max(3, len(pages) // 20):  # many at once is a checker or feed fault: still page by page (a carried page is its verified live copy), but said loudly; the watchdog names release days that ship nothing
+    import check  # one carry rule and one warning threshold (full audit #46): live copy from dist/ or the site, old times kept, _carried.json
+    if LOCAL and bad and check.too_many(len(urls_), len(pages)):  # many at once is a checker or feed fault: still page by page (a carried page is its verified live copy), but said loudly; the watchdog names release days that ship nothing
         print("truth_live WARNING: %d of %d pages failed at once (checker wording or a feed outage?); each keeps its live copy or goes back to the queue" % (len(urls_), len(pages)))
     if LOCAL and bad and per_page(urls_):  # owner 2026-11-08 "fully automatic": one page never stops the release (2026-11-08: 11 unreadable lake pages over the old cap of 10 undid all 20 US picks); every failing page keeps its live copy or is sent back
-        cp = os.path.join(LOCAL, "_carried.json")
-        try:
-            carried = json.load(open(cp))
-        except (OSError, ValueError):
-            carried = []
-        newf = []
-        for u in urls_:
-            try:
-                html = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com" + u, headers={"User-Agent": "riverwaterlevels.com truth_live"}), timeout=30).read()
-            except urllib.error.HTTPError as e:
-                if e.code != 404:
-                    print("truth_live: could not carry", u, str(e)[:60])
-                    return 1
-                new_fail(LOCAL, u, [b for b in bad if b.startswith(u + ":")])  # release 2026-11-07: deleting the page left its links and sitemap entry and stopped the publish; now quarantine.py sends it back to the queue and the retry builds without it
-                newf.append(u)
-                continue
-            except Exception as e:
-                print("truth_live: could not carry", u, str(e)[:60])
-                return 1
-            open(os.path.join(LOCAL, u.strip("/"), "index.html"), "wb").write(html)
-            carried.append(u.strip("/") + "/index.html")
-            print("CARRIED previous live page for", u, "(this build's numbers did not match the source)")
-        json.dump(sorted(set(carried)), open(cp, "w"))
+        d_, newf = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), LOCAL), []
+        if not check.carry(d_, {u.strip("/") + "/index.html": [b for b in bad if b.startswith(u + ":")] for u in urls_}, None, newf):
+            return 1
+        for r_ in newf:  # release 2026-11-07: deleting the page left its links and sitemap entry and stopped the publish; now quarantine.py sends it back to the queue and the retry builds without it
+            u = "/" + r_.rsplit("index.html", 1)[0]
+            new_fail(d_, u, [b for b in bad if b.startswith(u + ":")])
         return 1 if newf else 0  # a new page that failed: the workflow's second try sends it back (quarantine.py reads _failed.json) and ships the rest
     return 1 if bad else 0
 
@@ -589,6 +591,65 @@ def tide_verdict(t, v, hilo):
     if t not in hilo:
         return "next tide %s is not a NOAA high or low time for this station" % t.isoformat()
     return None if abs(hilo[t] - v) <= 0.01 else "next tide %.3f ft on the page, NOAA predicts %.3f ft" % (v, hilo[t])
+
+
+LAST_YEAR = re.compile(r"A year earlier, on ([A-Z][a-z]{2} \d{1,2}, \d{4}): ([\d,.]+) cfs \(USGS daily mean\)|Last year: ([\d,.]+) cfs on ([A-Z][a-z]{2} \d{1,2}, \d{4}), the newest daily mean")
+USGS_DV = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/daily/items?monitoring_location_id=USGS-%s&parameter_code=00060&statistic_id=00003&time=%s&f=json"
+USGS_IV = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/continuous/items?monitoring_location_id=USGS-%s&parameter_code=00060&time=P2D&limit=1000&f=json"
+
+
+def ly_verdict(day, page_v, usgs):
+    """A page's 'a year earlier' flow against USGS's daily mean for that date: rounding to whole cfs plus 2% for a provisional value USGS has since revised."""
+    if not usgs:
+        return None
+    return None if abs(page_v - usgs[0]) <= max(1.0, 0.02 * abs(usgs[0])) else "last year's flow %s cfs on the page, USGS daily mean for %s is %s cfs" % (page_v, day, usgs[0])
+
+
+def spot_check(html, carried, bad, skipped, hour=None):
+    """Full audit #13: our own derived numbers, one page each a run (rotating by the hour, so every page comes round): the 'a year earlier' flow against
+    USGS daily values, and a 'This gauge is tidal' label against the flow USGS publishes now (it must still cycle within the day, lib.core.oscillating).
+    Two calls a run at any site size. A USGS outage is a skip, never a pass."""
+    from lib.core import oscillating
+    hour = int(datetime.datetime.now(datetime.timezone.utc).timestamp() // 3600) if hour is None else hour
+    sid = lambda h: (lambda m: m and (m.group(1) or m.group(2)))(GAUGE_ID.search(h))
+    ly = sorted((u, m) for u, h in html.items() if h and u not in carried and sid(h) for m in [LAST_YEAR.search(h)] if m)
+    n = 0
+    if ly:
+        u, m = ly[hour % len(ly)]
+        day = datetime.datetime.strptime(m.group(1) or m.group(4), "%b %d, %Y").date()
+        try:
+            vs = [float(f["properties"]["value"]) for f in json.loads(get(USGS_DV % (sid(html[u]), day.isoformat()))).get("features", []) if f["properties"].get("value") not in (None, "")]
+        except Exception as e:
+            skipped.append("%s: last-year flow not checked (USGS daily values: %s)" % (u, str(e)[:60]))
+        else:
+            w = ly_verdict(day, float((m.group(2) or m.group(3)).replace(",", "")), vs)
+            if not vs:
+                skipped.append("%s: USGS has no daily mean for %s" % (u, day))
+            elif w:
+                bad.append("%s: %s" % (u, w))
+            n += 1
+    td = sorted(u for u, h in html.items() if h and u not in carried and sid(h) and "This gauge is tidal" in h)
+    if td:
+        u = td[hour % len(td)]
+        try:
+            fs = json.loads(get(USGS_IV % sid(html[u]))).get("features", [])
+            fl = sorted((datetime.datetime.fromisoformat(f["properties"]["time"].replace("Z", "+00:00")), float(f["properties"]["value"]), None) for f in fs if f["properties"].get("value") not in (None, ""))
+        except Exception as e:
+            skipped.append("%s: tidal label not checked (USGS: %s)" % (u, str(e)[:60]))
+        else:
+            if len(fl) < 160:  # under 40 hours of 15-minute readings: too short to judge a cycle
+                skipped.append("%s: tidal label not checked (USGS returned %d readings for 2 days)" % (u, len(fl)))
+            elif not oscillating(fl):
+                bad.append("%s: page says the gauge is tidal, but USGS flow over the last 2 days does not cycle within the day" % u)
+            n += 1
+    return n
+
+
+def slipped(pt, gap_h, now=None):
+    """A page reading time after USGS's latest: past now (beyond 15 min of clock skew), or 30 min to 26 h ahead of USGS, is a future time or a time-zone
+    slip. Full audit #13: the old 1 < gap test let an exact 1 h daylight-saving slip pass. Under 30 min is USGS's latest endpoint lagging a reading or two."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    return pt > now + datetime.timedelta(minutes=15) or 0.5 <= gap_h <= 26
 
 
 def per_page(urls):
