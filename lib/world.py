@@ -112,6 +112,22 @@ def to_row(page, r):
                 hub_url="/%s/" % page["slug"], hub_slug=page["slug"], _built=True, _hub=False, _single=True, _ll=(r["lat"], r["lon"]), _lv=None, _band="–")
 
 
+def world_ld(page, r, url, feed, html):
+    """WebPage, Place and Dataset markup for a world gauge page, as a US gauge page carries (audit 2026-11-10 #25, owner decision 2: one standard page).
+    localize() drops the US block (it names USGS as creator); this one names the agency. The name is the page's own <title>, so the two never disagree."""
+    from html import unescape
+    from lib.directory import COUNTRY
+    t = re.search(r"<title>([^<]*)</title>", html)
+    where = "%s, %s" % (feed["head"], COUNTRY.get(page.get("feed"), "Germany"))
+    j = {"@context": "https://schema.org", "@type": "WebPage", "name": unescape(t.group(1)) if t else where, "url": common.SITE_URL + url, "dateModified": r["time"],
+         "isPartOf": {"@type": "WebSite", "name": common.BRAND, "url": common.SITE_URL, "publisher": {"@type": "Organization", "name": common.BRAND, "url": common.SITE_URL}},
+         "about": {"@type": "Place", "name": where, "geo": {"@type": "GeoCoordinates", "latitude": round(r["lat"], 4), "longitude": round(r["lon"], 4)}},
+         "mainEntity": {"@type": "Dataset", "name": "%s gauge %s, %s: water level" % (feed["agency"], feed["station"], where), "url": common.SITE_URL + url,
+                        "description": "Recent water level readings at %s gauge %s (%s); the agency can revise them." % (feed["agency"], feed["station"], feed["api"]),
+                        "creator": {"@type": "Organization", "name": feed["name"]}, "temporalCoverage": r["time"]}}
+    return '<script type="application/ld+json">%s</script>' % json.dumps(j, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
+
+
 SWAP = (("No active NWS alerts", "No active @WX@ weather alerts"), ("No active National Weather Service alerts were returned for this location.", "No active @WX@ weather alerts were returned for this location. River flood warnings are issued locally and are not in this feed."), ("The newest USGS flow reading", "The newest reading"), ("when USGS publishes", "when the agency publishes"), ("Latest USGS gage height", "Latest water level"), ("Solid line: USGS readings.", "Solid line: official readings."), ("NWS alerts unknown", "Official alerts unknown"), ("NWS alerts", "Official alerts"),
         ("Gage height", "Water level"), ("gage height", "water level"), ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "No river forecast is shown for this gauge."),
         ("We have no answer from the National Weather Service alert service for this location. Check weather.gov.", "No official alert feed is connected for this gauge. Check local authorities."),
@@ -704,4 +720,5 @@ def page(p, r, now, rows=(), keep=(), idx=None):
             w_ = lambda x: "%s %.2f m (%.1f ft) at %s" % ("High" if x[2] == "H" else "Low", x[1], x[1] * 3.28084, render.tzl(datetime.datetime.fromisoformat(x[0]), z_, date=False))
             html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "Next tide (prediction)", "%s %.2f <small>m</small>" % ("High" if nxt_[0][2] == "H" else "Low", nxt_[0][1]),
                           "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1, flags=re.S)
-    return row["dashboard_url"], localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
+    html = localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
+    return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)

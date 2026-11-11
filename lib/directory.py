@@ -183,7 +183,11 @@ def home(built, Gs, waters=()):
     body = ('<h1>%s</h1><p class="sub">Flow and water level at %d USGS river gauges across the US%s, with National Weather Service forecasts and alerts%s.</p>'
             '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
             % (esc(h1), len(built), esc(extra), esc(plus_world()), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", waters_list(waters), secs, SEARCH_JS + NEAR_JS))
-    return shell(h1 + " | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body)
+    return shell(h1 + " | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body, ld=SITE_LD)
+
+
+# audit 2026-11-10 #25: the home page names the site for search engines (gauge pages already say isPartOf this WebSite). No SearchAction: the search box filters in the browser, there is no search URL to point at.
+SITE_LD = '<script type="application/ld+json">%s</script>' % json.dumps({"@context": "https://schema.org", "@type": "WebSite", "name": BRAND, "url": SITE_URL + "/", "publisher": {"@type": "Organization", "name": BRAND, "url": SITE_URL}}, separators=(",", ":"))
 
 
 def world_pages():
@@ -242,7 +246,19 @@ def most_searched(groups, tiers, st):
             'A name shared with another river can count its searches too.</p>' % (esc(STATE_NAMES.get(st, st)), links))
 
 
-def state_page(st, rows, Gs, sd=None, lakes_hub=False):
+def state_waters(st, waters):
+    """Lakes, reservoirs and coasts in this state (audit 2026-11-10 #26: the Georgia hub listed no lakes while Lanier's and Allatoona's breadcrumbs name it).
+    One line each: the searched name and the place (no level: this list has no reading time to print beside one). Empty when the state has none."""
+    if not waters:
+        return ""
+    nm = lambda r: r["place"] + " tides" if r.get("coast") else r["river"]  # a coast is searched by its place, a lake by its own name (as on the home page)
+    items = "".join('<li><a href="%s">%s</a> <small>%s</small></li>' % (r["water_url"], esc(nm(r)), "NOAA tide station" if r.get("coast") else esc(r["place"]))
+                    for r in sorted(waters, key=lambda r: nm(r).lower()))
+    head = ("Lakes and reservoirs" if not any(r.get("coast") for r in waters) else "Coasts and tides" if all(r.get("coast") for r in waters) else "Lakes, reservoirs and coasts") + " in " + STATE_NAMES.get(st, st)
+    return '<h2 class="bst">%s</h2><ul class="cols">%s</ul>' % (esc(head), items)
+
+
+def state_page(st, rows, Gs, sd=None, lakes_hub=False, waters=()):
     groups = collections.defaultdict(list)
     for r in rows:
         groups[(r["hub_slug"], r["river"])].append(r)
@@ -288,8 +304,8 @@ def state_page(st, rows, Gs, sd=None, lakes_hub=False):
                 r["water_url"], esc(river_at(r["river"], r["place"])), r["site"], fmtc(dir_lv(G)), old_mark(G), esc(G["obs"]), band_word(G["p"]), ch, fcst)  # readable at a glance: the time sits under the flow (5 columns, was 6)
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s river levels: %d river%s, %d gauge%s</h1>'
             '<p class="sub">%s Source: USGS Water Data API, with flow compared with USGS daily statistics for this date.</p>%s'
-            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>' % (
-                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs))  # ponytail: one lake hub so far; a dict when a second state gets one
+            '<div class="card scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Latest flow</th><th scope="col" class="r">Compared with normal</th><th scope="col" class="r">24 h change</th><th scope="col">NWS river forecast</th></tr></thead><tbody>%s</tbody></table></div>%s' % (
+                esc(name), esc(name), len(groups), "" if len(groups) == 1 else "s", len(rows), "" if len(rows) == 1 else "s", roll, ('<p class="sub"><a href="/lakes/tx/">Texas lake levels: every TWDB reservoir</a></p>' if lakes_hub else "") + sw + most_searched(groups, demand(), st), trs, state_waters(st, waters)))  # ponytail: one lake hub so far; a dict when a second state gets one
     return shell("%s river levels and flows | %s" % (name, BRAND), "Current flow, how it compares with normal, and 24-hour change for the river gauges on this site in %s, from USGS data." % name, "/rivers/%s/" % st.lower(), body, ld=crumb_ld([("Home", "/"), (name, None)]))
 
 

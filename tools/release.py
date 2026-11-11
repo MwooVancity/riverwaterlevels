@@ -85,8 +85,39 @@ for w in ready:  # a feed missing a proof adds nothing; a feed whose every liste
 ready = fits
 ready = ready[:max(0, WORLD_MAX - len(listed))]
 # money first (owner 2026-11-03): searches x ad rate per country. Guesses from PLAN.md until AdSense reports ours; US 1.0.
-RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8}
-both = sorted([(-tier_.get(r["site"], 0), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * RATE.get(w["feed"], 0.1), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
+RATE = {"eccc": 0.8, "ea": 0.8, "pegelonline": 0.8, "imi": 0.8}  # PLAN.md Numbers: Canada, UK, Ireland, Germany 0.8 (audit 2026-11-10 #23: Ireland ranked at the 0.1 default)
+
+
+def load_bids(p):
+    """{keyword: bid_high_cad} for keywords Keyword Planner gave a top-of-page bid (0 or blank = no bid), and the file's date. A missing or torn file = no bids, guesses only."""
+    try:
+        out = {}
+        for r_ in csv.DictReader(open(p, encoding="utf-8")):
+            try:
+                b_ = float(r_.get("bid_high_cad") or 0)
+            except ValueError:
+                continue
+            if b_ > 0:
+                out[(r_.get("keyword") or "").strip().lower()] = b_
+        d_ = subprocess.run(["git", "log", "-1", "--format=%cs", "--", p], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+        return out, d_ or "date unknown"
+    except OSError:
+        return {}, "file missing"
+
+
+def rate(k, feed, bids, mid):
+    """Ad rate: the keyword's own Keyword Planner bid against the median bid (1.0 = a typical keyword), else the country guess (US 1.0)."""
+    b_ = bids.get((k or "").strip().lower())
+    return b_ / mid if b_ and mid else (1.0 if feed is None else RATE.get(feed, 0.1))
+
+
+_bp = os.path.join(ROOT, "data", "keyword-tiers-water.csv")
+BIDS, BID_DATE = load_bids(_bp)
+BID_MID = sorted(BIDS.values())[len(BIDS) // 2] if BIDS else 0
+print("ad rate: Keyword Planner bid_high_cad for %d keywords (data/keyword-tiers-water.csv, %s, median %.2f CAD = 1.0); country guesses for the rest: %s" % (len(BIDS), BID_DATE, BID_MID, RATE))
+assert rate("x", "imi", {}, 0) == 0.8 and rate("x", None, {}, 0) == 1.0 and rate("X ", "zz", {"x": 6.0}, 3.0) == 2.0 and rate("y", "zz", {"x": 6.0}, 3.0) == 0.1, "release: ad rate (bid first, country guess else)"
+kw_ = {r["gauge"]: r["keyword"] for r in q_ if r["gauge"]}
+both = sorted([(-tier_.get(r["site"], 0) * rate(kw_.get(r["site"]), None, BIDS, BID_MID), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * rate(w["keyword"], w["feed"], BIDS, BID_MID), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
 # readiness debate 2026-11-07: a lake or coast enters Google only after a phone review (data/reviewed.json), so an unreviewed one earns nothing until a
 # person reviews it. Owner 2026-11-07 ("worried about oceans and lakes, the new stuff"): the 2026-11-07 phone review failed 20 of 26 new lakes and coasts
 # that every machine check passed, so a new lake or coast is published only after its review passed (truth first: a false page is worse than none);
@@ -163,7 +194,7 @@ for r in rows:
     if r["site"] in clash and r["status"] == "queue":
         r["gate"] = clash[r["site"]]
     if r["site"] in sites and r["status"] == "queue":
-        r["status"] = "live"
+        r["status"], r["gate"] = "live", ""  # audit #24: a re-released pick kept its old 'retry after' gate, so a live page read as held (Barren River Lake)
 with open(wp, "w", newline="", encoding="utf-8") as f:
     w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
     w.writeheader()

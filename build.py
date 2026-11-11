@@ -33,6 +33,16 @@ def prev_page(url):
         return None
 
 
+def linkable(url, ix):
+    """A built page other pages may link: indexable, or every page while the site is on its pre-launch hold (nothing is indexable then, and the lists must still work)."""
+    return not ix["open"] or indexing.indexable(url, ix)
+
+
+def conus_name():
+    """templates/conus.webp published under a name hashed from its bytes, so it can be cached for a year (_headers) and a new map is a new name (audit #42)."""
+    return "conus.%s.webp" % hashlib.sha256(open(os.path.join(ROOT, "templates", "conus.webp"), "rb").read()).hexdigest()[:10]
+
+
 def main():
     rows, hubs = load_effective()
     now = datetime.datetime.fromisoformat(os.environ["BUILD_NOW"]) if os.environ.get("BUILD_NOW") else datetime.datetime.now(datetime.timezone.utc)
@@ -62,7 +72,7 @@ def main():
     inv_size = {k: len(v) for k, v in hubs.items()}
     by_hub = collections.defaultdict(list)
     for r in built:
-        r["_built"] = True
+        r["_built"] = linkable(r["dashboard_url"], ix)  # links rule 5 (audit 2026-11-10 #24): every list (home, hubs, nearby, upstream) links only built pages Google may index; noindexed /lake/barren-river-lake/ was on the home page
         g = Gs[r["site"]]
         r["_ll"], r["_lv"], r["_band"] = (g["lat"], g["lon"]), dir_lv(g), band_word(g["p"])
         r["_kind"] = pagelib.kind_of_g(g)  # links rule 3: the nearest lake, coast and river page of the other kinds
@@ -181,8 +191,10 @@ def main():
     print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
     json.dump(block_counts, open(os.path.join(nxt, "_blocks.json"), "w"), separators=(",", ":"))  # data blocks rendered per gauge page: tools/open_wave.py will not release a page with too few
     if built:
-        rivers_ = [r for r in built if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
-        emit("/", directory.home(rivers_, Gs, [r for r in built if r.get("lake")]))  # lakes and coasts get their home link (basics audit 2026-11-08)
+        shown = [r for r in built if r["_built"]]  # links rule 5: lists name only pages Google may index
+        rivers_ = [r for r in shown if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
+        waters_ = [r for r in shown if r.get("lake")]
+        emit("/", directory.home(rivers_, Gs, waters_).replace('src="/conus.webp"', 'src="/%s"' % conus_name()))  # lakes and coasts get their home link (basics audit 2026-11-08); the map under its hashed, year-cached name
         state_data = {}
         for st in sorted({r["state"] for r in rivers_}):
             sp = os.path.join(ROOT, "cache", "state-%s.json" % st.lower())
@@ -202,10 +214,10 @@ def main():
         except Exception as e:
             print("FAIL lakes/tx", str(e)[:120])
         for st in sorted({r["state"] for r in rivers_}):
-            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st), lakes_hub=bool(tx) and st == "TX"))
+            emit("/rivers/%s/" % st.lower(), directory.state_page(st, [r for r in rivers_ if r["state"] == st], Gs, state_data.get(st), lakes_hub=bool(tx) and st == "TX", waters=[r for r in waters_ if r["state"] == st]))  # audit #26: a lake's breadcrumb names its state hub, so the hub lists it
         for (hs, st), g in by_hub.items():
-            if len(g) > 1:
-                emit("/river/%s/" % hs, directory.hub_page(hs, st, g, inv_size[(hs, st)], Gs))
+            if len(g) > 1:  # ponytail: a hub whose gauges are all still unopened lists them anyway (its address must not 404); open_wave opens them the same day
+                emit("/river/%s/" % hs, directory.hub_page(hs, st, [r for r in g if r["_built"]] or g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
         world_rows = []
@@ -276,7 +288,8 @@ def main():
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
-    shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, "conus.webp"))  # home map, static
+    shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, conus_name()))  # home map, static, cached a year under its hashed name
+    shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, "conus.webp"))  # ponytail: the old name for a home page cached before the hashed one; delete after 2026-12
     for name in ("sw.js", "icon-192.png", "icon-512.png"):
         shutil.copy(os.path.join(ROOT, "templates", name), os.path.join(nxt, name))
     for name, text in render.ASSETS.items():  # the stylesheets, each named by a hash of its content
@@ -314,4 +327,10 @@ def main():
     print("gauges %d, pages %d, failed %d, redirects %d -> dist_next (run check.py, then publish.py)" % (len(Gs), len(urls), len(report["failed"]), len(redirects)))
 
 
+_ix = {"open": True, "site_pages": True, "allow": {"/lake/a/"}, "pulled": set(), "held": ()}
+assert linkable("/lake/b/", {"open": False}) and linkable("/lake/a/", _ix) and not linkable("/lake/b/", _ix) and linkable("/rivers/ga/", _ix), "build: links rule 5 (only indexable pages linked; every page while on hold)"
+_ld = json.loads(world.world_ld({"feed": "imi"}, {"time": "2026-11-10T03:10:00Z", "lat": 53.3456, "lon": -6.2219}, "/irish-sea/dublin-port/", {"head": "Dublin Port", "agency": "Marine Institute", "station": "Dublin Port", "api": "Marine Institute ERDDAP", "name": "Marine Institute (Ireland)"},
+                                  "<title>Dublin Port tide &amp; sea level today | River Water Levels</title>")[35:-9])
+assert _ld["@type"] == "WebPage" and _ld["name"].startswith("Dublin Port tide & sea") and _ld["about"]["name"] == "Dublin Port, Ireland" and _ld["mainEntity"]["creator"]["name"] == "Marine Institute (Ireland)", "build: world gauge structured data (audit #25)"
+assert 'href="/lake/lake-lanier/">Lake Lanier' in directory.state_waters("GA", [{"river": "Lake Lanier", "place": "Buford Dam", "water_url": "/lake/lake-lanier/"}]) and directory.state_waters("GA", []) == "", "build: state hub lists its lakes (audit #26)"
 main()
