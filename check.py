@@ -88,6 +88,18 @@ def ui_checks(body, plain=True):
 
 
 READ = {"pages": 0, "wide": 0, "wide_pages": 0, "eg": ""}
+OWN = {}  # url -> (kind, noindex, data sections): the own-data census
+
+
+def own_census(own):
+    """Every page its own (owner 2026-11-11; PLAN 'Every page its own'): per kind, indexable pages with no data section of their own. Information, never a target;
+    the char FLOOR rule let 69 one-table hubs through (83-299 words). It becomes a hold rule per kind once that kind's sections are built (country hubs next)."""
+    by = collections.defaultdict(lambda: [0, 0])
+    for kind, noidx, n in own.values():
+        if not noidx and kind in ("hub", "state", "country", "world", "gauge"):
+            by[kind][0] += 1
+            by[kind][1] += n == 0
+    return "own-data census: " + (", ".join("%s %d of %d with no data section of their own" % (k, v[1], v[0]) for k, v in sorted(by.items())) or "no pages")
 DOOR = collections.defaultdict(list)  # gauge id -> [(url, minhash)]; PLAN 0j
 DOOR_SALTS = [int(hashlib.md5(b"salt%d" % k).hexdigest()[:8], 16) for k in range(64)]
 
@@ -716,6 +728,7 @@ def check_dir(d):
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
                 n_links[u] = len(re.findall(r"<a ", h))
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
+                OWN[u] = (kind_of(rel), noindex_of[u], len(re.findall(r'class="card blk"', h)))  # every page its own (owner 2026-11-11): data sections a page carries itself
     site_bad = []
     urls = rel_of
     wjs = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()
@@ -775,6 +788,7 @@ def check_dir(d):
         i_, o_ = sorted(inb[u] for u in us_), sorted(len({x for x in links_of[u] if x in water_ and x != u}) for u in us_)
         print("links census %s: %d pages, inbound min %d median %d, outbound min %d median %d, %d with under %d inbound" % (k_, len(us_), i_[0], i_[len(i_) // 2], o_[0], o_[len(o_) // 2], sum(1 for x in i_ if x < NEIGHBOURS), NEIGHBOURS))
     print("readability census: %d pages, %d tables over 5 columns on %d pages%s" % (READ["pages"], READ["wide"], READ["wide_pages"], (", e.g. " + READ["eg"]) if READ["eg"] else ""))
+    print(own_census(OWN))
     dp_ = door_pairs(DOOR)
     print("doorway census: %d pages read, %d stations carry 2+ pages, %d page pairs 95%%+ the same text with the name removed%s" % (READ.get("door_pages", 0), sum(1 for v in DOOR.values() if len(v) > 1), len(dp_), (", e.g. %s = %s (%.0f%%)" % (dp_[0][0], dp_[0][1], 100 * dp_[0][2])) if dp_ else ""))
     # reciprocity: a gauge page and its Forecast page (when it exists) link to each other; hub and gauge link to each other when a hub page exists
@@ -1371,6 +1385,8 @@ def selftest():
     assert not [b for b in hater_rules('<section id="about_gauge"></section>' + kf) if "Key facts" in b], "selftest: a good Key facts block failed"
     assert any("no Key facts" in b for b in hater_rules('<section id="about_gauge"></section>')), "selftest: a page with a station record and no Key facts passed"
     assert any("live reading" in b for b in hater_rules(kf.replace("in Y County.", 'flows <b data-live="flow">5</b> cfs now.'))), "selftest: Key facts holding the live reading passed"
+    oc = own_census({"/a/": ("hub", False, 0), "/b/": ("hub", False, 3), "/c/": ("hub", True, 0), "/d/": ("state", False, 0), "/e/": ("trust", False, 0)})
+    assert oc == "own-data census: hub 1 of 2 with no data section of their own, state 1 of 1 with no data section of their own", "selftest: own-data census miscounts (noindex or prose pages counted): " + oc
     from lib.coverage import country
     assert [country(x) for x in ("lake/belton-lake/index.html", "coast\\x\\index.html", "river/a/index.html", "rhine/koeln/index.html", "ireland/dublin-port/index.html")] == ["US", "US", "US", "Germany", "Ireland"], "selftest: coverage counts a page under the wrong country"
     import tools.edge_tests
