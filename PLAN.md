@@ -54,7 +54,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
    Edge cases: an expired or seasonal limit shown as current (store the agency's date and season; past it = hidden); a limit in another unit or gauge (state the agency's gauge; show only when it is this gauge); our words replacing the agency's (quote only, BANNED verdict words still fail); one county's rule shown on a neighbour county's page.
 8. Official bathing-water status (EU bathing water directive sites in Germany/England/Ireland; US state beach advisories where a feed exists), not only samples.
    Edge cases: an advisory from last season shown as today's (status date shown; out of season says so); a beach 10 km away shown as this river's (distance shown, same water only); a feed down = Unknown, never "open".
-9. Upcoming dam release schedules where the operator publishes them (TVA, USACE, Reclamation), labelled as the operator's plan.
+9. DONE 2026-11-11 (11 live pages at a dam; operators publish monthly plans, no schedule feed. Read live: Glen Canyon page has current monthly volumes (updated 2026-10-15), linked from Lake Powell; Yellowtail newest plan Jan 2023 (stale, not linked); Canyon Ferry PDF unreadable (not linked). Recheck yearly): Upcoming dam release schedules where the operator publishes them (TVA, USACE, Reclamation), labelled as the operator's plan.
    Edge cases: a schedule changed after we fetched it (fetched time shown; "plans change" stated by the operator's words); a release for a different dam on the same river; time zone of the operator vs the gauge.
 
 ## Waiting (nothing to do before the date)
