@@ -8,3 +8,13 @@ https://riverwaterlevels.com/rivers/ga/	2026-11-09
 https://riverwaterlevels.com/rivers/id/	2026-11-09
 https://riverwaterlevels.com/about/	2026-11-09
 https://riverwaterlevels.com/methodology/	2026-11-09
+https://riverwaterlevels.com/lake/jordan-lake/	2026-11-11
+https://riverwaterlevels.com/lake/green-river-lake/	2026-11-11
+https://riverwaterlevels.com/lake/great-salt-lake/	2026-11-11
+https://riverwaterlevels.com/lake/falls-lake/	2026-11-11
+https://riverwaterlevels.com/lake/barren-river-lake/	2026-11-11
+https://riverwaterlevels.com/coast/pensacola/	2026-11-11
+https://riverwaterlevels.com/coast/panama-city-beach/	2026-11-11
+https://riverwaterlevels.com/coast/monterey/	2026-11-11
+https://riverwaterlevels.com/coast/jacksonville-beach/	2026-11-11
+https://riverwaterlevels.com/coast/indian-river-inlet/	2026-11-11
