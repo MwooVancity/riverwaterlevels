@@ -48,7 +48,9 @@ def _time_svg(obs, fc, hl, vmin, vmax, ticks, t0, t1, zone, W, Hh, fs, nx, cls, 
         lines += '<polyline points="%s" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="7 4"/>' % " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in pts)
         lines += '<line x1="%.1f" x2="%.1f" y1="12" y2="%d" stroke="var(--mut)" stroke-dasharray="2 3"/>' % (X(obs[-1][0]), X(obs[-1][0]), Hh - B)
     lines += '<circle cx="%.1f" cy="%.1f" r="5" fill="var(--accent)"/>' % (X(obs[-1][0]), Y(obs[-1][1]))
-    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s">%s%s%s</svg>' % (cls, W, Hh, esc(label), grid, xl, lines)
+    from lib.charts import tap_attr
+    drawn = [(t, v, "") for sg_ in segs for t, v in (sg_[::step] + ([sg_[-1]] if sg_[-1] is not sg_[::step][-1] else []))] + [(t, v, " (forecast)") for t, v in fc or []]
+    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s"%s>%s%s%s</svg>' % (cls, W, Hh, esc(label), tap_attr(drawn, X, Y, lambda v: "%.2f ft" % v), grid, xl, lines)
 
 
 def b_stage_chart(G):

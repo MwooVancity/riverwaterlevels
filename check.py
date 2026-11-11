@@ -1396,6 +1396,12 @@ def selftest():
     assert not google_rules("<title>Penns Creek at Penns Creek, PA: live water level and flow</title>", ""), "selftest: a town named after its creek read as stuffing"
     assert google_rules('<textarea>&lt;a href="x"&gt;Yuba River water level&lt;/a&gt;</textarea>', ""), "selftest: a followed keyword link in embed code passed"
     assert google_rules('<script type="application/ld+json">{"@type":"Dataset","description":"station 8726706"}</script>', '<small class="lvl">At NOAA station 8726724,'), "selftest: markup naming the wrong station passed"
+    import datetime as _dtm
+    from lib.blocks2 import _time_svg  # PLAN 6 chart readout: only drawn readings, forecasts marked (a 6 h gap is never filled in)
+    _t0 = _dtm.datetime(2026, 11, 10, tzinfo=_dtm.timezone.utc)
+    _ob = [(_t0 + _dtm.timedelta(minutes=15 * i), 5 + i / 100) for i in range(40)] + [(_t0 + _dtm.timedelta(hours=16, minutes=15 * i), 6.0) for i in range(20)]
+    _tp = re.search(r'data-tap="([^"]*)"', _time_svg(_ob, [(_t0 + _dtm.timedelta(hours=30), 6.5)], [], 4, 8, [4, 6, 8], _t0, _t0 + _dtm.timedelta(hours=48), _dtm.timezone.utc, 340, 250, 12, 4, "cn", "x")).group(1).split("|")
+    assert len(_tp) == 61 and _tp[0].split(";")[2] == "5.00 ft" and _tp[-1].split(";")[2] == "6.50 ft (forecast)", "selftest: chart readout points wrong: %s" % _tp[-1]
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
     w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()

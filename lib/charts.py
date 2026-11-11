@@ -64,6 +64,23 @@ def steps_med(pts):
     return st[len(st) // 2] if st else None
 
 
+def tap_attr(pts, X, Y, label):
+    """PLAN 6 (2026-11-03 gap research: "what was it at 7 am"): the drawn readings, each with its own value and time, so a tap shows the
+    nearest real reading (never an interpolated one). pts = [(time, value, suffix)]; TAP_JS formats the time in the gauge's zone."""
+    return ' data-tap="%s"' % "|".join("%.0f;%.0f;%s%s;%d" % (X(t), Y(v), label(v), s, t.timestamp()) for t, v, s in pts)
+
+
+# One script for every chart with data-tap: tap or drag shows the nearest drawn reading and its local time; vertical scrolling stays the page's.
+TAP_JS = ('<script>(function(){var f=new Intl.DateTimeFormat("en-US",{timeZone:"@TZ@",month:"short",day:"numeric",hour:"numeric",minute:"2-digit",timeZoneName:"short"}),N="http://www.w3.org/2000/svg";'
+          'document.querySelectorAll("svg[data-tap]").forEach(function(s){var P=s.getAttribute("data-tap").split("|").map(function(r){return r.split(";")}),W=s.viewBox.baseVal.width,c=document.createElementNS(N,"circle"),t=document.createElementNS(N,"text");'
+          'c.setAttribute("r","7");c.setAttribute("fill","none");c.setAttribute("stroke","var(--ink)");c.setAttribute("stroke-width","2");c.style.display="none";'
+          't.setAttribute("font-size","14");t.setAttribute("font-weight","600");t.setAttribute("fill","var(--ink)");t.setAttribute("stroke","var(--card)");t.setAttribute("stroke-width","4");t.setAttribute("paint-order","stroke");t.setAttribute("y","28");'
+          's.appendChild(c);s.appendChild(t);s.style.touchAction="pan-y";s.style.cursor="crosshair";'
+          'function mv(e){var r=s.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,b=P[0],d=1e9;P.forEach(function(p){var k=Math.abs(p[0]-x);if(k<d){d=k;b=p}});'
+          'c.setAttribute("cx",b[0]);c.setAttribute("cy",b[1]);c.style.display="";t.textContent=b[2]+", "+f.format(new Date(b[3]*1e3));var e2=b[0]>W/2;t.setAttribute("text-anchor",e2?"end":"start");t.setAttribute("x",e2?b[0]-10:+b[0]+10)}'
+          's.addEventListener("pointerdown",mv);s.addEventListener("pointermove",function(e){if(e.buttons||e.pointerType=="mouse")mv(e)})})})();</script>')
+
+
 def _chart_svg(G, W, Hh, fs, nx, cls):
     fl, zone, lt = G["fl"], G["zone"], G["lt"]
     t1 = lt
@@ -107,8 +124,8 @@ def _chart_svg(G, W, Hh, fs, nx, cls):
     line = "".join('<polyline points="%s" fill="none" stroke="var(--accent)" stroke-width="2.4"/>' % " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v, _ in sg_) for sg_ in segs if len(sg_) > 1)
     grid = "".join('<line x1="%d" x2="%d" y1="%.1f" y2="%.1f" stroke="var(--line)"/><text x="%d" y="%.1f" font-size="%d" fill="var(--mut)" text-anchor="end">%s</text>' % (L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks) + '<text x="%d" y="10" font-size="%d" fill="var(--mut)">cfs</text>' % (L + 4, fs)  # the unit once, top-left: "12,000 cfs" on the top tick overflowed the margin and showed ",000 cfs" (hater 2026-10-27)
     xl = day_axis(t0, t1, zone, X, nx, fs, Hh, L, W)
-    return ('<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs over the last 7 days with the 25th to 75th percentile band">%s%s%s%s'
-           '<circle cx="%.1f" cy="%.1f" r="5" fill="var(--accent)"/></svg>' % (cls, W, Hh, "".join(band), grid, xl, line, X(lt), Y(G["lv"])))
+    return ('<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="Flow in cfs over the last 7 days with the 25th to 75th percentile band"%s>%s%s%s%s'
+           '<circle cx="%.1f" cy="%.1f" r="5" fill="var(--accent)"/></svg>' % (cls, W, Hh, tap_attr([(t, v, "") for t, v, _ in thin], X, Y, lambda v: fmtc(v) + " cfs"), "".join(band), grid, xl, line, X(lt), Y(G["lv"])))
 
 
 
