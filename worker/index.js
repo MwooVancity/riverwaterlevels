@@ -212,7 +212,7 @@ function rewrite(res, g, m) {
   const builtAt = local(built, tz), nowAt = local(ft, tz), flow = Math.abs(fv) >= 1000 ? Number(fv.toPrecision(3)).toLocaleString("en-US") : Math.abs(fv) < 1 && fv !== 0 ? fv.toFixed(2) : Math.round(fv).toLocaleString("en-US"), ageTxt = age(Date.parse(ft));
   const ab = "ab " + (mins <= AGE_CHIP_MIN[0] ? "fresh" : mins <= AGE_CHIP_MIN[1] ? "ageing" : "stale");
   const stage0 = g.h && !g.h[2] && g.h[0] > -999 && Date.parse(g.h[1]) > Date.parse(built);
-  const note = '<p id="lbn" class="src lf2">' + (stage0 ? "Flow and gage height" : "Flow") + " at the top updated " + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".</p>";
+  const noteText = (stage0 ? "Flow and gage height" : "Flow") + " at the top updated " + nowAt + ". Charts, tables and comparisons below are as of the page build, " + builtAt + ".";
   const stage = stage0 ? Number(g.h[0]).toFixed(2) : null;
   const text = (s) => ({ element(e) { e.setInnerContent(s); } });
   // a tile sparkline's end dot at the live value, on the build's own scale (lib/ui.py spark); off the scale it sits on the edge, the number says how far
@@ -227,7 +227,7 @@ function rewrite(res, g, m) {
     .on("span[data-co]", text(nowAt))
     .on('span[data-live="age"]', { element(e) { e.setAttribute("data-t", ft); e.setInnerContent(ageTxt); } })
     .on("span.ab", { element(e) { e.setAttribute("class", ab); } })
-    .on("p.answer", { element(e) { e.after(note, { html: true }); } }); // said once, right under the answer it qualifies (was 5 stamps)
+    .on("p#lbn", text(noteText)); // audit #6: every river page is built with this line (lib/hero.py), so only its words change and nothing shifts; a template change rebuilds every page (build.py due 'code')
   if (stage) out.on('circle[data-k="stage"]', sparkDot(Number(stage))).on('span[data-live="stage"]', text(stage)).on("span[data-cs]", text(stage)).on('span[data-live="stageobs"]', text(local(g.h[1], tz)));
   const r = out.transform(res);
   const o = new Response(r.body, r);
