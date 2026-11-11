@@ -31,6 +31,11 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 - Google: Search Console validation restarted 2026-11-11 for the 308 noindex-era pages (owner asked); reindex queue in inspection order; index_inspect parallel in daily slices; Ireland rate fixed; Keyword Planner bids rank the queue.
 - Speed 2026-11-11 (Lighthouse mobile, cloud): Lake Lanier 89, Rhine Kaub 90, San Diego coast 89, CLS 0 on all three.
 
+## Next steps (every item WAITING its date; nothing can move today)
+1. WAITING 2026-11-12: read the Lake Michigan re-shoot and the speed run (lines below).
+2. WAITING 2026-11-18: lake past years live, then the lake phone review.
+3. OWNER: the clicks under Owner only (Email Routing, Cloudflare token, outreach, 5-second test).
+
 ## Waiting (nothing to do before the date)
 - 2026-11-12: Lake Michigan re-shoot review (run 42953307901) after the lake-wording fix; on PASS add lake-great to data/reviewed.json and clear its waves.csv gate.
 - 2026-11-12: speed run 42953063045 (home, Chipola hub, Georgia hub, Rhine hub): read the scores.
