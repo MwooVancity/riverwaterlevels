@@ -88,6 +88,7 @@
   "lake-agency-CDEC": "2026-11-08: split from lake-agency (Shasta passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
   "lake-agency-RISE": "2026-11-08: split from lake-agency (Lake Mead passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
   "lake-agency-TWDB": "2026-11-08: split from lake-agency (Lake Travis passed its per-page review 2026-11-07). 2026-11-08: template passed per-page reviews 2026-11-07 (Lake Mead RISE, Shasta CDEC, Lake Travis TWDB)",
-  "coast-tables": "2026-11-09: fresh full phone review PASS (cloud run 42544780280, Bandon 9432373 subordinate + Boca Raton 8722816 reference) after a first FAIL (run 42543656099: embed box over heading, live badge, section label) was fixed"
+  "coast-tables": "2026-11-09: fresh full phone review PASS (cloud run 42544780280, Bandon 9432373 subordinate + Boca Raton 8722816 reference) after a first FAIL (run 42543656099: embed box over heading, live badge, section label) was fixed",
+  "lake-great": "2026-11-11: fresh phone review PASS (cloud run 42953307901, Lake Michigan COOPS-9087031) after a FAIL (run 42951576649: 'storage readings' on a lake with no storage, river access wording, percentile wording) was fixed and guarded by check.py lake_wording; majors noted in PLAN (empty first-screen tiles, no GLERL normal, no USACE 6-month forecast)"
  }
 }

@@ -575,7 +575,7 @@ def world_blocks(page, rows, now):
                 hits += tr([esc(nm(r)), esc(a.get("event") or "Warning"), esc(tzl(parse_t(end), zn(r))) if end else "not stated"])
         if ts:  # no gauge checked = the feed is down: the section hides, the table stays
             n = len(rows) - len(unknown)
-            body = table(["Gauge", "In force", "Until"], hits) if hits else "<p>None in force: no %s at any of the %d gauge%s checked.</p>" % (words[0], n, "" if n == 1 else "s")
+            body = table(["Gauge", "In force", "Until"], hits) if hits else "<p>No %s in force at any of the %d gauge%s checked.</p>" % (words[0], n, "" if n == 1 else "s")
             body += ("<p>Unknown at %s.</p>" % esc("; ".join(unknown))) if unknown else ""
             out += _sec("world_alerts", "Warnings in force at these gauges", body, "Source: %s Checked %s." % (words[1], esc(tzl(min(ts), zn(rows[0])))))
     if feed == "pegelonline":
@@ -612,11 +612,12 @@ def world_page(page, d, now, linked=None):
         trs += "<tr><td>%s%s</td><td class=\"r\">%s</td><td class=\"r\">%s</td><td>%s</td><td>%s</td></tr>" % (
             gauge, "<div class=\"src\">km %.0f</div>" % r["km"] if by_km else "", cm, chg, label, esc(tzl(t, zone)))
     order = "Listed upstream to downstream by the agency's river kilometre." if by_km else "" if page.get("flat") or len(rows) < 2 else "Listed in the agency's order."
+    label, agency = HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]).split(" Source: ")  # check.py: the source line starts with "Source"
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"])) +
             _sec("world_gauges", "Every gauge now", '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Compared with normal</th>'
                  '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>' % trs,
-                 "%s %s fetched %s. The site rebuilds about once an hour." % (order, HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]), esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone)))) +
+                 "Source: %s fetched %s. The site rebuilds about once an hour. %s %s" % (agency, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone)), label, order)) +
             world_blocks(page, rows, now))
     n = len(rows)
     return shell("%s water levels today | %s" % (world_name(page), BRAND), "%s water levels at %d official gauges, with 24-hour change. Official data." % (page["river"], n), "/%s/" % page["slug"], body)

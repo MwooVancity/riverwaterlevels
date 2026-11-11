@@ -9173,7 +9173,7 @@ queue,,03310900,Nolin Lake,Kyrock,KY,0,,,0,lake,,,human,/lake/nolin-lake/
 queue,,03318005,Rough River Lake,Falls of Rough,KY,0,,,0,lake,,,human,/lake/rough-river-lake/
 queue,,08109900,Somerville Lake,Somerville,TX,0,,,0,lake,,,human,/lake/somerville-lake/
 queue,,02193900,Thurmond Lake,Plum Branch,SC,0,,,0,lake,,,human,/lake/thurmond-lake/
-queue,,COOPS-9087031,Lake Michigan,Holland,MI,0,,,0,lake,"held 2026-11-07: Great Lakes page passed a first review; re-shoot after the storage tile fix, then clear",,human,/lake/lake-michigan/
+queue,,COOPS-9087031,Lake Michigan,Holland,MI,0,,,0,lake,,,human,/lake/lake-michigan/
 queue,,8729108,Panama City,Panama City,FL,0,,,0,coast,,,human,/coast/panama-city/
 queue,,9449211,Bellingham,Bellingham,WA,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bellingham/
 queue,,8775870,Corpus Christi,Corpus Christi,TX,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/corpus-christi/
