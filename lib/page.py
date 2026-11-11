@@ -247,7 +247,7 @@ def tab_blocks(tab, G, pages):
         lead = (([b3.b_tides(G), sc] if level_of(G) else [sc, b3.b_tides(G)]) + [b3.b_waves(G), b3.b_moon(G), b3.b_key_facts(G)] if coast else  # black-hat review 2026-11-11: a prediction-only station leads with its own tide times; the level chart is a nearby station's
                 [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
-        return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + lead + [
+        return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), None if coast else b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),

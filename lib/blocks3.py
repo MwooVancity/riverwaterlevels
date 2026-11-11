@@ -354,6 +354,43 @@ def depth_rows(G):
     return c, near
 
 
+_LIMITS = None
+
+
+def limits_for(site):
+    """data/activity-limits.csv rows for this gauge (hand-checked official quotes, PLAN 7). A rule past its `until` date is dropped."""
+    global _LIMITS
+    if _LIMITS is None:
+        import csv, os
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "activity-limits.csv")
+        _LIMITS = list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
+    today = datetime.date.today().isoformat()
+    return [r for r in _LIMITS if r["site"] == site and not (r.get("until") and r["until"] < today)]
+
+
+def b_limits(G):
+    """PLAN 7 (2026-11-03 gap research rank 1): an agency's own published limit or closure for this reach, quoted word for word with its source
+    and date. Today's reading sits beside the threshold only when the agency names this gauge and the unit matches; never our verdict."""
+    rows = limits_for(G["site"])
+    if not rows:
+        return None
+    now_v = {"cfs": G.get("lv") if not G.get("stage_only") else None, "ft": G["sg"][-1][1] if G.get("sg") else None}
+    out = ""
+    for r in rows:
+        v = now_v.get(r["unit"]) if r["agency_gauge"] == G["site"] else None
+        thr = float(r["threshold"]) if r.get("threshold") else None
+        cmp_ = ""
+        if v is not None and thr is not None:
+            cmp_ = " Now at this gauge: %s %s, %s the %s %s in this rule (%s)." % (fmtc(v) if r["unit"] == "cfs" else "%.2f" % v, r["unit"], "above" if v > thr else "below" if v < thr else "at", fmtc(thr) if r["unit"] == "cfs" else "%.2f" % thr, r["unit"], esc(G["obs"]))
+        elif r["agency_gauge"] and r["agency_gauge"] != G["site"]:
+            cmp_ = " This rule names %s, not this gauge." % esc(r["agency_gauge"])
+        out += '<p><b>%s</b> (%s%s): &ldquo;%s&rdquo;%s</p>' % (esc(r["source_name"]), esc(r["activity"]), (", " + esc(r["season"])) if r.get("season") else "", esc(r["quote"]), cmp_)
+    src = "; ".join('<a href="%s" rel="noopener">%s</a> (%s, read %s)' % (esc(r["source_url"]), esc(r["source_name"]), esc(r["page_date"] or "no date on the page"), esc(fdate(r["read_on"]))) for r in rows)
+    return block("limits", "Rules the agencies publish for this water", "agency",
+                 "<p>The agency's own words; rules change, so check the source before you go.</p>" + out,
+                 "Source: %s. Quoted word for word." % src, "local_rules")
+
+
 def b_depth(G):
     """How deep and wide the river is at the gauge: USGS hydrographers' measured width and cross-section area; average depth = area / width is our math."""
     c, near = depth_rows(G)

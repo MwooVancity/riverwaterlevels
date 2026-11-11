@@ -749,6 +749,21 @@
    "read_on": "2026-11-09",
    "summary": "Read 2026-11-09 in the owner's Chrome: 'The CWMS Data Dissemination website is a public accessible map based repository of water resources data that includes elevation, precipitation, storage, and flow status'; 'All data contained herein is preliminary in nature and therefore subject to change. The data is for general information purposes ONLY'. Plus the DoD website banner (monitoring consent). No bar on reuse, ads or caching. Label every value preliminary, USACE.",
    "blocks": []
+  },
+  {
+   "id": "local_rules",
+   "name": "Agency river-use rules (county, city, park and river authority notices)",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://www.law.cornell.edu/supremecourt/text/18-1150",
+   "summary": "Ordinances and rules issued by a body with lawmaking power are not copyrightable (Georgia v. Public.Resource.Org, US Supreme Court, 2020-04-27). Other agency notices are quoted under 25 words, word for word, attributed and linked to the agency's page; a page whose own terms bar reuse is not added (data/activity-limits.csv is hand-checked row by row).",
+   "credit": "",
+   "read_on": "2026-11-11",
+   "blocks": [
+    "limits"
+   ]
   }
  ]
 }

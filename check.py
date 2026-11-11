@@ -1401,6 +1401,12 @@ def selftest():
     _t0 = _dtm.datetime(2026, 11, 10, tzinfo=_dtm.timezone.utc)
     _ob = [(_t0 + _dtm.timedelta(minutes=15 * i), 5 + i / 100) for i in range(40)] + [(_t0 + _dtm.timedelta(hours=16, minutes=15 * i), 6.0) for i in range(20)]
     _tp = re.search(r'data-tap="([^"]*)"', _time_svg(_ob, [(_t0 + _dtm.timedelta(hours=30), 6.5)], [], 4, 8, [4, 6, 8], _t0, _t0 + _dtm.timedelta(hours=48), _dtm.timezone.utc, 340, 250, 12, 4, "cn", "x")).group(1).split("|")
+    from lib import blocks3 as _b3  # PLAN 7: the agency's words, today's reading only beside its own gauge, an expired rule hidden
+    _lr = dict(site="1", activity="tubing", threshold="700", unit="cfs", agency_gauge="1", quote="Closed above 700 cfs.", source_name="C", source_url="u", page_date="", season="", until="", read_on="2026-11-11")
+    _keep, _b3._LIMITS = _b3._LIMITS, [_lr, dict(_lr, agency_gauge="USGS 2", quote="Q2"), dict(_lr, until="2020-01-01", quote="old")]
+    _bd = _b3.b_limits({"site": "1", "lv": 412.0, "sg": [], "obs": "now"})["body"]
+    _b3._LIMITS = _keep
+    assert "412 cfs, below the 700 cfs" in _bd and "names USGS 2, not this gauge" in _bd and "old" not in _bd, "selftest: limits block: %s" % _bd
     assert len(_tp) == 61 and _tp[0].split(";")[2] == "5.00 ft" and _tp[-1].split(";")[2] == "6.50 ft (forecast)", "selftest: chart readout points wrong: %s" % _tp[-1]
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
