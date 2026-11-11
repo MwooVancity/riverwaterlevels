@@ -623,7 +623,8 @@ def build_tab(tab, G, pages):
     if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
         title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
-        title = mk_title("%s tides: tide times and water level%s, %s" % (place, ", water temperature" if wt_ else "", st))  # audit #27: was up to 141 characters with the place twice; searched words first. Must keep every H1 word (check.py rank_checks: the 60-char cut broke the gate 2026-11-11); a tide-table page's swap turns "tide times and water level" into "tide times and tide table"
+        stn = river if [w for w in re.findall(r"[A-Za-z]{4,}", river) if w.lower() not in place.lower()] else ""  # "Sewells Point at Norfolk": the station's own name is in the H1, so the title carries it (release 2026-11-11); "San Diego Bay" adds no word
+        title = mk_title("%s tides: %stide times and water level%s, %s" % (place, (stn + " ") if stn else "", ", water temperature" if wt_ else "", st))  # audit #27: was up to 141 characters with the place twice; searched words first. Must keep every H1 word (check.py rank_checks: the 60-char cut broke the gate 2026-11-11); a tide-table page's swap turns "tide times and water level" into "tide times and tide table"
     if tab == "dashboard":
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
