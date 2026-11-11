@@ -185,7 +185,7 @@ const SECURITY = {
 function secure(res, url) {
   const o = new Response(res.body, res);
   for (const [k, v] of Object.entries(SECURITY)) if (!o.headers.has(k)) o.headers.set(k, v);
-  if (url.hostname.endsWith(".workers.dev")) o.headers.set("x-robots-tag", "noindex"); // the workers.dev mirror is never indexed
+  if (url.hostname.endsWith(".workers.dev") || url.pathname.endsWith(".json")) o.headers.set("x-robots-tag", "noindex"); // the workers.dev mirror is never indexed; nor is a data file (Search Console 2026-11-11: 106 .json files listed as crawled, not indexed)
   return o;
 }
 

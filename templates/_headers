@@ -5,6 +5,9 @@ https://riverwaterlevels.com/*
   X-Robots-Tag: noindex
 https://www.riverwaterlevels.com/*
   X-Robots-Tag: noindex
+# Data files (data.json, status.json, gauges.json, live/*.json) are for scripts, never search results: Search Console 2026-11-11 listed 106 of them under "Crawled - currently not indexed"
+/*.json
+  X-Robots-Tag: noindex
 /site.*.css
   Cache-Control: public, max-age=31536000, immutable
 /dir.*.css
