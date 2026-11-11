@@ -385,7 +385,7 @@ def b_limits(G):
         elif r["agency_gauge"] and r["agency_gauge"] != G["site"]:
             cmp_ = " This rule names %s, not this gauge." % esc(r["agency_gauge"])
         out += '<p><b>%s</b> (%s%s): &ldquo;%s&rdquo;%s</p>' % (esc(r["source_name"]), esc(r["activity"]), (", " + esc(r["season"])) if r.get("season") else "", esc(r["quote"]), cmp_)
-    src = "; ".join('<a href="%s" rel="noopener">%s</a> (%s, read %s)' % (esc(r["source_url"]), esc(r["source_name"]), esc(r["page_date"] or "no date on the page"), esc(fdate(r["read_on"]))) for r in rows)
+    src = "; ".join('<a href="%s" rel="noopener">%s</a> (%s, read %s)' % (esc(r["source_url"]), esc(r["source_name"]), esc(r["page_date"] or "no date on the page"), esc(fdate(r["read_on"]))) for r in {r["source_url"]: r for r in rows}.values())  # one source line per agency page, however many rules it carries
     return block("limits", "Rules the agencies publish for this water", "agency",
                  "<p>The agency's own words; rules change, so check the source before you go.</p>" + out,
                  "Source: %s. Quoted word for word." % src, "local_rules")

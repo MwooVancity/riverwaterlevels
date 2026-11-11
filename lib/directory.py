@@ -470,7 +470,7 @@ def hub_blocks(river, rows, Gs):
             lags.append(tr([esc(up["place"]), esc(dn["place"]), "about %d h" % x["lag_h"]], right=(2,)))
     if lags:
         out += _sec("river_lag", "How long changes take to pass down the river", table(["From", "To", "Changes show up later by"], "".join(lags), right=(2,)),
-                    "Our calculation from USGS hourly flow over the last 8 days at both gauges: the shift that best lines up their rises and falls (correlation 0.85 or more). An estimate from recent readings, not a measured travel time; it changes with flow. Gauges with no clear match are left out.")
+                    "Source: USGS hourly flow over the last 8 days at both gauges; the lag is our calculation: the shift that best lines up their rises and falls (correlation 0.85 or more). An estimate from recent readings, not a measured travel time; it changes with flow. Gauges with no clear match are left out.")
     acc, seen = [], {}
     for r in rows:
         for x in ((Gs[r["site"]]["rec"].get("access") or {}).get("rows") or []):
