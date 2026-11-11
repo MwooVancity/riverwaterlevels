@@ -13,8 +13,8 @@ from lib.common import *
 from lib.pages import load_effective
 from lib import render, related
 
-ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
-exec(compile(open("check.py", encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
+import check  # a module since full audit #47 (its main() runs only as a script)
+ck = vars(check)
 
 
 def link_map():

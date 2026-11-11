@@ -38,7 +38,7 @@ def england(row, page):
     t = page_t(page)
     items = json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/stations/%s/readings?parameter=level&%s" % (urllib.parse.quote(sid), ("since=%s&_sorted&_limit=20" % t) if t else "latest")))["items"]
     live = next((i["value"] for i in items if i.get("measure", "").endswith("-level-stage-i-15_min-mASD") and (not t or str(i.get("dateTime", "")).replace("+00:00", "Z") == t)), None)
-    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # gate audit 2026-11-08: at the page's own minute the numbers must agree to rounding; 0.5 m only against "latest"; no live stage proves nothing; "not reporting" is a true page
+    ok = readable(page) if not shown else live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # gate audit 2026-11-08: at the page's own minute the numbers must agree to rounding; 0.5 m only against "latest"; no live stage proves nothing; "not reporting" is a true page
     print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
     near = [f for f in json.loads(get("https://environment.data.gov.uk/flood-monitoring/id/floods?lat=%.6f&long=%.6f&dist=0.01" % (row[2], row[3])))["items"] if f.get("severityLevel") in (1, 2, 3)]
     if near and "No flood warnings in force" in page:  # the agency's filter is wide (an area 1.3 km off Colwick came back, 2026-11-03): only an area the page's own rule covers is a fault
@@ -59,9 +59,15 @@ def ireland(row, page):
     q = "https://erddap.marine.ie/erddap/tabledap/IrishNationalTideGaugeNetwork.csv?time%%2CWater_Level_OD_Malin&station_id=%%22%s%%22&time=%s" % (urllib.parse.quote(sid), t) if t else None
     lines = get(q).strip().splitlines()[2:] if q else []
     live = float(lines[0].split(",")[1]) if lines and lines[0].split(",")[1] not in ("", "NaN") else None
-    ok = not shown or live is None or abs(float(shown.group(1)) - live) <= 0.02
+    ok = readable(page) if not shown else live is None or abs(float(shown.group(1)) - live) <= 0.02
     print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
     return int(not ok)
+
+
+def readable(page):
+    """A page with no stage number passes only when it says so: a flow number instead, or the 'Gauge not reporting' banner. Full audit #14: a page we
+    could not read (stage tile gone, markup changed) counted as ok."""
+    return bool(re.search(r'data-live="flow">-?\d', page)) or 'id="gauge_not_reporting"' in page
 
 
 def page_t(page):
@@ -87,7 +93,7 @@ def check(row):
         t = page_t(page)
         fs = json.loads(get("https://api.weather.gc.ca/collections/hydrometric-realtime/items?f=json&STATION_NUMBER=%s&limit=1&%sproperties=LEVEL" % (sid, ("datetime=%s&" % t) if t else "sortby=-DATETIME&")))["features"]
         live = fs[0]["properties"]["LEVEL"] if fs else None
-        ok = not shown or live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # same minute: rounding only; "not reporting" is a true page; no feed value for the page's minute proves nothing
+        ok = readable(page) if not shown else live is None or abs(float(shown.group(1)) - live) <= (0.02 if t else 0.5)  # same minute: rounding only; "not reporting" is a true page; no feed value for the page's minute proves nothing
         print(row[1], shown.group(1) if shown else "not reporting", "feed", live, "ok" if ok else "FAULT")
         near = json.loads(get("https://api.weather.gc.ca/collections/weather-alerts/items?f=json&lang=en&limit=20&bbox=%.3f,%.3f,%.3f,%.3f" % (row[3] - .01, row[2] - .01, row[3] + .01, row[2] + .01)))["features"]
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -108,7 +114,7 @@ def check(row):
         cur = next((m["value"] for m in ms if dt_.datetime.fromisoformat(m["timestamp"]) == t0), None)
     else:
         cur = json.loads(get("https://www.pegelonline.wsv.de/webservices/rest-api/v2/stations/%s/W/currentmeasurement.json" % urllib.parse.quote(name)))["value"]
-    ok = not shown or cur is None or abs(int(shown.group(1)) - cur) <= (2 if t else 50)  # same minute: rounding only (gate audit 2026-11-08)
+    ok = readable(page) if not shown else cur is None or abs(int(shown.group(1)) - cur) <= (2 if t else 50)  # same minute: rounding only (gate audit 2026-11-08)
     print(row[1], shown.group(1) if shown else "not reporting", "feed", cur, "ok" if ok else "FAULT", "page time", t or "none")  # 2026-11-09: Duesseldorf built 26 against feed 13 twice in the cloud while a rebuild from the live feed gives 13; the time shows whether a stale cache row was built
     return int(not ok) + wt_block(name, page, row)
 
@@ -208,34 +214,17 @@ def carry(urls, n):
     """Before deploy: each world page whose number does not match its agency keeps its live copy; a new page with none is recorded in _failed.json, so the
     release's second try sends it back (tools/quarantine.py) and ships the rest. No count cap (owner 2026-11-08); many at once is said loudly.
     Exit code: 0 the rest may ship, 1 a new page failed (second try), 1 a carry could not be made."""
-    if len(urls) > max(3, n // 20):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import check  # one carry rule and one warning threshold (full audit #46): live copy from dist/ or the site, old times kept, _carried.json
+    from lib.common import new_fail  # one writer of _failed.json (truth_live uses it too)
+    if check.too_many(len(urls), n):
         print("WARNING world truth: %d pages disagree with their agency at once (parser or feed fault?); each keeps its live copy or goes back to the queue" % len(urls))
     newf = []
-    cp = os.path.join(LOCAL, "_carried.json")
-    try:
-        done = set(json.load(open(cp)))
-    except (OSError, ValueError):
-        done = set()
-    for u in urls:
-        dst = os.path.join(LOCAL, u.strip("/"), "index.html")
-        try:
-            html = urllib.request.urlopen(urllib.request.Request("https://riverwaterlevels.com" + u, headers=UA), timeout=30).read()
-        except urllib.error.HTTPError as e:
-            if e.code != 404:
-                print("world truth: could not carry", u, str(e)[:60])
-                return 1
-            sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from lib.common import new_fail  # one writer of _failed.json (truth_live uses it too)
-            new_fail(LOCAL, u, ["%s: its number did not match the agency" % u])
-            newf.append(u)
-            continue
-        except Exception as e:
-            print("world truth: could not carry", u, str(e)[:60])
-            return 1
-        open(dst, "wb").write(html)
-        done.add(u.strip("/") + "/index.html")
-        print("CARRIED previous live page for", u, "(its number did not match the agency)")
-    json.dump(sorted(done), open(cp, "w"))
+    if not check.carry(LOCAL, {u.strip("/") + "/index.html": ["its number did not match the agency"] for u in urls}, None, newf):
+        return 1
+    for r_ in newf:
+        u = "/" + r_.rsplit("index.html", 1)[0]
+        new_fail(LOCAL, u, ["%s: its number did not match the agency" % u])
     return 1 if newf else 0
 
 
@@ -254,6 +243,12 @@ def selftest():
         assert check(en) == faults, "a page saying no warnings beside a live agency warning passed, or an area far off by the agency's wide filter alarmed"
     get = lambda u: '<i data-n="4009"></i><b data-live="stage">1.05</b> No flood warnings in force' if "/e/" in u else '{"items": [{"measure": "x/4009-level-stage-i-15_min-mASD", "value": 1.07}]}' if "readings" in u else '{"items": [{"severityLevel": 4}]}'
     assert check(en) == 0, "a true English page failed, or a warning no longer in force counted"
+    for pg_, want in (('<i data-n="4009"></i><b>3.05</b>', 1), ('<i data-n="4009"></i><section class="card" id="gauge_not_reporting">', 0), ('<i data-n="4009"></i><b data-live="flow">12</b>', 0)):
+        get = lambda u, pg_=pg_: pg_ if "/e/" in u else '{"items": []}'
+        assert check(en) == want, "full audit #14: a page whose stage could not be read passed, or a not-reporting or flow-only page failed: %r" % pg_
+    for pg_, want in (('<i data-n="X1"></i>', 1), ('<i data-n="X1"></i><section id="gauge_not_reporting">', 0)):
+        get = lambda u, pg_=pg_: pg_ if "/i/" in u else "h\nunits\n"
+        assert ireland([0, "/i/", 52.0, -8.0], pg_) == want, "full audit #14: an unreadable Irish page passed"
     assert drought_gap("Not in a mapped drought area", "2") == 3 and drought_gap("D2 Severe Drought", "1") == 1 and drought_gap("Not in a mapped", "NoData") == 0, "drought comparison wrong"
     get = lambda u: '{"features": [{"properties": {"STATION_NAME": "SEYMOUR FALLS", "VALUE": 9.9, "YEAR_COUNT_NORMAL_PERIOD": 1}}]}'
     assert canada_blocks([0, "/x/", 49.0, -123.0], '<section id="climate_normals">station Seymour Falls, 9 km January 9.9 °C</section>') == 1, "a one-year normal passed"

@@ -203,8 +203,8 @@ if rc:
 def page_check(picks_):
     """{site: first message} for each new gauge whose built page fails check.py's page checks (the same functions the site gate runs per page)."""
     os.chdir(ROOT)
-    ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
-    exec(compile(open("check.py", encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
+    import check  # a module since full audit #47 (its main() runs only as a script)
+    ck = vars(check)
     out = {}
     for r in picks_:
         u = r.get("url")

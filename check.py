@@ -301,6 +301,26 @@ def check_html(h, rel):
     return bad
 
 
+OBS_CLOCK = re.compile(r'data-live="obs">([A-Z][a-z]{2})\s(\d{1,2}),\s(\d{1,2}):(\d{2})\s([AP]M)\b.*?data-live="age" data-t="([^"]+)"', re.S)  # \s: the page writes no-break spaces (lib/core.py clock)
+
+
+def clock_text(h, tzn):
+    """Full audit 2026-11-10 #13: the clock a reader sees ('observed Nov 8, 1:00 PM') must be the page's own reading time (data-t) in the gauge's zone; a
+    1 h daylight-saving slip or a zone mix-up shows here. Hour and minute, month and day all compared; the zone label itself is checked above."""
+    m = OBS_CLOCK.search(h)
+    if not m or not tzn:
+        return []
+    import datetime, zoneinfo
+    try:
+        t = datetime.datetime.fromisoformat(m.group(6).replace("Z", "+00:00")).astimezone(zoneinfo.ZoneInfo(tzn))
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+        return []
+    hh = int(m.group(3)) % 12 + (12 if m.group(5) == "PM" else 0)
+    if (m.group(1), int(m.group(2)), hh, int(m.group(4))) != (t.strftime("%b"), t.day, t.hour, t.minute):
+        return ["clock shown %s %s, %s:%s %s, but the reading time %s is %s in %s" % (m.group(1), m.group(2), m.group(3), m.group(4), m.group(5), m.group(6), t.strftime("%b %d, %I:%M %p %Z"), tzn)]
+    return []
+
+
 def claims_vs_cache(h, rec, now=None):
     """A page that says a value is missing while our own cache holds it fresh has hidden data (Memphis: 'no gage height' while NWS MEMT1 observed it)."""
     import datetime
@@ -318,6 +338,9 @@ def claims_vs_cache(h, rec, now=None):
                 bad.append("observed time labelled %s, but this gauge's zone %s is %s" % (zl.group(1), tzn_, "/".join(sorted(ok_))))
         except (zoneinfo.ZoneInfoNotFoundError, ValueError):
             pass
+    bad += clock_text(h, tzn_)
+    if "has no current river forecast" in h and (((rec.get("nwps") or {}).get("forecast") or {}).get("points")):  # full audit #13: a "Not issued" claim against the cache it was built from
+        bad.append("river forecast shown as not issued while the cache holds NWS %s forecast points" % (rec.get("nwps") or {}).get("lid"))
     o = (rec.get("nwps") or {}).get("obs_stage") or {}
     try:
         fresh = (now - datetime.datetime.fromisoformat(o["t"].replace("Z", "+00:00"))).total_seconds() < 24 * 3600 and float(o["v"]) > -999
@@ -454,6 +477,22 @@ def reuse_barred(sources):
     A row records it as "ads", "commercial" or "cache": "barred"; such a row may never be quoted or owner-permission (blocks show only those)."""
     return ["source %s shows on pages but its terms bar %s: use another official source or link out" % (r.get("id"), ", ".join(k for k in ("ads", "commercial", "cache") if r.get(k) == "barred"))
             for r in sources if r.get("status") in ("quoted", "owner-permission") and any(r.get(k) == "barred" for k in ("ads", "commercial", "cache"))]
+
+
+TERMS = ("ads", "commercial", "cache")
+TERM_VALUES = ("allowed", "barred", "unread")  # "allowed" only where the row's own quoted terms say so (public domain, "commercially", a licence to copy); "unread" is said, never guessed
+
+
+def terms_unstated(sources):
+    """Full audit 2026-11-10 #17: 35 of 42 sources on pages never said whether ads, commercial use and caching are allowed, so reuse_barred could not fire.
+    Every row shown on pages (quoted or owner-permission, with blocks) states each of the three as allowed, barred or unread."""
+    return ["source %s shows on pages but does not state %s as allowed, barred or unread" % (r.get("id"), ", ".join(k for k in TERMS if r.get(k) not in TERM_VALUES))
+            for r in sources if r.get("status") in ("quoted", "owner-permission") and r.get("blocks") and any(r.get(k) not in TERM_VALUES for k in TERMS)]
+
+
+def terms_unread(sources):
+    """Ids of sources shown on pages whose terms on ads, commercial use or caching were never read: printed every run, a to-do for a browser read."""
+    return sorted(r["id"] for r in sources if r.get("status") in ("quoted", "owner-permission") and r.get("blocks") and "unread" in [r.get(k) for k in TERMS])
 
 
 def hater_rules(h):
@@ -638,6 +677,12 @@ def glossary_gaps(h):
 
 
 
+def noindex_link(src_noindex, href, urls, noindex_of):
+    """Full audit 2026-11-10 #24 (live /lake/barren-river-lake/, noindexed, linked from home and Bowling Green): an indexable page links a built water page
+    only when that page is indexable too. Embeds and /status/ are not water pages (kind trust or status), so their noindex never counts."""
+    return not src_noindex and href in urls and bool(noindex_of.get(href)) and kind_of(urls[href]) in ("gauge", "world")
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -715,6 +760,8 @@ def check_dir(d):
         for href in links:
             if href not in urls and href not in redirects and href not in static and not href.endswith("/data.json"):
                 results[rel].append("broken internal link %s" % href)
+            elif noindex_link(noindex_of.get(u), href, urls, noindex_of):
+                results[rel].append("links to noindexed water page %s (links rule 5: only built, indexable pages are linked)" % href)
         graph[u] = links
         k = kind_of(rel)
         if n_links[u] > BUDGET[k]:
@@ -743,7 +790,7 @@ def check_dir(d):
                 hub = "/river/%s/" % parts[1]
                 if hub in urls and hub not in graph.get(u, ()):
                     results[urls[u]].append("no link back to hub %s" % hub)
-                if hub in urls and len(parts) == 3 and base not in graph.get(hub, ()):
+                if hub in urls and len(parts) == 3 and base not in graph.get(hub, ()) and not noindex_link(noindex_of.get(hub), base, urls, noindex_of):  # an indexable hub must not list a noindexed gauge (links rule 5)
                     results[urls[hub]].append("hub does not link to gauge %s" % base)
     # sitemap equals page set
     sp = os.path.join(d, "sitemap.xml")
@@ -795,7 +842,7 @@ def check_dir(d):
     except (OSError, ValueError):
         pass
     kept |= {"/embed" + u for u in list(kept)}  # a kept gauge page keeps its embed panel too
-    orphans = [u for u in urls if u not in depth and u not in kept]
+    orphans = [u for u in urls if u not in depth and u not in kept and not (noindex_of.get(u) and kind_of(urls[u]) in ("gauge", "world") and any(not v for v in noindex_of.values()))]  # a noindexed water page (pulled or held) is unlinked on purpose (links rule 5); in hold mode, every page noindexed, the orphan rule still runs
     deep = [u for u, k in depth.items() if k > 4]
     for what, us_ in (("not reachable from home", orphans), ("deeper than 4 clicks from home", deep)):  # a water page is held alone (carried or sent back); any other page is site-level
         for u in us_:
@@ -933,8 +980,37 @@ def selftest():
     assert interp_pct(short, 1.0) is None and interp_pct(short, 9.0) is None and 25 < interp_pct(short, 3.5) < 50, "selftest: a record with no 5th or 95th claimed an end or lost its comparison"
     assert foreign_usgs("(USGS CDEC-SHA)") and foreign_usgs("USGS lake gauge TWDB-travis") and foreign_usgs('href="https://waterdata.usgs.gov/monitoring-location/USGS-CDEC-SHA/"') and not foreign_usgs("USGS PAD-US (USGS 09380000) USGS Topo"), "selftest: a USGS label on a CDEC id passed"
     assert reuse_barred([{"id": "chs", "status": "quoted", "commercial": "barred"}]) and not reuse_barred([{"id": "chs", "status": "off", "commercial": "barred"}]), "selftest: a source whose terms bar ads or commercial use could still show"
-    _bar = reuse_barred(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"])
+    _src = json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"]
+    _bar = reuse_barred(_src) + terms_unstated(_src)
     assert not _bar, "; ".join(_bar)
+    assert terms_unstated([{"id": "x", "status": "quoted", "blocks": ["a"], "ads": "allowed", "commercial": "allowed"}]) and terms_unstated([{"id": "x", "status": "owner-permission", "blocks": ["a"], "ads": "yes", "commercial": "allowed", "cache": "allowed"}]) and not terms_unstated([{"id": "x", "status": "off", "blocks": ["a"]}, {"id": "y", "status": "quoted", "blocks": []}, {"id": "z", "status": "quoted", "blocks": ["a"], "ads": "unread", "commercial": "allowed", "cache": "barred"}]), "selftest: a source on pages that does not state its ads, commercial and caching terms passed (full audit #17)"
+    _pk = "-----BEGIN " + "PRIVATE KEY-----"
+    assert SECRET.search('{"private_key": "%s\\nMIIE"}' % _pk) and SECRET.search("-----BEGIN RSA " + "PRIVATE KEY-----") and not SECRET.search("-----BEGIN PUBLIC KEY-----"), "selftest: a private key block in a built file passed the secret scan (full audit #18)"
+    _env = {"METOFFICE_SITE_KEY": "m" * 30, "GSC_KEY_JSON": json.dumps({"private_key_id": "ab" * 20, "private_key": _pk + "x", "client_email": "a@b"}), "PATH": "p" * 30}
+    assert "m" * 30 in own_secrets(_env) and "ab" * 20 in own_secrets(_env) and "p" * 30 not in own_secrets(_env), "selftest: the Met Office key or the Search Console key id is not searched for in built files (full audit #18)"
+    import tempfile, io, urllib.request, urllib.error
+    _real_open, _root = urllib.request.urlopen, ROOT
+    try:  # full audit #46: one carry rule; a live copy keeps its old times and is listed, a never-published page goes to `new`, any other error fails the carry
+        with tempfile.TemporaryDirectory() as td_:
+            globals()["ROOT"] = td_
+            for p_ in ("next/a/x", "next/b/x", "dist/a/x"):
+                os.makedirs(os.path.join(td_, p_))
+            open(os.path.join(td_, "dist", "a", "x", "index.html"), "w").write("old")
+            nd_ = os.path.join(td_, "next")
+            for f_, v_ in (("live-sites.json", [["s1", "/a/x/"]]), ("_built.json", {"s1": {"at": "new"}})):
+                json.dump(v_, open(os.path.join(nd_, f_), "w"))
+                json.dump([["s1", "/a/x/", "old"]] if f_ == "live-sites.json" else {"s1": {"at": "old"}}, open(os.path.join(td_, "dist", f_), "w"))
+            urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(urllib.error.HTTPError("u", 404, "nf", {}, io.BytesIO()))
+            got_, new_ = [], []
+            assert carry(nd_, {"a/x/index.html": ["m"], "b/x/index.html": ["m"]}, got_, new_) and got_ == ["a/x/index.html"] and new_ == ["b/x/index.html"], "selftest: carry did not keep the live copy or list the never-published page"
+            assert open(os.path.join(nd_, "a", "x", "index.html")).read() == "old" and json.load(open(os.path.join(nd_, "_carried.json"))) == ["a/x/index.html"] and json.load(open(os.path.join(nd_, "_built.json"))) == {"s1": {"at": "old"}}, "selftest: a carried page kept this build's times or was not listed in _carried.json"
+            assert not carry(nd_, {"b/x/index.html": ["m"]}), "selftest: a page with no live copy passed the carry with no caller to record it"
+            urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(OSError("down"))
+            assert not carry(nd_, {"b/x/index.html": ["m"]}, [], []), "selftest: the live site down read as a never-published page"
+    finally:
+        urllib.request.urlopen = _real_open
+        globals()["ROOT"] = _root
+    assert too_many(11, 100) and not too_many(10, 100) and too_many(51, 1000) and not too_many(50, 1000), "selftest: the one carry warning threshold moved"
     assert queue_over([{"rank": "1", "keyword": "x tides", "tier": "50000"}], {"x tides": "5000"}) and not queue_over([{"rank": "1", "keyword": "x tides", "tier": "500"}], {"x tides": "5000"}), "selftest: a queue row above its Keyword Planner tier passed"
     _kt = {}
     for _f in ("keyword-tiers.csv", "keyword-tiers-water.csv"):
@@ -1263,6 +1339,15 @@ def selftest():
     assert claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at), "selftest: hidden NWS stage did not fire"
     zp_ = '<p class="sub">USGS gauge 1 &middot; observed Nov 8, 1:00 PM %s &middot; 5 min old</p>'
     assert any("labelled EST" in x for x in claims_vs_cache(zp_ % "EST", {"tz": "America/Denver"}, at)) and not claims_vs_cache(zp_ % "MST", {"tz": "America/Denver"}, at) and not claims_vs_cache(zp_ % "MDT", {"tz": "America/Denver"}, at) and not claims_vs_cache(zp_ % "MST", {"tz": "America/Phoenix"}, at), "selftest: a wrong zone label passed, or a right one (standard or daylight) failed (gate audit 2026-11-08)"
+    ck_ = '<p class="sub">USGS gauge 1 &middot; observed <span data-live="obs">%s</span> &middot; <span class="ab"><span data-live="age" data-t="2026-11-08T20:00:00+00:00">5 min</span> old</span></p>'
+    assert not clock_text(ck_ % "Nov 8, 1:00 PM MST", "America/Denver") and not clock_text(ck_ % "Nov 8, 12:00 PM PST", "America/Los_Angeles"), "selftest: a right reader clock failed"
+    assert clock_text(ck_ % "Nov 8, 2:00 PM MST", "America/Denver") and clock_text(ck_ % "Nov 9, 1:00 PM MST", "America/Denver") and clock_text(ck_ % "Nov 8, 1:00 AM MST", "America/Denver"), "selftest: a reader clock 1 h off (daylight saving slip), a day off or AM for PM passed (full audit #13)"
+    assert any("clock shown" in x for x in claims_vs_cache(ck_ % "Nov 8, 2:00 PM MST", {"tz": "America/Denver"}, at)), "selftest: claims_vs_cache does not run the clock check"
+    fcn_ = {"nwps": {"lid": "ABCD1", "forecast": {"points": [{"t": "x", "v": 1}]}}}
+    assert any("not issued" in x for x in claims_vs_cache("<small>NWS ABCD1 has no current river forecast.</small>", fcn_, at)) and not claims_vs_cache("<small>NWS ABCD1 has no current river forecast.</small>", {"nwps": {"lid": "ABCD1", "forecast": {"points": []}}}, at), "selftest: 'no current river forecast' beside cached forecast points passed, or a true one failed (full audit #13)"
+    u_ = {"/": "index.html", "/lake/a/": "lake/a/index.html", "/lake/b/": "lake/b/index.html", "/embed/lake/a/": "embed/lake/a/index.html", "/status/": "status/index.html"}
+    ni_ = {"/": False, "/lake/a/": False, "/lake/b/": True, "/embed/lake/a/": True, "/status/": True}
+    assert noindex_link(False, "/lake/b/", u_, ni_) and not noindex_link(True, "/lake/b/", u_, ni_) and not noindex_link(False, "/lake/a/", u_, ni_) and not noindex_link(False, "/embed/lake/a/", u_, ni_) and not noindex_link(False, "/status/", u_, ni_), "selftest: an indexable page linking a noindexed water page passed, or an embed, /status/ or an indexable target fired (full audit #24)"
     assert not claims_vs_cache('<span>Gage height</span><b>1.60 <small>ft</small></b>', obs, at), "selftest: filled NWS stage wrongly failed"
     assert not claims_vs_cache('<span>Gage height</span><b>Not measured</b>', obs, at + datetime.timedelta(days=2)), "selftest: a 2-day-old NWS stage should not count"
     lvr = {"coops": {"level": {"id": "9449424", "name": "Cherry Point", "km": 23.3}, "station": "9449211"}}
@@ -1296,12 +1381,28 @@ def selftest():
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 
-SECRET = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|cloudflare_api_token)[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{20,}")
+SECRET = re.compile(r"(?i)(api[_-]?key|x-api-key|secret|authorization|bearer|cloudflare_api_token)[\"']?\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----")  # full audit 2026-11-10 #18: the Search Console service-account key is a PEM block
+OWN_KEYS = ("USGS_API_KEY", "CLOUDFLARE_API_TOKEN", "AIRNOW_API_KEY", "RIDB_API_KEY", "METOFFICE_SITE_KEY", "GSC_KEY_JSON")
+
+
+def own_secrets(env):
+    """This machine's key values to look for verbatim; the service-account JSON is searched by its private key id and key, not as one long string."""
+    out = []
+    for k_ in OWN_KEYS:
+        v = env.get(k_) or ""
+        if k_ == "GSC_KEY_JSON":
+            try:
+                j_ = json.loads(v)
+                out += [str(j_.get(f_) or "") for f_ in ("private_key_id", "private_key")]
+            except ValueError:
+                pass
+        out.append(v)
+    return [v for v in out if len(v) >= 12]
 
 
 def secret_scan(d):
     """No key, token or secret in any built text file, and none of this machine's own key values."""
-    bad, own = [], [v for k_, v in os.environ.items() if k_ in ("USGS_API_KEY", "CLOUDFLARE_API_TOKEN", "AIRNOW_API_KEY", "RIDB_API_KEY") and len(v) >= 12]
+    bad, own = [], own_secrets(os.environ)
     for root, _, fs in os.walk(d):
         for f in fs:
             if f.endswith((".png", ".gz", ".ico")):
@@ -1336,10 +1437,20 @@ def keep_old_times(d, rels):
     json.dump(built, open(bp, "w"), separators=(",", ":"))
 
 
-def carry(d, fails, got=None):
-    """Replace each failing gauge page with its live copy (dist/ when present, else the live site), so the other pages ship. True when every one was replaced."""
-    import shutil, urllib.request
-    ok = True
+def too_many(k, n):
+    """One threshold for every carry gate (check, truth_tests, truth_live, truth_world): more failing pages than this at once is said loudly as a likely
+    template, checker or feed fault. A warning only: each page still keeps its live copy or goes back to the queue (owner 2026-11-08)."""
+    return k > max(CARRY_MAX, n // 20)
+
+
+def carry(d, fails, got=None, new=None):
+    """The one carry rule (full audit 2026-11-10 #46; check.py, truth_tests, truth_live and truth_world all call it). Each failing page {rel: [why]} of the
+    build in d keeps its live copy (dist/ when present, else the live site), its times stay the live copy's (keep_old_times, or the 6 h alarm stays quiet
+    and the Worker dates old content as new) and it is listed in d/_carried.json. A page the live site does not have (404: never published) goes into
+    `new` when the caller passes a list (the caller records it for quarantine.py), else it fails the carry. True when every page was carried or listed new."""
+    import shutil, urllib.request, urllib.error
+    got = [] if got is None else got
+    ok, n0 = True, len(got)
     for rel in fails:
         dst, old = os.path.join(d, rel), os.path.join(ROOT, "dist", rel)
         try:
@@ -1347,12 +1458,27 @@ def carry(d, fails, got=None):
                 shutil.copy2(old, dst)
             else:
                 url = "https://riverwaterlevels.com/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
-                open(dst, "wb").write(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read())
-            got is not None and got.append(rel)
-            print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(fails[rel])[:160] + ")")
+                body = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read()
+                open(dst, "wb").write(body)
+            got.append(rel)
+            print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(str(x) for x in fails[rel])[:160] + ")")
+        except urllib.error.HTTPError as e:
+            if e.code == 404 and new is not None:
+                new.append(rel)
+                continue
+            print("could not carry", rel, e)
+            ok = False
         except Exception as e:
             print("could not carry", rel, e)
             ok = False
+    if len(got) > n0:
+        keep_old_times(d, set(got[n0:]))
+        cp = os.path.join(d, "_carried.json")
+        try:
+            done = set(json.load(open(cp)))
+        except (OSError, ValueError):
+            done = set()
+        json.dump(sorted(done | {r.replace("\\", "/") for r in got[n0:]}), open(cp, "w"))
     return ok
 
 
@@ -1367,17 +1493,12 @@ def main():
     except (OSError, ValueError):
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
-    if len(fails) > max(CARRY_MAX, sum(1 for k in res if kind_of(k) in CARRYABLE) // 20):  # a template or checker fault: said loudly, still page by page (owner 2026-11-08 fully automatic: no count stops the release)
+    if too_many(len(fails), sum(1 for k in res if kind_of(k) in CARRYABLE)):  # a template or checker fault: said loudly, still page by page (owner 2026-11-08 fully automatic: no count stops the release)
         print("WARNING: %d pages failed at once (template or checker fault?); each keeps its live copy or goes back to the queue" % len(fails))
     if "--carry" in sys.argv and fails and not site_bad and all(kind_of(k) in CARRYABLE for k in fails):
-        got = []
-        if not carry(d, fails, got) and got:  # release 2026-11-07: pages that were carried are recorded even when a new one could not be, so quarantine.py sees them as shipped, not failed
-            keep_old_times(d, set(got))
-            json.dump(sorted({r.replace("\\", "/") for r in set(got) | done}), open(os.path.join(d, "_carried.json"), "w"))
-        elif got and len(got) == len(fails):  # owner 2026-10-28: one bad page must not hold every other fix off the site
+        got = []  # release 2026-11-07: pages that were carried are recorded (carry writes _carried.json) even when a new one could not be, so quarantine.py sees them as shipped
+        if carry(d, fails, got):  # owner 2026-10-28: one bad page must not hold every other fix off the site
             carried = set(fails)
-            keep_old_times(d, carried)
-            json.dump(sorted({r.replace("\\", "/") for r in carried | done}), open(os.path.join(d, "_carried.json"), "w"))
             res, site_bad, maxd = check_dir(d)
             fails = {k: v for k, v in res.items() if v and k not in carried and k not in done}  # a carried page is the live one: it passed the checks of its own release
     for k, v in fails.items():
@@ -1390,10 +1511,14 @@ def main():
     for x in leaks[:5]:
         print("SITE FAIL secret-like text in built file", x)
     site_bad += ["secret-like text in %d built file(s)" % len(leaks)] if leaks else []
+    _src = json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"]
+    _ur = terms_unread(_src)
+    print("terms census: %d sources on pages, %d with ads, commercial or caching terms unread (read them in a browser): %s" % (sum(1 for r in _src if r.get("status") in ("quoted", "owner-permission") and r.get("blocks")), len(_ur), ", ".join(_ur) or "none"))
     print("pages %d, failing %d, site-level failures %d, max click depth from home %d" % (len(res), len(fails), len(site_bad), maxd))
     if fails or site_bad:  # tools/quarantine.py reads this after a failed release
         json.dump({"pages": fails, "site": site_bad}, open(os.path.join(d, "_failed.json"), "w", encoding="utf-8"))
     sys.exit(1 if (fails or site_bad) else 0)
 
 
-main()
+if __name__ == "__main__":
+    main()

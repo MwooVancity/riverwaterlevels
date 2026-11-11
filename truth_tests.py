@@ -317,11 +317,10 @@ def carry_bad(rows, n):
         by.setdefault(s_, []).append(m_)
     if any(s_ not in rows for s_ in by):
         return False
-    if len(by) > max(3, n // 20):  # owner 2026-11-08: no count stops the release; many at once is said loudly
+    import check  # one carry rule and one warning threshold (full audit #46)
+    if check.too_many(len(by), n):  # owner 2026-11-08: no count stops the release; many at once is said loudly
         print("WARNING truth tests: %d gauges failed at once (template or checker fault?); each keeps its live copy or goes back to the queue" % len(by))
     d = os.path.join(ROOT, "dist_next")
-    ck = {"__file__": os.path.join(ROOT, "check.py"), "__name__": "check"}
-    exec(compile(open(os.path.join(ROOT, "check.py"), encoding="utf-8").read().rsplit("\nmain()", 1)[0], "check.py", "exec"), ck)
     fails = {}
     for s_, ms in by.items():
         u = rows[s_].get("dashboard_url") or rows[s_].get("url") or ""
@@ -329,22 +328,14 @@ def carry_bad(rows, n):
         if not rel or not os.path.exists(os.path.join(d, rel)):
             return False
         fails[rel] = ms
-    got = []
-    ck["carry"](d, fails, got)
-    new_ = [r for r in fails if r not in got]  # practice 2026-11-08: a new page has no live copy; it is recorded for quarantine.py (second try sends it back), never a stop of every page
-    if new_:
+    got, new_ = [], []
+    if not check.carry(d, fails, got, new_):  # carry keeps the live copy's times and lists it in _carried.json; a live site that does not answer stops the release
+        return False
+    if new_:  # practice 2026-11-08: a new page has no live copy; it is recorded for quarantine.py (second try sends it back), never a stop of every page
         from lib.common import new_fail
         for r in new_:
             new_fail(d, "/" + r.replace("\\", "/").rsplit("index.html", 1)[0], ["truth: " + m for m in fails[r]][:3])
-    fails = {r: fails[r] for r in got}
-    ck["keep_old_times"](d, set(fails))
-    cp = os.path.join(d, "_carried.json")
-    try:
-        done = set(json.load(open(cp)))
-    except (OSError, ValueError):
-        done = set()
-    json.dump(sorted(done | {r.replace("\\", "/") for r in fails}), open(cp, "w"))
-    print("truth tests: %d gauge(s) kept their live page, %d new sent back; the rest ship: %s" % (len(fails), len(new_), ", ".join(sorted(by))))
+    print("truth tests: %d gauge(s) kept their live page, %d new sent back; the rest ship: %s" % (len(got), len(new_), ", ".join(sorted(by))))
     return not new_
 
 
