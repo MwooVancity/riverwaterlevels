@@ -340,6 +340,42 @@ def run():
     nt = r_.search(r'data-tide="([^"|]+)\|[^"]*" data-tides="([^"]*)">(\w+)', render.hero(cst, None))
     assert nt and render.parse_t(nt.group(1)) > n0 and nt.group(3) == "Low" and nt.group(2).count(";") == 1 and "data-tides" in render.TIDE_JS, "audit #15: the next tide is not after the build time, or the tile carries no tide list for the browser to step forward"
     assert "No NOAA tide prediction after this page was built" in render.hero(dict(cst, rec=dict(cst["rec"], coops=dict(cst["rec"]["coops"], hilo=[hl_(-1, 8.0, "H")]))), None), "audit #15: no future tide prediction did not say so"
+    world_hub()
+
+
+def world_hub():
+    """PLAN 'Every page its own' item 4: a world hub carries data of its own (km order, one chart, warnings, BfG forecast highs) from rows already in cache."""
+    from lib.directory import world_page
+    nw = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
+    iso = lambda h: (nw - datetime.timedelta(hours=h)).isoformat()
+    ser = lambda base: [[iso(h), base + h % 5] for h in range(168, -1, -1)]
+    wxok = {"alerts": [], "fetched_at": iso(1)}
+    g = lambda name, km, **k: dict({"name": name, "km": km, "cm": 200.0, "then": 190.0, "time": iso(1), "state": "normal", "series": ser(200), "wx": wxok}, **k)
+    # Danube: km counts from the mouth, so it falls downstream; the list starts upstream, its middle out of order
+    rows = [g("ULM", 2586.0, wx={"abroad": True}), g("KELHEIM", 2414.0, fc={"at": iso(2), "pts": [[iso(-6), 250.0, "forecast"], [iso(-30), 270.0, "estimate"]]}), g("INGOLSTADT", 2458.0),
+            g("REGENSBURG", 2379.0, time=iso(30)), g("HOFKIRCHEN", 2256.0), g("STRAUBING", 2321.0),
+            g("PASSAU", 2225.0, wx={"alerts": [{"event": "Frost", "ends": (nw + datetime.timedelta(hours=6)).isoformat()}], "fetched_at": iso(1)})]
+    page = {"slug": "danube", "river": "Danube", "lead": "Official gauges, upstream to downstream."}
+    h = world_page(page, {"fetched_at": iso(1), "rows": rows}, nw, ())
+    order = [n.title() for n in ("ULM", "INGOLSTADT", "KELHEIM", "REGENSBURG", "STRAUBING", "HOFKIRCHEN", "PASSAU")]
+    assert [h.index(">%s<" % n) for n in order] == sorted(h.index(">%s<" % n) for n in order) and "by the agency's river kilometre" in h, "world hub: Danube not upstream to downstream by km (km falls downstream)"
+    chart = h[h.index('id="world_level_chart"'):h.index("</section>", h.index('id="world_level_chart"'))]
+    assert chart.count('<polyline') == 8 and "4 of 6 reporting gauges" in chart and "Regensburg" not in chart and "Ulm" in chart and "Passau" in chart, "world hub: chart not capped at 4 evenly spaced reporting lines, or a gauge not reporting drawn"
+    assert "Not reporting" in h and ">Regensburg<" in h, "world hub: a gauge not reporting is not named in the table"
+    al = h[h.index('id="world_alerts"'):]
+    assert "Frost" in al and "Ulm (outside Germany" in al and "DWD" in al, "world hub: a DWD warning in force, or a gauge DWD does not cover, not said"
+    fc = h[h.index('id="world_forecast"'):]
+    assert "270 cm" in fc and "(estimate)" in fc and "8.9 ft" in fc and "other 6 gauges" in fc, "world hub: BfG forecast high, its estimate flag or the count without a forecast wrong"
+    # feed down: every check stale, so the warnings section hides; the gauge list stays
+    down = world_page(page, {"fetched_at": iso(1), "rows": [dict(r, wx={}) for r in rows]}, nw, ())
+    assert 'id="world_alerts"' not in down and 'id="world_gauges"' in down, "world hub: a dead warnings feed showed a section (or 'none'), or the gauge list was lost"
+    # one gauge: no chart, the gauge page has its own
+    one = world_page(page, {"fetched_at": iso(1), "rows": rows[:1]}, nw, ())
+    assert 'id="world_level_chart"' not in one and "Listed upstream" not in one, "world hub: one gauge drew a chart or claimed an order"
+    # a country hub with mixed units: each in its own unit plus feet, no chart across different rivers and zero points, none in force said once
+    ca = {"slug": "canada", "river": "Canada", "lead": "Official gauges.", "feed": "eccc", "flat": True}
+    c = world_page(ca, {"fetched_at": iso(1), "rows": [g("01AB", 0, cm=1.25, then=1.2, unit="m", zone="America/Toronto"), g("02CD", 0, cm=125.0, zone="America/Toronto")]}, nw, ())
+    assert "1.25 m" in c and "4.1 ft" in c and "125 cm" in c and 'id="world_level_chart"' not in c and "None in force" in c and "provincial flood forecasting centres" in c, "world hub: mixed units, a cross-river chart, or Canada's no-alert line wrong"
 
 
 def england(ago):
