@@ -5,7 +5,7 @@ name: watchdog
 # readings are refreshed by requesting a page. It never fails the run. Problems it cannot heal are read at session start.
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 */6 * * *"  # backup only (audit 2026-11-10 #39): the Worker cron dispatches this every hour at :00 (24 of 24 hours on 11-10); this catches a dead Worker or an expired GH_DISPATCH_TOKEN
   workflow_dispatch:
     inputs:
       test_keepalive:
@@ -47,19 +47,25 @@ jobs:
         run: |
           busy=$(gh run list --workflow=refresh.yml --json status --jq '[.[] | select(.status=="queued" or .status=="in_progress" or .status=="pending")] | length' -L 10)
           if [ "$busy" = "0" ]; then gh workflow run refresh.yml && echo "refresh dispatched"; else echo "a refresh is already queued or running ($busy)"; fi
-      - name: Live numbers against USGS and NWS (log only)
+      # audit 2026-11-10 #12: their MISMATCH and FAULT lines go into watchdog-out.txt, so the dashboard step below lists them; a crash is a PROBLEM line there too
+      - name: Live numbers against USGS and NWS (onto the dashboard)
         continue-on-error: true
         timeout-minutes: 5
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-        run: python tools/truth_live.py
-      - name: World gauge pages against their feed
-        id: truth
+        run: |
+          rc=0; timeout 270 python tools/truth_live.py > tl.txt 2>&1 || rc=$?
+          cat tl.txt; cat tl.txt >> watchdog-out.txt
+          if ! grep -q '^truth_live: ' tl.txt; then echo "  PROBLEM: truth_live printed no result (exit $rc): live pages were not compared with USGS/NWS this hour (this step's log)" | tee -a watchdog-out.txt; fi
+      - name: World gauge pages against their feed (onto the dashboard)
         continue-on-error: true
         timeout-minutes: 4
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-        run: python tools/truth_world.py
+        run: |
+          rc=0; timeout 210 python tools/truth_world.py > tw.txt 2>&1 || rc=$?
+          cat tw.txt; cat tw.txt >> watchdog-out.txt
+          if ! grep -q '^world truth: ' tw.txt; then echo "  PROBLEM: truth_world printed no result (exit $rc): world pages were not compared with their agency this hour (this step's log)" | tee -a watchdog-out.txt; fi
       - name: Owner dashboard (this run's Summary tab; tools/ops_summary.py)
         continue-on-error: true
         timeout-minutes: 5

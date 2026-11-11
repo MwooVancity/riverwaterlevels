@@ -4,7 +4,7 @@ ponytail: linear in pages, so fixed costs (wrangler deploy) project high; that o
 import datetime, json, os
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cache", "_ledger.jsonl")
-LIMIT_S = {"shard collect": 45 * 60, "release": 30 * 60}  # a shard job dies at 60 min; the release shares the 45-min brake with the refresh
+LIMIT_S = {"shard collect": 45 * 60, "shard 0 collect": 45 * 60, "release": 30 * 60}  # a shard job dies at 60 min; the release shares the 45-min brake with the refresh
 DEFAULT_S = 45 * 60  # any other stage: the 45-min brake
 GROWTH = 25 * 30  # pages added in 30 days at the daily 25
 KEEP = 4000  # lines: ~24 runs x ~8 stages a day = 90 days at most
@@ -47,7 +47,27 @@ def report(path=PATH, now=None, hours=24):
     return {"stages": out, "soon": soon}
 
 
-if __name__ == "__main__":
+def last_run_s(path=PATH):
+    """The release brake (audit 2026-11-10 #40): seconds of the newest refresh, its "refresh total" plus the "shard collect" logged before it,
+    from one run, not the worst of each in 24 h. None when either line is missing (lost cache, unreadable file): the brake then holds the release."""
+    rows = []
+    try:
+        for l in open(path, encoding="utf-8"):
+            try:
+                rows.append(json.loads(l))
+            except ValueError:
+                continue
+    except OSError:
+        return None
+    i = next((k for k in range(len(rows) - 1, -1, -1) if rows[k].get("stage") == "refresh total"), None)
+    sh = next((r for r in reversed(rows[:i]) if r.get("stage") == "shard collect"), None) if i is not None else None
+    return rows[i]["s"] + sh["s"] if sh else None
+
+
+if __name__ == "__main__" and "--last-run-min" in __import__("sys").argv:  # sharded.yml release brake: minutes, or nothing when unknown
+    s_ = last_run_s()
+    print("" if s_ is None else int(s_ // 60))
+elif __name__ == "__main__":
     import tempfile
     with tempfile.TemporaryDirectory() as d:
         p = os.path.join(d, "l.jsonl")
@@ -60,4 +80,10 @@ if __name__ == "__main__":
         assert len(r["soon"]) == 1 and r["soon"][0].startswith("shard collect"), "a shard at 2,000 s of 2,700 with 750 pages of growth ahead was not named: %s" % r["soon"]
         old = report(p, now=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=2))
         assert not old["stages"], "runs older than a day still decide"
+        assert last_run_s(p) is None, "no refresh total yet, but the brake got a number"
+        add("refresh total", 900, 200, p)
+        add("shard collect", 100, 200, p)
+        add("refresh total", 300, 200, p)
+        assert last_run_s(p) == 400, "the brake did not read the newest run (300 s) plus its shard collect (100 s): %s" % last_run_s(p)
+        assert last_run_s(os.path.join(d, "none.jsonl")) is None, "a missing ledger read as a fast run"
     print("ledger selftest OK")

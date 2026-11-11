@@ -1,7 +1,8 @@
 name: refresh
 
-# Rebuilds and deploys the site without the owner's computer. Started hourly by the Worker cron (worker/index.js build()) once
-# GH_DISPATCH_TOKEN is set; the schedule below is the backup. One run collects every source on its own timer (collect.py).
+# Rebuilds and deploys the site without the owner's computer. Started hourly by the Worker cron (worker/index.js build(), when the build is
+# over 40 min old); the schedule below is the backup. The work is in sharded.yml: N collect shards, then one merge + release + build + gates +
+# publish + deploy job. The single-job copy of that pipeline was deleted 2026-11-10 (audit #34): it never ran, and its steps drifted from the live ones.
 on:
   push:
     branches: [main]  # every push runs the gates and, only if they pass, deploys (repo audit 2026-10-20: a push never ran a gate before)
@@ -20,143 +21,30 @@ permissions:
   actions: read
 
 jobs:
-  # The switch: data/pipeline.json {"sharded": false} = the single job below, exactly as before; true = sharded.yml (N collect shards, one merge+build+deploy job).
-  # If this tiny job fails, "sharded" is empty and the single job runs: the old path is the fail-safe.
+  # data/pipeline.json {"shards": N}: how many collect jobs. A scheduled run skips itself when the live site was built under 40 min ago (audit #39:
+  # the backup schedule landed minutes after a Worker-started run and rebuilt the same data). Unreadable status.json = run: the site must update.
   plan:
     runs-on: ubuntu-latest
     outputs:
-      sharded: ${{ steps.p.outputs.sharded }}
       shards: ${{ steps.p.outputs.shards }}
+      go: ${{ steps.p.outputs.go }}
     steps:
       - uses: actions/checkout@v7
       - id: p
-        run: python3 -c "import json;d=json.load(open('data/pipeline.json'));print('sharded=' + ('true' if d.get('sharded') is True else 'false'));print('shards=%d' % int(d.get('shards', 20)))" >> "$GITHUB_OUTPUT"
+        run: |
+          n=$(python3 -c "import json; print(int(json.load(open('data/pipeline.json'))['shards']))") || n=20
+          echo "shards=$n" >> "$GITHUB_OUTPUT"
+          go=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            age=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json, sys, datetime; b = datetime.datetime.fromisoformat(json.load(sys.stdin)['built_at']); print(int((datetime.datetime.now(datetime.timezone.utc) - b).total_seconds() // 60))" 2>/dev/null) || age=""
+            if [ -n "$age" ] && [ "$age" -lt 40 ]; then go=false; echo "scheduled run skipped: the live site was built $age min ago"; fi
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
 
   sharded:
     needs: plan
-    if: ${{ needs.plan.outputs.sharded == 'true' }}
+    if: ${{ needs.plan.outputs.go == 'true' }}
     uses: ./.github/workflows/sharded.yml
     secrets: inherit
     with:
-      live: true
       shards: ${{ needs.plan.outputs.shards }}
-
-  refresh:
-    needs: plan
-    if: ${{ !cancelled() && needs.plan.outputs.sharded != 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 150
-    env:
-      USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-      RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
-      AIRNOW_API_KEY: ${{ secrets.AIRNOW_API_KEY }}
-      METOFFICE_SITE_KEY: ${{ secrets.METOFFICE_SITE_KEY }}  # England weather, collect shard 0 only
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      GH_TOKEN: ${{ github.token }}
-      WORKERS_PAID: ${{ vars.WORKERS_PAID }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-      - name: Restore the last published pages (rolling rebuild carries unchanged gauge pages from dist/)
-        uses: actions/cache/restore@v6
-        with:
-          path: dist
-          key: rwl-pages-${{ github.run_id }}
-          restore-keys: |
-            rwl-pages-
-      - name: Restore the last data cache
-        id: datacache
-        uses: actions/cache/restore@v6
-        with:
-          path: |
-            cache
-            state
-          key: rwl-data-${{ github.run_id }}
-          restore-keys: |
-            rwl-data-
-      - name: Keep the committed review signatures (the restored cache holds older ones; 2026-10-27 a fresh _template PASS was overwritten)
-        run: git checkout -- state/reviews && git clean -fdq state/reviews
-      - name: Install the pinned wrangler
-        run: npm ci --silent
-      - name: Daily release (owner cap 25 gauges/day; first run from 11:00 UTC that has not released today)
-        id: rel
-        continue-on-error: true
-        run: |
-          skip() { echo "release SKIPPED: $1"; echo "$1" > state/release-skip.txt; exit 0; }; rm -f state/release-skip.txt
-          today=$(date -u +%F); last=$(cat data/last-release.txt 2>/dev/null || true)
-          m=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; s=json.load(sys.stdin)['ledger']['stages']; print(int((s.get('refresh total',{}).get('s',0)+s.get('shard collect',{}).get('s',0))//60))" 2>/dev/null || echo 0)  # scale debate 2026-11-07: the last normal refresh from the site's own ledger, not GitHub's run time (it counted the release itself: 55 min) and no API call
-          echo "last refresh took ${m} min; last release ${last:-never}"
-          if [ "${m:-0}" -gt 45 ]; then skip "the last refresh took ${m} min, over 45"; fi
-          cap=${{ vars.WORKERS_PAID && 100000 || 20000 }}  # WORKERS_PAID: repo variable the owner sets after buying the plan
-          lim=$(curl -s --max-time 20 https://riverwaterlevels.com/status.json | python3 -c "import json,sys; d=json.load(sys.stdin); f=d.get('files') or 0; c=int(sys.argv[1]); print('files %d of %d' % (f, c) if f > 0.7 * c else '')" "$cap" 2>/dev/null || true)
-          if [ -n "$lim" ]; then skip "a hard limit is over 70% ($lim)"; fi  # grow no further until the owner acts
-          k=$(python -I tools/worker_load.py 2>/dev/null || true)
-          if [ -z "${{ vars.WORKERS_PAID }}" ] && [ "${k:-0}" -ge 10 ]; then skip "Cloudflare stopped the Worker $k times in 24 h"; fi  # a stopped run is a reader's error page
-          rem=$(curl -sI --max-time 20 https://riverwaterlevels.com/live/00000000.json | tr -d '\r' | awk 'tolower($1)=="x-rwl-usgs-remaining:"{print int($2)}')
-          if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
-          if [ $((10#$(date -u +%H))) -ge 11 ] && [ "$today" != "$last" ]; then  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
-            python -I tools/world_match.py | head -3 || true
-            python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
-            python -I tools/release.py 25 && python -I tools/open_wave.py 25 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
-        if: steps.rel.outputs.released != '1'
-        run: git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
-      - name: Refresh (collect, build, check, publish, deploy, live check)
-        continue-on-error: true  # never fail the run: publish.py already refuses to publish a broken build, so a red run would only send the owner noise email. Real health is on /status and in this step's log.
-        env:
-          CACHE_MATCHED: ${{ steps.datacache.outputs.cache-matched-key }}
-        run: python refresh.py 2>&1 | tee refresh-out.log
-      - name: Second try after a failed release (failing new gauges go back to the queue, or the whole release is undone; the site always updates)
-        if: ${{ steps.rel.outputs.released == '1' }}
-        continue-on-error: true
-        run: |
-          if ! grep -q "refresh OK" refresh-out.log; then
-            rm -rf dist  # a failed deploy already published here: pages carried from it link to gauges this try takes back
-            python -I tools/quarantine.py || { git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/; }
-            python refresh.py --no-collect 2>&1 | tee refresh-out.log
-          fi
-      - name: Keep the day's new gauges only if the refresh passed
-        if: steps.rel.outputs.released == '1'
-        continue-on-error: true
-        env:
-          GSC_KEY_JSON: ${{ secrets.GSC_KEY_JSON }}  # owner 2026-11-10: Search Console key as a GitHub secret, for the sitemap resubmit only
-        run: |
-          git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
-          if grep -q "refresh OK" refresh-out.log && ! git diff --quiet data/waves.csv data/world-pages.json; then
-            python -I tools/reindex.py --queue || true  # the day's new pages join the daily Request-indexing queue (one writer: this step)
-            date -u +%F > data/last-release.txt; if git diff data/waves.csv | grep -q '^+live,'; then date -u +%F > data/last-success.txt; fi; git add -f docs/research/priority/picks.csv; git add data/reindex-new.txt data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
-            git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
-            git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
-            python -I tools/indexnow.py --new || true  # tell Bing the pages that just opened (PLAN 0h); never fails the release
-            pip install -q google-api-python-client google-auth >/dev/null 2>&1; python -I tools/gsc_submit.py || true  # tell Google the sitemap changed (Search Console API; needs the service account at Full)
-          else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
-            echo "release DROPPED: the release was undone or the refresh did not pass"
-            git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/
-            python -I tools/release_failed.py "release undone $(date -u +%F), the refresh did not pass with it"
-            git add data/waves.csv data/last-release.txt && git commit -m "release failed today: its picks wait until tomorrow ($(date -u +%F))" && git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release-failed recorded"
-          fi
-      - name: Save the published pages (a missing dist/ after a dry run only logs a warning)
-        if: always()
-        uses: actions/cache/save@v6
-        with:
-          path: dist
-          key: rwl-pages-${{ github.run_id }}
-      - name: Did this run pass (a missed restore saves a new cache only after a passing refresh)
-        id: passed
-        if: always()
-        run: grep -q 'refresh OK' refresh-out.log && echo 'ok=1' >> "$GITHUB_OUTPUT" || true
-      - name: Save the data cache (a failed restore must not replace the good copy; readiness debate 2026-11-07, a lost cache must not stay lost)
-        if: ${{ always() && (steps.datacache.outputs.cache-matched-key != '' || steps.passed.outputs.ok == '1') }}
-        uses: actions/cache/save@v6
-        with:
-          path: |
-            cache
-            state
-          key: rwl-data-${{ github.run_id }}

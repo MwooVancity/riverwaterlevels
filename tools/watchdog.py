@@ -18,6 +18,7 @@ REBUILD_MIN = 120     # the Worker rebuilds on the hour only when the last build
 EDGE_MAX_S = 1800     # the cron writes only when a reading changed; 30 min with no write means the poll stopped
 # a source that has not worked for this long is reported dead: 3 h for the hourly sources, 30 h for once-a-day sources
 HOURLY = {"usgs", "nws", "rain", "wpc", "nwps"}
+EMPTY_MIN = 5  # gauges answered empty, all of them, before a source counts as a feed answering empty
 SLOW = {"world-normals": 750, "world-access": 750, "access": 750, "land": 750, "cdec_res": 750}  # fetched only when 720 h old (collect.py world_extras, collect.py MONTHLY): 50 h called them dead (2026-11-07: world-normals "94 h"; 2026-11-10: cdec_res "75 h", one gauge fetched fine on 11-07). A failing run still alarms (the failed-share rule below)
 
 
@@ -66,6 +67,14 @@ def mass_carry(n_carried, n_gauges):
     return "%d of %d gauge pages carried as their old copy in the last run (over 5%%): a template, checker or feed fault; see the refresh log FAIL lines" % (n_carried, n_gauges) if n_gauges and n_carried > max(3, n_gauges // 20) else None
 
 
+def empty_answer(src, n):
+    """(line, is a problem) for a source that returned nothing for every gauge it was asked about. Audit 2026-11-10 #38: 1 to 4 gauges with nothing
+    is gauges without that data (a new lake, a coast: fieldmeas, peaks, year), not a feed answering empty; 9 such lines stood every hour."""
+    if n >= EMPTY_MIN:
+        return "source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n), True
+    return "source %s returned nothing for its %d gauge(s) in its last run (too few to call the feed down)" % (src, n), False
+
+
 def world_thin(s):
     t = (s.get("world") or {}).get("thin") or {}
     return "%d world gauges held as thin pages (under the floor): %s" % (len(t), "; ".join("%s: %s" % (k, ", ".join(v)) for k, v in list(t.items())[:3])) if t else None
@@ -112,8 +121,8 @@ def main():
             bad.append("data cache lost: this build started empty; the good copy was not overwritten")
         try:
             sh_ = json.loads(s.get("shards") or "{}")
-            if 0 in sh_.get("failed", []) or len(sh_.get("failed", [])) * 4 >= sh_.get("of", 1):
-                bad.append("collect shards failed: %s of %s (shard 0 holds every world gauge)" % (sh_["failed"], sh_["of"]))
+            if sh_.get("failed"):  # any failed shard: its US gauges and its world pages (collect.py my_shard) keep their old readings and go stale
+                bad.append("collect shards failed: %s of %s (their gauges and world pages keep old readings until the next run)" % (sh_["failed"], sh_["of"]))
         except ValueError:
             pass
         for c_ in (s.get("coverage") or {}).get("drops") or []:
@@ -155,7 +164,8 @@ def main():
                 bad.append("%s failed on %d gauge(s) in the latest run (%s)" % (src, lr["failed"], v.get("last_error") or ""))
                 continue
             if lr.get("ok", 0) == 0 and lr.get("absent", 0) == n and n:
-                bad.append("source %s returned nothing for all %d gauges in its last run (the agency sent an empty answer)" % (src, n))
+                line_, is_bad = empty_answer(src, n)
+                (bad if is_bad else ok).append(line_)
                 continue
             if not last or ((src in UNIVERSAL or src in HOURLY) and hours_since(last) > limit) or hours_since(last) > SLOW.get(src, 50):  # never worked, or a daily source silent for two days
                 bad.append("%s %s has not worked for %s (last error: %s)" % ("feed dead:" if (src in HOURLY or src in ("eccc", "pegelonline", "ea")) and (not last or hours_since(last) > 24) else "source", src, "ever" if not last else "%.0f h" % hours_since(last), v.get("last_error") or "none recorded"))
@@ -251,19 +261,13 @@ def main():
         print("  PROBLEM:", x)
     for x in ok:
         print("  ok:", x)
-    # Owner alarm after the Claude subscription ends (2026-10-30): the hourly run fails TWICE A DAY (01 and 13 UTC) when a reader-visible problem stands,
-    # so GitHub's built-in failure email reaches the owner. Source noise (one feed down, its block hides) never alarms.
-    SEVERE = ("site unreachable", "edge check failed", "edge stored copy", "cannot read", "world gauge readings", "feed dead", "Worker load unreadable", "data cache lost", "collect shards failed", "pages missing blocks", "blocks vanished", "build key", "no new gauges released", "numbers last verified", "USGS key budget", "Workers Paid", "site rebuilt", "live gauges on the site (missing", "built pages disagreed", "Cloudflare plan files", "GitHub cache", "gauge pages not rebuilt", "Googlebot and a phone", "deploy key expires", "carried as their old copy")  # gate audit 2026-11-08: mass_carry reached the log only
-    alarm = [x for x in bad if any(k in x for k in SEVERE)]
-    out = os.environ.get("GITHUB_OUTPUT")
-    if out:
-        open(out, "a").write("heal=%s\n" % ("refresh" if "refresh" in heal else "none"))
-        if alarm:  # watchdog.yml decides whether this run may email: GitHub skipped 59% of the 01 and 13 UTC hours (2026-11-02)
-            open(out, "a").write("alarm=%s\n" % " | ".join(alarm)[:900].replace("\n", " "))
-    return 0  # never fails: no owner email; problems are read at session start and healed here where possible
+    if out_:  # owner: no alarms, no emails; the dashboard (watchdog.yml Summary, tools/ops_summary.py) is read daily. The alarm output was never read (audit 2026-11-10 #33)
+        open(out_, "a").write("heal=%s\n" % ("refresh" if "refresh" in heal else "none"))
+    return 0  # never fails: problems are read on the dashboard and at session start, and healed here where possible
 
 
 if "--selftest" in sys.argv:
+    assert empty_answer("nwm.medium", 113)[1] and not empty_answer("fieldmeas", 1)[1] and not empty_answer("stocking", 4)[1] and empty_answer("x", 5)[1], "selftest: an empty answer judged wrong (a problem from 5 gauges, never for 1 to 4)"
     assert mass_carry(12, 216) and not mass_carry(2, 216) and not mass_carry(10, 216) and not mass_carry(0, 0), "selftest: the mass-carry line fired wrong (5% of gauge pages, min 3)"
     real = open
     try:
