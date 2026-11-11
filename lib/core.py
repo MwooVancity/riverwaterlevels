@@ -355,9 +355,8 @@ def fc_points(f):
     return out
 
 
-def miles_between(la1, lo1, la2, lo2):
-    la1, lo1, la2, lo2 = map(math.radians, (la1, lo1, la2, lo2))
-    return 3958.8 * 2 * math.asin(math.sqrt(math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2))
+def miles_between(la1, lo1, la2, lo2):  # lib/common.km in miles
+    return km(la1, lo1, la2, lo2, 3958.8)
 
 
 def human_span(days):
@@ -401,10 +400,6 @@ def compass(d):
 def wind_arrow(d):
     """NWS gives the direction the wind comes FROM; the arrow points where it blows TO. The compass letters stay for screen readers and on hover."""
     return '<span class="wa" role="img" aria-label="from %s" title="Wind from %s" style="transform:rotate(%ddeg)">&#8593;</span>' % (compass(d), compass(d), round(d + 180) % 360)
-
-
-def tint(frac):
-    return "color-mix(in srgb,var(--accent) %d%%,var(--card))" % round(max(0, min(1, frac)) * 55)
 
 
 # One malformed optional record (a source that changed its shape, a half-written cache) must hide ITS block, never stop the page or the build.

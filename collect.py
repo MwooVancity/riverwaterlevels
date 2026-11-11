@@ -111,10 +111,8 @@ def now_iso():
     return iso(datetime.datetime.now(datetime.timezone.utc))
 
 
-def haversine(a, b, c, d):
-    p = math.pi / 180
-    x = math.sin((c - a) * p / 2) ** 2 + math.cos(a * p) * math.cos(c * p) * math.sin((d - b) * p / 2) ** 2
-    return 3958.8 * 2 * math.asin(math.sqrt(x))
+def haversine(a, b, c, d):  # miles; the formula is lib/common.km
+    return km(a, b, c, d, 3958.8)
 
 
 def fetch_usgs(site, h):
@@ -307,10 +305,7 @@ def multiyear(rows, span=50, back=3):
     return {"as_of": last.isoformat(), "span": span, "series": out}
 
 
-def hav_km(a, b, c, d):
-    p = math.pi / 180
-    x = math.sin((c - a) * p / 2) ** 2 + math.cos(a * p) * math.cos(c * p) * math.sin((d - b) * p / 2) ** 2
-    return 12742 * math.asin(math.sqrt(x))
+hav_km = km  # lib/common.km
 
 
 def snotel_stations(h=None):
@@ -1156,18 +1151,8 @@ def fetch_cameras(site, h):
     return {"fetched_at": now_iso(), "cams": out} if out else None
 
 
-def default_sites():
-    """Every gauge marked live in data/waves.csv (tracked in git): the scheduled refresh covers all of them, cache or no cache (sweep 2026-10-21: the live list must not depend on the CI cache surviving)."""
-    import csv
-    return sorted(r["site"] for r in csv.DictReader(open(os.path.join(os.path.dirname(CACHE), "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live")
-
-
-# Slow history and reference data: refreshed at most once a day (owner 2026-10-25), in the 09:00-12:00 UTC full run, after USGS has
-# computed yesterday's daily values everywhere in CONUS and before eastern-morning readers. A value older than 36 h refreshes on any run.
-DAILY = {"snotel", "cpc", "cpc610", "usdm", "attains", "floodfreq", "acis", "ridb", "streamcat", "stocking", "rating", "uv", "dam_rise", "glsea", "usbr_lc", "usno", "usace_pool"}
-WEEKLY = {"meta", "peaks", "wtemp", "record", "year", "fieldmeas", "multiyear", "wqp"}  # wqp: samples come weekly at most; daily at 14,000 gauges would be ~40,000 portal calls a day behind a firewall that blocks bursts  # USGS history, about 6 calls per gauge: daily would be 2,300 calls/h at 9,100 gauges on a 1,000/h key; weekly in 168 slots is 325/h
+from lib.cadence import DAILY, WEEKLY, MONTHLY  # noqa: E402  one list read by collect and tools/watchdog.py SLOW (audit 2026-11-10 #48)
 USGS_OUT = [False]  # the key's hourly quota answered 429: this run stops asking for history, so live readings and the edge keep what is left
-MONTHLY = {"access", "land", "cdec_res"}  # places that change over years; the slowest source when daily (Overpass took 101 of 192 s in a shard, 2026-10-31). 303 calls a day at 9,100 gauges.
 
 
 RUN = {}  # ponytail: outcome counts per source for this process (one collect run per process); written by write_health()

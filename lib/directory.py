@@ -61,9 +61,8 @@ def featured(built, n=FEATURED):
 
 def conus_map(built, Gs, cap=FEATURED):
     """USGS Topo image of the lower 48 with a link dot per featured gauge (the `cap` highest scored), coloured by percentile bucket."""
-    R = 6378137.0
-    mx = lambda lon: R * math.radians(lon)
-    my = lambda lat: R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+    mx = lambda lon: merc(0, lon)[0]
+    my = lambda lat: merc(lat, 0)[1]
     lon0, lon1, lat0, lat1 = -125.0, -66.5, 24.0, 49.6
     x0, x1, y0, y1 = mx(lon0), mx(lon1), my(lat0), my(lat1)
     h = round(800 * (y1 - y0) / (x1 - x0))

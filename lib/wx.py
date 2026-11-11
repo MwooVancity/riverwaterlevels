@@ -6,9 +6,7 @@ NEAR_KM = 60  # a station further than this says nothing about the water here
 UTC = datetime.timezone.utc
 
 
-def km(lat, lon, lat2, lon2):
-    a = math.sin(math.radians(lat2 - lat) / 2) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(lat2)) * math.sin(math.radians(lon2 - lon) / 2) ** 2
-    return 12742 * math.asin(math.sqrt(a))
+from lib.common import km  # noqa: E402  the one distance formula; wx.km stays for lib/world.py and collect.py
 
 
 def nearest(lat, lon, spots, limit=NEAR_KM):

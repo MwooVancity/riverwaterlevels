@@ -4,9 +4,11 @@
 - exactly ONE water-level station in the whole NOAA list may carry that name (Long Beach x4 is refused);
 - a name that is also a non-US tide place in the queue's foreign rows is refused (Plymouth, Portland, Dunedin...).
 Prints proposed coasts.csv rows; --apply appends them. One NOAA call (the station list). Read-only without --apply."""
-import csv, json, math, os, re, sys, urllib.request
+import csv, json, os, re, sys, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+from lib.common import km as _km  # noqa: E402
 TIDE = re.compile(r"^(.*?)\s+(?:tides?|tide times|tide chart|tide table|tides today|harbor tides)$")
 FOREIGN = {"plymouth", "portsmouth", "portland", "dunedin", "aberdeen", "bangor", "belfast", "brighton", "dover", "hull", "newport", "richmond", "freeport",
            "westport", "avalon", "brunswick", "falmouth", "weymouth", "exmouth", "whitby", "scarborough", "southport", "bournemouth", "torquay", "penzance", "vancouver", "beaufort"}  # Vancouver means BC; Beaufort is NC and SC
@@ -131,9 +133,8 @@ def join_queue(adds):
 
 
 def km(a, b):
-    p = 0.017453292519943295
-    x = (float(b["lng"]) - float(a["lng"])) * p * math.cos((float(a["lat"]) + float(b["lat"])) / 2 * p)
-    return 6371 * math.hypot(x, (float(b["lat"]) - float(a["lat"])) * p)
+    """Two NOAA station dicts ({lat, lng}): lib/common.km (was a flat-earth copy; under 0.1% apart at these 10-25 km limits)."""
+    return _km(float(a["lat"]), float(a["lng"]), float(b["lat"]), float(b["lng"]))
 
 
 def pred_pick(picks, pred, wl, have, ref_km=10, level_km=25):

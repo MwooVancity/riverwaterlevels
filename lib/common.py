@@ -169,6 +169,17 @@ def km_mi(km):
     return km * 0.621371
 
 
+def km(lat, lon, lat2, lon2, r=6371):
+    """Great-circle (haversine) distance in km; r=3958.8 gives miles. The one distance formula (audit 2026-11-10 #49: was 4 copies)."""
+    a = math.sin(math.radians(lat2 - lat) / 2) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(lat2)) * math.sin(math.radians(lon2 - lon) / 2) ** 2
+    return 2 * r * math.asin(math.sqrt(a))
+
+
+def merc(lat, lon):
+    """Web Mercator (EPSG:3857) metres for a point: the USGS map exports' bbox."""
+    return 6378137.0 * math.radians(lon), 6378137.0 * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+
+
 def round_half_up(x, nd=0):
     """Round half up, as JavaScript's Math.round does: the page and its live refresh must print the same number (Python's round() and %-format round half to even)."""
     q = 10 ** nd

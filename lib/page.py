@@ -61,9 +61,9 @@ def b_land(G):
 
 
 def b_map(G):
-    lat, lon, R = G["lat"], G["lon"], 6378137.0
+    lat, lon = G["lat"], G["lon"]
     half = 8000 / math.cos(math.radians(lat))
-    cx, cy = R * math.radians(lon), R * math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+    cx, cy = merc(lat, lon)
     bbox = "%.0f,%.0f,%.0f,%.0f" % (cx - half, cy - half * 0.5625, cx + half, cy + half * 0.5625)
     src = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export?bbox=%s&bboxSR=3857&imageSR=3857&size=640,360&format=png&f=image" % bbox
     return block("gauge_map", "Gauge location", "map", '<div class="mapimg"><img src="%s" alt="USGS topographic map centered on %s, about 10 miles across" width="640" height="360" loading="lazy" decoding="async"><i aria-hidden="true"></i></div>' % (src, re.sub(r"^at ", "", where_(G))),

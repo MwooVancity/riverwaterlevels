@@ -1,5 +1,5 @@
 """Small visual widgets for the gauge page: line icons, the percentile dial, stat tiles. Pure strings, no data access."""
-import math, re
+import html, math, re
 
 _I = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">%s</svg>'
 ICONS = {
@@ -128,15 +128,11 @@ def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
     if fc is not None and cur is not None and abs(P(fc) - P(cur)) > 1.5:
         marks += '<u class="lad-fc" style="left:%.2f%%"></u>' % P(fc)
     key = "".join('<li><i style="background:%s"></i>%s <b>%.1f ft</b></li>' % (cols[k], k.capitalize(), v) for k, v in order)
-    key += '<li class="now"><i class="lad-sw"></i>%s <b>%.2f ft</b></li>' % (esc_ui(now_label), cur) if cur is not None else ""
+    key += '<li class="now"><i class="lad-sw"></i>%s <b>%.2f ft</b></li>' % (html.escape(str(now_label), False), cur) if cur is not None else ""
     if fc is not None:
         key += '<li class="fcl"><i class="lad-fsw"></i>%s <b>%.1f ft</b></li>' % (fc_label, fc)
     txt = "Flood stage scale: latest stage %.2f ft%s; action, minor, moderate and major flood stages at %s." % (cur or 0, ("; %s %.1f ft" % (fc_label.lower(), fc)) if fc is not None else "", ", ".join("%.1f ft" % v for _, v in order))
     return '<div class="lad" role="img" aria-label="%s"><div class="lad-bar">%s%s</div><ul class="lad-key">%s</ul></div>' % (txt, segs, marks, key)
-
-
-def esc_ui(s):
-    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def banner(n, names_html):
