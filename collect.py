@@ -1330,7 +1330,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 COAST_TABLES = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("tables") and re.fullmatch(r"\d+(\.\d+)?", r.get("level_km") or "")}  # tide tables (owner decision 3, 2026-11-08): no live level within 25 km, so the page has predictions only; level_* names the nearest live station, never read
@@ -1408,6 +1408,67 @@ def fetch_cdec_res(sta):
     if not cap or not yrs or not all(avg.values()):
         raise RuntimeError("CDEC profile %s: capacity or monthly averages missing" % sta)
     return {"fetched_at": now_iso(), "cap_af": int(cap.group(1).replace(",", "")), "avg_from": yrs.group(1), "avg_to": yrs.group(2), "avg_af": {k: int(v.group(1).replace(",", "")) for k, v in avg.items()}}
+
+
+NID_URL = "https://geospatial.sec.usace.army.mil/dls/rest/services/NID/National_Inventory_of_Dams_Public_Service/FeatureServer/0/query"  # USACE NID public feature service (read 2026-11-10)
+NID_FIELDS = "NIDID,NAME,OTHER_NAMES,FORMER_NAMES,RIVER_OR_STREAM,YEAR_COMPLETED,PRIMARY_OWNER_TYPE,FED_AGENCY_OWNERS,FED_AGENCY_OPERATIONS,PURPOSES,NID_HEIGHT,SURFACE_AREA,MAX_STORAGE,NORMAL_STORAGE,DATA_UPDATED,LATITUDE,LONGITUDE,IS_ASSOCIATED_STRUCTURE"
+NID_GENERIC = {"lake", "lk", "reservoir", "res", "pond", "the", "of", "dam", "and", "at", "near", "nr"}
+NID_MI = {"lake": 15, "dam": 10}  # a lake gauge can sit mid-lake; a river gauge only counts within 10 mi of its dam
+
+
+def nid_words(s):
+    return set(re.findall(r"[a-z0-9]+", (s or "").lower())) - NID_GENERIC
+
+
+def nid_key(site, rec):
+    """What to look for in the NID: ("lake", words of the lake name) for a lake page; ("dam", words of X) for a river gauge whose USGS name says
+    'below/at/near X Dam'. ponytail: no NLDI upstream test; the station name is the proof the dam is at or above the gauge. None = no lookup, no call."""
+    if LAKE_NAME.get(site):
+        w = nid_words(LAKE_NAME[site])
+        return ("lake", w) if w else None
+    m = re.search(r"\b(?:below|blw|bl|bel|at|nr|near)\s+((?:[a-z.'-]+\s+){1,4}?)dam\b", rec.get("river_name") or "", re.I)
+    w = nid_words(m.group(1)) if m else set()
+    return ("dam", w) if w else None
+
+
+def nid_match(rows, lat, lon, kind, words):
+    """The one NID dam for this page, or (None, why). A dam counts when every word of the lake or dam name is in its NID name, other or former
+    names; saddle dikes and other associated structures never count. Two candidates without a clear nearest (second < 1 mi and < 1.5x farther) = none: never guess."""
+    best = {}
+    for a in rows:
+        if a.get("IS_ASSOCIATED_STRUCTURE") == "Yes" or not a.get("NIDID") or a.get("LATITUDE") is None or a.get("LONGITUDE") is None:
+            continue
+        if not words <= nid_words(" ".join(a.get(k) or "" for k in ("NAME", "OTHER_NAMES", "FORMER_NAMES"))):
+            continue
+        mi = haversine(lat, lon, a["LATITUDE"], a["LONGITUDE"])
+        if mi <= NID_MI[kind] and (a["NIDID"] not in best or mi < best[a["NIDID"]][0]):
+            best[a["NIDID"]] = (mi, a)
+    c = sorted(best.values(), key=lambda x: x[0])
+    if not c:
+        return None, "no NID dam named %s within %d mi" % (" ".join(sorted(words)), NID_MI[kind])
+    if len(c) > 1 and (c[1][0] - c[0][0] < 1 or c[1][0] < 1.5 * c[0][0]):
+        return None, "ambiguous: %s and %s" % (c[0][1]["NIDID"], c[1][1]["NIDID"])
+    mi, a = c[0]
+    num = lambda k: a[k] if isinstance(a.get(k), (int, float)) and not isinstance(a.get(k), bool) and a[k] >= 0 else None  # NID: unknown is blank, never zero
+    yr = a.get("YEAR_COMPLETED")
+    return {"id": a["NIDID"], "name": a.get("NAME"), "other": a.get("OTHER_NAMES"), "river": a.get("RIVER_OR_STREAM") if a.get("RIVER_OR_STREAM") not in (None, "", "Unknown") else None,
+            "year": yr if isinstance(yr, int) and 1600 < yr <= datetime.date.today().year else None, "owner": a.get("FED_AGENCY_OWNERS"), "owner_type": a.get("PRIMARY_OWNER_TYPE"),
+            "operator": a.get("FED_AGENCY_OPERATIONS"), "purposes": a.get("PURPOSES"), "height_ft": num("NID_HEIGHT"), "area_ac": num("SURFACE_AREA"), "max_af": num("MAX_STORAGE"),
+            "normal_af": num("NORMAL_STORAGE"), "updated": datetime.datetime.fromtimestamp(a["DATA_UPDATED"] / 1000, datetime.timezone.utc).date().isoformat() if isinstance(a.get("DATA_UPDATED"), (int, float)) else None,
+            "mi": round(mi, 1)}, None
+
+
+def fetch_nid(site, rec):
+    """USACE National Inventory of Dams facts for this lake's dam, or the dam a river gauge's name places it below. One call a month.
+    A cut-short or failed reply raises (previous kept); no match or two equal candidates stores match None, so the page shows no block."""
+    kind, words = nid_key(site, rec)
+    q = urllib.parse.urlencode({"geometry": "%s,%s" % (rec["lon"], rec["lat"]), "geometryType": "esriGeometryPoint", "inSR": 4326, "distance": NID_MI[kind], "units": "esriSRUnit_StatuteMile",
+                                "outFields": NID_FIELDS, "returnGeometry": "false", "f": "json"})
+    d = http_json(NID_URL + "?" + q, timeout=60)
+    if "features" not in d or d.get("exceededTransferLimit"):
+        raise RuntimeError("NID reply cut short or without features")
+    m, why = nid_match([f.get("attributes") or {} for f in d["features"]], rec["lat"], rec["lon"], kind, words)
+    return {"fetched_at": now_iso(), "kind": kind, "match": m, "why": why}
 
 
 def fetch_coops_lake(st):
@@ -1646,6 +1707,7 @@ def fetch_extras(site, rec, h, log):
                     *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
                     *((("usbr_lc", fetch_lc_mead),) if AGENCY.get(site) == "rise:6123" else ()),
                     *((("usace_pool", lambda: fetch_usace_pool(*LAKE_USACE[site])),) if site in LAKE_USACE else ()),
+                    *((("nid", lambda: fetch_nid(site, rec)),) if nid_key(site, rec) else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code

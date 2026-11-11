@@ -280,7 +280,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_snotel": ("none: snow pillows are provincial", "none: no gauge-linked snow feed"), "b_floodfreq": (NO_GAUGE, NO_GAUGE), "b_crests": (NO_GAUGE, NO_GAUGE), "b_flood_outlook": ("none: provincial", "none: state flood centres, no national open feed"),
     "b_depth": ("none: no open channel-measurement feed known (not yet searched, 2026-11-09)", "none: no open channel-measurement feed known (not yet searched, 2026-11-09)"), "b_field_meas": (NO_GAUGE, NO_GAUGE), "b_rating": (NO_GAUGE, NO_GAUGE), "b_samples": (NO_GAUGE, NO_GAUGE), "b_attains": (US_ONLY, US_ONLY), "b_streamcat": (US_ONLY, US_ONLY), "b_land": (US_ONLY, US_ONLY),
     "b_heatmap": ("none: the feed has no hourly grid; the hourly table carries it", "none: covered by the hourly table"), "b_nwm": (US_ONLY, US_ONLY), "b_nwm_medium": (US_ONLY, US_ONLY), "b_noforecast": ("none: the river forecast tile says so", "none: the river forecast tile says so"),
-    "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
+    "b_recreation": (US_ONLY, US_ONLY), "b_stocking": (US_ONLY, US_ONLY), "b_dam": (US_ONLY, US_ONLY), "b_dam_facts": (US_ONLY, US_ONLY), "b_wpc": (US_ONLY, US_ONLY), "b_cpc": (US_ONLY, US_ONLY), "b_nws_point": (US_ONLY, US_ONLY)}
 MET = "next: Met Office Global Spot rain amounts and map images, same key; fields not proven live"
 MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (owner sign-up)"
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
@@ -309,7 +309,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_depth": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_field_meas": "none: the flood-monitoring API reference lists no field measurements, read 2026-11-03", "b_rating": "none: the flood-monitoring API reference lists no rating curves, read 2026-11-03",
     "b_samples": "next: Environment Agency Water Quality Archive sampling points, open; not read", "b_attains": "next: Environment Agency Catchment Data Explorer water body status, open; not read",
     "b_land": "next: UKCEH Land Cover Map; licence not read", "b_noforecast": COVER["b_noforecast"][0],
-    "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
+    "b_streamcat": NOT_CHECKED, "b_nwm": NOT_CHECKED, "b_nwm_medium": NOT_CHECKED, "b_recreation": NOT_CHECKED, "b_stocking": NOT_CHECKED, "b_dam": NOT_CHECKED, "b_dam_facts": US_ONLY, "b_wpc": NOT_CHECKED, "b_cpc": NOT_CHECKED, "b_nws_point": NOT_CHECKED}
 COVER = {b: row + (ENGLAND[b],) for b, row in COVER.items()}  # a block missing from ENGLAND fails here, at import
 IMI_NONE = "none: the Marine Institute tide gauge network publishes sea level only (read 2026-11-09)"
 MET_IE = "next: Met Eireann open data (CC BY 4.0, read 2026-11-09); not wired"
@@ -321,7 +321,7 @@ IRELAND = dict({b: IMI_NONE for b in COVER}, **{  # PLAN 7c, Irish live tide gau
     "b_tides": "have",  # the next three Marine Institute highs and lows, in the forecast tile (page(); 2026-11-09)
     "b_official_marks": "none: the network publishes no station marks; heights are above OD Malin",
     "b_flow_behind": COVER["b_flow_behind"][0], "b_map": COVER["b_map"][0], "b_noforecast": COVER["b_noforecast"][0],
-    "b_attains": US_ONLY, "b_streamcat": US_ONLY, "b_land": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY,
+    "b_attains": US_ONLY, "b_streamcat": US_ONLY, "b_land": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_dam_facts": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY,
     "b_moon": "next: USNO moon phase works anywhere; not wired for world pages", "b_waves": "next: Marine Institute Irish weather buoy network (M2-M6); not read"})
 COVER = {b: row + (IRELAND[b],) for b, row in COVER.items()}
 ORDER = ("eccc", "pegelonline", "ea", "imi")  # the column order of COVER

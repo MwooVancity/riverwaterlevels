@@ -181,6 +181,37 @@ def b_dam(G):
     return block("dam_releases", "Dam release upstream: %s" % esc(d["dam"]), "agency", table(["Measure", "Value", "Time"], rows, right=(1,)), src, sid)
 
 
+def b_dam_facts(G):
+    """The lake's dam, or the dam a river gauge sits below, as the USACE National Inventory of Dams states it (collect.py nid_match).
+    No match, two equal candidates, or never fetched: no block (we do not know a dam is there). Matched with no facts: one grey line. Older than 75 days: amber.
+    Hazard potential is left out on purpose: it rates harm if the dam failed, and beside a lake it reads as a danger verdict."""
+    d = G["rec"].get("nid") or {}
+    m = d.get("match")
+    if not m or not cleared("nid"):
+        return None
+    ac = lambda v, u: "{:,.0f} {}".format(v, u)
+    rows = [(k, v) for k, v in (
+        ("Year completed", m.get("year") and str(m["year"])),
+        ("Owner", m.get("owner") or (m.get("owner_type") and "%s (NID owner type)" % m["owner_type"])),
+        ("Operator", m.get("operator")),
+        ("Purposes", m.get("purposes")),
+        ("River or stream", m.get("river")),
+        ("Dam height (NID height: the largest of its dam, structural and hydraulic heights)", m.get("height_ft") is not None and ac(m["height_ft"], "ft")),
+        ("Lake surface area at normal pool", m.get("area_ac") is not None and ac(m["area_ac"], "acres")),
+        ("Normal storage (below the normal pool, including dead storage)", m.get("normal_af") is not None and ac(m["normal_af"], "acre-ft")),
+        ("Maximum storage (below the highest possible water surface)", m.get("max_af") is not None and ac(m["max_af"], "acre-ft")),
+        ("Distance from this gauge (our calculation)", "%.1f mi" % m["mi"])) if v]
+    name = m.get("name") or m["id"]
+    also = " (%s)" % m["other"] if m.get("other") and m["other"].lower() != name.lower() else ""
+    src = "Source: USACE National Inventory of Dams, record %s%s, fetched %s. Values as the NID states them; the distance is our calculation." % (
+        esc(m["id"]), (", NID data updated %s" % esc(fdate(m["updated"]))) if m.get("updated") else "", esc(fdate(d["fetched_at"][:10])))
+    age_h = (G["now"] - parse_t(d["fetched_at"])).total_seconds() / 3600
+    if len(rows) == 1:  # only our distance: the NID record carries none of the facts
+        return block("dam_facts", "The dam: %s" % esc(name), "hist", "<p>The National Inventory of Dams lists %s%s (record %s) but states none of its size, age or purposes.</p>" % (esc(name), esc(also), esc(m["id"])), src, "nid", empty=True)
+    lead = '<p class="lead">%s%s%s, %.1f mi from this gauge.</p>' % (esc(name), esc(also), (", completed in %d" % m["year"]) if m.get("year") else "", m["mi"])
+    return block("dam_facts", "The dam: %s" % esc(name), "hist", lead + table(["Measure", "Value"], "".join(tr([esc(a), esc(b)], right=(1,)) for a, b in rows), right=(1,)), src, "nid", amber=age_h)
+
+
 def b_samples(G):
     """Last 3 E. coli results on this river's channel (15 km up and down, NLDI river navigation), none older than 3 years. No verdict."""
     w = G["rec"].get("wqp")

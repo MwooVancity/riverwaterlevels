@@ -188,10 +188,10 @@
 "t": "iso"
 },
 "nid": {
-"count": "num",
-"dams": "list",
 "fetched_at": "iso",
-"miles": "num"
+"kind": "str",
+"match": "dict",
+"why": "str"
 },
 "nwm": {
 "comid": "num",
