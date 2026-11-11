@@ -47,6 +47,15 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
    Edge cases: every coast with a borrowed level, not only Clearwater (test: pages where `level_of(G)` is set); a doorway census pair stays flagged until it differs.
 4. WAITING 2026-11-18: lake past years live, then the lake phone review.
 5. OWNER: the clicks under Owner only (Email Routing, Cloudflare token, outreach, 5-second test). Black-hat #7: no named operator or contact is the site's largest rater gap; the contact page waits on Email Routing.
+Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11; ranked by "changes a decision in 30 seconds"; Helpful: answers the reader's next question / Gain: competitors lack it or bury it / HCU: official data, no verdict):
+6. Tap a chart for the value and time (gauge charts: flow, gage height, lake level, tide). Pure page code, no new source.
+   Edge cases: a tap between two readings shows the nearest real reading, never an interpolated one (test: fixture with a 6 h gap); a held or suspect reading is not read out as current; no layout shift (CLS 0 stays: speed run); works with the Worker's live number swap (the newest point included); screen readers keep the table under the chart.
+7. Agency-published activity limits and closures, quoted with source and date ("Boulder County: tubing closed above 700 cfs"), only where an agency publishes one for that reach.
+   Edge cases: an expired or seasonal limit shown as current (store the agency's date and season; past it = hidden); a limit in another unit or gauge (state the agency's gauge; show only when it is this gauge); our words replacing the agency's (quote only, BANNED verdict words still fail); one county's rule shown on a neighbour county's page.
+8. Official bathing-water status (EU bathing water directive sites in Germany/England/Ireland; US state beach advisories where a feed exists), not only samples.
+   Edge cases: an advisory from last season shown as today's (status date shown; out of season says so); a beach 10 km away shown as this river's (distance shown, same water only); a feed down = Unknown, never "open".
+9. Upcoming dam release schedules where the operator publishes them (TVA, USACE, Reclamation), labelled as the operator's plan.
+   Edge cases: a schedule changed after we fetched it (fetched time shown; "plans change" stated by the operator's words); a release for a different dam on the same river; time zone of the operator vs the gauge.
 
 ## Waiting (nothing to do before the date)
 - 2026-11-18: lake past-years block appears as the weekly fetch reaches each lake; read /lake/lake-lanier/, then one phone review of the lake variant.

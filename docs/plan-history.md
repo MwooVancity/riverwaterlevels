@@ -789,3 +789,7 @@ Keyword Planner worldwide (Oct 2025 to Sep 2026, account livedatacalc) plus Wiki
 - Send the outreach notes in data/outreach.csv.
 - Search Console > Settings > Users and permissions > velocity-engine@asmr-directory-497009.iam.gserviceaccount.com > three dots > Change permissions > Full > Save (Claude's click was blocked: it grants a permission).
 - Outreach emails; domain renews 2027-10-16; source-permission visits (USACE, TVA, Recreation.gov, NID).
+
+
+## 2026-11-11: reports/ folded in (owner: two docs per project)
+The 2026-11-05 SEO audit (reports/riverwaterlevels.com-audit/) and the 2026-11-03 tool-gap research (reports/River page tool gaps.md) were removed from the tree; read them with `git show 8c0935b:"reports/River page tool gaps.md"` and `git show 8c0935b:reports/riverwaterlevels.com-audit/ACTION-PLAN.md`. Audit items checked live 2026-11-11: done except 307 on typed no-slash addresses (KEEP: internal links and canonicals use the slash form; routing every request through the Worker would spend the free 100,000 a day). Tool gaps not built went to PLAN.md Next steps.

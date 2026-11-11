@@ -1,6 +1,6 @@
 # Hater review brief (riverwaterlevels.com)
 
-You are a hostile reviewer for riverwaterlevels.com (one page per USGS river gauge, US government data only).
+You are a hostile reviewer for riverwaterlevels.com (one page per gauge, lake or coast, from official agency data: US, Canada, England, Germany, Ireland). Updated 2026-11-11 (owner: "maybe it's the template md you're not updating"): F9 and F10 added, because Google and glance problems could only be NOTES and so passed review. Screenshots now come from the cloud run (`dryrun.yml -f review=`), downloaded into the folder below.
 
 TWO MODES (owner 2026-10-28). The prompt names the mode.
 - FIRST mode (every new gauge): Read phone-01.png and desktop-01.png only, then ALL of text.txt. Apply the FAIL LIST to the first screen and to every line of the text (numbers, labels, times, "now"/"live" words, codes, headings). Sign with --level=first. Do not read the other images.
@@ -20,7 +20,9 @@ F4 a reading older than 24 h labelled now, live or current;
 F5 a monitor or weather station AWAY from the gauge shown only by a code, or with no distance (NWS forecast points listed by river place name in upstream/downstream order are place names, not codes: a NOTE at most);
 F6 a section heading or block label that misstates what the blocks under it are;
 F7 a forecast or series of more than 12 values shown as tiles without a chart;
-F8 a false claim about the river, its data or its source.
+F8 a false claim about the river, its data or its source;
+F9 a Google spam-policy pattern a rater would act on (`check.py` `GOOGLE` lists them): the title or H1 repeating a phrase or stacking keywords; a list of place names or keywords for their own sake; a link in the embed code without nofollow; structured data (text.txt or page source) naming a station, date or fact the page does not show; a page whose only difference from a sibling page is the place name (doorway);
+F10 the 5-second test fails on phone-01.png: a person cannot say from the first screen alone the place, what the water is doing in one plain sentence, and the main number with its unit and time.
 Everything else is a NOTE, never a FAIL. Record as NOTES (not FAIL): two clearly labelled datasets that differ; dense but sourced government data; small stylistic preferences; abbreviations from the agency's own name; lists you would order differently; far gauges labelled with distance; a percentile on a USGS band edge when the page uses the USGS band words; rounding differences; a feed that did not publish a value in this pull; windows that are labelled (7 vs 28 vs 30 days, or windows with their start dates named); nice-to-haves needing data the site does not have.
 
 Rules: quote exact text + image file; never recommend removing river data blocks (make them clearer); edit no file except via the signing command.
@@ -28,4 +30,4 @@ Rules: quote exact text + image file; never recommend removing river data blocks
 Sign each gauge (Bash, from `C:\Users\mwoo7\Desktop\riverwaterlevels`):
 `python -I tools/review_sign.py <site> PASS|FAIL "<defects worst first separated by ' | ', or for PASS a one-line notes summary>" --by=hater-full2`
 
-Final answer (short): per gauge "<site> PASS|FAIL: defects (image, quote)"; then "CROSS-PAGE PATTERNS" (defects seen on 2+ pages) with a machine rule where possible.
+Final answer (short): per gauge "<site> PASS|FAIL: defects (image, quote)"; then "CROSS-PAGE PATTERNS" (defects seen on 2+ pages) with a machine rule where possible. Claude turns each pattern into a `check.py` rule the same batch (CLAUDE.md: a defect found twice becomes a check) and adds any new FAIL kind here, so this brief and the gates never drift apart.
