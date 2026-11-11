@@ -273,6 +273,7 @@ def check_html(h, rel):
                 bad.append("structured data without @context and @type")
         except ValueError:
             bad.append("structured data is not valid JSON")
+    bad += google_rules(h, body)
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -395,6 +396,49 @@ def world_claims(h, rows):
         return []
     shown, tol = float(v.group(1).replace(",", "")), (0.006 if r.get("unit") == "m" else 0.6)
     return [] if abs(shown - r["cm"]) <= tol else ["level on the page %s, the cached reading it was built from %s %s at the same time: a unit, conversion or station slip" % (v.group(1), r["cm"], r.get("unit") or "cm")]
+
+
+# Google's own rules, each mapped to the check that enforces it here, or to why no machine can (owner 2026-11-11: "why is our infrastructure
+# not designed to comply with Google"). Source: developers.google.com/search/docs/essentials/spam-policies, .../fundamentals/creating-helpful-content,
+# .../appearance/structured-data/sd-policies, read 2026-11-11. A new Google policy gets a row the day it is read; tools/blackhat_review.md reads the rest.
+GOOGLE = {
+    "cloaking": "cloak_risks (Worker never reads user agent, bot score, country)",
+    "doorway abuse": "doorway census (name-swap pairs 95%+ same text) + owner decision 4",
+    "expired domain abuse": "not applicable: own domain since 2025",
+    "hacked content": "secret scan + CSP report; not machine-checked beyond that",
+    "hidden text and link abuse": "ui_checks hidden-text rules; closed folds are allowed by Google",
+    "keyword stuffing": "google_rules: a title repeating a two-word phrase",
+    "link spam: widget links": "google_rules: embed code links carry rel=nofollow",
+    "link spam: other": "no paid, exchanged or automated links exist; outreach is by hand (PLAN Owner only)",
+    "machine-generated traffic": "no rank scraping: Search Console API only (tools/gsc_read.py)",
+    "scaled content abuse": "own_census + truth gates (every page carries its own gauge data); blackhat_review reads the rest",
+    "scraping": "every block adds a comparison, label or join the agency page lacks (three tests); not machine-checked",
+    "sneaky redirects": "_redirects are same-content moves only; not machine-checked",
+    "structured data relevance": "google_rules: a borrowed level's station is the one the markup names",
+    "fresh dates without change": "build.py lastmod from a content hash; dateModified = reading time",
+    "who / about / contact": "NOT YET: publisher name and contact wait on the owner (PLAN Owner only)",
+    "factual errors": "truth_tests, truth_live, truth_world",
+    "spelling and sloppiness": "doubled word, BANNED, ui_checks",
+}
+
+
+def google_rules(h, body):
+    """The Google rules a page itself can break (GOOGLE above). One finding each, empty when clean."""
+    bad = []
+    t = re.sub(r"\s+", " ", (re.search(r"<title>(.*?)</title>", h, re.S) or [None, ""])[1]).lower()
+    t = re.sub(r"\b([a-z][a-z ]+?) at \1\b", r"\1", t)  # "Penns Creek at Penns Creek": the town carries the creek's name, not a stuffed phrase
+    words = re.findall(r"[a-z]{3,}", re.split(r"\(|\|", t)[0])
+    pairs = collections.Counter(zip(words, words[1:]))
+    rep = [" ".join(p) for p, n in pairs.items() if n > 1]
+    if rep:
+        bad.append("Google keyword stuffing: the title repeats %r" % rep[0])
+    for code in re.findall(r"<textarea[^>]*>(.*?)</textarea>", h, re.S):
+        if "&lt;a " in code and "nofollow" not in code:
+            bad.append("Google link spam: embed code carries a followed link (widget links must be nofollow)")
+    lv = re.search(r'class="lvl">At NOAA station (\w+)', body)
+    if lv and not any(lv.group(1) in ld and "Dataset" in ld for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S)):
+        bad.append("Google structured data: the readings come from station %s but the Dataset markup does not name it" % lv.group(1))
+    return bad
 
 
 def cloak_risks(js):
@@ -1348,6 +1392,10 @@ def selftest():
     assert not visitor_calls(w_ok), "selftest: timer-only outside calls wrongly flagged: %s" % visitor_calls(w_ok)
     assert visitor_calls(w_ok + "\nasync function page(req) { return fetch('https://api.waterdata.usgs.gov/x'); }"), "selftest: worker calling USGS on a page view did not fire"
     assert cloak_risks('const ua = req.headers.get("User-Agent");'), "selftest: worker reading the user agent did not fire"
+    assert google_rules("<title>Clearwater Beach tides, tide chart today: Clearwater Beach water level, FL</title>", ""), "selftest: a title repeating the place (black-hat 2026-11-11) passed"
+    assert not google_rules("<title>Penns Creek at Penns Creek, PA: live water level and flow</title>", ""), "selftest: a town named after its creek read as stuffing"
+    assert google_rules('<textarea>&lt;a href="x"&gt;Yuba River water level&lt;/a&gt;</textarea>', ""), "selftest: a followed keyword link in embed code passed"
+    assert google_rules('<script type="application/ld+json">{"@type":"Dataset","description":"station 8726706"}</script>', '<small class="lvl">At NOAA station 8726724,'), "selftest: markup naming the wrong station passed"
     assert cloak_risks("if (request.cf.botManagement.score < 30) {}"), "selftest: worker reading the bot score did not fire"
     assert not cloak_risks('fetch(u, { headers: { "User-Agent": UA } })'), "selftest: our own outgoing user agent wrongly flagged"
     w_real = open(os.path.join(ROOT, "worker", "index.js"), encoding="utf-8").read()

@@ -48,6 +48,7 @@ A link exists only because a reader here would tap it next; links come from data
 - Pages enter Google only via `tools/open_wave.py`.
 - Cloudflare free, per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.
 - Wrong or odd number on any page: `tools/source_fix.md`.
+- Google (owner 2026-11-11): `check.py` `GOOGLE` maps every Google spam policy, helpful-content question and structured-data rule to the check that enforces it, or says why none can; `google_rules` runs on every page. A new Google rule gets a row and a check the day it is read; no separate Google doc.
 - A rule not in `gates.py`/`check.py` is a note; a new check ships a fixture (`--selftest`). What can heal never blocks; `tools/watchdog.py` heals hourly. No alarms or emails; the owner reads the dashboard daily. Fix the cause, never loosen a check.
 - Windows: no `&&` in PowerShell; `MSYS_NO_PATHCONV=1` in Git Bash; `python -I`.
 
