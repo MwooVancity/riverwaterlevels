@@ -314,7 +314,7 @@ def sources_block(blocks, G):
     lis = ""
     for i in ids:
         s = SOURCES[i]
-        lis += '<li>%s. <a href="%s" rel="noopener">Terms</a></li>' % (esc((s.get("credit") or s["name"]).rstrip(".")), esc(s["terms_url"]))
+        lis += '<li>%s. <a href="%s" rel="noopener">Terms</a></li>' % (esc(s["name"].rstrip(".")), esc(s["terms_url"]))  # black-hat review 2026-11-11: the credit sentence is already under each block (core.credit_line); the list names the source
     stats_src = G["rec"].get("stats_source")
     return ('<details class="card fold srcall" data-g="data" id="sources"><summary><b>Sources and method</b><span>%d data sources, how the percentile is calculated, disclaimer</span></summary><ul>%s</ul><p class="src">%s</p><p class="src">Percentile method: %s.</p><p class="src">%s</p></details>' % (
         len(ids), lis, esc(humanize_iso(stats_src) if stats_src else "Tide comparison: NOAA CO-OPS 6-minute predictions for this station; the difference is our calculation." if G.get("coast") else "USGS daily statistics: not available for this gauge."), esc(G["method"]), esc(DISCLAIMER)))

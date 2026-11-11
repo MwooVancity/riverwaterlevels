@@ -365,10 +365,9 @@ def b_depth(G):
     where = lambda r: "at the gauge" if r[5] < 50 else "%s ft %s" % (fmtc(r[5]), {"Upstream": "upstream", "Downstream": "downstream"}.get(r[6], "away"))
     say = lambda r: "on %s, at %s cfs, USGS measured the river %s ft wide with an average depth of %.1f ft" % (fdate(r[0][:10]), fmtc(r[1]), fmtc(r[2]), d(r))
     first = near or c[0]  # the reader asks how deep it is today: the measurement at the flow nearest today's leads (phone review 2026-11-09)
-    lead = "<p><b>About %.0f ft deep on average</b> %s: %s (%s). An average across the whole channel: pools and the main channel are deeper, edges shallower.</p>" % (d(first), "at a flow like today's (%s cfs)" % fmtc(G["lv"]) if near else "when last measured", say(first), where(first))  # fresh review 2026-11-09: an average read as a wading depth
+    lead = "<p><b>About %.0f ft deep on average</b> %s: %s (%s). An average across the whole channel (area divided by width): pools and the main channel are deeper, edges shallower, and depth changes with the flow.</p>" % (d(first), "at a flow like today's (%s cfs)" % fmtc(G["lv"]) if near else "when last measured", say(first), where(first))  # fresh review 2026-11-09: an average read as a wading depth
     if first is not c[0]:
         lead += "<p>Latest measurement: %s (%s).</p>" % (say(c[0]), where(c[0]))
-    lead += "<p>Average depth is the cross-section area divided by the width; the deepest part of the channel is deeper, the edges shallower. Depth changes with the flow.</p>"
     rows = "".join(tr([fdate(r[0][:10]), "%s cfs" % fmtc(r[1]), "%.1f ft" % d(r), "%s ft" % fmtc(r[2])], right=(1, 2, 3)) for r in c[:10])
     return block("depth", "How deep and wide the river is here", "hist", lead + more("All %d recent measurements" % min(10, len(c)), table(["Date", "Flow", "Average depth", "Width"], rows, right=(1, 2, 3))),
                  "Source: USGS Water Data API channel measurements (hydrographer site visits within a mile of the gauge; the main channel of each visit), fetched %s. Average depth = area &divide; width, our math." % esc(tzl(parse_t(G["rec"]["fieldmeas"]["fetched_at"]), G["zone"])), "usgs")
