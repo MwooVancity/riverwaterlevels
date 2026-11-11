@@ -47,6 +47,52 @@ def report(path=PATH, now=None, hours=24):
     return {"stages": out, "soon": soon}
 
 
+CATCH_PATH = os.path.join(os.path.dirname(PATH), "_catches.jsonl")
+RUNS = 10  # CLAUDE.md: a gate with no catch in 10 runs is named for deletion (never deleted by code)
+
+
+def add_catches(counts, path=CATCH_PATH):
+    """One line per refresh: {gate: pages or failures it caught}. Kept to KEEP lines; a write error never fails a run."""
+    if not counts:
+        return
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"), "c": counts}) + "\n")
+        lines = open(path, encoding="utf-8").read().splitlines()
+        if len(lines) > KEEP:
+            open(path, "w", encoding="utf-8").write("\n".join(lines[-KEEP:]) + "\n")
+    except OSError as e:
+        print("catch ledger: not written (%s)" % e)
+
+
+def catch_report(path=CATCH_PATH, runs=RUNS):
+    """Per gate over its own last `runs` runs: [runs read, catches]. "idle" = gates with `runs` runs and 0 catches; None when the file is missing (Unknown, never 'idle')."""
+    got = {}
+    try:
+        lines = open(path, encoding="utf-8").read().splitlines()
+    except OSError:
+        return None
+    for l in reversed(lines):
+        try:
+            c = json.loads(l)["c"]
+        except (ValueError, KeyError, TypeError):
+            continue
+        for g, n in c.items():
+            r = got.setdefault(g, [0, 0])
+            if r[0] < runs and isinstance(n, int):
+                r[0], r[1] = r[0] + 1, r[1] + n
+    return {"gates": got, "idle": sorted(g for g, (k, n) in got.items() if k >= runs and n == 0)}
+
+
+def catch_line(rep):
+    """The one line watchdog and ops_summary print."""
+    if not rep:
+        return "gate catches (last %d runs): Unknown (no catch ledger yet)" % RUNS
+    return "gate catches (last %d runs): %s%s" % (RUNS, ", ".join("%s %d in %d" % (g, n, k) for g, (k, n) in sorted(rep["gates"].items())),
+                                                 ("; no catch in %d runs, review for deletion: %s" % (RUNS, ", ".join(rep["idle"]))) if rep["idle"] else "")
+
+
 def last_run_s(path=PATH):
     """The release brake (audit 2026-11-10 #40): seconds of the newest refresh, its "refresh total" plus the "shard collect" logged before it,
     from one run, not the worst of each in 24 h. None when either line is missing (lost cache, unreadable file): the brake then holds the release."""
@@ -86,4 +132,15 @@ elif __name__ == "__main__":
         add("refresh total", 300, 200, p)
         assert last_run_s(p) == 400, "the brake did not read the newest run (300 s) plus its shard collect (100 s): %s" % last_run_s(p)
         assert last_run_s(os.path.join(d, "none.jsonl")) is None, "a missing ledger read as a fast run"
+        cp = os.path.join(d, "c.jsonl")
+        assert catch_report(cp) is None and "Unknown" in catch_line(None), "a missing catch ledger read as every gate idle"
+        for i in range(12):
+            add_catches({"page checks": 1 if i == 0 else 0, "rollback self-test": 0, "world pages vs their agency": 2 if i == 11 else 0}, cp)
+        add_catches({}, cp)
+        open(cp, "a", encoding="utf-8").write("torn{\n")
+        add_catches({"new gate": 0}, cp)
+        cr = catch_report(cp)
+        assert cr["idle"] == ["page checks", "rollback self-test"], "a catch 12 runs ago kept a gate alive, a fresh catch did not, or a 1-run gate was named: %s" % cr
+        assert cr["gates"]["world pages vs their agency"] == [10, 2] and cr["gates"]["new gate"] == [1, 0], cr
+        assert "review for deletion: page checks, rollback self-test" in catch_line(cr), catch_line(cr)
     print("ledger selftest OK")

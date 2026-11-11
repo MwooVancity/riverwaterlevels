@@ -5,7 +5,7 @@ Two gates, both before any deploy; refresh.py runs the same list. Add a check HE
 Gates block only what would show a reader something wrong. Whatever can heal (a slow build, a dead feed, stale edge readings) is reported by
 tools/watchdog.py at session start and never blocks a deploy. A post-deploy gate was deleted 2026-10-26: it could not block anything and
 gate 2 already checks the same numbers before the deploy."""
-import os, subprocess, sys, time
+import os, re, subprocess, sys, time
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PY = [sys.executable, "-I"]
@@ -24,6 +24,14 @@ GATE_1 = [("build", PY + ["build.py"]), ("page checks", PY + ["check.py", "--car
           ("edge one-gauge read self-test", ["node", "tools/worker_slice_test.mjs"])]  # dist/ does not exist yet in CI at gate time
 GATE_2 = [("truth fixtures", PY + ["tools/truth_fixtures.py"]), ("operator feed self-test", PY + ["tools/truth_live.py", "--selftest"]), ("info gain self-test", PY + ["tools/info_gain.py", "--selftest"]), ("truth contracts", PY + ["truth_tests.py"]), ("built pages vs USGS/NWS", PY + ["tools/truth_live.py", "--dir", "dist_next"]), ("world pages vs their agency", PY + ["tools/truth_world.py", "--dir", "dist_next"]), ("world truth self-test", PY + ["tools/truth_world.py", "--selftest"]), ("release failed self-test", PY + ["tools/release_failed.py", "--selftest"]), ("practice keep self-test", PY + ["tools/practice_keep.py", "--selftest"]), ("release rules self-test", PY + ["tools/check_rules.py", "--selftest"]), ("rollback self-test", PY + ["tools/rollback.py", "--selftest"])]
 GATES = [("1 build and sources", GATE_1), ("2 numbers", GATE_2)]
+PAGE_GATES = {"page checks", "built pages vs USGS/NWS", "world pages vs their agency"}  # judge real pages: each caught page is one catch; every other gate catches by failing
+CATCH = re.compile(r"\s*(FAIL |SITE FAIL|MISMATCH|CARRIED |NEW PAGE FAILED)|.* FAULT")
+
+
+def catches(name, out, rc):
+    """What one gate caught in one run (CLAUDE.md: a gate with no catch in 10 runs is named for deletion; lib/ledger.py catch_report). Self-tests print fixture faults on purpose, so only their exit counts."""
+    n = sum(1 for ln in out.splitlines() if CATCH.match(ln)) if name in PAGE_GATES else 0
+    return max(n, 1 if rc else 0)
 
 
 def run(cmd):

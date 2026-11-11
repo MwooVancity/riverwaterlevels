@@ -315,6 +315,7 @@ def main():
         cp_ = os.path.join(ROOT, "cache", "_census.json")
         st_["census"] = json.load(open(cp_, encoding="utf-8")) if os.path.exists(cp_) else None  # every official site built or not; tools/watchdog.py reports it
         st_["ledger"] = ledger.report()  # every stage's slowest run today and the page count where it breaks; tools/watchdog.py alarms on "soon"
+        st_["catches"] = ledger.catch_report()  # per gate, what it caught in its last 10 runs (refresh.py writes it after the gates, so this is the runs before this one)
         st_["coverage"] = coverage.scan(nxt, json.load(open(os.path.join(ROOT, "dist", "status.json"))).get("coverage") if os.path.exists(os.path.join(ROOT, "dist", "status.json")) else None)
         json.dump(st_, open(sp_, "w"), separators=(",", ":"))
     if nfiles > FILE_BUDGET and not preview:

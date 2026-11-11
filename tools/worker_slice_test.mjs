@@ -6,7 +6,9 @@ const fnOf = (name) => {
   const body = src.slice(src.indexOf("function " + name + "("));
   return new Function(body.slice(0, body.search(/\r?\n}\r?\n/) + 3) + "; return " + name + ";")();
 };
-const slice = fnOf("slice"), siteOf = fnOf("siteOf");
+const slice = fnOf("slice"), siteOf = fnOf("siteOf"), future = fnOf("future");
+const n0 = Date.parse("2026-11-10T12:00:00Z");
+if (!future(n0 + 2 * 3600000, n0) || future(n0 + 5 * 60000, n0) || future(n0 - 60000, n0)) { console.error("FAIL a reading 2 h ahead was stored, or 5 min of clock skew / a past reading was dropped (gate audit 0a)"); process.exit(1); }
 const g = {}; for (let i = 0; i < 3000; i++) g[String(10000000 + i)] = { f: [i, "2026-11-07T18:00:00+00:00"], h: [1.5, "2026-11-07T18:00:00+00:00", "Ice"] };
 g["07032000"] = { f: [246000, "2026-11-07T18:00:00+00:00"] };
 const text = JSON.stringify({ t: "2026-11-07T18:57:13.242Z", cur: "2026-11-07T18:50:00Z", rem: 812, g });

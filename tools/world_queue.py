@@ -2,7 +2,7 @@
 data/world-rivers.csv (Wikidata names), data/waves.csv. Outputs: data/world-queue.csv (all rows) and the publishing order
 docs/research/priority/picks.csv (US rows ready now; tools/release.py reads it first). Run: python -I tools/world_queue.py
 """
-import collections as C, csv, os, re
+import collections as C, csv, os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOTAL = 20000
@@ -152,15 +152,21 @@ def water_rows():
             water[(kind, name)] = (t, r["keyword"])
     out, took = [], set()
     w = {r["site"]: r for r in load("waves.csv")}
+    states_of = C.defaultdict(set)  # PLAN step 6: one name in several states (Clear Lake CA, IA, TX) is several places
+    for kind, f, key in (("lake", "lakes.csv", "lake"), ("ocean", "coasts.csv", "place")):
+        for r in load(f):
+            states_of[core(norm(r[key]))].add(r["state"])
     for kind, f, key in (("lake", "lakes.csv", "lake"), ("ocean", "coasts.csv", "place")):
         for r in load(f):
             names = [n for (kd, n) in water if kd == kind and core(n) in (core(norm(r[key])), core(norm(r[key])) | ALIAS.get(core(norm(r[key])), set()))] or [norm(r[key])]  # 'lake choke canyon', 'hartwell lake'
             hit = [(water[(kind, n)], n) for n in names if (kind, n) in water]
             (t, k), n = max(hit) if hit else ((0, ""), "")
             took.update((kind, x) for x in names)
+            held = namesake(core(norm(r[key])), r["state"], k, states_of) if t else ""
+            t = 0 if held else t
             st = (w.get(r["site"]) or {}).get("status")
-            out.append(dict(group=group(t, True), tier=t, keyword=k, river=r.get("lake") or r.get("name"), place=r.get("place", ""), region=r["state"], country="US",
-                            gauge=r["site"], shared="", feed=FEED.get((r.get("source") or ":").split(":")[0]) or ("USGS" if kind == "lake" else "NOAA CO-OPS"), ready="yes" if st in ("live", "queue") else "no", score=0, category=kind))
+            out.append(dict(group=group(t, True), tier=t, keyword=k if t else "", river=r.get("lake") or r.get("name"), place=r.get("place", ""), region=r["state"], country="US",
+                            gauge=r["site"], shared=held, feed=FEED.get((r.get("source") or ":").split(":")[0]) or ("USGS" if kind == "lake" else "NOAA CO-OPS"), ready="yes" if st in ("live", "queue") else "no", score=0, category=kind))
     for (kind, name), (t, k) in water.items():
         if (kind, name) in took:
             continue
@@ -178,6 +184,22 @@ ALIAS = {frozenset({"lanier"}): {"sidney"}}  # Lake Sidney Lanier is Lake Lanier
 
 def core(n):
     return frozenset(n.split()) - {"lake", "reservoir", "the"}
+
+
+def namesake(name, st, keyword, states_of):
+    """PLAN step 6, the systemic namesake rule for lakes and coasts: a bare keyword ('clear lake level') whose name belongs to places in two or more
+    states earns no page its searches until the keyword names the row's state (full name, or the abbreviation as the last word). '' = credit it.
+    Rivers: us_rows (USGS regions) and world_rows (a US river shares the name); tide places abroad: tools/coast_match.py abroad (GeoNames).
+    ponytail: knows only the places in lakes.csv and coasts.csv; a namesake we have not listed is caught by coast_match's GeoNames for coasts, not for lakes."""
+    many = states_of.get(name) or set()
+    if len(many) < 2:
+        return ""
+    sys.path.insert(0, ROOT)
+    from lib.directory import STATE_NAMES as FULL
+    k = norm(keyword)
+    if k.split()[-1:] == [st.lower()] or " %s " % norm(FULL.get(st, st)) in " %s " % k:  # whole words: 'arkansas' never names Kansas
+        return ""
+    return "held: %d states have a place of this name (%s); the keyword names none" % (len(many), ", ".join(sorted(many)))
 
 
 STATE_NAMES = {s.title() for s in ("alabama alaska arizona arkansas california colorado connecticut delaware florida georgia hawaii idaho illinois indiana iowa kansas kentucky "
