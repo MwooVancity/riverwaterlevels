@@ -695,6 +695,17 @@ def noindex_link(src_noindex, href, urls, noindex_of):
     return not src_noindex and href in urls and bool(noindex_of.get(href)) and kind_of(urls[href]) in ("gauge", "world")
 
 
+def attribute(us, urls, results, why):
+    """Audit #21 (2026-11-11): a site-wide mismatch that names pages (index tag vs allow list, sitemap vs indexable set) holds those pages alone:
+    a live one is carried, a new one goes back to the queue (tools/quarantine.py). Returns the URLs that are no page of a carryable kind (still site-level).
+    Was: any such mismatch undid the whole day's release (11-07, 11-08, 11-10 shipped nothing)."""
+    rest = sorted(u for u in us if not (u in urls and kind_of(urls[u]) in CARRYABLE))
+    for u in us:
+        if u in urls and kind_of(urls[u]) in CARRYABLE:
+            results[urls[u]].append(why)
+    return rest
+
+
 def check_dir(d):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes."""
     urlof = lambda rel: "/" + os.path.dirname(rel).replace("\\", "/") + "/" if os.path.dirname(rel) else "/"
@@ -829,12 +840,19 @@ def check_dir(d):
         cfg = indexing.load(ROOT)
         if bool(cfg["open"]) != open_mode:
             site_bad.append("data/index-allow.json (open=%s) and the built _headers (noindex rule present=%s) disagree" % (cfg["open"], not open_mode))
+        per_page = lambda us, why: attribute(us, urls, results, why)
         if open_mode:
             ix_ = {u for u in sm_urls if indexing.indexable(u, cfg)}
             if want != ix_:
-                site_bad.append("pages without a noindex tag differ from data/index-allow.json: no tag but not allowed %s; allowed but tagged %s" % (sorted(want - ix_)[:5], sorted(ix_ - want)[:5]))
+                r1_ = per_page(want - ix_, "no noindex tag but not in data/index-allow.json")
+                r2_ = per_page(ix_ - want, "in data/index-allow.json but carries a noindex tag")
+                if r1_ or r2_:
+                    site_bad.append("pages without a noindex tag differ from data/index-allow.json: no tag but not allowed %s; allowed but tagged %s" % (r1_[:5], r2_[:5]))
         if sm != want:
-            site_bad.append("sitemap differs from the indexable page set: only in sitemap %s; only in site %s" % (sorted(sm - want)[:5], sorted(want - sm)[:5]))
+            r3_ = per_page(want - sm, "indexable but missing from the sitemap")
+            r4_ = per_page(sm - want, "in the sitemap but noindexed")  # a sitemap entry with no page at all behind it stays site-level
+            if r3_ or r4_:
+                site_bad.append("sitemap differs from the indexable page set: only in sitemap %s; only in site %s" % (r4_[:5], r3_[:5]))
     else:
         site_bad.append("no sitemap.xml")
     # reachability and depth from home
@@ -1385,6 +1403,9 @@ def selftest():
     assert not [b for b in hater_rules('<section id="about_gauge"></section>' + kf) if "Key facts" in b], "selftest: a good Key facts block failed"
     assert any("no Key facts" in b for b in hater_rules('<section id="about_gauge"></section>')), "selftest: a page with a station record and no Key facts passed"
     assert any("live reading" in b for b in hater_rules(kf.replace("in Y County.", 'flows <b data-live="flow">5</b> cfs now.'))), "selftest: Key facts holding the live reading passed"
+    res_ = collections.defaultdict(list)
+    left_ = attribute({"/lake/new-lake/", "/ghost/"}, {"/lake/new-lake/": "lake/new-lake/index.html", "/about/": "about/index.html"}, res_, "in the sitemap but noindexed")
+    assert res_["lake/new-lake/index.html"] == ["in the sitemap but noindexed"] and left_ == ["/ghost/"], "selftest: a mismatch on one water page was not held on that page alone, or a missing page was not left site-level"
     oc = own_census({"/a/": ("hub", False, 0), "/b/": ("hub", False, 3), "/c/": ("hub", True, 0), "/d/": ("state", False, 0), "/e/": ("trust", False, 0)})
     assert oc == "own-data census: hub 1 of 2 with no data section of their own, state 1 of 1 with no data section of their own", "selftest: own-data census miscounts (noindex or prose pages counted): " + oc
     from lib.coverage import country
