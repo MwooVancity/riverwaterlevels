@@ -426,10 +426,10 @@
    "id": "airnow",
    "name": "EPA AirNow current air quality (airnowapi.org)",
    "status": "quoted",
-   "ads": "unread",
-   "commercial": "unread",
+   "ads": "allowed",
+   "commercial": "allowed",
    "cache": "allowed",
-   "terms_url": "https://docs.airnowapi.org/faq",
+   "terms_url": "https://docs.airnowapi.org/docs/DataUseGuidelines.pdf",
    "summary": "AirNow API FAQ: access 'is available to the public'; 'These data are not fully verified or validated and should be considered preliminary and subject to change'; each key has a call limit per service. Service: /aq/observation/current/ziplatlong/ (the 2026-10-01 replacement; the latLong service answers 410). Key: AIRNOW_API_KEY. Evidence: search-result 2026-10-21 and a live call read 2026-10-21.",
    "credit": "Air quality: EPA AirNow and the reporting agency named on the row (preliminary data)",
    "blocks": [
@@ -438,7 +438,7 @@
    "read_on": "2026-11-11",
    "evidence_url": "https://docs.airnowapi.org/faq",
    "evidence_phrase": "we recommend users cache daily or hourly air quality observation or forecast data retrieved via web services",
-   "evidence": "WebFetch of the AirNow API FAQ 2026-11-11 (caching recommended). Ads and commercial use rest on the AirNow Data Use Guidelines PDF (docs.airnowapi.org/docs/DataUseGuidelines.pdf), whose text did not extract (embedded fonts); data also come from state and local agencies, so the EPA public-domain licence is not assumed: unread"
+   "evidence": "WebFetch of the AirNow API FAQ 2026-11-11 (caching recommended). AirNow Data Exchange Guidelines PDF (last updated August 2025) read in full 2026-11-11: no bar on ads or commercial use; it expects the data in 'products, publications, presentations, or any other related distribution'. Its conditions, all met on the page: credit the reporting agency and AirNow first; values and advisories unaltered; AQI colours per the EPA technical document; displays say the data are preliminary. One condition is the owner's: tell AirNow (dmc@airnowtech.org) that the site uses the data (PLAN Owner only)."
   },
   {
    "id": "ncwsa",

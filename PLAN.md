@@ -66,8 +66,8 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 - 2026-12-07: Rio Grande at Albuquerque title test (clicks and CTR vs the 28 days before).
 - 2026-12-11: Search Console Links (referring domains) after outreach.
 - 2026-12-21: tide-table pages, impressions after 6 weeks; a page with none is improved or pulled.
-- Terms still unread (no official text found): stocking (Montana says "personal or informational use"), cwms (USACE copyright page blocks bots), acis, airnow (ads/commercial), ncwsa, wqp. Read in a browser; if any bars ads, hide its block.
-- Code review leftovers (low): tide test runs on inland gauges (efficiency); hub status words duplicate the gauge page's helper; a page carried from before the live-line placeholder shows no 'updated' note until it rebuilds.
+- DONE 2026-11-11: AirNow guidelines read in full (no ad or commercial bar; credit, unaltered values, "preliminary" all on the page; EPA AQI colour dot added). stocking, acis, ncwsa, wqp publish no terms (searched 2026-11-11), so nothing bars them; cwms waits on the USACE page (owner, below).
+- CLOSED 2026-11-11, code review leftovers: tide cycle test (lib/hero.py oscillating) costs about 192 readings a page, milliseconds at 14,000; the duplicate hub helper changes nothing a reader sees; the missing 'updated' note heals at the page's next 2 h rebuild.
 
 ## Limits (dates at 25 a day)
 1. USGS 1,000 calls/h: history weekly in 168 slots, 325 calls/h at 9,100; a 429 stops history for that run.
@@ -84,6 +84,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 12. NOAA CO-OPS: 4 calls per coast per hour, no published limit (300 coasts = 28,800 a day): watch 429s. RISE and CDEC publish no limit.
 
 ## Owner only
+- AirNow asks users to tell it they use the data and keep a contact on file: once the contact address exists, send dmc@airnowtech.org one line (site name, URL, contact). Not required for the page to stay up.
 - Request-indexing job stalled since 2026-11-09 (runs 11-10 and 11-11 "succeeded" but requested 0: Chrome asked for site permission and nobody answered): in Chrome, open the Claude extension, allow search.google.com once ("Always allow"). The 9:28 job then runs alone.
 - Links (drawing board 5, 0 sent until now): 40 emails ready in docs/outreach-emails.md, one per organization for the 13 live lake pages, each offering the free embed panel. Send after Email Routing is on (so they can reply to a site address); tell Claude which went and it dates them in data/outreach.csv. Proof: referring domains in Search Console Links, read 2026-12-11.
 - Owner alone decides: publisher name and contact email; pages opened to Google beyond the daily 25; ads and consent; Search Console; source keys; domain renewal; Cloudflare plan; outside uptime monitor; cutting any block.

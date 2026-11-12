@@ -270,6 +270,10 @@ def run():
     assert "Agency flag on this reading: Ice" in world.to_rec({"feed": "eccc", "river": "X", "slug": "x"}, dict(base, flag="Ice"))["feed"]["label_note"], "an ice flag did not reach the page"
 
     from lib import coverage, wx
+    from lib import blocks3 as _b3
+    _now = datetime.datetime(2026, 11, 11, 18, tzinfo=datetime.timezone.utc)
+    _aq = lambda cat: _b3.b_air_quality({"rec": {"airnow": {"fetched_at": "2026-11-11T18:00:00+00:00", "rows": [{"date": "2026-11-11", "hour": "17:00", "aqi": 60, "category": cat, "pollutant": "OZONE", "site": "X", "agency": "A"}]}}, "zone": datetime.timezone.utc, "now": _now})["body"]
+    assert 'background:#ffff00' in _aq("Moderate") and "<i " not in _aq("Not a category").split('class="aq">')[1][:4], "AQI dot missing, or a dot guessed for an unknown category"
     square = [[1, [0, 2, 0, 2], [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]]], [3, [0.5, 1, 0.5, 1], [[[0.5, 0.5], [0.5, 1], [1, 1], [1, 0.5], [0.5, 0.5]]]]]
     assert wx.drought_at(0.7, 0.7, square) == 3 and wx.drought_at(1.5, 1.5, square) == 1 and wx.drought_at(3, 3, square) is None, "drought class wrong"
     assert world.metric("<td>2.3 mi</td>") == "<td>3.7 km</td>", "a decimal distance broke"

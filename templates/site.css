@@ -156,6 +156,7 @@ details.fold>.blk{border:1px solid var(--line)}
 /* ---- fresh-review round 2: ladder as a bar with a text key, absence notes ---- */
 .lad{margin:2px 0 12px}.lad-bar{position:relative;height:16px;border-radius:99px;background:var(--line);margin:14px 0 10px;overflow:visible}.lad-bar>i{position:absolute;top:0;bottom:0}
 .lad-now{position:absolute;top:-8px;width:4px;height:32px;margin-left:-2px;background:var(--ink);border-radius:2px}.lad-fc{position:absolute;top:-6px;width:0;height:0;margin-left:-6px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--accent);text-decoration:none}
+.aq i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
 .lad-key{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.88rem}.lad-key li{display:flex;align-items:center;gap:6px}.lad-key i{width:12px;height:12px;border-radius:3px;display:inline-block}.lad-sw{background:var(--ink)!important;width:4px!important;height:14px!important;border-radius:2px!important}.lad-fsw{background:var(--accent)!important;border-radius:50%!important}
 .gaps{color:var(--mut);font-size:.85rem;margin:8px 0 0;line-height:1.45}
 .search:focus-within,.search input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

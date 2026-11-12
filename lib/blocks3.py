@@ -572,6 +572,9 @@ def _aq_time(r):
 AQ_TZ = {"KST": "AKST", "KDT": "AKDT"}  # AirNow labels Alaska time 'KST' (Anchorage 2026-11-07: hour 17:00 'KST' fetched 02:56 UTC = 17:56 AKST; Korea time would be 19 h old): never print Korea's abbreviation on an Alaska page
 
 
+AQI_RGB = {"good": "#00e400", "moderate": "#ffff00", "unhealthy for sensitive groups": "#ff7e00", "unhealthy": "#ff0000", "very unhealthy": "#8f3f97", "hazardous": "#7e0023"}
+
+
 def b_air_quality(G):
     """EPA AirNow NowCast AQI per pollutant at the nearest reporting site: the air a person breathes on the water today."""
     a = G["rec"].get("airnow")
@@ -594,7 +597,8 @@ def b_air_quality(G):
     rows_note = '' if one or not same_t else '<p class="src">All observed %s.</p>' % esc(_aq_time(a["rows"][0]))
     aq_tab = (('<p class="src">Monitor: %s &middot; observed %s</p>' % (esc(_aq_where(a["rows"][0])), esc(_aq_time(a["rows"][0])))) + table(["Pollutant", "AQI (of 500)", "EPA category"], rows, right=(1,))) if one else table(["Pollutant and monitor", "AQI (of 500)", "EPA category"], rows, right=(1,)) + rows_note
     worst = max(a["rows"], key=lambda r: r["aqi"] or 0)
-    return block("air_quality", "Air quality now", "epa", '<p class="aq">%s: AQI %s of 500 (%s, EPA)</p>' % (esc(worst["category"] or "Not rated"), esc(str(worst["aqi"])), esc((worst["pollutant"] or "").replace("OZONE", "Ozone"))) + aq_tab,
+    dot = AQI_RGB.get((worst["category"] or "").strip().lower())  # AirNow guidelines: AQI shown in the EPA's own colours (AQI technical assistance document, 2018); an unknown category gets no dot
+    return block("air_quality", "Air quality now", "epa", '<p class="aq">%s%s: AQI %s of 500 (%s, EPA)</p>' % ('<i style="background:%s"></i>' % dot if dot else "", esc(worst["category"] or "Not rated"), esc(str(worst["aqi"])), esc((worst["pollutant"] or "").replace("OZONE", "Ozone"))) + aq_tab,
                  "Source: EPA AirNow NowCast AQI, reporting agency %s, nearest monitor to the gauge; preliminary data, subject to change. Fetched %s." % (esc(worst.get("agency") or "not stated"), esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "airnow")
 
 
