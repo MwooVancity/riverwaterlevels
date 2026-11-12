@@ -62,7 +62,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 - WAITING 2026-11-18: Falls Lake (/lake/falls-lake/) is "Crawled, currently not indexed"; indexing re-requested 2026-11-11. Page has more sections than indexed Jordan Lake, so no page fix. Recheck in Search Console; still out = compare with indexed lakes.
 - 2026-11-18: lake past-years block appears as the weekly fetch reaches each lake; read /lake/lake-lanier/, then one phone review of the lake variant.
 - 2026-11-25: Search Console validation result for the noindex-era pages.
-- 2026-12-06: refresh run time alarm projected near 1,011 pages (ledger); build "only what changed" for the next stage then.
+- 2027-01-06: refresh run time reaches its 45 min limit near 1,761 pages (live ledger 2026-11-11, worst runs: shard collect 553 s and truth_live 433 s at 367 pages; was 1,011 before 16 shards). Fix then: data/pipeline.json shards 16 to 20 (GitHub free cap on parallel jobs); past that, truth_live checks a sample of unchanged pages. The watchdog warns 30 days ahead.
 - 2026-12-07: Rio Grande at Albuquerque title test (clicks and CTR vs the 28 days before).
 - 2026-12-11: Search Console Links (referring domains) after outreach.
 - 2026-12-21: tide-table pages, impressions after 6 weeks; a page with none is improved or pulled.
