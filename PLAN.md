@@ -67,7 +67,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 - 2026-12-07: Rio Grande at Albuquerque title test (clicks and CTR vs the 28 days before).
 - 2026-12-11: Search Console Links (referring domains) after outreach.
 - 2026-12-21: tide-table pages, impressions after 6 weeks; a page with none is improved or pulled.
-- DONE 2026-11-11: AirNow guidelines read in full (no ad or commercial bar; credit, unaltered values, "preliminary" all on the page; EPA AQI colour dot added). stocking, acis, ncwsa, wqp publish no terms (searched 2026-11-11), so nothing bars them; cwms waits on the USACE page (owner, below).
+- DONE 2026-11-11: AirNow guidelines read in full (no ad or commercial bar; credit, unaltered values, "preliminary" all on the page; EPA AQI colour dot added). stocking, acis, ncwsa, wqp publish no terms (searched 2026-11-11), so nothing bars them; cwms read 2026-11-12 in a browser: USACE information "may be distributed or copied", credit requested (kept).
 - CLOSED 2026-11-11, code review leftovers: tide cycle test (lib/hero.py oscillating) costs about 192 readings a page, milliseconds at 14,000; the duplicate hub helper changes nothing a reader sees; the missing 'updated' note heals at the page's next 2 h rebuild.
 
 ## Limits (dates at 25 a day)
@@ -94,12 +94,10 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 - AdSense: turn on consent mode in Privacy & messaging (flags are off by default); add a contact email, then build `/contact/` and link it in the footer.
 - AdSense decision. CSP stays report-only while ads are on pages.
 - Free sign-ups: SEPA registration, OPW courtesy email (with our server IPs, before Irish river pages), NRW key (Wales 1-year storage limit: default accept, keep 12 months). Later keys: Norway NVE, NZ Canterbury.
-- Read the USACE disclaimer in a browser (bot-blocked; CWMS pools wait on it).
 - Outside uptime monitor; GitHub Actions failure-email setting; a running Keyword Planner campaign for exact monthly volumes.
 - Decide: a daily scheduled Claude routine that reads GitHub failures and the watchdog report and fixes code (costs tokens daily).
 - Replace the Google robot key `livedatacalc-automation` (printed in chat 2026-10-31); old key starts 73f0baf9.
 - Confirm a phone visit in Analytics Realtime (owner's Chrome blocks the tag). Confirm the test alarm email arrived.
-- Delete `river-pipeline-for-chatgpt.zip` from the Desktop.
 - 5-second test (owner 2026-11-09 readable-at-a-glance rule): show one river page on a phone to someone who is not Claude for 5 seconds; they say what the river is doing. Tell Claude what they said.
 - LIVE 2026-11-12 (read live: /contact/ 200 with mailto contact@riverwaterlevels.com, footer link on home, About names the contact; inbox delivery not yet tested) (Claude in Chrome at the owner's request; rule and verified inbox already existed, "Add missing records" clicked; MX live on 1.1.1.1): Contact address (Cloudflare Email Routing): Cloudflare dashboard > riverwaterlevels.com > Email > Email Routing > Get started > add the custom address `contact` (contact@riverwaterlevels.com) forwarding to your own inbox > Add records. If the address is already there, open Email Routing > Settings > "Add missing records". Your inbox address is never written in this repo. Then Claude sets data/publisher.json email to contact@riverwaterlevels.com.
 - Cloudflare API token (the Cloudflare load guard, tools/worker_load.py, is blind without it: audit #32): Cloudflare dashboard > My Profile > API Tokens > Edit the token used as CLOUDFLARE_API_TOKEN > Add more > Account > Account Analytics > Read > Continue to summary > Update token (Save).
