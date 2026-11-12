@@ -273,6 +273,10 @@ def run():
     from lib import core as _core
     _n = "7 days: Source: A. Shaded band: x to y. Flow in cfs. 30 days: Source: B. Shaded band: x to y. Flow in cfs."
     assert _core.say_once(_n) == "7 days: Source: A. Shaded band: x to y. Flow in cfs. 30 days: Source: B.", _core.say_once(_n)
+    import csv as _csv
+    from lib import page as _pg
+    _cs = {r["state"] for r in _csv.DictReader(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "coasts.csv"), encoding="utf-8"))}
+    assert _cs <= set(_pg.BEACH_WATER), "coast state(s) with no beach-water program link: %s" % sorted(_cs - set(_pg.BEACH_WATER))
     from lib import blocks3 as _b3
     _now = datetime.datetime(2026, 11, 11, 18, tzinfo=datetime.timezone.utc)
     _aq = lambda cat: _b3.b_air_quality({"rec": {"airnow": {"fetched_at": "2026-11-11T18:00:00+00:00", "rows": [{"date": "2026-11-11", "hour": "17:00", "aqi": 60, "category": cat, "pollutant": "OZONE", "site": "X", "agency": "A"}]}}, "zone": datetime.timezone.utc, "now": _now})["body"]

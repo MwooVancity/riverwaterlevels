@@ -205,7 +205,11 @@ BEACH_WATER = {"TX": ("Texas Beach Watch (General Land Office)", "https://www.te
                "AK": ("Beach Program (Alaska Department of Environmental Conservation)", "https://dec.alaska.gov/water/water-quality/beach-program"),
                "CA": ("Safe to Swim (California Water Quality Monitoring Council)", "https://mywaterquality.ca.gov/safe-to-swim/"),
                "DE": ("Recreational Water Monitoring (Delaware DNREC)", "https://dnrec.delaware.gov/watershed-stewardship/assessment/recreational-water-monitoring/"),
-               "CT": ("State park beach monitoring (Connecticut DEEP; town beaches are tested by local health departments)", "https://portal.ct.gov/deep/water/inland-water-monitoring/beach-monitoring")}  # 2026-11-12: all seven are the states' own BEACH Act program pages (search results on each agency's domain); MA and AK refuse automated reads (403), read in search results only
+               "CT": ("State park beach monitoring (Connecticut DEEP; town beaches are tested by local health departments)", "https://portal.ct.gov/deep/water/inland-water-monitoring/beach-monitoring"),
+               "AL": ("Coastal Alabama Beach Monitoring Program (ADEM and Alabama Department of Public Health)", "https://adem.alabama.gov/coastal/ademadph-coastal-alabama-beach-monitoring-program"),
+               "GA": ("Georgia Healthy Beaches (Georgia DNR Coastal Resources Division)", "https://coastalgadnr.org/HealthyBeaches"),
+               "NC": ("Recreational Water Quality and swimming advisory map (NC Department of Environmental Quality)", "https://www.deq.nc.gov/recreational-water-quality"),
+               "NY": ("NYC Beach Water Quality (NYC Health Department; beaches outside the city are tested by county health departments)", "https://a816-dohbesp.nyc.gov/IndicatorPublic/Beaches/")}  # tools/edge_tests.py: every state in data/coasts.csv has a row, so a new coast state never ships without its program  # 2026-11-12: all seven are the states' own BEACH Act program pages (search results on each agency's domain); MA and AK refuse automated reads (403), read in search results only
 
 
 def b_official_links(G):
