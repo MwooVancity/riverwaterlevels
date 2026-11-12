@@ -321,7 +321,7 @@ def b_month_chart(G):
         return None
     svg = _year_svg(last, G["stats"], 760, 250, 11, 5, "cw", "%b %d", "30 days") + _year_svg(last, G["stats"], 340, 250, 12, 3, "cn", "%b %d", "30 days")
     return block("month_chart", "Last 30 days", "hist", svg + (LEG if G["rec"].get("stats") else ""),
-                 "Source: USGS daily mean flows (Water Data API), %s to %s. Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median. Gaps are days without a published value; recent days are provisional. Flow in cfs." % (esc(fdate(last[0][0])), esc(fdate(last[-1][0]))), "usgs")
+                 "Source: USGS daily mean flows (Water Data API), %s to %s. Gaps are days without a published value; recent days are provisional. Flow in cfs." % (esc(fdate(last[0][0])), esc(fdate(last[-1][0]))), "usgs")
 
 
 def b_year_chart(G):

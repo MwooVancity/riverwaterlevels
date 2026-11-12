@@ -148,7 +148,7 @@ def b_flow_chart(G):
     if G.get("stage_only") or not G["fl"]:  # no flow readings (tide tables): no chart
         return None
     svg = _chart_svg(G, 760, 250, 11, 7, "cw") + _chart_svg(G, 340, 250, 12, 4, "cn")
-    return block("flow_chart", "Last 7 days", "live", svg + (LEG if G["rec"].get("stats") else ""), "Source: USGS Water Data API (continuous values), observed to %s.%s Flow in cfs." % (esc(G["obs"]), " Shaded band: 25th to 75th percentile of USGS daily statistics for each date; dashed: median." if G["rec"].get("stats") else ""), "usgs")
+    return block("flow_chart", "Last 7 days", "live", svg + (LEG if G["rec"].get("stats") else ""), "Source: USGS Water Data API (continuous values), observed to %s. Flow in cfs." % esc(G["obs"]), "usgs")  # the band is explained by LEG under the chart; the note said it again
 
 
 def b_daily(G):
