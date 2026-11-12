@@ -9133,9 +9133,9 @@ live,,8720030,Fernandina Beach,Fernandina Beach,FL,0,,,0,coast,,,human,/coast/fe
 live,,8725520,Fort Myers,Fort Myers,FL,0,,,0,coast,,,human,/coast/fort-myers/
 live,,9437540,Garibaldi,Garibaldi,OR,0,,,0,coast,,,human,/coast/garibaldi/
 live,,1612340,Honolulu,Honolulu,HI,0,,,0,coast,,,human,/coast/honolulu/
-queue,,9452210,Juneau,Juneau,AK,0,,,0,coast,,,human,/coast/juneau/
-queue,,9450460,Ketchikan,Ketchikan,AK,0,,,0,coast,,,human,/coast/ketchikan/
-queue,,8720218,Mayport Bar Pilots Dock,Mayport,FL,0,,,0,coast,,,human,/coast/mayport/
+live,,9452210,Juneau,Juneau,AK,0,,,0,coast,,,human,/coast/juneau/
+live,,9450460,Ketchikan,Ketchikan,AK,0,,,0,coast,,,human,/coast/ketchikan/
+live,,8720218,Mayport Bar Pilots Dock,Mayport,FL,0,,,0,coast,,,human,/coast/mayport/
 queue,,8725114,Naples Bay North,Naples,FL,0,,,0,coast,,,human,/coast/naples/
 queue,,8775237,Port Aransas,Port Aransas,TX,0,,,0,coast,,,human,/coast/port-aransas/
 queue,,9444900,Port Townsend,Port Townsend,WA,0,,,0,coast,,,human,/coast/port-townsend/
@@ -9154,20 +9154,20 @@ live,,02393500,Allatoona Lake,Cartersville,GA,0,,,0,lake,"retry after 2026-11-08
 live,,03312900,Barren River Lake,Finney,KY,0,,,0,lake,,,human,/lake/barren-river-lake/
 live,,08102000,Belton Lake,Belton,TX,0,,,0,lake,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/lake/belton-lake/
 live,,02087182,Falls Lake,Falls,NC,0,,,0,lake,,,human,/lake/falls-lake/
-queue,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/
+live,,08104650,Lake Georgetown,Georgetown,TX,0,,,0,lake,,,human,/lake/lake-georgetown/
 live,,03305990,Green River Lake,Campbellsville,KY,0,,,0,lake,,,human,/lake/green-river-lake/
 live,,02098197,Jordan Lake,Moncure,NC,0,,,0,lake,,,human,/lake/jordan-lake/
-queue,,08143000,Lake Brownwood,Brownwood,TX,0,,,0,lake,,,human,/lake/lake-brownwood/
-queue,,04294500,Lake Champlain,Burlington,VT,0,,,0,lake,,,human,/lake/lake-champlain/
-queue,,08067600,Lake Conroe,Conroe,TX,0,,,0,lake,,,human,/lake/lake-conroe/
-queue,,08110470,Lake Limestone,Marquez,TX,0,,,0,lake,,,human,/lake/lake-limestone/
-queue,,08066190,Lake Livingston,Goodrich,TX,0,,,0,lake,,,human,/lake/lake-livingston/
-queue,,02168500,Lake Murray,Columbia,SC,0,,,0,lake,,,human,/lake/lake-murray/
-queue,,11149300,Lake Nacimiento,Bradley,CA,0,,,0,lake,,,human,/lake/lake-nacimiento/
+live,,08143000,Lake Brownwood,Brownwood,TX,0,,,0,lake,,,human,/lake/lake-brownwood/
+live,,04294500,Lake Champlain,Burlington,VT,0,,,0,lake,,,human,/lake/lake-champlain/
+live,,08067600,Lake Conroe,Conroe,TX,0,,,0,lake,,,human,/lake/lake-conroe/
+live,,08110470,Lake Limestone,Marquez,TX,0,,,0,lake,,,human,/lake/lake-limestone/
+live,,08066190,Lake Livingston,Goodrich,TX,0,,,0,lake,,,human,/lake/lake-livingston/
+live,,02168500,Lake Murray,Columbia,SC,0,,,0,lake,,,human,/lake/lake-murray/
+live,,11149300,Lake Nacimiento,Bradley,CA,0,,,0,lake,,,human,/lake/lake-nacimiento/
 queue,,08064550,Richland-Chambers Reservoir,Kerens,TX,0,,,0,lake,,,human,/lake/richland-chambers-reservoir/
 queue,,08039300,Sam Rayburn Reservoir,Jasper,TX,0,,,0,lake,,,human,/lake/sam-rayburn-reservoir/
-queue,,08164525,Lake Texana,Edna,TX,0,,,0,lake,,,human,/lake/lake-texana/
-queue,,08060500,Lavon Lake,Lavon,TX,0,,,0,lake,,,human,/lake/lavon-lake/
+live,,08164525,Lake Texana,Edna,TX,0,,,0,lake,,,human,/lake/lake-texana/
+live,,08060500,Lavon Lake,Lavon,TX,0,,,0,lake,,,human,/lake/lavon-lake/
 queue,,03372400,Monroe Lake,Harrodsburg,IN,0,,,0,lake,,,human,/lake/monroe-lake/
 queue,,03310900,Nolin Lake,Kyrock,KY,0,,,0,lake,,,human,/lake/nolin-lake/
 queue,,03318005,Rough River Lake,Falls of Rough,KY,0,,,0,lake,,,human,/lake/rough-river-lake/
@@ -9181,33 +9181,33 @@ live,,9447427,Edmonds,Edmonds,WA,0,,,0,coast,,,human,/coast/edmonds/
 live,,9455558,Homer,Homer,AK,0,,,0,coast,,,human,/coast/homer/
 live,,8558690,Indian River Inlet,Indian River Inlet,DE,0,,,0,coast,,,human,/coast/indian-river-inlet/
 live,,8720291,Jacksonville Beach,Jacksonville Beach,FL,0,,,0,coast,,,human,/coast/jacksonville-beach/
-queue,,8724991,Marco,Marco,FL,0,,,0,coast,,,human,/coast/marco/
+live,,8724991,Marco,Marco,FL,0,,,0,coast,,,human,/coast/marco/
 queue,,9434939,Waldport,Waldport,OR,0,,,0,coast,,,human,/coast/waldport/
 queue,,9410196,Mission Bay,Mission Bay,CA,0,,,0,coast,,,human,/coast/mission-bay/
 queue,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bradenton/
 live,,8465233,Branford,Branford,CT,0,,,0,coast,,,human,/coast/branford/
-queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/cape-may/
+queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,no-usgs-rows,,human,/coast/cape-may/
 live,,8726706,Clearwater,Clearwater,FL,0,,,0,coast,,,human,/coast/clearwater/
 queue,,8444601,Nantasket Beach,Nantasket Beach,MA,0,,,0,coast,,,human,/coast/nantasket-beach/
 queue,,8660642,North Myrtle Beach,North Myrtle Beach,SC,0,,,0,coast,,,human,/coast/north-myrtle-beach/
 queue,,8670681,Savannah,Savannah,GA,0,,,0,coast,,,human,/coast/savannah/
 queue,,8726668,Tampa,Tampa,FL,0,,,0,coast,,,human,/coast/tampa/
 queue,,9437331,Tillamook,Tillamook,OR,0,,,0,coast,,,human,/coast/tillamook/
-queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/bandon/
-queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/belmar/
-queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/boca-raton/
-queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/duxbury/
-queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/edisto-beach/
-queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/englewood/
+queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,no-usgs-rows,,human,/coast/bandon/
+queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,no-usgs-rows,,human,/coast/belmar/
+queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,no-usgs-rows,,human,/coast/boca-raton/
+queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,no-usgs-rows,,human,/coast/duxbury/
+queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,no-usgs-rows,,human,/coast/edisto-beach/
+queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,no-usgs-rows,,human,/coast/englewood/
 queue,,9447659,Everett,Everett,WA,0,,,0,coast,,,human,/coast/everett/
-queue,,9434032,Florence,Florence,OR,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/florence/
+queue,,9434032,Florence,Florence,OR,0,,,0,coast,no-usgs-rows,,human,/coast/florence/
 queue,,8722219,Fort Pierce,Fort Pierce,FL,0,,,0,coast,no-usgs-rows,,human,/coast/fort-pierce/
 queue,,8731439,Gulf Shores,Gulf Shores,AL,0,,,0,coast,no-usgs-rows,,human,/coast/gulf-shores/
 queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/jupiter/
 queue,,8722495,Jupiter Inlet,Jupiter Inlet,FL,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/jupiter-inlet/
 queue,,8532591,Manasquan Inlet,Manasquan Inlet,NJ,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/manasquan-inlet/
-queue,,8724967,Marco Island,Marco Island,FL,0,,,0,coast,,,human,/coast/marco-island/
-queue,,8720692,Matanzas Inlet,Matanzas Inlet,FL,0,,,0,coast,,,human,/coast/matanzas-inlet/
+queue,,8724967,Marco Island,Marco Island,FL,0,,,0,coast,no-usgs-rows,,human,/coast/marco-island/
+queue,,8720692,Matanzas Inlet,Matanzas Inlet,FL,0,,,0,coast,no-usgs-rows,,human,/coast/matanzas-inlet/
 queue,,8727001,New Port Richey,New Port Richey,FL,0,,,0,coast,,,human,/coast/new-port-richey/
 queue,,8721164,New Smyrna Beach,New Smyrna Beach,FL,0,,,0,coast,,,human,/coast/new-smyrna-beach/
 queue,,8659182,Oak Island,Oak Island,NC,0,,,0,coast,,,human,/coast/oak-island/
@@ -9215,7 +9215,7 @@ queue,,9446969,Olympia,Olympia,WA,0,,,0,coast,,,human,/coast/olympia/
 queue,,8721138,Ponce Inlet,Ponce Inlet,FL,0,,,0,coast,,,human,/coast/ponce-inlet/
 queue,,8446121,Provincetown,Provincetown,MA,0,,,0,coast,,,human,/coast/provincetown/
 queue,,9415316,Rio Vista,Rio Vista,CA,0,,,0,coast,,,human,/coast/rio-vista/
-queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/sarasota/
+queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,no-usgs-rows,,human,/coast/sarasota/
 queue,,8445138,Scituate,Scituate,MA,0,,,0,coast,,,human,/coast/scituate/
 queue,,8726034,Siesta Key,Siesta Key,FL,0,,,0,coast,,,human,/coast/siesta-key/
 queue,,8722357,Stuart,Stuart,FL,0,,,0,coast,,,human,/coast/stuart/
