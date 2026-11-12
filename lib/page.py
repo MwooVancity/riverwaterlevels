@@ -196,7 +196,14 @@ BEACH_WATER = {"TX": ("Texas Beach Watch (General Land Office)", "https://www.te
                "FL": ("Florida Healthy Beaches (Department of Health)", "https://www.floridahealth.gov/HealthyBeaches"),
                "NJ": ("NJ Beaches (NJ Department of Environmental Protection)", "https://njbeaches.org/"),
                "WA": ("Swimming safety and the BEACH program (Washington Department of Ecology)", "https://ecology.wa.gov/water-shorelines/water-monitoring-research/swimming-safety"),
-               "HI": ("Clean Water Branch (Hawaii Department of Health)", "https://health.hawaii.gov/cwb/")}
+               "HI": ("Clean Water Branch (Hawaii Department of Health)", "https://health.hawaii.gov/cwb/"),
+               "SC": ("Beach Monitoring (South Carolina Department of Environmental Services)", "https://des.sc.gov/programs/bureau-water/aquatic-science/beach-monitoring"),
+               "VA": ("Beach Monitoring (Virginia Department of Health)", "https://www.vdh.virginia.gov/waterborne-hazards-control/beach-monitoring/"),
+               "MA": ("Beach water quality (Massachusetts Department of Public Health)", "https://www.mass.gov/beachdata"),
+               "ME": ("Maine Healthy Beaches (Maine Department of Environmental Protection)", "https://www.maine.gov/dep/water/beaches/"),
+               "OR": ("Oregon Beach Monitoring Program (Oregon Health Authority)", "https://www.oregon.gov/oha/PH/HEALTHYENVIRONMENTS/RECREATION/BEACHWATERQUALITY/Pages/status.aspx"),
+               "AK": ("Beach Program (Alaska Department of Environmental Conservation)", "https://dec.alaska.gov/water/water-quality/beach-program"),
+               "CA": ("Safe to Swim (California Water Quality Monitoring Council)", "https://mywaterquality.ca.gov/safe-to-swim/")}  # 2026-11-12: all seven are the states' own BEACH Act program pages (search results on each agency's domain); MA and AK refuse automated reads (403), read in search results only
 
 
 def b_official_links(G):
