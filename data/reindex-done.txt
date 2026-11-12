@@ -18,3 +18,9 @@ https://riverwaterlevels.com/coast/panama-city-beach/	2026-11-11
 https://riverwaterlevels.com/coast/monterey/	2026-11-11
 https://riverwaterlevels.com/coast/jacksonville-beach/	2026-11-11
 https://riverwaterlevels.com/coast/indian-river-inlet/	2026-11-11
+https://riverwaterlevels.com/lake/lavon-lake/	2026-11-12
+https://riverwaterlevels.com/lake/lake-texana/	2026-11-12
+https://riverwaterlevels.com/lake/lake-nacimiento/	2026-11-12
+https://riverwaterlevels.com/lake/lake-murray/	2026-11-12
+https://riverwaterlevels.com/lake/lake-livingston/	2026-11-12
+https://riverwaterlevels.com/lake/lake-limestone/	2026-11-12
