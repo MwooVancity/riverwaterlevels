@@ -203,7 +203,9 @@ BEACH_WATER = {"TX": ("Texas Beach Watch (General Land Office)", "https://www.te
                "ME": ("Maine Healthy Beaches (Maine Department of Environmental Protection)", "https://www.maine.gov/dep/water/beaches/"),
                "OR": ("Oregon Beach Monitoring Program (Oregon Health Authority)", "https://www.oregon.gov/oha/PH/HEALTHYENVIRONMENTS/RECREATION/BEACHWATERQUALITY/Pages/status.aspx"),
                "AK": ("Beach Program (Alaska Department of Environmental Conservation)", "https://dec.alaska.gov/water/water-quality/beach-program"),
-               "CA": ("Safe to Swim (California Water Quality Monitoring Council)", "https://mywaterquality.ca.gov/safe-to-swim/")}  # 2026-11-12: all seven are the states' own BEACH Act program pages (search results on each agency's domain); MA and AK refuse automated reads (403), read in search results only
+               "CA": ("Safe to Swim (California Water Quality Monitoring Council)", "https://mywaterquality.ca.gov/safe-to-swim/"),
+               "DE": ("Recreational Water Monitoring (Delaware DNREC)", "https://dnrec.delaware.gov/watershed-stewardship/assessment/recreational-water-monitoring/"),
+               "CT": ("State park beach monitoring (Connecticut DEEP; town beaches are tested by local health departments)", "https://portal.ct.gov/deep/water/inland-water-monitoring/beach-monitoring")}  # 2026-11-12: all seven are the states' own BEACH Act program pages (search results on each agency's domain); MA and AK refuse automated reads (403), read in search results only
 
 
 def b_official_links(G):
