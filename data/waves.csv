@@ -9203,9 +9203,9 @@ queue,,9447659,Everett,Everett,WA,0,,,0,coast,,,human,/coast/everett/
 queue,,9434032,Florence,Florence,OR,0,,,0,coast,retry after 2026-11-11: practice: no-usgs-rows,,human,/coast/florence/
 queue,,8722219,Fort Pierce,Fort Pierce,FL,0,,,0,coast,no-usgs-rows,,human,/coast/fort-pierce/
 queue,,8731439,Gulf Shores,Gulf Shores,AL,0,,,0,coast,no-usgs-rows,,human,/coast/gulf-shores/
-queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,,,human,/coast/jupiter/
-queue,,8722495,Jupiter Inlet,Jupiter Inlet,FL,0,,,0,coast,,,human,/coast/jupiter-inlet/
-queue,,8532591,Manasquan Inlet,Manasquan Inlet,NJ,0,,,0,coast,,,human,/coast/manasquan-inlet/
+queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/jupiter/
+queue,,8722495,Jupiter Inlet,Jupiter Inlet,FL,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/jupiter-inlet/
+queue,,8532591,Manasquan Inlet,Manasquan Inlet,NJ,0,,,0,coast,retry after 2026-11-12: practice: no-usgs-rows,,human,/coast/manasquan-inlet/
 queue,,8724967,Marco Island,Marco Island,FL,0,,,0,coast,,,human,/coast/marco-island/
 queue,,8720692,Matanzas Inlet,Matanzas Inlet,FL,0,,,0,coast,,,human,/coast/matanzas-inlet/
 queue,,8727001,New Port Richey,New Port Richey,FL,0,,,0,coast,,,human,/coast/new-port-richey/
