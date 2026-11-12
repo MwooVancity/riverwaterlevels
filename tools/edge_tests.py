@@ -270,6 +270,9 @@ def run():
     assert "Agency flag on this reading: Ice" in world.to_rec({"feed": "eccc", "river": "X", "slug": "x"}, dict(base, flag="Ice"))["feed"]["label_note"], "an ice flag did not reach the page"
 
     from lib import coverage, wx
+    from lib import core as _core
+    _n = "7 days: Source: A. Shaded band: x to y. Flow in cfs. 30 days: Source: B. Shaded band: x to y. Flow in cfs."
+    assert _core.say_once(_n) == "7 days: Source: A. Shaded band: x to y. Flow in cfs. 30 days: Source: B.", _core.say_once(_n)
     from lib import blocks3 as _b3
     _now = datetime.datetime(2026, 11, 11, 18, tzinfo=datetime.timezone.utc)
     _aq = lambda cat: _b3.b_air_quality({"rec": {"airnow": {"fetched_at": "2026-11-11T18:00:00+00:00", "rows": [{"date": "2026-11-11", "hour": "17:00", "aqi": 60, "category": cat, "pollutant": "OZONE", "site": "X", "agency": "A"}]}}, "zone": datetime.timezone.utc, "now": _now})["body"]

@@ -281,9 +281,21 @@ FAMILY = {"live": "now", "obs": "now", "official": "fc", "usdm": "fc", "model": 
 FAMILY_BY_ID = {"alerts": "safe", "flood_impacts": "safe", "offline": "safe"}
 
 
+def say_once(s):
+    """A sentence of three or more words already said in this note is not said again (thin-content audit 2026-11-11: the flow chart note repeated 'Shaded band...' three times; Source notes were 28% of a river page's words)."""
+    seen, out = set(), []
+    for p in re.split(r"(?<=\.)\s+", s):
+        k = p.strip()
+        if len(k.split()) >= 3 and k in seen:
+            continue
+        seen.add(k)
+        out.append(p)
+    return " ".join(out)
+
+
 def render_block(b):
     amber = (' <span class="tag amber">%s</span>' % (b.get("age_tag") or "Older than %d h" % stale_after(b["id"]))) if b.get("amber") else ""
-    src = '<details class="srcd"><summary>Source</summary><p class="src">%s%s</p></details>' % (b["source"], credit_line(b))  # one small toggle in the heading row; opens under the heading
+    src = '<details class="srcd"><summary>Source</summary><p class="src">%s%s</p></details>' % (say_once(b["source"]), credit_line(b))  # one small toggle in the heading row; opens under the heading
     fam = FAMILY_BY_ID.get(b["id"]) or FAMILY.get(b["tag"], "now")
     if b.get("empty"):
         return '<section class="card blk emp" data-f="%s" id="%s"><h2>%s</h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["body"], src)
