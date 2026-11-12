@@ -60,6 +60,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
    Edge cases: a schedule changed after we fetched it (fetched time shown; "plans change" stated by the operator's words); a release for a different dam on the same river; time zone of the operator vs the gauge.
 
 ## Waiting (nothing to do before the date)
+- 2026-11-26 (owner): reapply to AdSense (rejected 'low value content' 2026-11-12; contact page and shorter notes live since). Fallback researched 2026-11-12: Journey by Mediavine needs 1,000 tier-1 sessions in 30 days (Mediavine's own page; lowered from 10,000 on 2026-01-15), apply the month Analytics shows it; Ezoic needs 250,000 users for new sites since 2026-02-19 (Ezoic support), out; Media.net has no official public minimum (guides say about 10,000 pageviews), skip.
 - WAITING 2026-11-18: Falls Lake (/lake/falls-lake/) is "Crawled, currently not indexed"; indexing re-requested 2026-11-11. Page has more sections than indexed Jordan Lake, so no page fix. Recheck in Search Console; still out = compare with indexed lakes.
 - 2026-11-18: lake past-years block appears as the weekly fetch reaches each lake; read /lake/lake-lanier/, then one phone review of the lake variant.
 - 2026-11-25: Search Console validation result for the noindex-era pages.
