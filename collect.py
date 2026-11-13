@@ -734,6 +734,205 @@ def ut_name(w):
     return " ".join(UT_ABBR.get(t, t.title()) for t in re.sub(r",", " ,", w).split()).replace(" ,", ",")
 
 
+MI_STOCK = "https://utility.arcgis.com/usrsvcs/servers/fc7739be5f5247e7bf7f2c6bc9471140/rest/services/DNR/FishStockingReportGISAGO/MapServer/0/query"  # Michigan DNR fish stocking report (FSIS), item licence (read 2026-11-13): 'no restrictions on the use, reproduction, or distribution'
+MI_PLSS = "https://gis.blm.gov/arcgis/rest/services/Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer/2/query"  # BLM CadNSDI PLSS sections (federal, public domain)
+_MI_ROWS, _MI_SEC = [], {}
+
+
+def mi_secid(t, r, s):
+    """Michigan DNR town/range/sec ('29N', '04W', '11') -> BLM CadNSDI section id 'MI190290N0040W0SN110' (Michigan Meridian = 19). None when a part does not parse."""
+    if not (t and r and s and re.fullmatch(r"\d{1,3}[NS]", t.strip()) and re.fullmatch(r"\d{1,3}[EW]", r.strip()) and re.fullmatch(r"\d{1,2}", s.strip())):
+        return None
+    t, r = t.strip(), r.strip()
+    return "MI19%03d0%s%03d0%s0SN%02d0" % (int(t[:-1]), t[-1], int(r[:-1]), r[-1], int(s))
+
+
+def mi_load(today):
+    """Once per process: every Michigan stocking row of the last 550 days (about 1,400, one or two calls), then each distinct section turned into a point
+    (the middle of the section's box; about 750 sections, 60 per call, 13 calls). A section that is missing or returned twice has no point: its rows are left out."""
+    cut = (today - datetime.timedelta(days=550)).isoformat()
+    off, got = 0, []
+    while True:
+        q = urllib.parse.urlencode({"where": "stocking_date >= DATE '%s'" % cut, "outFields": "Water_Body_Name,SPEC_COMM_Alt,Number_Fish_Stocked,stocking_date,town,range,sec",
+                                    "orderByFields": "ObjectID", "resultOffset": str(off), "resultRecordCount": "2000", "returnGeometry": "false", "f": "json"})
+        j = http_json(MI_STOCK + "?" + q, None, 90)
+        got += [f.get("attributes") or {} for f in j.get("features", [])]
+        if not j.get("exceededTransferLimit") or not j.get("features") or off > 40000:
+            break
+        off += len(j["features"])
+    for a in got:
+        d, k = a.get("stocking_date"), mi_secid(a.get("town"), a.get("range"), a.get("sec"))
+        if not isinstance(d, (int, float)) or not k or not (a.get("Water_Body_Name") or "").strip():
+            continue  # no section (Great Lakes grid rows) = no position, left out
+        d = (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=d)).date()
+        if d <= today:  # a future date is never shown as stocked
+            n = a.get("Number_Fish_Stocked")
+            _MI_ROWS.append((k, re.sub(r"\s+", " ", a["Water_Body_Name"]).strip(), (a.get("SPEC_COMM_Alt") or "").strip() or None, n if isinstance(n, int) and n > 0 else None, d.isoformat()))
+    if not _MI_ROWS:  # fails once, named; the placeholder stops later gauges re-downloading
+        _MI_ROWS.append(("", "", None, None, "0000-00-00"))
+        raise RuntimeError("Michigan stocking report parsed to no rows with a section (format changed?)")
+    ids, seen = sorted({r[0] for r in _MI_ROWS}), {}
+    for i in range(0, len(ids), 60):  # 60 ids keep the address near 2.5 KB
+        q = urllib.parse.urlencode({"where": "FRSTDIVID IN (%s)" % ",".join("'%s'" % x for x in ids[i:i + 60]), "outFields": "FRSTDIVID", "returnGeometry": "true", "outSR": "4326", "f": "json"})
+        for ft in json.loads(get_text(MI_PLSS + "?" + q)).get("features", []):
+            k, pts = (ft.get("attributes") or {}).get("FRSTDIVID"), [p_ for ring in ((ft.get("geometry") or {}).get("rings") or []) for p_ in ring]
+            if k and pts:
+                seen.setdefault(k, []).append(((min(p_[1] for p_ in pts) + max(p_[1] for p_ in pts)) / 2, (min(p_[0] for p_ in pts) + max(p_[0] for p_ in pts)) / 2))
+    _MI_SEC.update({k: v[0] for k, v in seen.items() if len(v) == 1})
+    if ids and not _MI_SEC:
+        raise RuntimeError("BLM PLSS sections returned no Michigan section (format changed?)")
+
+
+def fetch_stocking_mi(lat, lon, miles):
+    """Michigan: DNR's statewide stocking report (a table, no position) placed by its town/range/section through BLM's PLSS sections. All network work is
+    once per process (mi_load); each gauge is a distance check. A section is about a mile across, so a distance can be off by up to about half a mile."""
+    today = datetime.date.today()
+    if not _MI_ROWS:
+        mi_load(today)
+    cut, out = (today - datetime.timedelta(days=550)).isoformat(), []
+    for k, w, sp, n, d in _MI_ROWS:
+        p = _MI_SEC.get(k)
+        if p and d >= cut:
+            mi = round(hav_km(lat, lon, p[0], p[1]) * 0.621371, 1)
+            if mi <= miles:
+                out.append({"species": sp, "date": d, "num": n, "water": w, "size": None, "mi": mi})
+    return out
+
+
+IA_SCHED = "https://www.iowadnr.gov/things-do/fishing/where-fish/trout-fishing/community-trout-stocking-schedule"
+IA_ATLAS = "https://programs.iowadnr.gov/geospatial/rest/services/Recreation/fishing/MapServer/7/query?where=1%3D1&outFields=lakeCode,lakeName,countyName&outSR=4326&f=json"
+_IA = {}
+
+
+def ia_schedule(t, today):
+    """Iowa DNR community trout stocking schedule -> [(date iso, water, city)]. Each date cell reads '10/23/26 - Noon' or '10/26/2026 - 3 p.m.'; a cell
+    saying 'postponed' did not happen on its date and its new date has no year, so it is dropped; a day not yet over (today or later) is planned, never
+    stocked. Returns (all dated cells seen, past rows) so an all-future schedule is not mistaken for a format change."""
+    seen, out = 0, []
+    for r in re.findall(r"<tr.*?</tr>", t, re.S):
+        c = [re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", x))).strip() for x in re.findall(r"<td.*?</td>", r, re.S)]
+        if len(c) < 3 or not c[0]:
+            continue
+        for cell in c[2:]:
+            m = re.match(r"(\d{1,2}/\d{1,2}/(\d{4}|\d{2}))\b", cell)
+            if not m:
+                continue
+            try:
+                d = datetime.datetime.strptime(m.group(1), "%m/%d/%Y" if len(m.group(2)) == 4 else "%m/%d/%y").date()
+            except ValueError:
+                continue
+            seen += 1
+            if d < today and "postpone" not in cell.lower():
+                out.append((d.isoformat(), c[0], c[1]))
+    return seen, out
+
+
+def fetch_stocking_ia(lat, lon, miles):
+    """Iowa (community trout ponds): the DNR schedule page (Waterbody, city, fall and spring dates; read once per process) joined by exact water name to
+    the DNR Community Atlas points (372, read once per process). A name with no atlas point, or more than one lake code, is left out, never guessed:
+    17 of 21 match (2026-11-13; misses 'Triumph Park West & East', 'Big Lake', 'Ottumwa Park Pond (South Pond)', 'Stolley Pond' are worded differently).
+    The page names only 'trout' and 'about 1,500 trout each stocking', so species is 'Trout' and no count is shown. Coldwater streams: the DNR
+    trout-stream layer has no dated releases, so none are shown."""
+    if not _IA:
+        today = datetime.date.today()
+        seen, rows = ia_schedule(get_text(IA_SCHED), today)
+        pts = {}
+        for ft in json.loads(get_text(IA_ATLAS)).get("features", []):
+            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+            k = re.sub(r"\s+", " ", (a.get("lakeName") or "").strip().lower())
+            if k and g.get("y") is not None:
+                pts.setdefault(k, {}).setdefault(a.get("lakeCode"), (g["y"], g["x"]))
+        _IA.update(rows=rows, pos={k: next(iter(v.values())) for k, v in pts.items() if len(v) == 1})
+        if not seen or not pts:  # one failure per run, named; later gauges neither re-download nor show anything
+            _IA.update(rows=[], pos={})
+            raise RuntimeError("Iowa trout stocking schedule or community atlas parsed to nothing (page format changed?)")
+    cut, out = (datetime.date.today() - datetime.timedelta(days=550)).isoformat(), []
+    for d, w, city in _IA["rows"]:
+        p = _IA["pos"].get(re.sub(r"\s+", " ", w.strip().lower()))
+        if p and d >= cut:
+            mi = round(hav_km(lat, lon, p[0], p[1]) * 0.621371, 1)
+            if mi <= miles:
+                out.append({"species": "Trout", "date": d, "num": None, "water": "%s (%s)" % (w, city) if city else w, "size": None, "mi": mi})
+    return out
+
+
+NM_PAGE = "https://wildlife.dgf.nm.gov/fishing/weekly-report/"
+NM_LAYER = "https://services2.arcgis.com/CjbW1bVhK4dB3WOa/arcgis/rest/services/Fishing_Waters_Map/FeatureServer/5/query"  # NMDOW Fishing Access points, about 480 statewide
+_NM_ROWS, _NM_PTS = [], {}
+
+
+def nm_pdf(b, today):
+    """NMDOW weekly stocking report PDF (PDFium, Helvetica, Flate streams) -> [(WATER NAME, species, number, length in, date iso)], stdlib only.
+    Species is the 11-pt section header above its rows (the lowest one carries over a page break); a row is the 8-pt texts on one baseline: water name
+    (the first cell; column widths change per section), length (one decimal), number (whole), date (m/d/Y); lbs (two decimals) is not kept. Header,
+    TOTAL lines and future dates are dropped. Water names the report cuts at 40 characters stay cut (they then match no position)."""
+    out, sp = [], None
+    for m in re.finditer(rb"stream\r?\n", b):
+        try:
+            d = zlib.decompressobj().decompress(b[m.end():]).decode("latin-1")
+        except zlib.error:
+            continue
+        line, heads, sz = {}, [], None
+        for t in re.finditer(r"/F1 ([\d.]+) Tf|BT\s+([\d.]+) ([\d.]+) Td\s+\(((?:\\.|[^\\)])*)\) Tj", d):
+            if t.group(1):
+                sz = float(t.group(1))
+                continue
+            x, y, s = float(t.group(2)), round(float(t.group(3))), re.sub(r"\\(.)", r"\1", t.group(4)).strip()
+            if sz == 11 and x < 50 and s:
+                heads.append((y, s))
+            elif sz == 8 and s:
+                line.setdefault(y, []).append((x, s))
+        for y in sorted(line, reverse=True):
+            cells = sorted(line[y])
+            above = [h for h in heads if h[0] > y]
+            rsp = min(above)[1] if above else sp  # nearest section header above the row, else the one carried from the last page
+            w = cells[0][1] if cells[0][0] < 50 else ""
+            ds = [s for x, s in cells[1:] if re.fullmatch(r"\d\d/\d\d/\d{4}", s)]
+            num = [s for x, s in cells[1:] if re.fullmatch(r"\d{1,3}(,\d{3})+|\d+", s)]
+            ln = [s for x, s in cells[1:] if re.fullmatch(r"\d+\.\d", s)]
+            if not (w and rsp and len(ds) == 1 and len(num) == 1):
+                continue
+            dt = datetime.datetime.strptime(ds[0], "%m/%d/%Y").date()
+            if dt <= today:  # a planned date is never shown as stocked
+                out.append((re.sub(r"\s+", " ", w.upper()), rsp, int(num[0].replace(",", "")), float(ln[0]) if ln else None, dt.isoformat()))
+        sp = min(heads)[1] if heads else sp
+    return out
+
+
+def fetch_stocking_nm(lat, lon, miles):
+    """New Mexico: NMDOW's weekly stocking report PDFs (the four weeks the report page lists; stock_merge keeps older weeks) joined by exact water name to
+    NMDOW's Fishing Access points (Fishing_Waters_Map layer 5). Both read once per process, so a gauge costs no call after the first. A name carried by two
+    FIMS water codes, or a report name with a reach in brackets the layer does not carry ('RIO GRANDE (PILAR TO COCHITI LAKE)'), is left out, never guessed."""
+    today = datetime.date.today()
+    if not _NM_ROWS:
+        links = sorted(set(re.findall(r"https://wildlife\.dgf\.nm\.gov/download/stocking-report-[\d-]+/\?wpdmdl=\d+", get_text(NM_PAGE))))
+        for u in links:
+            _NM_ROWS.extend(nm_pdf(http_raw(u, 60), today))
+        if not _NM_ROWS:  # a page or PDF format change: fail once, named; the placeholder stops later gauges re-downloading
+            _NM_ROWS.append(("", "", 0, None, "0000-00-00"))
+            raise RuntimeError("New Mexico stocking reports parsed to no rows (%d links; format changed?)" % len(links))
+    if not _NM_PTS:
+        fims = {}
+        for i, ft in enumerate(json.loads(get_text(NM_LAYER + "?where=1%3D1&outFields=Waterbody_Name,FIMS_Code&returnGeometry=true&outSR=4326&resultRecordCount=2000&f=json")).get("features", [])):
+            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+            k = re.sub(r"\s+", " ", (a.get("Waterbody_Name") or "").strip().upper())
+            if k and g.get("y") is not None:  # a blank FIMS code is its own unknown water: two blank points of one name are not assumed the same
+                fims.setdefault(k, set()).add((a.get("FIMS_Code") or "").strip().lstrip("0") or "?%d" % i)
+                _NM_PTS.setdefault(k, []).append((g["y"], g["x"]))
+        if not _NM_PTS:  # same once-only failure as the reports
+            _NM_PTS[""] = [(0.0, 0.0)]
+            raise RuntimeError("New Mexico fishing access layer returned no points")
+        for k in [k for k in _NM_PTS if len(fims[k]) > 1]:  # one name, two waters: no position is trusted
+            del _NM_PTS[k]
+    pos = {}
+    for k, pts in _NM_PTS.items():
+        mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in pts) * 0.621371, 1)  # nearest access point of the water
+        if mi <= miles:
+            pos[k] = mi
+    cut = (today - datetime.timedelta(days=550)).isoformat()
+    return [{"species": sp, "date": d, "num": n, "water": w.title(), "size": ln, "mi": pos[w]} for w, sp, n, ln, d in _NM_ROWS if d >= cut and w in pos]
+
+
 def stock_keep(rows, n=60):
     """The newest release per water and species, the n nearest waters, newest first. The page shows only its own river or lake (lib/blocks3 b_stocking),
     so keeping the 12 newest within 35 miles let a busy pond season push the gauge's own river out of the cache (found 2026-11-13)."""
@@ -749,6 +948,9 @@ def fetch_stocking(lat, lon, miles=35):
     two = [(fn, src, cred, url) for box, fn, src, cred, url in (
         ((-73.6, 41.2, -69.8, 42.9), fetch_stocking_ma, "MassWildlife trout stocking report", "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", MA_STOCK + "StockedFish_View/FeatureServer/0"),
         ((-72.6, 42.7, -70.6, 45.3), fetch_stocking_nh, "NH Fish and Game fish stocking records", "New Hampshire Fish and Game Department", NH_STOCK + "5"),
+        ((-90.42, 41.69, -82.41, 48.31), fetch_stocking_mi, 'Michigan DNR fish stocking report', 'Michigan Department of Natural Resources (Fish Stocking Information System); section positions from the Bureau of Land Management PLSS (CadNSDI)', 'https://utility.arcgis.com/usrsvcs/servers/fc7739be5f5247e7bf7f2c6bc9471140/rest/services/DNR/FishStockingReportGISAGO/MapServer/0'),
+        ((-96.7, 40.3, -90.1, 43.6), fetch_stocking_ia, 'Iowa DNR community trout stocking schedule', 'Iowa Department of Natural Resources', 'https://www.iowadnr.gov/things-do/fishing/where-fish/trout-fishing/community-trout-stocking-schedule'),
+        ((-109.1, 31.3, -103.0, 37.0), fetch_stocking_nm, 'NMDOW weekly fish stocking report', 'New Mexico Department of Wildlife (NMDOW)', 'https://wildlife.dgf.nm.gov/fishing/weekly-report/'),
         ((-114.1, 36.9, -109.0, 42.1), fetch_stocking_ut, "Utah DWR fish stocking report", "Utah Division of Wildlife Resources", "https://dwrapps.utah.gov/fishstocking/Fish"),
         ((-83.7, 36.5, -75.2, 39.5), fetch_stocking_va, "Virginia DWR trout stocking schedule", "Virginia Department of Wildlife Resources (Trout Stocked Streams, Virginia Department of Game and Inland Fisheries)", VA_SCHED))
         if box[0] <= lon <= box[2] and box[1] <= lat <= box[3]]  # two-step states; a border gauge (MA/NH overlap) gets both states' releases, not only the first state's

@@ -1247,6 +1247,111 @@ if __name__ == "__main__":
         assert collect.fetch_stocking_va(37.3, -79.5, 35) == [] and sum("dwr.virginia.gov/fishing" in c for c in calls_) == 1, "Virginia: an empty parse re-downloaded at the next gauge"
     finally:
         collect._VA_ROWS[:], collect.get_text = vr_, gt_
+    # Michigan stocking: DNR table rows placed by town/range/section through BLM PLSS; future dates, rows with no section and a section returned twice are left out
+    assert collect.mi_secid("29N", "04W", "11") == "MI190290N0040W0SN110" and collect.mi_secid("2S", "12E", "1") == "MI190020S0120E0SN010", "Michigan section id wrong"
+    assert collect.mi_secid(None, "04W", "11") is None and collect.mi_secid("29X", "04W", "11") is None, "Michigan: a bad town/range parsed"
+    mr_, ms_, hj_, gt_ = list(collect._MI_ROWS), dict(collect._MI_SEC), collect.http_json, collect.get_text
+    try:
+        collect._MI_ROWS.clear(); collect._MI_SEC.clear()
+        ms = lambda d: (datetime.date.today() + datetime.timedelta(days=d) - datetime.date(1970, 1, 1)).days * 86400000 + 13 * 3600000
+        rows_ = [{"Water_Body_Name": "Boardman River", "SPEC_COMM_Alt": "Coho salmon   ", "Number_Fish_Stocked": 500, "stocking_date": ms(-10), "town": "27N", "range": "11W", "sec": "03"},
+                 {"Water_Body_Name": "Boardman River", "SPEC_COMM_Alt": "Brown trout", "Number_Fish_Stocked": 900, "stocking_date": ms(5), "town": "27N", "range": "11W", "sec": "03"},
+                 {"Water_Body_Name": "Lake Michigan", "SPEC_COMM_Alt": "Lake trout", "Number_Fish_Stocked": 9000, "stocking_date": ms(-20), "town": None, "range": None, "sec": None},
+                 {"Water_Body_Name": "Twin Lake", "SPEC_COMM_Alt": "Walleye", "Number_Fish_Stocked": 70, "stocking_date": ms(-30), "town": "27N", "range": "11W", "sec": "04"}]
+        collect.http_json = lambda u, *a, **k: {"features": [{"attributes": r} for r in rows_]}
+        sq = lambda k, x, y: {"attributes": {"FRSTDIVID": k}, "geometry": {"rings": [[[x, y], [x + 0.02, y], [x + 0.02, y + 0.014], [x, y + 0.014], [x, y]]]}}
+        calls_ = []
+        collect.get_text = lambda u, *a, **k: calls_.append(u) or json.dumps({"features": [sq("MI190270N0110W0SN030", -85.63, 44.75), sq("MI190270N0110W0SN040", -85.66, 44.75), sq("MI190270N0110W0SN040", -85.0, 44.0)]})
+        got_ = collect.fetch_stocking_mi(44.757, -85.62, 35)
+        assert [(r["water"], r["species"], r["num"], r["size"]) for r in got_] == [("Boardman River", "Coho salmon", 500, None)] and got_[0]["mi"] < 1, "Michigan: future, no-section or twice-returned section rows kept: %r" % got_
+        assert collect.fetch_stocking_mi(30.0, -90.0, 35) == [] and len(calls_) == 1, "Michigan: far gauge got rows or sections re-downloaded"
+        collect._MI_ROWS.clear(); collect._MI_SEC.clear()
+        collect.http_json = lambda u, *a, **k: {"features": []}
+        try:
+            collect.fetch_stocking_mi(44.757, -85.62, 35)
+            raise AssertionError("Michigan: an empty table passed silently")
+        except RuntimeError:
+            pass
+        assert collect.fetch_stocking_mi(44.757, -85.62, 35) == [] and len(calls_) == 1, "Michigan: an empty table re-downloaded at the next gauge"
+    finally:
+        collect._MI_ROWS[:], collect.http_json, collect.get_text = mr_, hj_, gt_
+        collect._MI_SEC.clear(); collect._MI_SEC.update(ms_)
+    # Iowa community trout: past dates only, postponed and future dropped, ambiguous or missing names left out, format change raises once
+    td = datetime.date.today()
+    p1, p2, fut = (td - datetime.timedelta(days=20)).strftime("%m/%d/%y"), (td - datetime.timedelta(days=200)).strftime("%m/%d/%Y"), (td + datetime.timedelta(days=5)).strftime("%m/%d/%Y")
+    page = ("<table><tr><th>Waterbody</th><th>Location</th><th>Fall</th><th>Spring</th></tr>"
+            "<tr><td>Ada Hayden Heritage Park Lake</td><td>Ames</td><td>%s - Noon</td><td>%s - 10 a.m.</td></tr>"
+            "<tr><td>Discovery Park Pond</td><td>Muscatine</td><td>%s - 10 a.m. - postponed to Nov. 20 due to warm water temperatures</td><td></td></tr>"
+            "<tr><td>Blue Pit</td><td>Mason City</td><td>%s - 11 a.m.</td><td></td></tr>"
+            "<tr><td>Twin Pond</td><td>X</td><td>%s - Noon</td><td></td></tr>"
+            "<tr><td>Stolley Pond</td><td>Spencer</td><td>%s - Noon</td><td></td></tr></table>") % (p1, p2, p1, fut, p1, p1)
+    atlas = {"features": [{"attributes": {"lakeCode": c, "lakeName": n}, "geometry": {"x": x, "y": y}} for c, n, x, y in (
+        ("AHL85", "Ada Hayden Heritage Park Lake", -93.6264, 42.0652), ("DPP70", "Discovery Park Pond", -91.05, 41.42), ("BLP17", "Blue Pit", -93.2, 43.15),
+        ("TW1", "Twin Pond", -93.6, 42.0), ("TW2", "Twin Pond", -93.5, 42.1))]}
+    old = collect.get_text
+    collect.get_text = lambda u, *a, **k: page if "iowadnr.gov/things-do" in u else json.dumps(atlas)
+    try:
+        collect._IA.clear()
+        r = collect.fetch_stocking_ia(42.0258, -93.6146, 35)
+        assert sorted(x["date"] for x in r) == sorted([(td - datetime.timedelta(days=20)).isoformat(), (td - datetime.timedelta(days=200)).isoformat()]), r
+        assert all(x["water"] == "Ada Hayden Heritage Park Lake (Ames)" and x["species"] == "Trout" and x["num"] is None and x["mi"] == 2.8 for x in r), r
+        assert collect.fetch_stocking_ia(41.42, -91.05, 35) == []  # postponed Muscatine release is not shown
+        collect._IA.clear()
+        collect.get_text = lambda u, *a, **k: "<html>new layout</html>" if "iowadnr.gov/things-do" in u else json.dumps(atlas)
+        try:
+            collect.fetch_stocking_ia(42.0, -93.6, 35)
+            assert False, "format change must raise"
+        except RuntimeError:
+            pass
+        collect.get_text = lambda u, *a, **k: 1 / 0  # no re-download after the failure
+        assert collect.fetch_stocking_ia(42.0, -93.6, 35) == []
+    finally:
+        collect.get_text = old
+        collect._IA.clear()
+    # NM: weekly PDF parsed with stdlib only; species from section headers (carried over a page break); future, TOTAL rows dropped; exact name join
+    import zlib as zl_
+    def pg_(items):
+        return zl_.compress("".join("/F1 %s Tf\nBT\n%s %s Td\n(%s) Tj\nET\n" % i for i in items).encode("latin-1"))
+    fut_ = (datetime.date.today() + datetime.timedelta(days=3)).strftime("%m/%d/%Y")
+    p1_ = pg_([(11, 25, 667, "Rio Grande Cutthroat Trout"), (8, 30, 642, "Water Name"), (8, 30, 617, "SAN ANTONIO RIVER"), (8, 150, 617, "SEVEN SPRINGS TROUT HATCHERY"),
+               (8, 364, 617, "6.1"), (8, 394, 617, "160.00"), (8, 435, 617, "2,016"), (8, 471, 617, "10/20/2026"), (8, 30, 592, "TOTAL"), (8, 394, 592, "160.00"),
+               (11, 25, 527, "Triploid Rainbow Trout"), (8, 30, 502, "FENTON LAKE"), (8, 404, 502, "11.2"), (8, 428, 502, "1,000.00"), (8, 473, 502, "2213"), (8, 491, 502, "10/19/2026"),
+               (8, 30, 477, "PINE POND"), (8, 404, 477, "10.0"), (8, 473, 477, "50"), (8, 491, 477, fut_)])
+    p2_ = pg_([(8, 30, 757, "Water Name"), (8, 30, 732, "CLEAR CREEK"), (8, 473, 732, "75"), (8, 491, 732, "10/21/2026"),
+               (8, 30, 707, "CONSERVANCY PARK LAKE \\(aka Tingley Beach"), (8, 473, 707, "90"), (8, 491, 707, "10/21/2026")])
+    pdf_ = b"%PDF-1.7\r\n1 0 obj<<>>stream\r\n" + p1_ + b"\r\nendstream\r\n2 0 obj<<>>stream\r\n" + p2_ + b"\r\nendstream\r\n"
+    got_ = collect.nm_pdf(pdf_, datetime.date.today())
+    assert got_[:2] == [("SAN ANTONIO RIVER", "Rio Grande Cutthroat Trout", 2016, 6.1, "2026-10-20"), ("FENTON LAKE", "Triploid Rainbow Trout", 2213, 11.2, "2026-10-19")], "NM: species, number or length misread: %r" % got_
+    assert ("CLEAR CREEK", "Triploid Rainbow Trout", 75, None, "2026-10-21") in got_ and not any(w in ("TOTAL", "PINE POND") for w, *_ in got_), "NM: a page-2 row lost its species, or a TOTAL or future row was kept: %r" % got_
+    assert ("CONSERVANCY PARK LAKE (AKA TINGLEY BEACH", "Triploid Rainbow Trout", 90, None, "2026-10-21") in got_, "NM: an escaped bracket misread"
+    nr_, np_, gt_, hr_ = list(collect._NM_ROWS), dict(collect._NM_PTS), collect.get_text, collect.http_raw
+    try:
+        collect._NM_ROWS.clear(); collect._NM_PTS.clear()
+        lay_ = {"features": [{"attributes": {"Waterbody_Name": "Fenton Lake", "FIMS_Code": "0712"}, "geometry": {"x": -106.73, "y": 35.88}},
+                             {"attributes": {"Waterbody_Name": "Fenton Lake", "FIMS_Code": "712"}, "geometry": {"x": -106.70, "y": 35.86}},
+                             {"attributes": {"Waterbody_Name": "Clear Creek", "FIMS_Code": "1209"}, "geometry": {"x": -106.6, "y": 35.8}},
+                             {"attributes": {"Waterbody_Name": "Clear Creek", "FIMS_Code": "722"}, "geometry": {"x": -105.0, "y": 36.0}},
+                             {"attributes": {"Waterbody_Name": "San Antonio River", "FIMS_Code": " "}, "geometry": {"x": -106.6, "y": 35.9}},
+                             {"attributes": {"Waterbody_Name": "San Antonio River", "FIMS_Code": None}, "geometry": {"x": -106.5, "y": 35.9}}]}
+        calls_ = []
+        collect.get_text = lambda u, *a, **k: calls_.append(u) or ('<a href="https://wildlife.dgf.nm.gov/download/stocking-report-11-13-26/?wpdmdl=57400&refresh=x">' if "weekly-report" in u else json.dumps(lay_))
+        collect.http_raw = lambda u, *a, **k: calls_.append(u) or pdf_
+        r_ = collect.fetch_stocking_nm(35.85, -106.72, 35)
+        assert [(x["water"], x["num"], x["mi"], x["species"], x["size"]) for x in r_] == [("Fenton Lake", 2213, 1.3, "Triploid Rainbow Trout", 11.2)], \
+            "NM: one water (two access points, one FIMS code) must join; a name on two codes or two blank codes must not: %r" % r_
+        assert collect.fetch_stocking_nm(35.85, -106.72, 35) == r_ and len(calls_) == 3, "NM: report page, PDFs or layer re-downloaded at the next gauge"
+        assert collect.fetch_stocking_nm(32.3, -106.7, 35) == [], "NM: a gauge with no stocked water nearby must get nothing"
+        collect._NM_ROWS.clear(); calls_.clear()
+        collect.http_raw = lambda u, *a, **k: calls_.append(u) or b"%PDF-1.7 no streams"
+        try:
+            collect.fetch_stocking_nm(35.85, -106.72, 35)
+            raise AssertionError("NM: an empty parse passed silently")
+        except RuntimeError:
+            pass
+        assert collect.fetch_stocking_nm(35.85, -106.72, 35) == [] and len(calls_) == 2, "NM: an empty parse re-downloaded at the next gauge"
+    finally:
+        collect._NM_ROWS[:], collect.get_text, collect.http_raw = nr_, gt_, hr_
+        collect._NM_PTS.clear(); collect._NM_PTS.update(np_)
     # page order debate 2026-11-13: decisions before history. Snowpack in the outlook, key facts with past years, public land in Getting on the water,
     # coast tide table before the level chart before surf, red tide and king tides; recreation, public land and station air never in the side column
     pg_ = open(os.path.join(ROOT, "lib", "page.py"), encoding="utf-8").read()
