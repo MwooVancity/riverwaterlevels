@@ -310,6 +310,30 @@ def multiyear(rows, span=50, back=3):
     return {"as_of": last.isoformat(), "span": span, "series": out, "ly": ly, "next": next_days(val, datetime.date.today())}
 
 
+def big_floods(rows, peaks, n=3, before=3, after=10):
+    """PLAN 19d: the n largest plain USGS annual peaks inside the stored daily record, each with its daily means from 3 days before to 10 after.
+    None when the peaks have no qualifier field (old cache row) or no peak falls inside the daily record. Two peaks within 14 days are one flood."""
+    pr = (peaks or {}).get("rows") or []
+    if not rows or not pr or any(len(r) < 5 for r in pr):
+        return None
+    val = dict((r[0], r[1]) for r in rows)
+    out = []
+    for t, v, *_rest in sorted((r for r in pr if r[1] and not (set(str(r[4] or "").split()) & (DROP | LOWER | UPPER))), key=lambda r: -r[1]):
+        try:
+            d = datetime.date.fromisoformat(str(t)[:10])
+        except ValueError:
+            continue
+        if any(abs((d - datetime.date.fromisoformat(f["date"])).days) <= 14 for f in out):
+            continue
+        days = [[(d + datetime.timedelta(days=i)).isoformat(), val.get((d + datetime.timedelta(days=i)).isoformat())] for i in range(-before, after + 1)]
+        if sum(1 for _, x in days if x is not None) < 10:
+            continue  # the daily record does not cover this flood
+        out.append({"date": d.isoformat(), "peak": float(v), "days": days})
+        if len(out) == n:
+            break
+    return {"fetched_at": now_iso(), "floods": out} if out else None
+
+
 def next_days(val, today, before=3, n=21):
     """Every earlier year's daily means for the 21 days from 3 days before today's calendar date (owner 2026-11-12, 'what happened next in years like this').
     Fetched weekly, so the build can still find today and today + 7 inside the window for up to 13 days. From the stored full record: no new call."""
@@ -1751,6 +1775,7 @@ def fetch_extras(site, rec, h, log):
                     *((("nid", lambda: fetch_nid(site, rec)),) if nid_key(site, rec) else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
+                    ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:
             continue

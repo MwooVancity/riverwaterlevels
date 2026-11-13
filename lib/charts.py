@@ -292,6 +292,27 @@ def b_like_today(G, near=0.25, ahead=7, least=5):
                  "'About the same' is a change under %d%% or under %d cfs, as on the rest of the page." % (len(have), md(d0), round(near * 100), "24 h average" if G.get("basis_mean") else "latest reading", ahead, FLAT_PCT, FLAT_CFS), "usgs")
 
 
+def b_floods(G):
+    """PLAN 19d: the gauge's largest floods inside its daily record, day by day (collect.big_floods). The peak is USGS's instantaneous annual peak; the days are daily means, which run lower."""
+    f = (G["rec"].get("floods") or {}).get("floods") or []
+    if not f or G.get("lake") or G.get("coast"):
+        return None
+    rows = ""
+    for x in f:
+        d0, half = datetime.date.fromisoformat(x["date"]), x["peak"] / 2
+        days = [(datetime.date.fromisoformat(t), v) for t, v in x["days"] if v is not None]
+        top = max(days, key=lambda dv: dv[1])
+        above = sum(1 for _, v in days if v >= half)
+        back = next((t for t, v in days if t > d0 and v < half), None)
+        rows += tr([fdate(x["date"]), "%s cfs" % fmtc(x["peak"]), "%s cfs on %s" % (fmtc(top[1]), md(top[0])), str(above),
+                    md(back) if back else "not by %s" % md(days[-1][0])], right=(1, 2, 3))
+    big = f[0]
+    lead = "<p><b>The largest flood in this gauge's daily record peaked at %s cfs on %s.</b> For each of the biggest floods: how high the daily flow ran and how long it stayed above half the peak.</p>" % (fmtc(big["peak"]), fdate(big["date"]))
+    return block("big_floods", "The biggest floods here, day by day", "hist", lead + table(["Flood", "Peak (USGS)", "Highest daily mean", "Days above half the peak", "Back under half the peak"], rows, right=(1, 2, 3)),
+                 "Source: USGS annual peak streamflow (instantaneous peaks; peaks USGS codes as historic, a daily mean, a dam failure, a lower or upper bound, or with an unknown date are left out) and USGS daily mean flows (Water Data API), from 3 days before to 10 days after each peak; "
+                 "floods before the daily record began are skipped. A daily mean averages the whole day, so it runs below the instantaneous peak. Two peaks within 14 days count as one flood. Days are counted inside that 14-day window.", "usgs")
+
+
 def b_peaks(G):
     p = G["rec"].get("peaks")
     rows = [r for r in (p or {}).get("rows", []) if r[1] is not None]

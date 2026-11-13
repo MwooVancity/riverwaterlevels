@@ -843,6 +843,23 @@ def probe(warn, square, pages):
     h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
     assert h2.count("first-come, first-served") == 1 and h2.count("P.O. Box 309, Carbondale, CO") == 1 and h2.count("Own words for") == 3 and h2.count("is listed once, under the first site") == 1 and "same as listed" not in h2, "RIDB: a shared address or sentence was repeated, an address was split, a note repeated, or a site's own words were dropped"
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
+    # PLAN 19d: the biggest floods, day by day
+    dly = [[(datetime.date(1990, 1, 1) + datetime.timedelta(days=k)).isoformat(), 100.0] for k in range(12000)]
+    dv = dict(dly)
+    for dd_, pk in (("2000-05-10", 9000.0), ("2010-03-01", 7000.0), ("2015-06-01", 5000.0)):
+        d_ = datetime.date.fromisoformat(dd_)
+        for k, f_ in enumerate((0.2, 0.6, 1.0, 0.9, 0.7, 0.4, 0.2)):
+            dv[(d_ + datetime.timedelta(days=k - 2)).isoformat()] = pk * f_
+    dly = sorted(dv.items())
+    pks = {"rows": [["2000-05-10", 9500.0, None, None, ""], ["2000-05-15", 9400.0, None, None, ""], ["1950-01-01", 99999.0, None, None, ""], ["1985-01-01", 50000.0, None, None, "HISTORIC"],
+                    ["2010-03-01", 7500.0, None, None, ""], ["2012-01-01", 8000.0, None, None, "MAXDAILYMEAN"], ["2015-06-01", 5500.0, None, None, "ESTIMATED"]]}
+    bf = collect.big_floods(dly, pks)
+    assert bf and [f["date"] for f in bf["floods"]] == ["2000-05-10", "2010-03-01", "2015-06-01"], "19d: wrong floods picked (before the daily record, historic, daily mean, or a second peak of one flood used): %s" % (bf and [f["date"] for f in bf["floods"]])
+    assert collect.big_floods(dly, {"rows": [["2000-05-10", 9500.0, None, None]]}) is None and collect.big_floods([], pks) is None, "19d: old cache rows or no daily record still built floods"
+    from lib.charts import b_floods
+    bfb = b_floods({"rec": {"floods": bf}})
+    assert bfb and "peaked at 9,500 cfs on May 10, 2000" in bfb["body"] and "9,000 cfs on May 10" in bfb["body"] and "<td class=\"r\">4</td>" in bfb["body"] and "May 13" in bfb["body"], "19d: flood row wrong (peak, highest daily mean, days above half, back under half): %s" % (bfb and bfb["body"][:500])
+    assert b_floods({"rec": {"floods": bf}, "lake": "00062"}) is None, "19d: a lake got a floods block"
     # PLAN 19c: the hourly check, said once on /methodology/
     from lib import directory as _dir
     tj = os.path.join(tempfile.mkdtemp(), "_truth.json")

@@ -807,7 +807,7 @@ def stage_years(G):
     if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and "minor" in cats and stage_pair(G)) or datum_gap(G):
         return None
     rows = [r for r in p["rows"] if r[2] is not None and (not r[3] or r[3].replace(" ", "") == "['ESTIMATED']")] if all(len(r) > 3 for r in p["rows"]) else []  # any other USGS qualifier (different datum, backwater, not the annual maximum) can misstate the peak stage
-    drop = {"HISTORIC", "MAXDAILYMEAN", "DAMFAILURE", "MONTHUNKNOWN", "YEARUNKNOWN"}  # peer review 2026-11-12 #1: USGS codes HISTORIC on the flow row only; a historic stage (Louisville 1832) entered 'X of Y years'
+    drop = DROP | {"MAXDAILYMEAN"}  # lib/common: one code list; peer review 2026-11-12 #1: USGS codes HISTORIC on the flow row only; a historic stage (Louisville 1832) entered 'X of Y years'
     rows = [r for r in rows if len(r) < 5 or not (set(str(r[4] or "").split()) & drop)]
     dd = [r[0] for r in p["rows"] if r[3] and "DIFFDATUM" in r[3]]
     if dd:  # stages before the last datum change can sit on another zero point: only the years after it count

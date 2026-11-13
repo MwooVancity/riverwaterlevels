@@ -257,6 +257,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_month_chart": ("none: the history table carries this date against every year", "none: PEGELONLINE keeps 30 days and no history"),
     "b_year_chart": ("none: the history table lists each recent year", "none: PEGELONLINE keeps 30 days and no history"),
     "b_multiyear": ("have", "none: PEGELONLINE keeps 30 days and no history"),
+    "b_floods": (HYDAT, "none: PEGELONLINE keeps 30 days and no history"),
     "b_speed": ("none: the Water Office publishes no channel velocity measurements", "none: PEGELONLINE publishes no channel velocity measurements"),
     "b_like_today": (HYDAT, "none: PEGELONLINE keeps 30 days and no history"),
     "b_sustained": ("none: US block reads flow percentiles, which Canada does not publish", "none: PEGELONLINE keeps 30 days and no history"),
@@ -297,7 +298,7 @@ ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says
     "b_quality": "none: the flood-monitoring API measures level, flow, rainfall, temperature, wind and velocity only, all 7,439 measures read 2026-11-03",
     "b_wtemp": "next: water temperature at 2 of 7,439 measures in the same API, read 2026-11-03; not wired",
     "b_acis": "next: Met Office 1991-2020 climate averages per station; terms not read",
-    "b_month_chart": "none: the history table carries this date against every year", "b_year_chart": "none: the history table lists each recent year", "b_multiyear": "have", "b_like_today": "next: the Environment Agency daily means after today's date in earlier years; not wired", "b_speed": "none: the Environment Agency publishes no channel velocity measurements",
+    "b_month_chart": "none: the history table carries this date against every year", "b_year_chart": "none: the history table lists each recent year", "b_multiyear": "have", "b_like_today": "next: the Environment Agency daily means after today's date in earlier years; not wired", "b_speed": "none: the Environment Agency publishes no channel velocity measurements", "b_floods": "next: the Environment Agency daily means around its annual peaks; not wired",
     "b_daily": "none: the Hydrology API publishes each day's lowest and highest level, carried by the history table; no daily mean", "b_sustained": NRFA, "b_flowdur": NRFA, "b_peaks": NRFA, "b_stage_years": NRFA, "b_floodfreq": NRFA,
     "b_record": "none: the agency's highest and lowest on record, with dates, are in official marks",
     "b_drought": "next: Environment Agency drought status by area, in monthly water situation reports; no point dataset read",
@@ -329,7 +330,7 @@ COVER = {b: row + (IRELAND[b],) for b, row in COVER.items()}
 ORDER = ("eccc", "pegelonline", "ea", "imi")  # the column order of COVER
 TODO_IE = {MET_IE: "weather, rain and forecasts (Met Eireann)", IRELAND["b_alerts"]: "weather warnings (Met Eireann; see met.ie until one is proven here)",
            IRELAND["b_air_quality"]: "air quality (EPA Ireland)",            IRELAND["b_moon"]: "moon phase", IRELAND["b_waves"]: "offshore waves (Marine Institute weather buoys)"}
-TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)", ENGLAND["b_like_today"]: "what happened next in earlier years (Environment Agency daily flows)",
+TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)", ENGLAND["b_like_today"]: "what happened next in earlier years (Environment Agency daily flows)", ENGLAND["b_floods"]: "the biggest floods day by day (Environment Agency daily flows)",
         MET: "rain forecast totals and radar (Met Office)", MET_OBS: "air observations (Met Office)",
         ENGLAND["b_acis"]: "climate averages (Met Office)", ENGLAND["b_air_quality"]: "air quality (Defra UK-AIR)",
         ENGLAND["b_river_forecast"]: "river forecast (GOV.UK Check for flooding shows one at some stations)", ENGLAND["b_wtemp"]: "water temperature (the agency measures it at a few gauges)",

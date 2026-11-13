@@ -376,3 +376,11 @@ def new_fail(d, u, msgs):
     f["site"] = f.get("site") or []
     json.dump(f, open(p, "w", encoding="utf-8"))
     print("NEW PAGE FAILED", u, "(its numbers did not match the source; the second try sends it back to the queue)")
+
+
+# USGS peak qualifier codes (read live 2026-11-12 on 01646500, 09380000, 07289000, 03294500): one list for collect.py, lib/research.py and the blocks
+DROP = {"HISTORIC", "DAMFAILURE", "MONTHUNKNOWN", "YEARUNKNOWN"}  # outside the systematic record, a dam break, no month or year
+LOWER = {"MAXDAILYMEAN", "GREATERTHAN"}  # the true peak is at least this value (review #4): a lower bound, never a plain peak
+UPPER = {"LESSTHAN"}  # the true peak is at most this value
+REG = {"REGULATED", "UNKNOWNREGULATION"}  # flow changed by dams or diversions: studied apart
+KEEP = {"ESTIMATED", "REVISED", "DAYUNKNOWN"}  # USGS's own value stands

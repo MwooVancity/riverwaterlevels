@@ -20,12 +20,6 @@ HL = 25  # rows in a linked highlight table (check.py BUDGET trust 60, with the 
 URLS = ("/research/", "/research/peak-month/", "/research/peak-change/", "/research/100-year-floods/", "/research/flood-stage-years/", "/research/water-temperature/", "/research/lake-levels/", "/research/tides/")
 WORLD_URL = "/research/world-rivers/"
 MN = calendar.month_name
-# USGS peak qualifier codes (read live 2026-11-12 on 01646500, 09380000, 07289000, 03294500)
-DROP = {"HISTORIC", "DAMFAILURE", "MONTHUNKNOWN", "YEARUNKNOWN"}  # outside the systematic record, a dam break, no month or year
-LOWER = {"MAXDAILYMEAN", "GREATERTHAN"}  # the true peak is at least this value (review #4): a lower bound, never a plain peak
-UPPER = {"LESSTHAN"}  # the true peak is at most this value
-REG = {"REGULATED", "UNKNOWNREGULATION"}  # flow changed by dams or diversions: studied apart
-KEEP = {"ESTIMATED", "REVISED", "DAYUNKNOWN"}  # USGS's own value stands
 SAMPLE = ("<p class=\"src\"><b>Sample:</b> the US river gauges that have a page on this site, chosen by what people search for. They are not a random or representative sample of US rivers: "
           "searches rise after floods, so rivers that flooded recently may be over-represented. The results describe these gauges, not the country.</p>")
 SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on this site and an agency figure for how full they are. They are not every US reservoir, "
