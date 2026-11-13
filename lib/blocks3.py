@@ -120,7 +120,8 @@ def _on_lake(water, lake):
     Whole words only: 'Lake Mead' must not match 'Meadow Pond'."""
     import re as _re
     key = _re.sub(r"(?i)\b(lake|reservoir|res|pond|the|of)\b\.?", " ", lake).split()
-    return bool(key) and all(_re.search(r"(?i)\b%s\b" % _re.escape(k), water) for k in key) and not _re.search(r"(?i)\b(river|creek|brook|stream)\b", water)
+    flowing = _re.search(r"(?i)\b(river|creek|brook|stream)\b", water) and not _re.search(r"(?i)\b(lake|reservoir|res|pond)\b", water)  # 'Deer Creek Reservoir' is a lake
+    return bool(key) and all(_re.search(r"(?i)\b%s\b" % _re.escape(k), water) for k in key) and not flowing
 
 
 def b_stocking(G):

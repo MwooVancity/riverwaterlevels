@@ -677,6 +677,56 @@ def stock_merge(new, prev):
     return new
 
 
+UT_TABLE, UT_LAYER = "https://dwrapps.utah.gov/fishstocking/Fish?y=%d", "https://services.arcgis.com/ZzrwjTRez6FJiOq4/arcgis/rest/services/UDWR_Fish_Stocking_Events_1979_2024_VIEW/FeatureServer/%d/query"
+_UT_ROWS = {}
+
+
+def ut_table(t, today):
+    """Utah DWR yearly stocking table -> [(WATER NAME, species, quantity, avg length in, date iso)]. A date after today (seen: 11/19 on 11/13) is held,
+    never shown as stocked; a row whose quantity or date does not parse is dropped."""
+    out = []
+    for r in re.findall(r"<tr.*?</tr>", t, re.S):
+        c = [html.unescape(re.sub(r"<[^>]+>", "", x)).strip() for x in re.findall(r"<td.*?</td>", r, re.S)]
+        if len(c) != 6:
+            continue
+        try:
+            d, n = datetime.datetime.strptime(c[5], "%m/%d/%Y").date(), int(c[3].replace(",", ""))
+        except ValueError:
+            continue
+        if d <= today and c[0]:
+            out.append((re.sub(r"\s+", " ", c[0].upper()), c[2].title(), n, float(c[4]) if re.fullmatch(r"\d+(\.\d+)?", c[4]) else None, d.isoformat()))
+    return out
+
+
+def fetch_stocking_ut(lat, lon, miles):
+    """Utah (PLAN 37d): DWR's yearly stocking tables (this year and last, read once per process, about 1 MB each) joined by exact water name to the
+    UDWR stocked lakes (layer 0) and streams (layer 1), which carry Lat_Y/Long_X. 92% of 2026 names match (620 of 673); the rest are left out, never guessed."""
+    today = datetime.date.today()
+    for y in (today.year, today.year - 1):
+        if y not in _UT_ROWS:
+            _UT_ROWS[y] = ut_table(get_text(UT_TABLE % y), today)
+    dd, pos = miles / 69.0, {}
+    for layer in (0, 1):
+        q = urllib.parse.urlencode({"where": "Stocked_YN='Yes'", "geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326",
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": "WaterName,Lat_Y,Long_X", "returnGeometry": "false", "resultRecordCount": "2000", "f": "json"})
+        for ft in json.loads(get_text(UT_LAYER % layer + "?" + q)).get("features", []):
+            a = ft.get("attributes") or {}
+            if a.get("WaterName") and isinstance(a.get("Lat_Y"), (int, float)) and isinstance(a.get("Long_X"), (int, float)):
+                mi = round(hav_km(lat, lon, a["Lat_Y"], a["Long_X"]) * 0.621371, 1)
+                k = re.sub(r"\s+", " ", a["WaterName"].upper())
+                if mi <= miles:
+                    pos[k] = min(mi, pos.get(k, mi))
+    return [{"species": sp, "date": d, "num": n, "water": ut_name(w), "size": ln, "mi": pos[w]} for y in _UT_ROWS for w, sp, n, ln, d in _UT_ROWS[y] if w in pos]
+
+
+UT_ABBR = {"CR": "Creek", "RES": "Reservoir", "R": "River", "L": "Lake", "FK": "Fork", "CYN": "Canyon", "P": "Pond", "E": "East", "W": "West", "N": "North", "S": "South", "MF": "Middle Fork"}
+
+
+def ut_name(w):
+    """'DEER CR RES' -> 'Deer Creek Reservoir': Utah's table abbreviates, so a page named 'Deer Creek Reservoir' matched nothing. Whole tokens only."""
+    return " ".join(UT_ABBR.get(t, t.title()) for t in re.sub(r",", " ,", w).split()).replace(" ,", ",")
+
+
 def stock_keep(rows, n=60):
     """The newest release per water and species, the n nearest waters, newest first. The page shows only its own river or lake (lib/blocks3 b_stocking),
     so keeping the 12 newest within 35 miles let a busy pond season push the gauge's own river out of the cache (found 2026-11-13)."""
@@ -692,6 +742,7 @@ def fetch_stocking(lat, lon, miles=35):
     two = [(fn, src, cred, url) for box, fn, src, cred, url in (
         ((-73.6, 41.2, -69.8, 42.9), fetch_stocking_ma, "MassWildlife trout stocking report", "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", MA_STOCK + "StockedFish_View/FeatureServer/0"),
         ((-72.6, 42.7, -70.6, 45.3), fetch_stocking_nh, "NH Fish and Game fish stocking records", "New Hampshire Fish and Game Department", NH_STOCK + "5"),
+        ((-114.1, 36.9, -109.0, 42.1), fetch_stocking_ut, "Utah DWR fish stocking report", "Utah Division of Wildlife Resources", "https://dwrapps.utah.gov/fishstocking/Fish"),
         ((-83.7, 36.5, -75.2, 39.5), fetch_stocking_va, "Virginia DWR trout stocking schedule", "Virginia Department of Wildlife Resources (Trout Stocked Streams, Virginia Department of Game and Inland Fisheries)", VA_SCHED))
         if box[0] <= lon <= box[2] and box[1] <= lat <= box[3]]  # two-step states; a border gauge (MA/NH overlap) gets both states' releases, not only the first state's
     got = [(src, cred, url, r) for fn, src, cred, url in two for r in [fn(lat, lon, miles)] if r]

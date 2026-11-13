@@ -1200,6 +1200,12 @@ if __name__ == "__main__":
     assert [r["water"] for r in mg_["rows"]] == ["B Creek", "A Creek"], "stocking merge lost a recent release or kept a 2020 one"
     assert len(collect.stock_merge(dict(nw_, source="S and T"), old_)["rows"]) == 2, "stocking merge: a border page lost its releases when a second state joined"
     assert collect.stock_merge(dict(nw_, source="T"), old_)["rows"] == nw_["rows"] and collect.stock_merge(None, old_) is old_ and collect.stock_merge(None, None) is None, "stocking merge mixed sources or lost the old record"
+    # PLAN 37d Utah: future dates held, bad rows dropped, abbreviations expanded so 'Deer Cr Res' reaches the Deer Creek Reservoir page
+    ut_html_ = ("<tr><td>DEER CR RES</td><td>WASATCH</td><td>RAINBOW</td><td>2,730</td><td>9.42</td><td>11/10/2026</td></tr>"
+                "<tr><td>DEER CR RES</td><td>WASATCH</td><td>RAINBOW</td><td>500</td><td>9.4</td><td>11/19/2026</td></tr><tr><td>X</td><td>Y</td><td>Z</td><td>n/a</td><td>1</td><td>11/01/2026</td></tr>")
+    assert collect.ut_table(ut_html_, datetime.date(2026, 11, 13)) == [("DEER CR RES", "Rainbow", 2730, 9.42, "2026-11-10")], "Utah table: a future date shown, or a bad row kept"
+    assert collect.ut_name("DEER CR RES") == "Deer Creek Reservoir" and collect.ut_name("BLACKS FK, E FK") == "Blacks Fork, East Fork", "Utah names not expanded"
+    assert blocks3._on_lake("Deer Creek Reservoir", "Deer Creek Reservoir") and not blocks3._on_lake("Deer Creek", "Deer Creek Reservoir"), "lake rule: a creek-named lake dropped, or the creek itself kept"
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
     from lib import cadence as cad_
     assert "key not in COAST_KEYS and USGS_OUT[0]" in open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read() and not (cad_.WEEKLY & collect.COAST_KEYS) - {"floodtide"}, "a non-USGS weekly source waits on the USGS quota again, or a new place source joined WEEKLY unchecked"
