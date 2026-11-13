@@ -142,7 +142,7 @@ def b_stocking(G):
         keep.append(x)
     if not keep:
         return None
-    rows = "".join(tr([fdate(x["date"]), esc(re.sub(r"\((?=\S)", " (", x["species"] or "–")), fmt(round(x["num"])) if x.get("num") else "–", esc(x["water"] or "–"),
+    rows = "".join(tr([("Week of " if x.get("week") else "") + fdate(x["date"]), esc(re.sub(r"\((?=\S)", " (", x["species"] or "–")), fmt(round(x["num"])) if x.get("num") else "–", esc(x["water"] or "–"),
                        ("%.1f mi" % x["mi"]) if x.get("mi") is not None else "–"], right=(2, 4)) for x in keep)
     return block("stocking", "Recent fish stocking nearby", "hist",
                  table(["Date", "Species", "Number", "Water", "Distance"], rows, right=(2, 4)),

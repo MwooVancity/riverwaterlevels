@@ -545,6 +545,10 @@ STOCK_SOURCES = [
     {"id": "nd", "name": "North Dakota Game & Fish stocking", "url": "https://ndgishub.nd.gov/arcgis/rest/services/Applications/GNF_FishingWaters/MapServer/3/query",
      "bbox": (-104.2, 45.8, -96.5, 49.1), "credit": "North Dakota Game and Fish Department",
      "f": {"species": "Species", "date": "StockDate", "num": "Total_Stocked", "water": "Lake_Name", "size": "StockSizeDescription"}},
+    {"id": "ca", "name": "CDFW fish planting locations", "url": "https://services2.arcgis.com/Uq9r85Potqm3MfRV/arcgis/rest/services/biosds2897_fmu/FeatureServer/0/query",
+     "bbox": (-124.5, 32.5, -114.1, 42.0), "credit": "California Department of Fish and Wildlife, BIOS ds2897 (CC BY 4.0)", "week": True,  # PLAN 37e: dates are the week of planting
+     "where": "AnnouncePeriod IN ('past','recent')",  # 'current' (this week) and 'future' are planned, not done: never shown as stocked
+     "f": {"species": "FishType", "date": "WeekOfPlantStart", "num": None, "water": "WaterName", "size": None}},
     {"id": "ga", "name": "Georgia DNR recently stocked trout streams", "url": "https://services6.arcgis.com/9QlSLDqa0P1cHLhu/arcgis/rest/services/Recently_Stocked_Streams/FeatureServer/0/query",
      "bbox": (-85.7, 30.3, -80.8, 35.1), "credit": "Georgia Department of Natural Resources, Wildlife Resources Division", "species": "Trout",  # PLAN 36: one row per stream, its last stocking only; trout by the layer's own name, no count; terms: empty licence, no reuse bar (read 2026-11-13)
      "f": {"species": None, "date": "LastStock", "num": None, "water": "Name", "size": None}},
@@ -753,7 +757,7 @@ def fetch_stocking(lat, lon, miles=35):
         fm, dd = s["f"], miles / 69.0
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
                                     "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(v for v in fm.values() if v), "returnGeometry": "true", "resultRecordCount": "500",
-                                    "orderByFields": fm["date"] + " DESC", "f": "json"})  # newest first: a 500-row cap on decades of records must cut the oldest, not random ones
+                                    "orderByFields": fm["date"] + " DESC", "where": s.get("where", "1=1"), "f": "json"})  # newest first: a 500-row cap on decades of records must cut the oldest, not random ones
         j = json.loads(get_text(s["url"] + "?" + q))
         cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
         rows = []
@@ -767,7 +771,7 @@ def fetch_stocking(lat, lon, miles=35):
             mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in vx) * 0.621371, 1) if vx else None
             if mi is not None and mi > miles:
                 continue
-            rows.append({"species": a.get(fm["species"]) if fm.get("species") else s.get("species"), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
+            rows.append({**({"week": True} if s.get("week") else {}), "species": a.get(fm["species"]) if fm.get("species") else s.get("species"), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
                          "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
         if rows:
             got.append((s["name"], s["credit"], s["url"], rows))

@@ -1206,6 +1206,17 @@ if __name__ == "__main__":
     assert collect.ut_table(ut_html_, datetime.date(2026, 11, 13)) == [("DEER CR RES", "Rainbow", 2730, 9.42, "2026-11-10")], "Utah table: a future date shown, or a bad row kept"
     assert collect.ut_name("DEER CR RES") == "Deer Creek Reservoir" and collect.ut_name("BLACKS FK, E FK") == "Blacks Fork, East Fork", "Utah names not expanded"
     assert blocks3._on_lake("Deer Creek Reservoir", "Deer Creek Reservoir") and not blocks3._on_lake("Deer Creek", "Deer Creek Reservoir"), "lake rule: a creek-named lake dropped, or the creek itself kept"
+    # PLAN 37e California: only done plantings asked (past, recent), the date said as a week, CC BY credit kept
+    gt_, asked_ = collect.get_text, []
+    try:
+        collect.get_text = lambda u, *a, **k: asked_.append(u) or json.dumps({"features": [{"attributes": {"WaterName": "Big Pine Creek", "WeekOfPlantStart": "2026-09-27", "FishType": "Trout"}, "geometry": {"x": -118.3, "y": 37.1}}]})
+        ca_ = collect.fetch_stocking(37.0, -118.4)
+        assert "past" in collect.urllib.parse.unquote_plus(asked_[0]) and "future" not in collect.urllib.parse.unquote_plus(asked_[0]) and "current" not in collect.urllib.parse.unquote_plus(asked_[0]), "California: planned plantings asked for"
+        assert ca_["rows"][0]["week"] and "CC BY" in ca_["credit"], "California: week flag or credit lost"
+    finally:
+        collect.get_text = gt_
+    wk_ = blocks3.b_stocking({"river": "Big Pine Creek", "zone": datetime.timezone.utc, "now": datetime.datetime(2026, 11, 13, tzinfo=datetime.timezone.utc), "rec": {"stocking": dict(ca_, fetched_at="2026-11-13T00:00:00+00:00")}})
+    assert "Week of Sep 27, 2026" in wk_["body"].replace(" ", " "), "California: a planting week shown as a single day"
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
     from lib import cadence as cad_
     assert "key not in COAST_KEYS and USGS_OUT[0]" in open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read() and not (cad_.WEEKLY & collect.COAST_KEYS) - {"floodtide"}, "a non-USGS weekly source waits on the USGS quota again, or a new place source joined WEEKLY unchecked"
