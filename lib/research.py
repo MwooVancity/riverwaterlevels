@@ -559,7 +559,7 @@ def tides(built, Gs):
     days = statistics.median(x[7] for x in rows)
     span = "%d days" % round(days) if days >= 1.5 else "%d hours" % round(days * 24)
     top = max(rows, key=lambda x: x[3][1])
-    lead = ("<p><b>Over the last %s, the sea ran " + ("furthest above its tide prediction" if top[3][1] > 0 else "closest to its tide prediction") + " at %s: %+.2f ft at %s.</b> "
+    lead = ("<p><b>Over the last %s, the sea ran " + ("furthest above its tide prediction" if top[3][1] > 0 else "nearest to rising above its tide prediction") + " at %s: %+.2f ft at %s.</b> "
             "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft. Part of a gap can be steady: local sea level differs from the long-term level NOAA's tide datums are referenced to (at most US stations it has risen since; where the land is rising, as in parts of Alaska, it has fallen), and a season can run above or below its normal level; wind, air pressure and river flow add the rest.%s</p>") % (
         span, _link(top[0]), top[3][1], esc(tzl(top[3][0], top[1]["zone"])), len(rows), statistics.median(x[5] for x in rows),
         (" %s left out (tide predictions only, or under 24 hours of matched readings)." % _pl(left, "station was", "stations were")) if left else "")
@@ -608,9 +608,10 @@ def world_rivers(wpages, wkeep, now):
         return ("%d of %d" % (c[k], n)) if n >= 3 else ("%d" % c[k] if n else "–")
     tb = table(["Country", "Low", "Normal", "High", "Not reporting, tidal or no label"], "".join(
         tr([COUNTRY[f], share(by[f], "low"), share(by[f], "normal"), share(by[f], "high"), str(by[f]["not reporting"] + by[f]["tidal"] + by[f]["no label"])], right=(1, 2, 3, 4)) for f in cs), right=(1, 2, 3, 4))
-    lead = ("<p><b>Right now %d of %d labelled gauges on this site outside the US read low and %d read high.</b> "
-            "Each label has its own basis: %s. So the table counts them country by country and never adds them into one share.</p>") % (
-        sum(by[f]["low"] for f in cs), len(labelled), sum(by[f]["high"] for f in cs),
+    lc_ = [f for f in cs if by[f]["low"] + by[f]["normal"] + by[f]["high"]]
+    lead = ("<p><b>Right now, by each country's own label: %s.</b> "
+            "Each label has its own basis: %s. So the counts are kept country by country and never added across countries.</p>") % (
+        "; ".join("%s, %d of %d gauges low and %d high" % (COUNTRY[f], by[f]["low"], by[f]["low"] + by[f]["normal"] + by[f]["high"], by[f]["high"]) for f in lc_),
         "; ".join({"pegelonline": "the WSV's own marks in Germany", "ea": "the Environment Agency's own typical range in England", "eccc": "our rank against past monthly means in Canada, where Water Survey of Canada publishes no label"}[f] for f in ("pegelonline", "ea", "eccc") if by[f]["low"] + by[f]["normal"] + by[f]["high"]))
     nm_ = lambda p: p.get("river") or p["slug"]
     hubs = "".join('<li><a href="/%s/">%s</a>%s</li>' % (esc(p["slug"]), esc(nm_(p)), "" if nm_(p) == COUNTRY.get(p.get("feed") or "pegelonline") else " (%s)" % COUNTRY.get(p.get("feed") or "pegelonline", "")) for p, d in wpages[:30] if wkeep.get(p["slug"]))
@@ -696,10 +697,14 @@ def verify(url, html, data):
         if not m or int(m.group(1)) != len(rows):
             bad.append("tide station count against CSV %d" % len(rows))
     elif url.endswith("/world-rivers/"):
-        lab = [r["label"] for r in rows if r["label"] in ("low", "normal", "high")]
-        m = re.search(r"(\d+) of (\d+) labelled gauges.*?read low and (\d+) read high", lead)
-        if not m or (int(m.group(1)), int(m.group(2)), int(m.group(3))) != (lab.count("low"), len(lab), lab.count("high")):
-            bad.append("world lead %r against CSV" % (m and m.group(0)))
+        got_ = {c: (int(a), int(b), int(h)) for c, a, b, h in re.findall(r"(\w+), (\d+) of (\d+) gauges low and (\d+) high", lead)}
+        want_ = {}
+        for r in rows:
+            if r["label"] in ("low", "normal", "high"):
+                lo_, n_, hi_ = want_.get(r["country"], (0, 0, 0))
+                want_[r["country"]] = (lo_ + (r["label"] == "low"), n_ + 1, hi_ + (r["label"] == "high"))
+        if got_ != want_:
+            bad.append("world lead %r against CSV %r" % (got_, want_))
     else:
         bad.append("no reproducibility check for %s: a new research page needs one" % url)
     return bad
