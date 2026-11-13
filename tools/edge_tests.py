@@ -1007,4 +1007,6 @@ def nid_facts():
 
 if __name__ == "__main__":
     run()
+    from tools.outreach_guard import selftest as outreach_selftest  # owner 2026-11-13: nobody is emailed twice
+    outreach_selftest()
     print("selftest OK")
