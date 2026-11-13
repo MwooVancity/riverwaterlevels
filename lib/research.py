@@ -6,7 +6,7 @@ import calendar, collections, csv, io, math, re, statistics
 import datetime
 from lib.common import *
 from lib.core import table, tr, tzl
-from lib.directory import shell, crumb_ld, STATE_NAMES
+from lib.directory import shell, crumb_ld, STATE_NAMES, utc_day
 
 MIN_PEAKS = 20  # water years of annual peaks a gauge needs before its peak month is counted
 WIN = 20  # water years in each period of the two-period comparison
@@ -583,7 +583,7 @@ def world_rivers(wpages, wkeep, now):
     body = (lead + tb + "<h2>What each label means</h2><ul>%s</ul>" % basis + "<h2>The rivers and coasts behind these numbers</h2><ul>%s</ul>" % hubs +
             ("<h2>How this was worked out</h2><p>Sources, as each gauge page shows them: Water Survey of Canada real-time levels (Environment and Climate Change Canada), PEGELONLINE (WSV, Germany), the Environment Agency flood-monitoring API (England, Open Government Licence v3.0) and the Marine Institute Irish National Tide Gauge Network (CC BY 4.0). "
              "A reading older than 24 hours is counted as not reporting and gets no label. Labelled readings run from %s to %s UTC. Shares are shown only for a country with at least 3 labelled gauges.</p>") % (
-                times[0].strftime("%b %d, %H:%M").replace(" 0", " ", 1), times[-1].strftime("%b %d, %H:%M").replace(" 0", " ", 1)))  # check.py BANNED: no raw machine timestamp shown to a reader
+                utc_day(times[0]), utc_day(times[-1])))  # check.py BANNED: no raw machine timestamp shown to a reader
     data = _csv(["country", "page_slug", "gauge", "label", "reading_utc", "label_basis"],
                 [[COUNTRY.get(f, f), p["slug"], r.get("title") or r.get("name"), lab, r.get("time") or "", BASIS.get(f, "")] for f, p, r, lab in rows])
     sample = ("<p class=\"src\"><b>Sample:</b> the gauges outside the US that have a page on this site, in %s. They are not every gauge in those countries, so the results describe these gauges only.</p>" % ", ".join(COUNTRY[f] for f in cs))

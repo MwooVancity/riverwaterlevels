@@ -660,6 +660,33 @@ def run_by(pub):
     return ("%s is an independent site run by %s. It is not a government agency. " % (esc(BRAND), esc(pub["person"]))) if pub.get("person") else ""
 
 
+def utc_day(t):
+    """'Nov 3, 03:20' in UTC: a reader's date, never a machine timestamp (check.py BANNED)."""
+    t = t.astimezone(datetime.timezone.utc)
+    return "%s %d, %s" % (t.strftime("%b"), t.day, t.strftime("%H:%M"))
+
+
+def checks_section(now=None, path=None):
+    """PLAN 19c: the last hourly comparison of live pages with USGS and NWS (tools/truth_live.py writes _truth.json into each build), from the published copy. Said once here, never on every page."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    head = '<h2 id="checks">How the numbers are checked</h2><p>Every hour a separate job reads the live pages and compares their flow, gage height, water temperature and tide numbers with USGS and NOAA at the same time. '
+    try:
+        j = json.load(open(path or os.path.join(DIST, "_truth.json"), encoding="utf-8"))
+        at = parse_t(j["checked_at"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return head + "Its latest result is not available to this build.</p>"
+    age = (now - at).total_seconds() / 3600
+    when = "%s UTC" % utc_day(at)
+    if j.get("status") in ("ok", "mismatch"):
+        bad = len(j.get("mismatches") or [])
+        res = "%s check (%s): %d pages compared, %s." % ("Latest" if age <= 24 else "Last available", when, j.get("compared") or 0,
+                                                       "no number differed from the agency's" if not bad else "%d page%s showed a number that differed from the agency's at the time of the check" % (bad, "" if bad == 1 else "s"))
+    else:
+        lo = j.get("last_ok_at")
+        res = "The check at %s did not complete%s." % (when, ("; the last complete check was %s UTC" % utc_day(parse_t(lo))) if lo else "")
+    return head + res + "</p>"
+
+
 def trust_pages(built_count, built_rows):
     t = {}
     t["/about/"] = prose_page("About", "/about/", (
@@ -736,7 +763,8 @@ def trust_pages(built_count, built_rows):
         "<h2 id=\"corrections\">Corrections</h2><p>Errors that come from a source are the source's to correct; we show the source's current value on the next refresh. Errors in our calculations are corrected as soon as they are found. Last reviewed Nov 12, 2026.</p>"
         "<h3>Corrections log</h3><ul>"  # trust (crawl 2026-11-12): dated, reader-visible errors of ours only; add a line the day one is fixed
         "<li>Nov 10, 2026: on gauge pages, the line under the flow said the flow was as of the page build time, while the reading itself could be older. It now says the charts and tables are as of the build; the flow shows its own reading time.</li>"
-        "<li>Nov 10, 2026: this page said a change under 1% reads as steady; the pages use under 2% or under 5 cfs. Text corrected to match.</li></ul>")
+        "<li>Nov 12, 2026: the Annual peaks that reached flood stage block counted a year twice when USGS listed two peaks in it, and counted historic peaks from before the regular record (and before a change of gauge datum). Each water year now counts once, from the regular record after the last datum change.</li>"
+        "<li>Nov 10, 2026: this page said a change under 1% reads as steady; the pages use under 2% or under 5 cfs. Text corrected to match.</li></ul>") + checks_section()
     t["/methodology/"] = prose_page("Methodology", "/methodology/", meth, "How River Water Levels calculates percentiles, comparisons, rates and lags, and its freshness limits.")
     upd = (("USGS gauge readings", "About every 15 minutes (some gauges hourly)", "About hourly, and in your browser when the page loads"),
            ("NWS alerts", "As issued", "About hourly, and in your browser when the page loads"),

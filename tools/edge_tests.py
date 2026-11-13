@@ -842,6 +842,17 @@ def probe(warn, square, pages):
     h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
     assert h2.count("first-come, first-served") == 1 and h2.count("P.O. Box 309, Carbondale, CO") == 1 and h2.count("Own words for") == 3 and h2.count("is listed once, under the first site") == 1 and "same as listed" not in h2, "RIDB: a shared address or sentence was repeated, an address was split, a note repeated, or a site's own words were dropped"
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
+    # PLAN 19c: the hourly check, said once on /methodology/
+    from lib import directory as _dir
+    tj = os.path.join(tempfile.mkdtemp(), "_truth.json")
+    nn = datetime.datetime(2026, 11, 13, 4, 0, tzinfo=datetime.timezone.utc)
+    for st_, mm, want in (("ok", [], "229 pages compared, no number differed"), ("mismatch", ["a", "b"], "2 pages showed a number that differed"), ("skipped", [], "did not complete; the last complete check was Nov 12, 20:00 UTC")):
+        json.dump({"checked_at": "2026-11-13T03:20:26+00:00", "status": st_, "compared": 229, "mismatches": mm, "last_ok_at": "2026-11-12T20:00:00+00:00"}, open(tj, "w"))
+        cs = _dir.checks_section(nn, tj)
+        assert want in cs and "Nov 13, 03:20 UTC" in cs and not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", cs), "19c: check result wrong for %s: %s" % (st_, cs)
+    assert "Last available check" in _dir.checks_section(nn + datetime.timedelta(days=3), tj.replace("_truth", "_x")) or "not available" in _dir.checks_section(nn, tj.replace("_truth", "_x")), "19c: a missing result file crashed or claimed numbers"
+    json.dump({"checked_at": "2026-11-10T03:20:26+00:00", "status": "ok", "compared": 5, "mismatches": []}, open(tj, "w"))
+    assert "Last available check" in _dir.checks_section(nn, tj), "19c: a 3-day-old result read as the latest"
     # PLAN 19a: float time from USGS channel velocity
     sg_ = {"rec": {"fieldmeas": {"chan": [["2024-06-01T10:00", 100.0, 50, 40, 2.0, 0, ""], ["2023-06-01T10:00", 110.0, 50, 40, 3.0, 0, ""], ["2022-06-01T10:00", 95.0, 50, 40, 2.5, 0, ""],
                                           ["2021-06-01T10:00", 900.0, 50, 40, 9.0, 0, ""], ["1990-06-01T10:00", 100.0, 50, 40, 1.0, 0, ""], ["2020-06-01T10:00", 100.0, 50, 40, 25.0, 0, ""]]}},
