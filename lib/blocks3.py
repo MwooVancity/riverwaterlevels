@@ -633,7 +633,8 @@ def b_recreation(G):
     r = dict(r, sites=[x for x in r["sites"] if x["mi"] <= r["radius_mi"]])  # a facility farther than the stated radius is never listed under it
     if not r["sites"]:
         return None
-    rows = "".join(tr([_ridb_site(x), "%.1f mi" % x["mi"], _ridb_fee(x), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(1,)) for x in r["sites"])
+    said = {}  # 28 pages held 2026-11-12: sites run by one office share an address or description; the second says whose it is, never the text again
+    rows = "".join(tr([_ridb_site(x, said), "%.1f mi" % x["mi"], _ridb_fee(x), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(1,)) for x in r["sites"])
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency",
                  '<p>%d federal site%s within %d miles, nearest %s at %.1f mi. Fees, reservations and directions are as Recreation.gov lists them.</p>' % (len(r["sites"]), "" if len(r["sites"]) == 1 else "s", r["radius_mi"], esc(_ridb_name(r["sites"][0]["name"])), r["sites"][0]["mi"])
                  + table(["Site", "Distance", "Fees and reservations", "Phone"], rows, right=(1,)),
@@ -645,7 +646,7 @@ def _ridb_ok(t):
     return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().upper() not in ("NONE", "N/A", "NA", "TBD")  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
 
 
-def _ridb_site(x):
+def _ridb_site(x, said=None):
     """Name (linked to its Recreation.gov page when there is one), type and agency, activities; the rest of what RIDB says behind More."""
     nm = esc(_ridb_name(x["name"]))
     h = ('<a href="%s" rel="noopener">%s</a>' % (esc(x["url"]), nm)) if str(x.get("url") or "").startswith("https://") else nm
@@ -653,7 +654,25 @@ def _ridb_site(x):
     acts = ", ".join(x.get("water") or (x.get("activities") or [])[:3])
     h += "<br><small>%s</small>" % esc(("Activities: " + acts) if acts else "Activities not listed")
     det = [("About", x.get("about")), ("Address", x.get("address")), ("Directions", x.get("directions"))]
-    det = "".join("<p><b>%s:</b> %s</p>" % (k, esc(v)) for k, v in det if _ridb_ok(v))
+    said = {} if said is None else said
+    out = ""
+    for k, v in det:
+        if not _ridb_ok(v):
+            continue
+        keep, first = [], None
+        for sn in re.split(r"(?<=[.!?])\s+", " ".join(v.split())):
+            key = sn.lower()
+            if len(sn.split()) >= 3 and key in said:
+                first = first or said[key]
+                continue
+            keep.append(sn)
+            said.setdefault(key, _ridb_name(x["name"]))
+        txt = esc(" ".join(keep))
+        if first:
+            txt += (" (plus the text listed for %s)" if txt else "same as listed for %s") % esc(first)
+        if txt:
+            out += "<p><b>%s:</b> %s</p>" % (k, txt)
+    det = out
     if x.get("email"):
         det += '<p><b>Email:</b> <a href="mailto:%s">%s</a></p>' % (esc(x["email"]), esc(x["email"]))
     return h + ('<details class="tmore"><summary>More</summary>%s</details>' % det if det else "")

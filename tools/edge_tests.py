@@ -159,7 +159,7 @@ def run():
     assert "At 56 US river gauges on this site that USGS does not mark as regulated, the 1%-chance flow was reached or passed in 56 of 1400 gauge-years" in hy and "At 10 gauges USGS marks as regulated" in hy, "edge: 100-year counts wrong (conflict, no range, no 1% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 300]
     assert "not one flood per century" in hy and "1%%" not in hy and "/river/b1/town/" not in hy, "edge: 100-year page lost its plain meaning, shows a double percent, or lists a conflicting statistic"
     assert "reached NWS minor flood stage in a median 33% of years" in fs and "never at 0" in fs, "edge: flood stage share wrong: %s" % fs[fs.find("<b>"):fs.find("<b>") + 300]
-    assert "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt, "edge: water temperature kept a thin July, crashed on a bad month, or lost the record years"
+    assert "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt and max(len(re.findall(r"<th ", t_)) for t_ in wt.split("</table>")) <= 5, "edge: water temperature kept a thin July, crashed on a bad month, or lost the record years"
     for u_, h_ in bp.items():
         assert h_.count("<a ") <= 60, "edge: %s has %d links (check.py BUDGET trust 60)" % (u_, h_.count("<a "))
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
@@ -732,13 +732,19 @@ def probe(warn, square, pages):
     from lib import blocks3 as b3r
     h = b3r.b_recreation({"rec": {"ridb": rd}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
     rows = [t for t in re.findall(r"<tr>.*?</tr>", h, re.S) if "<td" in t]
-    assert len(rows) == 3 and h.count("Bolding Mill<") == 1, "RIDB: wrong row count %d" % len(rows)
+    assert len(rows) == 3 and h.count(">Bolding Mill<") == 1, "RIDB: wrong row count %d" % len(rows)
     assert "Recreation.gov lists it as reservable" in rows[0] and "href=\"https://www.recreation.gov/x\"" not in rows[0] and "$45.00" in rows[0], "RIDB: reservable with no URL must say so with no link"
     assert "Fee not stated by Recreation.gov" in h and "Not listed as reservable" in h and "not an email" not in h and "license" not in h, "RIDB: missing fee, not reservable, a bad email or a BANNED word mishandled"
     assert "Fees: see the site on Recreation.gov" in h and "x" * 400 not in h and '<a href="https://www.recreation.gov/x" rel="noopener">Reservable on Recreation.gov</a>' in h, "RIDB: a fee too long to show whole was cut, or a reservation URL not linked"
     assert not re.search(r"&lt;/?[a-zA-Z]|<p>Monday|\b(safe|open now)\b", h) and len(re.findall(r"<th ", h)) <= 5, "RIDB: HTML shown as text, a verdict, or more than 5 columns"
     old = {"fetched_at": "2026-11-09T00:00:00Z", "radius_mi": 15, "sites": [{"name": "OLD", "type": "Campground", "mi": 2.0, "activities": [], "water": [], "phone": "", "url": ""}]}
     assert "Unknown" in b3r.b_recreation({"rec": {"ridb": old}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"], "RIDB: a cache from before the fee field claimed 'Fee not stated'"
+    # 2026-11-12: 28 live pages held by the sentence-repeat gate: sites run by one office share an address and a sentence of their descriptions
+    fcfs = "This location is available on a first-come, first-served basis."
+    sh = {"fetched_at": "2026-11-12T00:00:00Z", "radius_mi": 15, "sites": [dict(name=n, type="Campground", mi=float(i + 1), activities=[], water=[], phone="", url="", fee="",
+          about="%s %s" % (fcfs, "Own words for %s here." % n), address="PO Box 309, Carbondale, CO") for i, n in enumerate(("ALPHA", "BETA", "GAMMA"))]}
+    h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
+    assert h2.count("first-come, first-served") == 1 and h2.count("PO Box 309") == 1 and h2.count("Own words for") == 3 and "same as listed for Alpha" in h2 and "plus the text listed for Alpha" in h2, "RIDB: a shared address or sentence was repeated, or a site's own words were dropped"
 
 
 def nid_facts():

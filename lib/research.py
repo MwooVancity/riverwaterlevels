@@ -232,8 +232,8 @@ def water_temp(gl):
     lead = ("<p><b>Across %d US river gauges on this site with a USGS water temperature record, the July average at the middle gauge is %.0f&deg;F. July averages under 60&deg;F at %d gauges and 70&deg;F or warmer at %d.</b> "
             "A monthly average says nothing about a given day; each gauge page shows the latest reading where the sensor reports.</p>") % (len(rows), statistics.median(jul), sum(1 for t in jul if t < 60), sum(1 for t in jul if t >= 70))
     f = lambda m, ms: "%.0f&deg;F" % ms[m] if m in ms else "–"
-    hd = ["Gauge", "January", "April", "July", "October", "Record"]
-    row = lambda g: lambda x: tr([g(x[0])] + [f(m, x[1]) for m in (1, 4, 7, 10)] + ["%s to %s" % (x[2], x[3])], right=(1, 2, 3, 4))
+    hd = ["Gauge", "January", "April", "July", "October"]  # 5 columns (check.py wide_tables): the record years sit under the gauge name
+    row = lambda g: lambda x: tr(['%s<div class="src">Sensor record %s to %s</div>' % (g(x[0]), x[2], x[3])] + [f(m, x[1]) for m in (1, 4, 7, 10)], right=(1, 2, 3, 4))
     by = sorted(rows, key=lambda x: x[1][7])
     body = (lead + "<h2>Coldest in July</h2>" + table(hd, "".join(map(row(_link), by[:HL // 2])), right=(1, 2, 3, 4)) +
             "<h2>Warmest in July</h2>" + table(hd, "".join(map(row(_link), by[::-1][:HL // 2])), right=(1, 2, 3, 4)) +
