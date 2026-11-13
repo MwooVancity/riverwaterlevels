@@ -1383,9 +1383,13 @@ def b_moon(G):
     today_ = lambda ph: [t for t, p in ev if p == ph and d0 <= t < d1]
     tm = lambda ts, w: ", ".join(esc(tzl(t, z, date=False)) for t in ts) or "No %s today" % w  # "None" reads as a code leak (break gate 2026-11-07)
     cps = sorted({tuple(d["closest"]) for d in u["days"] if d.get("closest")}, key=lambda c: abs((parse_t(c[1]) - G["now"]).total_seconds()))
+    overhead = [(t, ph) for t, ph in ev if ph == "Upper Transit"]  # PLAN 35: fetched since 2026-11-13; an older cache has none, so the row waits rather than saying 'none'
     rows = "".join(tr([a, b], right=(1,)) for a, b in (("Moonrise today", tm(today_("Rise"), "moonrise")), ("Moonset today", tm(today_("Set"), "moonset")),
+                                                      *((("Moon overhead today", tm(today_("Upper Transit"), "moon overhead")),) if overhead else ()),
                                                       ("Moon phase, nearest principal phase", ("%s, %s" % (esc(cps[0][0]), esc(tzl(parse_t(cps[0][1]), z)))) if cps else "Unknown")))
-    return block("moon", "Moon today", "agency", table(["Measure", esc(fdate(loc.date().isoformat()))], rows, right=(1,)),
+    sol = ('<p class="src">Solunar tables, from John Alden Knight\'s 1926 theory that fish feed more when the moon is overhead, underfoot or at the horizon, are built from these times. '
+           'The theory is disputed, and sources give different period lengths, so none is shown.</p>') if overhead else ""
+    return block("moon", "Moon today", "agency", table(["Measure", esc(fdate(loc.date().isoformat()))], rows, right=(1,)) + sol,
                  src + ", read %s. USNO gives the times in UTC; station time is our conversion." % esc(tzl(parse_t(u["fetched_at"]), z)), "usno")
 
 

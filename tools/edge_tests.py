@@ -1137,4 +1137,11 @@ if __name__ == "__main__":
     assert not re.search(r"in this (river|lake)|\bbite\b|good fishing", b_, re.I), "fish: records claimed for this water, or a verdict"
     e_ = fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00", rows=[], species=0))
     assert e_["empty"] and "No record is not the same as no fish" in e_["body"] and "Unknown" in fb_(None)["body"], "fish: no record read as no fish, or missing data shown"
+    # PLAN 35 solunar inputs on coasts: USNO's moon-overhead time shown in station time with the disputed-theory note; an older cache without it shows neither
+    un_ = {"fetched_at": "2026-11-13T10:00:00+00:00", "days": [{"date": "2026-11-13", "moon": [["Rise", "2026-11-13T16:28:00+00:00"], ["Upper Transit", "2026-11-13T21:42:00+00:00"]], "closest": ["New Moon", "2026-11-09T07:02:00+00:00"]},
+                                                                {"date": "2026-11-14", "moon": [], "closest": ["New Moon", "2026-11-09T07:02:00+00:00"]}]}
+    mo_ = lambda u: blocks3.b_moon({"coast": True, "zone": zoneinfo.ZoneInfo("America/New_York"), "now": datetime.datetime(2026, 11, 13, 18, tzinfo=datetime.timezone.utc), "rec": {"usno": u}})["body"].replace(" ", " ")
+    assert "Moon overhead today" in mo_(un_) and "4:42 PM" in mo_(un_) and "disputed" in mo_(un_), "solunar: moon overhead time missing, wrong zone, or the theory not called disputed"
+    old_ = {**un_, "days": [dict(un_["days"][0], moon=[["Rise", "2026-11-13T16:28:00+00:00"]]), un_["days"][1]]}
+    assert "overhead" not in mo_(old_) and "Solunar" not in mo_(old_), "solunar: a cache without the overhead time said 'none' or kept the note"
     print("selftest OK")

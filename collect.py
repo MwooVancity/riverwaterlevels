@@ -1674,7 +1674,7 @@ def fetch_usno(lat, lon):
         if float(p.get("tz", 99)) != 0 or (p.get("year"), p.get("month"), p.get("day")) != (d.year, d.month, d.day):
             raise RuntimeError("USNO answered another zone or date: %r" % {k: p.get(k) for k in ("tz", "year", "month", "day")})
         cp = p.get("closestphase") or {}
-        days.append({"date": d.isoformat(), "moon": [[x["phen"], "%sT%s:00+00:00" % (d.isoformat(), x["time"])] for x in p.get("moondata") or [] if x.get("phen") in ("Rise", "Set") and re.fullmatch(r"\d\d:\d\d", x.get("time") or "")],
+        days.append({"date": d.isoformat(), "moon": [[x["phen"], "%sT%s:00+00:00" % (d.isoformat(), x["time"])] for x in p.get("moondata") or [] if x.get("phen") in ("Rise", "Set", "Upper Transit") and re.fullmatch(r"\d\d:\d\d", x.get("time") or "")],
                      "closest": [cp["phase"], "%04d-%02d-%02dT%s:00+00:00" % (cp["year"], cp["month"], cp["day"], cp["time"])] if cp.get("phase") and re.fullmatch(r"\d\d:\d\d", cp.get("time") or "") else None})
     return {"fetched_at": now_iso(), "days": days}
 
