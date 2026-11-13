@@ -585,6 +585,40 @@ def fetch_stocking_ma(lat, lon, miles):
     return rows
 
 
+NH_STOCK = "https://services8.arcgis.com/hg1B9Egwk1I5p300/arcgis/rest/services/FishStocking_view/FeatureServer/"
+NH_SPECIES = {"EBT": "Brook Trout", "BT": "Brown Trout", "RT": "Rainbow Trout", "LLS": "Landlocked Salmon"}  # NH Fish and Game stocking report key (wildlife.nh.gov stocking-report.pdf, Nov 5 2026: 'EBT Brook Trout; BT Brown Trout; RT Rainbow Trout; LLS Salmon'); a code not in it is shown as written
+
+
+def fetch_stocking_nh(lat, lon, miles):
+    """New Hampshire (PLAN 37a): stocking rows (species code, count, date) sit in table 5 keyed by BOW_TOWN ('WATER_TOWN'); positions are the stocked
+    lakes (polygon centroids), streams (lines, nearest vertex) and kids ponds (points) with the same key. 4 calls: three layers in the box, then the rows (POST)."""
+    dd, pos = miles / 69.0, {}
+    for layer, cen in ((3, True), (2, False), (1, False)):
+        q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": "BOW_TOWN", "returnGeometry": "false" if cen else "true", "returnCentroid": "true" if cen else "false", "resultRecordCount": "1000", "f": "json"})
+        for ft in json.loads(get_text(NH_STOCK + "%d/query?%s" % (layer, q))).get("features", []):
+            g, key = ft.get("centroid") or ft.get("geometry") or {}, (ft.get("attributes") or {}).get("BOW_TOWN")
+            vx = [(g["y"], g["x"])] if g.get("y") is not None else [(p_[1], p_[0]) for part in (g.get("paths") or []) for p_ in part]
+            if key and vx and re.fullmatch(r"[A-Z0-9 .'&()/-]+_[A-Z0-9 .'-]+", key):
+                mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in vx) * 0.621371, 1)
+                if mi <= miles:
+                    pos[key] = min(mi, pos.get(key, mi))
+    if not pos:
+        return []
+    cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
+    q = urllib.parse.urlencode({"where": "card_BOW_TOWN IN (%s) AND card_STOCK_DATE >= DATE '%s'" % (",".join("'%s'" % k.replace("'", "''") for k in sorted(pos, key=pos.get)[:200]), cut),
+                                "outFields": "SPECIES,FISH_NUMBER,card_BOW_TOWN,card_STOCK_DATE", "orderByFields": "card_STOCK_DATE DESC", "resultRecordCount": "1000", "f": "json"})
+    req = urllib.request.Request(NH_STOCK + "5/query", data=q.encode(), headers={"User-Agent": "riverwaterlevels.com"})
+    rows = []
+    for ft in json.loads(urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")).get("features", []):
+        a = ft.get("attributes") or {}
+        if isinstance(a.get("card_STOCK_DATE"), (int, float)) and a.get("card_BOW_TOWN") in pos:
+            w, t = (a["card_BOW_TOWN"].split("_", 1) + [""])[:2]
+            rows.append({"species": NH_SPECIES.get(a.get("SPECIES"), a.get("SPECIES")), "date": (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=a["card_STOCK_DATE"])).date().isoformat(),
+                         "num": a.get("FISH_NUMBER"), "water": "%s - %s" % (w.title(), t.title()) if t else w.title(), "size": None, "mi": pos[a["card_BOW_TOWN"]]})
+    return rows
+
+
 def stock_keep(rows, n=60):
     """The newest release per water and species, the n nearest waters, newest first. The page shows only its own river or lake (lib/blocks3 b_stocking),
     so keeping the 12 newest within 35 miles let a busy pond season push the gauge's own river out of the cache (found 2026-11-13)."""
@@ -597,10 +631,13 @@ def stock_keep(rows, n=60):
 
 def fetch_stocking(lat, lon, miles=35):
     """Recent hatchery stocking near the gauge, from the state's public stocking layer (species, date, count, water). Returns None where the state has no adapter or no record. Stocking is a release event, not a fish-population measure."""
-    if -73.6 <= lon <= -69.8 and 41.2 <= lat <= 42.9:  # Massachusetts (MassWildlife), a two-step source; a border gauge with no MA water nearby falls through to the rest
-        rows = sorted(fetch_stocking_ma(lat, lon, miles), key=lambda r: r["date"], reverse=True)
-        if rows:
-            return {"fetched_at": now_iso(), "source": "MassWildlife trout stocking report", "credit": "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", "url": MA_STOCK + "StockedFish_View/FeatureServer/0", "miles": miles, "rows": stock_keep(rows)}
+    two = [(fn, src, cred, url) for box, fn, src, cred, url in (
+        ((-73.6, 41.2, -69.8, 42.9), fetch_stocking_ma, "MassWildlife trout stocking report", "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", MA_STOCK + "StockedFish_View/FeatureServer/0"),
+        ((-72.6, 42.7, -70.6, 45.3), fetch_stocking_nh, "NH Fish and Game fish stocking records", "New Hampshire Fish and Game Department", NH_STOCK + "5"))
+        if box[0] <= lon <= box[2] and box[1] <= lat <= box[3]]  # two-step states; a border gauge (MA/NH overlap) gets both states' releases, not only the first state's
+    got = [(src, cred, url, r) for fn, src, cred, url in two for r in [fn(lat, lon, miles)] if r]
+    if got:
+        return {"fetched_at": now_iso(), "source": " and ".join(g[0] for g in got), "credit": "; ".join(g[1] for g in got), "url": got[0][2], "miles": miles, "rows": stock_keep([x for g in got for x in g[3]])}
     for s in STOCK_SOURCES:
         x0, y0, x1, y1 = s["bbox"]
         if not (x0 <= lon <= x1 and y0 <= lat <= y1):

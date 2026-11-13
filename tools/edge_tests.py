@@ -1176,6 +1176,18 @@ if __name__ == "__main__":
         assert ga_["rows"][0]["species"] == "Trout" and ga_["rows"][0]["num"] is None and ga_["rows"][0]["mi"] < 1 and ga_["rows"][0]["date"] == "2026-11-03", "Georgia stocking: line distance, fixed species, count or date wrong"
     finally:
         collect.get_text = gt_
+    # PLAN 37a NH and the MA/NH border: both states' releases kept, credits joined; NH codes decoded by the report key, water name readable
+    ma0_, nh0_ = collect.fetch_stocking_ma, collect.fetch_stocking_nh
+    try:
+        collect.fetch_stocking_ma = lambda la, lo, mi: [{"species": "Rainbow Trout", "date": "2026-10-13", "num": None, "water": "Long Sought-for Pond - Westford", "size": None, "mi": 9.0}]
+        collect.fetch_stocking_nh = lambda la, lo, mi: [{"species": "Brook Trout", "date": "2026-11-06", "num": 1000, "water": "Tewksbury Pond - Grafton", "size": None, "mi": 5.0}]
+        bd_ = collect.fetch_stocking(42.8, -71.4)
+        assert len(bd_["rows"]) == 2 and "MassWildlife" in bd_["source"] and "NH Fish and Game" in bd_["source"] and "; " in bd_["credit"], "border stocking: one state's releases or credit lost"
+        collect.fetch_stocking_ma = lambda la, lo, mi: []
+        assert collect.fetch_stocking(42.8, -71.4)["source"] == "NH Fish and Game fish stocking records", "border stocking: an empty state named as a source"
+    finally:
+        collect.fetch_stocking_ma, collect.fetch_stocking_nh = ma0_, nh0_
+    assert collect.NH_SPECIES["EBT"] == "Brook Trout" and collect.NH_SPECIES["LLS"] == "Landlocked Salmon", "NH species key changed"
     # 2026-11-13: the fish source line said 'licensed' (check.py BANNED) and the cloud refresh stopped; every new block's text now meets the banned list here first
     import check as ck_
     outs_ = [fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00")), sf_(sr_), rt_(rd_), kt_(base_), mf_(mp_), sk_(None, "Swift River")]

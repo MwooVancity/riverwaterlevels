@@ -40,7 +40,7 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 
 ## Next steps
 37. Stocking build queue from the 2026-11-13 research workflow (6 read-only agents, every claim from a live query; full results in the session journal wf_11ce7d96-e50). Georgia CODE ON CHECK 2026-11-13 (Recently_Stocked_Streams, last stocking per stream, line distance by nearest vertex, species 'Trout' fixed, no count). Next, in order:
-   (a) New Hampshire: FishStocking_view table 5 FishData (species code, count, date) joined by BOW_TOWN to StockedLakes centroids / StockedStreams lines; newest 2026-11-09; item terms read: no bar. Same two-step shape as Massachusetts.
+   (a) CODE ON CHECK 2026-11-13 (live: Newfound Lake rainbow trout Nov 9; MA/NH border pages get both states; species from the NH report key; edge tests). New Hampshire: FishStocking_view table 5 FishData (species code, count, date) joined by BOW_TOWN to StockedLakes centroids / StockedStreams lines; newest 2026-11-09; item terms read: no bar. Same two-step shape as Massachusetts.
    (b) Tennessee: tn.gov exceldriven.json recent table (dated, species, destination) joined to TWRA_Trout_Stocking_Locations points by name and county; future schedule rows labelled scheduled.
    (c) Virginia: dwr.virginia.gov trout stocking schedule HTML (date, county, water, species) joined to DWR_Stocked_Trout_Lakes/Reaches by Waterbody and County; credit line required by the layer.
    (d) Utah: dwrapps.utah.gov/fishstocking/Fish?y=YEAR HTML (water, county, species, quantity, length, date) joined to UDWR waters layer for Lat/Long; a row dated after today is held (2026-11-19 seen).
