@@ -348,12 +348,14 @@ def mk_title(base):
     return base  # one pattern on every page; the brand sits in the nav
 
 
-def dash_tail(wt, fc):
+def dash_tail(wt, fc, tb=False):
     """Title words after 'water level and flow', each only while its block shows: never a promise the page breaks."""
-    return (", NWS forecast" if fc else "") + (", water temperature" if wt else "")
+    return (", tubing rules" if tb else "") + (", NWS forecast" if fc else "") + (", water temperature" if wt else "")
 
 
-assert dash_tail(True, True) == ", NWS forecast, water temperature" and dash_tail(False, False) == "" and dash_tail(False, True) == ", NWS forecast", "page: title tail"
+TUBING_RULE = re.compile(r"tubing|all recreation|all water activities", re.I)  # PLAN 25b: an agency rule that covers tubing ('<river> tubing' 1K-10K at Comal, Guadalupe, Chattahoochee)
+assert dash_tail(True, True) == ", NWS forecast, water temperature" and dash_tail(False, False) == "" and dash_tail(False, True, True) == ", tubing rules, NWS forecast", "page: title tail"
+assert TUBING_RULE.search("tubing within city limits") and TUBING_RULE.search("All water activities") and not TUBING_RULE.search("expert paddlers only") and not TUBING_RULE.search("life jackets"), "page: tubing rule match"
 
 
 def humanize_iso(text):
@@ -669,7 +671,8 @@ def build_tab(tab, G, pages):
     wt_ = bool(b3.conditions(G).get("wt"))
     # Keyword Planner 2026-11-13 (US): '<river> forecast' is the largest river phrasing on live waters (PLAN 25a); named only while the forecast block shows
     fc_ = tab == "dashboard" and not G.get("coast") and b_river_forecast(G) is not None
-    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, dash_tail(wt_, fc_), G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    tb_ = tab == "dashboard" and not G.get("coast") and any(TUBING_RULE.search(r["activity"]) for r in b3.limits_for(G["site"])) and b3.b_limits(G) is not None
+    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, dash_tail(wt_, fc_, tb_), G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
         title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts

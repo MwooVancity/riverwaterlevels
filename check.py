@@ -438,7 +438,7 @@ def title_promise_ok(h, body):
     """PLAN 25a: 'NWS forecast' in the title only while the page carries the river forecast section (a gate or carry dropping the block breaks the promise)."""
     m = re.search(r"<title>(.*?)</title>", h, re.S)
     t = m.group(1) if m else ""
-    return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tide chart" not in t or "last 7 days and NOAA" in body)  # the chart label only; the hero caption also says predicted tide
+    return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tubing rules" not in t or 'id="limits"' in body) and ("tide chart" not in t or "last 7 days and NOAA" in body)  # the chart label only; the hero caption also says predicted tide
 
 
 def research_title_ok(h, url):
@@ -1166,6 +1166,8 @@ def selftest():
         assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
         assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
         _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
+        _u = "<title>X River at Y, TX: live water level and flow, tubing rules (USGS 1)</title>"
+        assert not title_promise_ok(_u, "<main></main>") and title_promise_ok(_u, '<section class="card blk" id="limits">'), "selftest: a title promised tubing rules without the agency rules block"
         _c = "<title>X tides: tide chart, tide times and water level, CA</title>"
         assert not title_promise_ok(_c, "<p>NOAA&#x27;s predicted tide of 2 ft</p>") and title_promise_ok(_c, "<svg aria-label=\"Water level in feet over the last 7 days and NOAA&#x27;s predicted tide\">") and not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
     finally:
