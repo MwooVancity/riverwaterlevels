@@ -291,7 +291,7 @@ def peak_month(gl, sub, unk):
             + EXCL + " A gauge counts as regulated when USGS StreamStats flags the station as regulated or any peak used is coded as affected by regulation or diversion. "
             "The average date and the clustering figure treat each peak date as a point on the yearly circle (the seasonality measure of Burn, 1997): 1 means every peak fell on the same date, 0 means they are spread evenly through the year; under 0.3 no average date is shown, because peaks spread through the year or split between two seasons have no meaningful average date. "
             "The most common month is not a forecast; in many years the high comes in another month, as the share shows.</p>")
-    return _page("When US rivers reach their yearly high", "peak-month", "The month each river's yearly high flow most often falls in, its average date and how tightly peaks cluster, from USGS annual peaks at %d US river gauges." % len(nat), body, sub, data, unk)
+    return _page("Flood season: when US rivers reach their yearly high", "peak-month", "The month each river's yearly high flow most often falls in, its average date and how tightly peaks cluster, from USGS annual peaks at %d US river gauges." % len(nat), body, sub, data, unk)
 
 
 def peak_change(gl, today, sub, unk):
@@ -344,7 +344,7 @@ def peak_change(gl, today, sub, unk):
     body = (lead + ("<h2>Higher at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_up, key=lambda x: -x[8])[:12]), right=(1, 2, 3, 4)) if sig_up else "") +
             ("<h2>Lower at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_dn, key=lambda x: x[8])[:12]), right=(1, 2, 3, 4)) if sig_dn else "") +
             "<h2>Every gauge</h2>" + table(hd, rw(rows[:ROW_CAP], _name), right=(1, 2, 3, 4)) + _cap(len(rows)) + meth)
-    return _page("Yearly river peaks: water years %s against %s" % (P2, P1), "peak-change", "Yearly peak flows of water years %s against %s, tested gauge by gauge, at %d US river gauges, from USGS annual peaks." % (P2, P1, len(nat)), body, sub, data, unk)
+    return _page("Are floods getting worse? Yearly river peaks, water years %s against %s" % (P2, P1), "peak-change", "Yearly peak flows of water years %s against %s, tested gauge by gauge, at %d US river gauges, from USGS annual peaks." % (P2, P1, len(nat)), body, sub, data, unk)
 
 
 def hundred_year(gl, unk):
@@ -399,7 +399,7 @@ def hundred_year(gl, unk):
             "For each gauge we took the highest peak of every water year after the last year of the statistic's own date range, so the count uses only years the statistic never saw; gauges with fewer than 5 such years, or whose statistic states no date range, are left out. "
             "A peak coded as a lower bound (maximum daily mean, or greater than) counts as reaching the 1% flow when it is already at or above it, and its year is left out when it is below. "
             "Left out: peaks coded historic, dam failure, less than, or with an unknown month or year; statistics USGS publishes in conflicting versions. A gauge USGS flags as regulated, or with a later peak coded as affected by regulation or diversion, is counted apart.</p>")
-    return _page("How often do '100-year floods' happen?", "100-year-floods", "How often the USGS 100-year (1%%-chance) flood flow was reached after USGS computed it, at %d US river gauges, with the limits of the count." % len(nat), body,
+    return _page("What is a 100-year flood, and how often does it happen?", "100-year-floods", "How often the USGS 100-year (1%%-chance) flood flow was reached after USGS computed it, at %d US river gauges, with the limits of the count." % len(nat), body,
                  "USGS flood statistics and annual peaks, for the US river gauges on this site.", data, unk)
 
 
@@ -432,7 +432,7 @@ def flood_stage(gl):
             "A gauge is counted only where the NWS-observed stage and the USGS gage height read within 0.3 ft of each other, so both are on the same zero point today; where USGS records a change of gauge datum, only the water years after the last one count. "
             "Each water year counts once, at its highest stage. Left out: stages USGS marks with any stage qualifier other than estimated (a conservative rule: some real flood stages, such as backwater stages, are dropped with them), and stages whose flow peak is coded historic, a daily mean or a dam failure; gauges with fewer than 10 usable water years. "
             "Record lengths differ from gauge to gauge, so shares cover different periods, and flood stages are set for today's channel.</p>")
-    return _page("How often do rivers reach flood stage?", "flood-stage-years", "The share of water years each river's yearly peak reached National Weather Service minor flood stage, at %d US river gauges." % len(nat), body,
+    return _page("What is flood stage, and how often do rivers reach it?", "flood-stage-years", "The share of water years each river's yearly peak reached National Weather Service minor flood stage, at %d US river gauges." % len(nat), body,
                  "USGS annual peak stages and NWS flood stages, for the US river gauges on this site.", data)
 
 
@@ -464,7 +464,7 @@ def water_temp(gl):
             "<h2>How this was worked out</h2><p>Source: USGS daily mean water temperature (Water Data API), as each gauge page's Typical water temperature by month block shows it: the mean of every published daily value in each calendar month over the record years shown; where USGS publishes two temperature series for one gauge, the first it returns is used. "
             "A month with fewer than 150 daily values is shown as a dash. Sensor records cover different years at different gauges, so gauges are not compared over the same period, and years with more readings weigh more in a mean. "
             "A sensor can sit in a deep or shaded spot, and a gauge below a dam can read the cold water released from the bottom of the lake, so a cold July figure can come from dam releases, and the water where you get in can differ.</p>")
-    return _page("How warm are US rivers?", "water-temperature", "Typical January, April, July and October water temperature at %d US river gauges, from USGS sensor records." % len(rows), body,
+    return _page("River temperature: how warm US rivers are by month", "water-temperature", "Typical January, April, July and October water temperature at %d US river gauges, from USGS sensor records." % len(rows), body,
                  "USGS water temperature records, for the US river gauges on this site.", data)
 
 
@@ -529,7 +529,7 @@ def lake_levels(built, Gs):
     data = _csv(G_HEAD + ["basis", "below_full_mark", "figure", "as_of (date for a daily figure, else UTC time)"], [_g(r) + [b[0], b[1], b[2], b[3].date().isoformat() if b[4] else b[3].astimezone(datetime.timezone.utc).isoformat()] for r, G, got in rows for b in got],
                 lambda row: _cred({"CDEC capacity": "cdec", "USACE full pool": "usace_cwms", "Reclamation capacity": "usbr", "TWDB conservation capacity": "twdb"}.get(row[len(G_HEAD)], "usgs"), "usgs"))
     asof = max(b[3] for _, _, got in rows for b in got)
-    return _page("How full are US lakes?", "lake-levels", "Every US lake on River Water Levels against its agency's own full mark right now: %d lakes, each basis named." % len(rows), body,
+    return _page(("Texas lake levels and other US lakes: how full each one is right now" if sum(1 for r, G, got in rows if r["state"] == "TX") * 2 >= len(rows) else "Lake levels: how full US lakes are right now"), "lake-levels", "Every US lake on River Water Levels against its agency's own full mark right now: %d lakes, each basis named." % len(rows), body,
                  "Agency lake and reservoir figures, for the US lakes on this site; newest figure %s UTC. These figures change as agencies publish; cite them with that date and time." % utc_day(asof), data, sample=SAMPLE_LAKE)
 
 
@@ -572,7 +572,7 @@ def tides(built, Gs):
     data = _csv(["noaa_station", "name", "state", "page", "span_days", "predicted_range_ft_in_span", "max_gap_ft", "max_gap_utc", "min_gap_ft", "min_gap_utc", "median_gap_ft", "matched_readings", "fetched_at"],
                 [[r["site"], r["river"], r["state"], SITE_URL + r["dashboard_url"], round(d_, 2), "" if rng is None else round(rng, 2), round(up[1], 2), up[0].astimezone(datetime.timezone.utc).isoformat(), round(dn[1], 2), dn[0].astimezone(datetime.timezone.utc).isoformat(), round(md_, 2), n, _fa(G, "coops")]
                  for r, G, rng, up, dn, md_, n, d_ in rows], _cred("coops"))
-    return _page("How far did the sea run from its tide prediction?", "tides", "Observed water against NOAA tide predictions over the last %s at %d NOAA stations, with the predicted tide range in the same span." % (span, len(rows)), body,
+    return _page("Storm surge and tide predictions: how far the sea ran from NOAA's predicted tide", "tides", "Observed water against NOAA tide predictions over the last %s at %d NOAA stations, with the predicted tide range in the same span." % (span, len(rows)), body,
                  "NOAA water levels and tide predictions, last %s, for the stations on this site; newest reading %s UTC. These figures change every few minutes; cite them with that date and time." % (span, utc_day(max(x[1]["sg"][-1][0] for x in rows))), data, sample=SAMPLE_TIDE)
 
 
@@ -626,7 +626,7 @@ def world_rivers(wpages, wkeep, now):
                 lambda row: _cred({v: k for k, v in COUNTRY.items()}.get(row[0], row[0])))
     sample = ("<p class=\"src\"><b>Sample:</b> the gauges outside the US that have a page on this site, in %s. They are not every gauge in those countries, so the results describe these gauges only.</p>" % ", ".join(COUNTRY[f] for f in cs))
     lab_c = [COUNTRY[f] for f in cs if by[f]["low"] + by[f]["normal"] + by[f]["high"]]  # hostile review #12: the title names only countries with a labelled gauge
-    return _page("Are rivers in %s low or high right now?" % (", ".join(lab_c[:-1]) + " and " + lab_c[-1] if len(lab_c) > 1 else lab_c[0]), "world-rivers",
+    return _page(("Rhine water level and r" if any(p["slug"] == "rhine" and wkeep.get("rhine") for p, d in wpages) else "R") + "iver levels in %s: low or high right now?" % (", ".join(lab_c[:-1]) + " and " + lab_c[-1] if len(lab_c) > 1 else lab_c[0]), "world-rivers",
                  "Gauges outside the US on River Water Levels by a low, normal or high label right now, each label's basis named, counted country by country.", body,
                  "Agency river levels in %s, for the gauges on this site; newest reading %s UTC. These labels change as the agencies publish; cite them with that date and time." % (", ".join(COUNTRY[f] for f in cs), utc_day(times[-1])), data, sample=sample)
 

@@ -276,6 +276,8 @@ def check_html(h, rel):
     bad += google_rules(h, body)
     if "/research/" in rel.replace("\\", "/") or 'data-method="' in body:
         bad += research_sanity(body) + research_gate(body, rel)
+        if 'data-method="' in body and not research_title_ok(h, "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]):
+            bad.append("research: the title carries no Keyword Planner-measured seed for this page (data/research-keywords.csv)")
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -425,6 +427,26 @@ GOOGLE = {
 
 
 RESEARCH_BANNED = (r"\bproves?\b", r"\bcaused by\b", r"\bbecause of climate\b", r"\bclimate change\b", r"\bdangerous\b", r"\bsafe\b", r"\bunsafe\b", r"\bguarantee")
+
+
+_SEEDS = None
+
+
+def research_title_ok(h, url):
+    """PLAN 24: a research page's title carries the words of at least one Keyword Planner-measured seed for that page (order, case and hyphens ignored).
+    True for a page with no seed row (the indexing lock keeps such a page out of Google anyway)."""
+    global _SEEDS
+    if _SEEDS is None:
+        import csv
+        norm = lambda k: " ".join(str(k or "").lower().replace("-", " ").split())
+        kw = {norm(r["keyword"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-tiers-water.csv"), encoding="utf-8")) if str(r.get("tier") or "0").replace(".", "", 1).isdigit() and float(r["tier"]) > 0}
+        _SEEDS = {}
+        for r in csv.DictReader(open(os.path.join(ROOT, "data", "research-keywords.csv"), encoding="utf-8")):
+            if norm(r["seed"]) in kw:
+                _SEEDS.setdefault(r["url"], []).append(set(norm(r["seed"]).split()))
+    m = re.search(r"<title>(.*?)</title>", h, re.S)
+    words = set(re.sub(r"[^a-z0-9 ]", " ", (m.group(1) if m else "").lower().replace("-", " ")).split())
+    return url not in _SEEDS or any(s <= words for s in _SEEDS[url])
 
 
 def research_gate(body, rel):

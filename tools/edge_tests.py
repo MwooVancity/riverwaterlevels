@@ -132,7 +132,7 @@ def run():
     assert abs(research.poisson_tail(3, 1.0) - 0.0803) < 0.001 and abs(research.poisson_tail(0, 2.0) - 0.1353) < 0.001 and 0 <= research.poisson_tail(400, 300.0) < 0.001, "edge: Poisson tail wrong or underflows at 300"
     assert "usgs_site,river,place,state,page" in rc["/research/peak-change/"] and "mann_whitney_p" in rc["/research/peak-change/"] and 'href="data.csv"' in pc_, "edge: CSV header or download link missing"
     assert research._csv(["a", "b"], [["=SUM(A1)", ""], [-3, "x"], ["-x", ""]]) == "a,b\n'=SUM(A1),\n-3,x\n'-x,\n", "edge: CSV formula cell not neutralised, a negative number changed, or an empty cell got an apostrophe (live 100-year CSV, 2026-11-12)"
-    assert 'data-method="%s"' % research.METHOD in pm, "edge: research page lacks its method mark, so build.py could never carry it (and could carry an old-method copy)"
+    assert 'data-method="%s"' % research.method_of("/research/peak-month/") in pm, "edge: research page lacks its method mark, so build.py could never carry it (and could carry an old-method copy)"
     assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == (rp, rc), "edge: same data on another day gave a different page (fresh date without change)"
     assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == ({}, {}) and research.pages([], {}) == ({}, {}), "edge: research published from under 10 gauges, or empty cache crashed"
     same = [(r, research._peaks(rG[r["site"]]), rG[r["site"]]) for r in rb[:12] if int(r["site"][1:]) % 2 == 0] * 2
@@ -263,7 +263,7 @@ def run():
     assert collect.stat_range("Statistic Date Range: 10/01/1915 - 09/30/2017") == [1916, 2017] and collect.stat_range("Statistic Date Range: 1931 - 2021") == [1931, 2021] and collect.stat_range("Statistic Date Range: 10/01/2000 - 10/15/2017") == [2001, 2018] and collect.stat_range("") is None and collect.stat_range("Statistic Date Range: 2020 - 1990") is None, "23: StreamStats date range parse wrong (the live form is MM/DD/YYYY; the old pattern matched nothing)"
     assert "Over the last 2 days" in tp_[1] and "Lowest (observed minus predicted)" in tp_[1] and "Most below" not in tp_[1] and "Smallest" not in tp_[1] and "this week" not in tp_[1].lower() and "tide datums are referenced to" in tp_[1] and "parts of Alaska" in tp_[1], "23: tide page names a span the data does not cover, calls a positive gap 'below', or omits the steady sea-level offset"
     assert research._pl(1, "regulated gauge is", "regulated gauges are") == "1 regulated gauge is" and research._pl(2, "x", "ys") == "2 ys", "23: count-1 grammar"
-    assert 'href="/research/world-rivers/">Are rivers in Germany' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=research.title_of(wr[1]))[0]["/research/"], "23: the index link does not use the world page's own title"
+    assert 'href="/research/world-rivers/">Rhine water level and river levels in Germany' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=research.title_of(wr[1]))[0]["/research/"], "23: the index link does not use the world page's own title"
     assert collect.fetch_floodfreq.__doc__ and "rangev" in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "collect.py"), encoding="utf-8").read().split('"dur": durs')[1][:40], "23: a duration-only StreamStats record lacks rangev, so the early refresh refetches it every run"
     assert "Germany" in wr[1][:wr[1].find("</title>")] and "Ireland" not in wr[1][:wr[1].find("</title>")], "23: the world title names a country with no labelled gauge"
     assert "not a forecast" in fs and "National Weather Service warnings" in fs, "23: flood-stage page lacks its not-a-forecast line"
@@ -275,6 +275,9 @@ def run():
     import check as _ck
     for u_, h_ in bp.items():
         assert not _ck.research_gate(h_, u_.strip("/") + "/index.html") and not _ck.research_sanity(h_), "22: the gate fails a real research page (false alarm): %s %s" % (u_, _ck.research_gate(h_, u_.strip("/") + "/index.html") + _ck.research_sanity(h_))
+    for u_, h_ in bp.items():  # PLAN 24: every real title carries a measured seed's words
+        assert _ck.research_title_ok(h_, u_), "24: %s title carries no measured seed: %s" % (u_, research.title_of(h_))
+    assert not _ck.research_title_ok("<title>How warm are US rivers? | River Water Levels</title>", "/research/water-temperature/"), "24: a title with no measured seed passed"
     lines_ = bc["/research/100-year-floods/"].splitlines()
     assert research.verify("/research/100-year-floods/", bp["/research/100-year-floods/"], "\n".join(lines_[:-3])), "22: a CSV missing rows still reproduced the 100-year headline"
     assert research.verify("/research/new-thing/", "<p><b>x</b></p>", "a\n1\n"), "22: a research page with no reproducibility check passed"
