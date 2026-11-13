@@ -24,8 +24,18 @@ def load(name):
 LEVEL = re.compile(r"\b(water|river|lake) levels?\b")  # PLAN 12 (keyword debate): "danube water levels" 50,000 is a gauge search, not trivia; only these phrasings pass CAP
 
 
+# Owner 2026-11-13 "grow 10x": the Keyword Planner run of activity phrasings (data/kwp/) ranks the queue too, but only phrasings a gauge page answers
+# with its own reading. Left out: 'forecast' ('battle creek forecast' is the town's weather), 'flooding' (news), fishing report, boat ramp, swimming.
+ASK = ("flood stage", "cfs", "gauge height", "conditions", "kayaking", "tubing", "water temperature")
+
+
 def tiers():
-    return {norm(r["keyword"]): (int(r["tier"]) if LEVEL.search(norm(r["keyword"])) else min(int(r["tier"]), CAP)) for r in load("keyword-tiers.csv")}
+    t = {norm(r["keyword"]): int(r["tier"]) for r in load("keyword-tiers.csv")}
+    kd = os.path.join(ROOT, "data", "kwp")
+    for f in sorted(os.listdir(kd)) if os.path.isdir(kd) else []:
+        if f.startswith("results-") and f.endswith(".csv"):
+            t.update((norm(r["keyword"]), int(r["tier"])) for r in csv.DictReader(open(os.path.join(kd, f), encoding="utf-8")) if r["phrasing"] in ASK and int(r["tier"]) >= 50)
+    return {k: (v if LEVEL.search(k) else min(v, CAP)) for k, v in t.items()}
 
 
 def best(tier, keywords):
@@ -78,7 +88,7 @@ def us_rows(tier):
     wet = {r["site"] for f in ("lakes.csv", "coasts.csv") for r in load(f)}  # lakes and coasts: water_rows
     for r in sorted((r for r in w if r["status"] == "queue" and not r["gate"] and r["site"] not in wet), key=lambda r: -float(r["score"] or 0)):
         n = r["river"].lower()
-        t, k = best(tier, [n + " water level", n + " flow"])
+        t, k = best(tier, [n + " water level", n + " flow"] + [n + " " + a for a in ASK])
         shared = len(states[r["river"]]) > 1 or n.startswith("lake ") or n in abroad
         held = ""
         if n.startswith("lake "):  # keyword debate 2026-11-07: "lake fork water level" means Lake Fork Reservoir TX, never a river gauge named Lake Fork (7 rows)
@@ -145,7 +155,7 @@ def water_rows():
         name = PHRASE.sub("", k)
         hub = re.match(r"(.+) (lake|river) levels$", k)
         kind = "hub" if hub and hub.group(1).title() in STATE_NAMES else r["kind"]
-        if kind == "river" or t < 50 or name == k or (kind == "lake" and not WET.search(name)):  # 'tenis level' (tennis) is not a lake (keyword debate)
+        if kind in ("river", "research") or t < 50 or name == k or (kind == "lake" and not WET.search(name)):  # 'tenis level' (tennis) is not a lake (keyword debate)
             continue
         cur = water.get((kind, name))
         if not cur or t > cur[0]:

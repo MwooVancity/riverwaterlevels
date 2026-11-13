@@ -15,6 +15,7 @@ TWDB-travis,Lake Travis,Austin,TX,lake
 CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 8661070,Springmaid Pier,Myrtle Beach,SC,ocean
 /lakes/tx/,Texas Lake,,,hub
+02379500,Cartecay River,Ellijay,GA,85
 02393500,Allatoona Lake,Cartersville,GA,lake
 9455920,Anchorage,Anchorage,AK,ocean
 9439040,Astoria,Astoria,OR,ocean
@@ -124,11 +125,25 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 9434939,Waldport,Waldport,OR,ocean
 8446613,Wellfleet,Wellfleet,MA,ocean
 8658163,Wrightsville Beach,Wrightsville Beach,NC,ocean
+01189995,Farmington River,Tariffville,CT,100
 06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,100
+02392000,Etowah River,Canton,GA,85
+02096500,Haw River,Haw River,NC,85
+12150800,Snohomish River,Monroe,WA,85
+05286000,Rum River,Saint Francis,MN,85
+02425000,Cahaba River,Marion Junction,AL,85
+01362500,Esopus Creek,Coldbrook,NY,85
+04117500,Thornapple River,Hastings,MI,85
+05387500,Upper Iowa River,Decorah,IA,85
+02490500,Bogue Chitto,Tylertown,MS,85
+02492000,Bogue Chitto River,Bush,LA,85
 04122001,Muskegon River,Bridge Street At Newaygo,MI,85
 08032000,Neches River,Neches,TX,85
+05331833,Namekagon River,Leonards,WI,100
+05419000,Apple River,Hanover,IL,85
 03271500,Great Miami River,Miamisburg,OH,75
 03399800,Ohio River,Smithland Dam Smithland,IL,100
+01170000,Deerfield River,West Deerfield,MA,75
 10141000,Weber River,Plain City,UT,70
 09237500,Yampa River,Below Stagecoach Reservoir,CO,70
 12037400,Wynoochee River,Above Black Creek Near Montesano,WA,75
@@ -152,6 +167,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06923940,Niangua River,Above Lake Niangua Near Macks Creek,MO,75
 0818999010,Nueces River,Barksdale,TX,85
 02169000,Saluda River,Columbia,SC,70
+02491800,Bogue Chitto,Enon,LA,85
 12210700,Nooksack River,North Cedarville,WA,70
 04183000,Maumee River,New Haven,IN,30
 12101500,Puyallup River,Puyallup,WA,30
@@ -167,29 +183,73 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03140500,Muskingum River,Coshocton,OH,30
 03086000,Ohio River,Sewickley,PA,10
 07264500,Bayou Meto,Stuttgart,AR,30
+01318500,Hudson River,Hadley,NY,100
+02337170,Chattahoochee River,Fairburn,GA,100
+02338000,Chattahoochee River,Whitesburg,GA,100
+02331600,Chattahoochee River,Cornelia,GA,100
+01327750,Hudson River,Fort Edward,NY,100
+11467000,Russian River,Hacienda Bridge Near Guerneville,CA,85
+02335880,Chattahoochee River,Powers Ferry And I-285 Near Atlanta,GA,100
+02341460,Chattahoochee River,14th Saint At Columbus,GA,100
+08170500,San Marcos River,San Marcos,TX,70
+11462500,Russian River,Hopland,CA,85
+11463000,Russian River,Cloverdale,CA,85
+02335815,Chattahoochee River,Below Morgan Falls Dam,GA,100
+02335000,Chattahoochee River,Norcross,GA,100
+01335754,Hudson River,Above Lock 1 Near Waterford,NY,100
+02339500,Chattahoochee River,West Point,GA,100
+02335450,Chattahoochee River,Above Roswell,GA,100
+02334430,Chattahoochee River,Buford Dam Near Buford,GA,100
+11463980,Russian River,Digger Bend Near Healdsburg,CA,85
+01315500,Hudson River,North Creek,NY,100
+01312000,Hudson River,Newcomb,NY,100
+06037500,Madison River,West Yellowstone,MT,100
+06038800,Madison River,Kirby Ranch Near Cameron,MT,100
+11465390,Russian River,Windsor,CA,85
+02331000,Chattahoochee River,Leaf,GA,100
+11462080,Russian River,Talmage,CA,85
+11463500,Russian River,Geyserville,CA,85
+06040000,Madison River,Cameron,MT,100
+06040800,Madison River,Above Powerplant Near McAllister,MT,100
+02337260,Chattahoochee River,Above Bear Creek Near Rico,GA,100
+08171400,San Marcos River,Martindale,TX,70
+11463682,Russian River,Jimtown,CA,85
+02343805,Chattahoochee River,Mile 46 Near Columbia,GA,100
+02342881,Chattahoochee River,Spur 39 Near Omaha,GA,100
 05395000,Wisconsin River,Merrill,WI,100
 09073400,Roaring Fork River,Aspen,CO,100
+09503700,Verde River,Paulden,AZ,100
 01421900,West Branch Delaware River,From Delhi,NY,100
 01423000,West Branch Delaware River,Walton,NY,100
 06025500,Big Hole River,Melrose,MT,100
+04137500,Au Sable River,Au Sable,MI,100
+02395000,Etowah River,Kingston,GA,85
 04202000,Cuyahoga River,Hiram Rapids,OH,85
+02423380,Cahaba River,Mountain Brook,AL,85
+04118000,Thornapple River,Caledonia,MI,85
 08167800,Guadalupe River,Sattler,TX,100
+05292000,Minnesota River,Ortonville,MN,85
+03505550,Nantahala River,Hewitt,NC,100
 01631000,South Fork Shenandoah River,Front Royal,VA,100
 08165500,Guadalupe River,Hunt,TX,100
 03029000,Clarion River,Ridgway,PA,100
 08167000,Guadalupe River,Comfort,TX,100
+01188090,Farmington River,Unionville,CT,100
 01453000,Lehigh River,Bethlehem,PA,70
+09363500,Animas River,Cedar Hill,CO,100
 08166200,Guadalupe River,Kerrville,TX,100
 01425000,West Branch Delaware River,Stilesville,NY,100
+02096960,Haw River,Bynum,NC,70
 09239500,Yampa River,Steamboat Springs,CO,70
 09073300,Roaring Fork River,Above Difficult Creek Near Aspen,CO,100
 08197500,Frio River,Below Dry Frio River Near Uvalde,TX,70
+01364500,Esopus Creek,Mount Marion,NY,70
 03221000,Scioto River,Below O'Shaughnessy Dam Near Dublin,OH,70
-11467000,Russian River,Hacienda Bridge Near Guerneville,CA,85
 01563500,Juniata River,Mapleton Depot,PA,70
 08166140,Guadalupe River,Above Bear Creek At Kerrville,TX,100
 12350250,Bitterroot River,Bell Crossing Near Victor,MT,100
 08176500,Guadalupe River,Victoria,TX,100
+09364010,Animas River,Below Aztec,NM,100
 03219500,Scioto River,Prospect,OH,85
 06025250,Big Hole River,Maiden Rock Near Divide,MT,100
 05529000,Des Plaines River,Des Plaines,IL,60
@@ -197,84 +257,97 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08166250,Guadalupe River,Center Point,TX,100
 09081000,Roaring Fork River,Emma,CO,100
 06026210,Big Hole River,Glen,MT,100
-11462500,Russian River,Hopland,CA,85
+09359020,Animas River,Below Silverton,CO,100
 08169792,Guadalupe River,FM 1117 Near Seguin,TX,100
-11463000,Russian River,Cloverdale,CA,85
+02423425,Cahaba River,Cahaba Heights,AL,85
 08175800,Guadalupe River,Cuero,TX,100
+09504000,Verde River,Clarkdale,AZ,100
+02423496,Cahaba River,Hoover,AL,85
 03216600,Ohio River,Greenup Dam Near Greenup,KY,100
 04121500,Muskegon River,Evart,MI,85
 04221000,Genesee River,Wellsville,NY,85
 04223000,Genesee River,Portageville,NY,85
 08167500,Guadalupe River,Spring Branch,TX,100
-11463980,Russian River,Digger Bend Near Healdsburg,CA,85
 05407000,Wisconsin River,Muscoda,WI,100
 03270500,Great Miami River,Dayton,OH,75
+05388250,Upper Iowa River,Dorchester,IA,85
 12344000,Bitterroot River,Darby,MT,100
 03184000,Greenbrier River,Hilldale,WV,100
 03182500,Greenbrier River,Buckeye,WV,100
 03180500,Greenbrier River,Durbin,WV,100
-06037500,Madison River,West Yellowstone,MT,100
 09076300,Roaring Fork River,Below Maroon Creek Near Aspen,CO,100
 03229610,Scioto River,Commercial Point,OH,85
 03262700,Great Miami River,Troy,OH,75
+09510000,Verde River,Below Bartlett Dam,AZ,100
 12181000,Skagit River,Marblemount,WA,90
 03217500,Scioto River,La Rue,OH,85
 04206000,Cuyahoga River,Old Portage,OH,70
 13185000,Boise River,Twin Springs,ID,75
-06038800,Madison River,Kirby Ranch Near Cameron,MT,100
 08167200,Guadalupe River,FM 474 Near Bergheim,TX,100
 06024540,Big Hole River,Below Mudd Creek Near Wisdom,MT,100
 01629500,South Fork Shenandoah River,Luray,VA,100
 08169845,Guadalupe River,Creek 143 Near Gonzales,TX,100
+01168500,Deerfield River,Charlemont,MA,75
 01451000,Lehigh River,Walnutport,PA,70
 14210000,Clackamas River,Estacada,OR,70
 04206425,Cuyahoga River,Jaite,OH,85
-11465390,Russian River,Windsor,CA,85
 12178000,Skagit River,Newhalem,WA,85
+09508500,Verde River,Below Tangle Creek Above Horseshoe Dam,AZ,100
 02162500,Saluda River,Greenville,SC,70
+02423160,Cahaba River,Whites Chapel,AL,85
 03261500,Great Miami River,Sidney,OH,70
 10136500,Weber River,Gateway,UT,70
 07010350,Meramec River,Cook Station,MO,85
 08173900,Guadalupe River,Gonzales,TX,100
 03231500,Scioto River,Chillicothe,OH,85
 04230650,Genesee River,Ballantyne Bridge Near Mortimer,NY,85
+05330000,Minnesota River,Jordan,MN,85
 02087500,Neuse River,Clayton,NC,70
 02163500,Saluda River,Ware Shoals,SC,70
-11462080,Russian River,Talmage,CA,85
 10128500,Weber River,Oakley,UT,70
 14038530,John Day River,John Day,OR,70
 02167000,Saluda River,Chappells,SC,70
 01454700,Lehigh River,Glendon,PA,70
+05387440,Upper Iowa River,Bluffton,IA,85
+09511300,Verde River,Scottsdale,AZ,100
+02391860,Etowah River,Of I-575 At Canton,GA,85
 03114306,Ohio River,Above Sardis,OH,100
 03030500,Clarion River,Piney,PA,70
-11463500,Russian River,Geyserville,CA,85
+02423500,Cahaba River,Acton,AL,85
 08188800,Guadalupe River,Tivoli,TX,100
 10132000,Weber River,Echo,UT,70
 06024580,Big Hole River,Wise River,MT,100
+02424000,Cahaba River,Centreville,AL,70
 03028500,Clarion River,Johnsonburg,PA,70
+02390050,Etowah River,Kelly Bridge Road Near Matt,GA,85
+05311000,Minnesota River,Montevideo,MN,85
 10130500,Weber River,Coalville,UT,70
-06040000,Madison River,Cameron,MT,100
 04125550,Manistee River,Wellston,MI,100
 12508990,Yakima River,Mabton,WA,85
 02089000,Neuse River,Goldsboro,NC,70
 02089500,Neuse River,Kinston,NC,70
 12459000,Wenatchee River,Peshastin,WA,70
-06040800,Madison River,Above Powerplant Near McAllister,MT,100
 01421610,West Branch Delaware River,Hobart,NY,100
+05301000,Minnesota River,Lac Qui Parle,MN,85
+09362520,Animas River,Below Durango Pump Plant Near Durango,CO,100
 03381700,Ohio River,Old Shawneetown Il-ky,KY,100
 03217424,Scioto River,Kenton,OH,85
 12457000,Wenatchee River,Plain,WA,85
 03274000,Great Miami River,Hamilton,OH,75
 05400760,Wisconsin River,Wisconsin Rapids,WI,100
 09247600,Yampa River,Below Craig,CO,70
+09358000,Animas River,Silverton,CO,100
+06465500,Niobrara River,Verdel,NE,100
 03434500,Harpeth River,Kingston Springs,TN,60
 13250000,Payette River,Letha,ID,70
 03271620,Great Miami River,Franklin,OH,75
 01642190,Monocacy River,Monocacy Blvd At Frederick,MD,70
 09237450,Yampa River,Above Stagecoach Reservoir,CO,70
 02163001,Saluda River,Williamston,SC,70
+01104200,Charles River,Wellesley,MA,30
 03432350,Harpeth River,Franklin,TN,60
 03230700,Scioto River,Circleville,OH,90
+02423555,Cahaba River,Helena,AL,70
 08041000,Neches River,Evadale,TX,75
 04123500,Manistee River,Grayling,MI,100
 08114000,Brazos River,Richmond,TX,70
@@ -284,11 +357,13 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 14166000,Willamette River,Harrisburg,OR,70
 03221646,Scioto River,5th Avenue At Columbus,OH,70
 08040600,Neches River,Town Bluff,TX,75
+01470500,Schuylkill River,Berne,PA,30
 12093500,Puyallup River,Orting,WA,30
 12200500,Skagit River,Mount Vernon,WA,70
 08033500,Neches River,Rockland,TX,85
 03432400,Harpeth River,Below Franklin,TN,60
 02087570,Neuse River,Smithfield,NC,70
+02098206,Haw River,Moncure,NC,70
 03298200,Floyds Fork,Mount Washington,KY,60
 07019000,Meramec River,Eureka,MO,70
 03612600,Ohio River,Olmsted,IL,100
@@ -303,6 +378,8 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07017020,Meramec River,Pacific,MO,70
 03234500,Scioto River,Higby,OH,70
 14208000,Clackamas River,Big Bottom,OR,100
+05316770,Minnesota River,New Ulm,MN,85
+05316580,Minnesota River,Morton,MN,85
 02198500,Savannah River,Clyo,GA,70
 01567000,Juniata River,Newport,PA,70
 01564895,Juniata River,Lewistown,PA,70
@@ -311,26 +388,34 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08205500,Frio River,Derby,TX,70
 03272100,Great Miami River,Middletown,OH,75
 03292494,Ohio River,Water Tower At Louisville,KY,100
+02423647,Cahaba River,West Blocton,AL,70
 08082500,Brazos River,Seymour,TX,70
-11463682,Russian River,Jimtown,CA,85
+02423130,Cahaba River,Trussville,AL,70
 05530100,Des Plaines River,Algonquin Road At Des Plaines,IL,60
+02394000,Etowah River,Allatoona Dam Above Cartersville,GA,70
 14020000,Umatilla River,Above Meacham Creek Near Gibbon,OR,30
 01447500,Lehigh River,Stoddartsville,PA,70
 10155000,Provo River,Hailstone,UT,70
 12179000,Skagit River,Above Alma Creek Near Marblemount,WA,85
+04136000,Au Sable River,Red Oak,MI,100
 14111400,Klickitat River,Below Summit Creek Near Glenwood,WA,85
 05528100,Des Plaines River,Lincolnshire,IL,60
 09251000,Yampa River,Maybell,CO,75
 13213000,Boise River,Parma,ID,70
+09359500,Animas River,Tall Timber Resort Above Tacoma,CO,100
 04124200,Manistee River,Mesick,MI,100
+04137005,Au Sable River,Curtisville,MI,100
+05311150,Minnesota River,Highway 212 In Granite Falls,MN,85
 08110200,Brazos River,Washington,TX,70
 14197900,Willamette River,Newberg,OR,70
 14211010,Clackamas River,Oregon City,OR,70
 09072550,Roaring Fork River,Above Lost Man Creek Near Aspen,CO,100
 05532500,Des Plaines River,Riverside,IL,30
+01362200,Esopus Creek,Allaben,NY,85
 03432100,Harpeth River,Mcdaniel,TN,60
 12449500,Methow River,Twisp,WA,85
 02091814,Neuse River,Fort Barnwell,NC,70
+09504950,Verde River,Above Camp Verde,AZ,100
 10155500,Provo River,Charleston,UT,70
 14048000,John Day River,Mcdonald Ferry,OR,100
 13211205,Boise River,Caldwell,ID,70
@@ -339,15 +424,19 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 10129500,Weber River,Wanship,UT,70
 04231600,Genesee River,Ford Street Bridge Rochester,NY,30
 03237020,Scioto River,Piketon,OH,70
+09364200,Animas River,Penny Lane Near Flora Vista,NM,100
 08111850,Brazos River,San Felipe,TX,70
 03232470,Paint Creek,Bainbridge,OH,60
 10129300,Weber River,Peoa Utah,UT,70
 10155200,Provo River,River Road Bridge Near Heber City,UT,70
 14036860,John Day River,Blue Mountain Hot Springs Near Prairie City,OR,70
 10137000,Weber River,Ogden Utah,UT,70
+01472000,Schuylkill River,Pottstown,PA,30
 09260050,Yampa River,Deerlodge Park,CO,70
 08116650,Brazos River,Rosharon,TX,70
+01468500,Schuylkill River,Landingville,PA,30
 09240020,Yampa River,Below Soda Creek At Steamboat Springs,CO,70
+01471510,Schuylkill River,Reading,PA,30
 04121970,Muskegon River,Croton,MI,70
 08192000,Nueces River,Below Uvalde,TX,30
 12211200,Nooksack River,Everson,WA,70
@@ -356,6 +445,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08111500,Brazos River,Hempstead,TX,70
 08090800,Brazos River,Dennis,TX,70
 08089000,Brazos River,Palo Pinto,TX,70
+01363556,Esopus Creek,Lomontville,NY,70
 08088000,Brazos River,South Bend,TX,70
 08091000,Brazos River,Glen Rose,TX,70
 02197500,Savannah River,Burtons Ferry Branch Near Millhaven,GA,70
@@ -370,15 +460,19 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 12092000,Puyallup River,Electron,WA,30
 13247500,Payette River,Horseshoe Bend,ID,70
 03313000,Barren River,Finney,KY,60
+09508000,Verde River,Below East Verde River Near Childs,AZ,100
 02162550,Saluda River,Above I-85 Near Golden Grove,SC,70
 03229000,Alum Creek,Columbus,OH,30
 04182950,Maumee River,Coliseum Blvd At Fort Wayne,IN,30
+06463720,Niobrara River,Mariaville,NE,100
+0136219503,Esopus Creek,Below Lost Clove Road At Big Indian,NY,85
 01572190,Swatara Creek,Inwood,PA,30
 01572025,Swatara Creek,Pine Grove,PA,30
 04187100,Ottawa River,Lima,OH,30
 04193500,Maumee River,Waterville,OH,10
 05537980,Des Plaines River,Route 53 At Joliet,IL,30
 03228750,Alum Creek,Kilbourne,OH,30
+01103280,Charles River,Medway,MA,30
 03156400,Hocking River,Lancaster,OH,30
 07380120,Amite River,Port Vincent,LA,30
 14171600,Willamette River,Corvallis,OR,70
@@ -391,12 +485,14 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02202040,Ogeechee River,Rocky Ford Road Near Rocky Ford,GA,30
 14107000,Klickitat River,Above West Fork Near Glenwood,WA,30
 021973269,Savannah River,Waynesboro,GA,70
+01103500,Charles River,Dover,MA,30
 08193000,Nueces River,Asherton,TX,30
 02255600,Fisheating Creek,Lake Placid,FL,30
 01573208,Swatara Creek,Palmyra,PA,30
 06799350,Elkhorn River,West Point,NE,30
 01396582,Spruce Run,Main Street At Glen Gardner,NJ,10
 06797500,Elkhorn River,Ewing,NE,30
+01473500,Schuylkill River,Norristown,PA,30
 06800500,Elkhorn River,Waterloo,NE,10
 04182900,Maumee River,Fort Wayne,IN,30
 12096500,Puyallup River,Alderton,WA,30
@@ -424,108 +520,135 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02420000,Alabama River,Montgomery,AL,10
 03150500,Muskingum River,Beverly,OH,10
 03150000,Muskingum River,McConnelsville,OH,10
+01411000,Great Egg Harbor River,Folsom,NJ,100
 11427000,North Fork American River,North Fork Dam,CA,100
 01457000,Musconetcong River,Bloomsbury,NJ,100
 03057000,Tygart Valley River,Colfax,WV,100
 02398000,Chattooga River,Summerville,GA,100
-01189995,Farmington River,Tariffville,CT,100
 02034000,Rivanna River,Palmyra,VA,100
 01442500,Brodhead Creek,Minisink Hills,PA,100
 03455000,French Broad River,Newport,TN,100
 03109500,Little Beaver Creek,East Liverpool,OH,100
+01098530,Sudbury River,Saxonville,MA,100
 01608500,South Branch Potomac River,Springfield,WV,100
+10336610,Upper Truckee River,South Lake Tahoe,CA,100
 03161000,South Fork New River,Jefferson,NC,100
 03075500,Youghiogheny River,Oakland,MD,100
 01541200,West Branch Susquehanna River,Curwensville,PA,100
 03513000,Tuckasegee River,Bryson City,NC,100
+01158000,Ashuelot River,Below Surry Mount Dam Near Keene,NH,85
 03069500,Cheat River,Parsons,WV,100
+04293000,Missisquoi River,North Troy,VT,100
+12358500,Middle Fork Flathead River,West Glacier,MT,100
+07143665,Little Arkansas River,Alta Mills,KS,100
 02450250,Sipsey Fork,Grayson,AL,100
 09384000,Little Colorado River,Above Lyman Lake Near Saint Johns,AZ,100
 01417500,East Branch Delaware River,Harvard,NY,100
 03012550,Allegheny River,Kinzua Dam,PA,100
 02398300,Chattooga River,Above Gaylesville,AL,100
+03539800,Obed River,Lancing,TN,100
 01096500,Nashua River,East Pepperell,MA,90
 01589000,Patapsco River,Hollofield,MD,85
 04060993,Brule River,US Highway 2 Near Florence,MI,100
 09346400,San Juan River,Carracas,CO,100
+01073500,Lamprey River,Newmarket,NH,90
 03230500,Big Darby Creek,Darbyville,OH,90
 07164500,Arkansas River,Tulsa,OK,100
+04174500,Huron River,Ann Arbor,MI,85
 05576500,Sangamon River,Riverton,IL,85
 07144550,Arkansas River,Derby,KS,100
 02456500,Locust Fork,Sayre,AL,85
+04164000,Clinton River,Fraser,MI,85
 04106000,Kalamazoo River,Comstock,MI,85
-02392000,Etowah River,Canton,GA,85
+03571000,Sequatchie River,Whitwell,TN,85
+01094000,Souhegan River,Merrimack,NH,85
 03451000,Swannanoa River,Biltmore,NC,85
 04156000,Tittabawassee River,Midland,MI,85
 06342500,Missouri River,Bismarck,ND,100
 02233500,Econlockhatchee River,Chuluota,FL,85
-02096500,Haw River,Haw River,NC,85
 11335000,Cosumnes River,Michigan Bar,CA,85
-12150800,Snohomish River,Monroe,WA,85
 03363000,Driftwood River,Edinburgh,IN,85
-05286000,Rum River,Saint Francis,MN,85
+09405500,North Fork Virgin River,Springdale,UT,100
+02387000,Conasauga River,Tilton,GA,85
 02223000,Oconee River,Milledgeville,GA,85
+04125460,Pine River,High School Bridge Near Hoxeyville,MI,100
+01367500,Rondout Creek,Rosendale,NY,85
 04189000,Blanchard River,Findlay,OH,85
 04186500,Auglaize River,Fort Jennings,OH,85
 06932000,Little Piney Creek,Newburg,MO,85
 04198000,Sandusky River,Fremont,OH,85
+01371500,Wallkill River,Gardiner,NY,85
 12045500,Elwha River,Mcdonald Branch Near Port Angeles,WA,85
 06933500,Gasconade River,Jerome,MO,85
 05520500,Kankakee River,Momence,IL,85
 01409400,Mullica River,Batsto,NJ,85
 03330500,Tippecanoe River,Oswego,IN,85
-02425000,Cahaba River,Marion Junction,AL,85
+02312720,Withlacoochee River,Wysong Dam At Carlson,FL,85
 02359500,Econfina Creek,Bennett,FL,85
+01485000,Pocomoke River,Willards,MD,85
 02335870,Sope Creek,Marietta,GA,85
 02080500,Roanoke River,Roanoke Rapids,NC,100
 01351500,Schoharie Creek,Burtonsville,NY,85
 03441000,Davidson River,Brevard,NC,85
-01362500,Esopus Creek,Coldbrook,NY,85
 01618000,Potomac River,Shepherdstown,WV,100
 02024000,Maury River,Buena Vista,VA,85
 05593000,Kaskaskia River,Carlyle,IL,85
-04117500,Thornapple River,Hastings,MI,85
-05387500,Upper Iowa River,Decorah,IA,85
+13239000,North Fork Payette River,Mccall,ID,85
 01076500,Pemigewasset River,Plymouth,NH,85
 13190500,South Fork Boise River,Anderson Ranch Dam,ID,85
 03053500,Buckhannon River,Hall,WV,85
 01529500,Cohocton River,Campbell,NY,85
+04102500,Paw Paw River,Riverside,MI,85
 02387500,Oostanaula River,Resaca,GA,85
 01578310,Susquehanna River,Conowingo,MD,100
+04133501,Thunder Bay River,Herron Road Near Bolton,MI,85
+02153551,Broad River,Below Ninetynine Island Reservoir,SC,85
+13019500,Hoback River,Jackson,WY,100
+07292500,Homochitto River,Rosetta,MS,85
 03518500,Tellico River,Tellico Plains,TN,85
 08013000,Calcasieu River,Glenmora,LA,85
 07337900,Glover River,Glover,OK,85
 03052000,Middle Fork River,Audra,WV,85
-05331833,Namekagon River,Leonards,WI,100
 02376500,Perdido River,Barrineau Park,FL,85
 01381000,Rockaway River,Below Reservoir At Boonton,NJ,65
+02192000,Broad River,Bell,GA,85
 08014500,Ouiska Chitto Creek,Oberlin,LA,85
 08048000,West Fork Trinity River,Fort Worth,TX,70
 05244000,Crow Wing River,Nimrod,MN,85
+02380500,Coosawattee River,Ellijay,GA,85
+03503000,Little Tennessee River,Needmore,NC,85
 04056500,Manistique River,Manistique,MI,85
 02487500,Strong River,D`lo,MS,85
-02379500,Cartecay River,Ellijay,GA,85
 01529950,Chemung River,Corning,NY,85
 05483600,Middle Raccoon River,Panora,IA,85
 11123000,Santa Ynez River,Below Gibraltar Dam Near Santa Barbara,CA,65
 05438500,Kishwaukee River,Belvidere,IL,75
+14189000,Santiam River,Jefferson,OR,75
 02160700,Enoree River,Whitmire,SC,85
 13344500,Tucannon River,Starbuck,WA,85
+12302055,Fisher River,Libby,MT,85
 01403060,Raritan River,Below Calco Dam At Bound Brook,NJ,65
+04025500,Bois Brule River,Brule,WI,100
 01046500,Kennebec River,Bingham Maine,ME,100
+02382200,Talking Rock Creek,Hinton,GA,85
 12342500,West Fork Bitterroot River,Conner,MT,100
+11143000,Big Sur River,Big Sur,CA,100
 05289800,Minnehaha Creek,Hiawatha Avenue In Minneapolis,MN,85
 01671020,North Anna River,Hart Corner Near Doswell,VA,85
 11113000,Sespe Creek,Fillmore,CA,75
+01179500,Westfield River,Knightville,MA,100
 01597500,Savage River,Below Savage River Dam Near Bloomington,MD,70
+05422000,Wapsipinicon River,De Witt,IA,75
 05567500,Mackinaw River,Congerville,IL,75
 01459500,Tohickon Creek,Pipersville,PA,100
+03469251,West Prong Little Pigeon River,Gatlinburg,TN,100
 03011020,Allegheny River,Salamanca,NY,75
+02146000,Catawba River,Rock Hill,SC,85
 05514500,Cuivre River,Troy,MO,75
 02085070,Eno River,Durham,NC,70
 03336900,Salt Fork,Saint Joseph,IL,75
 02377570,Styx River,Elsanor,AL,85
-01170000,Deerfield River,West Deerfield,MA,75
+12431000,Little Spokane River,Dartford,WA,70
 02213000,Ocmulgee River,Macon,GA,70
 14312000,South Umpqua River,Brockway,OR,75
 02326500,Aucilla River,Lamont,FL,85
@@ -535,6 +658,8 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03540500,Emory River,Oakdale,TN,75
 01205500,Housatonic River,Stevenson,CT,70
 05418500,Maquoketa River,Maquoketa,IA,75
+04064500,Pine River,Below Pine River Powerplant Near Florence,WI,65
+06764880,South Platte River,Roscoe,NE,100
 01672500,South Anna River,Ashland,VA,75
 07015720,Bourbeuse River,High Gate,MO,75
 14305500,Siletz River,Siletz,OR,75
@@ -549,9 +674,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07179730,Neosho River,Americus,KS,70
 04292500,Lamoille River,East Georgia,VT,70
 01197500,Housatonic River,Great Barrington,MA,70
+04199000,Huron River,Milan,OH,70
 01558000,Little Juniata River,Spruce Creek,PA,70
 12451000,Stehekin River,Stehekin,WA,85
 13142500,Big Wood River,Below Magic Dam Near Richfield,ID,65
+02151500,Broad River,Boiling Springs,NC,70
 01667500,Rapidan River,Culpeper,VA,70
 03041500,Conemaugh River,Seward,PA,70
 03350500,Cicero Creek,Noblesville,IN,75
@@ -616,6 +743,8 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02113850,Ararat River,Ararat,NC,60
 13183000,Owyhee River,Below Owyhee Dam,OR,70
 02370500,Big Coldwater Creek,Milton,FL,60
+0214244102,Catawba River,Below Lookout Shoals Dam Near Sharon,NC,65
+01154500,Connecticut River,North Walpole,NH,75
 03058000,West Fork River,Below Stonewall Jackson Dam Near Weston,WV,65
 07348700,Bayou Dorcheat,Springhill,LA,60
 14216000,Lewis River,Above Muddy River Near Cougar,WA,85
@@ -632,9 +761,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02371500,Conecuh River,Brantley,AL,60
 02479300,Red Creek,Vestry,MS,60
 14321000,Umpqua River,Elkton,OR,75
+02318500,Withlacoochee River,US 84 Near Quitman,GA,60
 13127000,Big Lost River,Below Mackay Reservoir Near Mackay,ID,65
 12082500,Nisqually River,National,WA,60
 06930060,Big Piney,Below Fort Leonard Wood,MO,70
+01170500,Connecticut River,Montague City,MA,70
 02295420,Payne Creek,Bowling Green,FL,60
 07065495,Jacks Fork,Alley Spring,MO,70
 02489000,Pearl River,Columbia,MS,85
@@ -646,6 +777,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 14046000,North Fork John Day River,Monument,OR,75
 07049000,War Eagle Creek,Hindsville,AR,85
 02407000,Coosa River,Childersburg,AL,70
+03435000,Cumberland River,Below Cheatham Dam,TN,70
 033356848,Big Pine Creek,Pine Village,IN,75
 03131982,Clear Fork Mohican River,Bellville,OH,70
 02472850,Okatoma Creek,Sanford,MS,60
@@ -654,6 +786,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03284000,Kentucky River,Lock 10 Near Winchester,KY,70
 02102500,Cape Fear River,Lillington,NC,70
 08067650,West Fork San Jacinto River,Below Lake Conroe Near Conroe,TX,65
+01138500,Connecticut River,Wells River,VT,70
 08196000,Dry Frio River,Reagan Wells,TX,70
 10293000,East Walker River,Bridgeport,CA,70
 15200280,Gulkana River,Sourdough,AK,100
@@ -939,35 +1072,33 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01632000,North Fork Shenandoah River,Cootes Store,VA,100
 03050500,Tygart Valley River,Elkins,WV,100
 07086000,Arkansas River,Granite,CO,100
-01318500,Hudson River,Hadley,NY,100
-09503700,Verde River,Paulden,AZ,100
 01500500,Susquehanna River,Unadilla,NY,100
 03076500,Youghiogheny River,Friendsville,MD,100
 03189600,Gauley River,Below Summersville Dam,WV,100
+12324200,Clark Fork,Deer Lodge,MT,100
 06065500,Missouri River,Below Hauser Dam Near Helena,MT,100
 08361000,Rio Grande,Below Elephant Butte Dam,NM,100
 09383400,Little Colorado River,Greer,AZ,100
+04172000,Huron River,Hamburg,MI,85
 01536500,Susquehanna River,Wilkes-Barre,PA,100
 09365000,San Juan River,Farmington,NM,100
-02395000,Etowah River,Kingston,GA,85
 03025500,Allegheny River,Franklin,PA,100
 04196000,Sandusky River,Bucyrus,OH,85
-02423380,Cahaba River,Mountain Brook,AL,85
-02337170,Chattahoochee River,Fairburn,GA,100
 06928000,Gasconade River,Hazelgreen,MO,85
+02310947,Withlacoochee River,Cumpressco,FL,85
 05572000,Sangamon River,Monticello,IL,85
+06721000,South Platte River,Fort Lupton,CO,100
 10348000,Truckee River,Reno,NV,100
 02455000,Locust Fork,Cleveland,AL,85
-04118000,Thornapple River,Caledonia,MI,85
 02056000,Roanoke River,Niagara,VA,100
+03404500,Cumberland River,Cumberland Falls,KY,85
 03331500,Tippecanoe River,Ora,IN,85
+01365000,Rondout Creek,Lowes Corners,NY,85
 02054500,Roanoke River,Lafayette,VA,100
 03453500,French Broad River,Marshall,NC,100
-05292000,Minnesota River,Ortonville,MN,85
-03505550,Nantahala River,Hewitt,NC,100
 07064440,Current River,Montauk State Park,MO,100
-02338000,Chattahoochee River,Whitesburg,GA,100
 03082500,Youghiogheny River,Connellsville,PA,100
+04293500,Missisquoi River,East Berkshire,VT,100
 14316500,North Umpqua River,Above Copeland Creek Near Toketee Falls,OR,100
 09342500,San Juan River,Pagosa Springs,CO,100
 01606500,South Branch Potomac River,Petersburg,WV,100
@@ -981,27 +1112,26 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03051000,Tygart Valley River,Belington,WV,100
 03050000,Tygart Valley River,Dailey,WV,100
 07081200,Arkansas River,Leadville,CO,100
-01188090,Farmington River,Unionville,CT,100
 02085000,Eno River,Hillsborough,NC,70
 03439000,French Broad River,Rosman,NC,100
-02331600,Chattahoochee River,Cornelia,GA,100
 11111500,Sespe Creek,Wheeler Springs,CA,75
+05421000,Wapsipinicon River,Independence,IA,75
 01541000,West Branch Susquehanna River,Bower,PA,100
-01327750,Hudson River,Fort Edward,NY,100
-09363500,Animas River,Cedar Hill,CO,100
 01633000,North Fork Shenandoah River,Mount Jackson,VA,100
+07144100,Little Arkansas River,Sedgwick,KS,100
+03500000,Little Tennessee River,Prentiss,NC,75
 01417000,East Branch Delaware River,Downsville,NY,100
 03189100,Gauley River,Craigsville,WV,100
 01413500,East Branch Delaware River,Margaretville,NY,100
-02096960,Haw River,Bynum,NC,70
+07291000,Homochitto River,Eddiceton,MS,85
 01199000,Housatonic River,Falls Village,CT,70
 02060500,Roanoke River,Altavista,VA,100
 04286000,Winooski River,Montpelier,VT,70
-01364500,Esopus Creek,Mount Marion,NY,70
 04188337,Blanchard River,Below Mount Blanchard,OH,85
 01542500,West Branch Susquehanna River,Karthaus,PA,100
 03447687,French Broad River,Fletcher,NC,100
 01596500,Savage River,Barton,MD,70
+04165500,Clinton River,Moravian Drive At Mount Clemens,MI,85
 04105500,Kalamazoo River,Battle Creek,MI,85
 06486000,Missouri River,Sioux City,NE,100
 01665500,Rapidan River,Ruckersville,VA,70
@@ -1010,68 +1140,66 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04153300,Tittabawassee River,Sanford,MI,85
 07139000,Arkansas River,Garden City,KS,100
 05440000,Kishwaukee River,Perryville,IL,60
-02335880,Chattahoochee River,Powers Ferry And I-285 Near Atlanta,GA,100
+12353000,Clark Fork,Below Missoula,MT,100
+103366092,Upper Truckee River,Highway 50 Above Meyers,CA,100
 07096000,Arkansas River,Canon City,CO,100
-09364010,Animas River,Below Aztec,NM,100
+01410820,Great Egg Harbor River,Blue Anchor,NJ,100
 14303600,Nestucca River,Beaver,OR,75
 04103500,Kalamazoo River,Marshall,MI,85
 01638500,Potomac River,Point Of Rocks,MD,100
 07165570,Arkansas River,Haskell,OK,100
 06078200,Missouri River,Ulm,MT,100
+13246000,North Fork Payette River,Banks,ID,85
 01350000,Schoharie Creek,Prattsville,NY,85
 14203500,Tualatin River,Dilley,OR,60
 07133000,Arkansas River,Lamar,CO,100
 01102000,Ipswich River,Ipswich,MA,60
 03052120,Buckhannon River,Alton,WV,85
-02341460,Chattahoochee River,14th Saint At Columbus,GA,100
 01551500,West Branch Susquehanna River,Williamsport,PA,100
-08170500,San Marcos River,San Marcos,TX,70
-09359020,Animas River,Below Silverton,CO,100
+01157000,Ashuelot River,Gilsum,NH,85
 04196500,Sandusky River,Upper Sandusky,OH,85
+01161000,Ashuelot River,Hinsdale,NH,85
 02069000,Dan River,Pine Hall,NC,70
 09385700,Little Colorado River,Below Salado Springs,AZ,100
 08313000,Rio Grande,Otowi Bridge,NM,100
 10350000,Truckee River,Vista,NV,100
 03510577,Tuckasegee River,Barker's Creek,NC,100
+02312500,Withlacoochee River,Croom,FL,85
 03454500,French Broad River,Hot Springs,NC,100
 05570910,Sangamon River,Fisher,IL,85
-02423425,Cahaba River,Cahaba Heights,AL,85
-02335815,Chattahoochee River,Below Morgan Falls Dam,GA,100
-02335000,Chattahoochee River,Norcross,GA,100
-01335754,Hudson River,Above Lock 1 Near Waterford,NY,100
+02313000,Withlacoochee River,SR 200 Near Holder,FL,85
 02021500,Maury River,Rockbridge Baths,VA,85
-09504000,Verde River,Clarkdale,AZ,100
 07099400,Arkansas River,Above Pueblo,CO,100
 01540500,Susquehanna River,Danville,PA,100
 01515000,Susquehanna River,Waverly,PA,100
 01553500,West Branch Susquehanna River,Lewisburg,PA,100
-02423496,Cahaba River,Hoover,AL,85
+02156500,Broad River,Carlisle,SC,85
+03538830,Obed River,Adams Bridge Near Crossville,TN,100
 03077500,Youghiogheny River,Youghiogheny River Dam,PA,100
 05410490,Kickapoo River,Steuben,WI,70
 08013500,Calcasieu River,Oberlin,LA,85
-02339500,Chattahoochee River,West Point,GA,100
-02335450,Chattahoochee River,Above Roswell,GA,100
-02334430,Chattahoochee River,Buford Dam Near Buford,GA,100
 01531500,Susquehanna River,Towanda,PA,100
 07097000,Arkansas River,Portland,CO,100
 03332605,Tippecanoe River,Below Oakdale Dam,IN,85
 03129000,Tuscarawas River,Newcomerstown,OH,60
+06710247,South Platte River,"Below Union Avenue At Englewood,c",CO,100
+02313230,Withlacoochee River,Inglis Dam Near Dunnellon,FL,85
 03070260,Cheat River,Albright,WV,100
 01513500,Susquehanna River,Vestal,NY,100
 08276500,Rio Grande,Below Taos Junction Bridge Near Taos,NM,100
 02319500,Suwannee River,Ellaville,FL,100
 03508050,Tuckasegee River,SR 1172 Near Cullowhee,NC,100
 09394500,Little Colorado River,Woodruff,AZ,100
+02311500,Withlacoochee River,Dade City,FL,85
 02368500,Shoal River,Mossy Head,FL,60
 10351700,Truckee River,Nixon,NV,100
 02294898,Peace River,Fort Meade,FL,60
 05573540,Sangamon River,Route 48 At Decatur,IL,85
 03333050,Tippecanoe River,Delphi,IN,85
 05412020,Turkey River,Above French Hollow Creek At Elkader,IA,75
+02312000,Withlacoochee River,US 301 At Trilby,FL,85
 06177000,Missouri River,Wolf Point,MT,100
-05388250,Upper Iowa River,Dorchester,IA,85
-01315500,Hudson River,North Creek,NY,100
-01312000,Hudson River,Newcomb,NY,100
+03404000,Cumberland River,Williamsburg,KY,85
 01042500,Kennebec River,The Forks Maine,ME,100
 01605500,South Branch Potomac River,Franklin,WV,100
 01545500,West Branch Susquehanna River,Renovo,PA,100
@@ -1079,21 +1207,23 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02045500,Nottoway River,Stony Creek,VA,60
 10351650,Truckee River,Wadsworth,NV,100
 10338000,Truckee River,Truckee,CA,100
+02138520,Catawba River,Sr1223 Below Lake James Near Bridgewater,NC,65
+02312600,Withlacoochee River,Floral City,FL,85
 09397000,Little Colorado River,Holbrook,AZ,100
-09510000,Verde River,Below Bartlett Dam,AZ,100
 07091200,Arkansas River,Nathrop,CO,100
+023177483,Withlacoochee River,"Skipper Bridge Rd,nr Bemiss",GA,60
 01049265,Kennebec River,North Sidney Maine,ME,100
+06759500,South Platte River,Fort Morgan,CO,100
+02191300,Broad River,Above Carlton,GA,85
 07182390,Neosho River,Neosho Rapids,KS,70
 14308000,South Umpqua River,Tiller,OR,75
 07123000,Arkansas River,La Junta,CO,100
 02233484,Econlockhatchee River,Oviedo,FL,85
 02160390,Enoree River,Woodruff,SC,85
-01168500,Deerfield River,Charlemont,MA,75
+01160350,Ashuelot River,West Swanzey,NH,85
 08151500,Llano River,Llano,TX,70
 10347460,Truckee River,Mogul,NV,100
-09508500,Verde River,Below Tangle Creek Above Horseshoe Dam,AZ,100
 01527500,Cohocton River,Avoca,NY,85
-02423160,Cahaba River,Whites Chapel,AL,85
 06891000,Kansas River,Lecompton,KS,85
 09386300,Little Colorado River,Below Zion Reservoir Near Saint Johns,AZ,100
 03067510,Shavers Fork,Cheat Bridge,WV,85
@@ -1101,33 +1231,36 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02320000,Suwannee River,Luraville,FL,100
 01541303,West Branch Susquehanna River,Hyde,PA,100
 02054530,Roanoke River,Glenvar,VA,100
-02331000,Chattahoochee River,Leaf,GA,100
 04292000,Lamoille River,Johnson,VT,70
 13135500,Big Wood River,Ketchum,ID,60
 09386030,Little Colorado River,Above Zion Reservoir Near Saint Johns,AZ,100
 10350340,Truckee River,Tracy,NV,100
-05330000,Minnesota River,Jordan,MN,85
+02312762,Withlacoochee River,Inverness,FL,85
+01073319,Lamprey River,Langford Road At Raymond,NH,60
 02223500,Oconee River,Dublin,GA,85
 04197137,Sandusky River,Tiffin,OH,85
+01410784,Great Egg Harbor River,Sicklerville,NJ,100
 08044500,West Fork Trinity River,Boyd,TX,70
 010642505,Saco River,River Street At Bartlett,NH,85
-05387440,Upper Iowa River,Bluffton,IA,85
-09511300,Verde River,Scottsdale,AZ,100
+02312598,Withlacoochee River,Pineola,FL,85
+02312558,Withlacoochee River,Nobleton,FL,85
 02319800,Suwannee River,Dowling Park Florida,FL,100
-02391860,Etowah River,Of I-575 At Canton,GA,85
-02423500,Cahaba River,Acton,AL,85
+12331800,Clark Fork,Drummond,MT,100
+02312300,Withlacoochee River,Rital,FL,85
+12324680,Clark Fork,Goldcreek,MT,100
+03403500,Cumberland River,Barbourville,KY,70
 02210500,Ocmulgee River,Jackson,GA,70
+06700000,South Platte River,Above Cheesman Lake,CO,100
 04189131,Blanchard River,Gilboa,OH,85
-02424000,Cahaba River,Centreville,AL,70
 03044000,Conemaugh River,Tunnelton,PA,70
-02390050,Etowah River,Kelly Bridge Road Near Matt,GA,85
-05311000,Minnesota River,Montevideo,MN,85
 03332555,Tippecanoe River,Norway,IN,85
 14325000,South Fork Coquille River,Powers,OR,60
+01158110,Ashuelot River,Above The Branch At Keene,NH,85
 04189260,Blanchard River,Ottawa,OH,85
 11289650,Tuolumne River,Below Lagrange Dam Near Lagrange,CA,100
 04127200,Boardman River,Beitner Road Near Traverse City,MI,85
 01538700,Susquehanna River,Bloomsburg,PA,100
+07143672,Little Arkansas River,Highway 50 Near Halstead,KS,100
 07064533,Current River,Above Akers,MO,100
 09397300,Little Colorado River,Joseph City,AZ,100
 08026000,Sabine River,Burkeville,TX,85
@@ -1136,24 +1269,28 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07143330,Arkansas River,Hutchinson,KS,100
 07083710,Arkansas River,Below Empire Gulch Near Malta,CO,100
 07141300,Arkansas River,Great Bend,KS,100
-05301000,Minnesota River,Lac Qui Parle,MN,85
 01553025,West Branch Susquehanna River,Allenwood,PA,100
 01549760,West Branch Susquehanna River,Jersey Shore,PA,100
 07146500,Arkansas River,Arkansas City,KS,100
+12323800,Clark Fork,Galen,MT,100
 02374250,Conecuh River,State Highway 41 Near Brewton,AL,60
 08359500,Rio Grande,Narrows In Elephant Butte Reservoir,NM,100
 08042800,West Fork Trinity River,Jacksboro,TX,70
-09362520,Animas River,Below Durango Pump Plant Near Durango,CO,100
 08015500,Calcasieu River,Kinder,LA,85
+04161000,Clinton River,Auburn Hills,MI,85
+13245000,North Fork Payette River,Cascade,ID,85
 06090300,Missouri River,Great Falls,MT,100
+06711565,South Platte River,Englewood,CO,100
 01545800,West Branch Susquehanna River,Lock Haven,PA,100
 04108660,Kalamazoo River,New Richmond,MI,75
 08049500,West Fork Trinity River,Grand Prairie,TX,70
 01379000,Passaic River,Millington,NJ,60
 07130500,Arkansas River,Below John Martin Reservoir,CO,100
-09358000,Animas River,Silverton,CO,100
+07144200,Little Arkansas River,Valley Center,KS,100
 01502731,Susquehanna River,Windsor,NY,100
 03332345,Tippecanoe River,Buffalo,IN,85
+12389000,Clark Fork,Plains,MT,100
+12354500,Clark Fork,Saint Regis,MT,100
 03147500,Licking River,Below Dillon Dam Near Dillon Falls,OH,70
 09402000,Little Colorado River,Cameron,AZ,100
 06185500,Missouri River,Culbertson,MT,100
@@ -1161,15 +1298,17 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06109500,Missouri River,Virgelle,MT,100
 06090800,Missouri River,Fort Benton,MT,100
 06054500,Missouri River,Toston,MT,100
-06465500,Niobrara River,Verdel,NE,100
 01613000,Potomac River,Hancock,MD,100
 09368000,San Juan River,Shiprock,NM,100
 03052450,Buckhannon River,Buckhannon,WV,85
+01368050,Wallkill River,Oil City Road Near Unionville,NY,60
 01610000,Potomac River,Paw Paw,MD,100
 08263500,Rio Grande,Cerro,NM,100
 02323500,Suwannee River,Wilcox,FL,100
 02320500,Suwannee River,Branford,FL,100
 03081500,Youghiogheny River,Ohiopyle,PA,100
+02161000,Broad River,Alston,SC,85
+02147020,Catawba River,Below Catawba,SC,85
 05568000,Mackinaw River,Green Valley,IL,60
 03016000,Allegheny River,West Hickory,PA,100
 01381900,Passaic River,Pine Brook,NJ,60
@@ -1182,8 +1321,10 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01554000,Susquehanna River,Sunbury,PA,100
 14366000,Applegate River,Applegate,OR,60
 02116500,Yadkin River,Yadkin College,NC,60
-02337260,Chattahoochee River,Above Bear Creek Near Rico,GA,100
-02423555,Cahaba River,Helena,AL,70
+05420680,Wapsipinicon River,Tripoli,IA,75
+06714215,South Platte River,64th Avenue Commerce City,CO,100
+05421740,Wapsipinicon River,Anamosa,IA,75
+12357500,Middle Fork Flathead River,West Glacier,MT,100
 04152049,Tittabawassee River,Secord Dam Near Gladwin,MI,85
 07099970,Arkansas River,Moffat Street At Pueblo,CO,100
 03049500,Allegheny River,Natrona,PA,70
@@ -1195,6 +1336,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01533400,Susquehanna River,Meshoppen,PA,100
 01502632,Susquehanna River,Bainbridge,NY,100
 02112250,Yadkin River,Elkin,NC,60
+02153200,Broad River,Blacksburg,SC,70
 08329928,Rio Grande,Alameda,NM,100
 11377100,Sacramento River,Above Bend Bridge Near Red Bluff,CA,75
 01390500,Saddle River,Ridgewood,NJ,30
@@ -1204,11 +1346,13 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 0211139110,Yadkin River,Below West Kerr Scott Dam Near Buck,NC,65
 02224500,Oconee River,Mount Vernon,GA,85
 02388500,Oostanaula River,Rome,GA,60
+02313200,Withlacoochee River,US 41 At Dunnellon,FL,85
 06813500,Missouri River,Rulo,NE,100
 02223056,Oconee River,Avant Mine Near Oconee,GA,85
 06895500,Missouri River,Waverly,MO,100
-01470500,Schuylkill River,Berne,PA,30
 07152500,Arkansas River,Ralston,OK,100
+12334550,Clark Fork,Turah Bridge Near Bonner,MT,100
+12324400,Clark Fork,Above Little Blackfoot River Near Garrison,MT,100
 03122500,Tuscarawas River,Below Dover Dam Near Dover,OH,65
 11458000,Napa River,Napa,CA,30
 03007800,Allegheny River,Port Allegany,PA,70
@@ -1217,10 +1361,9 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11276500,Tuolumne River,Hetch Hetchy,CA,100
 06934000,Gasconade River,Rich Fountain,MO,85
 04069416,Peshtigo River,Porterfield,WI,70
-02098206,Haw River,Moncure,NC,70
+04161820,Clinton River,Sterling Heights,MI,85
 08158700,Onion Creek,Driftwood,TX,30
 01534500,Lackawanna River,Archbald,PA,30
-08171400,San Marcos River,Martindale,TX,70
 05578000,Sangamon River,Petersburg,IL,85
 03094000,Mahoning River,Leavittsburg,OH,30
 02044500,Nottoway River,Rawlings,VA,60
@@ -1228,29 +1371,34 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03036500,Allegheny River,Kittanning,PA,70
 05451500,Iowa River,Marshalltown,IA,30
 01670400,North Anna River,Partlow,VA,85
+01183500,Westfield River,Westfield,MA,30
 08329918,Rio Grande,Alameda Bridge At Alameda,NM,100
 11276600,Tuolumne River,Above Early Intake Near Mather,CA,100
 08048543,West Fork Trinity River,Beach Saint Fort Worth,TX,70
+02319000,Withlacoochee River,Pinetta,FL,60
 02223248,Oconee River,Oconee,GA,85
 07359002,Ouachita River,Remmel Dam Above Jones Mill,AR,30
 07249455,Arkansas River,Fort Smith,AR,100
+021564493,Broad River,Below Neal Shoals Reservoir Near Carlisle,SC,85
+01144500,Connecticut River,West Lebanon,NH,70
 12089500,Nisqually River,Mckenna,WA,30
 08330875,Rio Grande,Isleta Lakes Near Isleta,NM,100
 01350180,Schoharie Creek,North Blenheim,NY,60
 04217000,Tonawanda Creek,Batavia,NY,30
 01574500,Codorus Creek,Spring Grove,PA,30
 06935965,Missouri River,Saint Charles,MO,100
+02137727,Catawba River,Pleasant Gardens,NC,60
+01129500,Connecticut River,North Stratford,NH,75
+01129200,Connecticut River,Below Indian Stream Near Pittsburg,NH,75
 05412500,Turkey River,Garber,IA,75
 01557500,Bald Eagle Creek,Tyrone,PA,30
 03250500,Licking River,Blue Lick Springs,KY,70
 01455500,Musconetcong River,Outlet Of Lake Hopatcong,NJ,30
 08198500,Sabinal River,Sabinal,TX,75
 0307020015,Cheat River,Below Saltlick Creek At Rowlesburg,WV,100
-05316770,Minnesota River,New Ulm,MN,85
 04176500,River Raisin,Monroe,MI,30
 07065200,Jacks Fork,Mountain View,MO,70
 05518000,Kankakee River,Shelby,IN,30
-05316580,Minnesota River,Morton,MN,85
 03289300,South Elkhorn Creek,Midway,KY,30
 07016500,Bourbeuse River,Union,MO,30
 02090380,Contentnea Creek,Lucama,NC,30
@@ -1262,6 +1410,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04087030,Menomonee River,Menomonee Falls,WI,30
 10262500,Mojave River,Barstow,CA,30
 07138070,Arkansas River,Deerfield,KS,100
+03402900,Cumberland River,Pine Saint Branch At Pineville,KY,70
 07183500,Neosho River,Parsons,KS,70
 07138000,Arkansas River,Syracuse,KS,100
 07137500,Arkansas River,Coolidge,KS,100
@@ -1271,7 +1420,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01440400,Brodhead Creek,Analomink,PA,30
 12372000,Flathead River,Polson,MT,70
 07141220,Arkansas River,Larned,KS,100
-02423647,Cahaba River,West Blocton,AL,70
 08183900,Cibolo Creek,Boerne,TX,30
 07182510,Neosho River,Burlington,KS,70
 02363000,Pea River,Ariton,AL,30
@@ -1281,15 +1429,16 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08163500,Lavaca River,Hallettsville,TX,30
 12025700,Skookumchuck River,Vail,WA,30
 03331753,Tippecanoe River,Winamac,IN,85
-02423130,Cahaba River,Trussville,AL,70
 01436690,Neversink River,Bridgeville,NY,60
-02394000,Etowah River,Allatoona Dam Above Cartersville,GA,70
+02383500,Coosawattee River,Pine Chapel,GA,30
 03061000,West Fork River,Enterprise,WV,30
 07144570,Arkansas River,Mulvane,KS,100
 06918440,Sac River,Dadeville,MO,30
+04294000,Missisquoi River,Swanton,VT,60
 06821250,Missouri River,Above Parkville,MO,100
 08317400,Rio Grande,Below Cochiti Dam,NM,100
 03471500,South Fork Holston River,Riverside Near Chilhowie,VA,30
+01131500,Connecticut River,Dalton,NH,70
 01413088,East Branch Delaware River,Roxbury,NY,100
 07066000,Jacks Fork,Eminence,MO,70
 06074000,Missouri River,Cascade,MT,100
@@ -1301,6 +1450,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01472198,Perkiomen Creek,East Greenville,PA,30
 07124000,Arkansas River,Las Animas,CO,100
 01619000,Antietam Creek,Waynesboro,MD,30
+03431500,Cumberland River,Nashville,TN,70
 02300100,Little Manatee River,Fort Lonesome,FL,30
 07144300,Arkansas River,Wichita,KS,100
 09400350,Little Colorado River,Winslow,AZ,100
@@ -1313,9 +1463,9 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07134180,Arkansas River,Granada,CO,100
 01047150,Kennebec River,Madison Maine,ME,100
 08331160,Rio Grande,Bosque Farms,NM,100
+04174040,Huron River,Zeeb Road At Scio,MI,85
 04107850,Kalamazoo River,Allegan,MI,85
 08073100,Langham Creek,Addicks Reservoir Outflow Near Addicks,TX,30
-09359500,Animas River,Tall Timber Resort Above Tacoma,CO,100
 08174600,Peach Creek,Below Dilworth,TX,30
 02108566,Northeast Cape Fear River,Burgaw,NC,70
 04185935,Auglaize River,Kossuth,OH,85
@@ -1323,22 +1473,25 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06935450,Missouri River,Washington,MO,100
 06894650,Missouri River,Napoleon,MO,100
 08355050,Rio Grande,Bridge Near Escondida,NM,100
-05311150,Minnesota River,Highway 212 In Granite Falls,MN,85
 04067958,Peshtigo River,Wabeno,WI,70
 06906500,Missouri River,Glasgow,MO,100
 08022040,Sabine River,Beckville,TX,60
 10348036,Truckee River,Glendale Avenue Near Sparks,NV,100
 03031500,Allegheny River,Parker,PA,70
+12431500,Little Spokane River,Dartford,WA,70
 02164110,Reedy River,Above Fork Shoals,SC,30
-01362200,Esopus Creek,Allaben,NY,85
+02319394,Withlacoochee River,Lee,FL,60
+03401000,Cumberland River,Harlan,KY,70
 03203600,Guyandotte River,Logan,WV,30
 03253500,Licking River,Catawba,KY,70
 08355490,Rio Grande,Above Us Highway 380 Near San Antonio,NM,100
 01350500,Schoharie Creek,Middleburgh,NY,60
+02317755,Withlacoochee River,US 41 Near Valdosta,GA,60
 03015310,Allegheny River,Below Conewango Creek At Warren,PA,70
+01172010,Connecticut River,I-391 Bridge At Holyoke,MA,70
 03282000,Kentucky River,Lock 14 At Heidelberg,KY,70
 08331510,Rio Grande,State Highway 346 Near Bosque,NM,100
-09504950,Verde River,Above Camp Verde,AZ,100
+02162035,Broad River,Columbia,SC,70
 09357000,San Juan River,Bloomfield,NM,100
 03364650,Clifty Creek,Columbus,IN,30
 02215000,Ocmulgee River,US 341 At Hawkinsville,GA,70
@@ -1362,11 +1515,8 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08049300,West Fork Trinity River,Greenbelt Road Fort Worth,TX,70
 11078000,Santa Ana River,Santa Ana,CA,30
 03290500,Kentucky River,Lock 2 At Lockport,KY,70
-02343805,Chattahoochee River,Mile 46 Near Columbia,GA,100
 04232730,Seneca River,Seneca Falls,NY,30
-02342881,Chattahoochee River,Spur 39 Near Omaha,GA,100
 01576767,Pequea Creek,Ronks,PA,30
-09364200,Animas River,Penny Lane Near Flora Vista,NM,100
 02298830,Myakka River,SR 72 Near Sarasota,FL,60
 01395000,Rahway River,Rahway,NJ,30
 08178800,Salado Creek,Loop 13 San Antonio,TX,30
@@ -1384,7 +1534,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03249500,Licking River,Farmers,KY,70
 02400680,Big Wills Creek,State Highway 35 Near Fort Payne,AL,30
 01206900,Naugatuck River,Thomaston,CT,30
-01472000,Schuylkill River,Pottstown,PA,30
 05470000,South Skunk River,Ames,IA,30
 06879100,Kansas River,Fort Riley,KS,70
 02045320,Nottoway River,Route 609 Near Mckenney,VA,60
@@ -1406,13 +1555,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01400500,Raritan River,Manville,NJ,30
 03131122,Rocky Fork,Lucas,OH,30
 11123500,Santa Ynez River,Below Los Laurls Canyon Near Snta Ynez,CA,30
-01468500,Schuylkill River,Landingville,PA,30
 08068000,West Fork San Jacinto River,Conroe,TX,30
 06887500,Kansas River,Wamego,KS,70
 02358700,Apalachicola River,"Blountstown,florida",FL,60
 08075900,Greens Bayou,US Highway 75 Near Houston,TX,30
 13181000,Owyhee River,Rome,OR,70
-01471510,Schuylkill River,Reading,PA,30
 02295637,Peace River,US 17 At Zolfo Springs,FL,60
 08155240,Barton Creek,Lost Creek Blvd Near Austin,TX,30
 03075590,Youghiogheny River,Swallow Falls Park,MD,100
@@ -1430,10 +1577,10 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05482300,North Raccoon River,Sac City,IA,30
 01350355,Schoharie Creek,Breakabeen,NY,60
 02111000,Yadkin River,Patterson,NC,30
-01363556,Esopus Creek,Lomontville,NY,70
 13139510,Big Wood River,Hailey Id Total Flow,ID,30
 03325519,Mississinewa River,Ridgeville,IN,30
 02294650,Peace River,SR 60 At Bartow,FL,30
+04155500,Pine River,Midland,MI,30
 05471500,South Skunk River,Oskaloosa,IA,30
 01470960,Tulpehocken Creek,Blue Marsh Damsite Near Reading,PA,30
 03282060,Kentucky River,Lock 13 Near Willow Shoals,KY,70
@@ -1465,6 +1612,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08018500,Sabine River,Mineola,TX,30
 03101500,Shenango River,Pymatuning Dam,PA,30
 03300400,Beech Fork,Maud,KY,30
+02382500,Coosawattee River,Carters,GA,30
 11254000,San Joaquin River,Mendota,CA,30
 02087324,Crabtree Creek,US 1 At Raleigh,NC,30
 01200500,Housatonic River,Gaylordsville,CT,70
@@ -1491,7 +1639,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04216418,Tonawanda Creek,Attica,NY,30
 06888350,Kansas River,Belvue,KS,70
 08017410,Sabine River,Wills Point,TX,30
-09508000,Verde River,Below East Verde River Near Childs,AZ,100
 08028500,Sabine River,Bon Wier,TX,85
 08068090,West Fork San Jacinto River,Above Lake Houston Near Porter,TX,30
 09354500,Los Pinos River,La Boca,CO,30
@@ -1499,15 +1646,14 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02336360,Nancy Creek,Rickenbacker Drive At Atlanta,GA,30
 01447680,Tunkhannock Creek,Long Pond,PA,30
 08013250,Calcasieu River,Oakdale,LA,85
+02145910,Catawba River,Below Lake Wylie Dam Fewell Island,SC,85
 02223382,Oconee River,Dublin,GA,85
 11173575,Alameda Creek,Below Welch Creek Near Sunol,CA,30
 11059300,Santa Ana River,East Saint Near San Bernardino,CA,30
 06935550,Missouri River,Labadie,MO,100
 02481880,Pearl River,Burnside,MS,30
 07311900,Wichita River,Seymour,TX,30
-06463720,Niobrara River,Mariaville,NE,100
 05471050,South Skunk River,Colfax,IA,30
-0136219503,Esopus Creek,Below Lost Clove Road At Big Indian,NY,85
 03286500,Kentucky River,Lock 7 At Highbridge,KY,70
 02488500,Pearl River,Monticello,MS,60
 05514860,Dardenne Creek,Old Town Saint Peters,MO,30
@@ -1527,6 +1673,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02486000,Pearl River,Jackson,MS,30
 14201340,Pudding River,Woodburn,OR,30
 01396190,South Branch Raritan River,Four Bridges,NJ,60
+01370520,Wallkill River,Phillipsburg,NY,60
 05426067,Bark River,Nagawicka Road At Delafield,WI,30
 05454500,Iowa River,Iowa City,IA,30
 10262000,Mojave River,Hodge,CA,30
@@ -1565,6 +1712,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05452500,Iowa River,Belle Plaine,IA,30
 08180640,Medina River,La Coste,TX,30
 05051500,Red River Of The North,Wahpeton,ND,30
+01097480,Sudbury River,Ashland,MA,30
 03287250,Kentucky River,Lock 5 Near Tyrone,KY,70
 01465200,Neshaminy Creek,Penns Park,PA,30
 03349210,Cicero Creek,Tipton,IN,30
@@ -1582,9 +1730,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04190000,Blanchard River,Dupont,OH,30
 05590520,Kaskaskia River,Below Ficklin,IL,30
 054041665,Baraboo River,Main Street At Reedsburg,WI,30
+03431790,Cumberland River,Ashland City,TN,70
 15514000,Chena River,Fairbanks,AK,30
 05455700,Iowa River,Lone Tree,IA,30
 13140335,Big Wood River,South Broadford Bridge Near Bellevue,ID,30
+01161280,Connecticut River,Northfield,MA,70
 01432110,Lackawaxen River,Rowland,PA,30
 02090504,Contentnea Creek,Black Creek,NC,30
 01548005,Bald Eagle Creek,Beech Creek Station,PA,30
@@ -1617,7 +1767,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 09328000,San Rafael River,Castle Dale Utah,UT,60
 08072300,Buffalo Bayou,Katy,TX,30
 10263000,Mojave River,Afton,CA,30
-01473500,Schuylkill River,Norristown,PA,30
 12026150,Skookumchuck River,Below Bldy Run Creek Near Centralia,WA,30
 03202300,Guyandotte River,Pineville,WV,30
 08020450,Sabine River,Above Longview,TX,30
@@ -1669,6 +1818,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06860000,Smoky Hill River,Elkader,KS,30
 06866000,Smoky Hill River,Lindsborg,KS,10
 08128030,South Concho River,Above Twin Buttes Reservoir Near San Angelo,TX,30
+04127917,Pine River,Rudyard,MI,30
 03286200,Dix River,Dix Dam Near Burgin,KY,30
 0817887350,Medina River,Patterson Road At Medina,TX,30
 06864500,Smoky Hill River,Ellsworth,KS,10
@@ -1736,6 +1886,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11261500,San Joaquin River,Fremont Ford Bridge,CA,10
 05406457,Black Earth Creek,Brewery Road At Cross Plains,WI,10
 07241800,North Canadian River,Shawnee,OK,10
+04137680,Pine River,Kings Corner Road Near Oscoda,MI,30
 021968385,Butler Creek,Below Butler Creek Rsvr At Fort Gordon,GA,10
 05465700,Iowa River,Oakville,IA,10
 04157060,Saginaw River,Midland Street At Bay City,MI,10
@@ -1755,7 +1906,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05061500,South Branch Buffalo River,Sabin,MN,100
 01546500,Spring Creek,Axemann,PA,100
 12079000,Deschutes River,Rainier,WA,100
-01411000,Great Egg Harbor River,Folsom,NJ,100
 01603000,North Branch Potomac River,Cumberland,MD,100
 01181000,West Branch Westfield River,Huntington,MA,100
 02053800,South Fork Roanoke River,Shawsville,VA,100
@@ -1763,11 +1913,9 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03528000,Clinch River,Above Tazewell,TN,100
 02134500,Lumber River,Boardman,NC,100
 03479000,Watauga River,Sugar Grove,NC,100
-01098530,Sudbury River,Saxonville,MA,100
 09070000,Eagle River,Below Gypsum,CO,100
 01411300,Tuckahoe River,Head Of River,NJ,100
 03456500,East Fork Pigeon River,Canton,NC,100
-10336610,Upper Truckee River,South Lake Tahoe,CA,100
 03456991,Pigeon River,Canton,NC,100
 01422500,Little Delaware River,Delhi,NY,100
 03455500,West Fork Pigeon River,Above Lake Logan Near Hazelwood,NC,100
@@ -1777,27 +1925,20 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11532500,Smith River,Crescent City,CA,100
 05391000,Wisconsin River @ Rainbow Lake,Lake Tomahawk,WI,100
 06208500,Clarks Fork Yellowstone River,Edgar,MT,100
-01158000,Ashuelot River,Below Surry Mount Dam Near Keene,NH,85
 03179000,Bluestone River,Pipestem,WV,100
 01440000,Flat Brook,Flatbrookville,NJ,100
-04293000,Missisquoi River,North Troy,VT,100
 04270200,Little Salmon River,Bombay,NY,100
-12358500,Middle Fork Flathead River,West Glacier,MT,100
-07143665,Little Arkansas River,Alta Mills,KS,100
 01428500,Delaware River,Above Lackawaxen River Near Barryville,NY,100
 13018750,Snake River,Below Flat Creek Near Jackson,WY,100
 04031000,Black River,Bessemer,MI,100
 10260500,Deep Creek,Hesperia,CA,90
-03539800,Obed River,Lancing,TN,100
 04273700,Salmon River,South Plattsburgh,NY,100
 07148400,Salt Fork Arkansas River,Alva,OK,100
 01096000,Squannacook River,West Groton,MA,90
 01479000,White Clay Creek,Newark,DE,90
 01117800,Wood River,Arcadia,RI,90
 01427510,Delaware River,Callicoon,PA,100
-01073500,Lamprey River,Newmarket,NH,90
 01427500,Callicoon Creek,Callicoon,NY,100
-04174500,Huron River,Ann Arbor,MI,85
 02217500,Middle Oconee River,Athens,GA,85
 08165300,North Fork Guadalupe River,Hunt,TX,100
 02032640,North Fork Rivanna River,Earlysville,VA,100
@@ -1809,11 +1950,8 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03436100,Red River,Port Royal,TN,85
 03266000,Stillwater River,Englewood,OH,85
 03364000,East Fork White River,Columbus,IN,85
-04164000,Clinton River,Fraser,MI,85
 04148500,Flint River,Flint,MI,85
 05550000,Fox River,Algonquin,IL,85
-03571000,Sequatchie River,Whitwell,TN,85
-01094000,Souhegan River,Merrimack,NH,85
 09188500,Green River,Warren Bridge Near Daniel,WY,100
 02032515,South Fork Rivanna River,Charlottesville,VA,100
 03272000,Twin Creek,Germantown,OH,85
@@ -1836,11 +1974,9 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11376550,Battle Creek,Below Coleman Fish Hatchery Near Cottonwood,CA,85
 03361500,Big Blue River,Shelbyville,IN,85
 02472500,Bouie Creek,Hattiesburg,MS,85
-09405500,North Fork Virgin River,Springdale,UT,100
 07186000,Spring River,Waco,MO,85
 03362500,Sugar Creek,Edinburgh,IN,85
 04199500,Vermilion River,Vermilion,OH,85
-02387000,Conasauga River,Tilton,GA,85
 14377100,Illinois River,Kerby,OR,100
 03230310,Little Darby Creek,West Jefferson,OH,90
 14147500,North Fork Of Middle Fork Willamette River,Oakridge,OR,90
@@ -1855,21 +1991,16 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03262000,Loramie Creek,Lockington,OH,85
 02074000,Smith River,Eden,NC,85
 12488500,American River,Nile,WA,100
-04125460,Pine River,High School Bridge Near Hoxeyville,MI,100
-01367500,Rondout Creek,Rosendale,NY,85
 05554500,Vermilion River,Pontiac,IL,85
 01634500,Cedar Creek,Winchester,VA,85
 02030000,Hardware River,Below Briery Run Near Scottsville,VA,85
 07332500,Blue River,Blue,OK,85
 05317000,Cottonwood River,New Ulm,MN,85
 09507980,East Verde River,Childs,AZ,100
-01371500,Wallkill River,Gardiner,NY,85
 11451000,Cache Creek,Lower Lake,CA,85
 03353600,Little Eagle Creek,Speedway,IN,75
-02312720,Withlacoochee River,Wysong Dam At Carlson,FL,85
 03309000,Green River,Mammoth Cave,KY,100
 05420500,Mississippi River,Clinton,IA,100
-01485000,Pocomoke River,Willards,MD,85
 01666500,Robinson River,Locust Dale,VA,85
 13094000,Snake River,Buhl,ID,100
 03539778,Clear Creek,Lilly Bridge Near Lancing,TN,100
@@ -1892,27 +2023,19 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 13310700,South Fork Salmon River,Krassel Ranger Station,ID,100
 03486000,Watauga River,Elizabethton,TN,100
 12141300,Middle Fork Snoqualmie River,Tanner,WA,85
-13239000,North Fork Payette River,Mccall,ID,85
-02490500,Bogue Chitto,Tylertown,MS,85
-02492000,Bogue Chitto River,Bush,LA,85
 01524500,Canisteo River,Below Canacadea Creek At Hornell,NY,85
 11465350,Dry Creek,Mouth Near Healdsburg,CA,85
 02245500,South Fork Black Creek,Penney Farms,FL,85
 04027500,White River,Ashland,WI,85
 11509500,Klamath River,Keno,OR,100
 09382000,Paria River,Lees Ferry,AZ,85
-04102500,Paw Paw River,Riverside,MI,85
 10309000,East Fork Carson River,Gardnerville,NV,85
 07189000,Elk River,Tiff City,MO,85
 01671100,Little River,Doswell,VA,85
 10308200,East Fork Carson River,Below Markleeville Creek Near Markleeville,CA,85
 14183000,North Santiam River,Mehama,OR,85
-04133501,Thunder Bay River,Herron Road Near Bolton,MI,85
-02153551,Broad River,Below Ninetynine Island Reservoir,SC,85
 02438000,Buttahatchee River,Below Hamilton,AL,85
 05476000,Des Moines River,Jackson,MN,85
-13019500,Hoback River,Jackson,WY,100
-07292500,Homochitto River,Rosetta,MS,85
 14182500,Little North Santiam River,Mehama,OR,85
 03379500,Little Wabash River,Below Clay City,IL,85
 07069500,Spring River,Imboden,AR,85
@@ -1927,14 +2050,12 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11383500,Deer Creek,Vina,CA,85
 03065000,Dry Fork,Hendricks,WV,85
 03303000,Blue River,White Cloud,IN,85
-02192000,Broad River,Bell,GA,85
 02439400,Buttahatchee River,Aberdeen,MS,85
 01479820,Red Clay Creek,Kennett Square,PA,90
 03410500,South Fork Cumberland River,Stearns,KY,85
 11097000,Big Tujunga Creek,Below Hansen Dam,CA,65
 07230000,Little River,Below Lake Thunderbird Near Norman,OK,65
 03612000,Cache River,Forman,IL,85
-02380500,Coosawattee River,Ellijay,GA,85
 01478245,White Clay Creek,Strickersville,PA,90
 04122200,White River,Whitehall,MI,85
 11463200,Big Sulphur Creek,Cloverdale,CA,85
@@ -1942,7 +2063,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08047500,Clear Fork Trinity River,Fort Worth,TX,70
 03196800,Elk River,Clay,WV,100
 03115400,Little Muskingum River,Bloomfield,OH,85
-03503000,Little Tennessee River,Needmore,NC,85
 06888500,Mill Creek,Paxico,KS,85
 11085000,San Gabriel River,Below Santa Fe Dam Near Baldwin Peak,CA,65
 14153500,Coast Fork Willamette River,Below Cottage Grove Dam,OR,70
@@ -1950,7 +2070,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04128990,Pigeon River,Vanderbilt,MI,85
 04197170,Rock Creek,Tiffin,OH,85
 01361000,Kinderhook Creek,Rossman,NY,85
-05419000,Apple River,Hanover,IL,85
 05327000,High Island Creek,Henderson,MN,85
 04101370,Judy Creek,South Bend,IN,85
 11102300,Rio Hondo,Below Whittier Narrows Dam,CA,65
@@ -1959,16 +2078,13 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05340500,Saint Croix River,Saint Croix Falls,WI,100
 03350700,Stony Creek,Noblesville,IN,75
 04106500,Portage Creek,Kalamazoo,MI,85
-14189000,Santiam River,Jefferson,OR,75
 01526500,Tioga River,Erwins,NY,85
 11463900,Maacama Creek,Kellogg,CA,85
 01483700,Saint Jones River,Dover,DE,75
 08062000,East Fork Trinity River,Crandall,TX,70
 03584600,Elk River,Prospect,TN,85
-12302055,Fisher River,Libby,MT,85
 01186500,Still River,Robertsville,CT,100
 05550300,Tyler Creek,Elgin,IL,85
-04025500,Bois Brule River,Brule,WI,100
 13011900,Buffalo Fork,Above Lava Creek Near Moran,WY,100
 01194500,East Branch Eightmile River,North Lyme,CT,100
 01029500,East Branch Penobscot River,Grindstone Maine,ME,100
@@ -1984,39 +2100,32 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06411500,Rapid Creek,Below Pactola Dam,SD,65
 11189500,South Fork Kern River,Onyx,CA,100
 14316700,Steamboat Creek,Glide,OR,100
-02382200,Talking Rock Creek,Hinton,GA,85
 09292500,Yellowstone River,Altonah,UT,100
 02322700,Ichetucknee River @ Hwy27,Hildreth,FL,100
 14142800,Beaver Creek,Troutdale,OR,100
-11143000,Big Sur River,Big Sur,CA,100
 10396000,Donner Und Blitzen River,Frenchglen,OR,100
 02140991,Johns River,Arneys Store,NC,85
 01608000,South Fork South Branch Potomac River,Moorefield,WV,100
 05317200,Little Cottonwood River,Courtland,MN,85
-01179500,Westfield River,Knightville,MA,100
 13296000,Yankee Fork Salmon River,Clayton,ID,100
 08285500,Rio Chama,Below El Vado Dam,NM,90
 04135700,South Branch Au Sable River,Luzerne,MI,100
 01081500,Merrimack River,Franklin Junction,NH,75
 12167000,North Fork Stillaguamish River,Arlington,WA,75
-05422000,Wapsipinicon River,De Witt,IA,75
 10265100,Deadman Creek,Big Springs Near Crestview,CA,100
 05435500,Pecatonica River,Freeport,IL,75
 13014500,Gros Ventre River,Kelly,WY,90
 01584500,Little Gunpowder Falls,Laurel Brook,MD,70
 01563200,Rays Branch Juniata River,Below Rays Dam Near Huntingdon,PA,70
-03469251,West Prong Little Pigeon River,Gatlinburg,TN,100
 11109800,Piru Creek,Below Santa Felicia Dam,CA,65
 02083000,Fishing Creek,Enfield,NC,75
 01586000,North Branch Patapsco River,Cedarhurst,MD,70
 09057500,Blue River,Below Green Mountain Reservoir,CO,70
-02146000,Catawba River,Rock Hill,SC,85
 11149400,Nacimiento River,Below Nacimiento Dam Near Bradley,CA,65
 08317200,Santa Fe River,Above Cochiti Lake,NM,100
 08127000,Elm Creek,Ballinger,TX,85
 02317500,Alapaha River,Statenville,GA,75
 05383075,La Crosse River,La Crosse,WI,85
-12431000,Little Spokane River,Dartford,WA,70
 02173500,North Fork Edisto River,Orangeburg,SC,75
 11519500,Scott River,Fort Jones,CA,90
 02235200,Blackwater Creek,Cassia,FL,100
@@ -2050,8 +2159,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01117350,Chipuxet River,West Kingston,RI,90
 13153500,Malad River,Bliss,ID,85
 01487000,Nanticoke River,Bridgeville,DE,75
-04064500,Pine River,Below Pine River Powerplant Near Florence,WI,65
-06764880,South Platte River,Roscoe,NE,100
 01591610,Patuxent River,Below Brighton Dam Near Brighton,MD,65
 01197000,East Branch Housatonic River,Coltsville,MA,70
 02173000,South Fork Edisto River,Denmark,SC,75
@@ -2096,7 +2203,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01480500,West Branch Brandywine Creek,Coatesville,PA,70
 06919500,Cedar Creek,Pleasant View,MO,75
 01359528,Normans Kill,Albany,NY,85
-04199000,Huron River,Milan,OH,70
 02088500,Little River,Princeton,NC,70
 05423500,South Branch Rock River,Waupun,WI,70
 04119160,Buck Creek,Wilson Avenue At Grandville,MI,85
@@ -2110,7 +2216,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03252500,South Fork Licking River,Cynthiana,KY,70
 07187600,Spring River,Baxter Springs,KS,85
 01481000,Brandywine Creek,Chadds Ford,PA,70
-02151500,Broad River,Boiling Springs,NC,70
 03361440,Little Blue River,Shelbyville,IN,85
 02175500,Salkehatchie River,Miley,SC,75
 12138160,Sultan River,Below Powerplant Near Sultan,WA,65
@@ -2376,9 +2481,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03141500,Seneca Fork,Below Senecaville Dam Near Senecaville,OH,65
 09505800,West Clear Creek,Camp Verde,AZ,60
 03130000,Black Fork,Below Charles Mill Dam Near Mifflin,OH,65
-0214244102,Catawba River,Below Lookout Shoals Dam Near Sharon,NC,65
 01154950,Cold River,High Street At Alstead,NH,75
-01154500,Connecticut River,North Walpole,NH,75
 05568800,Indian Creek,Wyoming,IL,60
 03128500,Little Stillwater Creek,Below Tappan Dam At Tappan,OH,65
 11381500,Mill Creek,Los Molinos,CA,60
@@ -2453,7 +2556,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01123600,Quinebaug River,Below Westville Dam Near Southbridge,MA,65
 03056250,Three Fork Creek,Grafton,WV,85
 03143500,Wills Creek,Below Wills Creek Dam At Wills Creek,OH,65
-02318500,Withlacoochee River,US 84 Near Quitman,GA,60
 08254000,Costilla Creek,Below Costilla Dam,NM,65
 02041000,Deep Creek,Mannboro,VA,60
 06048650,East Gallatin River,Above Water Reclamation Fa Near Bozeman,MT,70
@@ -2471,7 +2573,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05536162,Plum Creek,Crete,IL,85
 02270000,Carter Creek,Sebring,FL,60
 02173212,Cedar Creek,Thor,SC,75
-01170500,Connecticut River,Montague City,MA,70
 07195400,Illinois River,Highway 16 Near Siloam Springs,AR,70
 14163000,Gate Creek,Vida,OR,85
 08447020,Independence Creek,Sheffield,TX,85
@@ -2529,7 +2630,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 14194150,South Yamhill River,Mcminnville,OR,60
 01379780,Green Pond Brook,Below Picatinny Lake At Picatinny Ars,NJ,65
 02217770,North Oconee River,College Saint At Athens,GA,60
-03435000,Cumberland River,Below Cheatham Dam,TN,70
 09447800,Bonita Creek,Morenci,AZ,60
 12456500,Chiwawa River,Plain,WA,75
 14231900,Cispus River,Above Yellowjacket Creek Near Randle,WA,85
@@ -2574,7 +2674,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 14158798,Smith River,Above Trail Brdg Resv Near Belknap Springs,OR,90
 11151870,Arroyo Seco,Greenfield,CA,60
 09424450,Big Sandy River,Wikieup,AZ,70
-01138500,Connecticut River,Wells River,VT,70
 01545000,Kettle Creek,Westport,PA,70
 10316500,Lamoille Creek,Lamoille,NV,70
 01057000,Little Androscoggin River,South Paris Maine,ME,70
@@ -2696,7 +2795,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04174518,Malletts Creek,Ann Arbor,MI,85
 01649500,Northeast Branch Anacostia River,Riverdale,MD,30
 01374581,West Branch Croton River,Below Dam Near Kent Cliffs,NY,65
-02491800,Bogue Chitto,Enon,LA,85
 11467553,North Fork Gualala River,Above South Fork Gualala River Near Gualala,CA,75
 14209250,Oak Grove Fork,Ripplebrook Campground,OR,100
 07290650,Bayou Pierre,Willows,MS,60
@@ -5505,30 +5603,23 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02344350,Flint River,Lovejoy,GA,100
 05061000,Buffalo River,Hawley,MN,100
 03456100,West Fork Pigeon River,Bethel,NC,100
-12324200,Clark Fork,Deer Lodge,MT,100
 02133624,Lumber River,Maxton,NC,100
 02019500,James River,Buchanan,VA,100
 11516530,Klamath River,Below Iron Gate Dam,CA,100
 05200510,Mississippi River,Bemidji,MN,100
-04172000,Huron River,Hamburg,MI,85
 03270000,Mad River,Dayton,OH,85
 04096405,Saint Joseph River,Burlington,MI,85
-04137500,Au Sable River,Au Sable,MI,100
 09217000,Green River,Green River,WY,100
 01118000,Wood River,Hope Valley,RI,90
-02310947,Withlacoochee River,Cumpressco,FL,85
-06721000,South Platte River,Fort Lupton,CO,100
 09085100,Colorado River,Below Glenwood Springs,CO,100
 02081500,Tar River,Tar River,NC,85
 03361000,Big Blue River,Carthage,IN,85
 07151000,Salt Fork Arkansas River,Tonkawa,OK,100
 06309000,Yellowstone River,Miles City,MT,100
 05555300,Vermilion River,Leonore,IL,85
-03404500,Cumberland River,Cumberland Falls,KY,85
 03305000,Green River,Mckinney,KY,100
 07363500,Saline River,Rye,AR,85
 03184500,New River,Hinton,WV,100
-01365000,Rondout Creek,Lowes Corners,NY,85
 14359000,Rogue River,Raygold Near Central Point,OR,100
 04150500,Cass River,Cass City,MI,85
 14339000,Rogue River,Dodge Bridge Near Eagle Point,OR,100
@@ -5536,7 +5627,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01547100,Spring Creek,Milesburg,PA,100
 13050500,Henrys Fork,Saint Anthony,ID,100
 01525500,Canisteo River,West Cameron,NY,85
-04293500,Missisquoi River,East Berkshire,VT,100
 05333500,Saint Croix River,Danbury,WI,100
 13296500,Salmon River,Below Yankee Fork Near Clayton,ID,100
 07056000,Buffalo River,Saint Joe,AR,100
@@ -5548,7 +5638,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02322500,Santa Fe River,Fort White,FL,100
 03165500,New River,Ivanhoe,VA,100
 05382325,La Crosse River,Sparta,WI,85
-05421000,Wapsipinicon River,Independence,IA,75
 07048600,White River,Fayetteville,AR,70
 10311000,Carson River,Carson City,NV,70
 03460795,Pigeon River,Below Power Plant Near Waterville,NC,100
@@ -5556,15 +5645,12 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 13046000,Henrys Fork,Ashton,ID,100
 01092000,Merrimack River,Goffs Falls Below Manchester,NH,85
 01595500,North Branch Potomac River,Kitzmiller,MD,100
-07144100,Little Arkansas River,Sedgwick,KS,100
-03500000,Little Tennessee River,Prentiss,NC,75
 03282500,Red River,Hazel Green,KY,100
 02316000,Alapaha River,Alapaha,GA,75
 03582000,Elk River,Above Fayetteville,TN,85
 06207500,Clarks Fork Yellowstone River,Belfry,MT,100
 07063000,Black River,Poplar Bluff,MO,70
 02347500,Flint River,US 19 Near Carsonville,GA,100
-07291000,Homochitto River,Eddiceton,MS,85
 03596000,Duck River,Below Manchester,TN,70
 03497300,Little River,Above Townsend,TN,70
 02016500,James River,Lick Run,VA,100
@@ -5573,17 +5659,13 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02346180,Flint River,Thomaston,GA,100
 07332390,Blue River,Connerville,OK,85
 07166500,Verdigris River,Altoona,KS,70
-04165500,Clinton River,Moravian Drive At Mount Clemens,MI,85
 09064600,Eagle River,Minturn,CO,100
 11475800,South Fork Eel River,Leggett,CA,90
 04111000,Grand River,Eaton Rapids,MI,85
 02352500,Flint River,Albany,GA,100
 04147500,Flint River,Otisville,MI,85
 03216350,Little Sandy River,Below Grayson Dam Near Leon,KY,70
-12353000,Clark Fork,Below Missoula,MT,100
-103366092,Upper Truckee River,Highway 50 Above Meyers,CA,100
 04149000,Flint River,Fosters,MI,85
-01410820,Great Egg Harbor River,Blue Anchor,NJ,100
 13013650,Snake River,Moose,WY,100
 03604400,Buffalo River,Below Lobelville,TN,100
 03365500,East Fork White River,Seymour,IN,85
@@ -5595,7 +5677,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08050400,Elm Fork Trinity River,Gainesville,TX,70
 04116000,Grand River,Ionia,MI,85
 04252500,Black River,Boonville,NY,85
-13246000,North Fork Payette River,Banks,ID,85
 03265000,Stillwater River,Pleasant Hill,OH,85
 05378500,Mississippi River,Winona,MN,100
 02344396,Flint River,Woolsey Road Near Woolsey,GA,100
@@ -5603,30 +5684,24 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 04097500,Saint Joseph River,Three Rivers,MI,85
 02356000,Flint River,Bainbridge,GA,100
 08287000,Rio Chama,Below Abiquiu Dam,NM,75
-01157000,Ashuelot River,Gilsum,NH,85
 01090800,Piscataquog River,Below Everett Dam Near East Weare,NH,85
 02344872,Flint River,Below Big Branch Near Molena,GA,100
 09315000,Green River,Green River,UT,100
 05211000,Mississippi River,Grand Rapids,MN,100
-01161000,Ashuelot River,Hinsdale,NH,85
 13090500,Snake River,Twin Falls,ID,100
 13037500,Snake River,Heise,ID,100
 01451400,Spring Creek,Trexlertown,PA,100
 01434000,Delaware River,Port Jervis,PA,100
-02312500,Withlacoochee River,Croom,FL,85
 14092500,Deschutes River,Madras,OR,100
 04114000,Grand River,Portland,MI,85
 09211200,Green River,Below Fontenelle Reservoir,WY,100
 03170000,Little River,Graysontown,VA,60
 01031500,Piscataquis River,Dover-Foxcroft Maine,ME,75
-02313000,Withlacoochee River,SR 200 Near Holder,FL,85
 13269000,Snake River,Weiser,ID,100
 10344400,Little Truckee River,Above Boca Reservoir Near Truckee,CA,100
 05267000,Mississippi River,Royalton,MN,100
 13069500,Snake River,Blackfoot,ID,100
 13038500,Snake River,Lorenzo,ID,100
-02156500,Broad River,Carlisle,SC,85
-03538830,Obed River,Adams Bridge Near Crossville,TN,100
 06329500,Yellowstone River,Sidney,MT,100
 08045850,Clear Fork Trinity River,Weatherford,TX,70
 09070500,Colorado River,Dotsero,CO,100
@@ -5641,14 +5716,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05427085,Rock River,Fort Atkinson,WI,70
 02478500,Chickasawhay River,Leakesville,MS,60
 06209500,Rock Creek,Red Lodge,MT,75
-06710247,South Platte River,"Below Union Avenue At Englewood,c",CO,100
-02313230,Withlacoochee River,Inglis Dam Near Dunnellon,FL,85
 02353000,Flint River,Newton,GA,100
 05383950,Root River,Pilot Mound,MN,75
 05569500,Spoon River,London Mills,IL,60
 02321898,Santa Fe River,O'leno State Park,FL,100
 13081500,Snake River,Minidoka Id At Howells Ferry,ID,100
-02311500,Withlacoochee River,Dade City,FL,85
 02047500,Blackwater River,Dendron,VA,60
 05270700,Mississippi River,Saint Cloud,MN,100
 09502000,Salt River,Below Stewart Mountain Dam,AZ,100
@@ -5658,12 +5730,10 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03320000,Green River,Lock 2 At Calhoun,KY,100
 03348000,White River,Anderson,IN,75
 03146402,North Fork Licking River,East Main Saint At Newark,OH,70
-02312000,Withlacoochee River,US 301 At Trilby,FL,85
 09169500,Dolores River,Bedrock,CO,85
 13135000,Snake River,Below Lower Salmon Falls Near Hagerman,ID,100
 09058000,Colorado River,Kremmling,CO,100
 09019500,Colorado River,Granby,CO,100
-03404000,Cumberland River,Williamsburg,KY,85
 03197000,Elk River,Queen Shoals,WV,100
 03194700,Elk River,Below Webster Springs,WV,100
 13042500,Henrys Fork,Island Park,ID,100
@@ -5679,22 +5749,17 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 09095500,Colorado River,Cameo,CO,100
 01581810,Gunpowder Falls,Hoffmanville,MD,70
 05587450,Mississippi River,Grafton,IL,100
-02138520,Catawba River,Sr1223 Below Lake James Near Bridgewater,NC,65
 13213100,Snake River,Nyssa,ID,100
-02312600,Withlacoochee River,Floral City,FL,85
 06892513,Mill Creek,Johnson Drive Shawnee,KS,85
 02232500,Saint Johns River,Christmas,FL,75
 14309000,Cow Creek,Azalea,OR,60
 07289350,Big Black River,West,MS,60
 14076500,Deschutes River,Culver,OR,100
 04282500,Otter Creek,Middlebury,VT,60
-023177483,Withlacoochee River,"Skipper Bridge Rd,nr Bemiss",GA,60
 02152474,First Broad River,Lawndale,NC,70
 0210166029,Rocky River,Sr1300 Near Crutchfield Crossroads,NC,85
 07074500,White River,Newport,AR,70
 05242300,Mississippi River,Brainerd,MN,100
-06759500,South Platte River,Fort Morgan,CO,100
-02191300,Broad River,Above Carlton,GA,85
 04119000,Grand River,Grand Rapids,MI,85
 03308500,Green River,Munfordville,KY,100
 09015000,Colorado River,Below Shadow Mountain Reservoir,CO,100
@@ -5703,7 +5768,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03347000,White River,Muncie,IN,70
 05542500,Illinois River,Morris,IL,85
 03357000,White River,Spencer,IN,75
-01160350,Ashuelot River,West Swanzey,NH,85
 14150000,Middle Fork Willamette River,Dexter,OR,70
 03277300,North Fork Kentucky River,Whitesburg,KY,70
 02011400,Jackson River,Bacova,VA,60
@@ -5730,21 +5794,16 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07196500,Illinois River,Tahlequah,OK,70
 14337600,Rogue River,Mcleod,OR,100
 08059000,East Fork Trinity River,McKinney,TX,70
-02312762,Withlacoochee River,Inverness,FL,85
 07221500,Canadian River,Sanchez,NM,75
 05344490,Saint Croix River,Prescott,WI,100
 02354800,Ichawaynochaway Creek,Elmodel,GA,85
-01073319,Lamprey River,Langford Road At Raymond,NH,60
 01480617,West Branch Brandywine Creek,Modena,PA,70
-01410784,Great Egg Harbor River,Sicklerville,NJ,100
 14165500,Mckenzie River,Coburg,OR,70
 13068500,Blackfoot River,Blackfoot,ID,70
 05369500,Chippewa River,Durand,WI,85
 08136700,Colorado River,Stacy,TX,85
 07069305,Spring River,Spring Street Bridge At Hardy,AR,85
 03336000,Wabash River,Covington,IN,85
-02312598,Withlacoochee River,Pineola,FL,85
-02312558,Withlacoochee River,Nobleton,FL,85
 04057510,Sturgeon River,Nahma Junction,MI,90
 02218900,Apalachee River,Snows Mill Road Near Bishop,GA,85
 09429600,Colorado River,Below Laguna Dam Az-ca,CA,100
@@ -5753,17 +5812,12 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02208150,Alcovy River,New Hope Road Near Grayson,GA,60
 09050700,Blue River,Below Dillon,CO,70
 02403310,Choccolocco Creek,Boiling Spring Alabama,AL,60
-12331800,Clark Fork,Drummond,MT,100
 11475000,Eel River,Fort Seward,CA,90
 05446500,Rock River,Joslin,IL,85
 11530000,Trinity River,Hoopa,CA,90
 11525500,Trinity River,Lewiston,CA,90
-02312300,Withlacoochee River,Rital,FL,85
-12324680,Clark Fork,Goldcreek,MT,100
-03403500,Cumberland River,Barbourville,KY,70
 03598000,Duck River,Shelbyville,TN,70
 07301500,North Fork Red River,Carter,OK,70
-06700000,South Platte River,Above Cheesman Lake,CO,100
 13063000,Blackfoot River,Above Reservoir Near Henry,ID,75
 09046600,Blue River,Dillon,CO,70
 01029100,East Branch Penobscot River,Below Grand Lake Matagamon,ME,100
@@ -5780,13 +5834,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02193500,Little River,Washington,GA,70
 02134170,Lumber River,Lumberton,NC,100
 03348130,White River,Raible Avenue At Anderson,IN,75
-01158110,Ashuelot River,Above The Branch At Keene,NH,85
 04154512,Chippewa River,South Homer Road Near Midland,MI,85
 14148000,Middle Fork Willamette River,Below North Fork Near Oakridge,OR,70
 05355250,Mississippi River,Red Wing,MN,100
 02203518,Canoochee River,Bridge 38 At Fort Stewart,GA,60
 02355662,Flint River,Riverview Plantation Near Hopeful,GA,100
-07143672,Little Arkansas River,Highway 50 Near Halstead,KS,100
 08401500,Pecos River,Below Brantley Dam Near Carlsbad,NM,70
 0208524975,Little River,Below Little River Tributary At Fairntosh,NC,70
 13093383,Snake River,Pigeon Cove Near Twin Falls,ID,100
@@ -5802,14 +5854,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01548500,Pine Creek,Cedar Run,PA,70
 07301110,Salt Fork Red River,Elmer,OK,70
 13090000,Snake River,Kimberly,ID,100
-12323800,Clark Fork,Galen,MT,100
 09067020,Eagle River,Below Wastewater Treatment Plant At Avon,CO,100
 02303330,Hillsborough River,Morris Branch Near Thonotosassa,FL,60
 02173051,South Fork Edisto River,Bamberg,SC,75
 01053500,Androscoggin River,Errol,NH,85
-04161000,Clinton River,Auburn Hills,MI,85
 14162500,Mckenzie River,Vida,OR,85
-13245000,North Fork Payette River,Cascade,ID,85
 0208521324,Little River,Sr1461 Near Orange Factory,NC,70
 07128500,Purgatoire River,Las Animas,CO,75
 05531500,Salt Creek,Western Springs,IL,30
@@ -5819,15 +5868,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01427207,Delaware River,Lordville,PA,100
 03269500,Mad River,Springfield,OH,85
 13153776,Snake River,Below Bliss Dam Near Bliss,ID,100
-06711565,South Platte River,Englewood,CO,100
 07332307,Blue River,Franks,OK,85
 11109600,Piru Creek,Above Lake Piru,CA,60
 07185700,Spring River,La Russell,MO,70
 01580520,Deer Creek,Darlington,MD,75
 03197950,Elk River,Charleston,WV,100
-07144200,Little Arkansas River,Valley Center,KS,100
-12389000,Clark Fork,Plains,MT,100
-12354500,Clark Fork,Saint Regis,MT,100
 09402500,Colorado River,Grand Canyon,AZ,100
 09163500,Colorado River,Colorado-utah State Line,CO,100
 09261000,Green River,Jensen,UT,100
@@ -5842,12 +5887,9 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 09406000,Virgin River,Virgin,UT,60
 03431700,Richland Creek,Charlotte Avenue At Nashville,TN,30
 05055400,Sheyenne River,Below Devils Lake State Outlet Near Bremen,ND,65
-01368050,Wallkill River,Oil City Road Near Unionville,NY,60
 05475350,Des Moines River,Above Windom,MN,85
 02239000,Ocklawaha River,"Ocala,fla",FL,60
 09046490,Blue River,Blue River,CO,70
-02161000,Broad River,Alston,SC,85
-02147020,Catawba River,Below Catawba,SC,85
 09185600,Colorado River,Potash,UT,100
 03351350,White River,16th Street At Indianapolis,IN,75
 0208250410,Tar River,Below Dam Near Langley Crossroads,NC,65
@@ -5865,15 +5907,10 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03603000,Duck River,Above Hurricane Mills,TN,70
 04065722,Menominee River,Vulcan,MI,70
 11482500,Redwood Creek,Orick,CA,60
-05420680,Wapsipinicon River,Tripoli,IA,75
-01104200,Charles River,Wellesley,MA,30
 04166100,River Rouge,Southfield,MI,30
-06714215,South Platte River,64th Avenue Commerce City,CO,100
-05421740,Wapsipinicon River,Anamosa,IA,75
 09228000,Henrys Fork,Burntfork,WY,100
 01472157,French Creek,Phoenixville,PA,60
 09109000,Taylor River,Below Taylor Park Reservoir,CO,70
-12357500,Middle Fork Flathead River,West Glacier,MT,100
 09060799,Colorado River,Catamount Bridge,CO,100
 01085000,Contoocook River,Henniker,NH,85
 01438500,Delaware River,Montague,PA,100
@@ -5888,7 +5925,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 12143400,South Fork Snoqualmie River,Above Alice Creek Near Garcia,WA,60
 03349000,White River,Noblesville,IN,75
 07062500,Black River,Leeper,MO,70
-02153200,Broad River,Blacksburg,SC,70
 01381500,Whippany River,Morristown,NJ,30
 07031650,Wolf River,Germantown,TN,30
 06295000,Yellowstone River,Forsyth,MT,100
@@ -5900,7 +5936,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02243960,Ocklawaha River,Rodman Dam Near Orange Springs,FL,60
 02264495,Shingle Creek,Campbell,FL,30
 02419890,Tallapoosa River,Mont.-mont Water Works,AL,60
-02313200,Withlacoochee River,US 41 At Dunnellon,FL,85
 08047000,Clear Fork Trinity River,Benbrook,TX,70
 07047942,LAnguille River,Colt,AR,60
 05080000,Red Lake River,Fisher,MN,85
@@ -5911,8 +5946,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05424057,Rock River,Horicon,WI,70
 14335072,Rogue River,Cole Middle Rivers Fork Hatchery Near Mcleod,OR,100
 09471550,San Pedro River,Tombstone,AZ,60
-12334550,Clark Fork,Turah Bridge Near Bonner,MT,100
-12324400,Clark Fork,Above Little Blackfoot River Near Garrison,MT,100
 03255500,Mill Creek,Reading,OH,30
 03145173,South Fork Licking River,Heath,OH,70
 05539900,West Branch Du Page River,West Chicago,IL,30
@@ -5929,7 +5962,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05427530,Rock River,Newville,WI,70
 03144816,South Fork Licking River,Kirkersville,OH,70
 04066800,Menominee River,Koss,MI,85
-04161820,Clinton River,Sterling Heights,MI,85
 02088383,Little River,Zebulon,NC,70
 11162630,Pilarcitos Creek,Half Moon Bay,CA,30
 05536215,Thorn Creek,Glenwood,IL,30
@@ -5951,25 +5983,18 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08395500,Pecos River,Lake Arthur,NM,70
 04087240,Root River,Racine,WI,30
 05439000,South Branch Kishwaukee River,Dekalb,IL,30
-01183500,Westfield River,Westfield,MA,30
 01047200,Sandy River,Madrid Maine,ME,70
-02319000,Withlacoochee River,Pinetta,FL,60
 06670500,Laramie River,Fort Laramie,WY,70
 02232400,Saint Johns River,Cocoa,FL,75
 06803555,Salt Creek,Greenwood,NE,30
 11526250,Trinity River,Junction City,CA,90
 02011500,Back Creek,Mountain Grove,VA,60
-021564493,Broad River,Below Neal Shoals Reservoir Near Carlisle,SC,85
-01144500,Connecticut River,West Lebanon,NH,70
 08053000,Elm Fork Trinity River,Lewisville,TX,70
 01581920,Gunpowder Falls,Parkton,MD,70
 07338750,Mountain Fork,Smithville,OK,85
 05580950,Sugar Creek,Bloomington,IL,30
 11526400,Trinity River,Above North Fork Trinity River Near Helena,CA,90
 09489500,Black River,Below Pumping Plant Near Point Of Pines,AZ,75
-02137727,Catawba River,Pleasant Gardens,NC,60
-01129500,Connecticut River,North Stratford,NH,75
-01129200,Connecticut River,Below Indian Stream Near Pittsburg,NH,75
 08252500,Costilla Creek,Above Costilla Dam,NM,75
 08061750,East Fork Trinity River,Forney,TX,70
 09430500,Gila River,Gila,NM,75
@@ -6006,7 +6031,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01648010,Rock Creek,Joyce Road Washington,DC,60
 08315480,Santa Fe River,Above Mcclure Reservoir Near Santa Fe,NM,100
 02197830,Brier Creek,Waynesboro,GA,60
-03402900,Cumberland River,Pine Saint Branch At Pineville,KY,70
 01151500,Ottauquechee River,North Hartland,VT,30
 01125500,Quinebaug River,Putnam,CT,30
 0208758850,Swift Creek,Mccullars Crossroads,NC,30
@@ -6039,7 +6063,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 11379500,Elder Creek,Paskenta,CA,30
 05432500,Pecatonica River,Darlington,WI,30
 05316500,Redwood River,Redwood Falls,MN,30
-02383500,Coosawattee River,Pine Chapel,GA,30
 02324500,Fenholloway River,Foley,FL,30
 14166500,Long Tom River,Noti,OR,30
 01347000,Mohawk River,Little Falls,NY,30
@@ -6051,12 +6074,10 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08173000,Plum Creek,Luling,TX,30
 02361500,Choctawhatchee River,Bellwood,AL,60
 03373500,East Fork White River,Shoals,IN,70
-04294000,Missisquoi River,Swanton,VT,60
 07289730,Big Black River,Bentonia,MS,60
 07207000,Cimarron River,Cimarron,NM,70
 08084000,Clear Fork Brazos River,Nugent,TX,70
 08083100,Clear Fork Brazos River,Roby,TX,70
-01131500,Connecticut River,Dalton,NH,70
 09165000,Dolores River,Below Rico,CO,70
 12329500,Flint Creek,Maxville,MT,70
 05525000,Iroquois River,Iroquois,IL,30
@@ -6080,13 +6101,11 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03036000,Mahoning Creek,Mahoning Creek Dam,PA,30
 09019000,Colorado River,Below Lake Granby,CO,100
 14087380,Crooked River,Below Osborne Canyon Near Opal City,OR,100
-03431500,Cumberland River,Nashville,TN,70
 01123360,Quinebaug River,Below East Brimfield Dam At Fiskdale,MA,65
 05107500,Roseau River,Ross,MN,30
 04224775,Canaseraga Creek,Above Dansville,NY,30
 04150800,Cass River,Wahjamega,MI,85
 11528100,South Fork Trinity River,Forest Glen,CA,90
-04136000,Au Sable River,Red Oak,MI,100
 07325800,Cobb Creek,Eakly,OK,30
 06890100,Delaware River,Muscotah,KS,30
 12404500,Kettle River,Laurier,WA,85
@@ -6104,7 +6123,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07055646,Buffalo River,Boxley,AR,100
 07076750,White River,Georgetown,AR,70
 01480700,East Branch Brandywine Creek,Downingtown,PA,70
-04174040,Huron River,Zeeb Road At Scio,MI,85
 07363054,Saline River,Shaw,AR,85
 16701800,Wailuku River,Kaumana,HI,85
 06893390,Indian Creek,State Line Road Leawood,KS,30
@@ -6118,7 +6136,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02433500,Tombigbee River,Bigbee,MS,30
 09413200,Virgin River,Bloomington,UT,60
 10311400,Carson River,Deer Run Road Near Carson City,NV,70
-04137005,Au Sable River,Curtisville,MI,100
 13310800,Efsf Salmon River,Above Meadow Creek Near Stibnite,ID,100
 01457500,Delaware River,Riegelsville,NJ,100
 07160350,Skeleton Creek,Enid,OK,30
@@ -6128,8 +6145,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08067000,Trinity River,Liberty,TX,70
 09442000,Gila River,Clifton,AZ,85
 08382650,Pecos River,Above Santa Rosa Lake,NM,70
-12431500,Little Spokane River,Dartford,WA,70
-02319394,Withlacoochee River,Lee,FL,60
 08446500,Pecos River,Girvin,TX,70
 08407500,Pecos River,Red Bluff,NM,70
 08382600,Pecos River,Above Canon Del Uta Near Colonias,NM,70
@@ -6137,7 +6152,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03340500,Wabash River,Montezuma,IN,85
 06610793,West Papillion Creek,Papillion,NE,30
 07056700,Buffalo River,Harriet,AR,100
-03401000,Cumberland River,Harlan,KY,70
 09259700,Little Snake River,Below Dry Gulch Near Baggs,WY,100
 09183600,Mill Creek,Below Sheley Tunnel Near Moab,UT,60
 09314250,Price River,Below Miller Creek Near Wellington,UT,85
@@ -6156,10 +6170,7 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 07037500,Saint Francis River,Patterson,MO,85
 11152500,Salinas River,Spreckels,CA,30
 02423800,Little Cahaba River,Brierfield,AL,85
-02317755,Withlacoochee River,US 41 Near Valdosta,GA,60
-01172010,Connecticut River,I-391 Bridge At Holyoke,MA,70
 07069220,Spring River,Mammoth Spring,AR,85
-02162035,Broad River,Columbia,SC,70
 01518862,Cowanesque River,Westfield,PA,30
 10133800,East Canyon Creek,Jeremy Ranch,UT,30
 05437500,Rock River,Rockton,IL,75
@@ -6365,7 +6376,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08048970,Village Creek,Everman,TX,30
 03146277,North Fork Licking River,Newark,OH,70
 09504500,Oak Creek,Cornville,AZ,30
-04155500,Pine River,Midland,MI,30
 04180500,Saint Joseph River,Fort Wayne,IN,30
 06869500,Saline River,Tescott,KS,30
 11156500,San Benito River,Willow Creek School,CA,30
@@ -6434,7 +6444,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 03474000,Middle Fork Holston River,Seven Mile Ford,VA,30
 08183500,San Antonio River,Falls City,TX,30
 07165750,Verdigris River,Virgil,KS,70
-02382500,Coosawattee River,Carters,GA,30
 03212500,Levisa Fork,Paintsville,KY,30
 07338500,Little River,Below Lukfata Creek Near Idabel,OK,30
 02329600,Little River,Midway,FL,30
@@ -6514,7 +6523,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 05551330,Mill Creek,Batavia,IL,30
 02479130,Black Creek,Brooklyn,MS,30
 05551675,Blackberry Creek,Montgomery,IL,30
-02145910,Catawba River,Below Lake Wylie Dam Fewell Island,SC,85
 07307028,North Fork Red River,Tipton,OK,70
 08129300,Spring Creek,Above Tankersley,TX,30
 06914950,Big Bull Creek,Edgerton,KS,30
@@ -6563,7 +6571,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 10319900,South Fork Humboldt River,Above Tenmile Creek Near Elko,NV,30
 11152050,Arroyo Seco,Below Reliz Creek Near Soledad,CA,30
 02335757,Big Creek,Below Hog Wallow Creek At Roswell,GA,30
-01103280,Charles River,Medway,MA,30
 06893820,Little Blue River,Lees Summit Road In Independence,MO,30
 06796000,Platte River,North Bend,NE,70
 03535200,Beaver Creek,Powell,TN,30
@@ -6587,7 +6594,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 08178000,San Antonio River,San Antonio,TX,30
 05435950,Sugar River,Verona,WI,30
 02055100,Tinker Creek,Daleville,VA,10
-01370520,Wallkill River,Phillipsburg,NY,60
 03022540,Woodcock Creek,Blooming Valley,PA,30
 06887000,Big Blue River,Manhattan,KS,10
 05592575,Hickory Creek,Brownstown,IL,30
@@ -6675,7 +6681,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 02238500,Ocklawaha River,Moss Bluff,FL,30
 02203800,South River,Bouldercrest Road At Atlanta,GA,30
 08406000,Black River,Malaga,NM,30
-01103500,Charles River,Dover,MA,30
 07157740,Cimarron River,Buttermilk,KS,70
 03351500,Fall Creek,Fortville,IN,30
 07105800,Fountain Creek,Security,CO,30
@@ -6727,7 +6732,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06799445,Logan Creek,Wakefield,NE,30
 02266500,Reedy Creek,Loughman,FL,30
 04015438,Saint Louis River,Skibo,MN,30
-01097480,Sudbury River,Ashland,MA,30
 05588000,Indian Creek,Wanda,IL,30
 02097464,Morgan Creek,White Cross,NC,10
 01343403,Black Creek,Gray,NY,30
@@ -6773,7 +6777,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 01451380,Little Lehigh Creek,Trexlertown,PA,30
 02094659,South Buffalo Creek,Pomona,NC,10
 12021800,Chehalis River,Adna,WA,30
-03431790,Cumberland River,Ashland City,TN,70
 10133650,East Canyon Creek,Below I-80 Rest Stop Near Park City,UT,30
 12323850,Lost Creek,Galen,MT,30
 021623950,North Saluda River,Highland,SC,70
@@ -6785,7 +6788,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06730500,Boulder Creek,Mouth Near Longmont,CO,30
 07106510,Fountain Creek,8th Street At Pueblo,CO,30
 06428500,Belle Fourche River,Wy-sd State Line,SD,30
-01161280,Connecticut River,Northfield,MA,70
 08385522,Pecos River,Below Taiban Creek Near Fort Sumner,NM,70
 04087234,Root River,60th Saint Near Caledonia,WI,30
 08156675,Shoal Creek,Silverway Drive Austin,TX,10
@@ -7124,7 +7126,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 09520500,Gila River,Dome,AZ,10
 09134100,North Fork Gunnison River,Below Paonia,CO,70
 04249000,Oswego River,Lock 7 Oswego,NY,10
-04127917,Pine River,Rudyard,MI,30
 06856600,Republican River,Clay Center,KS,10
 11401920,Spanish Creek,Quincy,CA,30
 03351710,Fall Creek,79th Saint At Indianapolis,IN,30
@@ -7398,7 +7399,6 @@ CDEC-SHA,Shasta Lake,Shasta Dam,CA,lake
 06719845,Little Dry Creek,Below Federal Blvd At Westminster,CO,10
 01374781,Titicus River,Below June Road At Salem Center,NY,10
 10102250,Bear River,Smithfield,UT,10
-04137680,Pine River,Kings Corner Road Near Oscoda,MI,30
 01374559,West Branch Croton River,Richardsville,NY,10
 06466400,Bazile Creek,Center,NE,10
 04072076,Silver Creek,Florist Drive At Oneida,WI,10
