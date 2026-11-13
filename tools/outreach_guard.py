@@ -59,7 +59,32 @@ def selftest():
     assert not clashes({"org_name": "Sue Guide", "email": "sue@gmail.com", "website": ""}, k), "a free-mail domain blocked a different person"
     assert clashes({"org_name": "Bob", "email": "BOB@gmail.com", "website": ""}, k), "same free-mail address not caught"
     assert not clashes({"org_name": "New", "email": "a@notsent.com", "website": "https://notsent.com"}, k), "an org never sent to was blocked"
+    lg_ = [dict(log[2])]  # 2026-11-13: names piped from Windows ended in \r and nothing was recorded while the tool said "recorded 27"
+    assert stamp(lg_, [{"org_name": "Not Sent Yet", "email": "a@notsent.com"}, {"org_name": "Brand New", "email": "b@new.com"}], {norm("not sent yet\r"), norm("Brand New")}, "2026-11-13") == {"not sent yet", "brand new"}, "a name with a Windows line end was not recorded"
+    assert len(lg_) == 2 and lg_[0]["sent_on"] == "2026-11-13" and lg_[0]["email_sha"] == sha("a@notsent.com"), "an unsent row was duplicated instead of stamped"
+    assert clashes({"org_name": "x", "email": "A@notsent.com", "website": ""}, sent_keys(lg_)), "a just-recorded address can be emailed again"
     print("outreach_guard selftest OK")
+
+
+def norm(s):
+    return " ".join((s or "").lower().split())
+
+
+def stamp(log, drafts, names, today):
+    """Marks the named drafts as sent in log (rows of data/outreach.csv): an unsent row of the same org is stamped, else a row is added. Returns the names stamped."""
+    done = set()
+    for d in drafts:
+        if norm(d["org_name"]) in names and "@" in (d.get("email") or ""):
+            why = clashes(d, sent_keys(log))
+            assert not why, "%s already contacted: %s" % (d["org_name"], why)
+            row = next((r for r in log if norm(r["org_name"]) == norm(d["org_name"]) and not r.get("sent_on")), None)
+            if row is None:
+                row = {"lake": d.get("water", ""), "org_name": d["org_name"], "type": d.get("type", ""), "website": d.get("website", ""), "contact_page_url": d.get("form_url", ""),
+                       "why_they_would_embed": d.get("why", "")[:200], "evidence_url": d.get("email_evidence_url", ""), "found_on": today}
+                log.append(row)
+            row.update({"sent_on": today, "sent_via": "email %s@" % d["email"].split("@")[0][:3], "email_sha": sha(d["email"])})
+            done.add(norm(d["org_name"]))
+    return done
 
 
 def main(a):
@@ -68,18 +93,14 @@ def main(a):
     log = list(csv.DictReader(open(LOG, encoding="utf-8")))
     drafts = list(csv.DictReader(open(a[-1] if a[0] != "--record" else a[1], encoding="utf-8")))
     if a[0] == "--record":
-        names, today = set(a[2:]), datetime.date.today().isoformat()
+        names, today = {norm(n) for n in a[2:]}, datetime.date.today().isoformat()  # trimmed and case-blind: a name piped from Windows ends in \r
         cols = list(log[0].keys()) + (["email_sha"] if "email_sha" not in log[0] else [])
-        for d in drafts:
-            if d["org_name"] in names:
-                why = clashes(d, sent_keys(log))
-                assert not why, "%s already contacted: %s" % (d["org_name"], why)
-                log.append({"lake": d.get("water", ""), "org_name": d["org_name"], "type": d.get("type", ""), "website": d.get("website", ""), "contact_page_url": d.get("form_url", ""),
-                            "why_they_would_embed": d.get("why", "")[:200], "evidence_url": d.get("email_evidence_url", ""), "found_on": today, "sent_on": today,
-                            "sent_via": "email %s@" % d["email"].split("@")[0][:3], "email_sha": sha(d["email"])})
+        done = stamp(log, drafts, names, today)
         w = csv.DictWriter(open(LOG, "w", encoding="utf-8", newline=""), fieldnames=cols, extrasaction="ignore")
         w.writeheader(); w.writerows(log)
-        return print("recorded", len(names))
+        miss = names - done
+        print("recorded %d" % len(done) + ("; NOT FOUND in the drafts: %s" % sorted(miss) if miss else ""))
+        return sys.exit(1 if miss else 0)
     keys, bad = sent_keys(log), 0
     for d in drafts:
         why = clashes(d, keys)
