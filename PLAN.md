@@ -39,7 +39,26 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 - Outreach: hold until the nofollow embed is LIVE (it is what the emails offer).
 
 ## Next steps
-14. WAITING 2026-11-13 (cloud run 43353308859 building it; then read /research/ live). CODE ON CHECK 2026-11-12. Research pages (owner 2026-11-12: original posts like slabcalc's research, 'max info gain'): /research/ index, /research/peak-month/ (the month each river's yearly high most often falls in), /research/peak-change/ (median yearly peak, last 20 water years against the 20 before), all from the USGS annual peaks every gauge page already carries (lib/research.py, build.py, footer link). No new fetch. Helpful: a reader finds their river's high-water season and whether its floods changed / Gain: no agency page puts these side by side for these gauges / HCU: our own research, method and limits stated, nothing written to fill space.
+15. CODE ON CHECK 2026-11-12 (tests pass; read live after the cloud run). Three more research pages (owner 2026-11-12 'push out all the research papers nobody else has'), each from data its gauge pages already show, same rules as those blocks (lib/research.py):
+   (a) /research/100-year-floods/: USGS StreamStats 1% annual-chance flow against the annual peaks AFTER the years USGS used to compute it (out of sample), observed count vs the count the 1% chance implies. Helpful: people near a river learn what '100-year flood' really means there / Gain: agencies publish the flow, not how often it was passed since / HCU: own calculation, method and limits stated.
+   (b) /research/flood-stage-years/: share of years whose peak stage reached NWS minor flood stage, only where b_stage_years shows it (same datum check, same qualifier filter). Helpful: how often this river floods its banks / Gain: one table across rivers, nowhere else / HCU: same.
+   (c) /research/water-temperature/: typical July and January water temperature per gauge (USGS monthly means as the gauge page shows), with the cold-water bands the pages already quote. Helpful: swimmers, paddlers and trout anglers pick water / Gain: no list across rivers exists / HCU: same.
+   Edge cases (each with its test in tools/edge_tests.py):
+   - (a) StreamStats record range missing or unreadable: no 'after' window; gauge left out; test: range None.
+   - (a) no years after the range (stats computed on the newest data): gauge left out, not counted as zero; test.
+   - (a) StreamStats conflict flag (two statistic groups disagree): left out, as on the gauge page; test.
+   - (a) regulated gauge: counted apart and named, since dams change peaks; test: regulated split in the lead.
+   - (a) the 1% row missing (only other probabilities published): gauge left out; test.
+   - (a) reader takes '100-year' as a schedule: lead says it is a 1% chance each year; test: text present.
+   - (b) USGS and NWS stage on different datums: gauge left out (datum_gap, stage_pair, as on the page); test: datum gap fixture.
+   - (b) qualified peak stages (other datum, backwater): left out, same filter as b_stage_years; test: qualified row ignored.
+   - (b) no NWS minor flood stage: left out; test.
+   - (b) under 10 years of peak stages: left out; test.
+   - (c) month with fewer than 150 daily values: not used, as '(few)' on the page; test.
+   - (c) malformed month value: left out, never the gauge; test.
+   - (c) sensor retired decades ago: last year shown in the table; test: years column present.
+   - all: lakes, coasts, unbuilt pages and duplicate gauges left out (research.gauges); under 10 gauges = no page, published copy carried (build.py uses research.URLS); same data any day = same page; tables capped at ROW_CAP with a line; tests: shared fixtures above.
+14. CODE ON CHECK 2026-11-12; cloud run 43353308859 failed the two pages on the link budget (226 links, trust max 60: every gauge was a link); fixed: full tables name gauges without links, short highlight tables link (test: every research page at 70 gauges has 60 links or fewer). Read live after the next cloud run. Research pages (owner 2026-11-12: original posts like slabcalc's research, 'max info gain'): /research/ index, /research/peak-month/ (the month each river's yearly high most often falls in), /research/peak-change/ (median yearly peak, last 20 water years against the 20 before), all from the USGS annual peaks every gauge page already carries (lib/research.py, build.py, footer link). No new fetch. Helpful: a reader finds their river's high-water season and whether its floods changed / Gain: no agency page puts these side by side for these gauges / HCU: our own research, method and limits stated, nothing written to fill space.
    Edge cases, written before the fix (each: how it breaks today, at 14,000 gauges, the test in tools/edge_tests.py):
    - Input, date with an unknown month or day (USGS writes 00): fromisoformat crashes the page; any gauge with an old peak; test: a 1950-00-00 row is skipped.
    - Input, peak with no flow, zero or negative (stage-only peak): divide by zero in the change; test: None and 0 flows skipped.

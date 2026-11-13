@@ -745,16 +745,23 @@ def b_wpc(G):
     return out_b
 
 
-def b_stage_years(G):
-    """Years whose annual peak stage reached each NWS flood category. Shown only when USGS and NWS stages are on the same datum (datum_gap finds no gap between two comparable readings) and the NWS publishes flood stages."""
+def stage_years(G):
+    """(peak rows with a usable stage, NWS flood categories, nwps record), or None: the one rule for the gauge page block and /research/flood-stage-years/."""
     n = G["rec"].get("nwps") or {}
     p = G["rec"].get("peaks")
     cats = n.get("categories") or {}
     if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and "minor" in cats and stage_pair(G)) or datum_gap(G):
         return None
     rows = [r for r in p["rows"] if r[2] is not None and (not r[3] or r[3].replace(" ", "") == "['ESTIMATED']")] if all(len(r) > 3 for r in p["rows"]) else []  # any other USGS qualifier (different datum, backwater, not the annual maximum) can misstate the peak stage
-    if len(rows) < 10:
+    return (rows, cats, n) if len(rows) >= 10 else None
+
+
+def b_stage_years(G):
+    """Years whose annual peak stage reached each NWS flood category. Shown only when USGS and NWS stages are on the same datum (datum_gap finds no gap between two comparable readings) and the NWS publishes flood stages."""
+    got = stage_years(G)
+    if not got:
         return None
+    rows, cats, n = got
     out = ""
     for k in ("minor", "moderate", "major"):
         if k in cats:
