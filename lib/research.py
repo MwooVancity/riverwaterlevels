@@ -33,6 +33,7 @@ SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on
 SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have their own reading and a page on this site. They are not every US station, "
                "so the results describe these stations only.</p>")
 CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
+METHOD = "2026-11-12b"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
 
 
 def _wy(y, m):
@@ -195,7 +196,7 @@ def _csv(head, rows):
     w = csv.writer(b, lineterminator="\n")
     w.writerow(head)
     for r in rows:
-        w.writerow([("'" + c) if isinstance(c, str) and c[:1] in "=+-@" else c for c in r])
+        w.writerow([("'" + c) if isinstance(c, str) and c and c[0] in "=+-@" else c for c in r])  # an empty cell stays empty
     return b.getvalue()
 
 
@@ -222,8 +223,8 @@ def _page(title, slug, desc, body, sub, data=None, unk=None, sample=None):
             extra += '<p class="src">USGS codes this page does not yet sort: %s. Those peaks are counted as USGS published them.</p>' % ", ".join("%s (%d peaks)" % (esc(k), v) for k, v in sorted(unk.items()))
         if data:
             extra += '<p><a href="data.csv">Download the data for every gauge (CSV)</a>, one row per gauge with its source fetch time, for checking or reuse with a link back.</p>'
-    return url, shell(title + " | " + BRAND, desc, url, '<div class="crumb">%s</div><div class="prose"><h1>%s</h1><p class="sub">%s</p>%s%s</div>' % (
-        vis, esc(title), sub, body, extra), ld=crumb_ld(crumbs)), data
+    return url, shell(title + " | " + BRAND, desc, url, '<div class="crumb">%s</div><div class="prose" data-method="%s"><h1>%s</h1><p class="sub">%s</p>%s%s</div>' % (
+        vis, METHOD, esc(title), sub, body, extra), ld=crumb_ld(crumbs)), data
 
 
 def _months(ms):

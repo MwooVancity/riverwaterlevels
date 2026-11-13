@@ -131,7 +131,8 @@ def run():
     assert research.mwu_p([5.0] * 20, [5.0] * 20) == 1.0 and research.mwu_p(list(range(20)), list(range(100, 120))) < 0.001 and 0.1 < research.mwu_p([1.0, 3.0, 5.0, 7.0] * 5, [2.0, 4.0, 6.0, 8.0] * 5) <= 1.0 and abs(research.mwu_p([1, 2, 3, 4, 5], [6, 7, 8, 9, 10]) - 0.0122) < 0.0005, "edge: Mann-Whitney wrong on ties, separation or overlap"
     assert abs(research.poisson_tail(3, 1.0) - 0.0803) < 0.001 and abs(research.poisson_tail(0, 2.0) - 0.1353) < 0.001 and 0 <= research.poisson_tail(400, 300.0) < 0.001, "edge: Poisson tail wrong or underflows at 300"
     assert "usgs_site,river,place,state,page" in rc["/research/peak-change/"] and "mann_whitney_p" in rc["/research/peak-change/"] and 'href="data.csv"' in pc_, "edge: CSV header or download link missing"
-    assert research._csv(["a"], [["=SUM(A1)"], [-3], ["-x"]]) == "a\n'=SUM(A1)\n-3\n'-x\n", "edge: CSV formula cell not neutralised, or a negative number changed"
+    assert research._csv(["a", "b"], [["=SUM(A1)", ""], [-3, "x"], ["-x", ""]]) == "a,b\n'=SUM(A1),\n-3,x\n'-x,\n", "edge: CSV formula cell not neutralised, a negative number changed, or an empty cell got an apostrophe (live 100-year CSV, 2026-11-12)"
+    assert 'data-method="%s"' % research.METHOD in pm, "edge: research page lacks its method mark, so build.py could never carry it (and could carry an old-method copy)"
     assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == (rp, rc), "edge: same data on another day gave a different page (fresh date without change)"
     assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == ({}, {}) and research.pages([], {}) == ({}, {}), "edge: research published from under 10 gauges, or empty cache crashed"
     same = [(r, research._peaks(rG[r["site"]]), rG[r["site"]]) for r in rb[:12] if int(r["site"][1:]) % 2 == 0] * 2
