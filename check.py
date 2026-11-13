@@ -279,7 +279,7 @@ def check_html(h, rel):
         if 'data-method="' in body and not research_title_ok(h, "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]):
             bad.append("research: the title carries no Keyword Planner-measured seed for this page (data/research-keywords.csv)")
     if not title_promise_ok(h, body):
-        bad.append("title names the NWS forecast but the page has no river forecast section (PLAN 25a)")
+        bad.append("title names the NWS forecast or a tide chart the page does not show (PLAN 25a, 25c)")
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -437,7 +437,8 @@ _SEEDS = None
 def title_promise_ok(h, body):
     """PLAN 25a: 'NWS forecast' in the title only while the page carries the river forecast section (a gate or carry dropping the block breaks the promise)."""
     m = re.search(r"<title>(.*?)</title>", h, re.S)
-    return "NWS forecast" not in (m.group(1) if m else "") or 'id="river_forecast"' in body
+    t = m.group(1) if m else ""
+    return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tide chart" not in t or "last 7 days and NOAA" in body)  # the chart label only; the hero caption also says predicted tide
 
 
 def research_title_ok(h, url):
@@ -1165,7 +1166,8 @@ def selftest():
         assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
         assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
         _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
-        assert not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
+        _c = "<title>X tides: tide chart, tide times and water level, CA</title>"
+        assert not title_promise_ok(_c, "<p>NOAA&#x27;s predicted tide of 2 ft</p>") and title_promise_ok(_c, "<svg aria-label=\"Water level in feet over the last 7 days and NOAA&#x27;s predicted tide\">") and not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
     finally:
         dr_.publisher = pub_
     from lib import pages as pg_
