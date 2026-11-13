@@ -20,9 +20,21 @@ def load(root):
         cfg["held"] = tuple("/%s/" % w["slug"] for w in json.load(open(os.path.join(root, "data", "world-pages.json"), encoding="utf-8")) if w.get("hold"))
     except (OSError, ValueError, KeyError, TypeError):
         cfg["held"] = ()
+    cfg["research_ok"] = research_reviewed(root)
     if os.environ.get("RWL_NOINDEX"):  # preview builds (preview.yml): every page noindex
         cfg["open"] = False
     return cfg
+
+
+def research_reviewed(root):
+    """PLAN 22 lock 1: research pages whose current method version passed a fresh peer review (data/reviewed.json "research": {url: method}).
+    METHOD is read from lib/research.py's text (no import: indexing stays light). A torn file or no METHOD = none (fail closed)."""
+    try:
+        m = re.search(r'^METHOD = "([^"]+)"', open(os.path.join(root, "lib", "research.py"), encoding="utf-8").read(), re.M)
+        rv = json.load(open(os.path.join(root, "data", "reviewed.json"), encoding="utf-8")).get("research") or {}
+        return {u for u, v in rv.items() if m and v == m.group(1)}
+    except (OSError, ValueError, AttributeError):
+        return set()
 
 
 def indexable(url, cfg):
@@ -34,8 +46,8 @@ def indexable(url, cfg):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
-    if url.startswith("/research/"):  # PLAN 20: research pages entered Google as site pages without open_wave or the new-layout test; now only when open_wave allows them
-        return url in cfg["allow"]
+    if url.startswith("/research/"):  # PLAN 20: only when open_wave allows them; PLAN 22: and only when a fresh peer review passed this exact method version
+        return url in cfg["allow"] and url in (cfg.get("research_ok") or ())
     return bool(cfg["site_pages"])
 
 

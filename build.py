@@ -248,9 +248,14 @@ def main():
                 emit("/%s/" % page["slug"], wp.replace("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page.").replace("-0.00 m", "0.00 m"))
         try:  # research pages (owner 2026-11-12, PLAN 14): a fault or an empty cache carries the published copies (never a 404) and is named in the failed list
             wr_ = research.world_rivers(wpages, wkeep, wnow)  # PLAN 18c
+            if wr_ and research.verify(*wr_):  # PLAN 22 lock 2
+                report["failed"].append({"site": "research", "reason": "dropped: " + "; ".join(research.verify(*wr_)), "url": wr_[0]})
+                wr_ = None
             (rp, rcsv), why_r = research.pages(built, Gs, world=bool(wr_) or bool(prev_page(research.WORLD_URL))), "too few gauges with usable annual peaks (an old cache row waits for its weekly refresh)"
         except Exception as e:
             wr_, rp, rcsv, why_r = None, {}, {}, "%s: %s" % (type(e).__name__, str(e)[:100])
+        for u_, why_ in research.FAILED:
+            report["failed"].append({"site": "research", "reason": "dropped, its CSV does not reproduce its headline: " + why_, "url": u_})
         if wr_:
             rp[wr_[0]], rcsv[wr_[0]] = wr_[1], wr_[2]
         for url in [u for u in research.URLS + (research.WORLD_URL,) if u not in rp]:  # one finding short of gauges keeps its old copy too

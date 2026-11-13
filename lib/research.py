@@ -608,6 +608,78 @@ def world_rivers(wpages, wkeep, now):
                  "Agency river levels in %s, for the gauges on this site; newest reading %s UTC. These labels change as the agencies publish; cite them with that date and time." % (", ".join(COUNTRY[f] for f in cs), utc_day(times[-1])), data, sample=sample)
 
 
+def _lead(html):
+    m = re.search(r"<p>(?:<[^>]+>)*?<b>(.*?)</b>", html.split('class="prose"', 1)[-1], re.S)
+    return re.sub(r"<[^>]+>", "", m.group(1)) if m else ""
+
+
+def _num(s):
+    return float(s.replace(",", ""))
+
+
+def verify(url, html, data):
+    """PLAN 22 lock 2: the page's headline numbers recomputed from its own published CSV. [] when they match; else what differs (build.py then drops the page).
+    Each finding is checked from the CSV alone, the way an outside reader would check it."""
+    if not data:
+        return [] if url == "/research/" else ["no CSV"]
+    rows = list(csv.DictReader(io.StringIO(data)))
+    lead, bad = _lead(html), []
+    T = lambda v: str(v).strip().lower() == "true"
+    if url.endswith("/peak-month/"):
+        nat = [r for r in rows if not T(r["regulated"])]
+        c = collections.Counter(r["peak_month_most_often"] for r in nat if " and " not in r["peak_month_most_often"])
+        m = re.search(r"comes in (\w+): at (\d+) of (\d+) gauges", lead)
+        if not m or c.most_common(1)[0] != (m.group(1), int(m.group(2))) or len(nat) != int(m.group(3)):
+            bad.append("peak month lead %r against CSV %s of %d" % (m and m.group(0), c.most_common(1), len(nat)))
+    elif url.endswith("/peak-change/"):
+        nat = [r for r in rows if not T(r["regulated"])]
+        up = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) > 0)
+        dn = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) < 0)
+        k = bh_count([float(r["mann_whitney_p"]) for r in nat])
+        m = re.search(r"(\d+) tested higher and (\d+) lower", html) or re.search(r"before it, (\d+) tested higher and (\d+) lower", html)
+        g = re.search(r"Across (\d+) gauges|of (\d+) gauges, yearly peaks", lead)
+        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != ("no more change" in lead):
+            bad.append("peak change counts on the page differ from the CSV (up %d, down %d, gauges %d, corrected %d)" % (up, dn, len(nat), k))
+    elif url.endswith("/100-year-floods/"):
+        nat = [r for r in rows if not T(r["regulated"])]
+        hit, yrs = sum(len(r["years_reached"].split()) for r in nat), sum(int(r["water_years_counted"]) for r in nat)
+        m = re.search(r"At (\d+) US river gauges.*?reached in (\d+) of (\d+) gauge-years", lead)
+        if not m or (int(m.group(1)), int(m.group(2)), int(m.group(3))) != (len(nat), hit, yrs):
+            bad.append("100-year lead %r against CSV %d gauges, %d of %d" % (m and m.group(0), len(nat), hit, yrs))
+    elif url.endswith("/flood-stage-years/"):
+        sh = [100 * int(r["water_years_peak_reached_it"]) / int(r["water_years_with_peak_stage"]) for r in rows]
+        m = re.search(r"in (\d+)% of years", lead)
+        if not m or int(m.group(1)) != round(statistics.median(sh)):
+            bad.append("flood stage lead %r against CSV median %.0f%%" % (m and m.group(0), statistics.median(sh)))
+    elif url.endswith("/water-temperature/"):
+        m = re.search(r"averages (\d+)", lead)
+        jul = [float(r["mean_f_july"]) for r in rows if r["mean_f_july"]]
+        if not m or int(m.group(1)) != round(statistics.median(jul)):
+            bad.append("water temperature lead %r against CSV July median %.1f" % (m and m.group(0), statistics.median(jul)))
+    elif url.endswith("/lake-levels/"):
+        by = collections.defaultdict(list)
+        for r in rows:
+            by[r["usgs_site"]].append(T(r["below_full_mark"]))
+        m = re.search(r"(\d+) of (\d+) US lakes", lead)
+        if not m or (int(m.group(1)), int(m.group(2))) != (sum(1 for v in by.values() if all(v)), len(by)):
+            bad.append("lake lead %r against CSV" % (m and m.group(0)))
+    elif url.endswith("/tides/"):
+        m = re.search(r"Across (\d+) NOAA stations", html)
+        if not m or int(m.group(1)) != len(rows):
+            bad.append("tide station count against CSV %d" % len(rows))
+    elif url.endswith("/world-rivers/"):
+        lab = [r["label"] for r in rows if r["label"] in ("low", "normal", "high")]
+        m = re.search(r"(\d+) of (\d+) labelled gauges.*?read low and (\d+) read high", lead)
+        if not m or (int(m.group(1)), int(m.group(2)), int(m.group(3))) != (lab.count("low"), len(lab), lab.count("high")):
+            bad.append("world lead %r against CSV" % (m and m.group(0)))
+    else:
+        bad.append("no reproducibility check for %s: a new research page needs one" % url)
+    return bad
+
+
+FAILED = []  # [(url, why)] from the last pages() call: pages dropped because their CSV did not reproduce their headline (build.py names them on the dashboard)
+
+
 def pages(built, Gs, today=None, world=False):
     """({url: html}, {url: csv text}): the research index and every finding with enough data; ({}, {}) when none has (build.py then carries the published copies)."""
     today = today or datetime.date.today()
@@ -616,6 +688,12 @@ def pages(built, Gs, today=None, world=False):
     wys = [max(p) for _, p, _ in gl if p]
     sub = "USGS annual peaks through water year %d at most gauges, for the US river gauges on this site." % statistics.median_low(wys) if wys else "USGS annual peaks, for the US river gauges on this site."  # review #10: the typical newest year, not the newest at any one gauge
     got = [x for x in ((peak_month(gl, sub, unk), peak_change(gl, today, sub, unk), hundred_year(gl, unk), flood_stage(gl), water_temp(gl)) if gl else ()) + (lake_levels(built, Gs), tides(built, Gs)) if x]
+    FAILED.clear()
+    for x in list(got):  # PLAN 22 lock 2: a page whose headline its own CSV does not reproduce is never published
+        why = verify(*x)
+        if why:
+            FAILED.append((x[0], "; ".join(why)))
+            got.remove(x)
     if not got:
         return {}, {}
     items = "".join('<li><a href="%s">%s</a></li>' % (u, esc(h.split("<title>")[1].split(" | ")[0])) for u, h, _ in got)

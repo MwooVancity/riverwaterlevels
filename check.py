@@ -275,7 +275,7 @@ def check_html(h, rel):
             bad.append("structured data is not valid JSON")
     bad += google_rules(h, body)
     if "/research/" in rel.replace("\\", "/") or 'data-method="' in body:
-        bad += research_sanity(body)
+        bad += research_sanity(body) + research_gate(body, rel)
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -422,6 +422,31 @@ GOOGLE = {
     "factual errors": "truth_tests, truth_live, truth_world",
     "spelling and sloppiness": "doubled word, BANNED, ui_checks",
 }
+
+
+RESEARCH_BANNED = (r"\bproves?\b", r"\bcaused by\b", r"\bbecause of climate\b", r"\bclimate change\b", r"\bdangerous\b", r"\bsafe\b", r"\bunsafe\b", r"\bguarantee")
+
+
+def research_gate(body, rel):
+    """PLAN 22 locks 3 and 4: a research finding carries every part a reviewer needs and no claim stronger than its test. The index page needs the lead only.
+    A recalculation notice (no data-method) is not a finding and is not judged here."""
+    if 'data-method="' not in body:
+        return []
+    t = re.sub(r"<[^>]+>", " ", body)
+    bad = []
+    is_index = rel.replace("\\", "/").rstrip("/").endswith("research/index.html") or rel.replace("\\", "/") in ("research/index.html",)
+    if not is_index:
+        for need, why in (("<p><b>", "a bold lead finding"), ("<b>Sample:</b>", "the Sample paragraph"), ("How this was worked out", "the method section"), ('href="data.csv"', "the CSV link")):
+            if need not in body:
+                bad.append("research: missing %s" % why)
+        if "more than chance" in t and "correction" not in t:
+            bad.append("research: 'more than chance' without the multiple-testing correction")
+        for m in re.finditer(r"\bsignificant\b", t):
+            if not re.search(r"\bp\b|p &lt;|p <|Mann-Whitney|test", t[max(0, m.start() - 200): m.end() + 200]):
+                bad.append("research: 'significant' with no test named near it")
+                break
+    bad += ["research: claim word %r" % re.search(p, t, re.I).group(0) for p in RESEARCH_BANNED if re.search(p, t, re.I)]
+    return bad[:5]
 
 
 def research_sanity(body):
@@ -1094,6 +1119,11 @@ def selftest():
         dr_.publisher = lambda: {}
         assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
         assert research_sanity("<p>At <b>90 of 87</b> gauges</p>") and research_sanity("<p>-3 gauges</p>") and not research_sanity("<p>at 33 of 105 gauges, 5 of 720 gauge-years, a -0.5 ft gap</p>"), "selftest: research sanity missed 'X of Y' over the whole or a negative count, or fired on good text"
+        _good = '<div data-method="x"><p><b>Lead.</b></p><b>Sample:</b> s <h2>How this was worked out</h2> Mann-Whitney test, statistically significant at p &lt; 0.05 <a href="data.csv">csv</a></div>'
+        assert not research_gate(_good, "research/tides/index.html"), "selftest: research gate failed a complete page: %s" % research_gate(_good, "research/tides/index.html")
+        assert research_gate(_good.replace("<b>Sample:</b>", ""), "research/tides/index.html") and research_gate(_good.replace("Lead.", "This proves floods are worse."), "research/tides/index.html") and research_gate(_good + "<p>the river is safe</p>", "research/tides/index.html"), "selftest: research gate passed a missing Sample, 'proves' or 'safe'"
+        assert research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> a significant rise</div>', "research/x/index.html") and research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> more than chance</div>', "research/x/index.html"), "selftest: 'significant' with no test, or 'more than chance' with no correction, passed"
+        assert not research_gate("<h1>This finding is being recalculated</h1>", "research/x/index.html"), "selftest: the recalculation notice was judged as a finding"
         import tempfile as _tf
         from lib.research import METHOD as _M
         _sd = _tf.mkdtemp()

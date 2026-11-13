@@ -259,6 +259,17 @@ def run():
     assert not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", wr[1]), "PLAN 18c: a raw machine timestamp on the world page (check.py BANNED held it, run 43357129006)"
     assert research.world_rivers(wp_[:1], {"rhine": {"A0", "A1"}}, nw_) is None, "PLAN 18c: a world page built from 2 labelled gauges"
     assert 'href="/research/world-rivers/"' not in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/"] and 'href="/research/world-rivers/"' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=True)[0]["/research/"], "the research index links a world page that was not built"
+    # PLAN 22 lock 2: every headline reproduced from its own CSV; a doctored CSV drops the page
+    for u_, h_ in list(bp.items()):
+        if u_ != "/research/":
+            assert research.verify(u_, h_, bc[u_]) == [], "22: %s does not reproduce from its own CSV: %s" % (u_, research.verify(u_, h_, bc[u_]))
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    import check as _ck
+    for u_, h_ in bp.items():
+        assert not _ck.research_gate(h_, u_.strip("/") + "/index.html") and not _ck.research_sanity(h_), "22: the gate fails a real research page (false alarm): %s %s" % (u_, _ck.research_gate(h_, u_.strip("/") + "/index.html") + _ck.research_sanity(h_))
+    lines_ = bc["/research/100-year-floods/"].splitlines()
+    assert research.verify("/research/100-year-floods/", bp["/research/100-year-floods/"], "\n".join(lines_[:-3])), "22: a CSV missing rows still reproduced the 100-year headline"
+    assert research.verify("/research/new-thing/", "<p><b>x</b></p>", "a\n1\n"), "22: a research page with no reproducibility check passed"
     # PLAN 21 harm audit: chance-level counts never called more than chance; licence credit in every CSV; cite-with-date line on snapshot pages; CSVs noindex
     nul = [({"site": "n%d" % i, "state": "GA", "river": "N%d" % i, "place": "T", "dashboard_url": "/river/n%d/t/" % i, "_built": True}) for i in range(40)]
     import random as _rnd
@@ -856,9 +867,17 @@ def probe(warn, square, pages):
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
     # PLAN 20: gate gaps (research outside open_wave; new block types without a review)
     from lib import indexing as _ix, page as _pgx
-    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/"}, "pulled": set(), "held": ()}
+    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/", "/research/tides/"}, "pulled": set(), "held": (), "research_ok": {"/research/peak-month/"}}  # tides allowed but not reviewed at this version
     assert not _ix.indexable("/research/", cfg_) and not _ix.indexable("/research/tides/", cfg_) and _ix.indexable("/research/peak-month/", cfg_) and _ix.indexable("/about/", cfg_), "20: research pages indexable without open_wave, or a site page lost"
     assert not _ix.sitemap_ok("/research/tides/", cfg_), "20: a research page not opened is in the sitemap"
+    # PLAN 22 lock 1: review of the exact method version
+    td2 = tempfile.mkdtemp()
+    os.makedirs(os.path.join(td2, "lib")); os.makedirs(os.path.join(td2, "data"))
+    open(os.path.join(td2, "lib", "research.py"), "w").write('METHOD = "v2"\n')
+    json.dump({"research": {"/research/a/": "v2", "/research/b/": "v1"}}, open(os.path.join(td2, "data", "reviewed.json"), "w"))
+    assert _ix.research_reviewed(td2) == {"/research/a/"}, "22: a page reviewed at an older method version counted as reviewed"
+    open(os.path.join(td2, "data", "reviewed.json"), "w").write("{torn")
+    assert _ix.research_reviewed(td2) == set(), "22: a torn reviewed.json opened research pages (must fail closed)"
     rb_, rv_ = _pgx.reviewed_blocks, os.environ.pop("RWL_REVIEW", None)
     try:
         _pgx.reviewed_blocks = lambda: frozenset({"water_speed"})
