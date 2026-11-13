@@ -275,7 +275,7 @@ def tab_blocks(tab, G, pages):
                 [b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [
                 "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
-                "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), None if coast else b3.b_tides(G),
+                "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), b3.b_speed(G), None if coast else b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:River forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_like_today(G), "AD",
                 "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b3.b_stocking(G), b3.b_dam(G),

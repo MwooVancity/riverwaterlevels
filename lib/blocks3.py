@@ -415,6 +415,37 @@ def b_depth(G):
                  "Source: USGS Water Data API channel measurements (hydrographer site visits within a mile of the gauge; the main channel of each visit), fetched %s. Average depth = area &divide; width, our math." % esc(tzl(parse_t(G["rec"]["fieldmeas"]["fetched_at"]), G["zone"])), "usgs")
 
 
+SPEED_NEAR, SPEED_MIN, SPEED_YEARS = 0.25, 3, 20  # visits within 25% of today's flow; at least 3; none older than 20 years (the channel moves)
+
+
+def _hm(mins):
+    m = int(round(mins))
+    return "%d min" % m if m < 60 else "%d h %02d min" % (m // 60, m % 60)
+
+
+def b_speed(G):
+    """How fast the water moves here at flows like today's (owner 2026-11-12, PLAN 19a): USGS hydrographers' measured mean velocity on visits within a mile
+    of the gauge at flows within 25% of the latest reading; the float times are our arithmetic from that range. Not a trip time."""
+    c = (G["rec"].get("fieldmeas") or {}).get("chan") or []
+    lv = G.get("lv")
+    if not c or not lv or lv <= 0 or G.get("offline") or G.get("osc") or G.get("tidal") or G.get("lake") or G.get("coast") or G.get("stage_only"):
+        return None
+    cut = (G["ldate"] - datetime.timedelta(days=365 * SPEED_YEARS)).isoformat()
+    near = [r for r in c if abs(r[1] - lv) <= SPEED_NEAR * lv and 0 < r[4] <= 20 and r[0][:10] >= cut]
+    if len(near) < SPEED_MIN:
+        return None
+    lo, hi = min(r[4] for r in near), max(r[4] for r in near)
+    mph = lambda v: v * 3600 / 5280
+    per = lambda v, mi: 5280 * mi / v / 60
+    rows = "".join(tr(["%d mile%s" % (mi, "" if mi == 1 else "s"), ("about %s" % _hm(per(hi, mi))) if abs(hi - lo) < 0.05 else "%s to %s" % (_hm(per(hi, mi)), _hm(per(lo, mi)))], right=(1,)) for mi in (1, 3, 5, 10))
+    lead = ("<p><b>At flows like today's, the water here has moved about %.1f to %.1f mph</b> (%.1f to %.1f ft/s, average across the channel, measured by USGS on %d visits at %s to %s cfs). "
+            "The main current and the surface run faster than the average; pools, eddies and the edges run slower, and wind and stops add time.</p>") % (
+        mph(lo), mph(hi), lo, hi, len(near), fmtc(min(r[1] for r in near)), fmtc(max(r[1] for r in near)))
+    return block("water_speed", "How fast the water moves here", "hist", lead + table(["Distance", "Time drifting at that speed"], rows, right=(1,)),
+                 "Source: USGS Water Data API channel measurements (hydrographer site visits within a mile of the gauge, main channel, last %d years) at flows within %d%% of the latest reading, %s cfs. "
+                 "Mean velocity is the flow divided by the channel's cross-section area at one spot on one day; the times are our arithmetic (distance divided by that speed), not a trip time for any stretch." % (SPEED_YEARS, round(SPEED_NEAR * 100), fmtc(lv)), "usgs")
+
+
 def window_change(fl, lt, h):
     """Flow change over h hours: the latest reading against the reading closest to h hours earlier (within 20 minutes or 60% of the reporting interval), exactly what the rate table shows and what anyone can read off USGS. Returns (latest, earlier, percent) or None.
     A noisy gauge is not smoothed here: it is recognised (flow_jitter in lib/render.py, or the gage height contradicting the flow) and the headline says so. The headline tile, the rate table and the home and hub tables all use this."""
@@ -635,15 +666,16 @@ def b_recreation(G):
         return None
     said = {}  # 28 pages held 2026-11-12: sites run by one office share an address or description; the second says whose it is, never the text again
     rows = "".join(tr([_ridb_site(x, said), "%.1f mi" % x["mi"], _ridb_fee(x), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(1,)) for x in r["sites"])
+    shared = '<p class="src">Text that several of these sites share on Recreation.gov (an office address, a booking note) is listed once, under the first site that has it.</p>' if said.get("_dropped") else ""
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency",
                  '<p>%d federal site%s within %d miles, nearest %s at %.1f mi. Fees, reservations and directions are as Recreation.gov lists them.</p>' % (len(r["sites"]), "" if len(r["sites"]) == 1 else "s", r["radius_mi"], esc(_ridb_name(r["sites"][0]["name"])), r["sites"][0]["mi"])
-                 + table(["Site", "Distance", "Fees and reservations", "Phone"], rows, right=(1,)),
+                 + table(["Site", "Distance", "Fees and reservations", "Phone"], rows, right=(1,)) + shared,
                  "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Fees, reservations, addresses, directions and descriptions are Recreation.gov's own words. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")  # was a table row that phones showed as a fake site card (hater 2026-10-27)
 
 
 def _ridb_ok(t):
     """RIDB text a page can carry: check.py BANNED holds a page on a bare 'None' and on the word licence (builder jargon), so a field saying either is left out, never reworded."""
-    return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().upper() not in ("NONE", "N/A", "NA", "TBD")  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
+    return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().strip(".").upper() not in ("NONE", "N/A", "NA", "TBD") and not re.search(r"(?i)\b(\w+) \1\b", t) and t.count("(") == t.count(")") and t.count("[") == t.count("]")  # 2026-11-12: RIDB's own 'and and', 'pavilion Pavilion' and a lone bracket held pages; such a field is left out, never rewritten  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
 
 
 def _ridb_site(x, said=None):
@@ -659,19 +691,17 @@ def _ridb_site(x, said=None):
     for k, v in det:
         if not _ridb_ok(v):
             continue
-        keep, first = [], None
-        for sn in re.split(r"(?<=[.!?])\s+", " ".join(v.split())):
+        parts = [" ".join(v.split())] if k == "Address" else re.split(r"(?<=[a-z0-9)][.!?])\s+(?=[A-Z])", " ".join(v.split()))  # an address is one piece (P.O. Box split it, 2026-11-12)
+        keep = []
+        for sn in parts:
             key = sn.lower()
             if len(sn.split()) >= 3 and key in said:
-                first = first or said[key]
+                said["_dropped"] = True  # said once under the first site; the block notes it once
                 continue
             keep.append(sn)
-            said.setdefault(key, _ridb_name(x["name"]))
-        txt = esc(" ".join(keep))
-        if first:
-            txt += (" (plus the text listed for %s)" if txt else "same as listed for %s") % esc(first)
-        if txt:
-            out += "<p><b>%s:</b> %s</p>" % (k, txt)
+            said.setdefault(key, True)
+        if keep:
+            out += "<p><b>%s:</b> %s</p>" % (k, esc(" ".join(keep)))
     det = out
     if x.get("email"):
         det += '<p><b>Email:</b> <a href="mailto:%s">%s</a></p>' % (esc(x["email"]), esc(x["email"]))
@@ -683,7 +713,7 @@ def _ridb_fee(x):
     if "fee" not in x:  # a cache written before 2026-11-10 never asked: Unknown, never "not stated"
         return "Unknown"
     fee = x["fee"]  # None = stated but too long to show whole
-    f = esc(fee) if _ridb_ok(fee) else "Fee not stated by Recreation.gov" if fee is not None and (not fee or fee.strip().upper() in ("NONE", "N/A", "NA", "TBD")) else "Fees: see the site on Recreation.gov"
+    f = esc(fee) if _ridb_ok(fee) else "Fee not stated by Recreation.gov" if fee is not None and (not fee or fee.strip().strip(".").upper() in ("NONE", "N/A", "NA", "TBD")) else "Fees: see the site on Recreation.gov"
     if not x.get("reservable"):
         return f + "<br><small>Not listed as reservable</small>"
     u = x.get("res_url") or ""

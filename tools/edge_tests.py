@@ -255,6 +255,7 @@ def run():
            ({"slug": "dublin", "feed": "imi", "river": "Dublin"}, {"rows": [{"name": "D", "cm": 1, "time": nw_.isoformat(), "state": "normal"}]})]
     wr = research.world_rivers(wp_, {"rhine": {"A%d" % k for k in range(8)} | {"OLD"}, "dublin": {"D"}}, nw_)
     assert wr and "Right now 4 of 8 labelled gauges on this site outside the US read low and 2 read high" in wr[1] and "<td>Germany</td><td class=\"r\">4 of 8</td>" in wr[1] and "Tidal" in wr[1], "PLAN 18c: world labels counted wrong, a stale reading labelled, or a tidal station labelled: %s" % (wr and wr[1][wr[1].find("<b>"):wr[1].find("<b>") + 200])
+    assert not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", wr[1]), "PLAN 18c: a raw machine timestamp on the world page (check.py BANNED held it, run 43357129006)"
     assert research.world_rivers(wp_[:1], {"rhine": {"A0", "A1"}}, nw_) is None, "PLAN 18c: a world page built from 2 labelled gauges"
     assert 'href="/research/world-rivers/"' not in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/"] and 'href="/research/world-rivers/"' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=True)[0]["/research/"], "the research index links a world page that was not built"
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
@@ -837,9 +838,17 @@ def probe(warn, square, pages):
     # 2026-11-12: 28 live pages held by the sentence-repeat gate: sites run by one office share an address and a sentence of their descriptions
     fcfs = "This location is available on a first-come, first-served basis."
     sh = {"fetched_at": "2026-11-12T00:00:00Z", "radius_mi": 15, "sites": [dict(name=n, type="Campground", mi=float(i + 1), activities=[], water=[], phone="", url="", fee="",
-          about="%s %s" % (fcfs, "Own words for %s here." % n), address="PO Box 309, Carbondale, CO") for i, n in enumerate(("ALPHA", "BETA", "GAMMA"))]}
+          about="%s %s" % (fcfs, "Own words for %s here." % n), address="P.O. Box 309, Carbondale, CO") for i, n in enumerate(("ALPHA", "BETA", "GAMMA"))]}
     h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
-    assert h2.count("first-come, first-served") == 1 and h2.count("PO Box 309") == 1 and h2.count("Own words for") == 3 and "same as listed for Alpha" in h2 and "plus the text listed for Alpha" in h2, "RIDB: a shared address or sentence was repeated, or a site's own words were dropped"
+    assert h2.count("first-come, first-served") == 1 and h2.count("P.O. Box 309, Carbondale, CO") == 1 and h2.count("Own words for") == 3 and h2.count("is listed once, under the first site") == 1 and "same as listed" not in h2, "RIDB: a shared address or sentence was repeated, an address was split, a note repeated, or a site's own words were dropped"
+    assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
+    # PLAN 19a: float time from USGS channel velocity
+    sg_ = {"rec": {"fieldmeas": {"chan": [["2024-06-01T10:00", 100.0, 50, 40, 2.0, 0, ""], ["2023-06-01T10:00", 110.0, 50, 40, 3.0, 0, ""], ["2022-06-01T10:00", 95.0, 50, 40, 2.5, 0, ""],
+                                          ["2021-06-01T10:00", 900.0, 50, 40, 9.0, 0, ""], ["1990-06-01T10:00", 100.0, 50, 40, 1.0, 0, ""], ["2020-06-01T10:00", 100.0, 50, 40, 25.0, 0, ""]]}},
+           "lv": 100.0, "ldate": datetime.date(2026, 11, 12)}
+    bs = b3r.b_speed(sg_)
+    assert bs and "about 1.4 to 2.0 mph" in bs["body"] and "on 3 visits at 95 to 110 cfs" in bs["body"] and "29 min to 44 min" in bs["body"] and "not a trip time" in bs["source"], "19a: float time wrong (a far flow, a 1990 visit or a 25 ft/s typo used?): %s" % (bs and bs["body"][:300])
+    assert b3r.b_speed(dict(sg_, lv=500.0)) is None and b3r.b_speed(dict(sg_, lake="00062")) is None and b3r.b_speed(dict(sg_, osc=True)) is None and b3r.b_speed(dict(sg_, lv=None)) is None, "19a: float time shown with no visits near today's flow, on a lake, a tidal reach or with no flow"
 
 
 def nid_facts():
