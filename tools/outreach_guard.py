@@ -68,6 +68,8 @@ def selftest():
     kb = sent_keys([{"org_name": "Dead Box Marina", "website": "https://deadbox.com", "contact_page_url": "", "sent_on": "2026-11-13", "sent_via": "email inf@; 2026-11-13 BOUNCED (550)", "email_sha": sha("info@deadbox.com")}])
     assert clashes({"org_name": "Dead Box Marina", "email": "info@deadbox.com", "website": ""}, kb), "a bounced dead address can be emailed again"
     assert not clashes({"org_name": "Dead Box Marina", "email": "office@deadbox.com", "website": "https://deadbox.com"}, kb), "a bounced org cannot be tried once at a working address"
+    nb = nearby("08206900", 100)
+    assert nb[0][0] == 0 and all(u.startswith("https://riverwaterlevels.com/") for _, _, u in nb) and nb == sorted(nb), "the nearby list lost its own water, a live URL, or its order"
     print("outreach_guard selftest OK")
 
 
@@ -92,9 +94,32 @@ def stamp(log, drafts, names, today):
     return done
 
 
+def nearby(site, miles=100):
+    """Every live page within `miles` of `site` (owner 2026-11-13: a yes gets the whole set of waters its audience uses, not one page). [(mi, name, url)] nearest first."""
+    import math
+    pos = {}
+    for f, nm in (("geo/gauge-geo.csv", None), ("lakes.csv", "lake"), ("coasts.csv", "name")):
+        for r in csv.DictReader(open(os.path.join(ROOT, "data", f), encoding="utf-8")):
+            if r.get("lat") and r.get("lon"):
+                pos.setdefault(r["site"], (float(r["lat"]), float(r["lon"])))
+    live = [r for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live" and r["url"].startswith("/") and r["site"] in pos]
+    la, lo = pos[site]
+    out = []
+    for r in live:
+        b, c = pos[r["site"]]
+        d = 3958.8 * 2 * math.asin(math.sqrt(math.sin(math.radians(b - la) / 2) ** 2 + math.cos(math.radians(la)) * math.cos(math.radians(b)) * math.sin(math.radians(c - lo) / 2) ** 2))
+        if d <= miles:
+            out.append((round(d), "%s at %s" % (r["river"], r["place"]) if r["river"] != r["place"] else r["river"], "https://riverwaterlevels.com" + r["url"]))
+    return sorted(out)
+
+
 def main(a):
     if a[:1] == ["--selftest"]:
         return selftest()
+    if a[:1] == ["--nearby"]:
+        for d, n, u in nearby(a[1], float(a[2]) if a[2:] else 100):
+            print("%4d mi  %s  %s" % (d, n, u))
+        return
     log = list(csv.DictReader(open(LOG, encoding="utf-8")))
     drafts = list(csv.DictReader(open(a[-1] if a[0] != "--record" else a[1], encoding="utf-8")))
     if a[0] == "--record":
