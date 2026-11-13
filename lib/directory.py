@@ -649,14 +649,15 @@ def status_page(built, Gs, built_at):
 
 def _publisher_line():
     """The publisher contact from data/publisher.json, or the recorded waiver in one plain sentence."""
-    try:
-        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "publisher.json"), encoding="utf-8") as f:
-            pub = json.load(f)
-    except (OSError, ValueError):
-        pub = {}
+    pub = publisher()
     if pub.get("email"):
-        return "Publisher contact: %s. Corrections are handled as described on the Methodology page." % esc(pub["email"])
+        return "%sContact: %s. Corrections are handled as described on the Methodology page." % (run_by(pub), esc(pub["email"]))
     return None
+
+
+def run_by(pub):
+    """Who runs the site, one sentence (Google: 'who created the content'); empty without a named person."""
+    return ("%s is an independent site run by %s. It is not a government agency. " % (esc(BRAND), esc(pub["person"]))) if pub.get("person") else ""
 
 
 def trust_pages(built_count, built_rows):
@@ -732,7 +733,10 @@ def trust_pages(built_count, built_rows):
         "<h2>Public land and maps</h2><p>Public land is from the USGS Protected Areas Database (PAD-US) within about half a mile of the gauge; mapped land is not proof of legal access. Maps are U.S. Geological Survey National Map services.</p>"
         "<h2>Freshness limits</h2><p>A gauge whose latest flow is more than 24 hours old shows a Gauge not reporting notice with the time of its last reading; after 30 days without a reading the page is no longer rebuilt. River forecasts older than 24 hours are marked and older than 72 hours hidden; hourly weather forecasts older than 12 hours are marked and older than 72 hours hidden. Weather observations older than 3 hours are marked and older than 12 hours hidden. Rain estimates older than 6 hours are marked and older than 24 hours hidden. Alerts older than 3 hours are marked. Snow data older than 5 days and outlooks older than 3 days are hidden.</p>"
         "<h2>What we do not do</h2><p>We do not make our own forecasts and we do not rate conditions as good or bad. Forecasts, outlooks and impact statements shown are National Weather Service products quoted as published; every other number is a source value or a calculation described on this page.</p>"
-        "<h2 id=\"corrections\">Corrections</h2><p>Errors that come from a source are the source's to correct; we show the source's current value on the next refresh. Errors in our calculations are corrected as soon as they are found. Last reviewed Oct 17, 2026.</p>")
+        "<h2 id=\"corrections\">Corrections</h2><p>Errors that come from a source are the source's to correct; we show the source's current value on the next refresh. Errors in our calculations are corrected as soon as they are found. Last reviewed Nov 12, 2026.</p>"
+        "<h3>Corrections log</h3><ul>"  # trust (crawl 2026-11-12): dated, reader-visible errors of ours only; add a line the day one is fixed
+        "<li>Nov 10, 2026: on gauge pages, the line under the flow said the flow was as of the page build time, while the reading itself could be older. It now says the charts and tables are as of the build; the flow shows its own reading time.</li>"
+        "<li>Nov 10, 2026: this page said a change under 1% reads as steady; the pages use under 2% or under 5 cfs. Text corrected to match.</li></ul>")
     t["/methodology/"] = prose_page("Methodology", "/methodology/", meth, "How River Water Levels calculates percentiles, comparisons, rates and lags, and its freshness limits.")
     upd = (("USGS gauge readings", "About every 15 minutes (some gauges hourly)", "About hourly, and in your browser when the page loads"),
            ("NWS alerts", "As issued", "About hourly, and in your browser when the page loads"),
@@ -753,8 +757,16 @@ def trust_pages(built_count, built_rows):
                                      '<p class="src">NWS material is public domain and not subject to copyright. Sources whose terms are not yet settled are not used on the site.</p>' % (rows, updrows), "The data sources used by River Water Levels and the terms checked.")
     pub = publisher()
     if pub.get("email"):  # drawing board, trust: who runs the site; appears the build after the owner fills data/publisher.json
-        t["/contact/"] = prose_page("Contact", "/contact/", "<p>%s is published by %s.</p><p>Email: <a href=\"mailto:%s\">%s</a></p><p>To report a wrong number, include the page address and the time shown on it; see <a href=\"/methodology/#corrections\">how corrections work</a>. "
-                                    "For a flood or other emergency, follow your local official warnings, not this site.</p>" % (esc(BRAND), esc(pub.get("name") or BRAND), esc(pub["email"]), esc(pub["email"])), "Contact %s: who publishes it and how to report a wrong number." % BRAND)
+        t["/contact/"] = prose_page("Contact", "/contact/", "<p>%s</p><p>Email: <a href=\"mailto:%s\">%s</a></p><p>To report a wrong number, include the page address and the time shown on it; see <a href=\"/methodology/#corrections\">how corrections work</a>. "
+                                    "For a flood or other emergency, follow your local official warnings, not this site.</p>" % (run_by(pub) or "%s is an independent site, not a government agency." % esc(BRAND), esc(pub["email"]), esc(pub["email"])), "Contact %s: who runs it and how to report a wrong number." % BRAND)
+    t["/terms/"] = prose_page("Terms of use", "/terms/", (
+        "<p>Updated 12 November 2026. By using this site you agree to these terms.</p>"
+        "<h2>What the site is</h2><p>%sIt shows readings, forecasts and records published by government agencies, with our own comparisons, each labelled with its source and time. It is free to read and paid for by advertising.</p>"
+        "<h2>No warranty</h2><p>Data can be late, provisional, corrected or wrong at the source, and feeds can stop. Pages are provided as they are, without any warranty. Do not rely on this site for safety decisions; it is not a flood warning service. See the <a href=\"/disclaimer/\">disclaimer</a>.</p>"
+        "<h2>Using our pages</h2><p>You may link to any page and put a gauge's live panel on your own site (<a href=\"/embed/\">how</a>). The agency data belongs to the agencies under their own terms, listed on <a href=\"/data-sources/\">Data sources</a>. Our charts, tables and wording may be quoted with a link back; please do not copy whole pages or scrape the site.</p>"
+        "<h2>Links and advertising</h2><p>Links to other sites are for your convenience; we do not control them. Ads are served by Google; see the <a href=\"/privacy/\">privacy policy</a> for cookies and your choices.</p>"
+        "<h2>Changes and contact</h2><p>These terms may change; the date above shows the last change. %s</p>") % (run_by(pub), ('Questions: <a href="mailto:%s">%s</a>.' % (esc(pub["email"]), esc(pub["email"]))) if pub.get("email") else 'Questions: see <a href="/about/">About</a>.'),
+        "Terms of use for River Water Levels: no warranty, how to reuse and embed pages, links and ads.")
     return t
 
 

@@ -416,7 +416,7 @@ GOOGLE = {
     "sneaky redirects": "_redirects are same-content moves only; not machine-checked",
     "structured data relevance": "google_rules: a borrowed level's station is the one the markup names",
     "fresh dates without change": "build.py lastmod from a content hash; dateModified = reading time",
-    "who / about / contact": "NOT YET: publisher name and contact wait on the owner (PLAN Owner only)",
+    "who / about / contact": "selftest: a named person in data/publisher.json shows on /contact/ and /about/; /terms/ always built",
     "factual errors": "truth_tests, truth_live, truth_world",
     "spelling and sloppiness": "doubled word, BANNED, ui_checks",
 }
@@ -1072,6 +1072,9 @@ def selftest():
     try:
         dr_.publisher = lambda: {"name": "P", "email": "x@example.com"}
         assert "mailto:x@example.com" in dr_.trust_pages(1, []).get("/contact/", ""), "selftest: a filled publisher email built no /contact/ page"
+        dr_.publisher = lambda: {"name": "P", "email": "x@example.com", "person": "Pat"}
+        tp_ = dr_.trust_pages(1, [])
+        assert all("run by Pat" in tp_[u_] for u_ in ("/contact/", "/about/", "/terms/")), "selftest: the named person is missing from contact, about or terms"
         dr_.publisher = lambda: {}
         assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
     finally:
