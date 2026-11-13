@@ -97,6 +97,40 @@ def run():
     assert bl and "1001.00 ft" in bl["body"] and "cfs" not in bl["body"] + bl["source"], "edge: lake past years not shown in ft"
     assert b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "62614"}) is None, "edge: lake history in another datum than the page"
     assert last_year_flow({"rec": {"multiyear": my}, "ldate": td}) is None, "edge: a lake level read as last year's flow"
+    # owner 2026-11-12: research pages from every gauge's annual peaks (lib/research.py; each case is listed in PLAN 14)
+    from lib import research
+    rb, rG = [], {}
+    for i in range(12):  # 12 gauges, peaks 1960-2025: even gauges peak in March and doubled after WY2005, odd in May and unchanged
+        s = "g%d" % i
+        rb.append({"site": s, "state": "GA" if i < 6 else "TX", "river": "River %d" % i, "place": "Town", "dashboard_url": "/river/r%d/town/" % i, "_built": True})
+        rG[s] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if i % 2 == 0 else "05"), (200.0 if y > 2005 else 100.0) if i % 2 == 0 else 100.0, None, None] for y in range(1960, 2026)]
+                                    + [["1950-00-00", 5.0, None, None], ["1955-03-15", None, 4.0, None], ["1956-03-15", 0.0, None, None], ["2010-04-15", 50.0, None, None]]}}}  # unknown date, stage-only, zero, secondary peak
+    rb.append({"site": "g0", "state": "GA", "river": "Other Creek", "place": "Town", "dashboard_url": "/river/other/town/", "_built": True})  # the same gauge on a second page
+    rb.append({"site": "lk", "state": "GA", "river": "Lake", "place": "Dam", "dashboard_url": "/lake/x/", "_built": True})
+    rG["lk"] = {"lake": "00062", "rec": {"peaks": {"rows": [["%d-01-01" % y, 9.0, None, None] for y in range(1960, 2000)]}}}
+    rb.append({"site": "tie", "state": "TX", "river": "Tie River", "place": "Town", "dashboard_url": "/river/tie/town/", "_built": True})
+    rG["tie"] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if y % 2 else "04"), 10.0, None, None] for y in range(1960, 2000)]}}}  # 20 March, 20 April
+    rp = research.pages(rb, rG, datetime.date(2026, 11, 12))
+    assert set(rp) == set(research.URLS), "edge: research pages missing, or build.py's carry list differs: %s" % sorted(rp)
+    pm, pc_ = rp["/research/peak-month/"], rp["/research/peak-change/"]
+    assert "Of 13 US river gauges" in pm and "most often comes in March (6 gauges), then May (6)" in pm, "edge: peak month counts wrong (duplicate gauge counted twice, or a lake counted)"
+    assert "/lake/x/" not in pm + pc_ and "/river/other/town/" not in pm, "edge: lake or second page of one gauge listed"
+    assert "(66 of 66 years, 100%)" in pm, "edge: a secondary peak, unknown date or no-flow row was counted"
+    assert "1 gauge split evenly between two or more months and is not counted" in pm and "March and April (20 of 40 years, 50% each)" in pm, "edge: tie not named"
+    assert research._wy(datetime.date(2020, 10, 1)) == 2021 and research._wy(datetime.date(2020, 9, 30)) == 2020, "edge: water-year boundary"
+    assert "more than 10% higher than in 1987 to 2006 at 6 gauges, more than 10% lower at 0, and within 10% at 6" in pc_ and "water years 2007 to 2026" in pc_, "edge: peak change windows or counts wrong (2026 not yet published must still count)"
+    assert "not a trend test" in pc_ and "does not say why" in pc_, "edge: peak change lost its limits"
+    assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == rp, "edge: same data on another day gave a different page (fresh date without change)"
+    assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == {} and research.pages([], {}) == {}, "edge: research published from under 10 gauges, or empty cache crashed"
+    same = [(r, research._peaks(rG[r["site"]])) for r in rb[:12] if int(r["site"][1:]) % 2 == 0] * 2
+    one = research.peak_month(same, 2025)[1]
+    assert "most often comes in March (12 gauges)." in one, "edge: every gauge in one month broke the lead"
+    cap_, research.ROW_CAP = research.ROW_CAP, 5
+    try:
+        assert "8 more gauges are not listed here" in research.pages(rb, rG, datetime.date(2026, 11, 12))["/research/peak-month/"], "edge: a cut table did not say so"
+    finally:
+        research.ROW_CAP = cap_
+    assert "BreadcrumbList" in pm and 'href="/research/peak-change/"' in rp["/research/"], "edge: research index or breadcrumb missing"
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
     from lib.charts import b_like_today
     d = datetime.date(2026, 11, 12)

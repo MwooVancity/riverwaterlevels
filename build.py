@@ -6,7 +6,7 @@ import glob, os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import coverage, render, directory, indexing, related, world
+from lib import coverage, render, directory, indexing, related, world, research
 from lib import page as pagelib
 from lib.blocks2 import flow_behind
 
@@ -219,6 +219,17 @@ def main():
             if len(g) > 1:  # ponytail: a hub whose gauges are all still unopened lists them anyway (its address must not 404); open_wave opens them the same day
                 emit("/river/%s/" % hs, directory.hub_page(hs, st, [r for r in g if r["_built"]] or g, inv_size[(hs, st)], Gs))
         for url, html in directory.trust_pages(len(built), built).items():
+            emit(url, html)
+        try:  # research pages (owner 2026-11-12, PLAN 14): a fault or an empty cache carries the published copies (never a 404) and is named in the failed list
+            rp, why_r = research.pages(built, Gs), "too few gauges with annual peaks"
+        except Exception as e:
+            rp, why_r = {}, "%s: %s" % (type(e).__name__, str(e)[:100])
+        for url in [u for u in research.URLS if u not in rp]:  # one finding short of gauges keeps its old copy too
+            old = prev_page(url)
+            if old:
+                rp[url] = old
+                report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); published copy carried" % why_r, "url": url})
+        for url, html in rp.items():
             emit(url, html)
         world_rows = []
         wnow, wpages = datetime.datetime.now(datetime.timezone.utc), []
