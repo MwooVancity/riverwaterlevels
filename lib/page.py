@@ -258,6 +258,23 @@ def data_meta(G, name, page_url, observed):
             "cite": "%s water data, %s. %s%s. %s" % (name, BRAND, src, (", observed %s" % observed) if observed else "", page_url)}
 
 
+REVIEW_BLOCKS = {"like_today", "water_speed", "big_floods"}  # PLAN 20: a new block type shows only after its phone review passes (data/reviewed.json "blocks"); add each new block id here the day it is built
+
+
+@__import__("functools").lru_cache(maxsize=1)
+def reviewed_blocks():
+    """Block ids that passed a phone review; a missing or torn file reviews none (new blocks stay hidden, old ones are unaffected)."""
+    try:
+        return frozenset(json.load(open(os.path.join(ROOT, "data", "reviewed.json"), encoding="utf-8")).get("blocks") or [])
+    except (OSError, ValueError, AttributeError):
+        return frozenset()
+
+
+def block_ready(bid):
+    """False only for a new block type not yet reviewed; review builds (RWL_REVIEW, dryrun review=) show it so it can be reviewed."""
+    return bid not in REVIEW_BLOCKS or bid in reviewed_blocks() or bool(os.environ.get("RWL_REVIEW"))
+
+
 def tab_blocks(tab, G, pages):
     if tab == "dashboard" and G.get("feed"):  # a gauge outside the US: same page, only the blocks its feed can fill; each country's sources join this list
         has_al = bool(live_alerts(G))
@@ -307,9 +324,19 @@ def embed_page(G, pages):
     return lake_words(out, G) if G.get("lake") else out  # lake review #6: the embed copy said flow and gage height
 
 
+@__import__("functools").lru_cache(maxsize=1)
+def research_open():
+    """PLAN 20, links rule: the footer links /research/ only when Google may index it (open_wave added it to the allow list)."""
+    from lib import indexing
+    try:
+        return indexing.indexable("/research/", indexing.load(ROOT))
+    except (OSError, ValueError):
+        return False
+
+
 def footer():
     return ('<footer><span>%s &middot; Data: USGS, NOAA, NWS.</span><span><a href="/about/">About</a><a href="/data-sources/">Data sources</a><a href="/disclaimer/">Disclaimer</a>'
-            '<a href="/faq/">FAQ</a><a href="/methodology/">Methodology</a><a href="/research/">Research</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/glossary/">Glossary</a><a href="/status/">Data status</a><a href="/embed/">Add to your site</a>%s</span></footer>' % (esc(BRAND), '<a href="/contact/">Contact</a>' if publisher().get("email") else ""))
+            '<a href="/faq/">FAQ</a><a href="/methodology/">Methodology</a>%s<a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/glossary/">Glossary</a><a href="/status/">Data status</a><a href="/embed/">Add to your site</a>%s</span></footer>' % (esc(BRAND), '<a href="/research/">Research</a>' if research_open() else "", '<a href="/contact/">Contact</a>' if publisher().get("email") else ""))
 
 
 def og_tags(title, desc, url):
@@ -597,7 +624,7 @@ def build_tab(tab, G, pages):
     T = TABS[tab]
     row = G["row"]
     raw = tab_blocks(tab, G, pages)
-    ok = lambda b: b and (PREVIEW or SOURCES[b["src_id"]]["status"] in ("quoted", "owner-permission"))
+    ok = lambda b: b and (PREVIEW or SOURCES[b["src_id"]]["status"] in ("quoted", "owner-permission")) and block_ready(b["id"])
     blocks = []
     for b in raw:
         if isinstance(b, str) and b.startswith(("SEC:", "FOLD:")):

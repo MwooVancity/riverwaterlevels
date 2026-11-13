@@ -843,6 +843,29 @@ def probe(warn, square, pages):
     h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
     assert h2.count("first-come, first-served") == 1 and h2.count("P.O. Box 309, Carbondale, CO") == 1 and h2.count("Own words for") == 3 and h2.count("is listed once, under the first site") == 1 and "same as listed" not in h2, "RIDB: a shared address or sentence was repeated, an address was split, a note repeated, or a site's own words were dropped"
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
+    # PLAN 20: gate gaps (research outside open_wave; new block types without a review)
+    from lib import indexing as _ix, page as _pgx
+    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/"}, "pulled": set(), "held": ()}
+    assert not _ix.indexable("/research/", cfg_) and not _ix.indexable("/research/tides/", cfg_) and _ix.indexable("/research/peak-month/", cfg_) and _ix.indexable("/about/", cfg_), "20: research pages indexable without open_wave, or a site page lost"
+    assert not _ix.sitemap_ok("/research/tides/", cfg_), "20: a research page not opened is in the sitemap"
+    rb_, rv_ = _pgx.reviewed_blocks, os.environ.pop("RWL_REVIEW", None)
+    try:
+        _pgx.reviewed_blocks = lambda: frozenset({"water_speed"})
+        assert _pgx.block_ready("water_speed") and not _pgx.block_ready("like_today") and _pgx.block_ready("depth"), "20: a reviewed new block hidden, an unreviewed one shown, or an old block hidden"
+        os.environ["RWL_REVIEW"] = "1"
+        assert _pgx.block_ready("like_today"), "20: a review build hid the block it is meant to review"
+    finally:
+        _pgx.reviewed_blocks = rb_
+        os.environ.pop("RWL_REVIEW", None)
+        if rv_ is not None:
+            os.environ["RWL_REVIEW"] = rv_
+    _pgx.research_open.cache_clear()
+    ro_ = _pgx.research_open
+    _pgx.research_open = lambda: False
+    try:
+        assert 'href="/research/"' not in _pgx.footer(), "20: the footer links research pages Google may not index"
+    finally:
+        _pgx.research_open = ro_
     # PLAN 19d: the biggest floods, day by day
     dly = [[(datetime.date(1990, 1, 1) + datetime.timedelta(days=k)).isoformat(), 100.0] for k in range(12000)]
     dv = dict(dly)

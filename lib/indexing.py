@@ -34,6 +34,8 @@ def indexable(url, cfg):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
+    if url.startswith("/research/"):  # PLAN 20: research pages entered Google as site pages without open_wave or the new-layout test; now only when open_wave allows them
+        return url in cfg["allow"]
     return bool(cfg["site_pages"])
 
 
