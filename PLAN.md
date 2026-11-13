@@ -189,12 +189,10 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 11. `_redirects`: rules after the first dynamic one count against 100; single-gauge forwards live in `single-rivers.json` plus the Worker. Link budgets: home 300, state 700.
 12. NOAA CO-OPS: 4 calls per coast per hour, no published limit (300 coasts = 28,800 a day): watch 429s. RISE and CDEC publish no limit.
 
-## Owner only (ranked by what it unlocks; rewritten 2026-11-13, done items removed: contact address and publisher email are live)
-1. Search Console robot access (Claude tried in Chrome 2026-11-13; the safety check blocks Claude from granting permissions, so it stays yours): Search Console > Settings > Users and permissions > velocity-engine@asmr-directory-497009.iam.gserviceaccount.com > three dots > Change permissions > Full > Save. Unlocks: Claude reads clicks and impressions per page and submits pages itself (Claude may not grant permissions).
+## Owner only (ranked by what it unlocks; rewritten 2026-11-13, done items removed: contact address and publisher email are live; Claude did in Chrome 2026-11-13: Search Console robot set to Full (read back "Full"), Cloudflare deploy token got Account Analytics Read (proved: today 6,888 Worker requests read through the API))
 2. Request-indexing job (stalled since 2026-11-09): in Chrome, Claude extension, allow search.google.com once ("Always allow"). Unlocks: new pages asked into Google daily.
 3. Replace the Google robot key livedatacalc-automation (shown in chat 2026-10-31, starts 73f0baf9): Google Cloud > IAM > Service accounts > Keys > Add key (JSON), delete the old one, put the new file where the old one was. Security.
-4. Cloudflare token: dashboard > My Profile > API Tokens > Edit the CLOUDFLARE_API_TOKEN token > Add more > Account > Account Analytics > Read > Update. Unlocks: the Worker load guard sees traffic.
-5. AdSense: Privacy & messaging > turn on consent mode; reapply after 2026-11-26 (Google re-reads pages with the contact page and shorter notes first).
+5. AdSense (signed in under your other Google account, the one AdSense uses; Claude stays out of account switching): Privacy & messaging > turn on consent mode; reapply after 2026-11-26 (Google re-reads pages with the contact page and shorter notes first).
 6. 5-second test: show one river page on a phone to someone else for 5 seconds; tell Claude what they said the river is doing.
 7. Five outreach forms with a CAPTCHA (Claude may not solve): upstateca.com/contact-us, callvillebay.com/contact, cartersvillemuseumcity.com/contact-us, kerrlakeguide.com/contact-us, Lake Canyon Yacht Club. Text in docs/outreach-emails.md.
 8. Phone check: open the site on your phone, Claude confirms the visit in Analytics Realtime (your desktop Chrome blocks the tag).
