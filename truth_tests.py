@@ -197,7 +197,7 @@ def main(only=None):
         if "Last NWS alert check" not in h4 or "No alerts active here" in h4 or "<b>No alerts</b>" in h4:
             fail(site, "alert answer is 20 h old but the page says no alerts as if current")
         # 3. silence
-        if not G["has_forecast"] and 'class="tile fcst none"' not in h:
+        if not G["has_forecast"] and 'class="tile fcst none' not in h:  # prefix: ui.tile adds " na" to a missing value (2026-11-13; the exact match failed 97 gauges)
             fail(site, "no NWS river forecast but the page does not say so")
         nwl = (G["rec"].get("nwps") or {}).get("lid")
         if nwl and "Not linked" in h:
