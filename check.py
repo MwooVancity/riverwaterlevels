@@ -278,6 +278,8 @@ def check_html(h, rel):
         bad += research_sanity(body) + research_gate(body, rel)
         if 'data-method="' in body and not research_title_ok(h, "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]):
             bad.append("research: the title carries no Keyword Planner-measured seed for this page (data/research-keywords.csv)")
+    if not title_promise_ok(h, body):
+        bad.append("title names the NWS forecast but the page has no river forecast section (PLAN 25a)")
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -430,6 +432,12 @@ RESEARCH_BANNED = (r"\bproves?\b", r"\bcaused by\b", r"\bbecause of climate\b", 
 
 
 _SEEDS = None
+
+
+def title_promise_ok(h, body):
+    """PLAN 25a: 'NWS forecast' in the title only while the page carries the river forecast section (a gate or carry dropping the block breaks the promise)."""
+    m = re.search(r"<title>(.*?)</title>", h, re.S)
+    return "NWS forecast" not in (m.group(1) if m else "") or 'id="river_forecast"' in body
 
 
 def research_title_ok(h, url):
@@ -1156,6 +1164,8 @@ def selftest():
         assert stale_research("research/100-year-floods/index.html", _old) and "being recalculated" in open(_old, encoding="utf-8").read() and 'content="noindex' in open(_old, encoding="utf-8").read(), "selftest: an old-method research copy was carried"
         assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
         assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
+        _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
+        assert not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
     finally:
         dr_.publisher = pub_
     from lib import pages as pg_

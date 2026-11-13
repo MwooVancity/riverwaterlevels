@@ -1,0 +1,2157 @@
+keyword,range,tier,bid_high_cad,value,competition,three_month,yoy,bid_low_cad,water,phrasing
+boat ramps near me,100K-1M,500000,14.70,7350000.0,Low,-90%,0%,2.85,,general question
+anchorage forecast,100K-1M,500000,1.72,860000.0,Low,0%,0%,0.74,anchorage,town forecast (weather intent)
+honolulu forecast,100K-1M,500000,1.61,805000.0,Low,0%,+900%,0.51,honolulu,town forecast (weather intent)
+charleston forecast,100K-1M,500000,1.50,750000.0,Low,0%,0%,0.56,charleston,town forecast (weather intent)
+atlantic city forecast,100K-1M,500000,1.48,740000.0,Low,-90%,0%,0.64,atlantic city,town forecast (weather intent)
+clearwater forecast,100K-1M,500000,1.41,705000.0,Low,0%,+900%,0.61,clearwater,town forecast (weather intent)
+bellingham forecast,100K-1M,500000,1.40,700000.0,Low,-90%,-90%,0.60,bellingham,town forecast (weather intent)
+panama city beach forecast,100K-1M,500000,1.40,700000.0,Low,0%,0%,0.58,panama city beach,forecast
+cfs meaning,10K-100K,50000,6.36,318000.0,Low,0%,0%,0.05,,general question
+salt river tubing,10K-100K,50000,2.43,121500.0,Low,-90%,-90%,0.13,salt river,tubing
+tide times,10K-100K,50000,2.42,121000.0,Low,0%,0%,0.27,,general question
+high water,10K-100K,50000,2.27,113500.0,Low,0%,0%,0.38,,general question
+tide chart,10K-100K,50000,2.12,106000.0,Low,0%,0%,0.29,,general question
+jacksonville beach forecast,10K-100K,50000,2.09,104500.0,Low,0%,0%,0.70,jacksonville beach,forecast
+battle creek forecast,10K-100K,50000,1.60,80000.0,Low,0%,0%,0.83,battle creek,forecast
+bar harbor forecast,10K-100K,50000,1.48,74000.0,Low,0%,0%,0.63,bar harbor,town forecast (weather intent)
+canyon lake forecast,10K-100K,50000,1.45,72500.0,Low,0%,0%,0.70,canyon lake,forecast
+pensacola forecast,10K-100K,50000,1.41,70500.0,Low,0%,0%,0.66,pensacola,town forecast (weather intent)
+little river forecast,10K-100K,50000,1.38,69000.0,Low,0%,0%,0.57,little river,forecast
+fort myers forecast,10K-100K,50000,1.37,68500.0,Low,0%,0%,0.61,fort myers,town forecast (weather intent)
+fernandina beach forecast,10K-100K,50000,1.35,67500.0,Low,0%,0%,0.64,fernandina beach,forecast
+edmonds forecast,10K-100K,50000,1.34,67000.0,Low,0%,0%,0.50,edmonds,town forecast (weather intent)
+crescent city forecast,10K-100K,50000,1.33,66500.0,Low,0%,0%,0.61,crescent city,town forecast (weather intent)
+astoria forecast,10K-100K,50000,1.17,58500.0,Low,0%,0%,0.53,astoria,town forecast (weather intent)
+boston forecast,10K-100K,50000,0.32,16000.0,Low,0%,0%,0.10,boston,town forecast (weather intent)
+rainfall totals near me,10K-100K,50000,0.16,8000.0,Low,0%,+900%,0.02,,general question
+rainfall totals,10K-100K,50000,0.08,4000.0,Low,0%,0%,0.02,,general question
+drought monitor,10K-100K,50000,,0.0,Low,0%,0%,,,general question
+charleston flooding,1K-10K,5000,56.82,284100.0,Low,0%,-90%,2.32,charleston,town flooding (weather intent)
+snowmelt,1K-10K,5000,33.79,168950.0,Low,0%,0%,2.83,,general question
+gallatin river fishing report,1K-10K,5000,8.91,44550.0,Low,-90%,0%,1.03,gallatin river,fishing report
+lake hartwell fishing report,1K-10K,5000,7.09,35450.0,Low,0%,0%,0.89,lake hartwell,fishing report
+madison river tubing,1K-10K,5000,4.97,24850.0,Low,-90%,0%,1.50,madison river,tubing
+charles river kayaking,1K-10K,5000,4.38,21900.0,Low,-90%,0%,1.17,charles river,kayaking
+guadalupe river tubing,1K-10K,5000,4.38,21900.0,Low,-90%,0%,0.71,guadalupe river,tubing
+river flow,1K-10K,5000,3.82,19100.0,Low,0%,0%,2.97,river,flow
+flood warning near me,1K-10K,5000,3.56,17800.0,Low,0%,0%,1.10,,general question
+what is cfs,1K-10K,5000,3.48,17400.0,Low,0%,0%,0.04,what is,cfs
+charleston kayaking,1K-10K,5000,3.46,17300.0,High,-90%,0%,0.95,charleston,kayaking
+lake powell kayaking,1K-10K,5000,3.40,17000.0,High,0%,0%,0.79,lake powell,kayaking
+pere marquette river fishing report,1K-10K,5000,3.29,16450.0,Low,0%,0%,0.54,pere marquette river,fishing report
+salt river kayaking,1K-10K,5000,2.86,14300.0,Medium,-90%,-90%,0.67,salt river,kayaking
+russian river kayaking,1K-10K,5000,2.71,13550.0,Low,-90%,0%,0.34,russian river,kayaking
+fishing report near me,1K-10K,5000,2.61,13050.0,Low,0%,0%,0.76,,general question
+salmon river fishing report,1K-10K,5000,2.51,12550.0,Low,0%,0%,0.28,salmon river,fishing report
+delaware river kayaking,1K-10K,5000,2.50,12500.0,Low,-90%,0%,1.32,delaware river,kayaking
+apple river tubing,1K-10K,5000,2.43,12150.0,Low,-90%,0%,0.54,apple river,tubing
+hudson river kayaking,1K-10K,5000,2.16,10800.0,Low,-90%,0%,0.24,hudson river,kayaking
+comal river tubing,1K-10K,5000,1.90,9500.0,Low,-90%,0%,0.64,comal river,tubing
+panama city beach fishing report,1K-10K,5000,1.89,9450.0,Low,0%,0%,0.33,panama city beach,fishing report
+river height,1K-10K,5000,1.72,8600.0,Low,0%,0%,0.47,,general question
+san marcos river tubing,1K-10K,5000,1.62,8100.0,Low,-90%,-90%,0.46,san marcos river,tubing
+indian river inlet fishing report,1K-10K,5000,1.48,7400.0,Low,0%,0%,0.85,indian river inlet,fishing report
+chattahoochee river tubing,1K-10K,5000,1.31,6550.0,Low,-90%,0%,0.49,chattahoochee river,tubing
+buffalo river kayaking,1K-10K,5000,1.11,5550.0,Low,-90%,0%,0.60,buffalo river,kayaking
+cedar key forecast,1K-10K,5000,1.04,5200.0,Low,0%,0%,0.77,cedar key,town forecast (weather intent)
+madison river fishing report,1K-10K,5000,1.00,5000.0,Low,-90%,0%,0.27,madison river,fishing report
+animas river cfs,1K-10K,5000,,0.0,Low,"+9,900%",+900%,,animas river,cfs
+atlantic city flooding,1K-10K,5000,,0.0,Low,0%,-90%,,atlantic city,town flooding (weather intent)
+beaver creek forecast,1K-10K,5000,,0.0,Low,0%,0%,,beaver creek,forecast
+bellingham flooding,1K-10K,5000,,0.0,Low,0%,0%,,bellingham,town flooding (weather intent)
+bogue chitto tubing,1K-10K,5000,,0.0,Low,-90%,0%,,bogue chitto,tubing
+boston flooding,1K-10K,5000,,0.0,Low,0%,-90%,,boston,town flooding (weather intent)
+cartecay river tubing,1K-10K,5000,,0.0,Low,-90%,+900%,,cartecay river,tubing
+chatham forecast,1K-10K,5000,,0.0,Low,0%,0%,,chatham,town forecast (weather intent)
+corpus christi forecast,1K-10K,5000,,0.0,Low,+900%,0%,,corpus christi,town forecast (weather intent)
+cowlitz river fishing report,1K-10K,5000,,0.0,Low,0%,0%,,cowlitz river,fishing report
+deep creek tubing,1K-10K,5000,,0.0,Low,-90%,0%,,deep creek,tubing
+delaware river tubing,1K-10K,5000,,0.0,Low,-99%,0%,,delaware river,tubing
+elm creek swimming,1K-10K,5000,,0.0,Low,-90%,+900%,,elm creek,swimming
+elm creek tubing,1K-10K,5000,,0.0,Low,0%,0%,,elm creek,tubing
+farmington river tubing,1K-10K,5000,,0.0,Low,-99%,0%,,farmington river,tubing
+frio river tubing,1K-10K,5000,,0.0,Low,-90%,-90%,,frio river,tubing
+green river flooding,1K-10K,5000,,0.0,Low,0%,0%,,green river,flooding
+green river tubing,1K-10K,5000,,0.0,Low,-90%,0%,,green river,tubing
+guadalupe river flooding,1K-10K,5000,,0.0,Low,0%,-90%,,guadalupe river,flooding
+homer forecast,1K-10K,5000,,0.0,Low,-90%,0%,,homer,town forecast (weather intent)
+honolulu flooding,1K-10K,5000,,0.0,Low,0%,+900%,,honolulu,town flooding (weather intent)
+lake lanier forecast,1K-10K,5000,,0.0,Low,0%,0%,,lake lanier,forecast
+lake level,1K-10K,5000,,0.0,Low,0%,0%,,lake,level
+lake mead forecast,1K-10K,5000,,0.0,Low,0%,0%,,lake mead,forecast
+mississippi river boat ramp,1K-10K,5000,,0.0,Low,0%,+900%,,mississippi river,boat ramp
+mississippi river flooding,1K-10K,5000,,0.0,Low,0%,0%,,mississippi river,flooding
+monterey forecast,1K-10K,5000,,0.0,Low,0%,0%,,monterey,town forecast (weather intent)
+river gauge,1K-10K,5000,,0.0,Low,0%,0%,,,general question
+river levels near me,1K-10K,5000,,0.0,Low,-90%,0%,,,general question
+skagit river flooding,1K-10K,5000,,0.0,Low,0%,0%,,skagit river,flooding
+snohomish river flooding,1K-10K,5000,,0.0,Low,0%,0%,,snohomish river,flooding
+snoqualmie river flooding,1K-10K,5000,,0.0,Low,0%,0%,,snoqualmie river,flooding
+usgs water data,1K-10K,5000,,0.0,Low,0%,0%,,,general question
+water temperature near me,1K-10K,5000,,0.0,Low,0%,0%,,,general question
+white river flooding,1K-10K,5000,,0.0,Low,-90%,+900%,,white river,flooding
+yellow river flooding,1K-10K,5000,,0.0,Low,0%,0%,,yellow river,flooding
+pensacola flooding,100-1K,500,32.47,16235.0,Low,+900%,+900%,7.73,pensacola,town flooding (weather intent)
+stony creek swimming,100-1K,500,24.03,12015.0,Low,0%,-90%,8.09,stony creek,swimming
+fernandina beach fishing report,100-1K,500,11.41,5705.0,Low,+900%,+900%,2.71,fernandina beach,fishing report
+charleston swimming,100-1K,500,10.05,5025.0,Low,0%,0%,6.29,charleston,swimming
+beaver creek tubing,100-1K,500,9.10,4550.0,Low,0%,0%,1.50,beaver creek,tubing
+homer kayaking,100-1K,500,6.66,3330.0,High,-90%,0%,1.28,homer,kayaking
+boston swimming,100-1K,500,6.42,3210.0,Low,-90%,-90%,1.44,boston,swimming
+white river kayaking,100-1K,500,6.06,3030.0,Low,0%,0%,3.79,white river,kayaking
+clearwater kayaking,100-1K,500,5.44,2720.0,High,0%,0%,1.39,clearwater,kayaking
+clearwater beach kayaking,100-1K,500,5.27,2635.0,High,0%,-90%,1.10,clearwater beach,kayaking
+canyon lake kayaking,100-1K,500,4.83,2415.0,Low,0%,0%,0.62,canyon lake,kayaking
+potomac river kayaking,100-1K,500,4.80,2400.0,Low,-90%,0%,1.31,potomac river,kayaking
+verde river kayaking,100-1K,500,4.80,2400.0,Medium,-90%,0%,1.06,verde river,kayaking
+lake mead kayaking,100-1K,500,4.51,2255.0,High,0%,0%,1.20,lake mead,kayaking
+belton lake fishing report,100-1K,500,4.49,2245.0,Low,0%,0%,1.47,belton lake,fishing report
+clear creek tubing,100-1K,500,4.41,2205.0,Low,-99%,-90%,1.37,clear creek,tubing
+shenandoah river kayaking,100-1K,500,3.93,1965.0,Low,0%,0%,0.68,shenandoah river,kayaking
+grand river fishing report,100-1K,500,3.91,1955.0,Low,0%,0%,1.01,grand river,fishing report
+verde river tubing,100-1K,500,3.72,1860.0,Low,-90%,0%,0.99,verde river,tubing
+honolulu kayaking,100-1K,500,3.68,1840.0,High,-90%,-90%,1.07,honolulu,kayaking
+red river tubing,100-1K,500,3.43,1715.0,Low,-90%,-90%,0.67,red river,tubing
+anchorage kayaking,100-1K,500,3.32,1660.0,High,-90%,0%,0.72,anchorage,kayaking
+clearwater fishing report,100-1K,500,3.30,1650.0,Low,0%,0%,0.35,clearwater,fishing report
+snake river kayaking,100-1K,500,3.27,1635.0,Low,-90%,0%,1.11,snake river,kayaking
+boston kayaking,100-1K,500,3.22,1610.0,Low,0%,0%,0.52,boston,kayaking
+milwaukee river kayaking,100-1K,500,3.15,1575.0,Low,-90%,0%,0.72,milwaukee river,kayaking
+yellowstone river fishing report,100-1K,500,3.12,1560.0,Low,-90%,0%,0.33,yellowstone river,fishing report
+fort myers kayaking,100-1K,500,3.09,1545.0,High,0%,0%,1.20,fort myers,kayaking
+panama city beach kayaking,100-1K,500,3.00,1500.0,High,0%,0%,0.81,panama city beach,kayaking
+deschutes river fishing report,100-1K,500,2.85,1425.0,Low,0%,-90%,1.45,deschutes river,fishing report
+james river kayaking,100-1K,500,2.85,1425.0,Low,-90%,-90%,0.50,james river,kayaking
+colorado river fishing report,100-1K,500,2.84,1420.0,Low,0%,0%,0.61,colorado river,fishing report
+ocoee river kayaking,100-1K,500,2.77,1385.0,Low,-90%,0%,1.07,ocoee river,kayaking
+animas river fishing report,100-1K,500,2.76,1380.0,Low,-90%,-90%,0.25,animas river,fishing report
+kenai river fishing report,100-1K,500,2.70,1350.0,Low,-90%,0%,0.44,kenai river,fishing report
+manistee river fishing report,100-1K,500,2.70,1350.0,Low,0%,0%,0.23,manistee river,fishing report
+white river tubing,100-1K,500,2.70,1350.0,Low,0%,0%,0.45,white river,tubing
+monterey kayaking,100-1K,500,2.68,1340.0,High,-90%,0%,0.95,monterey,kayaking
+clear creek fishing report,100-1K,500,2.58,1290.0,Low,0%,+900%,0.65,clear creek,fishing report
+bighorn river fishing report,100-1K,500,2.56,1280.0,Low,-90%,0%,0.13,bighorn river,fishing report
+colorado river kayaking,100-1K,500,2.49,1245.0,Low,0%,0%,0.70,colorado river,kayaking
+lake travis swimming,100-1K,500,2.38,1190.0,Low,0%,0%,0.36,lake travis,swimming
+white river fishing report,100-1K,500,2.35,1175.0,Low,0%,0%,0.86,white river,fishing report
+green river fishing report,100-1K,500,2.34,1170.0,Low,-90%,0%,0.42,green river,fishing report
+arkansas river fishing report,100-1K,500,2.32,1160.0,Low,0%,+900%,0.60,arkansas river,fishing report
+american river fishing report,100-1K,500,2.30,1150.0,Low,0%,0%,0.56,american river,fishing report
+corpus christi fishing report,100-1K,500,2.29,1145.0,Low,+900%,0%,0.83,corpus christi,fishing report
+fort myers fishing report,100-1K,500,2.29,1145.0,Low,+900%,0%,0.57,fort myers,fishing report
+blue river fishing report,100-1K,500,2.23,1115.0,Low,0%,0%,0.19,blue river,fishing report
+deep creek fishing report,100-1K,500,2.19,1095.0,Low,0%,+900%,1.40,deep creek,fishing report
+french broad river kayaking,100-1K,500,2.18,1090.0,Low,0%,0%,0.40,french broad river,kayaking
+pensacola fishing report,100-1K,500,2.14,1070.0,Low,0%,0%,0.26,pensacola,fishing report
+pensacola kayaking,100-1K,500,2.14,1070.0,High,0%,0%,0.59,pensacola,kayaking
+south platte river fishing report,100-1K,500,2.14,1070.0,Low,0%,0%,0.51,south platte river,fishing report
+nantahala river kayaking,100-1K,500,2.02,1010.0,Low,-90%,-90%,0.52,nantahala river,kayaking
+lake travis kayaking,100-1K,500,1.97,985.0,High,0%,0%,0.57,lake travis,kayaking
+san juan river fishing report,100-1K,500,1.97,985.0,Low,-90%,0%,0.94,san juan river,fishing report
+shenandoah river tubing,100-1K,500,1.97,985.0,Low,-90%,0%,0.48,shenandoah river,tubing
+niobrara river tubing,100-1K,500,1.92,960.0,Low,-90%,0%,1.06,niobrara river,tubing
+rio grande kayaking,100-1K,500,1.92,960.0,Low,-90%,0%,0.71,rio grande,kayaking
+san marcos river kayaking,100-1K,500,1.84,920.0,Low,-90%,-90%,0.50,san marcos river,kayaking
+missouri river kayaking,100-1K,500,1.78,890.0,Low,-90%,-90%,0.44,missouri river,kayaking
+roaring fork river fishing report,100-1K,500,1.77,885.0,Low,0%,0%,0.13,roaring fork river,fishing report
+bar harbor kayaking,100-1K,500,1.74,870.0,Medium,-90%,0%,0.39,bar harbor,kayaking
+taylor river fishing report,100-1K,500,1.68,840.0,Low,0%,0%,0.05,taylor river,fishing report
+guadalupe river kayaking,100-1K,500,1.67,835.0,Low,-90%,-90%,0.66,guadalupe river,kayaking
+cumberland river kayaking,100-1K,500,1.60,800.0,Low,-90%,0%,0.56,cumberland river,kayaking
+eagle river fishing report,100-1K,500,1.58,790.0,Low,+900%,+900%,0.13,eagle river,fishing report
+black river kayaking,100-1K,500,1.57,785.0,Low,0%,0%,0.39,black river,kayaking
+corpus christi kayaking,100-1K,500,1.54,770.0,High,-90%,-90%,0.36,corpus christi,kayaking
+red river kayaking,100-1K,500,1.48,740.0,Low,0%,0%,0.19,red river,kayaking
+charleston fishing report,100-1K,500,1.47,735.0,Low,0%,0%,0.51,charleston,fishing report
+french broad river tubing,100-1K,500,1.36,680.0,Low,-90%,0%,0.31,french broad river,tubing
+little river fishing report,100-1K,500,1.28,640.0,Low,0%,0%,0.39,little river,fishing report
+rogue river kayaking,100-1K,500,1.20,600.0,Low,-90%,0%,0.53,rogue river,kayaking
+boise river fishing report,100-1K,500,1.16,580.0,Low,0%,0%,0.13,boise river,fishing report
+truckee river tubing,100-1K,500,1.07,535.0,Low,-99%,0%,0.46,truckee river,tubing
+chattahoochee river kayaking,100-1K,500,1.05,525.0,Low,0%,0%,0.57,chattahoochee river,kayaking
+little truckee river fishing report,100-1K,500,0.80,400.0,Low,-90%,-90%,0.11,little truckee river,fishing report
+rogue river fishing report,100-1K,500,0.72,360.0,Low,-90%,0%,0.06,rogue river,fishing report
+truckee river fishing report,100-1K,500,0.59,295.0,Low,0%,0%,0.06,truckee river,fishing report
+yakima river fishing report,100-1K,500,0.30,150.0,Low,0%,0%,0.04,yakima river,fishing report
+yellow breeches creek fishing report,100-1K,500,0.21,105.0,Low,0%,0%,0.06,yellow breeches creek,fishing report
+allatoona lake fishing report,100-1K,500,,0.0,Low,0%,0%,,allatoona lake,fishing report
+american river cfs,100-1K,500,,0.0,Low,0%,0%,,american river,cfs
+american river tubing,100-1K,500,,0.0,Low,-90%,0%,,american river,tubing
+anchorage fishing report,100-1K,500,,0.0,Low,-90%,0%,,anchorage,fishing report
+animas river flooding,100-1K,500,,0.0,Low,"+9,900%",0%,,animas river,flooding
+arkansas river cfs,100-1K,500,,0.0,Low,-90%,0%,,arkansas river,cfs
+arkansas river flooding,100-1K,500,,0.0,Low,+900%,+900%,,arkansas river,flooding
+arkansas river tubing,100-1K,500,,0.0,Low,-90%,0%,,arkansas river,tubing
+atlantic city boat ramp,100-1K,500,,0.0,Low,-90%,0%,,atlantic city,boat ramp
+atlantic city fishing report,100-1K,500,,0.0,Low,0%,0%,,atlantic city,fishing report
+au sable river tubing,100-1K,500,,0.0,Low,-90%,0%,,au sable river,tubing
+beaver creek boat ramp,100-1K,500,,0.0,Low,0%,0%,,beaver creek,boat ramp
+beaver creek conditions,100-1K,500,,0.0,Low,+∞,0%,,beaver creek,conditions
+belton lake boat ramp,100-1K,500,,0.0,Low,0%,0%,,belton lake,boat ramp
+big hole river fishing report,100-1K,500,,0.0,Low,0%,0%,,big hole river,fishing report
+bitterroot river fishing report,100-1K,500,,0.0,Low,0%,0%,,bitterroot river,fishing report
+black river boat ramp,100-1K,500,,0.0,Low,0%,0%,,black river,boat ramp
+black river flooding,100-1K,500,,0.0,Low,0%,+900%,,black river,flooding
+black river tubing,100-1K,500,,0.0,Low,-90%,0%,,black river,tubing
+blue river kayaking,100-1K,500,,0.0,Low,-90%,0%,,blue river,kayaking
+bogue chitto river tubing,100-1K,500,,0.0,Low,-90%,0%,,bogue chitto river,tubing
+bois brule river fishing report,100-1K,500,,0.0,Low,0%,0%,,bois brule river,fishing report
+boise river cfs,100-1K,500,,0.0,Low,0%,0%,,boise river,cfs
+boise river tubing,100-1K,500,,0.0,Low,-90%,0%,,boise river,tubing
+boston fishing report,100-1K,500,,0.0,Low,-90%,-90%,,boston,fishing report
+boston tubing,100-1K,500,,0.0,Low,0%,0%,,boston,tubing
+branford boat ramp,100-1K,500,,0.0,Low,0%,0%,,branford,boat ramp
+branford forecast,100-1K,500,,0.0,Low,0%,0%,,branford,town forecast (weather intent)
+broad river kayaking,100-1K,500,,0.0,Low,-90%,0%,,broad river,kayaking
+brule river fishing report,100-1K,500,,0.0,Low,0%,0%,,brule river,fishing report
+buffalo river tubing,100-1K,500,,0.0,Low,-90%,0%,,buffalo river,tubing
+cache la poudre river fishing report,100-1K,500,,0.0,Low,0%,0%,,cache la poudre river,fishing report
+caddo river tubing,100-1K,500,,0.0,Low,-90%,0%,,caddo river,tubing
+cahaba river tubing,100-1K,500,,0.0,Low,-90%,0%,,cahaba river,tubing
+canyon lake boat ramp,100-1K,500,,0.0,Low,-90%,0%,,canyon lake,boat ramp
+canyon lake flooding,100-1K,500,,0.0,Low,0%,0%,,canyon lake,flooding
+canyon lake swimming,100-1K,500,,0.0,Low,-90%,0%,,canyon lake,swimming
+canyon lake tubing,100-1K,500,,0.0,Low,-90%,0%,,canyon lake,tubing
+catawba river kayaking,100-1K,500,,0.0,Low,-90%,0%,,catawba river,kayaking
+catawba river tubing,100-1K,500,,0.0,Low,-90%,0%,,catawba river,tubing
+cattaraugus creek fishing report,100-1K,500,,0.0,Low,+900%,0%,,cattaraugus creek,fishing report
+cedar creek boat ramp,100-1K,500,,0.0,Low,0%,-90%,,cedar creek,boat ramp
+cedar creek fishing report,100-1K,500,,0.0,Low,0%,-90%,,cedar creek,fishing report
+cedar creek kayaking,100-1K,500,,0.0,Low,-90%,0%,,cedar creek,kayaking
+cedar key boat ramp,100-1K,500,,0.0,Low,+900%,+900%,,cedar key,boat ramp
+cedar key fishing report,100-1K,500,,0.0,Low,0%,0%,,cedar key,fishing report
+chagrin river fishing report,100-1K,500,,0.0,Low,+900%,0%,,chagrin river,fishing report
+charles river swimming,100-1K,500,,0.0,Low,-90%,-90%,,charles river,swimming
+charleston boat ramp,100-1K,500,,0.0,Low,-90%,0%,,charleston,boat ramp
+chetco river fishing report,100-1K,500,,0.0,Low,+900%,0%,,chetco river,fishing report
+clackamas river flooding,100-1K,500,,0.0,Low,0%,0%,,clackamas river,flooding
+clark fork fishing report,100-1K,500,,0.0,Low,0%,0%,,clark fork,fishing report
+clark fork river fishing report,100-1K,500,,0.0,Low,0%,0%,,clark fork river,fishing report
+clear creek boat ramp,100-1K,500,,0.0,Low,0%,+900%,,clear creek,boat ramp
+clear creek cfs,100-1K,500,,0.0,Low,-90%,0%,,clear creek,cfs
+clear creek kayaking,100-1K,500,,0.0,Low,0%,0%,,clear creek,kayaking
+clearwater beach forecast,100-1K,500,,0.0,Low,0%,0%,,clearwater beach,forecast
+clearwater beach swimming,100-1K,500,,0.0,Low,0%,0%,,clearwater beach,swimming
+clearwater boat ramp,100-1K,500,,0.0,Low,0%,0%,,clearwater,boat ramp
+clearwater river fishing report,100-1K,500,,0.0,Low,0%,0%,,clearwater river,fishing report
+clinton river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,clinton river,kayaking
+coleto creek fishing report,100-1K,500,,0.0,Low,0%,0%,,coleto creek,fishing report
+colorado river cfs,100-1K,500,,0.0,Low,0%,+900%,,colorado river,cfs
+colorado river flooding,100-1K,500,,0.0,Low,-90%,0%,,colorado river,flooding
+colorado river tubing,100-1K,500,,0.0,Low,-90%,-90%,,colorado river,tubing
+columbia river fishing report,100-1K,500,,0.0,Low,0%,0%,,columbia river,fishing report
+columbia river flooding,100-1K,500,,0.0,Low,0%,0%,,columbia river,flooding
+comal river flooding,100-1K,500,,0.0,Low,0%,0%,,comal river,flooding
+connecticut river kayaking,100-1K,500,,0.0,Low,-90%,0%,,connecticut river,kayaking
+connecticut river tubing,100-1K,500,,0.0,Low,-99%,0%,,connecticut river,tubing
+corpus christi flooding,100-1K,500,,0.0,Low,+900%,0%,,corpus christi,town flooding (weather intent)
+cowlitz river flooding,100-1K,500,,0.0,Low,0%,0%,,cowlitz river,flooding
+current river conditions,100-1K,500,,0.0,Low,0%,+900%,,current river,conditions
+current river kayaking,100-1K,500,,0.0,Low,-90%,0%,,current river,kayaking
+cuyahoga river kayaking,100-1K,500,,0.0,Low,-90%,-99%,,cuyahoga river,kayaking
+dam release schedule,100-1K,500,,0.0,Low,0%,+900%,,,general question
+deep creek kayaking,100-1K,500,,0.0,Low,-90%,-90%,,deep creek,kayaking
+deep creek swimming,100-1K,500,,0.0,Low,-90%,0%,,deep creek,swimming
+deer creek boat ramp,100-1K,500,,0.0,Low,-90%,0%,,deer creek,boat ramp
+deer creek fishing report,100-1K,500,,0.0,Low,0%,0%,,deer creek,fishing report
+deerfield river tubing,100-1K,500,,0.0,Low,-99%,0%,,deerfield river,tubing
+delaware river boat ramp,100-1K,500,,0.0,Low,0%,0%,,delaware river,boat ramp
+delaware river fishing report,100-1K,500,,0.0,Low,0%,0%,,delaware river,fishing report
+delaware river swimming,100-1K,500,,0.0,Low,-90%,0%,,delaware river,swimming
+des plaines river flooding,100-1K,500,,0.0,Low,-90%,0%,,des plaines river,flooding
+deschutes river tubing,100-1K,500,,0.0,Low,-90%,0%,,deschutes river,tubing
+eagle river forecast,100-1K,500,,0.0,Low,0%,0%,,eagle river,forecast
+eagle river tubing,100-1K,500,,0.0,Low,-90%,0%,,eagle river,tubing
+east fork carson river fishing report,100-1K,500,,0.0,Low,0%,0%,,east fork carson river,fishing report
+econlockhatchee river swimming,100-1K,500,,0.0,Low,0%,+∞,,econlockhatchee river,swimming
+edisto river tubing,100-1K,500,,0.0,Low,-90%,0%,,edisto river,tubing
+elk creek boat ramp,100-1K,500,,0.0,Low,0%,0%,,elk creek,boat ramp
+elk creek fishing report,100-1K,500,,0.0,Low,+900%,0%,,elk creek,fishing report
+elk river fishing report,100-1K,500,,0.0,Low,0%,+900%,,elk river,fishing report
+elk river forecast,100-1K,500,,0.0,Low,0%,0%,,elk river,forecast
+elk river kayaking,100-1K,500,,0.0,Low,-90%,0%,,elk river,kayaking
+esopus creek fishing report,100-1K,500,,0.0,Low,0%,0%,,esopus creek,fishing report
+esopus creek tubing,100-1K,500,,0.0,Low,-90%,0%,,esopus creek,tubing
+etowah river kayaking,100-1K,500,,0.0,Low,-90%,0%,,etowah river,kayaking
+etowah river tubing,100-1K,500,,0.0,Low,-90%,0%,,etowah river,tubing
+falls lake boat ramp,100-1K,500,,0.0,Low,0%,0%,,falls lake,boat ramp
+falls lake fishing report,100-1K,500,,0.0,Low,0%,0%,,falls lake,fishing report
+falls lake swimming,100-1K,500,,0.0,Low,-90%,0%,,falls lake,swimming
+farmington river fishing report,100-1K,500,,0.0,Low,0%,0%,,farmington river,fishing report
+flathead river fishing report,100-1K,500,,0.0,Low,0%,+900%,,flathead river,fishing report
+flint river kayaking,100-1K,500,,0.0,Low,-90%,0%,,flint river,kayaking
+fox river fishing report,100-1K,500,,0.0,Low,+900%,0%,,fox river,fishing report
+fox river flooding,100-1K,500,,0.0,Low,0%,0%,,fox river,flooding
+fox river kayaking,100-1K,500,,0.0,Low,-90%,0%,,fox river,kayaking
+fox river tubing,100-1K,500,,0.0,Low,-90%,0%,,fox river,tubing
+frio river flooding,100-1K,500,,0.0,Low,-90%,0%,,frio river,flooding
+gallatin river cfs,100-1K,500,,0.0,Low,-90%,0%,,gallatin river,cfs
+grand river flooding,100-1K,500,,0.0,Low,0%,0%,,grand river,flooding
+grande ronde river fishing report,100-1K,500,,0.0,Low,+900%,0%,,grande ronde river,fishing report
+great salt lake swimming,100-1K,500,,0.0,Low,0%,0%,,great salt lake,swimming
+green river boat ramp,100-1K,500,,0.0,Low,0%,0%,,green river,boat ramp
+green river cfs,100-1K,500,,0.0,Low,0%,-90%,,green river,cfs
+green river flood stage,100-1K,500,,0.0,Low,0%,0%,,green river,flood stage
+green river forecast,100-1K,500,,0.0,Low,+900%,0%,,green river,forecast
+green river kayaking,100-1K,500,,0.0,Low,0%,0%,,green river,kayaking
+green river swimming,100-1K,500,,0.0,Low,-90%,0%,,green river,swimming
+guadalupe river conditions,100-1K,500,,0.0,Low,0%,0%,,guadalupe river,conditions
+guadalupe river fishing report,100-1K,500,,0.0,Low,0%,-90%,,guadalupe river,fishing report
+hardware river boat ramp,100-1K,500,,0.0,Low,0%,0%,,hardware river,boat ramp
+haw river kayaking,100-1K,500,,0.0,Low,0%,0%,,haw river,kayaking
+henrys fork fishing report,100-1K,500,,0.0,Low,0%,0%,,henrys fork,fishing report
+homer fishing report,100-1K,500,,0.0,Low,-90%,0%,,homer,fishing report
+hudson river flooding,100-1K,500,,0.0,Low,0%,-90%,,hudson river,flooding
+hudson river swimming,100-1K,500,,0.0,Low,0%,0%,,hudson river,swimming
+huron river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,huron river,kayaking
+huron river tubing,100-1K,500,,0.0,Low,-90%,0%,,huron river,tubing
+illinois river tubing,100-1K,500,,0.0,Low,-90%,0%,,illinois river,tubing
+james river boat ramp,100-1K,500,,0.0,Low,0%,0%,,james river,boat ramp
+james river tubing,100-1K,500,,0.0,Low,-90%,0%,,james river,tubing
+jordan lake boat ramp,100-1K,500,,0.0,Low,0%,-90%,,jordan lake,boat ramp
+jordan lake fishing report,100-1K,500,,0.0,Low,0%,0%,,jordan lake,fishing report
+jordan lake kayaking,100-1K,500,,0.0,Low,-90%,0%,,jordan lake,kayaking
+jordan lake swimming,100-1K,500,,0.0,Low,-90%,0%,,jordan lake,swimming
+jordan river boat ramp,100-1K,500,,0.0,Low,-90%,0%,,jordan river,boat ramp
+jordan river flood stage,100-1K,500,,0.0,Low,0%,0%,,jordan river,flood stage
+jordan river kayaking,100-1K,500,,0.0,Low,-90%,0%,,jordan river,kayaking
+kankakee river boat ramp,100-1K,500,,0.0,Low,0%,0%,,kankakee river,boat ramp
+kern river fishing report,100-1K,500,,0.0,Low,0%,0%,,kern river,fishing report
+kern river tubing,100-1K,500,,0.0,Low,-90%,0%,,kern river,tubing
+kerr lake boat ramp,100-1K,500,,0.0,Low,0%,0%,,kerr lake,boat ramp
+klamath river fishing report,100-1K,500,,0.0,Low,0%,0%,,klamath river,fishing report
+klickitat river fishing report,100-1K,500,,0.0,Low,0%,0%,,klickitat river,fishing report
+lake hartwell boat ramp,100-1K,500,,0.0,Low,0%,0%,,lake hartwell,boat ramp
+lake lanier boat ramp,100-1K,500,,0.0,Low,0%,0%,,lake lanier,boat ramp
+lake lanier flooding,100-1K,500,,0.0,Low,0%,+900%,,lake lanier,flooding
+lake lanier kayaking,100-1K,500,,0.0,Low,-90%,-90%,,lake lanier,kayaking
+lake lanier swimming,100-1K,500,,0.0,Low,-90%,0%,,lake lanier,swimming
+lake levels near me,100-1K,500,,0.0,Low,0%,0%,,,general question
+lake mead boat ramp,100-1K,500,,0.0,Low,0%,0%,,lake mead,boat ramp
+lake mead swimming,100-1K,500,,0.0,Low,0%,0%,,lake mead,swimming
+lake powell boat ramp,100-1K,500,,0.0,Low,0%,0%,,lake powell,boat ramp
+lake powell flooding,100-1K,500,,0.0,Low,"+9,900%","+9,900%",,lake powell,flooding
+lake powell forecast,100-1K,500,,0.0,Low,0%,0%,,lake powell,forecast
+lake powell swimming,100-1K,500,,0.0,Low,0%,0%,,lake powell,swimming
+lake travis boat ramp,100-1K,500,,0.0,Low,0%,0%,,lake travis,boat ramp
+lake travis flooding,100-1K,500,,0.0,Low,0%,0%,,lake travis,flooding
+lake travis forecast,100-1K,500,,0.0,Low,+900%,+900%,,lake travis,forecast
+lake water temperature,100-1K,500,,0.0,Low,0%,0%,,lake,water temperature
+little miami river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,little miami river,kayaking
+little river boat ramp,100-1K,500,,0.0,Low,0%,0%,,little river,boat ramp
+los angeles river flooding,100-1K,500,,0.0,Low,0%,0%,,los angeles river,flooding
+los angeles river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,los angeles river,kayaking
+lumber river boat ramp,100-1K,500,,0.0,Low,0%,+900%,,lumber river,boat ramp
+mad river fishing report,100-1K,500,,0.0,Low,+900%,+900%,,mad river,fishing report
+mad river kayaking,100-1K,500,,0.0,Low,-90%,0%,,mad river,kayaking
+mad river tubing,100-1K,500,,0.0,Low,-90%,0%,,mad river,tubing
+manistee river flooding,100-1K,500,,0.0,Low,0%,+∞,,manistee river,flooding
+manistee river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,manistee river,kayaking
+mckenzie river fishing report,100-1K,500,,0.0,Low,0%,0%,,mckenzie river,fishing report
+mill creek boat ramp,100-1K,500,,0.0,Low,0%,0%,,mill creek,boat ramp
+mill creek flooding,100-1K,500,,0.0,Low,0%,0%,,mill creek,flooding
+mill creek forecast,100-1K,500,,0.0,Low,0%,0%,,mill creek,forecast
+milwaukee river fishing report,100-1K,500,,0.0,Low,+900%,0%,,milwaukee river,fishing report
+minnesota river boat ramp,100-1K,500,,0.0,Low,0%,0%,,minnesota river,boat ramp
+minnesota river tubing,100-1K,500,,0.0,Low,0%,+900%,,minnesota river,tubing
+mississippi river flood stage,100-1K,500,,0.0,Low,0%,0%,,mississippi river,flood stage
+mississippi river forecast,100-1K,500,,0.0,Low,0%,0%,,mississippi river,forecast
+mississippi river swimming,100-1K,500,,0.0,Low,0%,0%,,mississippi river,swimming
+missouri river fishing report,100-1K,500,,0.0,Low,0%,0%,,missouri river,fishing report
+missouri river flooding,100-1K,500,,0.0,Low,0%,0%,,missouri river,flooding
+monterey fishing report,100-1K,500,,0.0,Low,0%,0%,,monterey,fishing report
+muskegon river flooding,100-1K,500,,0.0,Low,0%,0%,,muskegon river,flooding
+muskegon river tubing,100-1K,500,,0.0,Low,-99%,0%,,muskegon river,tubing
+namekagon river tubing,100-1K,500,,0.0,Low,-90%,0%,,namekagon river,tubing
+nantahala river tubing,100-1K,500,,0.0,Low,-90%,0%,,nantahala river,tubing
+new river kayaking,100-1K,500,,0.0,Low,-90%,-90%,,new river,kayaking
+new river tubing,100-1K,500,,0.0,Low,-90%,0%,,new river,tubing
+nueces river flooding,100-1K,500,,0.0,Low,-90%,0%,,nueces river,flooding
+nws river forecast,100-1K,500,,0.0,Low,0%,0%,,nws river,forecast
+ocoee river tubing,100-1K,500,,0.0,Low,-90%,0%,,ocoee river,tubing
+ohio river boat ramp,100-1K,500,,0.0,Low,-90%,-90%,,ohio river,boat ramp
+ohio river flood stage,100-1K,500,,0.0,Low,-90%,0%,,ohio river,flood stage
+ohio river flooding,100-1K,500,,0.0,Low,-90%,0%,,ohio river,flooding
+ohio river forecast,100-1K,500,,0.0,Low,-90%,0%,,ohio river,forecast
+ohio river kayaking,100-1K,500,,0.0,Low,-90%,0%,,ohio river,kayaking
+ohio river tubing,100-1K,500,,0.0,Low,-90%,0%,,ohio river,tubing
+panama city beach conditions,100-1K,500,,0.0,Low,0%,0%,,panama city beach,conditions
+panama city beach flooding,100-1K,500,,0.0,Low,0%,+900%,,panama city beach,flooding
+peace river boat ramp,100-1K,500,,0.0,Low,0%,0%,,peace river,boat ramp
+penns creek cfs,100-1K,500,,0.0,Low,-90%,0%,,penns creek,cfs
+penns creek fishing report,100-1K,500,,0.0,Low,0%,0%,,penns creek,fishing report
+pine river forecast,100-1K,500,,0.0,Low,-90%,0%,,pine river,forecast
+pine river kayaking,100-1K,500,,0.0,Low,-90%,0%,,pine river,kayaking
+potomac river fishing report,100-1K,500,,0.0,Low,0%,0%,,potomac river,fishing report
+potomac river swimming,100-1K,500,,0.0,Low,-90%,-90%,,potomac river,swimming
+potomac river tubing,100-1K,500,,0.0,Low,-90%,0%,,potomac river,tubing
+putah creek fishing report,100-1K,500,,0.0,Low,0%,0%,,putah creek,fishing report
+rappahannock river fishing report,100-1K,500,,0.0,Low,0%,0%,,rappahannock river,fishing report
+raritan river boat ramp,100-1K,500,,0.0,Low,0%,0%,,raritan river,boat ramp
+red river flooding,100-1K,500,,0.0,Low,0%,0%,,red river,flooding
+red river forecast,100-1K,500,,0.0,Low,0%,0%,,red river,forecast
+red river of the north flooding,100-1K,500,,0.0,Low,0%,0%,,red river of the north,flooding
+reservoir level,100-1K,500,,0.0,Low,0%,0%,,reservoir,level
+rio grande fishing report,100-1K,500,,0.0,Low,0%,0%,,rio grande,fishing report
+rio grande flooding,100-1K,500,,0.0,Low,+900%,+900%,,rio grande,town flooding (weather intent)
+river conditions,100-1K,500,,0.0,Low,0%,+900%,,river,conditions
+river flood stage,100-1K,500,,0.0,Low,0%,+900%,,river,flood stage
+river forecast,100-1K,500,,0.0,Low,0%,0%,,river,forecast
+river level forecast,100-1K,500,,0.0,Low,-90%,-90%,,river level,forecast
+rock creek boat ramp,100-1K,500,,0.0,Low,0%,0%,,rock creek,boat ramp
+rock creek fishing report,100-1K,500,,0.0,Low,-90%,0%,,rock creek,fishing report
+rum river tubing,100-1K,500,,0.0,Low,-90%,0%,,rum river,tubing
+russian river fishing report,100-1K,500,,0.0,Low,0%,0%,,russian river,fishing report
+russian river flood stage,100-1K,500,,0.0,Low,0%,0%,,russian river,flood stage
+russian river flooding,100-1K,500,,0.0,Low,-90%,-90%,,russian river,flooding
+russian river swimming,100-1K,500,,0.0,Low,-90%,0%,,russian river,swimming
+russian river tubing,100-1K,500,,0.0,Low,-90%,0%,,russian river,tubing
+saint johns river fishing report,100-1K,500,,0.0,Low,0%,0%,,saint johns river,fishing report
+salmon river cfs,100-1K,500,,0.0,Low,0%,0%,,salmon river,cfs
+salt river boat ramp,100-1K,500,,0.0,Low,0%,0%,,salt river,boat ramp
+salt river fishing report,100-1K,500,,0.0,Low,+900%,0%,,salt river,fishing report
+san juan river cfs,100-1K,500,,0.0,Low,+900%,+900%,,san juan river,cfs
+san juan river flooding,100-1K,500,,0.0,Low,"+9,900%",0%,,san juan river,flooding
+san marcos river flooding,100-1K,500,,0.0,Low,0%,0%,,san marcos river,flooding
+san marcos river swimming,100-1K,500,,0.0,Low,-90%,0%,,san marcos river,swimming
+sandy river boat ramp,100-1K,500,,0.0,Low,-90%,0%,,sandy river,boat ramp
+sandy river fishing report,100-1K,500,,0.0,Low,0%,0%,,sandy river,fishing report
+santa fe river kayaking,100-1K,500,,0.0,Low,0%,0%,,santa fe river,kayaking
+schuylkill river kayaking,100-1K,500,,0.0,Low,-90%,0%,,schuylkill river,kayaking
+shasta lake swimming,100-1K,500,,0.0,Low,-90%,0%,,shasta lake,swimming
+skagit river fishing report,100-1K,500,,0.0,Low,0%,0%,,skagit river,fishing report
+skagit river flood stage,100-1K,500,,0.0,Low,+∞,0%,,skagit river,flood stage
+skagit river forecast,100-1K,500,,0.0,Low,0%,0%,,skagit river,forecast
+skykomish river flooding,100-1K,500,,0.0,Low,0%,0%,,skykomish river,flooding
+smith river cfs,100-1K,500,,0.0,Low,0%,-90%,,smith river,cfs
+smith river fishing report,100-1K,500,,0.0,Low,+900%,0%,,smith river,fishing report
+smith river kayaking,100-1K,500,,0.0,Low,0%,0%,,smith river,kayaking
+snake river fishing report,100-1K,500,,0.0,Low,0%,0%,,snake river,fishing report
+snake river swimming,100-1K,500,,0.0,Low,0%,0%,,snake river,swimming
+snohomish river flood stage,100-1K,500,,0.0,Low,+∞,0%,,snohomish river,flood stage
+snoqualmie river flood stage,100-1K,500,,0.0,—,0%,-100%,,snoqualmie river,flood stage
+snoqualmie river tubing,100-1K,500,,0.0,Low,-90%,0%,,snoqualmie river,tubing
+south fork boise river fishing report,100-1K,500,,0.0,Low,0%,0%,,south fork boise river,fishing report
+south platte river tubing,100-1K,500,,0.0,Low,-90%,0%,,south platte river,tubing
+spring creek fishing report,100-1K,500,,0.0,Low,0%,0%,,spring creek,fishing report
+stillwater river fishing report,100-1K,500,,0.0,Low,0%,+900%,,stillwater river,fishing report
+styx river tubing,100-1K,500,,0.0,Low,-90%,0%,,styx river,tubing
+sugar creek kayaking,100-1K,500,,0.0,Low,0%,0%,,sugar creek,kayaking
+sugar creek tubing,100-1K,500,,0.0,Low,-90%,0%,,sugar creek,tubing
+susquehanna river fishing report,100-1K,500,,0.0,Low,0%,0%,,susquehanna river,fishing report
+susquehanna river kayaking,100-1K,500,,0.0,Low,-90%,0%,,susquehanna river,kayaking
+suwannee river boat ramp,100-1K,500,,0.0,Low,0%,+900%,,suwannee river,boat ramp
+suwannee river kayaking,100-1K,500,,0.0,Low,0%,0%,,suwannee river,kayaking
+tellico river fishing report,100-1K,500,,0.0,Low,0%,0%,,tellico river,fishing report
+thornapple river tubing,100-1K,500,,0.0,Low,-90%,0%,,thornapple river,tubing
+trinity river fishing report,100-1K,500,,0.0,Low,+900%,0%,,trinity river,fishing report
+trinity river flooding,100-1K,500,,0.0,Low,0%,0%,,trinity river,flooding
+trinity river kayaking,100-1K,500,,0.0,Low,0%,0%,,trinity river,kayaking
+upper iowa river kayaking,100-1K,500,,0.0,Low,-90%,0%,,upper iowa river,kayaking
+usgs river levels,100-1K,500,,0.0,Low,0%,0%,,,general question
+watauga river fishing report,100-1K,500,,0.0,Low,+900%,0%,,watauga river,fishing report
+water levels near me,100-1K,500,,0.0,Low,0%,0%,,,general question
+water release schedule,100-1K,500,,0.0,Low,0%,0%,,,general question
+west branch delaware river fishing report,100-1K,500,,0.0,Low,0%,0%,,west branch delaware river,fishing report
+white river boat ramp,100-1K,500,,0.0,Low,0%,0%,,white river,boat ramp
+white river flood stage,100-1K,500,,0.0,Low,-99%,0%,,white river,flood stage
+willamette river fishing report,100-1K,500,,0.0,Low,0%,-90%,,willamette river,fishing report
+willamette river flooding,100-1K,500,,0.0,Low,0%,0%,,willamette river,flooding
+wilson river fishing report,100-1K,500,,0.0,Low,0%,0%,,wilson river,fishing report
+wisconsin river flooding,100-1K,500,,0.0,Low,0%,0%,,wisconsin river,flooding
+wisconsin river kayaking,100-1K,500,,0.0,Low,-90%,0%,,wisconsin river,kayaking
+wisconsin river tubing,100-1K,500,,0.0,Low,-99%,0%,,wisconsin river,tubing
+withlacoochee river kayaking,100-1K,500,,0.0,Low,0%,0%,,withlacoochee river,kayaking
+yakima river flooding,100-1K,500,,0.0,Low,0%,0%,,yakima river,flooding
+yakima river tubing,100-1K,500,,0.0,Low,-99%,0%,,yakima river,tubing
+yellowstone river cfs,100-1K,500,,0.0,Low,-90%,0%,,yellowstone river,cfs
+yuba river fishing report,100-1K,500,,0.0,Low,0%,0%,,yuba river,fishing report
+astoria swimming,10-100,50,10.23,511.5,Medium,0%,0%,3.60,astoria,swimming
+mill creek swimming,10-100,50,7.37,368.5,Low,0%,0%,1.13,mill creek,swimming
+san diego bay kayaking,10-100,50,5.70,285.0,High,0%,0%,1.08,san diego bay,kayaking
+fernandina beach kayaking,10-100,50,4.46,223.0,High,0%,0%,1.24,fernandina beach,kayaking
+atlantic city kayaking,10-100,50,3.82,191.0,Medium,0%,0%,1.04,atlantic city,kayaking
+honolulu tubing,10-100,50,3.45,172.5,High,0%,0%,0.89,honolulu,tubing
+willamette river kayaking,10-100,50,2.73,136.5,Low,-90%,0%,0.76,willamette river,kayaking
+bellingham kayaking,10-100,50,2.62,131.0,Medium,-90%,0%,0.44,bellingham,kayaking
+lake travis tubing,10-100,50,2.45,122.5,High,-90%,0%,0.86,lake travis,tubing
+honolulu fishing report,10-100,50,2.18,109.0,Low,0%,0%,0.32,honolulu,fishing report
+wekiva river kayaking,10-100,50,2.14,107.0,Low,+900%,+900%,0.64,wekiva river,kayaking
+yellowstone river kayaking,10-100,50,2.04,102.0,Low,0%,0%,0.92,yellowstone river,kayaking
+hocking river kayaking,10-100,50,1.25,62.5,Low,-90%,0%,0.67,hocking river,kayaking
+clearwater beach conditions,10-100,50,0.45,22.5,Low,0%,0%,0.16,clearwater beach,conditions
+action stage,10-100,50,,0.0,Low,0%,-90%,,,general question
+alabama river fishing report,10-100,50,,0.0,Low,+∞,0%,,alabama river,fishing report
+alabama river flood stage,10-100,50,,0.0,Low,+∞,+∞,,alabama river,flood stage
+alabama river flooding,10-100,50,,0.0,Low,0%,0%,,alabama river,flooding
+alabama river forecast,10-100,50,,0.0,Low,0%,0%,,alabama river,forecast
+alabama river tubing,10-100,50,,0.0,Low,-90%,0%,,alabama river,tubing
+alapaha river boat ramp,10-100,50,,0.0,Low,0%,+∞,,alapaha river,boat ramp
+alapaha river flooding,10-100,50,,0.0,—,0%,-100%,,alapaha river,flooding
+allatoona lake swimming,10-100,50,,0.0,Low,-90%,0%,,allatoona lake,swimming
+allegheny river conditions,10-100,50,,0.0,Low,0%,0%,,allegheny river,conditions
+allegheny river fishing report,10-100,50,,0.0,Low,0%,0%,,allegheny river,fishing report
+allegheny river flood stage,10-100,50,,0.0,Low,0%,0%,,allegheny river,flood stage
+allegheny river flooding,10-100,50,,0.0,Low,0%,0%,,allegheny river,flooding
+allegheny river kayaking,10-100,50,,0.0,Low,-90%,0%,,allegheny river,kayaking
+allegheny river swimming,10-100,50,,0.0,—,-100%,-100%,,allegheny river,swimming
+allegheny river tubing,10-100,50,,0.0,Low,0%,0%,,allegheny river,tubing
+altamaha river flood stage,10-100,50,,0.0,Low,0%,0%,,altamaha river,flood stage
+altamaha river flooding,10-100,50,,0.0,Low,0%,+∞,,altamaha river,flooding
+altamaha river kayaking,10-100,50,,0.0,Low,0%,0%,,altamaha river,kayaking
+american river conditions,10-100,50,,0.0,Low,0%,0%,,american river,conditions
+american river flood stage,10-100,50,,0.0,—,0%,-100%,,american river,flood stage
+american river flooding,10-100,50,,0.0,Low,0%,0%,,american river,flooding
+american river kayaking,10-100,50,,0.0,Low,-90%,0%,,american river,kayaking
+american river swimming,10-100,50,,0.0,Low,0%,0%,,american river,swimming
+anchorage flooding,10-100,50,,0.0,Low,0%,-90%,,anchorage,town flooding (weather intent)
+anchorage swimming,10-100,50,,0.0,Low,-90%,0%,,anchorage,swimming
+anchorage tubing,10-100,50,,0.0,Low,0%,0%,,anchorage,tubing
+animas river conditions,10-100,50,,0.0,Low,0%,0%,,animas river,conditions
+animas river forecast,10-100,50,,0.0,Low,+∞,+∞,,animas river,forecast
+animas river kayaking,10-100,50,,0.0,Low,0%,0%,,animas river,kayaking
+animas river swimming,10-100,50,,0.0,Low,0%,0%,,animas river,swimming
+animas river tubing,10-100,50,,0.0,—,-100%,-100%,,animas river,tubing
+apple river fishing report,10-100,50,,0.0,Low,0%,0%,,apple river,fishing report
+apple river flooding,10-100,50,,0.0,—,-100%,0%,,apple river,flooding
+apple river kayaking,10-100,50,,0.0,Low,0%,0%,,apple river,kayaking
+arkansas river boat ramp,10-100,50,,0.0,Low,0%,0%,,arkansas river,boat ramp
+arkansas river conditions,10-100,50,,0.0,Low,0%,0%,,arkansas river,conditions
+arkansas river flood stage,10-100,50,,0.0,Low,0%,0%,,arkansas river,flood stage
+arkansas river forecast,10-100,50,,0.0,—,-100%,-100%,,arkansas river,forecast
+arkansas river kayaking,10-100,50,,0.0,Low,-90%,0%,,arkansas river,kayaking
+arkansas river swimming,10-100,50,,0.0,Low,0%,0%,,arkansas river,swimming
+ashuelot river flooding,10-100,50,,0.0,—,-100%,-100%,,ashuelot river,flooding
+ashuelot river kayaking,10-100,50,,0.0,—,-100%,-100%,,ashuelot river,kayaking
+assabet river flooding,10-100,50,,0.0,—,-100%,-100%,,assabet river,flooding
+assabet river kayaking,10-100,50,,0.0,Low,0%,0%,,assabet river,kayaking
+astoria boat ramp,10-100,50,,0.0,Low,-90%,0%,,astoria,boat ramp
+astoria fishing report,10-100,50,,0.0,Low,-90%,0%,,astoria,fishing report
+astoria flooding,10-100,50,,0.0,Low,0%,0%,,astoria,town flooding (weather intent)
+astoria kayaking,10-100,50,,0.0,Low,0%,0%,,astoria,kayaking
+atlantic city conditions,10-100,50,,0.0,Low,0%,0%,,atlantic city,town conditions (weather intent)
+atlantic city swimming,10-100,50,,0.0,Low,0%,0%,,atlantic city,swimming
+au sable river fishing report,10-100,50,,0.0,Low,-90%,0%,,au sable river,fishing report
+au sable river flooding,10-100,50,,0.0,—,-100%,0%,,au sable river,flooding
+au sable river kayaking,10-100,50,,0.0,Low,-90%,0%,,au sable river,kayaking
+auglaize river flooding,10-100,50,,0.0,—,-100%,0%,,auglaize river,flooding
+auglaize river kayaking,10-100,50,,0.0,Low,0%,0%,,auglaize river,kayaking
+bar harbor fishing report,10-100,50,,0.0,Low,0%,0%,,bar harbor,fishing report
+bar harbor flooding,10-100,50,,0.0,Low,0%,0%,,bar harbor,town flooding (weather intent)
+bar harbor swimming,10-100,50,,0.0,Low,0%,0%,,bar harbor,swimming
+barren river fishing report,10-100,50,,0.0,Low,0%,0%,,barren river,fishing report
+barren river flooding,10-100,50,,0.0,Low,0%,0%,,barren river,flooding
+barren river kayaking,10-100,50,,0.0,Low,0%,0%,,barren river,kayaking
+barren river lake conditions,10-100,50,,0.0,Low,+∞,0%,,barren river lake,conditions
+barren river lake fishing report,10-100,50,,0.0,Low,+900%,+900%,,barren river lake,fishing report
+barren river lake flooding,10-100,50,,0.0,—,-100%,-100%,,barren river lake,flooding
+barren river lake swimming,10-100,50,,0.0,Low,0%,0%,,barren river lake,swimming
+battle creek fishing report,10-100,50,,0.0,Low,0%,0%,,battle creek,fishing report
+battle creek flooding,10-100,50,,0.0,Low,0%,0%,,battle creek,flooding
+battle creek kayaking,10-100,50,,0.0,—,-100%,0%,,battle creek,kayaking
+battle creek swimming,10-100,50,,0.0,—,-100%,-100%,,battle creek,swimming
+beaver creek fishing report,10-100,50,,0.0,Low,0%,0%,,beaver creek,fishing report
+beaver creek flooding,10-100,50,,0.0,Low,0%,0%,,beaver creek,flooding
+beaver creek kayaking,10-100,50,,0.0,Low,-90%,0%,,beaver creek,kayaking
+beaver creek swimming,10-100,50,,0.0,Low,0%,0%,,beaver creek,swimming
+bellingham boat ramp,10-100,50,,0.0,Low,0%,+∞,,bellingham,boat ramp
+bellingham fishing report,10-100,50,,0.0,Low,0%,0%,,bellingham,fishing report
+bellingham flow,10-100,50,,0.0,—,-100%,0%,,bellingham,flow
+bellingham swimming,10-100,50,,0.0,Low,-90%,0%,,bellingham,swimming
+belton lake flooding,10-100,50,,0.0,Low,0%,0%,,belton lake,flooding
+belton lake kayaking,10-100,50,,0.0,Low,0%,0%,,belton lake,kayaking
+belton lake swimming,10-100,50,,0.0,Low,-90%,0%,,belton lake,swimming
+big blue river flood stage,10-100,50,,0.0,Low,0%,+900%,,big blue river,flood stage
+big blue river flooding,10-100,50,,0.0,Low,0%,0%,,big blue river,flooding
+big darby creek flooding,10-100,50,,0.0,Low,0%,0%,,big darby creek,flooding
+big darby creek kayaking,10-100,50,,0.0,Low,0%,0%,,big darby creek,kayaking
+big hole river cfs,10-100,50,,0.0,Low,0%,0%,,big hole river,cfs
+big hole river conditions,10-100,50,,0.0,Low,0%,+∞,,big hole river,conditions
+big hole river flooding,10-100,50,,0.0,—,-100%,0%,,big hole river,flooding
+big sur river fishing report,10-100,50,,0.0,Low,0%,+∞,,big sur river,fishing report
+big sur river flooding,10-100,50,,0.0,Low,0%,+∞,,big sur river,flooding
+big sur river kayaking,10-100,50,,0.0,—,0%,-100%,,big sur river,kayaking
+big sur river swimming,10-100,50,,0.0,Low,0%,0%,,big sur river,swimming
+big sur river tubing,10-100,50,,0.0,Low,0%,0%,,big sur river,tubing
+big tujunga creek swimming,10-100,50,,0.0,Low,0%,0%,,big tujunga creek,swimming
+bighorn river cfs,10-100,50,,0.0,Low,0%,0%,,bighorn river,cfs
+bighorn river conditions,10-100,50,,0.0,Low,0%,+∞,,bighorn river,conditions
+bighorn river flooding,10-100,50,,0.0,—,0%,0%,,bighorn river,flooding
+bitterroot river cfs,10-100,50,,0.0,Low,0%,0%,,bitterroot river,cfs
+bitterroot river conditions,10-100,50,,0.0,—,-100%,-100%,,bitterroot river,conditions
+bitterroot river flood stage,10-100,50,,0.0,—,0%,0%,,bitterroot river,flood stage
+bitterroot river flooding,10-100,50,,0.0,Low,+∞,0%,,bitterroot river,flooding
+black river cfs,10-100,50,,0.0,Low,0%,0%,,black river,cfs
+black river conditions,10-100,50,,0.0,Low,0%,0%,,black river,conditions
+black river fishing report,10-100,50,,0.0,Low,0%,-90%,,black river,fishing report
+black river flood stage,10-100,50,,0.0,Low,0%,0%,,black river,flood stage
+black river forecast,10-100,50,,0.0,Low,0%,0%,,black river,forecast
+black river swimming,10-100,50,,0.0,Low,0%,0%,,black river,swimming
+blanchard river flood stage,10-100,50,,0.0,—,-100%,-100%,,blanchard river,flood stage
+blanchard river flooding,10-100,50,,0.0,—,-100%,-100%,,blanchard river,flooding
+blue river boat ramp,10-100,50,,0.0,Low,0%,0%,,blue river,boat ramp
+blue river cfs,10-100,50,,0.0,Low,0%,0%,,blue river,cfs
+blue river conditions,10-100,50,,0.0,Low,0%,+∞,,blue river,conditions
+blue river flooding,10-100,50,,0.0,Low,0%,0%,,blue river,flooding
+blue river forecast,10-100,50,,0.0,Low,0%,0%,,blue river,forecast
+blue river swimming,10-100,50,,0.0,Low,0%,0%,,blue river,swimming
+blue river tubing,10-100,50,,0.0,Low,0%,0%,,blue river,tubing
+bluestone river kayaking,10-100,50,,0.0,Low,0%,0%,,bluestone river,kayaking
+boat ramp open,10-100,50,,0.0,Low,-90%,0%,,,general question
+bogachiel river flooding,10-100,50,,0.0,—,0%,0%,,bogachiel river,flooding
+bogue chitto flood stage,10-100,50,,0.0,Low,+∞,0%,,bogue chitto,flood stage
+bogue chitto flooding,10-100,50,,0.0,—,0%,0%,,bogue chitto,town flooding (weather intent)
+bogue chitto kayaking,10-100,50,,0.0,Low,0%,0%,,bogue chitto,kayaking
+bogue chitto river flood stage,10-100,50,,0.0,Low,+∞,0%,,bogue chitto river,flood stage
+bogue chitto river flooding,10-100,50,,0.0,Low,0%,+∞,,bogue chitto river,flooding
+bogue chitto river kayaking,10-100,50,,0.0,Low,0%,0%,,bogue chitto river,kayaking
+bois brule river kayaking,10-100,50,,0.0,Low,0%,0%,,bois brule river,kayaking
+boise river conditions,10-100,50,,0.0,Low,0%,0%,,boise river,conditions
+boise river flood stage,10-100,50,,0.0,Low,+∞,+∞,,boise river,flood stage
+boise river flooding,10-100,50,,0.0,Low,0%,0%,,boise river,flooding
+boise river kayaking,10-100,50,,0.0,Low,0%,0%,,boise river,kayaking
+boise river swimming,10-100,50,,0.0,Low,0%,0%,,boise river,swimming
+boston cfs,10-100,50,,0.0,Low,0%,0%,,boston,cfs
+boston conditions,10-100,50,,0.0,Low,0%,0%,,boston,town conditions (weather intent)
+boston flow,10-100,50,,0.0,Low,0%,0%,,boston,flow
+branford flooding,10-100,50,,0.0,Low,0%,0%,,branford,town flooding (weather intent)
+branford swimming,10-100,50,,0.0,Low,+∞,+∞,,branford,swimming
+broad river boat ramp,10-100,50,,0.0,Low,0%,0%,,broad river,boat ramp
+broad river fishing report,10-100,50,,0.0,Low,0%,0%,,broad river,fishing report
+broad river flood stage,10-100,50,,0.0,Low,+∞,+∞,,broad river,flood stage
+broad river flooding,10-100,50,,0.0,Low,0%,0%,,broad river,flooding
+broad river swimming,10-100,50,,0.0,Low,0%,+∞,,broad river,swimming
+broad river tubing,10-100,50,,0.0,Low,0%,0%,,broad river,tubing
+brodhead creek fishing report,10-100,50,,0.0,Low,0%,0%,,brodhead creek,fishing report
+brule river cfs,10-100,50,,0.0,Low,0%,0%,,brule river,cfs
+brule river conditions,10-100,50,,0.0,Low,0%,0%,,brule river,conditions
+brule river kayaking,10-100,50,,0.0,Low,0%,0%,,brule river,kayaking
+brule river tubing,10-100,50,,0.0,Low,0%,0%,,brule river,tubing
+buckhannon river boat ramp,10-100,50,,0.0,Low,0%,0%,,buckhannon river,boat ramp
+buckhannon river fishing report,10-100,50,,0.0,—,0%,0%,,buckhannon river,fishing report
+buckhannon river flood stage,10-100,50,,0.0,—,-100%,0%,,buckhannon river,flood stage
+buckhannon river flooding,10-100,50,,0.0,—,-100%,0%,,buckhannon river,flooding
+buffalo fork fishing report,10-100,50,,0.0,Low,0%,0%,,buffalo fork,fishing report
+buffalo river cfs,10-100,50,,0.0,Low,0%,0%,,buffalo river,cfs
+buffalo river conditions,10-100,50,,0.0,Low,0%,0%,,buffalo river,conditions
+buffalo river fishing report,10-100,50,,0.0,Low,0%,0%,,buffalo river,fishing report
+buffalo river flood stage,10-100,50,,0.0,—,0%,0%,,buffalo river,flood stage
+buffalo river flooding,10-100,50,,0.0,Low,0%,0%,,buffalo river,flooding
+buffalo river forecast,10-100,50,,0.0,Low,0%,0%,,buffalo river,forecast
+buffalo river swimming,10-100,50,,0.0,—,-100%,-100%,,buffalo river,swimming
+cache creek fishing report,10-100,50,,0.0,Low,0%,0%,,cache creek,fishing report
+cache creek flood stage,10-100,50,,0.0,Low,+∞,+∞,,cache creek,flood stage
+cache creek flooding,10-100,50,,0.0,Low,0%,0%,,cache creek,flooding
+cache creek forecast,10-100,50,,0.0,Low,0%,0%,,cache creek,forecast
+cache creek kayaking,10-100,50,,0.0,Low,0%,0%,,cache creek,kayaking
+cache creek swimming,10-100,50,,0.0,Low,0%,+∞,,cache creek,swimming
+cache creek tubing,10-100,50,,0.0,Low,0%,0%,,cache creek,tubing
+cache la poudre river flooding,10-100,50,,0.0,Low,0%,0%,,cache la poudre river,flooding
+cache la poudre river kayaking,10-100,50,,0.0,Low,0%,0%,,cache la poudre river,kayaking
+cache la poudre river swimming,10-100,50,,0.0,—,-100%,-100%,,cache la poudre river,swimming
+cache la poudre river tubing,10-100,50,,0.0,Low,0%,+∞,,cache la poudre river,tubing
+cache river flood stage,10-100,50,,0.0,Low,0%,0%,,cache river,flood stage
+cache river flooding,10-100,50,,0.0,Low,0%,+∞,,cache river,flooding
+cache river kayaking,10-100,50,,0.0,Low,0%,0%,,cache river,kayaking
+caddo river conditions,10-100,50,,0.0,—,-100%,-100%,,caddo river,conditions
+caddo river fishing report,10-100,50,,0.0,Low,0%,0%,,caddo river,fishing report
+caddo river flooding,10-100,50,,0.0,Low,0%,+∞,,caddo river,flooding
+caddo river kayaking,10-100,50,,0.0,Low,-90%,0%,,caddo river,kayaking
+cahaba river flood stage,10-100,50,,0.0,Low,+∞,0%,,cahaba river,flood stage
+cahaba river flooding,10-100,50,,0.0,Low,0%,+∞,,cahaba river,flooding
+cahaba river kayaking,10-100,50,,0.0,Low,0%,0%,,cahaba river,kayaking
+cahaba river swimming,10-100,50,,0.0,Low,0%,+∞,,cahaba river,swimming
+calawah river fishing report,10-100,50,,0.0,Low,0%,0%,,calawah river,fishing report
+calcasieu river fishing report,10-100,50,,0.0,Low,0%,0%,,calcasieu river,fishing report
+calcasieu river flood stage,10-100,50,,0.0,Low,0%,0%,,calcasieu river,flood stage
+calcasieu river flooding,10-100,50,,0.0,—,0%,0%,,calcasieu river,flooding
+canisteo river flooding,10-100,50,,0.0,Low,0%,+∞,,canisteo river,flooding
+canyon lake cfs,10-100,50,,0.0,Low,0%,0%,,canyon lake,cfs
+canyon lake conditions,10-100,50,,0.0,Low,0%,0%,,canyon lake,conditions
+canyon lake flood stage,10-100,50,,0.0,—,-100%,0%,,canyon lake,flood stage
+canyon lake flow,10-100,50,,0.0,Low,0%,+∞,,canyon lake,flow
+carson river fishing report,10-100,50,,0.0,Low,0%,0%,,carson river,fishing report
+carson river flood stage,10-100,50,,0.0,—,0%,0%,,carson river,flood stage
+carson river flooding,10-100,50,,0.0,Low,0%,0%,,carson river,flooding
+carson river kayaking,10-100,50,,0.0,—,-100%,0%,,carson river,kayaking
+cartecay river kayaking,10-100,50,,0.0,Low,0%,0%,,cartecay river,kayaking
+cass river flood stage,10-100,50,,0.0,—,0%,0%,,cass river,flood stage
+cass river flooding,10-100,50,,0.0,Low,0%,+∞,,cass river,flooding
+cass river kayaking,10-100,50,,0.0,Low,0%,0%,,cass river,kayaking
+catawba river boat ramp,10-100,50,,0.0,Low,0%,0%,,catawba river,boat ramp
+catawba river conditions,10-100,50,,0.0,—,-100%,-100%,,catawba river,conditions
+catawba river fishing report,10-100,50,,0.0,Low,0%,0%,,catawba river,fishing report
+catawba river flood stage,10-100,50,,0.0,Low,0%,+∞,,catawba river,flood stage
+catawba river flooding,10-100,50,,0.0,Low,0%,0%,,catawba river,flooding
+catawba river swimming,10-100,50,,0.0,Low,0%,0%,,catawba river,swimming
+cattaraugus creek flooding,10-100,50,,0.0,—,-100%,0%,,cattaraugus creek,flooding
+cattaraugus creek kayaking,10-100,50,,0.0,Low,0%,0%,,cattaraugus creek,kayaking
+cedar creek flooding,10-100,50,,0.0,Low,0%,0%,,cedar creek,flooding
+cedar creek swimming,10-100,50,,0.0,Low,0%,0%,,cedar creek,swimming
+cedar creek tubing,10-100,50,,0.0,—,-100%,-100%,,cedar creek,tubing
+cedar key flooding,10-100,50,,0.0,Low,0%,0%,,cedar key,town flooding (weather intent)
+cedar key kayaking,10-100,50,,0.0,Low,0%,0%,,cedar key,kayaking
+cedar key swimming,10-100,50,,0.0,Low,0%,0%,,cedar key,swimming
+chagrin river cfs,10-100,50,,0.0,Low,+900%,+900%,,chagrin river,cfs
+chagrin river flooding,10-100,50,,0.0,—,-100%,-100%,,chagrin river,flooding
+chagrin river kayaking,10-100,50,,0.0,Low,-90%,0%,,chagrin river,kayaking
+charles river boat ramp,10-100,50,,0.0,Low,0%,0%,,charles river,boat ramp
+charles river fishing report,10-100,50,,0.0,Low,0%,0%,,charles river,fishing report
+charles river flood stage,10-100,50,,0.0,—,0%,0%,,charles river,flood stage
+charles river flooding,10-100,50,,0.0,Low,0%,0%,,charles river,flooding
+charleston cfs,10-100,50,,0.0,Low,0%,0%,,charleston,cfs
+charleston conditions,10-100,50,,0.0,Low,+∞,0%,,charleston,town conditions (weather intent)
+charleston tubing,10-100,50,,0.0,—,-100%,-100%,,charleston,tubing
+chatham fishing report,10-100,50,,0.0,Low,0%,0%,,chatham,fishing report
+chatham flooding,10-100,50,,0.0,Low,0%,0%,,chatham,town flooding (weather intent)
+chatham kayaking,10-100,50,,0.0,Low,-90%,0%,,chatham,kayaking
+chatham swimming,10-100,50,,0.0,Low,0%,0%,,chatham,swimming
+chatham tubing,10-100,50,,0.0,—,0%,0%,,chatham,tubing
+chattahoochee river boat ramp,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,boat ramp
+chattahoochee river conditions,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,conditions
+chattahoochee river fishing report,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,fishing report
+chattahoochee river flood stage,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,flood stage
+chattahoochee river flooding,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,flooding
+chattahoochee river swimming,10-100,50,,0.0,Low,0%,0%,,chattahoochee river,swimming
+chattooga river conditions,10-100,50,,0.0,Low,0%,0%,,chattooga river,conditions
+chattooga river fishing report,10-100,50,,0.0,Low,0%,0%,,chattooga river,fishing report
+chattooga river flooding,10-100,50,,0.0,—,-100%,-100%,,chattooga river,flooding
+chattooga river kayaking,10-100,50,,0.0,Low,-90%,0%,,chattooga river,kayaking
+chattooga river tubing,10-100,50,,0.0,Low,0%,0%,,chattooga river,tubing
+cheat river fishing report,10-100,50,,0.0,—,-100%,-100%,,cheat river,fishing report
+cheat river flooding,10-100,50,,0.0,Low,0%,0%,,cheat river,flooding
+cheat river kayaking,10-100,50,,0.0,Low,0%,0%,,cheat river,kayaking
+cheat river swimming,10-100,50,,0.0,—,-100%,-100%,,cheat river,swimming
+cheat river tubing,10-100,50,,0.0,—,-100%,-100%,,cheat river,tubing
+chemung river fishing report,10-100,50,,0.0,—,-100%,-100%,,chemung river,fishing report
+chemung river flooding,10-100,50,,0.0,Low,0%,0%,,chemung river,flooding
+chemung river kayaking,10-100,50,,0.0,Low,0%,0%,,chemung river,kayaking
+chetco river cfs,10-100,50,,0.0,Low,0%,0%,,chetco river,cfs
+chetco river conditions,10-100,50,,0.0,Low,0%,0%,,chetco river,conditions
+chetco river flood stage,10-100,50,,0.0,—,0%,0%,,chetco river,flood stage
+chetco river flooding,10-100,50,,0.0,Low,0%,+∞,,chetco river,flooding
+chetco river forecast,10-100,50,,0.0,Low,0%,0%,,chetco river,forecast
+chetco river kayaking,10-100,50,,0.0,Low,0%,0%,,chetco river,kayaking
+chetco river swimming,10-100,50,,0.0,Low,0%,0%,,chetco river,swimming
+chikaskia river flood stage,10-100,50,,0.0,—,0%,0%,,chikaskia river,flood stage
+chipola river flood stage,10-100,50,,0.0,Low,0%,+∞,,chipola river,flood stage
+chipola river flooding,10-100,50,,0.0,Low,0%,+∞,,chipola river,flooding
+chipola river kayaking,10-100,50,,0.0,Low,0%,0%,,chipola river,kayaking
+chipola river tubing,10-100,50,,0.0,Low,0%,0%,,chipola river,tubing
+chippewa river fishing report,10-100,50,,0.0,Low,0%,0%,,chippewa river,fishing report
+chippewa river flood stage,10-100,50,,0.0,—,-100%,-100%,,chippewa river,flood stage
+chippewa river flooding,10-100,50,,0.0,Low,0%,0%,,chippewa river,flooding
+chippewa river kayaking,10-100,50,,0.0,Low,0%,0%,,chippewa river,kayaking
+chippewa river tubing,10-100,50,,0.0,Low,-90%,0%,,chippewa river,tubing
+clackamas river boat ramp,10-100,50,,0.0,Low,0%,0%,,clackamas river,boat ramp
+clackamas river conditions,10-100,50,,0.0,Low,0%,0%,,clackamas river,conditions
+clackamas river flood stage,10-100,50,,0.0,—,0%,0%,,clackamas river,flood stage
+clackamas river forecast,10-100,50,,0.0,Low,0%,+∞,,clackamas river,forecast
+clackamas river kayaking,10-100,50,,0.0,Low,0%,0%,,clackamas river,kayaking
+clackamas river swimming,10-100,50,,0.0,Low,0%,0%,,clackamas river,swimming
+clackamas river tubing,10-100,50,,0.0,Low,-90%,0%,,clackamas river,tubing
+clarion river conditions,10-100,50,,0.0,—,-100%,0%,,clarion river,conditions
+clarion river fishing report,10-100,50,,0.0,Low,0%,0%,,clarion river,fishing report
+clarion river flooding,10-100,50,,0.0,Low,0%,0%,,clarion river,flooding
+clarion river kayaking,10-100,50,,0.0,Low,0%,0%,,clarion river,kayaking
+clarion river tubing,10-100,50,,0.0,Low,-90%,0%,,clarion river,tubing
+clark fork boat ramp,10-100,50,,0.0,Low,-90%,0%,,clark fork,boat ramp
+clark fork cfs,10-100,50,,0.0,Low,0%,0%,,clark fork,cfs
+clark fork flooding,10-100,50,,0.0,Low,0%,0%,,clark fork,flooding
+clark fork river cfs,10-100,50,,0.0,Low,0%,0%,,clark fork river,cfs
+clark fork river flood stage,10-100,50,,0.0,—,0%,0%,,clark fork river,flood stage
+clark fork river flooding,10-100,50,,0.0,Low,0%,0%,,clark fork river,flooding
+clark fork river swimming,10-100,50,,0.0,Low,0%,0%,,clark fork river,swimming
+clark fork river tubing,10-100,50,,0.0,—,-100%,-100%,,clark fork river,tubing
+clark fork tubing,10-100,50,,0.0,Low,0%,0%,,clark fork,tubing
+clarks fork yellowstone river fishing report,10-100,50,,0.0,Low,0%,0%,,clarks fork yellowstone river,fishing report
+clarks fork yellowstone river flooding,10-100,50,,0.0,—,0%,0%,,clarks fork yellowstone river,flooding
+clear creek conditions,10-100,50,,0.0,—,-100%,-100%,,clear creek,conditions
+clear creek flood stage,10-100,50,,0.0,—,0%,0%,,clear creek,flood stage
+clear creek flooding,10-100,50,,0.0,Low,0%,0%,,clear creek,flooding
+clear creek swimming,10-100,50,,0.0,Low,0%,0%,,clear creek,swimming
+clear fork fishing report,10-100,50,,0.0,Low,0%,0%,,clear fork,fishing report
+clear fork tubing,10-100,50,,0.0,—,0%,0%,,clear fork,tubing
+clearwater beach boat ramp,10-100,50,,0.0,Low,0%,0%,,clearwater beach,boat ramp
+clearwater beach fishing report,10-100,50,,0.0,Low,0%,0%,,clearwater beach,fishing report
+clearwater beach flooding,10-100,50,,0.0,Low,0%,0%,,clearwater beach,flooding
+clearwater beach tubing,10-100,50,,0.0,—,-100%,-100%,,clearwater beach,tubing
+clearwater conditions,10-100,50,,0.0,Low,0%,0%,,clearwater,town conditions (weather intent)
+clearwater flooding,10-100,50,,0.0,Low,+900%,+900%,,clearwater,town flooding (weather intent)
+clearwater river flooding,10-100,50,,0.0,—,0%,-100%,,clearwater river,flooding
+clearwater river kayaking,10-100,50,,0.0,—,-100%,-100%,,clearwater river,kayaking
+clearwater river tubing,10-100,50,,0.0,—,-100%,0%,,clearwater river,tubing
+clearwater swimming,10-100,50,,0.0,Low,0%,0%,,clearwater,swimming
+clearwater tubing,10-100,50,,0.0,High,0%,0%,,clearwater,tubing
+clinch river fishing report,10-100,50,,0.0,Low,0%,0%,,clinch river,fishing report
+clinch river flood stage,10-100,50,,0.0,Low,0%,+∞,,clinch river,flood stage
+clinch river flooding,10-100,50,,0.0,Low,0%,0%,,clinch river,flooding
+clinch river kayaking,10-100,50,,0.0,Low,0%,0%,,clinch river,kayaking
+clinch river tubing,10-100,50,,0.0,Low,0%,0%,,clinch river,tubing
+clinton river fishing report,10-100,50,,0.0,Low,0%,0%,,clinton river,fishing report
+clinton river flood stage,10-100,50,,0.0,Low,0%,0%,,clinton river,flood stage
+clinton river flooding,10-100,50,,0.0,Low,0%,0%,,clinton river,flooding
+clinton river tubing,10-100,50,,0.0,—,-100%,-100%,,clinton river,tubing
+coast fork willamette river swimming,10-100,50,,0.0,—,-100%,-100%,,coast fork willamette river,swimming
+cohocton river fishing report,10-100,50,,0.0,Low,0%,0%,,cohocton river,fishing report
+colorado river conditions,10-100,50,,0.0,Low,0%,0%,,colorado river,conditions
+colorado river flood stage,10-100,50,,0.0,Low,0%,0%,,colorado river,flood stage
+colorado river forecast,10-100,50,,0.0,Low,0%,0%,,colorado river,forecast
+colorado river swimming,10-100,50,,0.0,Low,0%,0%,,colorado river,swimming
+columbia river cfs,10-100,50,,0.0,Low,0%,0%,,columbia river,cfs
+columbia river conditions,10-100,50,,0.0,Low,0%,0%,,columbia river,conditions
+columbia river flood stage,10-100,50,,0.0,Low,0%,+∞,,columbia river,flood stage
+columbia river forecast,10-100,50,,0.0,Low,0%,0%,,columbia river,forecast
+columbia river kayaking,10-100,50,,0.0,Low,-90%,0%,,columbia river,kayaking
+columbia river swimming,10-100,50,,0.0,Low,-90%,0%,,columbia river,swimming
+columbia river tubing,10-100,50,,0.0,Low,0%,0%,,columbia river,tubing
+comal river cfs,10-100,50,,0.0,Low,0%,0%,,comal river,cfs
+comal river conditions,10-100,50,,0.0,Low,0%,0%,,comal river,conditions
+comal river fishing report,10-100,50,,0.0,Low,0%,0%,,comal river,fishing report
+comal river kayaking,10-100,50,,0.0,Low,0%,0%,,comal river,kayaking
+comal river swimming,10-100,50,,0.0,Low,0%,0%,,comal river,swimming
+conasauga river kayaking,10-100,50,,0.0,Low,0%,0%,,conasauga river,kayaking
+congaree river fishing report,10-100,50,,0.0,Low,0%,0%,,congaree river,fishing report
+congaree river flood stage,10-100,50,,0.0,Low,0%,+∞,,congaree river,flood stage
+congaree river flooding,10-100,50,,0.0,Low,0%,0%,,congaree river,flooding
+congaree river kayaking,10-100,50,,0.0,Low,0%,0%,,congaree river,kayaking
+congaree river tubing,10-100,50,,0.0,Low,0%,0%,,congaree river,tubing
+conneaut creek fishing report,10-100,50,,0.0,Low,0%,-90%,,conneaut creek,fishing report
+conneaut creek kayaking,10-100,50,,0.0,—,-100%,-100%,,conneaut creek,kayaking
+connecticut river conditions,10-100,50,,0.0,Low,0%,0%,,connecticut river,conditions
+connecticut river fishing report,10-100,50,,0.0,Low,0%,0%,,connecticut river,fishing report
+connecticut river flood stage,10-100,50,,0.0,Low,0%,+∞,,connecticut river,flood stage
+connecticut river flooding,10-100,50,,0.0,Low,0%,0%,,connecticut river,flooding
+connecticut river forecast,10-100,50,,0.0,Low,0%,0%,,connecticut river,forecast
+connecticut river swimming,10-100,50,,0.0,Low,0%,0%,,connecticut river,swimming
+connoquenessing creek flood stage,10-100,50,,0.0,Low,0%,+∞,,connoquenessing creek,flood stage
+connoquenessing creek flooding,10-100,50,,0.0,Low,0%,0%,,connoquenessing creek,flooding
+connoquenessing creek kayaking,10-100,50,,0.0,Low,0%,0%,,connoquenessing creek,kayaking
+conodoguinet creek fishing report,10-100,50,,0.0,Low,0%,0%,,conodoguinet creek,fishing report
+conodoguinet creek flooding,10-100,50,,0.0,Low,0%,0%,,conodoguinet creek,flooding
+conodoguinet creek kayaking,10-100,50,,0.0,Low,0%,+∞,,conodoguinet creek,kayaking
+conodoguinet creek tubing,10-100,50,,0.0,—,-100%,0%,,conodoguinet creek,tubing
+coosawattee river flooding,10-100,50,,0.0,Low,0%,0%,,coosawattee river,flooding
+coosawattee river kayaking,10-100,50,,0.0,Low,0%,+∞,,coosawattee river,kayaking
+coosawattee river tubing,10-100,50,,0.0,Low,0%,0%,,coosawattee river,tubing
+corpus christi conditions,10-100,50,,0.0,Low,0%,0%,,corpus christi,town conditions (weather intent)
+corpus christi swimming,10-100,50,,0.0,Medium,0%,0%,,corpus christi,swimming
+corpus christi tubing,10-100,50,,0.0,Low,0%,+∞,,corpus christi,tubing
+cosumnes river fishing report,10-100,50,,0.0,—,-100%,-100%,,cosumnes river,fishing report
+cosumnes river flood stage,10-100,50,,0.0,Low,+∞,+∞,,cosumnes river,flood stage
+cosumnes river flooding,10-100,50,,0.0,Low,0%,0%,,cosumnes river,flooding
+cosumnes river kayaking,10-100,50,,0.0,Low,0%,0%,,cosumnes river,kayaking
+cottonwood river flood stage,10-100,50,,0.0,Low,+∞,0%,,cottonwood river,flood stage
+cottonwood river flooding,10-100,50,,0.0,Low,0%,0%,,cottonwood river,flooding
+cowlitz river cfs,10-100,50,,0.0,Low,0%,0%,,cowlitz river,cfs
+cowlitz river conditions,10-100,50,,0.0,Low,0%,+∞,,cowlitz river,conditions
+cowlitz river flood stage,10-100,50,,0.0,—,0%,-100%,,cowlitz river,flood stage
+cowlitz river forecast,10-100,50,,0.0,—,-100%,0%,,cowlitz river,forecast
+cowlitz river kayaking,10-100,50,,0.0,Low,0%,0%,,cowlitz river,kayaking
+cowlitz river swimming,10-100,50,,0.0,Low,0%,0%,,cowlitz river,swimming
+cowlitz river tubing,10-100,50,,0.0,—,-100%,0%,,cowlitz river,tubing
+crescent city boat ramp,10-100,50,,0.0,Low,0%,0%,,crescent city,boat ramp
+crescent city fishing report,10-100,50,,0.0,Low,-90%,0%,,crescent city,fishing report
+crescent city flooding,10-100,50,,0.0,Low,0%,0%,,crescent city,town flooding (weather intent)
+crescent city kayaking,10-100,50,,0.0,Low,0%,0%,,crescent city,kayaking
+crow wing river kayaking,10-100,50,,0.0,—,-100%,-100%,,crow wing river,kayaking
+crow wing river tubing,10-100,50,,0.0,Low,-90%,0%,,crow wing river,tubing
+cuivre river boat ramp,10-100,50,,0.0,Low,0%,0%,,cuivre river,boat ramp
+cuivre river flooding,10-100,50,,0.0,Low,0%,+∞,,cuivre river,flooding
+cuivre river kayaking,10-100,50,,0.0,Low,0%,0%,,cuivre river,kayaking
+cuivre river swimming,10-100,50,,0.0,Low,0%,+∞,,cuivre river,swimming
+cumberland river boat ramp,10-100,50,,0.0,Low,-90%,0%,,cumberland river,boat ramp
+cumberland river conditions,10-100,50,,0.0,Low,0%,0%,,cumberland river,conditions
+cumberland river fishing report,10-100,50,,0.0,Low,0%,0%,,cumberland river,fishing report
+cumberland river flood stage,10-100,50,,0.0,Low,0%,0%,,cumberland river,flood stage
+cumberland river flooding,10-100,50,,0.0,Low,0%,0%,,cumberland river,flooding
+cumberland river forecast,10-100,50,,0.0,—,-100%,0%,,cumberland river,forecast
+cumberland river swimming,10-100,50,,0.0,Low,0%,0%,,cumberland river,swimming
+cumberland river tubing,10-100,50,,0.0,Low,0%,0%,,cumberland river,tubing
+current river fishing report,10-100,50,,0.0,Low,0%,0%,,current river,fishing report
+current river flood stage,10-100,50,,0.0,Low,0%,0%,,current river,flood stage
+current river flooding,10-100,50,,0.0,Low,0%,0%,,current river,flooding
+current river forecast,10-100,50,,0.0,Low,0%,0%,,current river,forecast
+current river swimming,10-100,50,,0.0,Low,0%,0%,,current river,swimming
+current river tubing,10-100,50,,0.0,Low,0%,0%,,current river,tubing
+cuyahoga river cfs,10-100,50,,0.0,Low,0%,0%,,cuyahoga river,cfs
+cuyahoga river conditions,10-100,50,,0.0,Low,0%,0%,,cuyahoga river,conditions
+cuyahoga river fishing report,10-100,50,,0.0,Low,0%,0%,,cuyahoga river,fishing report
+cuyahoga river flood stage,10-100,50,,0.0,—,-100%,-100%,,cuyahoga river,flood stage
+cuyahoga river flooding,10-100,50,,0.0,Low,0%,0%,,cuyahoga river,flooding
+cuyahoga river swimming,10-100,50,,0.0,Low,0%,0%,,cuyahoga river,swimming
+cuyahoga river tubing,10-100,50,,0.0,Low,-90%,0%,,cuyahoga river,tubing
+dam release today,10-100,50,,0.0,—,-100%,-100%,,,general question
+davidson river fishing report,10-100,50,,0.0,Low,+900%,0%,,davidson river,fishing report
+davidson river flooding,10-100,50,,0.0,Low,0%,+∞,,davidson river,flooding
+davidson river kayaking,10-100,50,,0.0,Low,0%,0%,,davidson river,kayaking
+davidson river swimming,10-100,50,,0.0,Low,0%,+∞,,davidson river,swimming
+davidson river tubing,10-100,50,,0.0,Low,-90%,0%,,davidson river,tubing
+dearborn river cfs,10-100,50,,0.0,Low,0%,0%,,dearborn river,cfs
+dearborn river fishing report,10-100,50,,0.0,Low,0%,0%,,dearborn river,fishing report
+deep creek boat ramp,10-100,50,,0.0,Low,0%,0%,,deep creek,boat ramp
+deep creek cfs,10-100,50,,0.0,Low,+∞,+∞,,deep creek,cfs
+deep creek flooding,10-100,50,,0.0,Low,0%,0%,,deep creek,flooding
+deep creek forecast,10-100,50,,0.0,Low,0%,0%,,deep creek,forecast
+deer creek flooding,10-100,50,,0.0,Low,0%,0%,,deer creek,flooding
+deer creek forecast,10-100,50,,0.0,Low,0%,0%,,deer creek,forecast
+deer creek kayaking,10-100,50,,0.0,Low,0%,0%,,deer creek,kayaking
+deer creek swimming,10-100,50,,0.0,Low,0%,0%,,deer creek,swimming
+deer creek tubing,10-100,50,,0.0,Low,0%,0%,,deer creek,tubing
+deerfield river cfs,10-100,50,,0.0,Low,-90%,0%,,deerfield river,cfs
+deerfield river conditions,10-100,50,,0.0,—,-100%,0%,,deerfield river,conditions
+deerfield river fishing report,10-100,50,,0.0,Low,-90%,-90%,,deerfield river,fishing report
+deerfield river flooding,10-100,50,,0.0,—,-100%,-100%,,deerfield river,flooding
+deerfield river kayaking,10-100,50,,0.0,Low,0%,0%,,deerfield river,kayaking
+deerfield river swimming,10-100,50,,0.0,Low,0%,0%,,deerfield river,swimming
+delaware river cfs,10-100,50,,0.0,Low,0%,0%,,delaware river,cfs
+delaware river conditions,10-100,50,,0.0,Low,-90%,0%,,delaware river,conditions
+delaware river flood stage,10-100,50,,0.0,Low,0%,0%,,delaware river,flood stage
+delaware river flooding,10-100,50,,0.0,Low,-90%,-90%,,delaware river,flooding
+delaware river forecast,10-100,50,,0.0,Low,0%,0%,,delaware river,forecast
+des moines river fishing report,10-100,50,,0.0,Low,0%,0%,,des moines river,fishing report
+des moines river flood stage,10-100,50,,0.0,Low,0%,0%,,des moines river,flood stage
+des moines river flooding,10-100,50,,0.0,Low,0%,0%,,des moines river,flooding
+des moines river forecast,10-100,50,,0.0,Low,0%,0%,,des moines river,forecast
+des moines river kayaking,10-100,50,,0.0,Low,0%,0%,,des moines river,kayaking
+des moines river tubing,10-100,50,,0.0,Low,0%,0%,,des moines river,tubing
+des plaines river fishing report,10-100,50,,0.0,Low,0%,0%,,des plaines river,fishing report
+des plaines river flood stage,10-100,50,,0.0,Low,0%,+∞,,des plaines river,flood stage
+des plaines river kayaking,10-100,50,,0.0,Low,0%,0%,,des plaines river,kayaking
+des plaines river tubing,10-100,50,,0.0,—,-100%,0%,,des plaines river,tubing
+deschutes river cfs,10-100,50,,0.0,Low,0%,0%,,deschutes river,cfs
+deschutes river conditions,10-100,50,,0.0,Low,0%,0%,,deschutes river,conditions
+deschutes river flood stage,10-100,50,,0.0,—,0%,0%,,deschutes river,flood stage
+deschutes river flooding,10-100,50,,0.0,Low,0%,0%,,deschutes river,flooding
+deschutes river kayaking,10-100,50,,0.0,Low,0%,-90%,,deschutes river,kayaking
+deschutes river swimming,10-100,50,,0.0,Low,0%,0%,,deschutes river,swimming
+donner und blitzen river fishing report,10-100,50,,0.0,Low,+∞,0%,,donner und blitzen river,fishing report
+driftwood river kayaking,10-100,50,,0.0,Low,0%,+∞,,driftwood river,kayaking
+dry creek flooding,10-100,50,,0.0,Low,0%,0%,,dry creek,flooding
+dry fork boat ramp,10-100,50,,0.0,Low,0%,0%,,dry fork,boat ramp
+dungeness river fishing report,10-100,50,,0.0,Low,0%,0%,,dungeness river,fishing report
+dungeness river flooding,10-100,50,,0.0,Low,0%,0%,,dungeness river,flooding
+eagle river boat ramp,10-100,50,,0.0,Low,0%,0%,,eagle river,boat ramp
+eagle river cfs,10-100,50,,0.0,Low,0%,0%,,eagle river,cfs
+eagle river flooding,10-100,50,,0.0,Low,0%,0%,,eagle river,flooding
+eagle river kayaking,10-100,50,,0.0,Low,0%,0%,,eagle river,kayaking
+east branch delaware river fishing report,10-100,50,,0.0,Low,0%,0%,,east branch delaware river,fishing report
+east fork lewis river fishing report,10-100,50,,0.0,Low,0%,0%,,east fork lewis river,fishing report
+east fork stones river swimming,10-100,50,,0.0,Low,+∞,+∞,,east fork stones river,swimming
+east fork white river flood stage,10-100,50,,0.0,Low,0%,+∞,,east fork white river,flood stage
+east verde river fishing report,10-100,50,,0.0,Low,0%,0%,,east verde river,fishing report
+econfina creek kayaking,10-100,50,,0.0,Low,0%,0%,,econfina creek,kayaking
+econfina creek tubing,10-100,50,,0.0,Low,0%,0%,,econfina creek,tubing
+econlockhatchee river flooding,10-100,50,,0.0,—,-100%,-100%,,econlockhatchee river,flooding
+econlockhatchee river kayaking,10-100,50,,0.0,Low,0%,0%,,econlockhatchee river,kayaking
+edisto river fishing report,10-100,50,,0.0,Low,0%,0%,,edisto river,fishing report
+edisto river flood stage,10-100,50,,0.0,Low,0%,0%,,edisto river,flood stage
+edisto river flooding,10-100,50,,0.0,Low,0%,0%,,edisto river,flooding
+edisto river forecast,10-100,50,,0.0,—,0%,0%,,edisto river,forecast
+edisto river kayaking,10-100,50,,0.0,Low,0%,0%,,edisto river,kayaking
+edmonds fishing report,10-100,50,,0.0,Low,0%,0%,,edmonds,fishing report
+edmonds flooding,10-100,50,,0.0,Low,0%,0%,,edmonds,town flooding (weather intent)
+edmonds swimming,10-100,50,,0.0,Low,0%,0%,,edmonds,swimming
+eleven point river conditions,10-100,50,,0.0,Low,0%,0%,,eleven point river,conditions
+eleven point river fishing report,10-100,50,,0.0,Low,0%,0%,,eleven point river,fishing report
+eleven point river flood stage,10-100,50,,0.0,—,-100%,0%,,eleven point river,flood stage
+eleven point river flooding,10-100,50,,0.0,—,-100%,0%,,eleven point river,flooding
+eleven point river kayaking,10-100,50,,0.0,Low,0%,0%,,eleven point river,kayaking
+elk creek cfs,10-100,50,,0.0,Low,+∞,0%,,elk creek,cfs
+elk creek kayaking,10-100,50,,0.0,Low,0%,0%,,elk creek,kayaking
+elk creek swimming,10-100,50,,0.0,Low,0%,+∞,,elk creek,swimming
+elk creek tubing,10-100,50,,0.0,Low,0%,+∞,,elk creek,tubing
+elk river boat ramp,10-100,50,,0.0,Low,0%,0%,,elk river,boat ramp
+elk river cfs,10-100,50,,0.0,Low,0%,0%,,elk river,cfs
+elk river conditions,10-100,50,,0.0,Low,0%,+∞,,elk river,conditions
+elk river flood stage,10-100,50,,0.0,Low,0%,0%,,elk river,flood stage
+elk river flooding,10-100,50,,0.0,Low,0%,0%,,elk river,flooding
+elk river swimming,10-100,50,,0.0,Low,0%,0%,,elk river,swimming
+elk river tubing,10-100,50,,0.0,Low,0%,0%,,elk river,tubing
+elm creek flooding,10-100,50,,0.0,—,0%,-100%,,elm creek,flooding
+elwha river fishing report,10-100,50,,0.0,—,-100%,-100%,,elwha river,fishing report
+elwha river flood stage,10-100,50,,0.0,—,0%,0%,,elwha river,flood stage
+elwha river flooding,10-100,50,,0.0,—,-100%,-100%,,elwha river,flooding
+elwha river kayaking,10-100,50,,0.0,Low,0%,0%,,elwha river,kayaking
+eno river boat ramp,10-100,50,,0.0,Low,0%,0%,,eno river,boat ramp
+eno river fishing report,10-100,50,,0.0,Low,0%,0%,,eno river,fishing report
+eno river flood stage,10-100,50,,0.0,—,0%,0%,,eno river,flood stage
+eno river flooding,10-100,50,,0.0,Low,0%,0%,,eno river,flooding
+eno river kayaking,10-100,50,,0.0,Low,0%,0%,,eno river,kayaking
+eno river swimming,10-100,50,,0.0,Low,-90%,0%,,eno river,swimming
+eno river tubing,10-100,50,,0.0,Low,0%,0%,,eno river,tubing
+enoree river boat ramp,10-100,50,,0.0,Low,0%,0%,,enoree river,boat ramp
+enoree river flooding,10-100,50,,0.0,—,0%,-100%,,enoree river,flooding
+escambia river fishing report,10-100,50,,0.0,Low,0%,0%,,escambia river,fishing report
+escambia river flood stage,10-100,50,,0.0,Low,0%,0%,,escambia river,flood stage
+esopus creek conditions,10-100,50,,0.0,Low,0%,0%,,esopus creek,conditions
+esopus creek flood stage,10-100,50,,0.0,—,0%,0%,,esopus creek,flood stage
+esopus creek flooding,10-100,50,,0.0,Low,0%,0%,,esopus creek,flooding
+esopus creek kayaking,10-100,50,,0.0,Low,0%,0%,,esopus creek,kayaking
+esopus creek swimming,10-100,50,,0.0,Low,0%,0%,,esopus creek,swimming
+etowah river fishing report,10-100,50,,0.0,Low,0%,0%,,etowah river,fishing report
+etowah river flood stage,10-100,50,,0.0,—,0%,-100%,,etowah river,flood stage
+etowah river flooding,10-100,50,,0.0,Low,0%,0%,,etowah river,flooding
+falls lake flooding,10-100,50,,0.0,Low,0%,+∞,,falls lake,flooding
+falls lake kayaking,10-100,50,,0.0,Low,0%,0%,,falls lake,kayaking
+farmington river cfs,10-100,50,,0.0,Low,0%,0%,,farmington river,cfs
+farmington river conditions,10-100,50,,0.0,Low,0%,0%,,farmington river,conditions
+farmington river flood stage,10-100,50,,0.0,Low,0%,0%,,farmington river,flood stage
+farmington river flooding,10-100,50,,0.0,Low,0%,0%,,farmington river,flooding
+farmington river kayaking,10-100,50,,0.0,Low,-90%,0%,,farmington river,kayaking
+farmington river swimming,10-100,50,,0.0,Low,0%,0%,,farmington river,swimming
+fisheating creek boat ramp,10-100,50,,0.0,Low,0%,0%,,fisheating creek,boat ramp
+fisheating creek kayaking,10-100,50,,0.0,Low,0%,0%,,fisheating creek,kayaking
+fisher river cfs,10-100,50,,0.0,—,0%,0%,,fisher river,cfs
+fisher river flooding,10-100,50,,0.0,Low,0%,0%,,fisher river,flooding
+fishing creek boat ramp,10-100,50,,0.0,Low,0%,0%,,fishing creek,boat ramp
+fishing creek fishing report,10-100,50,,0.0,Low,0%,0%,,fishing creek,fishing report
+fishing creek flood stage,10-100,50,,0.0,—,-100%,0%,,fishing creek,flood stage
+fishing creek flooding,10-100,50,,0.0,Low,+∞,0%,,fishing creek,flooding
+flathead river cfs,10-100,50,,0.0,Low,0%,0%,,flathead river,cfs
+flathead river flood stage,10-100,50,,0.0,—,0%,0%,,flathead river,flood stage
+flathead river flooding,10-100,50,,0.0,—,-100%,-100%,,flathead river,flooding
+flathead river kayaking,10-100,50,,0.0,Low,0%,0%,,flathead river,kayaking
+flathead river tubing,10-100,50,,0.0,Low,0%,0%,,flathead river,tubing
+flint river boat ramp,10-100,50,,0.0,Low,0%,0%,,flint river,boat ramp
+flint river fishing report,10-100,50,,0.0,Low,0%,0%,,flint river,fishing report
+flint river flood stage,10-100,50,,0.0,Low,0%,0%,,flint river,flood stage
+flint river flooding,10-100,50,,0.0,Low,0%,0%,,flint river,flooding
+flint river tubing,10-100,50,,0.0,Low,0%,0%,,flint river,tubing
+fox river conditions,10-100,50,,0.0,Low,0%,0%,,fox river,conditions
+fox river flood stage,10-100,50,,0.0,Low,0%,0%,,fox river,flood stage
+fox river gauge height,10-100,50,,0.0,Low,0%,+∞,,fox river,gauge height
+fox river swimming,10-100,50,,0.0,Low,0%,0%,,fox river,swimming
+french broad river cfs,10-100,50,,0.0,Low,-90%,0%,,french broad river,cfs
+french broad river conditions,10-100,50,,0.0,Low,0%,0%,,french broad river,conditions
+french broad river fishing report,10-100,50,,0.0,Low,0%,0%,,french broad river,fishing report
+french broad river flood stage,10-100,50,,0.0,Low,+∞,0%,,french broad river,flood stage
+french broad river flooding,10-100,50,,0.0,Low,+900%,+900%,,french broad river,flooding
+french broad river swimming,10-100,50,,0.0,Low,0%,0%,,french broad river,swimming
+frio river boat ramp,10-100,50,,0.0,—,-100%,0%,,frio river,boat ramp
+frio river cfs,10-100,50,,0.0,Low,0%,0%,,frio river,cfs
+frio river conditions,10-100,50,,0.0,Low,0%,0%,,frio river,conditions
+frio river fishing report,10-100,50,,0.0,Low,0%,0%,,frio river,fishing report
+frio river flood stage,10-100,50,,0.0,—,-100%,0%,,frio river,flood stage
+frio river forecast,10-100,50,,0.0,Low,0%,+∞,,frio river,forecast
+frio river kayaking,10-100,50,,0.0,Low,-90%,0%,,frio river,kayaking
+frio river swimming,10-100,50,,0.0,Low,0%,0%,,frio river,swimming
+fryingpan river fishing report,10-100,50,,0.0,Low,0%,0%,,fryingpan river,fishing report
+gallatin river conditions,10-100,50,,0.0,Low,0%,+∞,,gallatin river,conditions
+gallatin river flooding,10-100,50,,0.0,Low,0%,0%,,gallatin river,flooding
+gallatin river kayaking,10-100,50,,0.0,Low,0%,0%,,gallatin river,kayaking
+gallatin river tubing,10-100,50,,0.0,Low,0%,+∞,,gallatin river,tubing
+garibaldi boat ramp,10-100,50,,0.0,Low,0%,0%,,garibaldi,boat ramp
+garibaldi conditions,10-100,50,,0.0,—,0%,0%,,garibaldi,town conditions (weather intent)
+garibaldi fishing report,10-100,50,,0.0,Low,0%,0%,,garibaldi,fishing report
+garibaldi flooding,10-100,50,,0.0,—,0%,-100%,,garibaldi,town flooding (weather intent)
+gasconade river conditions,10-100,50,,0.0,—,-100%,0%,,gasconade river,conditions
+gasconade river fishing report,10-100,50,,0.0,Low,0%,0%,,gasconade river,fishing report
+gasconade river flood stage,10-100,50,,0.0,Low,0%,0%,,gasconade river,flood stage
+gasconade river flooding,10-100,50,,0.0,Low,0%,0%,,gasconade river,flooding
+gasconade river kayaking,10-100,50,,0.0,Low,0%,0%,,gasconade river,kayaking
+gauge height meaning,10-100,50,,0.0,Low,0%,0%,,,general question
+gauley river cfs,10-100,50,,0.0,Low,0%,0%,,gauley river,cfs
+gauley river conditions,10-100,50,,0.0,Low,0%,+∞,,gauley river,conditions
+gauley river flooding,10-100,50,,0.0,—,-100%,0%,,gauley river,flooding
+gauley river kayaking,10-100,50,,0.0,Low,0%,0%,,gauley river,kayaking
+genesee river conditions,10-100,50,,0.0,—,-100%,-100%,,genesee river,conditions
+genesee river fishing report,10-100,50,,0.0,Low,0%,-90%,,genesee river,fishing report
+genesee river flooding,10-100,50,,0.0,Low,0%,0%,,genesee river,flooding
+genesee river kayaking,10-100,50,,0.0,Low,0%,0%,,genesee river,kayaking
+glover river fishing report,10-100,50,,0.0,Low,0%,0%,,glover river,fishing report
+glover river kayaking,10-100,50,,0.0,Low,0%,0%,,glover river,kayaking
+grand river cfs,10-100,50,,0.0,Low,0%,-90%,,grand river,cfs
+grand river conditions,10-100,50,,0.0,Low,0%,0%,,grand river,conditions
+grand river flood stage,10-100,50,,0.0,Low,0%,0%,,grand river,flood stage
+grand river forecast,10-100,50,,0.0,Low,0%,+∞,,grand river,forecast
+grand river gauge height,10-100,50,,0.0,Low,0%,+∞,,grand river,gauge height
+grand river kayaking,10-100,50,,0.0,Low,-90%,0%,,grand river,kayaking
+grand river swimming,10-100,50,,0.0,Low,0%,0%,,grand river,swimming
+grand river tubing,10-100,50,,0.0,Low,0%,0%,,grand river,tubing
+grande ronde river cfs,10-100,50,,0.0,Low,0%,0%,,grande ronde river,cfs
+grande ronde river flooding,10-100,50,,0.0,—,0%,0%,,grande ronde river,flooding
+great egg harbor river kayaking,10-100,50,,0.0,Low,0%,0%,,great egg harbor river,kayaking
+great egg harbor river tubing,10-100,50,,0.0,Low,0%,0%,,great egg harbor river,tubing
+great miami river fishing report,10-100,50,,0.0,Low,0%,0%,,great miami river,fishing report
+great miami river flood stage,10-100,50,,0.0,—,-100%,0%,,great miami river,flood stage
+great miami river flooding,10-100,50,,0.0,Low,0%,0%,,great miami river,flooding
+great miami river kayaking,10-100,50,,0.0,Low,0%,0%,,great miami river,kayaking
+great miami river tubing,10-100,50,,0.0,—,-100%,0%,,great miami river,tubing
+great salt lake flooding,10-100,50,,0.0,Low,0%,0%,,great salt lake,flooding
+great salt lake kayaking,10-100,50,,0.0,Low,0%,0%,,great salt lake,kayaking
+green river conditions,10-100,50,,0.0,Low,0%,0%,,green river,conditions
+green river lake fishing report,10-100,50,,0.0,Low,+900%,+900%,,green river lake,fishing report
+green river lake flooding,10-100,50,,0.0,—,-100%,-100%,,green river lake,flooding
+green river lake kayaking,10-100,50,,0.0,Low,0%,+∞,,green river lake,kayaking
+green river lake swimming,10-100,50,,0.0,Low,0%,+∞,,green river lake,swimming
+greenbrier river conditions,10-100,50,,0.0,Low,0%,+∞,,greenbrier river,conditions
+greenbrier river fishing report,10-100,50,,0.0,Low,0%,0%,,greenbrier river,fishing report
+greenbrier river flood stage,10-100,50,,0.0,—,-100%,0%,,greenbrier river,flood stage
+greenbrier river flooding,10-100,50,,0.0,Low,0%,0%,,greenbrier river,flooding
+greenbrier river kayaking,10-100,50,,0.0,Low,0%,0%,,greenbrier river,kayaking
+greenbrier river swimming,10-100,50,,0.0,Low,0%,+∞,,greenbrier river,swimming
+greenbrier river tubing,10-100,50,,0.0,Low,0%,0%,,greenbrier river,tubing
+gros ventre river fishing report,10-100,50,,0.0,Low,-90%,0%,,gros ventre river,fishing report
+gros ventre river flooding,10-100,50,,0.0,—,0%,0%,,gros ventre river,flooding
+guadalupe river boat ramp,10-100,50,,0.0,Low,0%,0%,,guadalupe river,boat ramp
+guadalupe river cfs,10-100,50,,0.0,Low,-90%,0%,,guadalupe river,cfs
+guadalupe river flood stage,10-100,50,,0.0,Low,0%,0%,,guadalupe river,flood stage
+guadalupe river forecast,10-100,50,,0.0,Low,0%,+∞,,guadalupe river,forecast
+guadalupe river swimming,10-100,50,,0.0,Low,0%,0%,,guadalupe river,swimming
+haw river fishing report,10-100,50,,0.0,—,-100%,-100%,,haw river,fishing report
+haw river flood stage,10-100,50,,0.0,—,-100%,-100%,,haw river,flood stage
+haw river flooding,10-100,50,,0.0,Low,0%,0%,,haw river,flooding
+haw river swimming,10-100,50,,0.0,—,-100%,-100%,,haw river,swimming
+haw river tubing,10-100,50,,0.0,—,-100%,-100%,,haw river,tubing
+henrys fork cfs,10-100,50,,0.0,Low,0%,0%,,henrys fork,cfs
+henrys fork flooding,10-100,50,,0.0,—,0%,0%,,henrys fork,flooding
+hoback river cfs,10-100,50,,0.0,Low,0%,+∞,,hoback river,cfs
+hoback river fishing report,10-100,50,,0.0,Low,0%,0%,,hoback river,fishing report
+hocking river conditions,10-100,50,,0.0,Low,0%,0%,,hocking river,conditions
+hocking river flood stage,10-100,50,,0.0,Low,0%,+∞,,hocking river,flood stage
+hocking river flooding,10-100,50,,0.0,Low,-90%,0%,,hocking river,flooding
+hocking river tubing,10-100,50,,0.0,Low,-90%,0%,,hocking river,tubing
+hoh river cfs,10-100,50,,0.0,Low,0%,-90%,,hoh river,cfs
+hoh river fishing report,10-100,50,,0.0,Low,+900%,+900%,,hoh river,fishing report
+hoh river flooding,10-100,50,,0.0,Low,0%,0%,,hoh river,flooding
+hoh river kayaking,10-100,50,,0.0,—,-100%,-100%,,hoh river,kayaking
+holmes creek boat ramp,10-100,50,,0.0,Low,0%,0%,,holmes creek,boat ramp
+holmes creek kayaking,10-100,50,,0.0,Low,0%,0%,,holmes creek,kayaking
+homer flooding,10-100,50,,0.0,Low,0%,0%,,homer,town flooding (weather intent)
+homer swimming,10-100,50,,0.0,Low,0%,0%,,homer,swimming
+homer tubing,10-100,50,,0.0,—,-100%,0%,,homer,tubing
+homochitto river tubing,10-100,50,,0.0,—,-100%,-100%,,homochitto river,tubing
+honolulu conditions,10-100,50,,0.0,Low,0%,+∞,,honolulu,town conditions (weather intent)
+honolulu swimming,10-100,50,,0.0,Low,0%,0%,,honolulu,swimming
+how high is the river,10-100,50,,0.0,Low,0%,0%,,,general question
+hudson river conditions,10-100,50,,0.0,Low,0%,0%,,hudson river,conditions
+hudson river fishing report,10-100,50,,0.0,Low,0%,0%,,hudson river,fishing report
+hudson river flood stage,10-100,50,,0.0,Low,0%,0%,,hudson river,flood stage
+hudson river forecast,10-100,50,,0.0,Low,0%,0%,,hudson river,forecast
+hudson river tubing,10-100,50,,0.0,Low,-90%,0%,,hudson river,tubing
+humptulips river cfs,10-100,50,,0.0,Low,0%,0%,,humptulips river,cfs
+humptulips river fishing report,10-100,50,,0.0,Low,+900%,0%,,humptulips river,fishing report
+huron river conditions,10-100,50,,0.0,—,-100%,-100%,,huron river,conditions
+huron river fishing report,10-100,50,,0.0,Low,0%,0%,,huron river,fishing report
+huron river flood stage,10-100,50,,0.0,—,0%,0%,,huron river,flood stage
+huron river flooding,10-100,50,,0.0,Low,0%,0%,,huron river,flooding
+huron river swimming,10-100,50,,0.0,—,-100%,-100%,,huron river,swimming
+huzzah creek flooding,10-100,50,,0.0,—,-100%,0%,,huzzah creek,flooding
+illinois river conditions,10-100,50,,0.0,Low,0%,0%,,illinois river,conditions
+illinois river fishing report,10-100,50,,0.0,Low,0%,0%,,illinois river,fishing report
+illinois river flood stage,10-100,50,,0.0,Low,-90%,0%,,illinois river,flood stage
+illinois river flooding,10-100,50,,0.0,Low,-90%,0%,,illinois river,flooding
+illinois river forecast,10-100,50,,0.0,Low,0%,0%,,illinois river,forecast
+illinois river kayaking,10-100,50,,0.0,Low,-90%,0%,,illinois river,kayaking
+illinois river swimming,10-100,50,,0.0,Low,0%,0%,,illinois river,swimming
+indian river inlet flooding,10-100,50,,0.0,Low,+∞,0%,,indian river inlet,flooding
+indian river inlet swimming,10-100,50,,0.0,Low,0%,+∞,,indian river inlet,swimming
+is it safe to fish,10-100,50,,0.0,Low,0%,+∞,,,general question
+is it safe to kayak today,10-100,50,,0.0,Low,0%,0%,,,general question
+is it safe to swim in the river,10-100,50,,0.0,Low,0%,0%,,,general question
+jacksonville beach conditions,10-100,50,,0.0,Low,0%,0%,,jacksonville beach,conditions
+jacksonville beach fishing report,10-100,50,,0.0,Low,0%,0%,,jacksonville beach,fishing report
+jacksonville beach flooding,10-100,50,,0.0,Low,+900%,+900%,,jacksonville beach,flooding
+jacksonville beach swimming,10-100,50,,0.0,Low,0%,+∞,,jacksonville beach,swimming
+james river conditions,10-100,50,,0.0,Low,-90%,0%,,james river,conditions
+james river flood stage,10-100,50,,0.0,Low,0%,0%,,james river,flood stage
+james river flooding,10-100,50,,0.0,Low,0%,0%,,james river,flooding
+james river forecast,10-100,50,,0.0,Low,0%,0%,,james river,forecast
+james river gauge height,10-100,50,,0.0,—,-100%,-100%,,james river,gauge height
+james river swimming,10-100,50,,0.0,Low,-90%,0%,,james river,swimming
+johns river fishing report,10-100,50,,0.0,Low,0%,0%,,johns river,fishing report
+johns river flooding,10-100,50,,0.0,Low,0%,+∞,,johns river,flooding
+jordan lake conditions,10-100,50,,0.0,Low,0%,+∞,,jordan lake,conditions
+jordan lake flooding,10-100,50,,0.0,Low,0%,0%,,jordan lake,flooding
+jordan lake forecast,10-100,50,,0.0,Low,0%,0%,,jordan lake,forecast
+jordan lake tubing,10-100,50,,0.0,—,-100%,0%,,jordan lake,tubing
+jordan river fishing report,10-100,50,,0.0,Low,0%,0%,,jordan river,fishing report
+jordan river flooding,10-100,50,,0.0,Low,0%,0%,,jordan river,flooding
+jordan river forecast,10-100,50,,0.0,Low,+∞,0%,,jordan river,forecast
+jordan river swimming,10-100,50,,0.0,Low,0%,0%,,jordan river,swimming
+jordan river tubing,10-100,50,,0.0,—,-100%,-100%,,jordan river,tubing
+kalamazoo river fishing report,10-100,50,,0.0,Low,0%,0%,,kalamazoo river,fishing report
+kalamazoo river flooding,10-100,50,,0.0,Low,0%,0%,,kalamazoo river,flooding
+kalamazoo river kayaking,10-100,50,,0.0,Low,-90%,0%,,kalamazoo river,kayaking
+kalamazoo river tubing,10-100,50,,0.0,Low,0%,0%,,kalamazoo river,tubing
+kanawha river conditions,10-100,50,,0.0,—,-100%,0%,,kanawha river,conditions
+kanawha river fishing report,10-100,50,,0.0,Low,0%,0%,,kanawha river,fishing report
+kanawha river flood stage,10-100,50,,0.0,—,-100%,-100%,,kanawha river,flood stage
+kanawha river flooding,10-100,50,,0.0,Low,0%,0%,,kanawha river,flooding
+kankakee river conditions,10-100,50,,0.0,Low,0%,+∞,,kankakee river,conditions
+kankakee river fishing report,10-100,50,,0.0,Low,0%,0%,,kankakee river,fishing report
+kankakee river flood stage,10-100,50,,0.0,—,-100%,-100%,,kankakee river,flood stage
+kankakee river flooding,10-100,50,,0.0,Low,-90%,0%,,kankakee river,flooding
+kankakee river kayaking,10-100,50,,0.0,Low,0%,0%,,kankakee river,kayaking
+kankakee river swimming,10-100,50,,0.0,Low,0%,0%,,kankakee river,swimming
+kankakee river tubing,10-100,50,,0.0,Low,0%,0%,,kankakee river,tubing
+kansas river boat ramp,10-100,50,,0.0,Low,0%,0%,,kansas river,boat ramp
+kansas river fishing report,10-100,50,,0.0,Low,0%,0%,,kansas river,fishing report
+kansas river flood stage,10-100,50,,0.0,Low,+∞,+∞,,kansas river,flood stage
+kansas river flooding,10-100,50,,0.0,Low,0%,0%,,kansas river,flooding
+kansas river forecast,10-100,50,,0.0,Low,0%,0%,,kansas river,forecast
+kansas river kayaking,10-100,50,,0.0,Low,0%,0%,,kansas river,kayaking
+kansas river tubing,10-100,50,,0.0,Low,0%,0%,,kansas river,tubing
+kaskaskia river boat ramp,10-100,50,,0.0,Low,-90%,0%,,kaskaskia river,boat ramp
+kaskaskia river fishing report,10-100,50,,0.0,Low,0%,0%,,kaskaskia river,fishing report
+kaskaskia river flood stage,10-100,50,,0.0,—,-100%,0%,,kaskaskia river,flood stage
+kaskaskia river flooding,10-100,50,,0.0,Low,0%,0%,,kaskaskia river,flooding
+kaskaskia river tubing,10-100,50,,0.0,—,0%,0%,,kaskaskia river,tubing
+kenai river cfs,10-100,50,,0.0,Low,0%,0%,,kenai river,cfs
+kenai river conditions,10-100,50,,0.0,—,-100%,-100%,,kenai river,conditions
+kenai river flood stage,10-100,50,,0.0,—,-100%,0%,,kenai river,flood stage
+kenai river flooding,10-100,50,,0.0,Low,0%,0%,,kenai river,flooding
+kenai river kayaking,10-100,50,,0.0,Low,0%,0%,,kenai river,kayaking
+kennebec river conditions,10-100,50,,0.0,—,-100%,0%,,kennebec river,conditions
+kennebec river fishing report,10-100,50,,0.0,Low,0%,0%,,kennebec river,fishing report
+kennebec river flood stage,10-100,50,,0.0,—,0%,0%,,kennebec river,flood stage
+kennebec river flooding,10-100,50,,0.0,Low,0%,0%,,kennebec river,flooding
+kennebec river kayaking,10-100,50,,0.0,Low,0%,0%,,kennebec river,kayaking
+kennebec river swimming,10-100,50,,0.0,Low,0%,0%,,kennebec river,swimming
+kennebec river tubing,10-100,50,,0.0,Low,-90%,0%,,kennebec river,tubing
+kern river cfs,10-100,50,,0.0,Low,0%,0%,,kern river,cfs
+kern river conditions,10-100,50,,0.0,Low,0%,0%,,kern river,conditions
+kern river flooding,10-100,50,,0.0,Low,0%,0%,,kern river,flooding
+kern river kayaking,10-100,50,,0.0,Low,0%,0%,,kern river,kayaking
+kern river swimming,10-100,50,,0.0,Low,0%,0%,,kern river,swimming
+kerr lake flooding,10-100,50,,0.0,Low,0%,0%,,kerr lake,flooding
+kerr lake swimming,10-100,50,,0.0,Low,0%,0%,,kerr lake,swimming
+kinderhook creek fishing report,10-100,50,,0.0,Low,0%,0%,,kinderhook creek,fishing report
+kinderhook creek flooding,10-100,50,,0.0,—,-100%,0%,,kinderhook creek,flooding
+kinderhook creek swimming,10-100,50,,0.0,Low,0%,+∞,,kinderhook creek,swimming
+kings river conditions,10-100,50,,0.0,—,-100%,0%,,kings river,conditions
+kings river fishing report,10-100,50,,0.0,Low,0%,0%,,kings river,fishing report
+kings river flood stage,10-100,50,,0.0,—,0%,0%,,kings river,flood stage
+kings river flooding,10-100,50,,0.0,—,-100%,-100%,,kings river,flooding
+kings river kayaking,10-100,50,,0.0,Low,0%,0%,,kings river,kayaking
+kings river swimming,10-100,50,,0.0,Low,0%,+∞,,kings river,swimming
+kings river tubing,10-100,50,,0.0,Low,0%,+∞,,kings river,tubing
+kinzua creek fishing report,10-100,50,,0.0,Low,0%,0%,,kinzua creek,fishing report
+kishwaukee river conditions,10-100,50,,0.0,—,-100%,0%,,kishwaukee river,conditions
+kishwaukee river fishing report,10-100,50,,0.0,Low,0%,0%,,kishwaukee river,fishing report
+kishwaukee river flood stage,10-100,50,,0.0,Low,0%,+∞,,kishwaukee river,flood stage
+kishwaukee river flooding,10-100,50,,0.0,Low,0%,0%,,kishwaukee river,flooding
+kishwaukee river kayaking,10-100,50,,0.0,Low,0%,0%,,kishwaukee river,kayaking
+kishwaukee river tubing,10-100,50,,0.0,Low,0%,0%,,kishwaukee river,tubing
+klamath river flood stage,10-100,50,,0.0,—,0%,0%,,klamath river,flood stage
+klamath river flooding,10-100,50,,0.0,Low,0%,0%,,klamath river,flooding
+klamath river kayaking,10-100,50,,0.0,Low,0%,0%,,klamath river,kayaking
+klamath river swimming,10-100,50,,0.0,—,-100%,-100%,,klamath river,swimming
+klickitat river conditions,10-100,50,,0.0,Low,0%,0%,,klickitat river,conditions
+klickitat river flooding,10-100,50,,0.0,Low,0%,+∞,,klickitat river,flooding
+klickitat river kayaking,10-100,50,,0.0,Low,0%,0%,,klickitat river,kayaking
+klickitat river tubing,10-100,50,,0.0,—,-100%,0%,,klickitat river,tubing
+kokosing river fishing report,10-100,50,,0.0,—,-100%,0%,,kokosing river,fishing report
+kokosing river kayaking,10-100,50,,0.0,Low,0%,0%,,kokosing river,kayaking
+kokosing river tubing,10-100,50,,0.0,Low,0%,0%,,kokosing river,tubing
+lake corpus christi forecast,10-100,50,,0.0,Low,0%,+∞,,lake corpus christi,forecast
+lake corpus christi swimming,10-100,50,,0.0,Low,0%,0%,,lake corpus christi,swimming
+lake hartwell flooding,10-100,50,,0.0,Low,0%,0%,,lake hartwell,flooding
+lake hartwell forecast,10-100,50,,0.0,Low,0%,0%,,lake hartwell,forecast
+lake hartwell kayaking,10-100,50,,0.0,Low,0%,0%,,lake hartwell,kayaking
+lake hartwell swimming,10-100,50,,0.0,Low,-90%,0%,,lake hartwell,swimming
+lake lanier conditions,10-100,50,,0.0,Low,0%,0%,,lake lanier,conditions
+lake lanier tubing,10-100,50,,0.0,Low,0%,0%,,lake lanier,tubing
+lake mead conditions,10-100,50,,0.0,Low,0%,0%,,lake mead,conditions
+lake mead flooding,10-100,50,,0.0,Low,0%,+900%,,lake mead,flooding
+lake mead tubing,10-100,50,,0.0,Low,0%,0%,,lake mead,tubing
+lake powell conditions,10-100,50,,0.0,Low,0%,0%,,lake powell,conditions
+lake powell tubing,10-100,50,,0.0,High,0%,0%,,lake powell,tubing
+lake travis conditions,10-100,50,,0.0,Low,0%,0%,,lake travis,conditions
+lamprey river flooding,10-100,50,,0.0,—,-100%,-100%,,lamprey river,flooding
+lamprey river kayaking,10-100,50,,0.0,Low,0%,0%,,lamprey river,kayaking
+lehigh river cfs,10-100,50,,0.0,Low,0%,0%,,lehigh river,cfs
+lehigh river conditions,10-100,50,,0.0,Low,0%,0%,,lehigh river,conditions
+lehigh river fishing report,10-100,50,,0.0,Low,0%,0%,,lehigh river,fishing report
+lehigh river flood stage,10-100,50,,0.0,—,-100%,0%,,lehigh river,flood stage
+lehigh river flooding,10-100,50,,0.0,Low,0%,0%,,lehigh river,flooding
+lehigh river kayaking,10-100,50,,0.0,Low,-90%,0%,,lehigh river,kayaking
+lehigh river swimming,10-100,50,,0.0,Low,0%,0%,,lehigh river,swimming
+lehigh river tubing,10-100,50,,0.0,Low,-90%,0%,,lehigh river,tubing
+little arkansas river flood stage,10-100,50,,0.0,Low,+∞,+∞,,little arkansas river,flood stage
+little arkansas river flooding,10-100,50,,0.0,—,0%,0%,,little arkansas river,flooding
+little beaver creek kayaking,10-100,50,,0.0,Low,0%,0%,,little beaver creek,kayaking
+little colorado river cfs,10-100,50,,0.0,Low,+∞,+∞,,little colorado river,cfs
+little colorado river fishing report,10-100,50,,0.0,—,-100%,-100%,,little colorado river,fishing report
+little colorado river flooding,10-100,50,,0.0,Low,+∞,+∞,,little colorado river,flooding
+little colorado river kayaking,10-100,50,,0.0,Low,0%,0%,,little colorado river,kayaking
+little colorado river swimming,10-100,50,,0.0,—,-100%,-100%,,little colorado river,swimming
+little colorado river tubing,10-100,50,,0.0,—,0%,0%,,little colorado river,tubing
+little miami river conditions,10-100,50,,0.0,Low,-90%,0%,,little miami river,conditions
+little miami river fishing report,10-100,50,,0.0,Low,0%,0%,,little miami river,fishing report
+little miami river flood stage,10-100,50,,0.0,Low,0%,+∞,,little miami river,flood stage
+little miami river flooding,10-100,50,,0.0,Low,-90%,0%,,little miami river,flooding
+little miami river swimming,10-100,50,,0.0,Low,0%,0%,,little miami river,swimming
+little miami river tubing,10-100,50,,0.0,Low,0%,0%,,little miami river,tubing
+little missouri river flooding,10-100,50,,0.0,Low,0%,0%,,little missouri river,flooding
+little missouri river kayaking,10-100,50,,0.0,Low,0%,0%,,little missouri river,kayaking
+little pee dee river boat ramp,10-100,50,,0.0,—,-100%,-100%,,little pee dee river,boat ramp
+little pee dee river fishing report,10-100,50,,0.0,Low,0%,0%,,little pee dee river,fishing report
+little pee dee river flood stage,10-100,50,,0.0,Low,+∞,+∞,,little pee dee river,flood stage
+little pee dee river flooding,10-100,50,,0.0,—,-100%,-100%,,little pee dee river,flooding
+little pigeon river fishing report,10-100,50,,0.0,Low,0%,0%,,little pigeon river,fishing report
+little pigeon river flooding,10-100,50,,0.0,Low,0%,0%,,little pigeon river,flooding
+little pigeon river kayaking,10-100,50,,0.0,Low,0%,0%,,little pigeon river,kayaking
+little pigeon river swimming,10-100,50,,0.0,Low,0%,0%,,little pigeon river,swimming
+little pigeon river tubing,10-100,50,,0.0,Low,0%,0%,,little pigeon river,tubing
+little river cfs,10-100,50,,0.0,Low,0%,0%,,little river,cfs
+little river flood stage,10-100,50,,0.0,Low,0%,0%,,little river,flood stage
+little river flooding,10-100,50,,0.0,Low,0%,-90%,,little river,flooding
+little river kayaking,10-100,50,,0.0,Low,0%,0%,,little river,kayaking
+little river swimming,10-100,50,,0.0,Low,0%,+∞,,little river,swimming
+little river tubing,10-100,50,,0.0,Low,0%,0%,,little river,tubing
+little salmon river fishing report,10-100,50,,0.0,Low,0%,0%,,little salmon river,fishing report
+little spokane river flooding,10-100,50,,0.0,—,0%,-100%,,little spokane river,flooding
+little spokane river kayaking,10-100,50,,0.0,Low,0%,0%,,little spokane river,kayaking
+little spokane river swimming,10-100,50,,0.0,—,-100%,0%,,little spokane river,swimming
+little tennessee river fishing report,10-100,50,,0.0,Low,0%,0%,,little tennessee river,fishing report
+little tennessee river flooding,10-100,50,,0.0,Low,0%,+∞,,little tennessee river,flooding
+little tennessee river kayaking,10-100,50,,0.0,Low,0%,0%,,little tennessee river,kayaking
+little tennessee river tubing,10-100,50,,0.0,—,-100%,0%,,little tennessee river,tubing
+little wabash river forecast,10-100,50,,0.0,—,-100%,0%,,little wabash river,forecast
+lochsa river cfs,10-100,50,,0.0,Low,0%,0%,,lochsa river,cfs
+lochsa river fishing report,10-100,50,,0.0,Low,-90%,0%,,lochsa river,fishing report
+lochsa river forecast,10-100,50,,0.0,Low,0%,0%,,lochsa river,forecast
+lochsa river kayaking,10-100,50,,0.0,Low,0%,0%,,lochsa river,kayaking
+locust fork kayaking,10-100,50,,0.0,Low,0%,0%,,locust fork,kayaking
+los angeles river swimming,10-100,50,,0.0,Low,0%,0%,,los angeles river,swimming
+loyalsock creek fishing report,10-100,50,,0.0,Low,0%,0%,,loyalsock creek,fishing report
+loyalsock creek flooding,10-100,50,,0.0,Low,0%,0%,,loyalsock creek,flooding
+loyalsock creek kayaking,10-100,50,,0.0,Low,0%,0%,,loyalsock creek,kayaking
+lumber river flood stage,10-100,50,,0.0,—,0%,-100%,,lumber river,flood stage
+lumber river flooding,10-100,50,,0.0,Low,0%,0%,,lumber river,flooding
+lumber river kayaking,10-100,50,,0.0,Low,0%,0%,,lumber river,kayaking
+lumber river tubing,10-100,50,,0.0,—,-100%,-100%,,lumber river,tubing
+lycoming creek fishing report,10-100,50,,0.0,Low,0%,+∞,,lycoming creek,fishing report
+lycoming creek flood stage,10-100,50,,0.0,—,-100%,-100%,,lycoming creek,flood stage
+lycoming creek flooding,10-100,50,,0.0,Low,0%,0%,,lycoming creek,flooding
+lynches river fishing report,10-100,50,,0.0,—,-100%,-100%,,lynches river,fishing report
+lynches river flood stage,10-100,50,,0.0,—,-100%,-100%,,lynches river,flood stage
+lynches river flooding,10-100,50,,0.0,—,0%,-100%,,lynches river,flooding
+lynches river kayaking,10-100,50,,0.0,—,-100%,-100%,,lynches river,kayaking
+mackinaw river fishing report,10-100,50,,0.0,—,-100%,-100%,,mackinaw river,fishing report
+mackinaw river flooding,10-100,50,,0.0,—,-100%,-100%,,mackinaw river,flooding
+mackinaw river kayaking,10-100,50,,0.0,Low,0%,0%,,mackinaw river,kayaking
+mackinaw river tubing,10-100,50,,0.0,—,-100%,0%,,mackinaw river,tubing
+mad river cfs,10-100,50,,0.0,Low,0%,0%,,mad river,cfs
+mad river conditions,10-100,50,,0.0,Low,0%,0%,,mad river,conditions
+mad river flood stage,10-100,50,,0.0,—,-100%,-100%,,mad river,flood stage
+mad river flooding,10-100,50,,0.0,Low,0%,0%,,mad river,flooding
+mad river swimming,10-100,50,,0.0,—,-100%,-100%,,mad river,swimming
+madison river cfs,10-100,50,,0.0,Low,0%,0%,,madison river,cfs
+madison river conditions,10-100,50,,0.0,Low,0%,+∞,,madison river,conditions
+madison river flooding,10-100,50,,0.0,Low,0%,0%,,madison river,flooding
+madison river kayaking,10-100,50,,0.0,Low,0%,0%,,madison river,kayaking
+major flood stage,10-100,50,,0.0,Low,0%,0%,,major,flood stage
+manistee river cfs,10-100,50,,0.0,Low,0%,+∞,,manistee river,cfs
+manistee river conditions,10-100,50,,0.0,Low,0%,+∞,,manistee river,conditions
+manistee river tubing,10-100,50,,0.0,Low,-90%,0%,,manistee river,tubing
+manistique river fishing report,10-100,50,,0.0,Low,0%,0%,,manistique river,fishing report
+manistique river kayaking,10-100,50,,0.0,Low,0%,0%,,manistique river,kayaking
+maury river fishing report,10-100,50,,0.0,Low,0%,0%,,maury river,fishing report
+maury river kayaking,10-100,50,,0.0,Low,0%,0%,,maury river,kayaking
+maury river tubing,10-100,50,,0.0,—,-100%,0%,,maury river,tubing
+mayo river kayaking,10-100,50,,0.0,Low,0%,+∞,,mayo river,kayaking
+mayo river swimming,10-100,50,,0.0,—,-100%,0%,,mayo river,swimming
+mayo river tubing,10-100,50,,0.0,—,-100%,0%,,mayo river,tubing
+mckenzie river cfs,10-100,50,,0.0,Low,0%,0%,,mckenzie river,cfs
+mckenzie river conditions,10-100,50,,0.0,—,-100%,0%,,mckenzie river,conditions
+mckenzie river flood stage,10-100,50,,0.0,—,0%,-100%,,mckenzie river,flood stage
+mckenzie river flooding,10-100,50,,0.0,Low,0%,0%,,mckenzie river,flooding
+mckenzie river kayaking,10-100,50,,0.0,Low,0%,0%,,mckenzie river,kayaking
+mckenzie river swimming,10-100,50,,0.0,Low,0%,0%,,mckenzie river,swimming
+mckenzie river tubing,10-100,50,,0.0,Low,0%,0%,,mckenzie river,tubing
+medina lake boat ramp,10-100,50,,0.0,Low,0%,0%,,medina lake,boat ramp
+medina lake conditions,10-100,50,,0.0,—,-100%,-100%,,medina lake,conditions
+medina lake flooding,10-100,50,,0.0,Low,0%,+∞,,medina lake,flooding
+medina lake kayaking,10-100,50,,0.0,Low,0%,0%,,medina lake,kayaking
+medina lake swimming,10-100,50,,0.0,Low,0%,0%,,medina lake,swimming
+menominee river fishing report,10-100,50,,0.0,Low,0%,-90%,,menominee river,fishing report
+menominee river flooding,10-100,50,,0.0,Low,0%,0%,,menominee river,flooding
+menominee river kayaking,10-100,50,,0.0,Low,0%,0%,,menominee river,kayaking
+menominee river tubing,10-100,50,,0.0,—,-100%,-100%,,menominee river,tubing
+meramec river boat ramp,10-100,50,,0.0,Low,0%,0%,,meramec river,boat ramp
+meramec river conditions,10-100,50,,0.0,Low,0%,0%,,meramec river,conditions
+meramec river fishing report,10-100,50,,0.0,Low,0%,0%,,meramec river,fishing report
+meramec river flood stage,10-100,50,,0.0,Low,0%,0%,,meramec river,flood stage
+meramec river flooding,10-100,50,,0.0,Low,0%,0%,,meramec river,flooding
+meramec river forecast,10-100,50,,0.0,—,-100%,0%,,meramec river,forecast
+meramec river kayaking,10-100,50,,0.0,Medium,0%,0%,,meramec river,kayaking
+meramec river swimming,10-100,50,,0.0,Low,0%,0%,,meramec river,swimming
+meramec river tubing,10-100,50,,0.0,Medium,0%,0%,,meramec river,tubing
+merced river cfs,10-100,50,,0.0,Low,0%,0%,,merced river,cfs
+merced river conditions,10-100,50,,0.0,—,-100%,-100%,,merced river,conditions
+merced river fishing report,10-100,50,,0.0,Low,0%,0%,,merced river,fishing report
+merced river flood stage,10-100,50,,0.0,—,0%,0%,,merced river,flood stage
+merced river flooding,10-100,50,,0.0,Low,0%,0%,,merced river,flooding
+merced river kayaking,10-100,50,,0.0,Low,0%,0%,,merced river,kayaking
+merced river swimming,10-100,50,,0.0,Low,-90%,0%,,merced river,swimming
+merced river tubing,10-100,50,,0.0,Low,0%,0%,,merced river,tubing
+mermentau river fishing report,10-100,50,,0.0,Low,0%,0%,,mermentau river,fishing report
+mermentau river flood stage,10-100,50,,0.0,Low,0%,0%,,mermentau river,flood stage
+mermentau river flooding,10-100,50,,0.0,—,0%,0%,,mermentau river,flooding
+merrimack river conditions,10-100,50,,0.0,—,-100%,-100%,,merrimack river,conditions
+merrimack river fishing report,10-100,50,,0.0,Low,0%,0%,,merrimack river,fishing report
+merrimack river flood stage,10-100,50,,0.0,—,-100%,-100%,,merrimack river,flood stage
+merrimack river flooding,10-100,50,,0.0,Low,0%,0%,,merrimack river,flooding
+merrimack river kayaking,10-100,50,,0.0,Low,0%,0%,,merrimack river,kayaking
+merrimack river swimming,10-100,50,,0.0,Low,0%,0%,,merrimack river,swimming
+merrimack river tubing,10-100,50,,0.0,—,-100%,0%,,merrimack river,tubing
+middle fork flathead river cfs,10-100,50,,0.0,Low,0%,0%,,middle fork flathead river,cfs
+middle fork flathead river fishing report,10-100,50,,0.0,Low,0%,0%,,middle fork flathead river,fishing report
+middle fork salmon river cfs,10-100,50,,0.0,Low,0%,0%,,middle fork salmon river,cfs
+middle fork salmon river conditions,10-100,50,,0.0,—,-100%,-100%,,middle fork salmon river,conditions
+middle fork salmon river fishing report,10-100,50,,0.0,Low,0%,+∞,,middle fork salmon river,fishing report
+middle fork salmon river forecast,10-100,50,,0.0,—,-100%,-100%,,middle fork salmon river,forecast
+middle fork salmon river kayaking,10-100,50,,0.0,Low,0%,0%,,middle fork salmon river,kayaking
+middle fork snoqualmie river fishing report,10-100,50,,0.0,Low,0%,0%,,middle fork snoqualmie river,fishing report
+middle fork snoqualmie river swimming,10-100,50,,0.0,—,-100%,0%,,middle fork snoqualmie river,swimming
+mill creek fishing report,10-100,50,,0.0,Low,0%,0%,,mill creek,fishing report
+mill creek flood stage,10-100,50,,0.0,—,-100%,-100%,,mill creek,flood stage
+mill creek kayaking,10-100,50,,0.0,Low,-90%,0%,,mill creek,kayaking
+milwaukee river cfs,10-100,50,,0.0,Low,0%,0%,,milwaukee river,cfs
+milwaukee river flood stage,10-100,50,,0.0,—,0%,-100%,,milwaukee river,flood stage
+milwaukee river flooding,10-100,50,,0.0,Low,0%,0%,,milwaukee river,flooding
+milwaukee river tubing,10-100,50,,0.0,—,-100%,0%,,milwaukee river,tubing
+minnehaha creek cfs,10-100,50,,0.0,Low,0%,0%,,minnehaha creek,cfs
+minnehaha creek flooding,10-100,50,,0.0,—,-100%,-100%,,minnehaha creek,flooding
+minnehaha creek kayaking,10-100,50,,0.0,Low,0%,0%,,minnehaha creek,kayaking
+minnehaha creek tubing,10-100,50,,0.0,Low,0%,0%,,minnehaha creek,tubing
+minnesota river conditions,10-100,50,,0.0,—,-100%,-100%,,minnesota river,conditions
+minnesota river fishing report,10-100,50,,0.0,Low,0%,0%,,minnesota river,fishing report
+minnesota river flood stage,10-100,50,,0.0,—,0%,-100%,,minnesota river,flood stage
+minnesota river flooding,10-100,50,,0.0,Low,0%,0%,,minnesota river,flooding
+minnesota river forecast,10-100,50,,0.0,Low,+∞,+∞,,minnesota river,forecast
+minnesota river kayaking,10-100,50,,0.0,Low,0%,0%,,minnesota river,kayaking
+missisquoi river flooding,10-100,50,,0.0,Low,+∞,0%,,missisquoi river,flooding
+missisquoi river kayaking,10-100,50,,0.0,Low,0%,0%,,missisquoi river,kayaking
+mississippi river conditions,10-100,50,,0.0,Low,0%,0%,,mississippi river,conditions
+mississippi river kayaking,10-100,50,,0.0,Low,0%,0%,,mississippi river,kayaking
+mississippi river tubing,10-100,50,,0.0,Low,0%,0%,,mississippi river,tubing
+missouri river boat ramp,10-100,50,,0.0,Low,-90%,0%,,missouri river,boat ramp
+missouri river cfs,10-100,50,,0.0,Low,0%,0%,,missouri river,cfs
+missouri river conditions,10-100,50,,0.0,Low,0%,0%,,missouri river,conditions
+missouri river flood stage,10-100,50,,0.0,Low,+900%,+900%,,missouri river,flood stage
+missouri river forecast,10-100,50,,0.0,Low,0%,0%,,missouri river,forecast
+missouri river swimming,10-100,50,,0.0,Low,0%,0%,,missouri river,swimming
+missouri river tubing,10-100,50,,0.0,Low,0%,0%,,missouri river,tubing
+moderate flood stage,10-100,50,,0.0,Low,0%,0%,,moderate,flood stage
+molalla river fishing report,10-100,50,,0.0,Low,0%,0%,,molalla river,fishing report
+molalla river flood stage,10-100,50,,0.0,—,0%,0%,,molalla river,flood stage
+molalla river flooding,10-100,50,,0.0,Low,0%,0%,,molalla river,flooding
+molalla river forecast,10-100,50,,0.0,Low,+∞,+∞,,molalla river,forecast
+molalla river swimming,10-100,50,,0.0,—,-100%,-100%,,molalla river,swimming
+monterey boat ramp,10-100,50,,0.0,Low,0%,0%,,monterey,boat ramp
+monterey conditions,10-100,50,,0.0,Low,0%,0%,,monterey,town conditions (weather intent)
+monterey flooding,10-100,50,,0.0,Low,+900%,+900%,,monterey,town flooding (weather intent)
+monterey swimming,10-100,50,,0.0,Low,0%,0%,,monterey,swimming
+mulberry river kayaking,10-100,50,,0.0,Low,0%,0%,,mulberry river,kayaking
+mulberry river swimming,10-100,50,,0.0,Low,0%,0%,,mulberry river,swimming
+mullica river boat ramp,10-100,50,,0.0,Low,0%,0%,,mullica river,boat ramp
+mullica river fishing report,10-100,50,,0.0,Low,0%,0%,,mullica river,fishing report
+mullica river flooding,10-100,50,,0.0,—,-100%,-100%,,mullica river,flooding
+mullica river kayaking,10-100,50,,0.0,Low,0%,0%,,mullica river,kayaking
+mullica river swimming,10-100,50,,0.0,Low,0%,0%,,mullica river,swimming
+mullica river tubing,10-100,50,,0.0,Low,0%,0%,,mullica river,tubing
+musconetcong river fishing report,10-100,50,,0.0,Low,0%,0%,,musconetcong river,fishing report
+musconetcong river flooding,10-100,50,,0.0,Low,0%,0%,,musconetcong river,flooding
+musconetcong river kayaking,10-100,50,,0.0,Low,0%,+∞,,musconetcong river,kayaking
+muskegon river conditions,10-100,50,,0.0,—,-100%,-100%,,muskegon river,conditions
+muskegon river flood stage,10-100,50,,0.0,—,-100%,0%,,muskegon river,flood stage
+muskegon river kayaking,10-100,50,,0.0,Low,-90%,0%,,muskegon river,kayaking
+namekagon river conditions,10-100,50,,0.0,Low,0%,0%,,namekagon river,conditions
+namekagon river fishing report,10-100,50,,0.0,Low,0%,0%,,namekagon river,fishing report
+namekagon river flooding,10-100,50,,0.0,—,0%,0%,,namekagon river,flooding
+namekagon river kayaking,10-100,50,,0.0,Low,0%,0%,,namekagon river,kayaking
+nantahala river conditions,10-100,50,,0.0,—,-100%,-100%,,nantahala river,conditions
+nantahala river fishing report,10-100,50,,0.0,Low,0%,0%,,nantahala river,fishing report
+nantahala river flooding,10-100,50,,0.0,—,-100%,-100%,,nantahala river,flooding
+naselle river cfs,10-100,50,,0.0,Low,0%,+∞,,naselle river,cfs
+naselle river fishing report,10-100,50,,0.0,Low,+900%,0%,,naselle river,fishing report
+naselle river flooding,10-100,50,,0.0,—,0%,0%,,naselle river,flooding
+nashua river flood stage,10-100,50,,0.0,—,-100%,-100%,,nashua river,flood stage
+nashua river flooding,10-100,50,,0.0,Low,0%,0%,,nashua river,flooding
+nashua river kayaking,10-100,50,,0.0,Low,0%,0%,,nashua river,kayaking
+neches river boat ramp,10-100,50,,0.0,Low,+∞,+∞,,neches river,boat ramp
+neches river fishing report,10-100,50,,0.0,—,-100%,-100%,,neches river,fishing report
+neches river flood stage,10-100,50,,0.0,Low,+∞,+∞,,neches river,flood stage
+neches river flooding,10-100,50,,0.0,Low,0%,0%,,neches river,flooding
+neches river kayaking,10-100,50,,0.0,Low,0%,0%,,neches river,kayaking
+nehalem river fishing report,10-100,50,,0.0,Low,0%,0%,,nehalem river,fishing report
+nehalem river flood stage,10-100,50,,0.0,—,0%,0%,,nehalem river,flood stage
+nehalem river flooding,10-100,50,,0.0,Low,0%,0%,,nehalem river,flooding
+nehalem river kayaking,10-100,50,,0.0,Low,0%,0%,,nehalem river,kayaking
+nehalem river swimming,10-100,50,,0.0,—,-100%,0%,,nehalem river,swimming
+new river boat ramp,10-100,50,,0.0,Low,0%,0%,,new river,boat ramp
+new river cfs,10-100,50,,0.0,Low,0%,0%,,new river,cfs
+new river conditions,10-100,50,,0.0,—,-100%,0%,,new river,conditions
+new river fishing report,10-100,50,,0.0,Low,+900%,+900%,,new river,fishing report
+new river flood stage,10-100,50,,0.0,Low,0%,0%,,new river,flood stage
+new river flooding,10-100,50,,0.0,Low,-90%,0%,,new river,flooding
+new river swimming,10-100,50,,0.0,—,-100%,-100%,,new river,swimming
+niobrara river conditions,10-100,50,,0.0,—,-100%,0%,,niobrara river,conditions
+niobrara river flooding,10-100,50,,0.0,Low,0%,0%,,niobrara river,flooding
+niobrara river kayaking,10-100,50,,0.0,Low,0%,0%,,niobrara river,kayaking
+nolichucky river cfs,10-100,50,,0.0,Low,0%,0%,,nolichucky river,cfs
+nolichucky river conditions,10-100,50,,0.0,Low,0%,+∞,,nolichucky river,conditions
+nolichucky river fishing report,10-100,50,,0.0,Low,0%,0%,,nolichucky river,fishing report
+nolichucky river flood stage,10-100,50,,0.0,Low,+∞,+∞,,nolichucky river,flood stage
+nolichucky river flooding,10-100,50,,0.0,Low,0%,0%,,nolichucky river,flooding
+nolichucky river kayaking,10-100,50,,0.0,Low,0%,0%,,nolichucky river,kayaking
+nolichucky river tubing,10-100,50,,0.0,—,-100%,-100%,,nolichucky river,tubing
+north branch potomac river fishing report,10-100,50,,0.0,Low,0%,0%,,north branch potomac river,fishing report
+north branch potomac river kayaking,10-100,50,,0.0,—,-100%,0%,,north branch potomac river,kayaking
+north fork american river fishing report,10-100,50,,0.0,Low,0%,0%,,north fork american river,fishing report
+north fork american river kayaking,10-100,50,,0.0,Low,0%,0%,,north fork american river,kayaking
+north fork american river swimming,10-100,50,,0.0,—,-100%,0%,,north fork american river,swimming
+north fork flathead river cfs,10-100,50,,0.0,—,-100%,-100%,,north fork flathead river,cfs
+north fork flathead river fishing report,10-100,50,,0.0,Low,0%,0%,,north fork flathead river,fishing report
+north fork payette river fishing report,10-100,50,,0.0,Low,0%,0%,,north fork payette river,fishing report
+north fork payette river kayaking,10-100,50,,0.0,Low,0%,0%,,north fork payette river,kayaking
+north fork shenandoah river fishing report,10-100,50,,0.0,Low,0%,0%,,north fork shenandoah river,fishing report
+north fork shenandoah river flooding,10-100,50,,0.0,Low,+∞,+∞,,north fork shenandoah river,flooding
+north fork shenandoah river tubing,10-100,50,,0.0,—,-100%,0%,,north fork shenandoah river,tubing
+north fork stillaguamish river fishing report,10-100,50,,0.0,Low,+∞,0%,,north fork stillaguamish river,fishing report
+north fork stillaguamish river flooding,10-100,50,,0.0,Low,+∞,+∞,,north fork stillaguamish river,flooding
+north fork virgin river cfs,10-100,50,,0.0,Low,0%,0%,,north fork virgin river,cfs
+north santiam river fishing report,10-100,50,,0.0,Low,0%,0%,,north santiam river,fishing report
+north santiam river swimming,10-100,50,,0.0,Low,-90%,+∞,,north santiam river,swimming
+north umpqua river fishing report,10-100,50,,0.0,Low,0%,0%,,north umpqua river,fishing report
+nueces river cfs,10-100,50,,0.0,Low,0%,+∞,,nueces river,cfs
+nueces river fishing report,10-100,50,,0.0,Low,0%,0%,,nueces river,fishing report
+nueces river flood stage,10-100,50,,0.0,Low,0%,0%,,nueces river,flood stage
+nueces river kayaking,10-100,50,,0.0,Low,0%,0%,,nueces river,kayaking
+nueces river swimming,10-100,50,,0.0,Low,0%,0%,,nueces river,swimming
+nueces river tubing,10-100,50,,0.0,Low,0%,0%,,nueces river,tubing
+oatka creek fishing report,10-100,50,,0.0,Low,0%,0%,,oatka creek,fishing report
+obed river kayaking,10-100,50,,0.0,Low,0%,0%,,obed river,kayaking
+ochlockonee river fishing report,10-100,50,,0.0,Low,0%,0%,,ochlockonee river,fishing report
+ochlockonee river flood stage,10-100,50,,0.0,Low,0%,0%,,ochlockonee river,flood stage
+ochlockonee river flooding,10-100,50,,0.0,Low,0%,0%,,ochlockonee river,flooding
+ocmulgee river flood stage,10-100,50,,0.0,—,0%,0%,,ocmulgee river,flood stage
+ocmulgee river flooding,10-100,50,,0.0,Low,0%,0%,,ocmulgee river,flooding
+ocmulgee river kayaking,10-100,50,,0.0,Low,0%,0%,,ocmulgee river,kayaking
+ocmulgee river tubing,10-100,50,,0.0,Low,0%,0%,,ocmulgee river,tubing
+ocoee river cfs,10-100,50,,0.0,—,-100%,-100%,,ocoee river,cfs
+ocoee river conditions,10-100,50,,0.0,Low,0%,0%,,ocoee river,conditions
+ocoee river fishing report,10-100,50,,0.0,Low,0%,0%,,ocoee river,fishing report
+ocoee river flooding,10-100,50,,0.0,Low,-99%,0%,,ocoee river,flooding
+ocoee river swimming,10-100,50,,0.0,Low,0%,0%,,ocoee river,swimming
+oconee river fishing report,10-100,50,,0.0,Low,0%,0%,,oconee river,fishing report
+oconee river flooding,10-100,50,,0.0,—,-100%,-100%,,oconee river,flooding
+oconee river kayaking,10-100,50,,0.0,Low,0%,0%,,oconee river,kayaking
+oconee river tubing,10-100,50,,0.0,—,-100%,-100%,,oconee river,tubing
+ohio river conditions,10-100,50,,0.0,Low,-90%,0%,,ohio river,conditions
+ohio river swimming,10-100,50,,0.0,Low,0%,0%,,ohio river,swimming
+oil creek fishing report,10-100,50,,0.0,Low,0%,0%,,oil creek,fishing report
+oil creek kayaking,10-100,50,,0.0,—,-100%,-100%,,oil creek,kayaking
+oostanaula river kayaking,10-100,50,,0.0,Low,0%,0%,,oostanaula river,kayaking
+ouiska chitto creek swimming,10-100,50,,0.0,Low,0%,0%,,ouiska chitto creek,swimming
+pacific creek boat ramp,10-100,50,,0.0,Low,0%,+900%,,pacific creek,boat ramp
+pacific creek fishing report,10-100,50,,0.0,—,-100%,0%,,pacific creek,fishing report
+paint creek boat ramp,10-100,50,,0.0,Low,0%,0%,,paint creek,boat ramp
+paint creek fishing report,10-100,50,,0.0,Low,0%,0%,,paint creek,fishing report
+paint creek flooding,10-100,50,,0.0,—,-100%,-100%,,paint creek,flooding
+paint creek kayaking,10-100,50,,0.0,Low,0%,0%,,paint creek,kayaking
+paint creek swimming,10-100,50,,0.0,Low,0%,0%,,paint creek,swimming
+panama city beach swimming,10-100,50,,0.0,Low,0%,0%,,panama city beach,swimming
+paria river cfs,10-100,50,,0.0,Low,+∞,+∞,,paria river,cfs
+paria river flooding,10-100,50,,0.0,Low,0%,0%,,paria river,flooding
+patapsco river fishing report,10-100,50,,0.0,Low,+900%,+900%,,patapsco river,fishing report
+patapsco river flooding,10-100,50,,0.0,Low,0%,0%,,patapsco river,flooding
+patapsco river kayaking,10-100,50,,0.0,Low,0%,0%,,patapsco river,kayaking
+patapsco river swimming,10-100,50,,0.0,Low,0%,0%,,patapsco river,swimming
+patapsco river tubing,10-100,50,,0.0,—,-100%,-100%,,patapsco river,tubing
+paw paw river fishing report,10-100,50,,0.0,Low,0%,0%,,paw paw river,fishing report
+paw paw river kayaking,10-100,50,,0.0,Low,-90%,0%,,paw paw river,kayaking
+paw paw river tubing,10-100,50,,0.0,Low,0%,+∞,,paw paw river,tubing
+peace river conditions,10-100,50,,0.0,Low,0%,+∞,,peace river,conditions
+peace river fishing report,10-100,50,,0.0,Low,0%,0%,,peace river,fishing report
+peace river flood stage,10-100,50,,0.0,Low,0%,0%,,peace river,flood stage
+peace river flooding,10-100,50,,0.0,Low,0%,0%,,peace river,flooding
+peace river forecast,10-100,50,,0.0,Low,0%,0%,,peace river,forecast
+peace river kayaking,10-100,50,,0.0,Low,0%,0%,,peace river,kayaking
+peace river swimming,10-100,50,,0.0,Low,0%,0%,,peace river,swimming
+peace river tubing,10-100,50,,0.0,Low,0%,0%,,peace river,tubing
+pecatonica river flood stage,10-100,50,,0.0,—,0%,0%,,pecatonica river,flood stage
+pecatonica river flooding,10-100,50,,0.0,Low,0%,0%,,pecatonica river,flooding
+pecatonica river kayaking,10-100,50,,0.0,Low,0%,0%,,pecatonica river,kayaking
+pecatonica river tubing,10-100,50,,0.0,—,-100%,-100%,,pecatonica river,tubing
+pemigewasset river conditions,10-100,50,,0.0,—,-100%,-100%,,pemigewasset river,conditions
+pemigewasset river fishing report,10-100,50,,0.0,Low,0%,0%,,pemigewasset river,fishing report
+pemigewasset river flood stage,10-100,50,,0.0,—,0%,0%,,pemigewasset river,flood stage
+pemigewasset river flooding,10-100,50,,0.0,Low,0%,0%,,pemigewasset river,flooding
+pemigewasset river kayaking,10-100,50,,0.0,Low,0%,0%,,pemigewasset river,kayaking
+pemigewasset river swimming,10-100,50,,0.0,Low,0%,0%,,pemigewasset river,swimming
+pemigewasset river tubing,10-100,50,,0.0,Low,-90%,0%,,pemigewasset river,tubing
+penns creek conditions,10-100,50,,0.0,Low,0%,0%,,penns creek,conditions
+penns creek flood stage,10-100,50,,0.0,Low,0%,0%,,penns creek,flood stage
+penns creek flooding,10-100,50,,0.0,—,-100%,-100%,,penns creek,flooding
+penns creek tubing,10-100,50,,0.0,—,-100%,0%,,penns creek,tubing
+pensacola conditions,10-100,50,,0.0,Low,0%,0%,,pensacola,town conditions (weather intent)
+pensacola swimming,10-100,50,,0.0,Low,0%,0%,,pensacola,swimming
+pensacola tubing,10-100,50,,0.0,Low,0%,0%,,pensacola,tubing
+perdido river fishing report,10-100,50,,0.0,Low,0%,0%,,perdido river,fishing report
+perdido river flood stage,10-100,50,,0.0,Low,0%,0%,,perdido river,flood stage
+perdido river kayaking,10-100,50,,0.0,Low,0%,0%,,perdido river,kayaking
+perdido river tubing,10-100,50,,0.0,—,-100%,-100%,,perdido river,tubing
+pere marquette river conditions,10-100,50,,0.0,Low,0%,0%,,pere marquette river,conditions
+pere marquette river flood stage,10-100,50,,0.0,—,0%,0%,,pere marquette river,flood stage
+pere marquette river flooding,10-100,50,,0.0,—,-100%,-100%,,pere marquette river,flooding
+pere marquette river kayaking,10-100,50,,0.0,Low,0%,0%,,pere marquette river,kayaking
+pere marquette river tubing,10-100,50,,0.0,—,-100%,-100%,,pere marquette river,tubing
+pigeon river cfs,10-100,50,,0.0,Low,0%,0%,,pigeon river,cfs
+pigeon river fishing report,10-100,50,,0.0,Low,0%,0%,,pigeon river,fishing report
+pigeon river flood stage,10-100,50,,0.0,Low,+∞,+∞,,pigeon river,flood stage
+pigeon river flooding,10-100,50,,0.0,Low,0%,0%,,pigeon river,flooding
+pigeon river kayaking,10-100,50,,0.0,Low,-90%,0%,,pigeon river,kayaking
+pigeon river swimming,10-100,50,,0.0,—,-100%,0%,,pigeon river,swimming
+pigeon river tubing,10-100,50,,0.0,Low,-90%,0%,,pigeon river,tubing
+pine river boat ramp,10-100,50,,0.0,Low,0%,0%,,pine river,boat ramp
+pine river conditions,10-100,50,,0.0,—,-100%,-100%,,pine river,conditions
+pine river fishing report,10-100,50,,0.0,Low,0%,0%,,pine river,fishing report
+pine river flooding,10-100,50,,0.0,Low,0%,0%,,pine river,flooding
+pine river tubing,10-100,50,,0.0,Low,0%,0%,,pine river,tubing
+piru creek fishing report,10-100,50,,0.0,Low,0%,0%,,piru creek,fishing report
+piscataquog river swimming,10-100,50,,0.0,Low,0%,0%,,piscataquog river,swimming
+pocomoke river fishing report,10-100,50,,0.0,Low,0%,0%,,pocomoke river,fishing report
+pocomoke river flooding,10-100,50,,0.0,Low,+∞,0%,,pocomoke river,flooding
+pocomoke river kayaking,10-100,50,,0.0,—,-100%,-100%,,pocomoke river,kayaking
+potomac river boat ramp,10-100,50,,0.0,Low,-90%,0%,,potomac river,boat ramp
+potomac river conditions,10-100,50,,0.0,Low,0%,0%,,potomac river,conditions
+potomac river flood stage,10-100,50,,0.0,Low,0%,0%,,potomac river,flood stage
+potomac river flooding,10-100,50,,0.0,Low,0%,0%,,potomac river,flooding
+potomac river forecast,10-100,50,,0.0,Low,0%,0%,,potomac river,forecast
+putah creek cfs,10-100,50,,0.0,Low,+900%,+900%,,putah creek,cfs
+putah creek flooding,10-100,50,,0.0,—,-100%,-100%,,putah creek,flooding
+putah creek kayaking,10-100,50,,0.0,—,-100%,-100%,,putah creek,kayaking
+putah creek swimming,10-100,50,,0.0,Low,0%,0%,,putah creek,swimming
+queets river cfs,10-100,50,,0.0,Low,0%,-90%,,queets river,cfs
+queets river fishing report,10-100,50,,0.0,Low,0%,0%,,queets river,fishing report
+quinault river fishing report,10-100,50,,0.0,Low,0%,0%,,quinault river,fishing report
+rapid creek fishing report,10-100,50,,0.0,Low,0%,0%,,rapid creek,fishing report
+rapid creek flooding,10-100,50,,0.0,Low,0%,0%,,rapid creek,flooding
+rapid creek tubing,10-100,50,,0.0,Low,0%,+∞,,rapid creek,tubing
+rappahannock river conditions,10-100,50,,0.0,Low,0%,0%,,rappahannock river,conditions
+rappahannock river flood stage,10-100,50,,0.0,Low,+∞,0%,,rappahannock river,flood stage
+rappahannock river flooding,10-100,50,,0.0,Low,0%,0%,,rappahannock river,flooding
+rappahannock river kayaking,10-100,50,,0.0,Low,0%,0%,,rappahannock river,kayaking
+rappahannock river swimming,10-100,50,,0.0,—,-100%,-100%,,rappahannock river,swimming
+rappahannock river tubing,10-100,50,,0.0,Low,-90%,0%,,rappahannock river,tubing
+raritan river fishing report,10-100,50,,0.0,Low,0%,0%,,raritan river,fishing report
+raritan river flood stage,10-100,50,,0.0,Low,0%,0%,,raritan river,flood stage
+raritan river flooding,10-100,50,,0.0,Low,0%,-90%,,raritan river,flooding
+raritan river kayaking,10-100,50,,0.0,Low,0%,0%,,raritan river,kayaking
+red cedar river fishing report,10-100,50,,0.0,Low,0%,0%,,red cedar river,fishing report
+red cedar river flooding,10-100,50,,0.0,Low,0%,0%,,red cedar river,flooding
+red cedar river kayaking,10-100,50,,0.0,Low,0%,0%,,red cedar river,kayaking
+red cedar river tubing,10-100,50,,0.0,Low,0%,0%,,red cedar river,tubing
+red river conditions,10-100,50,,0.0,Low,0%,+∞,,red river,conditions
+red river fishing report,10-100,50,,0.0,Low,0%,0%,,red river,fishing report
+red river flood stage,10-100,50,,0.0,Low,0%,0%,,red river,flood stage
+red river of the north fishing report,10-100,50,,0.0,Low,0%,0%,,red river of the north,fishing report
+red river of the north flood stage,10-100,50,,0.0,—,0%,0%,,red river of the north,flood stage
+red river swimming,10-100,50,,0.0,Low,0%,0%,,red river,swimming
+rio grande cfs,10-100,50,,0.0,Low,+900%,0%,,rio grande,cfs
+rio grande flood stage,10-100,50,,0.0,Low,0%,+∞,,rio grande,flood stage
+rio grande forecast,10-100,50,,0.0,Low,0%,0%,,rio grande,town forecast (weather intent)
+rio grande swimming,10-100,50,,0.0,Low,0%,0%,,rio grande,swimming
+rio grande tubing,10-100,50,,0.0,Low,0%,0%,,rio grande,tubing
+rio hondo boat ramp,10-100,50,,0.0,Low,0%,0%,,rio hondo,boat ramp
+rio hondo flooding,10-100,50,,0.0,Low,0%,0%,,rio hondo,town flooding (weather intent)
+rivanna river conditions,10-100,50,,0.0,Low,0%,0%,,rivanna river,conditions
+rivanna river fishing report,10-100,50,,0.0,Low,0%,0%,,rivanna river,fishing report
+rivanna river flooding,10-100,50,,0.0,Low,0%,+∞,,rivanna river,flooding
+rivanna river kayaking,10-100,50,,0.0,Low,0%,0%,,rivanna river,kayaking
+rivanna river swimming,10-100,50,,0.0,Low,0%,0%,,rivanna river,swimming
+rivanna river tubing,10-100,50,,0.0,Low,-90%,0%,,rivanna river,tubing
+river conditions today,10-100,50,,0.0,Low,0%,0%,,,general question
+river flooding today,10-100,50,,0.0,Low,0%,0%,,,general question
+river gauge near me,10-100,50,,0.0,Low,0%,0%,,,general question
+river water level today,10-100,50,,0.0,Low,0%,0%,,,general question
+roanoke river conditions,10-100,50,,0.0,—,0%,-100%,,roanoke river,conditions
+roanoke river fishing report,10-100,50,,0.0,Low,0%,0%,,roanoke river,fishing report
+roanoke river flood stage,10-100,50,,0.0,Low,+∞,+∞,,roanoke river,flood stage
+roanoke river flooding,10-100,50,,0.0,Low,0%,0%,,roanoke river,flooding
+roanoke river kayaking,10-100,50,,0.0,Low,0%,0%,,roanoke river,kayaking
+roanoke river swimming,10-100,50,,0.0,Low,0%,0%,,roanoke river,swimming
+roanoke river tubing,10-100,50,,0.0,Low,0%,0%,,roanoke river,tubing
+roaring fork river cfs,10-100,50,,0.0,Low,0%,0%,,roaring fork river,cfs
+roaring fork river flooding,10-100,50,,0.0,Low,0%,0%,,roaring fork river,flooding
+rock creek cfs,10-100,50,,0.0,Low,0%,0%,,rock creek,cfs
+rock creek flooding,10-100,50,,0.0,Low,0%,0%,,rock creek,flooding
+rock creek forecast,10-100,50,,0.0,Low,0%,0%,,rock creek,forecast
+rock creek kayaking,10-100,50,,0.0,Low,0%,0%,,rock creek,kayaking
+rock creek swimming,10-100,50,,0.0,Low,0%,0%,,rock creek,swimming
+rockaway river flood stage,10-100,50,,0.0,—,-100%,-100%,,rockaway river,flood stage
+rockaway river flooding,10-100,50,,0.0,Low,0%,0%,,rockaway river,flooding
+rogue river cfs,10-100,50,,0.0,Low,-90%,0%,,rogue river,cfs
+rogue river conditions,10-100,50,,0.0,Low,0%,0%,,rogue river,conditions
+rogue river flood stage,10-100,50,,0.0,—,-100%,0%,,rogue river,flood stage
+rogue river flooding,10-100,50,,0.0,Low,0%,0%,,rogue river,flooding
+rogue river forecast,10-100,50,,0.0,Low,0%,0%,,rogue river,forecast
+rogue river swimming,10-100,50,,0.0,Low,0%,0%,,rogue river,swimming
+rogue river tubing,10-100,50,,0.0,Medium,0%,0%,,rogue river,tubing
+rondout creek flooding,10-100,50,,0.0,Low,0%,0%,,rondout creek,flooding
+rondout creek kayaking,10-100,50,,0.0,Low,0%,0%,,rondout creek,kayaking
+rondout creek swimming,10-100,50,,0.0,Low,0%,0%,,rondout creek,swimming
+rum river fishing report,10-100,50,,0.0,Low,0%,0%,,rum river,fishing report
+rum river flood stage,10-100,50,,0.0,Low,0%,+∞,,rum river,flood stage
+rum river flooding,10-100,50,,0.0,Low,0%,0%,,rum river,flooding
+rum river kayaking,10-100,50,,0.0,Low,0%,0%,,rum river,kayaking
+russian river cfs,10-100,50,,0.0,Low,0%,0%,,russian river,cfs
+russian river conditions,10-100,50,,0.0,Low,0%,0%,,russian river,conditions
+russian river forecast,10-100,50,,0.0,Low,0%,0%,,russian river,forecast
+saint croix river fishing report,10-100,50,,0.0,Low,0%,0%,,saint croix river,fishing report
+saint johns river flooding,10-100,50,,0.0,Low,+900%,0%,,saint johns river,flooding
+saint joseph river fishing report,10-100,50,,0.0,Low,0%,0%,,saint joseph river,fishing report
+saint joseph river flooding,10-100,50,,0.0,—,-100%,0%,,saint joseph river,flooding
+saline river fishing report,10-100,50,,0.0,Low,0%,0%,,saline river,fishing report
+saline river flood stage,10-100,50,,0.0,Low,+∞,+∞,,saline river,flood stage
+saline river flooding,10-100,50,,0.0,Low,+∞,0%,,saline river,flooding
+saline river kayaking,10-100,50,,0.0,Low,0%,+∞,,saline river,kayaking
+saline river swimming,10-100,50,,0.0,Low,0%,+∞,,saline river,swimming
+salmon river boat ramp,10-100,50,,0.0,Low,0%,0%,,salmon river,boat ramp
+salmon river conditions,10-100,50,,0.0,Low,0%,0%,,salmon river,conditions
+salmon river flooding,10-100,50,,0.0,Low,0%,0%,,salmon river,flooding
+salmon river forecast,10-100,50,,0.0,Low,0%,0%,,salmon river,forecast
+salmon river kayaking,10-100,50,,0.0,Low,0%,0%,,salmon river,kayaking
+salmon river swimming,10-100,50,,0.0,Low,0%,0%,,salmon river,swimming
+salmon river tubing,10-100,50,,0.0,Low,0%,0%,,salmon river,tubing
+salt fork boat ramp,10-100,50,,0.0,Low,0%,0%,,salt fork,boat ramp
+salt fork fishing report,10-100,50,,0.0,Low,0%,0%,,salt fork,fishing report
+salt fork kayaking,10-100,50,,0.0,—,-100%,-100%,,salt fork,kayaking
+salt fork swimming,10-100,50,,0.0,Low,0%,0%,,salt fork,swimming
+salt river cfs,10-100,50,,0.0,Low,+900%,+900%,,salt river,cfs
+salt river conditions,10-100,50,,0.0,Low,0%,0%,,salt river,conditions
+salt river flood stage,10-100,50,,0.0,—,-100%,-100%,,salt river,flood stage
+salt river flooding,10-100,50,,0.0,Low,0%,-90%,,salt river,flooding
+salt river forecast,10-100,50,,0.0,Low,0%,+∞,,salt river,forecast
+salt river swimming,10-100,50,,0.0,Low,0%,0%,,salt river,swimming
+san diego bay fishing report,10-100,50,,0.0,Low,0%,0%,,san diego bay,fishing report
+san diego bay swimming,10-100,50,,0.0,Low,0%,0%,,san diego bay,swimming
+san gabriel river fishing report,10-100,50,,0.0,Low,0%,0%,,san gabriel river,fishing report
+san gabriel river flood stage,10-100,50,,0.0,Low,+∞,+∞,,san gabriel river,flood stage
+san gabriel river flooding,10-100,50,,0.0,Low,0%,0%,,san gabriel river,flooding
+san gabriel river kayaking,10-100,50,,0.0,Low,0%,0%,,san gabriel river,kayaking
+san gabriel river swimming,10-100,50,,0.0,Low,-90%,0%,,san gabriel river,swimming
+san gabriel river tubing,10-100,50,,0.0,—,-100%,-100%,,san gabriel river,tubing
+san juan river boat ramp,10-100,50,,0.0,Low,+900%,+900%,,san juan river,boat ramp
+san juan river conditions,10-100,50,,0.0,Low,0%,0%,,san juan river,conditions
+san juan river forecast,10-100,50,,0.0,Low,0%,0%,,san juan river,forecast
+san juan river kayaking,10-100,50,,0.0,Low,0%,0%,,san juan river,kayaking
+san juan river tubing,10-100,50,,0.0,Low,0%,0%,,san juan river,tubing
+san marcos river cfs,10-100,50,,0.0,Low,0%,0%,,san marcos river,cfs
+san marcos river conditions,10-100,50,,0.0,Low,0%,0%,,san marcos river,conditions
+san marcos river fishing report,10-100,50,,0.0,Low,0%,0%,,san marcos river,fishing report
+san marcos river flood stage,10-100,50,,0.0,—,0%,0%,,san marcos river,flood stage
+sandusky river fishing report,10-100,50,,0.0,Low,0%,0%,,sandusky river,fishing report
+sandusky river flood stage,10-100,50,,0.0,—,0%,0%,,sandusky river,flood stage
+sandusky river kayaking,10-100,50,,0.0,Low,0%,0%,,sandusky river,kayaking
+sandy river cfs,10-100,50,,0.0,Low,0%,0%,,sandy river,cfs
+sandy river conditions,10-100,50,,0.0,—,-100%,-100%,,sandy river,conditions
+sandy river flood stage,10-100,50,,0.0,—,0%,0%,,sandy river,flood stage
+sandy river flooding,10-100,50,,0.0,Low,0%,0%,,sandy river,flooding
+sandy river forecast,10-100,50,,0.0,Low,0%,+∞,,sandy river,forecast
+sandy river kayaking,10-100,50,,0.0,Low,0%,0%,,sandy river,kayaking
+sandy river swimming,10-100,50,,0.0,Low,-90%,0%,,sandy river,swimming
+sandy river tubing,10-100,50,,0.0,Low,-90%,0%,,sandy river,tubing
+sangamon river fishing report,10-100,50,,0.0,—,-100%,-100%,,sangamon river,fishing report
+sangamon river flood stage,10-100,50,,0.0,Low,0%,0%,,sangamon river,flood stage
+sangamon river flooding,10-100,50,,0.0,—,-100%,-100%,,sangamon river,flooding
+sangamon river kayaking,10-100,50,,0.0,Low,0%,0%,,sangamon river,kayaking
+santa fe river boat ramp,10-100,50,,0.0,Low,0%,0%,,santa fe river,boat ramp
+santa fe river fishing report,10-100,50,,0.0,Low,0%,0%,,santa fe river,fishing report
+santa fe river flood stage,10-100,50,,0.0,Low,+∞,+∞,,santa fe river,flood stage
+santa fe river flooding,10-100,50,,0.0,Low,0%,0%,,santa fe river,flooding
+santa fe river tubing,10-100,50,,0.0,Low,0%,0%,,santa fe river,tubing
+santa ynez river flooding,10-100,50,,0.0,—,-100%,-100%,,santa ynez river,flooding
+santa ynez river swimming,10-100,50,,0.0,Low,0%,0%,,santa ynez river,swimming
+santee river fishing report,10-100,50,,0.0,Low,+∞,0%,,santee river,fishing report
+santee river flood stage,10-100,50,,0.0,Low,0%,0%,,santee river,flood stage
+santee river flooding,10-100,50,,0.0,Low,0%,0%,,santee river,flooding
+santiam river fishing report,10-100,50,,0.0,Low,0%,0%,,santiam river,fishing report
+santiam river flood stage,10-100,50,,0.0,—,0%,0%,,santiam river,flood stage
+santiam river flooding,10-100,50,,0.0,—,0%,-100%,,santiam river,flooding
+santiam river kayaking,10-100,50,,0.0,Low,0%,0%,,santiam river,kayaking
+santiam river swimming,10-100,50,,0.0,Low,0%,+∞,,santiam river,swimming
+satilla river fishing report,10-100,50,,0.0,Low,0%,0%,,satilla river,fishing report
+satilla river flood stage,10-100,50,,0.0,Low,0%,0%,,satilla river,flood stage
+satilla river flooding,10-100,50,,0.0,Low,0%,0%,,satilla river,flooding
+satsop river cfs,10-100,50,,0.0,Low,0%,-90%,,satsop river,cfs
+satsop river fishing report,10-100,50,,0.0,Low,+900%,0%,,satsop river,fishing report
+satsop river flooding,10-100,50,,0.0,Low,0%,0%,,satsop river,flooding
+savage river fishing report,10-100,50,,0.0,Low,0%,-90%,,savage river,fishing report
+savage river flooding,10-100,50,,0.0,Low,0%,+∞,,savage river,flooding
+savage river kayaking,10-100,50,,0.0,Low,0%,0%,,savage river,kayaking
+schoharie creek fishing report,10-100,50,,0.0,Low,0%,0%,,schoharie creek,fishing report
+schoharie creek flooding,10-100,50,,0.0,Low,0%,0%,,schoharie creek,flooding
+schoharie creek kayaking,10-100,50,,0.0,Low,0%,0%,,schoharie creek,kayaking
+schoharie creek swimming,10-100,50,,0.0,Low,0%,0%,,schoharie creek,swimming
+schuylkill river conditions,10-100,50,,0.0,Low,0%,0%,,schuylkill river,conditions
+schuylkill river fishing report,10-100,50,,0.0,Low,0%,0%,,schuylkill river,fishing report
+schuylkill river flood stage,10-100,50,,0.0,Low,0%,0%,,schuylkill river,flood stage
+schuylkill river flooding,10-100,50,,0.0,Low,0%,-90%,,schuylkill river,flooding
+schuylkill river forecast,10-100,50,,0.0,Low,0%,0%,,schuylkill river,forecast
+schuylkill river swimming,10-100,50,,0.0,Low,0%,0%,,schuylkill river,swimming
+schuylkill river tubing,10-100,50,,0.0,Low,0%,0%,,schuylkill river,tubing
+scioto river boat ramp,10-100,50,,0.0,Low,0%,0%,,scioto river,boat ramp
+scioto river fishing report,10-100,50,,0.0,Low,0%,0%,,scioto river,fishing report
+scioto river flood stage,10-100,50,,0.0,Low,0%,0%,,scioto river,flood stage
+scioto river flooding,10-100,50,,0.0,Low,-90%,0%,,scioto river,flooding
+scioto river kayaking,10-100,50,,0.0,Low,0%,0%,,scioto river,kayaking
+scioto river swimming,10-100,50,,0.0,Low,0%,0%,,scioto river,swimming
+selway river cfs,10-100,50,,0.0,Low,0%,0%,,selway river,cfs
+selway river fishing report,10-100,50,,0.0,Low,0%,0%,,selway river,fishing report
+selway river forecast,10-100,50,,0.0,—,-100%,-100%,,selway river,forecast
+selway river kayaking,10-100,50,,0.0,Medium,0%,0%,,selway river,kayaking
+sequatchie river flooding,10-100,50,,0.0,—,-100%,0%,,sequatchie river,flooding
+sequatchie river kayaking,10-100,50,,0.0,Low,0%,0%,,sequatchie river,kayaking
+sequatchie river tubing,10-100,50,,0.0,—,-100%,0%,,sequatchie river,tubing
+sespe creek fishing report,10-100,50,,0.0,Low,0%,0%,,sespe creek,fishing report
+sespe creek flooding,10-100,50,,0.0,—,0%,-100%,,sespe creek,flooding
+shasta lake conditions,10-100,50,,0.0,Low,0%,0%,,shasta lake,conditions
+shasta lake flooding,10-100,50,,0.0,Low,0%,+∞,,shasta lake,flooding
+shasta lake forecast,10-100,50,,0.0,Low,0%,0%,,shasta lake,forecast
+shasta lake kayaking,10-100,50,,0.0,Low,0%,0%,,shasta lake,kayaking
+sheboygan river cfs,10-100,50,,0.0,Low,0%,+∞,,sheboygan river,cfs
+sheboygan river fishing report,10-100,50,,0.0,Low,0%,-90%,,sheboygan river,fishing report
+sheboygan river flooding,10-100,50,,0.0,—,0%,0%,,sheboygan river,flooding
+sheboygan river kayaking,10-100,50,,0.0,Low,0%,0%,,sheboygan river,kayaking
+shenandoah river boat ramp,10-100,50,,0.0,Low,0%,0%,,shenandoah river,boat ramp
+shenandoah river conditions,10-100,50,,0.0,Low,-90%,0%,,shenandoah river,conditions
+shenandoah river fishing report,10-100,50,,0.0,Low,-90%,-90%,,shenandoah river,fishing report
+shenandoah river flood stage,10-100,50,,0.0,—,-100%,-100%,,shenandoah river,flood stage
+shenandoah river flooding,10-100,50,,0.0,Low,0%,0%,,shenandoah river,flooding
+shenandoah river swimming,10-100,50,,0.0,Low,0%,0%,,shenandoah river,swimming
+shoal creek boat ramp,10-100,50,,0.0,Low,0%,0%,,shoal creek,boat ramp
+shoal creek flooding,10-100,50,,0.0,Low,0%,0%,,shoal creek,flooding
+shoal creek kayaking,10-100,50,,0.0,Low,0%,0%,,shoal creek,kayaking
+shoal creek tubing,10-100,50,,0.0,—,-100%,0%,,shoal creek,tubing
+sipsey fork fishing report,10-100,50,,0.0,Low,0%,0%,,sipsey fork,fishing report
+sipsey fork kayaking,10-100,50,,0.0,Low,0%,+∞,,sipsey fork,kayaking
+skagit river cfs,10-100,50,,0.0,Low,0%,0%,,skagit river,cfs
+skagit river conditions,10-100,50,,0.0,Low,+∞,0%,,skagit river,conditions
+skagit river kayaking,10-100,50,,0.0,Low,0%,0%,,skagit river,kayaking
+skagit river swimming,10-100,50,,0.0,Low,0%,0%,,skagit river,swimming
+skagit river tubing,10-100,50,,0.0,Low,0%,+∞,,skagit river,tubing
+skykomish river flood stage,10-100,50,,0.0,—,0%,-100%,,skykomish river,flood stage
+skykomish river forecast,10-100,50,,0.0,Low,0%,+∞,,skykomish river,forecast
+skykomish river kayaking,10-100,50,,0.0,Low,0%,0%,,skykomish river,kayaking
+skykomish river swimming,10-100,50,,0.0,Low,0%,0%,,skykomish river,swimming
+skykomish river tubing,10-100,50,,0.0,—,-100%,0%,,skykomish river,tubing
+smith river conditions,10-100,50,,0.0,Low,0%,0%,,smith river,conditions
+smith river flood stage,10-100,50,,0.0,Low,+∞,+∞,,smith river,flood stage
+smith river flooding,10-100,50,,0.0,Low,0%,0%,,smith river,flooding
+smith river forecast,10-100,50,,0.0,Low,0%,0%,,smith river,forecast
+smith river swimming,10-100,50,,0.0,Low,0%,0%,,smith river,swimming
+smith river tubing,10-100,50,,0.0,Low,0%,+∞,,smith river,tubing
+snake river boat ramp,10-100,50,,0.0,Low,0%,0%,,snake river,boat ramp
+snake river cfs,10-100,50,,0.0,Low,-90%,0%,,snake river,cfs
+snake river conditions,10-100,50,,0.0,Low,0%,+∞,,snake river,conditions
+snake river flooding,10-100,50,,0.0,Low,0%,0%,,snake river,flooding
+snake river tubing,10-100,50,,0.0,Low,-90%,0%,,snake river,tubing
+snohomish river cfs,10-100,50,,0.0,—,0%,0%,,snohomish river,cfs
+snohomish river fishing report,10-100,50,,0.0,Low,0%,-90%,,snohomish river,fishing report
+snohomish river forecast,10-100,50,,0.0,Low,0%,+∞,,snohomish river,forecast
+snohomish river kayaking,10-100,50,,0.0,Low,0%,+∞,,snohomish river,kayaking
+snohomish river swimming,10-100,50,,0.0,—,-100%,-100%,,snohomish river,swimming
+snohomish river tubing,10-100,50,,0.0,—,-100%,0%,,snohomish river,tubing
+snoqualmie river cfs,10-100,50,,0.0,Low,0%,0%,,snoqualmie river,cfs
+snoqualmie river conditions,10-100,50,,0.0,—,-100%,-100%,,snoqualmie river,conditions
+snoqualmie river fishing report,10-100,50,,0.0,Low,0%,0%,,snoqualmie river,fishing report
+snoqualmie river forecast,10-100,50,,0.0,Low,0%,0%,,snoqualmie river,forecast
+snoqualmie river kayaking,10-100,50,,0.0,Low,0%,0%,,snoqualmie river,kayaking
+snoqualmie river swimming,10-100,50,,0.0,—,-100%,-100%,,snoqualmie river,swimming
+snowmelt runoff,10-100,50,,0.0,Low,0%,0%,,,general question
+sope creek flooding,10-100,50,,0.0,—,-100%,-100%,,sope creek,flooding
+sope creek swimming,10-100,50,,0.0,Low,0%,0%,,sope creek,swimming
+souhegan river flood stage,10-100,50,,0.0,—,0%,-100%,,souhegan river,flood stage
+souhegan river flooding,10-100,50,,0.0,—,-100%,-100%,,souhegan river,flooding
+souhegan river kayaking,10-100,50,,0.0,Low,0%,+∞,,souhegan river,kayaking
+souhegan river swimming,10-100,50,,0.0,Low,0%,+∞,,souhegan river,swimming
+south branch potomac river fishing report,10-100,50,,0.0,Low,+∞,+∞,,south branch potomac river,fishing report
+south branch potomac river flooding,10-100,50,,0.0,—,-100%,0%,,south branch potomac river,flooding
+south fork boise river cfs,10-100,50,,0.0,Low,0%,0%,,south fork boise river,cfs
+south fork kern river fishing report,10-100,50,,0.0,Low,0%,0%,,south fork kern river,fishing report
+south fork new river flooding,10-100,50,,0.0,Low,0%,0%,,south fork new river,flooding
+south fork new river kayaking,10-100,50,,0.0,—,-100%,-100%,,south fork new river,kayaking
+south fork new river tubing,10-100,50,,0.0,Low,0%,0%,,south fork new river,tubing
+south fork salmon river fishing report,10-100,50,,0.0,Low,0%,0%,,south fork salmon river,fishing report
+south fork shenandoah river conditions,10-100,50,,0.0,Low,0%,+∞,,south fork shenandoah river,conditions
+south fork shenandoah river fishing report,10-100,50,,0.0,Low,-90%,-90%,,south fork shenandoah river,fishing report
+south fork shenandoah river kayaking,10-100,50,,0.0,Medium,0%,0%,,south fork shenandoah river,kayaking
+south fork shenandoah river tubing,10-100,50,,0.0,Low,0%,0%,,south fork shenandoah river,tubing
+south platte river cfs,10-100,50,,0.0,Low,0%,0%,,south platte river,cfs
+south platte river conditions,10-100,50,,0.0,Low,0%,0%,,south platte river,conditions
+south platte river flood stage,10-100,50,,0.0,—,0%,0%,,south platte river,flood stage
+south platte river flooding,10-100,50,,0.0,Low,0%,0%,,south platte river,flooding
+south platte river kayaking,10-100,50,,0.0,Low,0%,0%,,south platte river,kayaking
+south platte river swimming,10-100,50,,0.0,Low,0%,0%,,south platte river,swimming
+south umpqua river fishing report,10-100,50,,0.0,Low,0%,0%,,south umpqua river,fishing report
+south umpqua river flooding,10-100,50,,0.0,—,0%,0%,,south umpqua river,flooding
+south umpqua river swimming,10-100,50,,0.0,Low,0%,0%,,south umpqua river,swimming
+spillway release,10-100,50,,0.0,Low,+∞,+∞,,,general question
+spokane river cfs,10-100,50,,0.0,Low,0%,0%,,spokane river,cfs
+spokane river conditions,10-100,50,,0.0,Low,0%,0%,,spokane river,conditions
+spokane river fishing report,10-100,50,,0.0,Low,0%,0%,,spokane river,fishing report
+spokane river flood stage,10-100,50,,0.0,—,-100%,0%,,spokane river,flood stage
+spokane river flooding,10-100,50,,0.0,Low,0%,0%,,spokane river,flooding
+spokane river kayaking,10-100,50,,0.0,Low,0%,0%,,spokane river,kayaking
+spokane river swimming,10-100,50,,0.0,Low,0%,0%,,spokane river,swimming
+spokane river tubing,10-100,50,,0.0,Low,0%,0%,,spokane river,tubing
+spring creek boat ramp,10-100,50,,0.0,Low,-90%,0%,,spring creek,boat ramp
+spring creek conditions,10-100,50,,0.0,Low,+∞,0%,,spring creek,conditions
+spring creek flood stage,10-100,50,,0.0,—,0%,0%,,spring creek,flood stage
+spring creek flooding,10-100,50,,0.0,Low,0%,0%,,spring creek,flooding
+spring creek kayaking,10-100,50,,0.0,Low,0%,0%,,spring creek,kayaking
+spring creek swimming,10-100,50,,0.0,Low,0%,0%,,spring creek,swimming
+spring creek tubing,10-100,50,,0.0,Low,0%,0%,,spring creek,tubing
+spring river conditions,10-100,50,,0.0,—,-100%,0%,,spring river,conditions
+spring river fishing report,10-100,50,,0.0,Low,0%,0%,,spring river,fishing report
+spring river flood stage,10-100,50,,0.0,Low,0%,0%,,spring river,flood stage
+spring river flooding,10-100,50,,0.0,Low,0%,0%,,spring river,flooding
+spring river kayaking,10-100,50,,0.0,Low,0%,0%,,spring river,kayaking
+spring river swimming,10-100,50,,0.0,Low,0%,0%,,spring river,swimming
+spring river tubing,10-100,50,,0.0,Low,0%,0%,,spring river,tubing
+springmaid pier fishing report,10-100,50,,0.0,Low,0%,-90%,,springmaid pier,fishing report
+spruce run fishing report,10-100,50,,0.0,Low,0%,0%,,spruce run,fishing report
+spruce run kayaking,10-100,50,,0.0,Low,0%,0%,,spruce run,kayaking
+spruce run swimming,10-100,50,,0.0,Low,0%,0%,,spruce run,swimming
+stanislaus river conditions,10-100,50,,0.0,—,-100%,-100%,,stanislaus river,conditions
+stanislaus river fishing report,10-100,50,,0.0,Low,0%,0%,,stanislaus river,fishing report
+stanislaus river flood stage,10-100,50,,0.0,—,0%,0%,,stanislaus river,flood stage
+stanislaus river flooding,10-100,50,,0.0,—,-100%,-100%,,stanislaus river,flooding
+stanislaus river kayaking,10-100,50,,0.0,Low,0%,0%,,stanislaus river,kayaking
+stanislaus river swimming,10-100,50,,0.0,Low,0%,+∞,,stanislaus river,swimming
+stanislaus river tubing,10-100,50,,0.0,Low,0%,0%,,stanislaus river,tubing
+still river flooding,10-100,50,,0.0,—,-100%,-100%,,still river,flooding
+stillwater river cfs,10-100,50,,0.0,Low,0%,0%,,stillwater river,cfs
+stillwater river flooding,10-100,50,,0.0,Low,0%,+∞,,stillwater river,flooding
+stillwater river kayaking,10-100,50,,0.0,Low,0%,0%,,stillwater river,kayaking
+stony creek fishing report,10-100,50,,0.0,Low,0%,0%,,stony creek,fishing report
+stony creek flooding,10-100,50,,0.0,—,-100%,-100%,,stony creek,flooding
+stony creek kayaking,10-100,50,,0.0,Low,0%,0%,,stony creek,kayaking
+stony creek tubing,10-100,50,,0.0,—,-100%,-100%,,stony creek,tubing
+strong river kayaking,10-100,50,,0.0,—,-100%,-100%,,strong river,kayaking
+styx river flood stage,10-100,50,,0.0,Low,0%,0%,,styx river,flood stage
+styx river flooding,10-100,50,,0.0,Low,+∞,0%,,styx river,flooding
+styx river kayaking,10-100,50,,0.0,Low,0%,0%,,styx river,kayaking
+sudbury river flood stage,10-100,50,,0.0,—,0%,0%,,sudbury river,flood stage
+sudbury river flooding,10-100,50,,0.0,—,-100%,-100%,,sudbury river,flooding
+sudbury river kayaking,10-100,50,,0.0,Low,0%,0%,,sudbury river,kayaking
+sudbury river swimming,10-100,50,,0.0,—,-100%,0%,,sudbury river,swimming
+sudbury river tubing,10-100,50,,0.0,—,-100%,0%,,sudbury river,tubing
+sugar creek boat ramp,10-100,50,,0.0,Low,0%,0%,,sugar creek,boat ramp
+sugar creek fishing report,10-100,50,,0.0,Low,0%,0%,,sugar creek,fishing report
+sugar creek flood stage,10-100,50,,0.0,Low,0%,0%,,sugar creek,flood stage
+sugar creek flooding,10-100,50,,0.0,Low,-90%,0%,,sugar creek,flooding
+sugar creek swimming,10-100,50,,0.0,—,-100%,0%,,sugar creek,swimming
+suncook river flooding,10-100,50,,0.0,—,-100%,-100%,,suncook river,flooding
+susquehanna river conditions,10-100,50,,0.0,Low,0%,0%,,susquehanna river,conditions
+susquehanna river flood stage,10-100,50,,0.0,Low,0%,0%,,susquehanna river,flood stage
+susquehanna river flooding,10-100,50,,0.0,Low,0%,0%,,susquehanna river,flooding
+susquehanna river forecast,10-100,50,,0.0,Low,0%,0%,,susquehanna river,forecast
+susquehanna river swimming,10-100,50,,0.0,Low,0%,0%,,susquehanna river,swimming
+susquehanna river tubing,10-100,50,,0.0,Low,0%,0%,,susquehanna river,tubing
+suwannee river conditions,10-100,50,,0.0,—,0%,-100%,,suwannee river,conditions
+suwannee river fishing report,10-100,50,,0.0,Low,0%,0%,,suwannee river,fishing report
+suwannee river flood stage,10-100,50,,0.0,Low,0%,0%,,suwannee river,flood stage
+suwannee river flooding,10-100,50,,0.0,Low,0%,0%,,suwannee river,flooding
+suwannee river forecast,10-100,50,,0.0,Low,+∞,0%,,suwannee river,forecast
+suwannee river tubing,10-100,50,,0.0,Low,0%,0%,,suwannee river,tubing
+swannanoa river flood stage,10-100,50,,0.0,Low,+∞,+∞,,swannanoa river,flood stage
+swannanoa river flooding,10-100,50,,0.0,Low,0%,0%,,swannanoa river,flooding
+talking rock creek kayaking,10-100,50,,0.0,Low,0%,0%,,talking rock creek,kayaking
+tar river boat ramp,10-100,50,,0.0,Low,0%,0%,,tar river,boat ramp
+tar river fishing report,10-100,50,,0.0,—,-100%,-100%,,tar river,fishing report
+tar river flood stage,10-100,50,,0.0,—,-100%,-100%,,tar river,flood stage
+tar river flooding,10-100,50,,0.0,Low,0%,0%,,tar river,flooding
+tar river kayaking,10-100,50,,0.0,Low,0%,0%,,tar river,kayaking
+tar river tubing,10-100,50,,0.0,Low,-90%,0%,,tar river,tubing
+taunton river boat ramp,10-100,50,,0.0,Low,0%,+∞,,taunton river,boat ramp
+taunton river fishing report,10-100,50,,0.0,Low,0%,0%,,taunton river,fishing report
+taunton river flooding,10-100,50,,0.0,—,-100%,-100%,,taunton river,flooding
+taunton river kayaking,10-100,50,,0.0,Low,0%,0%,,taunton river,kayaking
+taylor river cfs,10-100,50,,0.0,Low,-90%,0%,,taylor river,cfs
+taylor river kayaking,10-100,50,,0.0,—,-100%,-100%,,taylor river,kayaking
+taylor river swimming,10-100,50,,0.0,—,0%,0%,,taylor river,swimming
+tellico river flooding,10-100,50,,0.0,Low,0%,+∞,,tellico river,flooding
+tellico river kayaking,10-100,50,,0.0,Low,0%,0%,,tellico river,kayaking
+tellico river tubing,10-100,50,,0.0,Low,0%,0%,,tellico river,tubing
+thornapple river fishing report,10-100,50,,0.0,Low,0%,0%,,thornapple river,fishing report
+thornapple river flood stage,10-100,50,,0.0,—,-100%,-100%,,thornapple river,flood stage
+thornapple river flooding,10-100,50,,0.0,Low,0%,0%,,thornapple river,flooding
+thornapple river kayaking,10-100,50,,0.0,Low,-90%,0%,,thornapple river,kayaking
+thunder bay river fishing report,10-100,50,,0.0,Low,0%,0%,,thunder bay river,fishing report
+thunder bay river flooding,10-100,50,,0.0,—,0%,0%,,thunder bay river,flooding
+thunder bay river kayaking,10-100,50,,0.0,Low,0%,0%,,thunder bay river,kayaking
+thunder bay river tubing,10-100,50,,0.0,—,-100%,0%,,thunder bay river,tubing
+tionesta creek fishing report,10-100,50,,0.0,Low,0%,0%,,tionesta creek,fishing report
+tippecanoe river conditions,10-100,50,,0.0,—,-100%,0%,,tippecanoe river,conditions
+tippecanoe river fishing report,10-100,50,,0.0,Low,0%,0%,,tippecanoe river,fishing report
+tippecanoe river flood stage,10-100,50,,0.0,Low,0%,0%,,tippecanoe river,flood stage
+tippecanoe river flooding,10-100,50,,0.0,Low,-90%,0%,,tippecanoe river,flooding
+tippecanoe river kayaking,10-100,50,,0.0,Low,0%,0%,,tippecanoe river,kayaking
+tippecanoe river tubing,10-100,50,,0.0,Low,-90%,0%,,tippecanoe river,tubing
+tittabawassee river fishing report,10-100,50,,0.0,Low,0%,0%,,tittabawassee river,fishing report
+tittabawassee river flood stage,10-100,50,,0.0,—,0%,0%,,tittabawassee river,flood stage
+tittabawassee river flooding,10-100,50,,0.0,Low,0%,+∞,,tittabawassee river,flooding
+tittabawassee river kayaking,10-100,50,,0.0,—,-100%,0%,,tittabawassee river,kayaking
+tohickon creek kayaking,10-100,50,,0.0,Low,0%,0%,,tohickon creek,kayaking
+tohickon creek swimming,10-100,50,,0.0,—,-100%,0%,,tohickon creek,swimming
+trask river fishing report,10-100,50,,0.0,Low,+900%,0%,,trask river,fishing report
+trinity river boat ramp,10-100,50,,0.0,Low,-90%,0%,,trinity river,boat ramp
+trinity river cfs,10-100,50,,0.0,Low,0%,0%,,trinity river,cfs
+trinity river conditions,10-100,50,,0.0,Low,0%,0%,,trinity river,conditions
+trinity river flood stage,10-100,50,,0.0,Low,+∞,0%,,trinity river,flood stage
+trinity river forecast,10-100,50,,0.0,Low,+∞,0%,,trinity river,forecast
+trinity river swimming,10-100,50,,0.0,Low,0%,0%,,trinity river,swimming
+trinity river tubing,10-100,50,,0.0,Low,0%,0%,,trinity river,tubing
+truckee river cfs,10-100,50,,0.0,Low,0%,0%,,truckee river,cfs
+truckee river conditions,10-100,50,,0.0,—,-100%,0%,,truckee river,conditions
+truckee river flood stage,10-100,50,,0.0,Low,+∞,0%,,truckee river,flood stage
+truckee river flooding,10-100,50,,0.0,Low,0%,0%,,truckee river,flooding
+truckee river kayaking,10-100,50,,0.0,Low,0%,0%,,truckee river,kayaking
+truckee river swimming,10-100,50,,0.0,Low,0%,0%,,truckee river,swimming
+tucannon river fishing report,10-100,50,,0.0,Low,0%,0%,,tucannon river,fishing report
+tuckasegee river fishing report,10-100,50,,0.0,Low,0%,0%,,tuckasegee river,fishing report
+tuckasegee river flooding,10-100,50,,0.0,Low,0%,0%,,tuckasegee river,flooding
+tuckasegee river kayaking,10-100,50,,0.0,Low,0%,0%,,tuckasegee river,kayaking
+tuckasegee river tubing,10-100,50,,0.0,Low,0%,0%,,tuckasegee river,tubing
+tuolumne river fishing report,10-100,50,,0.0,Low,0%,0%,,tuolumne river,fishing report
+tuolumne river flood stage,10-100,50,,0.0,—,0%,0%,,tuolumne river,flood stage
+tuolumne river flooding,10-100,50,,0.0,Low,0%,0%,,tuolumne river,flooding
+tuolumne river kayaking,10-100,50,,0.0,—,-100%,0%,,tuolumne river,kayaking
+tuolumne river swimming,10-100,50,,0.0,Low,0%,+∞,,tuolumne river,swimming
+tuolumne river tubing,10-100,50,,0.0,Low,0%,+∞,,tuolumne river,tubing
+twin creek kayaking,10-100,50,,0.0,Low,0%,0%,,twin creek,kayaking
+tygart valley river tubing,10-100,50,,0.0,—,0%,0%,,tygart valley river,tubing
+upper iowa river conditions,10-100,50,,0.0,Low,0%,0%,,upper iowa river,conditions
+upper iowa river fishing report,10-100,50,,0.0,Low,0%,0%,,upper iowa river,fishing report
+upper iowa river flood stage,10-100,50,,0.0,—,0%,-100%,,upper iowa river,flood stage
+upper iowa river flooding,10-100,50,,0.0,Low,+∞,0%,,upper iowa river,flooding
+upper iowa river tubing,10-100,50,,0.0,Low,0%,0%,,upper iowa river,tubing
+upper truckee river fishing report,10-100,50,,0.0,Low,0%,0%,,upper truckee river,fishing report
+upper truckee river kayaking,10-100,50,,0.0,Low,0%,0%,,upper truckee river,kayaking
+van duzen river fishing report,10-100,50,,0.0,Low,0%,0%,,van duzen river,fishing report
+verde river cfs,10-100,50,,0.0,Low,+900%,+900%,,verde river,cfs
+verde river fishing report,10-100,50,,0.0,Low,0%,0%,,verde river,fishing report
+verde river flooding,10-100,50,,0.0,Low,0%,-90%,,verde river,flooding
+verde river swimming,10-100,50,,0.0,Low,0%,0%,,verde river,swimming
+vermilion river fishing report,10-100,50,,0.0,Low,+900%,0%,,vermilion river,fishing report
+vermilion river flood stage,10-100,50,,0.0,Low,0%,0%,,vermilion river,flood stage
+vermilion river flooding,10-100,50,,0.0,Low,0%,0%,,vermilion river,flooding
+vermilion river kayaking,10-100,50,,0.0,—,-100%,-100%,,vermilion river,kayaking
+vermilion river tubing,10-100,50,,0.0,—,-100%,0%,,vermilion river,tubing
+village creek boat ramp,10-100,50,,0.0,Low,0%,0%,,village creek,boat ramp
+village creek flood stage,10-100,50,,0.0,Low,0%,0%,,village creek,flood stage
+village creek flooding,10-100,50,,0.0,Low,+∞,0%,,village creek,flooding
+village creek kayaking,10-100,50,,0.0,Low,0%,0%,,village creek,kayaking
+village creek swimming,10-100,50,,0.0,—,-100%,-100%,,village creek,swimming
+wallkill river flood stage,10-100,50,,0.0,—,0%,-100%,,wallkill river,flood stage
+wallkill river flooding,10-100,50,,0.0,Low,0%,0%,,wallkill river,flooding
+wallkill river kayaking,10-100,50,,0.0,Low,0%,0%,,wallkill river,kayaking
+wallkill river swimming,10-100,50,,0.0,Low,0%,0%,,wallkill river,swimming
+wapsipinicon river boat ramp,10-100,50,,0.0,Low,0%,0%,,wapsipinicon river,boat ramp
+wapsipinicon river fishing report,10-100,50,,0.0,Low,0%,0%,,wapsipinicon river,fishing report
+wapsipinicon river flooding,10-100,50,,0.0,Low,0%,+∞,,wapsipinicon river,flooding
+wapsipinicon river kayaking,10-100,50,,0.0,Low,0%,0%,,wapsipinicon river,kayaking
+wapsipinicon river tubing,10-100,50,,0.0,—,-100%,0%,,wapsipinicon river,tubing
+watauga river cfs,10-100,50,,0.0,Low,0%,0%,,watauga river,cfs
+watauga river flooding,10-100,50,,0.0,Low,0%,0%,,watauga river,flooding
+watauga river kayaking,10-100,50,,0.0,Low,0%,0%,,watauga river,kayaking
+watauga river tubing,10-100,50,,0.0,Low,0%,0%,,watauga river,tubing
+wekiva river fishing report,10-100,50,,0.0,—,0%,-100%,,wekiva river,fishing report
+wekiva river flooding,10-100,50,,0.0,Low,+∞,0%,,wekiva river,flooding
+wekiva river swimming,10-100,50,,0.0,Low,0%,0%,,wekiva river,swimming
+west branch delaware river flooding,10-100,50,,0.0,—,0%,0%,,west branch delaware river,flooding
+west branch susquehanna river fishing report,10-100,50,,0.0,Low,+∞,0%,,west branch susquehanna river,fishing report
+west branch susquehanna river flooding,10-100,50,,0.0,—,-100%,0%,,west branch susquehanna river,flooding
+west fork bitterroot river fishing report,10-100,50,,0.0,Low,-90%,0%,,west fork bitterroot river,fishing report
+west fork pigeon river fishing report,10-100,50,,0.0,Low,0%,0%,,west fork pigeon river,fishing report
+west prong little pigeon river fishing report,10-100,50,,0.0,Low,0%,0%,,west prong little pigeon river,fishing report
+west prong little pigeon river kayaking,10-100,50,,0.0,—,-100%,-100%,,west prong little pigeon river,kayaking
+westfield river fishing report,10-100,50,,0.0,Low,0%,0%,,westfield river,fishing report
+westfield river flooding,10-100,50,,0.0,—,-100%,0%,,westfield river,flooding
+westfield river kayaking,10-100,50,,0.0,Low,0%,0%,,westfield river,kayaking
+westfield river swimming,10-100,50,,0.0,Low,0%,0%,,westfield river,swimming
+what is gauge height,10-100,50,,0.0,Low,0%,0%,,what is,gauge height
+white clay creek fishing report,10-100,50,,0.0,Low,0%,0%,,white clay creek,fishing report
+white clay creek flood stage,10-100,50,,0.0,—,-100%,0%,,white clay creek,flood stage
+white clay creek swimming,10-100,50,,0.0,Low,0%,0%,,white clay creek,swimming
+white river cfs,10-100,50,,0.0,Low,0%,0%,,white river,cfs
+white river conditions,10-100,50,,0.0,Low,0%,0%,,white river,conditions
+white river forecast,10-100,50,,0.0,Low,0%,0%,,white river,forecast
+white river swimming,10-100,50,,0.0,Low,0%,0%,,white river,swimming
+willamette river conditions,10-100,50,,0.0,Low,0%,0%,,willamette river,conditions
+willamette river flood stage,10-100,50,,0.0,—,-100%,-100%,,willamette river,flood stage
+willamette river forecast,10-100,50,,0.0,Low,0%,0%,,willamette river,forecast
+willamette river swimming,10-100,50,,0.0,Low,-90%,0%,,willamette river,swimming
+willamette river tubing,10-100,50,,0.0,Low,0%,0%,,willamette river,tubing
+willapa river cfs,10-100,50,,0.0,Low,0%,+∞,,willapa river,cfs
+willapa river fishing report,10-100,50,,0.0,Low,0%,0%,,willapa river,fishing report
+willapa river flooding,10-100,50,,0.0,Low,0%,0%,,willapa river,flooding
+wilson river cfs,10-100,50,,0.0,Low,0%,+∞,,wilson river,cfs
+wilson river flood stage,10-100,50,,0.0,Low,+∞,0%,,wilson river,flood stage
+wilson river flooding,10-100,50,,0.0,Low,+∞,+∞,,wilson river,flooding
+wilson river forecast,10-100,50,,0.0,Low,0%,0%,,wilson river,forecast
+wilson river kayaking,10-100,50,,0.0,Low,0%,0%,,wilson river,kayaking
+wilson river swimming,10-100,50,,0.0,Low,0%,+∞,,wilson river,swimming
+wisconsin river cfs,10-100,50,,0.0,Low,0%,0%,,wisconsin river,cfs
+wisconsin river conditions,10-100,50,,0.0,Low,0%,0%,,wisconsin river,conditions
+wisconsin river fishing report,10-100,50,,0.0,Low,0%,0%,,wisconsin river,fishing report
+wisconsin river flood stage,10-100,50,,0.0,—,-100%,0%,,wisconsin river,flood stage
+wisconsin river swimming,10-100,50,,0.0,Low,0%,0%,,wisconsin river,swimming
+withlacoochee river boat ramp,10-100,50,,0.0,Low,0%,0%,,withlacoochee river,boat ramp
+withlacoochee river fishing report,10-100,50,,0.0,Low,0%,0%,,withlacoochee river,fishing report
+withlacoochee river flood stage,10-100,50,,0.0,Low,0%,0%,,withlacoochee river,flood stage
+withlacoochee river flooding,10-100,50,,0.0,Low,0%,0%,,withlacoochee river,flooding
+withlacoochee river tubing,10-100,50,,0.0,Low,0%,0%,,withlacoochee river,tubing
+wood river fishing report,10-100,50,,0.0,Low,0%,0%,,wood river,fishing report
+wood river flooding,10-100,50,,0.0,Low,+∞,0%,,wood river,flooding
+wood river kayaking,10-100,50,,0.0,Low,0%,0%,,wood river,kayaking
+yakima river cfs,10-100,50,,0.0,Low,0%,0%,,yakima river,cfs
+yakima river conditions,10-100,50,,0.0,Low,0%,0%,,yakima river,conditions
+yakima river flood stage,10-100,50,,0.0,—,0%,0%,,yakima river,flood stage
+yakima river forecast,10-100,50,,0.0,Low,0%,+∞,,yakima river,forecast
+yakima river kayaking,10-100,50,,0.0,Low,0%,0%,,yakima river,kayaking
+yakima river swimming,10-100,50,,0.0,Low,0%,+∞,,yakima river,swimming
+yellow breeches creek flooding,10-100,50,,0.0,Low,0%,0%,,yellow breeches creek,flooding
+yellow breeches creek kayaking,10-100,50,,0.0,Low,0%,+∞,,yellow breeches creek,kayaking
+yellow breeches creek swimming,10-100,50,,0.0,Low,0%,+∞,,yellow breeches creek,swimming
+yellow breeches creek tubing,10-100,50,,0.0,—,-100%,0%,,yellow breeches creek,tubing
+yellow river boat ramp,10-100,50,,0.0,Low,0%,0%,,yellow river,boat ramp
+yellow river fishing report,10-100,50,,0.0,Low,0%,0%,,yellow river,fishing report
+yellow river flood stage,10-100,50,,0.0,Low,0%,0%,,yellow river,flood stage
+yellow river kayaking,10-100,50,,0.0,Low,0%,0%,,yellow river,kayaking
+yellow river swimming,10-100,50,,0.0,Low,0%,0%,,yellow river,swimming
+yellow river tubing,10-100,50,,0.0,—,-100%,0%,,yellow river,tubing
+yellowstone river conditions,10-100,50,,0.0,Low,0%,0%,,yellowstone river,conditions
+yellowstone river flood stage,10-100,50,,0.0,—,0%,0%,,yellowstone river,flood stage
+yellowstone river flooding,10-100,50,,0.0,Low,0%,0%,,yellowstone river,flooding
+yellowstone river forecast,10-100,50,,0.0,—,-100%,-100%,,yellowstone river,forecast
+yellowstone river gauge height,10-100,50,,0.0,—,0%,0%,,yellowstone river,gauge height
+yellowstone river swimming,10-100,50,,0.0,—,-100%,-100%,,yellowstone river,swimming
+yellowstone river tubing,10-100,50,,0.0,Low,0%,0%,,yellowstone river,tubing
+youghiogheny river conditions,10-100,50,,0.0,—,-100%,-100%,,youghiogheny river,conditions
+youghiogheny river fishing report,10-100,50,,0.0,Low,0%,-90%,,youghiogheny river,fishing report
+youghiogheny river flood stage,10-100,50,,0.0,Low,0%,+∞,,youghiogheny river,flood stage
+youghiogheny river flooding,10-100,50,,0.0,Low,0%,0%,,youghiogheny river,flooding
+youghiogheny river kayaking,10-100,50,,0.0,Low,0%,0%,,youghiogheny river,kayaking
+youghiogheny river swimming,10-100,50,,0.0,Low,0%,0%,,youghiogheny river,swimming
+youghiogheny river tubing,10-100,50,,0.0,Low,0%,+∞,,youghiogheny river,tubing
+yuba river conditions,10-100,50,,0.0,Low,0%,0%,,yuba river,conditions
+yuba river flood stage,10-100,50,,0.0,—,0%,0%,,yuba river,flood stage
+yuba river flooding,10-100,50,,0.0,Low,0%,0%,,yuba river,flooding
+yuba river kayaking,10-100,50,,0.0,Low,0%,0%,,yuba river,kayaking
+yuba river swimming,10-100,50,,0.0,Low,-90%,0%,,yuba river,swimming
+yuba river tubing,10-100,50,,0.0,—,-100%,-100%,,yuba river,tubing
+big muddy river flooding,0-10,5,,0.0,—,0%,-100%,,big muddy river,flooding
+lake hartwell flood stage,0-10,5,,0.0,—,0%,0%,,lake hartwell,flood stage
+little snake river flooding,0-10,5,,0.0,—,0%,-100%,,little snake river,flooding
+patapsco river flood stage,0-10,5,,0.0,—,0%,0%,,patapsco river,flood stage
+ponca creek flooding,0-10,5,,0.0,—,0%,0%,,ponca creek,flooding
+upper truckee river flooding,0-10,5,,0.0,—,0%,0%,,upper truckee river,flooding

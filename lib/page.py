@@ -348,6 +348,14 @@ def mk_title(base):
     return base  # one pattern on every page; the brand sits in the nav
 
 
+def dash_tail(wt, fc):
+    """Title words after 'water level and flow', each only while its block shows: never a promise the page breaks."""
+    return (", NWS forecast" if fc else "") + (", water temperature" if wt else "")
+
+
+assert dash_tail(True, True) == ", NWS forecast, water temperature" and dash_tail(False, False) == "" and dash_tail(False, True) == ", NWS forecast", "page: title tail"
+
+
 def humanize_iso(text):
     return re.sub(r"\d{4}-\d{2}-\d{2}", lambda m: fdate(m.group(0)), text)
 
@@ -659,7 +667,9 @@ def build_tab(tab, G, pages):
     # Keyword Planner 2026-11-06 (US): '<water> water temperature' beats 'level today', 'gauge' and 'dam release' (22 of 122 at 100+, those three near 0).
     # The title names water temperature only while the tile shows it (fresh under 24 h, Celsius, not held as suspect): never a promise the page breaks.
     wt_ = bool(b3.conditions(G).get("wt"))
-    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, ", water temperature" if wt_ else "", G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    # Keyword Planner 2026-11-13 (US): '<river> forecast' is the largest river phrasing on live waters (PLAN 25a); named only while the forecast block shows
+    fc_ = tab == "dashboard" and not G.get("coast") and b_river_forecast(G) is not None
+    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, dash_tail(wt_, fc_), G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
         title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
