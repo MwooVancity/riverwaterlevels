@@ -619,6 +619,64 @@ def fetch_stocking_nh(lat, lon, miles):
     return rows
 
 
+VA_SCHED, VA_LAYERS = "https://dwr.virginia.gov/fishing/trout-stocking-schedule/", "https://services.dwr.virginia.gov/arcgis/rest/services/HUB_Layers/%s/FeatureServer/0/query"
+_VA_ROWS = []
+
+
+def va_schedule(t):
+    """Virginia DWR trout stocking schedule page -> [(date iso, county, water, [species])]. 'No Stockings Today' rows and dates that do not parse are
+    dropped; species are the cell's separate lines (the text runs 'Rainbow TroutBrown Trout' when tags are stripped)."""
+    out = []
+    for r in re.findall(r"<tr.*?</tr>", t, re.S):
+        c = re.findall(r"<td.*?</td>", r, re.S)
+        if len(c) < 5:
+            continue
+        txt = lambda h: html.unescape(re.sub(r"<[^>]+>", " ", h)).split()
+        try:
+            d = datetime.datetime.strptime(" ".join(txt(c[0])), "%B %d, %Y").date().isoformat()
+        except ValueError:
+            continue
+        water = re.sub(r"\s*\[.*?\]", "", " ".join(txt(c[2]))).strip()
+        sp = [s for s in (" ".join(txt(x)) for x in re.split(r"<br\s*/?>|</li>|</p>", c[4])) if s]
+        if water and "no stockings" not in water.lower():
+            out.append((d, re.sub(r"(?i)\s+county$", "", " ".join(txt(c[1]))), water, sp))
+    return out
+
+
+def fetch_stocking_va(lat, lon, miles):
+    """Virginia (PLAN 37c): the DWR schedule page (dated releases by county and water, no positions; read once per process) joined by water name and
+    county to DWR's stocked trout lakes (points) and reaches (lines). A water whose name and county match no feature is left out, never guessed."""
+    if not _VA_ROWS:
+        _VA_ROWS.extend(va_schedule(get_text(VA_SCHED)))
+    dd, pos = miles / 69.0, {}
+    for layer in ("DWR_Stocked_Trout_Lakes", "DWR_Stocked_Trout_Reaches"):
+        q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": "*", "returnGeometry": "true", "resultRecordCount": "1000", "f": "json"})
+        for ft in json.loads(get_text(VA_LAYERS % layer + "?" + q)).get("features", []):
+            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+            vx = [(g["y"], g["x"])] if g.get("y") is not None else [(p_[1], p_[0]) for part in (g.get("paths") or []) for p_ in part]
+            w, cty = (a.get("Waterbody") or "").strip().lower(), re.sub(r"(?i)\s+county$", "", (a.get("County") or a.get("COUNTY") or "").strip()).lower()
+            if w and vx:
+                mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in vx) * 0.621371, 1)
+                if mi <= miles:
+                    pos[(w, cty)] = min(mi, pos.get((w, cty), mi))
+    cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
+    return [{"species": ", ".join(sp) or None, "date": d, "num": None, "water": "%s (%s County)" % (w, cty), "size": None, "mi": pos[(w.lower(), cty.lower())]}
+            for d, cty, w, sp in _VA_ROWS if d >= cut and (w.lower(), cty.lower()) in pos]
+
+
+def stock_merge(new, prev):
+    """Each refresh adds to the releases already kept (PLAN 37 edge case): Virginia's page lists only recent weeks and Georgia only each stream's last
+    stocking, so replacing the cache dropped releases still inside the page's 12 months. Same source only; rows past 550 days fall away; None (no
+    adapter, nothing found) keeps the old record for its own 12-month window."""
+    if not new:
+        return new if not prev else prev
+    if prev and set((prev.get("source") or "").split(" and ")) & set(new["source"].split(" and ")):  # a border page's label changes when one state has no row this run
+        cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
+        new = dict(new, rows=stock_keep(new["rows"] + [r for r in prev.get("rows") or [] if (r.get("date") or "") >= cut]))
+    return new
+
+
 def stock_keep(rows, n=60):
     """The newest release per water and species, the n nearest waters, newest first. The page shows only its own river or lake (lib/blocks3 b_stocking),
     so keeping the 12 newest within 35 miles let a busy pond season push the gauge's own river out of the cache (found 2026-11-13)."""
@@ -633,12 +691,11 @@ def fetch_stocking(lat, lon, miles=35):
     """Recent hatchery stocking near the gauge, from the state's public stocking layer (species, date, count, water). Returns None where the state has no adapter or no record. Stocking is a release event, not a fish-population measure."""
     two = [(fn, src, cred, url) for box, fn, src, cred, url in (
         ((-73.6, 41.2, -69.8, 42.9), fetch_stocking_ma, "MassWildlife trout stocking report", "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", MA_STOCK + "StockedFish_View/FeatureServer/0"),
-        ((-72.6, 42.7, -70.6, 45.3), fetch_stocking_nh, "NH Fish and Game fish stocking records", "New Hampshire Fish and Game Department", NH_STOCK + "5"))
+        ((-72.6, 42.7, -70.6, 45.3), fetch_stocking_nh, "NH Fish and Game fish stocking records", "New Hampshire Fish and Game Department", NH_STOCK + "5"),
+        ((-83.7, 36.5, -75.2, 39.5), fetch_stocking_va, "Virginia DWR trout stocking schedule", "Virginia Department of Wildlife Resources (Trout Stocked Streams, Virginia Department of Game and Inland Fisheries)", VA_SCHED))
         if box[0] <= lon <= box[2] and box[1] <= lat <= box[3]]  # two-step states; a border gauge (MA/NH overlap) gets both states' releases, not only the first state's
     got = [(src, cred, url, r) for fn, src, cred, url in two for r in [fn(lat, lon, miles)] if r]
-    if got:
-        return {"fetched_at": now_iso(), "source": " and ".join(g[0] for g in got), "credit": "; ".join(g[1] for g in got), "url": got[0][2], "miles": miles, "rows": stock_keep([x for g in got for x in g[3]])}
-    for s in STOCK_SOURCES:
+    for s in STOCK_SOURCES:  # every state whose box holds the gauge is asked (Maryland sits inside Virginia's box; a border gauge has two states)
         x0, y0, x1, y1 = s["bbox"]
         if not (x0 <= lon <= x1 and y0 <= lat <= y1):
             continue
@@ -662,7 +719,9 @@ def fetch_stocking(lat, lon, miles=35):
             rows.append({"species": a.get(fm["species"]) if fm.get("species") else s.get("species"), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
                          "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
         if rows:
-            return {"fetched_at": now_iso(), "source": s["name"], "credit": s["credit"], "url": s["url"], "miles": miles, "rows": stock_keep(rows)}
+            got.append((s["name"], s["credit"], s["url"], rows))
+    if got:
+        return {"fetched_at": now_iso(), "source": " and ".join(g[0] for g in got), "credit": "; ".join(g[1] for g in got), "url": got[0][2], "miles": miles, "rows": stock_keep([x for g in got for x in g[3]])}
     return None
 
 
@@ -1989,7 +2048,7 @@ def fetch_extras(site, rec, h, log):
     for key, fn in (("meta", lambda: fetch_meta(site, h)), ("peaks", lambda: fetch_peaks(site, h)), ("wtemp", lambda: fetch_wtemp(site, h)), ("snotel", lambda: fetch_snotel(lat, lon)), ("cpc", lambda: fetch_cpc(lat, lon)), ("usdm", lambda: fetch_usdm(rec)), ("attains", lambda: fetch_attains(lat, lon)),
                     ("record", lambda: record_summary(fetch_daily(site, h), rec.get("stats"))), ("year", lambda: fetch_year(site, h)), ("fieldmeas", lambda: fetch_fieldmeas(site, h)), ("floodfreq", lambda: fetch_floodfreq(site)), ("cpc610", lambda: fetch_cpc(lat, lon, "cpc_6_10_day_outlk")),
                     ("related", lambda: related_lag(rec, h)), ("acis", lambda: fetch_acis(rec)), ("tides", lambda: fetch_tides(lat, lon)), ("cameras", lambda: fetch_cameras(site, h)), ("airnow", lambda: fetch_airnow(lat, lon)), ("ridb", lambda: fetch_ridb(lat, lon)), ("near_wtemp", lambda: fetch_near_wtemp(site, lat, lon, rec.get("river_name"), h)),
-                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: fetch_stocking(lat, lon)), ("access", lambda: fetch_access(lat, lon)), ("land", lambda: fetch_land(lat, lon)),
+                    ("streamcat", lambda: fetch_streamcat(site, rec)), ("stocking", lambda: stock_merge(fetch_stocking(lat, lon), rec.get("stocking"))), ("access", lambda: fetch_access(lat, lon)), ("land", lambda: fetch_land(lat, lon)),
                     ("rating", lambda: fetch_rating(site)), ("wqp", lambda: fetch_wqp(site)), ("uv", lambda: fetch_uv(rec)),
                     *(((("dam_" + DAMS[site]["kind"]), lambda: fetch_dam(site, DAMS[site]["kind"])),) if site in DAMS else ()),
                     *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),

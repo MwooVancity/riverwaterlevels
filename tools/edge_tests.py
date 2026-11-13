@@ -1188,6 +1188,18 @@ if __name__ == "__main__":
     finally:
         collect.fetch_stocking_ma, collect.fetch_stocking_nh = ma0_, nh0_
     assert collect.NH_SPECIES["EBT"] == "Brook Trout" and collect.NH_SPECIES["LLS"] == "Landlocked Salmon", "NH species key changed"
+    # PLAN 37c Virginia parse: tags in the water name and county dropped, two species split, 'No Stockings Today' and unparsable dates skipped
+    va_html_ = ("<tr><th>Date</th><th>County</th><th>Waterbody</th><th>Category</th><th>Species Stocked</th></tr>"
+                "<tr><td>November 13, 2026</td><td>Bedford County</td><td>Liberty Lake <em>[Heritage Day Water]</em></td><td>A</td><td><p>Rainbow Trout</p><p>Brown Trout</p></td></tr>"
+                "<tr><td>November 12, 2026</td><td>Statewide</td><td>No Stockings Today</td><td></td><td></td></tr><tr><td>TBD</td><td>Giles County</td><td>Wolf Creek</td><td>A</td><td>Rainbow Trout</td></tr>")
+    assert collect.va_schedule(va_html_) == [("2026-11-13", "Bedford", "Liberty Lake", ["Rainbow Trout", "Brown Trout"])], "Virginia schedule parse wrong: %r" % collect.va_schedule(va_html_)
+    # PLAN 37 merge: a refresh keeps earlier releases of the same source inside 550 days; another source replaces; nothing new keeps the old record
+    old_ = {"source": "S", "rows": [{"species": "Trout", "date": "2026-10-01", "num": None, "water": "A Creek", "size": None, "mi": 1.0}, {"species": "Trout", "date": "2020-01-01", "num": None, "water": "Old Creek", "size": None, "mi": 1.0}]}
+    nw_ = {"source": "S", "rows": [{"species": "Trout", "date": "2026-11-10", "num": None, "water": "B Creek", "size": None, "mi": 2.0}]}
+    mg_ = collect.stock_merge(nw_, old_)
+    assert [r["water"] for r in mg_["rows"]] == ["B Creek", "A Creek"], "stocking merge lost a recent release or kept a 2020 one"
+    assert len(collect.stock_merge(dict(nw_, source="S and T"), old_)["rows"]) == 2, "stocking merge: a border page lost its releases when a second state joined"
+    assert collect.stock_merge(dict(nw_, source="T"), old_)["rows"] == nw_["rows"] and collect.stock_merge(None, old_) is old_ and collect.stock_merge(None, None) is None, "stocking merge mixed sources or lost the old record"
     # 2026-11-13: the fish source line said 'licensed' (check.py BANNED) and the cloud refresh stopped; every new block's text now meets the banned list here first
     import check as ck_
     outs_ = [fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00")), sf_(sr_), rt_(rd_), kt_(base_), mf_(mp_), sk_(None, "Swift River")]
