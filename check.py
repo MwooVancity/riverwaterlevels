@@ -444,7 +444,7 @@ def research_title_ok(h, url):
         for r in csv.DictReader(open(os.path.join(ROOT, "data", "research-keywords.csv"), encoding="utf-8")):
             if norm(r["seed"]) in kw:
                 _SEEDS.setdefault(r["url"], []).append(set(norm(r["seed"]).split()))
-    m = re.search(r"<title>(.*?)</title>", h, re.S)
+    m = re.search(r"<title>(.*?)(?: \| [^|<]*)?</title>", h, re.S)  # the brand suffix (River Water Levels) must not supply seed words (title review 2026-11-13)
     words = set(re.sub(r"[^a-z0-9 ]", " ", (m.group(1) if m else "").lower().replace("-", " ")).split())
     return url not in _SEEDS or any(s <= words for s in _SEEDS[url])
 

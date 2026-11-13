@@ -321,15 +321,15 @@ def peak_change(gl, today, sub, unk):
     bh_up, bh_dn = sum(1 for x in nat if x[4] <= thr and x[8] > 0), sum(1 for x in nat if x[4] <= thr and x[8] < 0)
     exp = ALPHA / 2 * len(nat)
     if not k:  # harm audit 2026-11-12 #1: 3 up and 1 down of 87 was called 'more than chance' while chance gives about 2.2 each way
-        head = ("<b>Across %d gauges, no gauge's change in yearly peaks between water years %s and %s stands out from chance after the correction for testing many gauges at once.</b> "
+        head = ("<b>Are floods getting worse? On these %d gauges, not in a way this test can tell from chance: no gauge's change in yearly peaks between water years %s and %s stands out after the correction for testing many gauges at once.</b> "
                 "%d tested higher and %d lower at p &lt; %.2f, about what chance gives (about %.1f each way), and none survives the Benjamini-Hochberg correction (false discovery rate %d%%). "
                 "A test on about 20 years a period can miss a real change, so this is not evidence that nothing changed. "
                 ) % (len(nat), P1, P2, len(sig_up), len(sig_dn), ALPHA, exp, round(FDR * 100))
     else:
-        head = ("<b>At %d of %d gauges, yearly peaks in water years %s differ from %s by more than chance alone explains: %d higher, %d lower.</b> "
+        head = ("<b>Are floods getting worse? At %d of %d gauges, yearly peaks in water years %s differ from %s by more than chance alone explains: %d higher, %d lower.</b> "
                 "That is after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%); before it, %d tested higher and %d lower at p &lt; %.2f, against about %.1f each way by chance. "
                 ) % (k, len(nat), P2, P1, bh_up, bh_dn, round(FDR * 100), len(sig_up), len(sig_dn), ALPHA, exp)
-    lead = "<p>" + head + "This compares the typical yearly peak in two periods; it does not say why they changed.%s</p>" % (
+    lead = "<p>" + head + "This compares the typical yearly peak in two periods at these gauges, which are not every US river; it says nothing about flood damage or why peaks changed.%s</p>" % (
         (" %s listed apart, not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are")) if len(rows) > len(nat) else "")
     hd = ["Gauge", "Median peak %s" % P1, "Median peak %s" % P2, "Shift (Hodges-Lehmann)", "p"]
     rw = lambda xs, f=_link: "".join(tr([f(r) + (" (regulated)" if rg else ""), "%s cfs" % fmtc(a), "%s cfs" % fmtc(b), "%s%s cfs" % ("+" if hl_ > 0 else "", fmtc(hl_)), _pv(pv)], right=(1, 2, 3, 4)) for r, a, b, c, pv, rg, _, _, hl_, G in xs)
@@ -419,7 +419,7 @@ def flood_stage(gl):
     sh = [100 * x[2] / x[3] for x in nat]
     lead = ("<p><b>On a typical one of these rivers, the yearly peak reached minor flood stage in %.0f%% of years.</b> "
             "That is the median across %d US river gauges on this site where the USGS and National Weather Service stages agree and USGS flags no regulation; it happened in at least half the years at %d gauges, and never at %d.%s "
-            "Minor flood stage is the NWS's lowest flood category for each forecast point. This is the record of past years, not a forecast: for flooding now, follow the National Weather Service warnings for your area.</p>") % (
+            "The National Weather Service defines flood stage as the gage height at a given place above which rising water begins to threaten lives, property or commerce; its flood warnings are tied to it, and it is not necessarily the level at which the river leaves its banks (NWS glossary). Minor flood stage is the lowest of its flood categories for each forecast point. This is the record of past years, not a forecast: for flooding now, follow the National Weather Service warnings for your area.</p>") % (
         statistics.median(sh), len(nat), sum(1 for x in sh if x >= 50), sum(1 for x in sh if x == 0), (" %s listed but not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are")) if len(rows) > len(nat) else "")
     hd = ["Gauge", "NWS minor flood stage", "Water years a peak reached it", "Water years on file"]
     row = lambda f: lambda x: tr([f(x[0]) + (" (regulated)" if x[8] else ""), "%.1f ft" % x[1], "%d of %d (%d%%)" % (x[2], x[3], round(100 * x[2] / x[3])), "%d to %d" % (x[4], x[5])], right=(1, 2))
@@ -572,7 +572,7 @@ def tides(built, Gs):
     data = _csv(["noaa_station", "name", "state", "page", "span_days", "predicted_range_ft_in_span", "max_gap_ft", "max_gap_utc", "min_gap_ft", "min_gap_utc", "median_gap_ft", "matched_readings", "fetched_at"],
                 [[r["site"], r["river"], r["state"], SITE_URL + r["dashboard_url"], round(d_, 2), "" if rng is None else round(rng, 2), round(up[1], 2), up[0].astimezone(datetime.timezone.utc).isoformat(), round(dn[1], 2), dn[0].astimezone(datetime.timezone.utc).isoformat(), round(md_, 2), n, _fa(G, "coops")]
                  for r, G, rng, up, dn, md_, n, d_ in rows], _cred("coops"))
-    return _page("Storm surge and tide predictions: how far the sea ran from NOAA's predicted tide", "tides", "Observed water against NOAA tide predictions over the last %s at %d NOAA stations, with the predicted tide range in the same span." % (span, len(rows)), body,
+    return _page("Tide predictions vs actual water: how far the sea ran from NOAA's predicted tide", "tides", "Observed water against NOAA tide predictions over the last %s at %d NOAA stations, with the predicted tide range in the same span." % (span, len(rows)), body,
                  "NOAA water levels and tide predictions, last %s, for the stations on this site; newest reading %s UTC. These figures change every few minutes; cite them with that date and time." % (span, utc_day(max(x[1]["sg"][-1][0] for x in rows))), data, sample=SAMPLE_TIDE)
 
 
@@ -626,7 +626,7 @@ def world_rivers(wpages, wkeep, now):
                 lambda row: _cred({v: k for k, v in COUNTRY.items()}.get(row[0], row[0])))
     sample = ("<p class=\"src\"><b>Sample:</b> the gauges outside the US that have a page on this site, in %s. They are not every gauge in those countries, so the results describe these gauges only.</p>" % ", ".join(COUNTRY[f] for f in cs))
     lab_c = [COUNTRY[f] for f in cs if by[f]["low"] + by[f]["normal"] + by[f]["high"]]  # hostile review #12: the title names only countries with a labelled gauge
-    return _page(("Rhine water level and r" if any(p["slug"] == "rhine" and wkeep.get("rhine") for p, d in wpages) else "R") + "iver levels in %s: low or high right now?" % (", ".join(lab_c[:-1]) + " and " + lab_c[-1] if len(lab_c) > 1 else lab_c[0]), "world-rivers",
+    return _page("River levels in %s: low or high right now?" % (", ".join(lab_c[:-1]) + " and " + lab_c[-1] if len(lab_c) > 1 else lab_c[0]), "world-rivers",
                  "Gauges outside the US on River Water Levels by a low, normal or high label right now, each label's basis named, counted country by country.", body,
                  "Agency river levels in %s, for the gauges on this site; newest reading %s UTC. These labels change as the agencies publish; cite them with that date and time." % (", ".join(COUNTRY[f] for f in cs), utc_day(times[-1])), data, sample=sample)
 
@@ -666,8 +666,8 @@ def verify(url, html, data):
         dn = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) < 0)
         k = bh_count([float(r["mann_whitney_p"]) for r in nat])
         m = re.search(r"(\d+) tested higher and (\d+) lower", html) or re.search(r"before it, (\d+) tested higher and (\d+) lower", html)
-        g = re.search(r"Across (\d+) gauges|of (\d+) gauges, yearly peaks", lead)
-        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != ("stands out from chance" in lead):
+        g = re.search(r"On these (\d+) gauges|of (\d+) gauges, yearly peaks", lead)
+        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != ("not in a way this test can tell from chance" in lead):
             bad.append("peak change counts on the page differ from the CSV (up %d, down %d, gauges %d, corrected %d)" % (up, dn, len(nat), k))
     elif url.endswith("/100-year-floods/"):
         nat = [r for r in rows if not T(r["regulated"])]
