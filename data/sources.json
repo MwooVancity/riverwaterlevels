@@ -783,6 +783,22 @@
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
+  },
+  {
+   "id": "gbif",
+   "name": "GBIF.org occurrence search API (fish records, CC0 and CC BY only), with US common names from ITIS (itis.gov web services)",
+   "status": "quoted",
+   "terms_url": "https://www.gbif.org/terms",
+   "summary": "GBIF terms (read 2026-11-13 via search on gbif.org): CC BY 'permits any use provided attribution is appropriately given'; the Data User Agreement requires users to acknowledge publishers by citing sources. CC BY-NC records are excluded by the query. Each block names the three largest source datasets and links GBIF. ITIS is a US federal service (USGS-hosted), public domain. iNaturalist's own API is not used (terms restrict commercial use); its research-grade CC0/CC BY records arrive through GBIF.",
+   "credit": "GBIF.org occurrence data; dataset publishers named on the page; common names: ITIS",
+   "blocks": [
+    "fish"
+   ],
+   "read_on": "2026-11-13",
+   "evidence": "WebSearch 2026-11-13 on gbif.org (terms, data-user); live API answers read the same day for the Fryingpan and Austin",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   }
  ]
 }

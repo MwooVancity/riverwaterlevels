@@ -1103,4 +1103,38 @@ if __name__ == "__main__":
     e_ = rt_(dict(rd_, rows=[]))
     assert e_["empty"] and "No sample is not the same as no red tide" in e_["body"], "red tide: no sample read as no red tide"
     assert "Unknown" in rt_(None)["body"] and rt_(rd_, "CA") is None, "red tide: missing data shown, or the block on a non-Gulf coast"
+    # PLAN 33a fish species (GBIF + ITIS): CC BY-NC never asked; ITIS down = scientific name only and asked again; 'recorded within', never 'in this river'
+    hj_, nm_, ds_ = collect.http_json, dict(collect._GBIF_NAMES), dict(collect._GBIF_SETS)
+    asked_ = []
+    def fake_(u, *a, **k):
+        asked_.append(u)
+        if "occurrence/search" in u:
+            return {"count": 30, "facets": [{"field": "SPECIES_KEY", "counts": [{"name": "1", "count": 20}, {"name": "2", "count": 10}]}, {"field": "DATASET_KEY", "counts": [{"name": "d1", "count": 25}]}]}
+        if "/species/1" in u:
+            return {"canonicalName": "Oncorhynchus nerka"}
+        if "/species/2" in u:
+            return {"canonicalName": "Salmo trutta"}
+        if "/dataset/" in u:
+            return {"title": "USGS Nonindigenous Aquatic Species database"}
+        if "searchByScientificName" in u and "nerka" in u:
+            return {"scientificNames": [{"tsn": "161979", "combinedName": "Oncorhynchus nerka"}]}
+        if "getCommonNamesFromTSN" in u:
+            return {"commonNames": [{"commonName": n, "language": "English"} for n in ("blueback salmon", "kokanee", "red salmon", "sockeye salmon")]}
+        raise OSError("ITIS down")
+    try:
+        collect.http_json = fake_
+        collect._GBIF_NAMES.clear(); collect._GBIF_SETS.clear()
+        fi_ = collect.fetch_fish(39.36, -106.82)
+        assert "CC_BY_NC" not in asked_[0] and "CC0_1_0" in asked_[0] and "CC_BY_4_0" in asked_[0], "fish: a non-commercial licence asked for, or an open one left out"
+        assert fi_["rows"] == [["Oncorhynchus nerka", "blueback salmon, kokanee, red salmon", 20], ["Salmo trutta", None, 10]] and fi_["datasets"] == [["USGS Nonindigenous Aquatic Species database", 25]], "fish: names, counts or citation wrong"
+        assert 2 not in collect._GBIF_NAMES and "2" not in collect._GBIF_NAMES, "fish: an ITIS failure was remembered for the whole run"
+    finally:
+        collect.http_json = hj_
+        collect._GBIF_NAMES.clear(); collect._GBIF_NAMES.update(nm_); collect._GBIF_SETS.clear(); collect._GBIF_SETS.update(ds_)
+    fb_ = lambda f: blocks3.b_fish({"zone": zoneinfo.ZoneInfo("America/Denver"), "rec": {"fish": f}})
+    b_ = fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00"))["body"]
+    assert "2 fish species have records within 10 km since 2000" in b_ and "blueback salmon" in b_ and "Salmo trutta" in b_ and "No common name listed" in b_ and "USGS Nonindigenous" in b_, "fish: lead, names or sources missing"
+    assert not re.search(r"in this (river|lake)|\bbite\b|good fishing", b_, re.I), "fish: records claimed for this water, or a verdict"
+    e_ = fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00", rows=[], species=0))
+    assert e_["empty"] and "No record is not the same as no fish" in e_["body"] and "Unknown" in fb_(None)["body"], "fish: no record read as no fish, or missing data shown"
     print("selftest OK")

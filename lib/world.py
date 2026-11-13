@@ -242,6 +242,7 @@ NO_GAUGE = "none: the agency publishes no such record for its gauges"
 MAP = "none: no open map we may embed was read; the coordinates in About this gauge open OpenStreetMap at the gauge, and the official links open the agency map"
 HYDAT = "next: Water Office flow statistics (HYDAT daily flows, same API); not wired"
 MOON_WORLD = "next: USNO moon phases, one list for the whole world (PLAN 32); not wired for world pages"
+FISH_WORLD = "next: GBIF fish records work worldwide (PLAN 33a); not wired for world pages"
 COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). have = on the page; none = no official source, with the reason; next = a source exists and is not wired: a to-do the page's gaps line names (TODO), never a cap
     "b_offline": ("have", "have"),
     "b_flow_behind": ("none: the headline is water level, and the flow chart carries its own reading times", "none: the headline is water level, and the flow chart carries its own reading times"),
@@ -279,6 +280,7 @@ COVER = {  # every block on a US gauge page, per country (eccc, pegelonline). ha
     "b_surf": ("none: coast pages only; these are river and lake gauges", "none: coast pages only; these are river and lake gauges"),
     "b_redtide": ("none: coast pages only; these are river and lake gauges", "none: coast pages only; these are river and lake gauges"),
     "b_moonphase": (MOON_WORLD, MOON_WORLD),
+    "b_fish": (FISH_WORLD, FISH_WORLD),
     "b_lake_temp": ("none: Great Lakes pages only (NOAA GLERL lake-wide average); Canadian pages here are river gauges", "none: Great Lakes pages only; these are German rivers and Lake Constance, which GLERL does not cover"),
     "b_map": (MAP, MAP),
     "b_radar": ("none: the official links point to the agency radar", "none: the official links point to the agency radar"),
@@ -294,7 +296,7 @@ MET_OBS = "next: Met Office Land Observations, a separate free DataHub plan (own
 NRFA = "next: UK National River Flow Archive (UKCEH) station statistics; terms not read"
 IMPACT = "next: GOV.UK Check for flooding lists impact levels per station (Colwick: property flooding possible above 4.30 m, read 2026-11-03); no open feed read"
 ENGLAND = {  # read on the live API and its reference 2026-11-03; each none says what was read
-    "b_offline": "have", "b_key_facts": "have", "b_reservoir": "none: the EA publishes levels, not reservoir storage", "b_waves": "none: coast pages only; these are river gauges", "b_moon": "none: coast pages only; these are river gauges", "b_kingtide": "none: coast pages only; these are river gauges", "b_surf": "none: coast pages only; these are river gauges", "b_redtide": "none: coast pages only; these are river gauges", "b_moonphase": MOON_WORLD, "b_lake_temp": "none: Great Lakes pages only; these are English river gauges", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
+    "b_offline": "have", "b_key_facts": "have", "b_reservoir": "none: the EA publishes levels, not reservoir storage", "b_waves": "none: coast pages only; these are river gauges", "b_moon": "none: coast pages only; these are river gauges", "b_kingtide": "none: coast pages only; these are river gauges", "b_surf": "none: coast pages only; these are river gauges", "b_redtide": "none: coast pages only; these are river gauges", "b_moonphase": MOON_WORLD, "b_fish": FISH_WORLD, "b_lake_temp": "none: Great Lakes pages only; these are English river gauges", "b_flow_behind": COVER["b_flow_behind"][0], "b_alerts": "have", "b_stage_chart": "have", "b_official_marks": "have", "b_official_links": "have", "b_flow_chart": "have", "b_access": "have", "b_nearby": "have", "b_about": "have",
     "b_hourly": "have", "b_weather": "have", "b_air": MET_OBS, "b_qpf": MET, "b_radar": MET, "b_heatmap": "none: covered by the hourly table",  # Met Office Global Spot, wired 2026-11-03; sky words wait for the code table
     "b_air_quality": "next: Defra UK-AIR hourly air quality index, open data; terms not read",
     "b_rate": "have",
@@ -331,6 +333,7 @@ IRELAND = dict({b: IMI_NONE for b in COVER}, **{  # PLAN 7c, Irish live tide gau
     "b_flow_behind": COVER["b_flow_behind"][0], "b_map": COVER["b_map"][0], "b_noforecast": COVER["b_noforecast"][0],
     "b_attains": US_ONLY, "b_streamcat": US_ONLY, "b_land": US_ONLY, "b_nwm": US_ONLY, "b_nwm_medium": US_ONLY, "b_recreation": US_ONLY, "b_limits": NOT_CHECKED, "b_stocking": US_ONLY, "b_dam": US_ONLY, "b_dam_facts": US_ONLY, "b_wpc": US_ONLY, "b_cpc": US_ONLY, "b_nws_point": US_ONLY,
     "b_moonphase": MOON_WORLD,
+    "b_fish": FISH_WORLD,
     "b_moon": "next: USNO moon phase works anywhere; not wired for world pages", "b_waves": "next: Marine Institute Irish weather buoy network (M2-M6); not read"})
 COVER = {b: row + (IRELAND[b],) for b, row in COVER.items()}
 ORDER = ("eccc", "pegelonline", "ea", "imi")  # the column order of COVER
@@ -345,6 +348,7 @@ TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)", ENGLAND["b_li
         ENGLAND["b_attains"]: "water body status (Environment Agency Catchment Data Explorer)", ENGLAND["b_land"]: "land cover (UKCEH)", NOT_CHECKED: "fish stocking, dam releases, recreation sites and long-range outlooks (English sources not yet checked)"}
 TODO.update(TODO_IE)
 TODO[MOON_WORLD] = "moon phases (U.S. Naval Observatory)"
+TODO[FISH_WORLD] = "fish species recorded nearby (GBIF)"
 
 
 FC_NONE = re.compile(r'<div class="tile fcst none[^"]*">.*?</small></div>', re.S)  # the 'Not issued' tile a world forecast replaces; ui.tile may add classes (na)

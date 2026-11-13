@@ -13,6 +13,7 @@
 "dam_rise": "iso",
 "fema_zone": "iso",
 "fieldmeas": "iso",
+"fish": "iso",
 "floodfreq": "iso",
 "floodtide": "iso",
 "glsea": "iso",
@@ -149,6 +150,15 @@
 "chan": "list",
 "fetched_at": "iso",
 "rows": "list"
+},
+"fish": {
+"datasets": "list",
+"fetched_at": "iso",
+"km": "num",
+"records": "num",
+"rows": "list",
+"since": "num",
+"species": "num"
 },
 "floodfreq": {
 "citation": "str",

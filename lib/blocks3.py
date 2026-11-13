@@ -824,6 +824,29 @@ def b_redtide(G):
     return block("redtide", head, "agency", "<p><b>%s</b></p>" % lead + table(["Sample site", "Distance", "Latest sample", "Cells per liter", "Category (HABSOS)"], trs, right=(1, 3)), src + ".", "habsos")
 
 
+def b_fish(G):
+    """PLAN 33a: fish species with records within 10 km since 2000 (GBIF, CC0 and CC BY records; common names from ITIS). States: valid; valid-empty
+    (no record: said as no record, never 'no fish'); unavailable = Unknown. 'Recorded within 10 km' always: a record can be from another water nearby."""
+    if not cleared("gbif"):
+        return None
+    f = G["rec"].get("fish")
+    head = "Fish species recorded nearby"
+    src = "Source: GBIF.org occurrence records (CC0 and CC BY licensed), common names from ITIS"
+    if not f:
+        return block("fish", head, "agency", "<p>Unknown: fish records near here were not read in this build.</p>", src + ".", "gbif")
+    src += ", read %s" % esc(tzl(parse_t(f["fetched_at"]), G["zone"]))
+    if not f.get("rows"):
+        return block("fish", head, "agency", "<p><b>No fish record within %d km since %d is in GBIF.</b> No record is not the same as no fish.</p>" % (f["km"], f["since"]), src + ".", "gbif", empty=True)
+    n = ("%d or more" % f["species"]) if f.get("capped") else "%d" % f["species"]
+    nm = lambda r: esc(r[1].split(", ")[0] if r[1] else r[0])
+    lead = "%s fish species have records within %d km since %d. Most recorded: %s." % (n, f["km"], f["since"], ", ".join(nm(r) for r in f["rows"][:4]))
+    trs = "".join(tr([esc(r[1] or "No common name listed"), "<i>%s</i>" % esc(r[0]), "{:,}".format(r[2])], right=(2,)) for r in f["rows"])
+    sets = "; ".join("%s (%s records)" % (esc(t), "{:,}".format(c)) for t, c in f.get("datasets") or [])
+    return block("fish", head, "agency", "<p><b>%s</b></p>" % lead + table(["Fish (ITIS common names)", "Scientific name", "Records"], trs, right=(2,)) +
+                 '<p class="src">Records come from surveys, museum collections and checked public sightings, and can be from other water within %d km. Largest sources here: %s.</p>' % (f["km"], sets or "Unknown"),
+                 src + ". Counts are records, not fish caught.", "gbif")
+
+
 def b_moonphase(G):
     """PLAN 32 (anglers ask for the moon; coast pages have b_moon): the next principal moon phases from the U.S. Naval Observatory, UT shown in local time.
     States: valid; unavailable (not read, or no phase ahead in the list) = Unknown. Only future phases; no 'good fishing' words."""

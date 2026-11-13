@@ -1406,7 +1406,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide", "surf", "redtide"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide", "surf", "redtide", "fish"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
 RED_TIDE_COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r["state"] in ("FL", "AL", "MS", "TX")}  # PLAN 30: HABSOS states  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
@@ -1794,6 +1794,46 @@ def fetch_redtide(lat, lon):
     return {"fetched_at": now_iso(), "since": since, "rows": rows}
 
 
+GBIF_FISH = (1313, 1153, 708, 587, 548, 1103, 1167, 494, 538, 495, 549, 547, 496, 588, 1067, 590, 772, 1310, 1068, 550, 1162, 1104, 1106, 498, 773, 1305, 497, 537, 1311, 1165,
+             1308, 499, 888, 1166, 1306, 774, 1307, 1164, 1069, 889, 887, 885, 8214029, 884, 883, 769, 881, 886, 770, 9412443, 771, 880)  # fish orders in GBIF's backbone, which has no fish class (resolved by /species/match, exact, phylum Chordata, 2026-11-13): ray-finned orders, sharks, rays, lampreys, chimaeras
+_GBIF_NAMES, _GBIF_SETS = {}, {}
+
+
+def gbif_name(key):
+    """(scientific name, US common name or None) for a GBIF species key: the common name is ITIS's first English one (US federal list); GBIF's own
+    vernacular list mixes sources ('Baiser' for rainbow trout). Asked once per collect process per species."""
+    if key not in _GBIF_NAMES:
+        sci, com = http_json("https://api.gbif.org/v1/species/%s" % key, None, 30).get("canonicalName") or "", None
+        try:
+            hit = next((x["tsn"] for x in http_json("https://www.itis.gov/ITISWebService/jsonservice/searchByScientificName?srchKey=" + urllib.parse.quote(sci), None, 30).get("scientificNames") or [] if x and x.get("combinedName") == sci), None)
+            en = [c["commonName"] for c in http_json("https://www.itis.gov/ITISWebService/jsonservice/getCommonNamesFromTSN?tsn=" + hit, None, 30).get("commonNames") or [] if c and c.get("language") == "English"] if hit else []
+            com = ", ".join(en[:3]) or None  # ITIS lists several with no preferred flag (blueback salmon, kokanee, red salmon...): up to three, as readers search any of them
+        except Exception as e:  # ITIS down: the scientific name alone this time, never a guessed common name; not remembered, so the next page asks again
+            note("itis", "failed", e)
+            return sci, None
+        _GBIF_NAMES[key] = (sci, com)
+    return _GBIF_NAMES[key]
+
+
+def fetch_fish(lat, lon):
+    """PLAN 33a: fish species with records within 10 km since 2000 in GBIF, CC0 and CC BY records only (commercial use allowed with citation; CC BY-NC
+    left out). Species ranked by record count, the top 12 named; the three datasets with the most records are kept for the citation. 1 GBIF call
+    plus name lookups once per species per process; monthly per page."""
+    q = [("geoDistance", "%.4f,%.4f,10km" % (lat, lon)), ("year", "2000,%d" % datetime.date.today().year), ("license", "CC0_1_0"), ("license", "CC_BY_4_0"), ("occurrenceStatus", "PRESENT"),
+         ("limit", 0), ("facet", "speciesKey"), ("speciesKey.facetLimit", 200), ("facet", "datasetKey"), ("datasetKey.facetLimit", 3)] + [("taxonKey", k) for k in GBIF_FISH]
+    d = http_json("https://api.gbif.org/v1/occurrence/search?" + urllib.parse.urlencode(q), None, 60)
+    if "count" not in d:
+        raise RuntimeError("GBIF answered without a count")
+    fac = {f["field"]: f["counts"] for f in d.get("facets") or []}
+    sp = fac.get("SPECIES_KEY") or []
+    rows = [[*gbif_name(c["name"]), c["count"]] for c in sp[:12]]
+    for c in fac.get("DATASET_KEY") or []:
+        if c["name"] not in _GBIF_SETS:
+            _GBIF_SETS[c["name"]] = http_json("https://api.gbif.org/v1/dataset/%s" % c["name"], None, 30).get("title") or ""
+    return {"fetched_at": now_iso(), "km": 10, "since": 2000, "records": d["count"], "species": len(sp), "capped": len(sp) >= 200, "rows": [r for r in rows if r[0]],
+            "datasets": [[_GBIF_SETS[c["name"]], c["count"]] for c in fac.get("DATASET_KEY") or [] if _GBIF_SETS.get(c["name"])]}
+
+
 def fetch_buoy(st):
     """The newest row of the station's hand-checked buoy (NDBC realtime2 standard meteorological file): wave height, dominant period, mean wave
     direction, sea temperature, in the units the file states (m, s, degT, degC). 'MM' (missing) stays None, shown Unknown, never zero. 1 call."""
@@ -1874,6 +1914,7 @@ def fetch_extras(site, rec, h, log):
                     *((("surf", lambda: fetch_surf(lat, lon)),) if site in COASTS else ()),
                     *((("redtide", lambda: fetch_redtide(lat, lon)),) if site in RED_TIDE_COASTS else ()),
                     *((("moonphase", fetch_moonphase),) if site not in COASTS else ()),
+                    ("fish", lambda: fetch_fish(lat, lon)),
                     ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:
