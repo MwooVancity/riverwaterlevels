@@ -305,7 +305,21 @@ def multiyear(rows, span=50, back=3):
     yb = lambda d: d.replace(year=d.year - 1, day=28) if (d.month, d.day) == (2, 29) else d.replace(year=d.year - 1)
     a, b = yb(last), yb(max(last, datetime.date.today())) + datetime.timedelta(days=10)  # audit 2026-11-10 #3: last year's same date runs to today (+10 days: fetched weekly), not to this year's newest daily mean (Nehalem: Nov 4 shown, USGS had Nov 10)
     ly = {(a + datetime.timedelta(days=i)).isoformat(): val[(a + datetime.timedelta(days=i)).isoformat()] for i in range((b - a).days + 1) if (a + datetime.timedelta(days=i)).isoformat() in val}
-    return {"as_of": last.isoformat(), "span": span, "series": out, "ly": ly}
+    return {"as_of": last.isoformat(), "span": span, "series": out, "ly": ly, "next": next_days(val, datetime.date.today())}
+
+
+def next_days(val, today, before=3, n=21):
+    """Every earlier year's daily means for the 21 days from 3 days before today's calendar date (owner 2026-11-12, 'what happened next in years like this').
+    Fetched weekly, so the build can still find today and today + 7 inside the window for up to 13 days. From the stored full record: no new call."""
+    s0, out = today - datetime.timedelta(days=before), {}
+    for y in sorted({int(d[:4]) for d in val}):
+        if y >= s0.year:
+            continue  # only earlier years; the key is the year the window starts in
+        s = s0.replace(year=y, day=28) if (s0.month, s0.day) == (2, 29) else s0.replace(year=y)
+        lst = [val.get((s + datetime.timedelta(days=i)).isoformat()) for i in range(n)]
+        if sum(v is not None for v in lst) >= n // 2:
+            out[str(y)] = lst
+    return {"start": (today - datetime.timedelta(days=before)).isoformat(), "years": out}
 
 
 hav_km = km  # lib/common.km

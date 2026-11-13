@@ -97,6 +97,24 @@ def run():
     assert bl and "1001.00 ft" in bl["body"] and "cfs" not in bl["body"] + bl["source"], "edge: lake past years not shown in ft"
     assert b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "62614"}) is None, "edge: lake history in another datum than the page"
     assert last_year_flow({"rec": {"multiyear": my}, "ldate": td}) is None, "edge: a lake level read as last year's flow"
+    # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
+    from lib.charts import b_like_today
+    d = datetime.date(2026, 11, 12)
+    val = {}
+    for y in range(1990, 2026):  # 36 years; even years flow 100 then 150 a week on, odd years 400
+        for i in range(21):
+            val[(datetime.date(y, 11, 9) + datetime.timedelta(days=i)).isoformat()] = (100.0 if i <= 3 else 150.0) if y % 2 == 0 else 400.0
+    val["2026-11-10"] = 1.0  # this year never enters the past years
+    nx = collect.next_days(val, d)
+    assert nx["start"] == "2026-11-09" and "2026" not in nx["years"] and len(nx["years"]) == 36, "edge: next_days window or years wrong"
+    assert collect.next_days(val, datetime.date(2028, 3, 3))["start"] == "2028-02-29" and collect.next_days({"2027-02-28": 5.0}, datetime.date(2028, 3, 3))["years"] == {}, "edge: Feb 29 start crashed or a thin year was kept"
+    G = {"rec": {"multiyear": {"next": nx}}, "basis": 110.0, "ldate": d}
+    lt = b_like_today(G)
+    assert lt and "In 18 of 36 years" in lt["body"] and "higher in 18" in lt["body"] and "+50%" in lt["body"] and "not a forecast" in lt["body"], "edge: like-today counts wrong: %s" % (lt and lt["body"][:300])
+    assert b_like_today(dict(G, basis=250.0)) is None, "edge: no year within 25% still built a block"
+    assert b_like_today(dict(G, ldate=d + datetime.timedelta(days=14))) is None, "edge: window no longer holds today + 7, block still built"
+    assert b_like_today(dict(G, lake="00062")) is None and b_like_today(dict(G, osc=True)) is None and b_like_today(dict(G, basis=None)) is None, "edge: lake, tidal or no-flow page got a like-today block"
+    assert b_like_today({"rec": {"multiyear": {"next": {"start": "2026-11-09", "years": {k: v for k, v in list(nx["years"].items())[:8]}}}}, "basis": 110.0, "ldate": d}) is None, "edge: under 10 years of record built a block"
     ago = lambda **k: datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(**k)
     new = {"parameter_code": "00060", "time": "t1", "value": "11000", "qualifier": None}
     from lib import directory

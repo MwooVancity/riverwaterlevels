@@ -264,6 +264,34 @@ def b_multiyear(G):
                      span, md(start), md(asof)), "usgs")
 
 
+def b_like_today(G, near=0.25, ahead=7, least=5):
+    """What happened next in earlier years that were like today (owner 2026-11-12, slabcalc idea: our own calculation from the gauge's record).
+    Years whose daily mean on today's date was within 25% of today's flow; their flow 7 days later. History, never a forecast; flow only (a lake's level is not compared in %)."""
+    m = G["rec"].get("multiyear") or {}
+    nx, F = m.get("next") or {}, G.get("basis")
+    if m.get("pc", "00060") != "00060" or G.get("lake") or G.get("coast") or G.get("osc") or G.get("offline") or G.get("stage_only") or not nx.get("years") or not F or F <= 0:
+        return None
+    s0 = datetime.date.fromisoformat(nx["start"])
+    off = (G["ldate"] - s0).days
+    if not 0 <= off <= len(next(iter(nx["years"].values()))) - 1 - ahead:
+        return None  # the weekly window no longer holds today and a week on
+    have = [(y, s[off], s[off + ahead]) for y, s in nx["years"].items() if s[off] is not None and s[off + ahead] is not None]
+    like = sorted([h for h in have if abs(h[1] - F) <= near * F], reverse=True)
+    if len(like) < least or len(have) < 10:
+        return None  # too few years to say anything
+    moves = collections.Counter("about the same" if abs(b - a) < FLAT_CFS or abs(b - a) / a * 100 < FLAT_PCT else "higher" if b > a else "lower" for _, a, b in like)
+    pct = statistics.median((b - a) / a * 100 for _, a, b in like)
+    d0 = G["ldate"]
+    d7 = d0 + datetime.timedelta(days=ahead)
+    lead = ("<p><b>In %d of %d years on record, the flow on %s was within %d%% of today's %s cfs. A week later it was higher in %d, about the same in %d and lower in %d of them (median change %+.0f%%).</b> "
+            "This is what happened in those years, not a forecast: rain, snowmelt and dam releases differ every year.</p>") % (
+        len(like), len(have), md(d0), round(near * 100), fmtc(F), moves["higher"], moves["about the same"], moves["lower"], pct)
+    rows = "".join(tr([esc(y), "%s cfs" % fmtc(a), "%s cfs" % fmtc(b), "%+.0f%%" % ((b - a) / a * 100)], right=(1, 2, 3)) for y, a, b in like)
+    return block("like_today", "What happened next in years like this one", "hist", lead + table(["Year", md(d0), md(d7), "Change"], rows, right=(1, 2, 3)),
+                 "Source: USGS daily mean flows (Water Data API), %d years with both dates published. Our calculation: years whose daily mean on %s was within %d%% of today's %s, and their daily mean %d days later. "
+                 "'About the same' is a change under %d%% or under %d cfs, as on the rest of the page." % (len(have), md(d0), round(near * 100), "24 h average" if G.get("basis_mean") else "latest reading", ahead, FLAT_PCT, FLAT_CFS), "usgs")
+
+
 def b_peaks(G):
     p = G["rec"].get("peaks")
     rows = [r for r in (p or {}).get("rows", []) if r[1] is not None]
