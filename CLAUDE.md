@@ -45,7 +45,7 @@ A link exists only because a reader here would tap it next; links come from data
 - No cloaking: the Worker never reads user agent, client hints, country, IP or bot score; JS only refreshes numbers. Visitors spend no API calls: the Worker calls out only from its */3 cron; phones read `/live/<site>.json`.
 - HARD laptop (owner 2026-11-08): collect, build, screenshots and speed tests run in the cloud; Claude reads their output. Local only to debug one gauge, deleted that session; `cache/` + `dist*/` capped at 50 MB.
 - `collect.py` is the only build-side network code; `build.py` reads `cache/` only. Keys: calcscrape `.env`, GitHub secret `GSC_KEY_JSON`; never in pages, docs, commits or output.
-- Pages enter Google only via `tools/open_wave.py`.
+- Pages enter Google only via `tools/open_wave.py`. A content page (research and any new kind) also needs measured Keyword Planner demand for a seed (`data/research-keywords.csv` against `data/keyword-tiers-water.csv`) and a fresh review of its own version (`data/research-methods.json`, `data/reviewed.json`): `lib/indexing.py` (owner 2026-11-13).
 - Cloudflare free, per account (shared with asmrregistry): 5 crons (4 used), 1,000 KV writes/day, 100k requests/day, 20,000 files, 10 ms CPU.
 - Wrong or odd number on any page: `tools/source_fix.md`.
 - Google (owner 2026-11-11): `check.py` `GOOGLE` maps every Google spam policy, helpful-content question and structured-data rule to the check that enforces it, or says why none can; `google_rules` runs on every page. A new Google rule gets a row and a check the day it is read; no separate Google doc.

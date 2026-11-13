@@ -21,9 +21,22 @@ def load(root):
     except (OSError, ValueError, KeyError, TypeError):
         cfg["held"] = ()
     cfg["research_ok"] = research_reviewed(root)
+    cfg["research_demand"] = research_demand(root)
     if os.environ.get("RWL_NOINDEX"):  # preview builds (preview.yml): every page noindex
         cfg["open"] = False
     return cfg
+
+
+def research_demand(root):
+    """PLAN 24 lock 6 (systemic): research pages with at least one seed phrasing (data/research-keywords.csv) that Keyword Planner measured with searches
+    (data/keyword-tiers-water.csv, the one demand file). A seed never asked is not demand; a missing or torn file = none (fail closed)."""
+    import csv
+    norm = lambda k: " ".join(str(k or "").lower().split())
+    try:
+        kw = {norm(r["keyword"]) for r in csv.DictReader(open(os.path.join(root, "data", "keyword-tiers-water.csv"), encoding="utf-8")) if str(r.get("tier") or "0").replace(".", "", 1).isdigit() and float(r["tier"]) > 0}
+        return {r["url"] for r in csv.DictReader(open(os.path.join(root, "data", "research-keywords.csv"), encoding="utf-8")) if norm(r["seed"]) in kw}
+    except (OSError, ValueError, KeyError):
+        return set()
 
 
 def research_reviewed(root):
@@ -47,7 +60,10 @@ def indexable(url, cfg):
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
     if url.startswith("/research/"):  # PLAN 20: only when open_wave allows them; PLAN 22: and only when a fresh peer review passed this exact method version
-        return url in cfg["allow"] and url in (cfg.get("research_ok") or ())
+        dem, ok = cfg.get("research_demand") or set(), cfg.get("research_ok") or ()
+        if url == "/research/":  # the index opens when any finding below it is open
+            return url in cfg["allow"] and url in ok and any(u in cfg["allow"] and u in ok for u in dem)
+        return url in cfg["allow"] and url in ok and url in dem  # PLAN 24: no measured search demand, no Google
     return bool(cfg["site_pages"])
 
 

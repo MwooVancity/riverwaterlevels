@@ -875,7 +875,7 @@ def probe(warn, square, pages):
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
     # PLAN 20: gate gaps (research outside open_wave; new block types without a review)
     from lib import indexing as _ix, page as _pgx
-    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/", "/research/tides/"}, "pulled": set(), "held": (), "research_ok": {"/research/peak-month/"}}  # tides allowed but not reviewed at this version
+    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/", "/research/tides/"}, "pulled": set(), "held": (), "research_ok": {"/research/peak-month/"}, "research_demand": {"/research/peak-month/", "/research/tides/"}}  # tides allowed but not reviewed at this version
     assert not _ix.indexable("/research/", cfg_) and not _ix.indexable("/research/tides/", cfg_) and _ix.indexable("/research/peak-month/", cfg_) and _ix.indexable("/about/", cfg_), "20: research pages indexable without open_wave, or a site page lost"
     assert not _ix.sitemap_ok("/research/tides/", cfg_), "20: a research page not opened is in the sitemap"
     # PLAN 22 lock 1: review of the exact method version
@@ -886,6 +886,14 @@ def probe(warn, square, pages):
     assert _ix.research_reviewed(td2) == {"/research/a/"}, "22: a page reviewed at an older method version counted as reviewed"
     open(os.path.join(td2, "data", "reviewed.json"), "w").write("{torn")
     assert _ix.research_reviewed(td2) == set(), "22: a torn reviewed.json opened research pages (must fail closed)"
+    # PLAN 24 lock 6: measured search demand
+    open(os.path.join(td2, "data", "keyword-tiers-water.csv"), "w").write("keyword,tier,bid_high_cad,kind\nLake  Levels,5000,1.0,lake\nflood stage,0,0,river\n")
+    open(os.path.join(td2, "data", "research-keywords.csv"), "w").write("url,seed\n/research/a/,lake levels\n/research/b/,flood stage\n/research/c/,never asked phrase\n")
+    assert _ix.research_demand(td2) == {"/research/a/"}, "24: demand wrong (case and spaces, 0 searches, or a never-asked seed)"
+    cfg2 = dict(cfg_, allow={"/research/", "/research/peak-month/"}, research_ok={"/research/", "/research/peak-month/"}, research_demand=set())
+    assert not _ix.indexable("/research/peak-month/", cfg2) and not _ix.indexable("/research/", cfg2), "24: a research page or the index opened with no measured demand"
+    cfg2["research_demand"] = {"/research/peak-month/"}
+    assert _ix.indexable("/research/peak-month/", cfg2) and _ix.indexable("/research/", cfg2), "24: a reviewed, allowed page with measured demand stayed closed, or the index did not follow it"
     rb_, rv_ = _pgx.reviewed_blocks, os.environ.pop("RWL_REVIEW", None)
     try:
         _pgx.reviewed_blocks = lambda: frozenset({"water_speed"})
