@@ -1200,6 +1200,9 @@ if __name__ == "__main__":
     assert [r["water"] for r in mg_["rows"]] == ["B Creek", "A Creek"], "stocking merge lost a recent release or kept a 2020 one"
     assert len(collect.stock_merge(dict(nw_, source="S and T"), old_)["rows"]) == 2, "stocking merge: a border page lost its releases when a second state joined"
     assert collect.stock_merge(dict(nw_, source="T"), old_)["rows"] == nw_["rows"] and collect.stock_merge(None, old_) is old_ and collect.stock_merge(None, None) is None, "stocking merge mixed sources or lost the old record"
+    # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
+    from lib import cadence as cad_
+    assert "key not in COAST_KEYS and USGS_OUT[0]" in open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read() and not (cad_.WEEKLY & collect.COAST_KEYS) - {"floodtide"}, "a non-USGS weekly source waits on the USGS quota again, or a new place source joined WEEKLY unchecked"
     # 2026-11-13: the fish source line said 'licensed' (check.py BANNED) and the cloud refresh stopped; every new block's text now meets the banned list here first
     import check as ck_
     outs_ = [fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00")), sf_(sr_), rt_(rd_), kt_(base_), mf_(mp_), sk_(None, "Swift River")]

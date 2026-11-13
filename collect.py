@@ -2070,7 +2070,7 @@ def fetch_extras(site, rec, h, log):
         if site in NOUSGS and key not in COAST_KEYS:
             continue
         stamp = rec.setdefault("_fetched", {})
-        if key in WEEKLY and USGS_OUT[0]:
+        if key in WEEKLY and key not in COAST_KEYS and USGS_OUT[0]:  # only USGS history waits for the USGS quota; NOAA king tides (floodtide) do not (2026-11-13: every coast showed Unknown)
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
         early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))
