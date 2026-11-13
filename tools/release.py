@@ -210,6 +210,7 @@ for s_ in sorted(sites):  # practice run 2026-10-29: Arkansas at Parkdale and Sn
     try:
         c_ = json.load(open(os.path.join(ROOT, "cache", s_ + ".json"), encoding="utf-8"))
         ok_ = isinstance(c_, dict) and bool((c_.get("usgs") or {}).get("rows") if isinstance(c_.get("usgs"), dict) else c_.get("usgs"))
+        ok_ = ok_ or bool(isinstance(c_, dict) and isinstance(c_.get("coops"), dict) and c_["coops"].get("tables") and c_["coops"].get("hilo"))  # owner 11-08: a tide-table station (NOAA predictions, no live level) ships; 2026-11-13 it was sent back daily as 'no-usgs-rows' (Bandon, Cape May, Duxbury...)
     except (OSError, ValueError):
         ok_ = False
     if not ok_:
