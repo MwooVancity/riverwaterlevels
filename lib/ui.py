@@ -70,7 +70,11 @@ def rangebar(p):
 
 def tile(kind, ico, label, value_html, sub_html, cls=""):
     """One stat tile. The label and value keep the exact `<span>label</span><b>value</b>` shape that check.py and the live script read."""
+    cls = (cls + " na").strip() if value_html in NA_WORDS else cls  # a missing value reads as a gap, not as a big number (editor pass 2026-11-13)
     return '<div class="tile %s%s"><i class="ic">%s</i><span>%s</span><b>%s</b>%s</div>' % (kind, (" " + cls) if cls else "", icon(ico), label, value_html, calm(sub_html))
+
+
+NA_WORDS = {"Unknown", "Not issued", "Not published"}
 
 
 SMALL = re.compile(r"<small\b(?:(?!</small>).)*</small>", re.S)

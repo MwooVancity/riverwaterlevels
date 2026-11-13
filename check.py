@@ -1647,6 +1647,8 @@ def selftest():
     assert bk_ == "gauge 4 sessions (30 s), hub 2 sessions (5 s), home 1 sessions (5 s), other 1 sessions (0 s)", "selftest: GA4 engagement by page kind misfiles a landing page: " + bk_
     # official colours (PLAN 26): the colour class always names the same class as the word; every colour has a valid hex; unknown alerts get no guessed colour
     from lib.common import OFFICIAL, ww_cls, band_word, alert_col, official_css
+    from lib import ui as ui_
+    assert 'class="tile wtemp na"' in ui_.tile("wtemp", "thermo", "W", "Unknown", "") and " na" not in ui_.tile("flow", "flow", "F", "12", ""), "selftest: a missing tile value is drawn like a reading (or a reading drawn as missing)"
     for p_, w_ in ((None, ""), (-1, "w1"), (0, "w1"), (9.9, "w1"), (10, "w2"), (24.9, "w2"), (25, "w3"), (75, "w3"), (75.1, "w4"), (90, "w4"), (90.1, "w5"), (101, "w5")):
         assert ww_cls(p_) == w_, "selftest: percentile %s coloured %r, expected %r" % (p_, ww_cls(p_), w_)
         assert not w_ or band_word(p_).lower().startswith(OFFICIAL["ww"][w_][0].lower().split()[0]) or (w_ == "w3" and band_word(p_).startswith("Typical")), "selftest: colour and word disagree at %s" % p_

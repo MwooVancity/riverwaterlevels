@@ -303,6 +303,7 @@ def official_css():
     out = ""
     for k, (_, hx) in OFFICIAL["ww"].items():
         out += ".tile.b-%s{border-top:4px solid %s}.status.%s{border-left:6px solid %s;padding-left:10px}.dot.%s,.keyrow b.%s,.rb>.%s{background:%s}" % (k, hx, k, hx, k, k, k, hx)
+    out += ".keyrow b{box-shadow:0 0 0 1px var(--navy)}"  # same ring as the map dots; pale 'normal' swatch vanished on the light key without a ring (editor pass 2026-11-13)
     return out + ".sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1px rgba(0,0,0,.25)}"
 
 
