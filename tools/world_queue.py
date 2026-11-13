@@ -26,7 +26,9 @@ LEVEL = re.compile(r"\b(water|river|lake) levels?\b")  # PLAN 12 (keyword debate
 
 # Owner 2026-11-13 "grow 10x": the Keyword Planner run of activity phrasings (data/kwp/) ranks the queue too, but only phrasings a gauge page answers
 # with its own reading. Left out: 'forecast' ('battle creek forecast' is the town's weather), 'flooding' (news), fishing report, boat ramp, swimming.
-ASK = ("flood stage", "cfs", "gauge height", "conditions", "kayaking", "tubing", "water temperature")
+# Also left out: 'water temperature' (many gauges have no sensor, the page would answer 'Unknown').
+ASK = ("flood stage", "cfs", "gauge height", "conditions", "kayaking", "tubing")
+assert not {"forecast", "flooding", "water temperature"} & set(ASK), "world_queue: a phrasing our page does not answer ranks the queue"
 
 
 def tiers():
@@ -34,14 +36,17 @@ def tiers():
     kd = os.path.join(ROOT, "data", "kwp")
     for f in sorted(os.listdir(kd)) if os.path.isdir(kd) else []:
         if f.startswith("results-") and f.endswith(".csv"):
-            t.update((norm(r["keyword"]), int(r["tier"])) for r in csv.DictReader(open(os.path.join(kd, f), encoding="utf-8")) if r["phrasing"] in ASK and int(r["tier"]) >= 50)
+            for r in csv.DictReader(open(os.path.join(kd, f), encoding="utf-8")):
+                if r["phrasing"] in ASK and int(r["tier"]) >= 50:
+                    k = norm(r["keyword"])
+                    t[k] = max(t.get(k, 0), int(r["tier"]))  # two measurements of one keyword: the larger, never load order
     return {k: (v if LEVEL.search(k) else min(v, CAP)) for k, v in t.items()}
 
 
 def best(tier, keywords):
     k = max(keywords, key=lambda x: tier.get(norm(x), 0))
     t = tier.get(norm(k), 0)
-    if k.endswith(" flow") and not any(tier.get(norm(x)) for x in keywords if not x.endswith(" flow")):
+    if k.endswith(" flow") and not any(tier.get(norm(x)) for x in keywords if not x.endswith((" flow",) + tuple(" " + a for a in ASK))):  # an activity search never lifts flow trivia
         t = min(t, 500)  # flow alone is often trivia (Jordan River, Holy Land), never the top tier
     return t, k
 
@@ -228,6 +233,7 @@ def main():
     assert len(rows) == TOTAL, len(rows)
     assert all(r["tier"] <= CAP or LEVEL.search(norm(r.get("keyword") or "")) for r in rows if r["category"] not in ("lake", "ocean", "hub"))
     assert LEVEL.search("danube water levels") and not LEVEL.search("yellow river flow"), "world_queue: the level-phrase exception matches the wrong words"
+    assert best({"yellow river flow": 5000, "yellow river kayaking": 50}, ["yellow river water level", "yellow river flow", "yellow river kayaking"]) == (500, "yellow river flow"), "world_queue: an activity search lifted flow trivia past 500"
     built = {x["site"] for x in load("waves.csv") if x["status"] in ("live", "queue")} & {r["site"] for f in ("lakes.csv", "coasts.csv") for r in load(f)}
     assert built <= {r["gauge"] for r in rows if r["ready"] == "yes"}, "a built lake or coast fell out of the queue: %s" % sorted(built - {r["gauge"] for r in rows})
     assert all(r["group"] == 8 or r["ready"] == "yes" or r["tier"] for r in rows)

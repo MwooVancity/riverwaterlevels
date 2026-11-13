@@ -205,12 +205,22 @@ rc = subprocess.call(PY + [os.path.join(ROOT, "collect.py")] + sorted(sites), cw
 if rc:
     sys.exit("collect failed (%d); nothing built" % rc)
 import json
+
+
+def has_data(c_):
+    """A new gauge's cache holds readings, or (owner 11-08) a tide-table station's NOAA predictions: 2026-11-13 every tide-table coast was sent back daily as 'no-usgs-rows'."""
+    if not isinstance(c_, dict):
+        return False
+    u_ = c_.get("usgs")
+    return bool(u_.get("rows") if isinstance(u_, dict) else u_) or bool(isinstance(c_.get("coops"), dict) and c_["coops"].get("tables") and c_["coops"].get("hilo"))
+
+
+assert has_data({"usgs": {"rows": [1]}}) and has_data({"usgs": {"rows": []}, "coops": {"tables": True, "hilo": [1]}}) and not has_data({"usgs": {"rows": []}, "coops": {"hilo": [1]}}) and not has_data({"usgs": {"rows": []}, "coops": {"tables": True, "hilo": []}}) and not has_data(None), "release: has_data (readings, or a tide table with tides)"
 dead = set()
 for s_ in sorted(sites):  # practice run 2026-10-29: Arkansas at Parkdale and Snake at Hells Canyon returned no USGS rows; they go back to the queue with a gate so tomorrow picks others
     try:
         c_ = json.load(open(os.path.join(ROOT, "cache", s_ + ".json"), encoding="utf-8"))
-        ok_ = isinstance(c_, dict) and bool((c_.get("usgs") or {}).get("rows") if isinstance(c_.get("usgs"), dict) else c_.get("usgs"))
-        ok_ = ok_ or bool(isinstance(c_, dict) and isinstance(c_.get("coops"), dict) and c_["coops"].get("tables") and c_["coops"].get("hilo"))  # owner 11-08: a tide-table station (NOAA predictions, no live level) ships; 2026-11-13 it was sent back daily as 'no-usgs-rows' (Bandon, Cape May, Duxbury...)
+        ok_ = has_data(c_)
     except (OSError, ValueError):
         ok_ = False
     if not ok_:

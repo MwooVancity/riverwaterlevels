@@ -1166,7 +1166,7 @@ def selftest():
         assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
         assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
         _sm = os.path.join(_sd, "sitemap-1.xml")
-        open(_sm, "w", encoding="utf-8").write("<urlset><url><loc>https://riverwaterlevels.com/research/world-rivers/</loc><lastmod>x</lastmod></url><url><loc>https://riverwaterlevels.com/research/tides/</loc></url></urlset>")
+        open(_sm, "w", encoding="utf-8").write("<urlset><url>\n  <loc>https://riverwaterlevels.com/research/world-rivers/</loc><lastmod>x</lastmod></url><url><loc>https://riverwaterlevels.com/research/tides/</loc></url></urlset>")
         unlist(_sd, "research\\world-rivers\\index.html")
         assert "world-rivers" not in open(_sm, encoding="utf-8").read() and "research/tides/" in open(_sm, encoding="utf-8").read(), "selftest: a withdrawn page stayed in the sitemap, or a neighbour was dropped"
         _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
@@ -1733,14 +1733,15 @@ def stale_research(rel, dst):
 
 def unlist(d, rel):
     """A withdrawn (noindexed) page leaves every sitemap file of build d: a sitemap never names a noindex page (2026-11-13: /research/world-rivers/ was both)."""
-    loc = "<url><loc>https://riverwaterlevels.com/%s</loc>" % rel.replace("\\", "/").rsplit("index.html", 1)[0]
+    path = rel.replace("\\", "/").rsplit("index.html", 1)[0]
+    rx = re.compile(r"<url>\s*<loc>\s*https?://(?:www\.)?riverwaterlevels\.com/" + re.escape(path) + r"\s*</loc>.*?</url>\s*", re.S)  # any spacing the sitemap writer uses
     for f in os.listdir(d):
         if f.startswith("sitemap") and f.endswith(".xml"):
             p = os.path.join(d, f)
             s = open(p, encoding="utf-8").read()
-            i = s.find(loc)
-            if i >= 0:
-                open(p, "w", encoding="utf-8").write(s[:i] + s[s.index("</url>", i) + 6:])
+            s2 = rx.sub("", s)
+            if s2 != s:
+                open(p, "w", encoding="utf-8").write(s2)
 
 
 def carry(d, fails, got=None, new=None):
