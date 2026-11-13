@@ -340,6 +340,7 @@ TODO = {HYDAT: "flow statistics (Water Survey of Canada archive)", ENGLAND["b_li
 TODO.update(TODO_IE)
 
 
+FC_NONE = re.compile(r'<div class="tile fcst none[^"]*">.*?</small></div>', re.S)  # the 'Not issued' tile a world forecast replaces; ui.tile may add classes (na)
 SHOWN_AS = {"b_acis": "climate_normals", "b_multiyear": "world_history", "b_stage_years": "world_history", "b_quality": "also_measured", "b_wtemp": "water_temp_recent", "b_related": "along_river", "b_record": "official_marks", "b_rain": 'class="tile rain', "b_tides": 'class="tile fcst"'}  # the world block that answers the US block's question, reviewed once 2026-11-04
 ONLY_WHEN = {"b_offline": "shows only while the gauge is not reporting"}  # a have that is a state, not a block a page always owes
 
@@ -711,7 +712,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     html, meta = render.build_tab("dashboard", G, {row["site"]: row})
     top = fc_top(rec["feed"], now)
     if top:
-        html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast%s, %s. Federal Institute of Hydrology</small>" % (" (an estimate)" if top[2] else "", esc(top[0]))), html, count=1, flags=re.S)
+        html = FC_NONE.sub(ui.tile("fcst", "crest", "River forecast", fmt_level(top[1], rec["feed"]["unit"]), "<small>Highest in the forecast%s, %s. Federal Institute of Hydrology</small>" % (" (an estimate)" if top[2] else "", esc(top[0]))), html, count=1)
     if p.get("feed") == "ea":  # the weather is the Met Office's, never the Environment Agency's (localize names feed["wx"] for every NWS word)
         html = html.replace("Source: National Weather Service hourly point forecast", "Source: Met Office Global Spot hourly forecast for the gauge location, Powered by Met Office data").replace("Source: National Weather Service point forecast", "Source: Met Office Global Spot daily forecast for the gauge location, Powered by Met Office data")
         html = html.replace('<div class="tile sun', ea_rain_tile((r.get("wx") or {}).get("ea_rain"), now, rec["feed"]["zone"]) + '<div class="tile sun', 1)
@@ -723,7 +724,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
         if nxt_:  # Marine Institute predictions, labelled as predictions, times in Irish time
             z_ = zoneinfo.ZoneInfo("Europe/Dublin")
             w_ = lambda x: "%s %.2f m (%.1f ft) at %s" % ("High" if x[2] == "H" else "Low", x[1], x[1] * 3.28084, render.tzl(datetime.datetime.fromisoformat(x[0]), z_, date=False))
-            html = re.sub(r'<div class="tile fcst none">.*?</small></div>', ui.tile("fcst", "crest", "Next tide (prediction)", "%s %.2f <small>m</small>" % ("High" if nxt_[0][2] == "H" else "Low", nxt_[0][1]),
-                          "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1, flags=re.S)
+            html = FC_NONE.sub(ui.tile("fcst", "crest", "Next tide (prediction)", "%s %.2f <small>m</small>" % ("High" if nxt_[0][2] == "H" else "Low", nxt_[0][1]),
+                          "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1)
     html = localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
     return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)

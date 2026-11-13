@@ -1648,6 +1648,8 @@ def selftest():
     # official colours (PLAN 26): the colour class always names the same class as the word; every colour has a valid hex; unknown alerts get no guessed colour
     from lib.common import OFFICIAL, ww_cls, band_word, alert_col, official_css
     from lib import ui as ui_
+    from lib.world import FC_NONE
+    assert FC_NONE.search(ui_.tile("fcst none", "crest", "River forecast", "Not issued", "<small>x</small>")), "selftest: a world forecast can no longer find the 'Not issued' tile it replaces"
     assert 'class="tile wtemp na"' in ui_.tile("wtemp", "thermo", "W", "Unknown", "") and " na" not in ui_.tile("flow", "flow", "F", "12", ""), "selftest: a missing tile value is drawn like a reading (or a reading drawn as missing)"
     for p_, w_ in ((None, ""), (-1, "w1"), (0, "w1"), (9.9, "w1"), (10, "w2"), (24.9, "w2"), (25, "w3"), (75, "w3"), (75.1, "w4"), (90, "w4"), (90.1, "w5"), (101, "w5")):
         assert ww_cls(p_) == w_, "selftest: percentile %s coloured %r, expected %r" % (p_, ww_cls(p_), w_)
