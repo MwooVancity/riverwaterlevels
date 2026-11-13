@@ -1406,7 +1406,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide", "surf"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 COAST_TABLES = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("tables") and re.fullmatch(r"\d+(\.\d+)?", r.get("level_km") or "")}  # tide tables (owner decision 3, 2026-11-08): no live level within 25 km, so the page has predictions only; level_* names the nearest live station, never read
@@ -1735,6 +1735,22 @@ def fetch_floodtide(st):
     return out
 
 
+SURF = "https://mapservices.weather.noaa.gov/vector/rest/services/outlooks/marine_beachforecast_summary/MapServer/%d/query?geometry=%.4f,%.4f&geometryType=esriGeometryPoint&inSR=4326&distance=15&units=esriSRUnit_Kilometer&spatialRel=esriSpatialRelIntersects&outFields=beachname,sitename,productdat,producttim,period,rip,surf,srfprod&returnGeometry=false&f=json"
+
+
+def fetch_surf(lat, lon):
+    """PLAN 31: the NWS Surf Zone Forecast for beach zones within 15 km (rip current risk and surf height, NWS's own words), day 1 and day 2 layers.
+    NWS answers a place with no forecast (an office that issues none, or out of season) with a placeholder row named 'N/A': kept as an empty list,
+    which the page states as 'NWS issues no surf zone forecast here now', never as a low risk. A reply with an error raises (cache kept). 2 calls."""
+    rows = []
+    for layer in (0, 1):
+        j = http_json(SURF % (layer, lon, lat), NWS_H, 60)
+        if "features" not in j:
+            raise RuntimeError("NWS beach forecast query failed: %s" % str(j)[:80])
+        rows += [f["attributes"] for f in j["features"] if (f["attributes"].get("beachname") or "N/A") != "N/A" and f["attributes"].get("rip")]
+    return {"fetched_at": now_iso(), "rows": rows}
+
+
 def fetch_buoy(st):
     """The newest row of the station's hand-checked buoy (NDBC realtime2 standard meteorological file): wave height, dominant period, mean wave
     direction, sea temperature, in the units the file states (m, s, degT, degC). 'MM' (missing) stays None, shown Unknown, never zero. 1 call."""
@@ -1812,6 +1828,7 @@ def fetch_extras(site, rec, h, log):
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     *((("floodtide", lambda: fetch_floodtide(site)),) if site in COASTS else ()),
+                    *((("surf", lambda: fetch_surf(lat, lon)),) if site in COASTS else ()),
                     ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:

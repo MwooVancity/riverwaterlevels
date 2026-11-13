@@ -1038,4 +1038,26 @@ if __name__ == "__main__":
     assert "Unknown" in kt_({})["body"] and "Unknown" in kt_(dict(base_, top=[["2026-11-01T15:00:00+00:00", 9.0]]))["body"], "king tide: missing or all-past data shown as a coming tide"
     assert kt_(base_, coast=False) is None, "king tide block on a river page"
     assert not re.search(r"\bwill flood\b|\bsafe\b", b_), "king tide: a verdict in the text"
+    # PLAN 31 surf zone forecast: NWS's words attributed; none issued is said (never 'Low'); old is amber, older is Unknown; NWS times parsed
+    assert blocks3.nws_issued("11/13/2026", "500 PM EST") == datetime.datetime(2026, 11, 13, 22, tzinfo=datetime.timezone.utc) and blocks3.nws_issued("11/13/2026", "1205 AM PDT").hour == 0 and blocks3.nws_issued("N/A", "N/A") is None and blocks3.nws_issued("11/13/2026", "500 PM XYZ") is None, "surf: NWS issue time misread"
+    hj_ = collect.http_json
+    try:
+        collect.http_json = lambda u, *a, **k: {"features": [{"attributes": {"beachname": "N/A", "rip": None}}]}
+        assert collect.fetch_surf(37.8, -122.4)["rows"] == [], "surf: NWS's N/A placeholder kept as a forecast"
+        collect.http_json = lambda u, *a, **k: {"error": {"code": 500}}
+        try:
+            collect.fetch_surf(37.8, -122.4)
+            raise AssertionError("surf: an NWS error reply was stored as 'no forecast issued'")
+        except RuntimeError:
+            pass
+    finally:
+        collect.http_json = hj_
+    sr_ = {"fetched_at": "2026-11-13T23:00:00+00:00", "rows": [{"beachname": "Duval Beaches", "sitename": "WFO Jacksonville", "productdat": "11/13/2026", "producttim": "500 PM EST", "period": "Saturday", "rip": "High", "surf": "3 to 4 feet.", "srfprod": "https://forecast.weather.gov/product.php?site=jax&product=srf&issuedby=jax"}]}
+    sf_ = lambda s, h=2, **k: blocks3.b_surf(dict({"coast": True, "zone": zoneinfo.ZoneInfo("America/New_York"), "now": datetime.datetime(2026, 11, 13, 22, tzinfo=datetime.timezone.utc) + datetime.timedelta(hours=h), "rec": {"surf": s}}, **k))
+    b_ = sf_(sr_)
+    assert "High" in b_["body"] and "3 to 4 feet" in b_["body"] and "Duval Beaches" in b_["body"] and "National Weather Service" in b_["source"] and not b_["amber"], "surf: NWS risk, surf or attribution missing"
+    assert sf_(sr_, 40)["amber"] and "Unknown" in sf_(sr_, 80)["body"] and "Unknown" in sf_(None)["body"], "surf: an old forecast shown as current"
+    em_ = sf_(dict(sr_, rows=[]))
+    assert em_["empty"] and "issues no surf zone forecast" in em_["body"] and "Low" not in em_["body"], "surf: no forecast read as a low risk"
+    assert sf_(sr_, coast=False) is None, "surf block on a river page"
     print("selftest OK")

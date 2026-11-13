@@ -31,6 +31,7 @@
 "snotel": "iso",
 "stocking": "iso",
 "streamcat": "iso",
+"surf": "iso",
 "tides": "iso",
 "twdb": "iso",
 "usbr_lc": "iso",
@@ -799,6 +800,10 @@
 "comid": "num",
 "fetched_at": "iso",
 "vals": "dict"
+},
+"surf": {
+"fetched_at": "iso",
+"rows": "list"
 },
 "tides": {
 "fetched_at": "iso",

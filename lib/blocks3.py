@@ -758,6 +758,44 @@ def b_tides(G):
                  "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %sfetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), ("%.0f mi from the gauge, " % t["mi"]) if t["mi"] >= 0.5 else "", esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
 
 
+NWS_TZ = {"EST": -5, "EDT": -4, "CST": -6, "CDT": -5, "MST": -7, "MDT": -6, "PST": -8, "PDT": -7, "AKST": -9, "AKDT": -8, "HST": -10, "AST": -4, "SST": -11, "CHST": 10}
+
+
+def nws_issued(d, t):
+    """'11/13/2026' + '500 PM EST' -> aware datetime; None when NWS writes anything else (shown as NWS wrote it, with no age)."""
+    m = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{4})", (d or "").strip()), re.fullmatch(r"(\d{1,2})(\d\d) ([AP]M) ([A-Za-z]+)", (t or "").strip())
+    if not all(m) or m[1].group(4).upper() not in NWS_TZ:
+        return None
+    hh = int(m[1].group(1)) % 12 + (12 if m[1].group(3) == "PM" else 0)
+    return datetime.datetime(int(m[0].group(3)), int(m[0].group(1)), int(m[0].group(2)), hh, int(m[1].group(2)), tzinfo=datetime.timezone(datetime.timedelta(hours=NWS_TZ[m[1].group(4).upper()])))
+
+
+def b_surf(G):
+    """PLAN 31, coast pages: the NWS Surf Zone Forecast for the beach zones within 15 km: rip current risk and surf height in NWS's own words, attributed.
+    States: valid; valid-empty (NWS issues none here now: said, never a low risk); stale (issued over 36 h ago: age shown, amber); hidden past 72 h
+    and unavailable (not read) = Unknown."""
+    if not G.get("coast") or not cleared("nws"):
+        return None
+    s = G["rec"].get("surf")
+    head = "Surf zone forecast"
+    if not s:
+        return block("surf", head, "nws", "<p>Unknown: the National Weather Service surf zone forecast was not read in this build.</p>", "Source: National Weather Service Surf Zone Forecast.", "nws")
+    src = "Source: National Weather Service Surf Zone Forecast, beach zones within 15 km of the station, read %s" % esc(tzl(parse_t(s["fetched_at"]), G["zone"]))
+    rows = s.get("rows") or []
+    if not rows:
+        return block("surf", head, "nws", "<p><b>The National Weather Service issues no surf zone forecast for this stretch of coast now.</b> Many offices issue one only in the beach season.</p>", src + ".", "nws", empty=True)
+    at = nws_issued(rows[0].get("productdat"), rows[0].get("producttim"))
+    age = (G["now"] - at).total_seconds() / 3600 if at else None
+    if age is not None and age > 72:
+        return block("surf", head, "nws", "<p>Unknown: the newest National Weather Service surf zone forecast read here was issued %d days ago.</p>" % round(age / 24), src + ".", "nws")
+    issued = esc(tzl(at, G["zone"])) if at else esc("%s %s" % (rows[0].get("productdat"), rows[0].get("producttim")))
+    first = rows[0]
+    lead = "NWS rip current risk at %s, %s: %s. Surf: %s" % (esc(first["beachname"]), esc(first["period"].lower() if first["period"] in ("Today", "Tonight", "Rest of today") else first["period"]), esc(first["rip"]), esc((first.get("surf") or "Unknown").rstrip(".") + "."))
+    body = "<p><b>%s</b></p>" % lead + table(["Beach zone", "Period", "Rip current risk (NWS)", "Surf (NWS)"], "".join(tr([esc(r["beachname"]), esc(r["period"]), esc(r["rip"]), esc(r.get("surf") or "Unknown")]) for r in rows[:6]))
+    return block("surf", head, "nws", body, src + ", issued %s by NWS %s. Rip current risk and surf height are the National Weather Service's words. <a href=\"%s\" rel=\"noopener\">Full NWS product</a>." % (
+        issued, esc((first.get("sitename") or "").replace("WFO ", "")), esc(first.get("srfprod") or "https://www.weather.gov/beach/")), "nws", amber=age)
+
+
 def b_kingtide(G):
     """PLAN 29, coast pages: the highest predicted tides of the next 12 months (king tides) against NOAA's minor flood level at this station.
     States: valid (highest tides, and the ones at or above the level); valid-empty (none reach it: the gap is said); no level published (said, never
