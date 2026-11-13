@@ -126,7 +126,7 @@ def run():
     assert "NEWCODE (12 peaks)" in pm, "edge: an unknown USGS code was not named on the page"
     assert "1 gauge split evenly between two or more months and is not counted" in pm and "March and April (20 of 40 years, 50% each)" in pm, "edge: tie not named"
     assert research._wy(2020, 10) == 2021 and research._wy(2020, 9) == 2020, "edge: water-year boundary"
-    assert "ran higher than in 1987 to 2006 at 6 of 12 gauges and lower at 0" in pc_ and "about 0.3 in each direction" in pc_ and "6 of the differences remain" in pc_ and "water years 2007 to 2026" in pc_ and "Hodges-Lehmann" in pc_, "edge: peak change test counts or windows wrong: %s" % pc_[pc_.find("<b>"):pc_.find("<b>") + 400]
+    assert "At 6 of 12 gauges, yearly peaks in water years 2007 to 2026 differ from 1987 to 2006 by more than chance alone explains: 6 higher, 0 lower." in pc_ and "about 0.3 each way by chance" in pc_ and "Hodges-Lehmann" in pc_, "edge: peak change test counts or windows wrong: %s" % pc_[pc_.find("<b>"):pc_.find("<b>") + 400]
     assert "not a trend analysis" in pc_ and "does not say why" in pc_ and "Mann-Whitney" in pc_ and "not a random or representative sample" in pc_, "edge: peak change lost its limits, its test or its sample statement"
     assert research.mwu_p([5.0] * 20, [5.0] * 20) == 1.0 and research.mwu_p(list(range(20)), list(range(100, 120))) < 0.001 and 0.1 < research.mwu_p([1.0, 3.0, 5.0, 7.0] * 5, [2.0, 4.0, 6.0, 8.0] * 5) <= 1.0 and abs(research.mwu_p([1, 2, 3, 4, 5], [6, 7, 8, 9, 10]) - 0.0122) < 0.0005, "edge: Mann-Whitney wrong on ties, separation or overlap"
     assert abs(research.poisson_tail(3, 1.0) - 0.0803) < 0.001 and abs(research.poisson_tail(0, 2.0) - 0.1353) < 0.001 and 0 <= research.poisson_tail(400, 300.0) < 0.001, "edge: Poisson tail wrong or underflows at 300"
@@ -259,6 +259,17 @@ def run():
     assert not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", wr[1]), "PLAN 18c: a raw machine timestamp on the world page (check.py BANNED held it, run 43357129006)"
     assert research.world_rivers(wp_[:1], {"rhine": {"A0", "A1"}}, nw_) is None, "PLAN 18c: a world page built from 2 labelled gauges"
     assert 'href="/research/world-rivers/"' not in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/"] and 'href="/research/world-rivers/"' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=True)[0]["/research/"], "the research index links a world page that was not built"
+    # PLAN 21 harm audit: chance-level counts never called more than chance; licence credit in every CSV; cite-with-date line on snapshot pages; CSVs noindex
+    nul = [({"site": "n%d" % i, "state": "GA", "river": "N%d" % i, "place": "T", "dashboard_url": "/river/n%d/t/" % i, "_built": True}) for i in range(40)]
+    import random as _rnd
+    _r = _rnd.Random(7)
+    nG = {"n%d" % i: {"rec": {"peaks": {"rows": [["%d-03-15" % y, 100.0 + _r.random() * 50, None, None, ""] for y in range(1960, 2026)]}}} for i in range(40)}
+    np_ = research.pages(nul, nG, datetime.date(2026, 11, 12))[0]["/research/peak-change/"]
+    assert "show no more change from 1987 to 2006 than chance alone would give" in np_ and "more than chance alone explains" not in np_, "21: noise across 40 gauges was called more than chance"
+    assert rc["/research/peak-change/"].splitlines()[0].endswith(",credit") and "Data: U.S. Geological Survey" in rc["/research/peak-change/"], "21: a research CSV lacks the source credit"
+    assert "PEGELONLINE" in wr[2] and "CC BY 4.0" in wr[2] and wr[2].splitlines()[0].endswith(",credit"), "21: the world CSV lacks the OGL or CC BY credit its terms require"
+    assert "cite them with that date and time" in wr[1] and "cite them with that date and time" in tp_[1], "21: a snapshot page lacks its cite-with-date line"
+    assert "/*.csv\n  X-Robots-Tag: noindex" in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "_headers"), encoding="utf-8").read(), "21: research CSVs can be indexed as bare files"
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
     from lib.charts import b_like_today
     d = datetime.date(2026, 11, 12)

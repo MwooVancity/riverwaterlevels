@@ -274,6 +274,8 @@ def check_html(h, rel):
         except ValueError:
             bad.append("structured data is not valid JSON")
     bad += google_rules(h, body)
+    if "/research/" in rel.replace("\\", "/") or 'data-method="' in body:
+        bad += research_sanity(body)
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
     if not md or not (40 <= len(md.group(1)) <= 200):
         bad.append("meta description missing or outside 40-200 characters: %r" % (md.group(1)[:40] if md else None))
@@ -420,6 +422,14 @@ GOOGLE = {
     "factual errors": "truth_tests, truth_live, truth_world",
     "spelling and sloppiness": "doubled word, BANNED, ui_checks",
 }
+
+
+def research_sanity(body):
+    """Harm audit 2026-11-12 #5: one data bug must not become a quoted headline. A research page fails when its text says 'X of Y' with X over Y, or shows a negative count of gauges, years or lakes."""
+    t = re.sub(r"<[^>]+>", " ", body)
+    bad = ["research: '%s of %s' says more than the whole" % (a, b) for a, b in re.findall(r"\b(\d[\d,]*) of (\d[\d,]*)\b", t) if int(a.replace(",", "")) > int(b.replace(",", ""))]
+    bad += ["research: negative count '%s'" % m for m in re.findall(r"-\d+ (?:gauges?|years?|lakes?|stations?|gauge-years)\b", t)]
+    return bad[:3]
 
 
 def google_rules(h, body):
@@ -1077,6 +1087,7 @@ def selftest():
         assert all("run by Pat" in tp_[u_] for u_ in ("/contact/", "/about/", "/terms/")), "selftest: the named person is missing from contact, about or terms"
         dr_.publisher = lambda: {}
         assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
+        assert research_sanity("<p>At <b>90 of 87</b> gauges</p>") and research_sanity("<p>-3 gauges</p>") and not research_sanity("<p>at 33 of 105 gauges, 5 of 720 gauge-years, a -0.5 ft gap</p>"), "selftest: research sanity missed 'X of Y' over the whole or a negative count, or fired on good text"
     finally:
         dr_.publisher = pub_
     from lib import pages as pg_

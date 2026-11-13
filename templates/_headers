@@ -8,6 +8,9 @@ https://www.riverwaterlevels.com/*
 # Data files (data.json, status.json, gauges.json, live/*.json) are for scripts, never search results: Search Console 2026-11-11 listed 106 of them under "Crawled - currently not indexed"
 /*.json
   X-Robots-Tag: noindex
+# Research data files (harm audit 2026-11-12 #3): the page is the result, the CSV is for checking; never a bare file in search
+/*.csv
+  X-Robots-Tag: noindex
 /site.*.css
   Cache-Control: public, max-age=31536000, immutable
 /dir.*.css

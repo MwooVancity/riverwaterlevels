@@ -21,13 +21,13 @@ URLS = ("/research/", "/research/peak-month/", "/research/peak-change/", "/resea
 WORLD_URL = "/research/world-rivers/"
 MN = calendar.month_name
 SAMPLE = ("<p class=\"src\"><b>Sample:</b> the US river gauges that have a page on this site, chosen by what people search for. They are not a random or representative sample of US rivers: "
-          "searches rise after floods, so rivers that flooded recently may be over-represented. The results describe these gauges, not the country.</p>")
+          "searches rise after floods, so rivers that flooded recently may be over-represented. The results describe these gauges, not the country, and they change as gauges are added.</p>")
 SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on this site and an agency figure for how full they are. They are not every US reservoir, "
                "so the results describe these lakes only.</p>")
 SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have their own reading and a page on this site. They are not every US station, "
                "so the results describe these stations only.</p>")
 CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
-METHOD = "2026-11-12b"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
+METHOD = "2026-11-12c"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
 
 
 def _wy(y, m):
@@ -184,12 +184,20 @@ def _cap(n, what="annual peaks"):
     return "<p>%d more gauges are not listed here; each gauge page has its own %s, and the CSV lists them all.</p>" % (n - ROW_CAP, what) if n > ROW_CAP else ""
 
 
-def _csv(head, rows):
-    """CSV text; a text cell starting with = + - @ gets an apostrophe so a spreadsheet never runs it as a formula (numbers are written as numbers)."""
+def _cred(*ids):
+    """The credit each source's terms ask for, verbatim from data/sources.json (harm audit #2: OGL and CC BY require attribution wherever the data goes)."""
+    from lib.render import SOURCES
+    return "; ".join((SOURCES.get(i) or {}).get("credit") or {"usace_cwms": "Data: U.S. Army Corps of Engineers, Corps Water Management System"}.get(i, i) for i in ids)
+
+
+def _csv(head, rows, credit=None):
+    """CSV text; a text cell starting with = + - @ gets an apostrophe so a spreadsheet never runs it as a formula (numbers are written as numbers).
+    credit: a string, or a function of the row, written as the last column of every row."""
     b = io.StringIO()
     w = csv.writer(b, lineterminator="\n")
-    w.writerow(head)
+    w.writerow(list(head) + (["credit"] if credit else []))
     for r in rows:
+        r = list(r) + ([credit(r) if callable(credit) else credit] if credit else [])
         w.writerow([("'" + c) if isinstance(c, str) and c and c[0] in "=+-@" else c for c in r])  # an empty cell stays empty
     return b.getvalue()
 
@@ -266,7 +274,7 @@ def peak_month(gl, sub, unk):
         tr([_name(r) + (" (regulated)" if rg else ""), "%s (%d of %d years, %d%%%s)" % (_months(ms), n, k, round(100 * n / k), " each" if len(ms) > 1 else ""), _doy_name(md_), "%.2f" % rr, "%d (%d to %d)" % (k, y0, y1)], right=(3, 4))
         for r, ms, n, k, y0, y1, rg, md_, rr, G in rows[:ROW_CAP]), right=(3, 4))
     data = _csv(G_HEAD + ["peak_month_most_often", "years_in_that_month", "water_years_used", "first_water_year", "last_water_year", "mean_peak_day_of_year", "concentration_r", "regulated", "source", "peaks_fetched_at"],
-                [_g(r) + [" and ".join(MN[m] for m in ms), n, k, y0, y1, round(md_, 1), round(rr, 3), rg, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, ms, n, k, y0, y1, rg, md_, rr, G in rows])
+                [_g(r) + [" and ".join(MN[m] for m in ms), n, k, y0, y1, round(md_, 1), round(rr, 3), rg, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, ms, n, k, y0, y1, rg, md_, rr, G in rows], _cred("usgs"))
     body = (lead + "<h2>By month</h2>" + months + "<h2>By state</h2>" + table(["State", "Gauges", "Most common peak month"], st, right=(1,)) +
             "<h2>Every gauge</h2><p>Find your river: the month its yearly high has come most often, the average date, and how tightly the peaks cluster around it.</p>" + gt + _cap(len(rows)) +
             "<h2>How this was worked out</h2><p>Source: USGS annual peak streamflow (Water Data API), as each gauge page's Largest annual peaks block shows it, with USGS's qualifier codes. An annual peak is the highest instantaneous flow in a water year (October to September); where USGS lists more than one peak in a water year, the highest is used. "
@@ -294,10 +302,20 @@ def peak_change(gl, today, sub, unk):
     P1, P2 = span(end - 2 * WIN + 1, end - WIN), span(end - WIN + 1, end)
     sig_up = [x for x in nat if x[4] < ALPHA and x[8] > 0]
     sig_dn = [x for x in nat if x[4] < ALPHA and x[8] < 0]
-    lead = ("<p><b>Yearly peaks in water years %s ran higher than in %s at %d of %d gauges and lower at %d, by more than chance usually gives.</b> "
-            "With this many gauges, chance alone would give about %.1f in each direction; after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%), %d of the differences remain. "
-            "This compares the typical yearly peak in two periods; it does not say why they changed.%s</p>") % (
-        P2, P1, len(sig_up), len(nat), len(sig_dn), ALPHA / 2 * len(nat), round(FDR * 100), bh_count([x[4] for x in nat]),
+    ps = [x[4] for x in nat]
+    k = bh_count(ps)
+    thr = sorted(ps)[k - 1] if k else -1
+    bh_up, bh_dn = sum(1 for x in nat if x[4] <= thr and x[8] > 0), sum(1 for x in nat if x[4] <= thr and x[8] < 0)
+    exp = ALPHA / 2 * len(nat)
+    if not k:  # harm audit 2026-11-12 #1: 3 up and 1 down of 87 was called 'more than chance' while chance gives about 2.2 each way
+        head = ("<b>Across %d gauges, yearly peaks in water years %s show no more change from %s than chance alone would give.</b> "
+                "%d tested higher and %d lower at p &lt; %.2f, about what chance gives (about %.1f each way), and none stands out after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%). "
+                ) % (len(nat), P2, P1, len(sig_up), len(sig_dn), ALPHA, exp, round(FDR * 100))
+    else:
+        head = ("<b>At %d of %d gauges, yearly peaks in water years %s differ from %s by more than chance alone explains: %d higher, %d lower.</b> "
+                "That is after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%); before it, %d tested higher and %d lower at p &lt; %.2f, against about %.1f each way by chance. "
+                ) % (k, len(nat), P2, P1, bh_up, bh_dn, round(FDR * 100), len(sig_up), len(sig_dn), ALPHA, exp)
+    lead = "<p>" + head + "This compares the typical yearly peak in two periods; it does not say why they changed.%s</p>" % (
         (" %d regulated gauges are listed apart, not counted." % (len(rows) - len(nat))) if len(rows) > len(nat) else "")
     hd = ["Gauge", "Median peak %s" % P1, "Median peak %s" % P2, "Shift (Hodges-Lehmann)", "p"]
     rw = lambda xs, f=_link: "".join(tr([f(r) + (" (regulated)" if rg else ""), "%s cfs" % fmtc(a), "%s cfs" % fmtc(b), "%s%s cfs" % ("+" if hl_ > 0 else "", fmtc(hl_)), _pv(pv)], right=(1, 2, 3, 4)) for r, a, b, c, pv, rg, _, _, hl_, G in xs)
@@ -308,9 +326,9 @@ def peak_change(gl, today, sub, unk):
             "Testing many gauges at once lets some differences appear by chance, so the expected chance count and the Benjamini-Hochberg count are given. Peaks in neighbouring years and at neighbouring gauges are not independent, so every p is approximate and tends to be too small. "
             "Reasons a gauge changes include rain and snow patterns, water use, land development and gauge moves. This is a comparison of two periods, not a trend analysis of the whole record.</p>") % (WIN, P2, WIN, MIN_IN_WIN, ALPHA)
     data = _csv(G_HEAD + ["median_peak_cfs_wy%s" % P1.replace(" to ", "_"), "median_peak_cfs_wy%s" % P2.replace(" to ", "_"), "change_pct", "hodges_lehmann_shift_cfs", "mann_whitney_p", "regulated", "plain_peaks_first_period", "plain_peaks_second_period", "source", "peaks_fetched_at"],
-                [_g(r) + [round(a, 1), round(b, 1), round(c, 1), round(hl_, 1), round(pv, 4), rg, n1, n2, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, a, b, c, pv, rg, n1, n2, hl_, G in rows])
-    body = (lead + ("<h2>Largest significant rises</h2>" + table(hd, rw(sorted(sig_up, key=lambda x: -x[3])[:12]), right=(1, 2, 3, 4)) if sig_up else "") +
-            ("<h2>Largest significant falls</h2>" + table(hd, rw(sorted(sig_dn, key=lambda x: x[3])[:12]), right=(1, 2, 3, 4)) if sig_dn else "") +
+                [_g(r) + [round(a, 1), round(b, 1), round(c, 1), round(hl_, 1), round(pv, 4), rg, n1, n2, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, a, b, c, pv, rg, n1, n2, hl_, G in rows], _cred("usgs"))
+    body = (lead + ("<h2>Higher at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_up, key=lambda x: -x[3])[:12]), right=(1, 2, 3, 4)) if sig_up else "") +
+            ("<h2>Lower at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_dn, key=lambda x: x[3])[:12]), right=(1, 2, 3, 4)) if sig_dn else "") +
             "<h2>Every gauge</h2>" + table(hd, rw(rows[:ROW_CAP], _name), right=(1, 2, 3, 4)) + _cap(len(rows)) + meth)
     return _page("Yearly river peaks: water years %s against %s" % (P2, P1), "peak-change", "Yearly peak flows of water years %s against %s, tested gauge by gauge, at %d US river gauges, from USGS annual peaks." % (P2, P1, len(nat)), body, sub, data, unk)
 
@@ -361,7 +379,7 @@ def hundred_year(gl, unk):
     hd = ["Gauge", "1%-chance flow (USGS)", "USGS record used ends", "Water years since", "Years it was reached"]
     tb = table(hd, "".join(tr([_link(x[0]) + (" (regulated)" if x[5] else ""), "%s cfs" % fmtc(x[1]), "Water year %d" % x[2], str(len(x[3])), ", ".join(str(y) for y in x[4])], right=(1, 3)) for x in hit[:HL]), right=(1, 3)) if hit else "<p>None of these gauges has reached its 1%-chance flow since.</p>"
     data = _csv(G_HEAD + ["q_1pct_cfs", "interval_lower_cfs", "interval_upper_cfs", "statistic_record_start_wy", "statistic_record_end_wy", "water_years_counted", "years_reached", "years_at_or_above_lower", "years_at_or_above_upper", "regulated", "statistic_citation", "streamstats_fetched_at", "peaks_fetched_at"],
-                [_g(x[0]) + [x[1], x[6] or "", x[7] or "", x[11]["range1"][0], x[2], len(x[3]), " ".join(str(y) for y in x[4]), "" if x[8] is None else x[8], "" if x[9] is None else x[9], x[5], x[11].get("citation") or "", _fa(x[10], "floodfreq"), _fa(x[10], "peaks")] for x in rows])
+                [_g(x[0]) + [x[1], x[6] or "", x[7] or "", x[11]["range1"][0], x[2], len(x[3]), " ".join(str(y) for y in x[4]), "" if x[8] is None else x[8], "" if x[9] is None else x[9], x[5], x[11].get("citation") or "", _fa(x[10], "floodfreq"), _fa(x[10], "peaks")] for x in rows], _cred("usgs"))
     body = (lead + cis + "<h2>Gauges that reached it since</h2>" + tb + ("<p>%d more gauges; the CSV lists them all.</p>" % (len(hit) - HL) if len(hit) > HL else "") +
             "<h2>How this was worked out</h2><p>Sources: USGS StreamStats gage statistics (the 1% annual exceedance probability flow, the interval published with it, and the 'Statistic Date Range' stated on that statistic) and USGS annual peak streamflow (Water Data API) with its qualifier codes, as each gauge page shows them. "
             "For each gauge we took the highest peak of every water year after the last year of the statistic's own date range, so the count uses only years the statistic never saw; gauges with fewer than 5 such years, or whose statistic states no date range, are left out. "
@@ -391,7 +409,7 @@ def flood_stage(gl):
     row = lambda f: lambda x: tr([f(x[0]), "%.1f ft" % x[1], "%d of %d (%d%%)" % (x[2], x[3], round(100 * x[2] / x[3])), "%d to %d" % (x[4], x[5])], right=(1, 2))
     top = sorted(rows, key=lambda x: (-x[2] / x[3], x[0]["river"]))[:HL]
     data = _csv(G_HEAD + ["nws_forecast_point", "nws_minor_flood_stage_ft", "water_years_peak_reached_it", "water_years_with_peak_stage", "first_water_year", "last_water_year", "source", "peaks_fetched_at", "nws_fetched_at"],
-                [_g(x[0]) + [x[6], x[1], x[2], x[3], x[4], x[5], "USGS annual peak gage heights; NWS National Water Prediction Service flood categories", _fa(x[7], "peaks"), _fa(x[7], "nwps")] for x in rows])
+                [_g(x[0]) + [x[6], x[1], x[2], x[3], x[4], x[5], "USGS annual peak gage heights; NWS National Water Prediction Service flood categories", _fa(x[7], "peaks"), _fa(x[7], "nwps")] for x in rows], _cred("usgs", "nwps"))
     body = (lead + "<h2>Gauges that reach flood stage most often</h2>" + table(hd, "".join(map(row(_link), top)), right=(1, 2)) +
             "<h2>Every gauge</h2>" + table(hd, "".join(map(row(_name), rows[:ROW_CAP])), right=(1, 2)) + _cap(len(rows), "flood record") +
             "<h2>How this was worked out</h2><p>Sources: USGS annual peak gage heights (Water Data API) and National Weather Service flood stages (National Water Prediction Service), as each gauge page's Annual peaks that reached flood stage block shows them. "
@@ -423,7 +441,7 @@ def water_temp(gl):
     row = lambda g: lambda x: tr(['%s<div class="src">Sensor record %s to %s</div>' % (g(x[0]), x[2], x[3])] + [f(m, x[1]) for m in (1, 4, 7, 10)], right=(1, 2, 3, 4))
     by = sorted(rows, key=lambda x: x[1][7])
     data = _csv(G_HEAD + ["mean_f_%s" % MN[m].lower() for m in range(1, 13)] + ["daily_values_%s" % MN[m].lower() for m in range(1, 13)] + ["first_year", "last_year", "source", "fetched_at"],
-                [_g(x[0]) + [round(x[1][m], 1) if m in x[1] else "" for m in range(1, 13)] + [x[4].get(m, "") for m in range(1, 13)] + [x[2], x[3], "USGS daily mean water temperature (Water Data API)", _fa(x[5], "wtemp")] for x in rows])
+                [_g(x[0]) + [round(x[1][m], 1) if m in x[1] else "" for m in range(1, 13)] + [x[4].get(m, "") for m in range(1, 13)] + [x[2], x[3], "USGS daily mean water temperature (Water Data API)", _fa(x[5], "wtemp")] for x in rows], _cred("usgs"))
     body = (lead + "<h2>Coldest in July</h2>" + table(hd, "".join(map(row(_link), by[:HL // 2])), right=(1, 2, 3, 4)) +
             "<h2>Warmest in July</h2>" + table(hd, "".join(map(row(_link), by[::-1][:HL // 2])), right=(1, 2, 3, 4)) +
             "<h2>Every gauge</h2>" + table(hd, "".join(map(row(_name), rows[:ROW_CAP])), right=(1, 2, 3, 4)) + _cap(len(rows), "water temperature by month") +
@@ -492,9 +510,11 @@ def lake_levels(built, Gs):
             "<h2>How this was worked out</h2><p>Sources, as each lake page's How full block shows them: US Army Corps of Engineers Corps Water Management System top of conservation (full pool) against the USGS lake reading on the same datum; "
             "California Data Exchange Center storage against its stated capacity and its 1991-2020 average for the month; U.S. Bureau of Reclamation Lower Colorado Region daily contents; Texas Water Development Board daily percent of conservation capacity, used only when its level matches USGS's the same day. "
             "Differences and percents not published by the agency are our calculation. Below the full mark is not a shortage: many reservoirs are drawn down on purpose for flood season.</p>")
-    data = _csv(G_HEAD + ["basis", "below_full_mark", "figure", "as_of_utc"], [_g(r) + [b[0], b[1], b[2], b[3].astimezone(datetime.timezone.utc).isoformat()] for r, G, got in rows for b in got])
+    data = _csv(G_HEAD + ["basis", "below_full_mark", "figure", "as_of_utc"], [_g(r) + [b[0], b[1], b[2], b[3].astimezone(datetime.timezone.utc).isoformat()] for r, G, got in rows for b in got],
+                lambda row: _cred({"CDEC capacity": "cdec", "USACE full pool": "usace_cwms", "Reclamation capacity": "usbr", "TWDB conservation capacity": "twdb"}.get(row[len(G_HEAD)], "usgs"), "usgs"))
+    asof = max(b[3] for _, _, got in rows for b in got)
     return _page("How full are US lakes?", "lake-levels", "Every US lake on River Water Levels against its agency's own full mark right now: %d lakes, each basis named." % len(rows), body,
-                 "Agency lake and reservoir figures, for the US lakes on this site.", data, sample=SAMPLE_LAKE)
+                 "Agency lake and reservoir figures, for the US lakes on this site; newest figure %s UTC. These figures change as agencies publish; cite them with that date and time." % utc_day(asof), data, sample=SAMPLE_LAKE)
 
 
 def tides(built, Gs):
@@ -532,9 +552,9 @@ def tides(built, Gs):
             "The predicted range is the highest predicted high tide minus the lowest predicted low tide in the 7 days. Observations are preliminary until NOAA verifies them. Stations that publish predictions only are left out, because their level comes from another place.</p>")
     data = _csv(["noaa_station", "name", "state", "page", "predicted_range_ft_7d", "max_gap_ft", "max_gap_utc", "min_gap_ft", "min_gap_utc", "median_gap_ft", "matched_readings", "fetched_at"],
                 [[r["site"], r["river"], r["state"], SITE_URL + r["dashboard_url"], "" if rng is None else round(rng, 2), round(up[1], 2), up[0].astimezone(datetime.timezone.utc).isoformat(), round(dn[1], 2), dn[0].astimezone(datetime.timezone.utc).isoformat(), round(md_, 2), n, _fa(G, "coops")]
-                 for r, G, rng, up, dn, md_, n in rows])
+                 for r, G, rng, up, dn, md_, n in rows], _cred("coops"))
     return _page("How far did the sea run from its tide prediction this week?", "tides", "Observed water against NOAA tide predictions over the last 7 days at %d NOAA stations, with this week's predicted tide range." % len(rows), body,
-                 "NOAA water levels and tide predictions, last 7 days, for the stations on this site.", data, sample=SAMPLE_TIDE)
+                 "NOAA water levels and tide predictions, last 7 days, for the stations on this site; newest reading %s UTC. These figures change every few minutes; cite them with that date and time." % utc_day(max(x[1]["sg"][-1][0] for x in rows)), data, sample=SAMPLE_TIDE)
 
 
 COUNTRY = {"eccc": "Canada", "pegelonline": "Germany", "ea": "England", "imi": "Ireland"}
@@ -580,11 +600,12 @@ def world_rivers(wpages, wkeep, now):
              "A reading older than 24 hours is counted as not reporting and gets no label. Labelled readings run from %s to %s UTC. Shares are shown only for a country with at least 3 labelled gauges.</p>") % (
                 utc_day(times[0]), utc_day(times[-1])))  # check.py BANNED: no raw machine timestamp shown to a reader
     data = _csv(["country", "page_slug", "gauge", "label", "reading_utc", "label_basis"],
-                [[COUNTRY.get(f, f), p["slug"], r.get("title") or r.get("name"), lab, r.get("time") or "", BASIS.get(f, "")] for f, p, r, lab in rows])
+                [[COUNTRY.get(f, f), p["slug"], r.get("title") or r.get("name"), lab, r.get("time") or "", BASIS.get(f, "")] for f, p, r, lab in rows],
+                lambda row: _cred({v: k for k, v in COUNTRY.items()}.get(row[0], row[0])))
     sample = ("<p class=\"src\"><b>Sample:</b> the gauges outside the US that have a page on this site, in %s. They are not every gauge in those countries, so the results describe these gauges only.</p>" % ", ".join(COUNTRY[f] for f in cs))
     return _page("Are rivers in Canada, Germany, England and Ireland low or high right now?", "world-rivers",
                  "Every gauge outside the US on River Water Levels by its agency's own low, normal or high label right now, counted country by country.", body,
-                 "Agency river levels in %s, for the gauges on this site." % ", ".join(COUNTRY[f] for f in cs), data, sample=sample)
+                 "Agency river levels in %s, for the gauges on this site; newest reading %s UTC. These labels change as the agencies publish; cite them with that date and time." % (", ".join(COUNTRY[f] for f in cs), utc_day(times[-1])), data, sample=sample)
 
 
 def pages(built, Gs, today=None, world=False):
