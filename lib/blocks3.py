@@ -112,7 +112,15 @@ def _on_river(water, river):
     """True when a stocked water is this river: its name carries the river's own name and is not a pond, lake or reservoir."""
     import re as _re
     key = _re.sub(r"(?i)\b(river|creek|fork|north|south|east|west|middle|branch|the)\b", " ", river).split()
-    return bool(key) and all(k.lower() in water.lower() for k in key) and not _re.search(r"(?i)\b(pond|lake|reservoir|res\.?)\b", water)
+    return bool(key) and all(_re.search(r"(?i)\b%s\b" % _re.escape(k), water) for k in key) and not _re.search(r"(?i)\b(pond|lake|reservoir|res\.?)\b", water)
+
+
+def _on_lake(water, lake):
+    """True when a stocked water is this lake (PLAN 36 edge case, 2026-11-13: lake pages never showed their own stocking because every lake was dropped).
+    Whole words only: 'Lake Mead' must not match 'Meadow Pond'."""
+    import re as _re
+    key = _re.sub(r"(?i)\b(lake|reservoir|res|pond|the|of)\b\.?", " ", lake).split()
+    return bool(key) and all(_re.search(r"(?i)\b%s\b" % _re.escape(k), water) for k in key) and not _re.search(r"(?i)\b(river|creek|brook|stream)\b", water)
 
 
 def b_stocking(G):
@@ -127,7 +135,7 @@ def b_stocking(G):
     seen, keep = set(), []
     for x in s["rows"]:
         k = (x.get("date"), (x.get("species") or "").strip().lower(), (x.get("water") or "").strip().lower())
-        if k in seen or str(x.get("date") or "") < cut or not _on_river(x.get("water") or "", G["river"]):
+        if k in seen or str(x.get("date") or "") < cut or not (_on_lake if G.get("lake") else _on_river)(x.get("water") or "", G["river"]):
             continue
         seen.add(k)
         keep.append(x)

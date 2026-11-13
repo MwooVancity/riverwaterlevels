@@ -1157,4 +1157,15 @@ if __name__ == "__main__":
     finally:
         collect.get_text, collect.urllib.request.urlopen = gt_, uo_
         collect._MA_SP.clear(); collect._MA_SP.update(sp_)
+    # PLAN 36 stocking edge cases: a busy pond season never pushes the gauge's own river out; lake pages match their own lake; whole words only
+    pond_ = [{"species": "Rainbow Trout", "date": "2026-10-%02d" % (1 + i % 28), "num": None, "water": "Pond %d" % i, "size": None, "mi": 20.0 + i} for i in range(40)]
+    own_ = {"species": "Brown Trout", "date": "2026-09-01", "num": 500, "water": "Swift River - Belchertown", "size": None, "mi": 2.0}
+    kept_ = collect.stock_keep(pond_ + [own_, dict(own_, date="2026-05-01")])
+    assert own_ in kept_ and sum(1 for r in kept_ if r["water"] == own_["water"]) == 1 and kept_ == sorted(kept_, key=lambda r: r["date"], reverse=True), "stocking: the own river was pushed out, kept twice, or not newest first"
+    assert len(collect.stock_keep(pond_ * 3, 25)) == 25, "stocking: the cap did not hold"
+    assert blocks3._on_lake("Lake Saltonstall - Haverhill", "Lake Saltonstall") and not blocks3._on_lake("Meadow Pond", "Lake Mead") and not blocks3._on_lake("Saltonstall Brook", "Lake Saltonstall"), "stocking: lake match wrong"
+    assert blocks3._on_river("Swift River - Belchertown", "Swift River") and not blocks3._on_river("Swiftwater Brook", "Swift River") and not blocks3._on_river("Swift River Pond", "Swift River"), "stocking: river match wrong"
+    sk_ = lambda lake, river: blocks3.b_stocking({"lake": lake, "river": river, "zone": datetime.timezone.utc, "now": datetime.datetime(2026, 11, 13, tzinfo=datetime.timezone.utc),
+                                                  "rec": {"stocking": {"fetched_at": "2026-11-13T00:00:00+00:00", "source": "S", "credit": "C", "miles": 35, "rows": [own_, {"species": "Rainbow Trout", "date": "2026-10-13", "num": None, "water": "Lake Saltonstall - Haverhill", "size": None, "mi": 3.0}]}}})
+    assert "Lake Saltonstall" in sk_("00062", "Lake Saltonstall")["body"] and "Swift River" not in sk_("00062", "Lake Saltonstall")["body"] and "Swift River" in sk_(None, "Swift River")["body"], "stocking: a lake page missed its lake or showed a river's release"
     print("selftest OK")

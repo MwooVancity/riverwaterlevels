@@ -582,19 +582,30 @@ def fetch_stocking_ma(lat, lon, miles):
     return rows
 
 
+def stock_keep(rows, n=60):
+    """The newest release per water and species, the n nearest waters, newest first. The page shows only its own river or lake (lib/blocks3 b_stocking),
+    so keeping the 12 newest within 35 miles let a busy pond season push the gauge's own river out of the cache (found 2026-11-13)."""
+    best = {}
+    for r in sorted(rows, key=lambda r: r["date"], reverse=True):
+        best.setdefault(((r.get("water") or "").strip().lower(), (r.get("species") or "").strip().lower()), r)
+    near = sorted(best.values(), key=lambda r: (r["mi"] is None, r["mi"] or 0))[:n]
+    return sorted(near, key=lambda r: r["date"], reverse=True)
+
+
 def fetch_stocking(lat, lon, miles=35):
     """Recent hatchery stocking near the gauge, from the state's public stocking layer (species, date, count, water). Returns None where the state has no adapter or no record. Stocking is a release event, not a fish-population measure."""
     if -73.6 <= lon <= -69.8 and 41.2 <= lat <= 42.9:  # Massachusetts (MassWildlife), a two-step source; a border gauge with no MA water nearby falls through to the rest
         rows = sorted(fetch_stocking_ma(lat, lon, miles), key=lambda r: r["date"], reverse=True)
         if rows:
-            return {"fetched_at": now_iso(), "source": "MassWildlife trout stocking report", "credit": "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", "url": MA_STOCK + "StockedFish_View/FeatureServer/0", "miles": miles, "rows": rows[:12]}
+            return {"fetched_at": now_iso(), "source": "MassWildlife trout stocking report", "credit": "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", "url": MA_STOCK + "StockedFish_View/FeatureServer/0", "miles": miles, "rows": stock_keep(rows)}
     for s in STOCK_SOURCES:
         x0, y0, x1, y1 = s["bbox"]
         if not (x0 <= lon <= x1 and y0 <= lat <= y1):
             continue
         fm, dd = s["f"], miles / 69.0
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
-                                    "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(v for v in fm.values() if v), "returnGeometry": "true", "resultRecordCount": "500", "f": "json"})
+                                    "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(v for v in fm.values() if v), "returnGeometry": "true", "resultRecordCount": "500",
+                                    "orderByFields": fm["date"] + " DESC", "f": "json"})  # newest first: a 500-row cap on decades of records must cut the oldest, not random ones
         j = json.loads(get_text(s["url"] + "?" + q))
         cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
         rows = []
@@ -609,9 +620,8 @@ def fetch_stocking(lat, lon, miles=35):
                 continue
             rows.append({"species": a.get(fm["species"]), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
                          "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
-        rows.sort(key=lambda r: r["date"], reverse=True)
         if rows:
-            return {"fetched_at": now_iso(), "source": s["name"], "credit": s["credit"], "url": s["url"], "miles": miles, "rows": rows[:12]}
+            return {"fetched_at": now_iso(), "source": s["name"], "credit": s["credit"], "url": s["url"], "miles": miles, "rows": stock_keep(rows)}
     return None
 
 
