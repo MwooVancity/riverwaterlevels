@@ -1009,4 +1009,33 @@ if __name__ == "__main__":
     run()
     from tools.outreach_guard import selftest as outreach_selftest  # owner 2026-11-13: nobody is emailed twice
     outreach_selftest()
+    # PLAN 29 king tides: NOAA's flood level is on the station datum, predictions on MLLW; a short reply, no level, past tides, a river page
+    hj_, cg_ = collect.http_json, collect.coops_get
+    yr_ = [{"t": "2027-%02d-01 12:00" % (1 + i % 12), "v": "3.0", "type": "H"} for i in range(700)] + [{"t": "2027-01-23 16:03", "v": "4.6", "type": "H"}, {"t": "2027-01-23 22:00", "v": "9.9", "type": "L"}]
+    try:
+        collect.coops_get = lambda st, q: yr_
+        collect.http_json = lambda u, *a, **k: {"nos_minor": 6.24, "nws_minor": 7.19} if "floodlevels" in u else {"datums": [{"name": "STND", "value": 0.0}, {"name": "MLLW", "value": 1.73}]}
+        ft_ = collect.fetch_floodtide("8726724")
+        assert ft_["level"] == 4.51 and ft_["who"] == "nos" and ft_["over"] == [("2027-01-23T16:03:00+00:00", 4.6)],"king tide: flood level not moved from station datum to MLLW, or a low tide counted"
+        collect.http_json = lambda u, *a, **k: {"nos_minor": None, "nws_minor": None}
+        assert collect.fetch_floodtide("x")["level"] is None and collect.fetch_floodtide("x")["top"], "king tide: a station with no flood level lost its highest tides"
+        collect.coops_get = lambda st, q: yr_[:40]
+        try:
+            collect.fetch_floodtide("x")
+            raise AssertionError("king tide: a reply cut short could say 'none in 12 months'")
+        except RuntimeError:
+            pass
+    finally:
+        collect.http_json, collect.coops_get = hj_, cg_
+    from lib import blocks3
+    now_ = datetime.datetime(2026, 11, 13, tzinfo=datetime.timezone.utc)
+    kt_ = lambda f, **k: blocks3.b_kingtide(dict({"coast": True, "site": "8726724", "zone": zoneinfo.ZoneInfo("America/New_York"), "now": now_, "rec": {"floodtide": f}}, **k))
+    base_ = {"fetched_at": "2026-11-12T00:00:00+00:00", "who": "nos", "level": 4.51, "top": [["2027-08-02T15:50:00+00:00", 3.7], ["2026-11-01T15:00:00+00:00", 9.0]], "over": []}
+    b_ = kt_(base_)["body"]
+    assert "3.7 ft" in b_ and "0.8 ft below NOAA" in b_ and "9.0" not in b_, "king tide: gap to the flood level wrong, or a past tide shown as coming"
+    assert "reach" in kt_(dict(base_, over=[["2027-01-23T16:03:00+00:00", 4.6]]))["body"] and "1 predicted high tide" in kt_(dict(base_, over=[["2027-01-23T16:03:00+00:00", 4.6]]))["body"], "king tide: a tide at the flood level not named"
+    assert "publishes no flood level" in kt_(dict(base_, level=None))["body"], "king tide: no published level read as no flooding"
+    assert "Unknown" in kt_({})["body"] and "Unknown" in kt_(dict(base_, top=[["2026-11-01T15:00:00+00:00", 9.0]]))["body"], "king tide: missing or all-past data shown as a coming tide"
+    assert kt_(base_, coast=False) is None, "king tide block on a river page"
+    assert not re.search(r"\bwill flood\b|\bsafe\b", b_), "king tide: a verdict in the text"
     print("selftest OK")

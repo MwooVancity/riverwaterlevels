@@ -287,7 +287,7 @@ def tab_blocks(tab, G, pages):
         # Search order (Keyword Planner, fresh agent 2026-11-06): coasts 'tides' 1.15M + 'tide times' 620k + 'tide chart' 96k a month, so the
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
-        lead = (([b3.b_tides(G), sc] if level_of(G) else [sc, b3.b_tides(G)]) + [b3.b_waves(G), b3.b_moon(G), b3.b_key_facts(G)] if coast else  # black-hat review 2026-11-11: a prediction-only station leads with its own tide times; the level chart is a nearby station's
+        lead = (([b3.b_tides(G), sc] if level_of(G) else [sc, b3.b_tides(G)]) + [b3.b_kingtide(G), b3.b_waves(G), b3.b_moon(G), b3.b_key_facts(G)] if coast else  # black-hat review 2026-11-11: a prediction-only station leads with its own tide times; the level chart is a nearby station's
                 [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_key_facts(G), b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [

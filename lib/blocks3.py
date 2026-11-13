@@ -758,6 +758,35 @@ def b_tides(G):
                  "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %sfetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), ("%.0f mi from the gauge, " % t["mi"]) if t["mi"] >= 0.5 else "", esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
 
 
+def b_kingtide(G):
+    """PLAN 29, coast pages: the highest predicted tides of the next 12 months (king tides) against NOAA's minor flood level at this station.
+    States: valid (highest tides, and the ones at or above the level); valid-empty (none reach it: the gap is said); no level published (said, never
+    'no flooding tides'); unavailable (Unknown: not read). Only future tides are shown, so a week-old fetch never shows a past tide as coming."""
+    if not G.get("coast") or not cleared("coops"):
+        return None
+    f, z = G["rec"].get("floodtide") or {}, G["zone"]
+    head = "Highest tides in the next 12 months"
+    src = "Source: NOAA National Ocean Service, CO-OPS high tide predictions for station %s and its published flood levels" % esc(G["site"])
+    fut = lambda xs: [(parse_t(t), v) for t, v in xs or [] if parse_t(t) > G["now"]]
+    top, over = sorted(fut(f.get("top")), key=lambda x: -x[1]), fut(f.get("over"))
+    if not top:
+        return block("kingtide", head, "noaa", "<p>Unknown: NOAA's 12-month tide predictions for this station were not read in this build.</p>", src + ".", "coops")
+    lv = f.get("level")
+    whose = "NOAA's minor high-tide flooding level" if f.get("who") == "nos" else "the National Weather Service's minor flood level"
+    when = lambda t: esc(tzl(t, z))
+    if lv is None:
+        lead = "The highest predicted tide in the next 12 months is %.1f ft on %s. NOAA publishes no flood level for this station." % (top[0][1], when(top[0][0]))
+    elif over:
+        lead = "%d predicted high %s in the next 12 months %s %s (%.1f ft above MLLW); the first is %.1f ft on %s." % (
+            len(over), "tide" if len(over) == 1 else "tides", "reaches" if len(over) == 1 else "reach", whose, lv, over[0][1], when(over[0][0]))
+    else:
+        lead = "The highest predicted tide in the next 12 months is %.1f ft on %s, %.1f ft below %s (%.1f ft above MLLW)." % (top[0][1], when(top[0][0]), lv - top[0][1], whose, lv)
+    gap = lambda v: "Unknown" if lv is None else ("%.1f ft above" % (v - lv) if v > lv else "at the level" if v == lv else "%.1f ft below" % (lv - v))
+    rows = "".join(tr([when(t), "%.1f ft" % v, gap(v)], right=(1,)) for t, v in (over or sorted(top))[:5])  # the tides at the level, in date order, prove the lead; else the highest five
+    return block("kingtide", head, "noaa", "<p><b>%s</b></p>" % lead + table(["Date and time", "Predicted high tide (above MLLW)", "Compared with the flood level"], rows, right=(1,)),
+                 src + ", read %s. NOAA gives the flood level on the station datum; moving it to MLLW with NOAA's published datums is our calculation. Predictions include no wind, air pressure or river flow, which can raise the water above them." % esc(tzl(parse_t(f["fetched_at"]), z)), "coops")
+
+
 def b_wpc(G):
     """WPC flood and excessive rainfall outlooks that cover the gauge point, and recent NWS flood reports within 50 miles. Hidden when there is nothing to show."""
     w = G["rec"].get("wpc")

@@ -1406,7 +1406,7 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
 COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 COAST_TABLES = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("tables") and re.fullmatch(r"\d+(\.\d+)?", r.get("level_km") or "")}  # tide tables (owner decision 3, 2026-11-08): no live level within 25 km, so the page has predictions only; level_* names the nearest live station, never read
@@ -1710,6 +1710,31 @@ def coops_get(st, q):
     return j.get("data") or j.get("predictions") or []
 
 
+MD = "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/%s/%s.json?units=english"
+
+
+def fetch_floodtide(st):
+    """PLAN 29, king tides: NOAA's minor flood level at this tide station and the next 12 months of its high-tide predictions: the highest ones and
+    every one at or above that level. floodlevels.json is on the station datum (STND); predictions are above MLLW, so the level is moved by MLLW's
+    height on STND (datums.json): Clearwater 8726724 nos_minor 6.24 - MLLW 1.73 = 4.51 ft above MLLW. NOAA (NOS) level first, else the NWS one.
+    No level published = level None (the page says NOAA publishes none here, never 'no flooding tides'). 3 calls a week per coast."""
+    fl = http_json(MD % (st, "floodlevels"), NWS_H, 60)
+    who, lvl = next(((k[:3], fl[k]) for k in ("nos_minor", "nws_minor") if fl.get(k) is not None), (None, None))
+    today = datetime.datetime.now(datetime.timezone.utc)
+    hi = [(p["t"].replace(" ", "T") + ":00+00:00", float(p["v"])) for p in coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&end_date=%s" % (
+        today.strftime("%Y%m%d"), (today + datetime.timedelta(days=365)).strftime("%Y%m%d"))) if p.get("type") == "H" and p.get("v") not in (None, "")]
+    if len(hi) < 300:  # a year holds about 705 highs: fewer means NOAA cut the reply short, and "none in 12 months" would be a lie
+        raise RuntimeError("CO-OPS returned %d high tides for 12 months at %s" % (len(hi), st))
+    out = {"fetched_at": now_iso(), "station": st, "who": who, "level_stnd": lvl, "level": None, "end": hi[-1][0], "top": sorted(hi, key=lambda x: -x[1])[:5], "over": []}
+    if lvl is not None:
+        dat = {d["name"]: d["value"] for d in http_json(MD % (st, "datums"), NWS_H, 60).get("datums") or [] if d.get("value") is not None}
+        if "MLLW" not in dat:
+            raise RuntimeError("no MLLW height on the station datum at %s" % st)
+        out["level"] = round(lvl - dat["MLLW"], 2)
+        out["over"] = [x for x in hi if x[1] >= out["level"]]  # uncapped: the page counts them (a year has about 705 highs at most)
+    return out
+
+
 def fetch_buoy(st):
     """The newest row of the station's hand-checked buoy (NDBC realtime2 standard meteorological file): wave height, dominant period, mean wave
     direction, sea temperature, in the units the file states (m, s, degT, degC). 'MM' (missing) stays None, shown Unknown, never zero. 1 call."""
@@ -1786,6 +1811,7 @@ def fetch_extras(site, rec, h, log):
                     *((("nid", lambda: fetch_nid(site, rec)),) if nid_key(site, rec) else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
+                    *((("floodtide", lambda: fetch_floodtide(site)),) if site in COASTS else ()),
                     ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:

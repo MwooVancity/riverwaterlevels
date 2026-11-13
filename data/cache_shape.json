@@ -14,6 +14,7 @@
 "fema_zone": "iso",
 "fieldmeas": "iso",
 "floodfreq": "iso",
+"floodtide": "iso",
 "glsea": "iso",
 "land": "iso",
 "meta": "iso",
@@ -154,6 +155,16 @@
 "rows": "list",
 "url": "str",
 "years": "num"
+},
+"floodtide": {
+"end": "iso",
+"fetched_at": "iso",
+"level": "num",
+"level_stnd": "num",
+"over": "list",
+"station": "str",
+"top": "list",
+"who": "str"
 },
 "glsea": {
 "avg_f": "num",
