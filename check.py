@@ -789,6 +789,12 @@ def carried_unchanged(d):
     return {u + "/index.html" for u in old} | {"embed/" + u + "/index.html" for u in old}
 
 
+def unlinked_ok(u, kind, noindex_of):
+    """A noindexed water or research page is unlinked on purpose (links rule 5: only indexable pages are linked), so it is no orphan; in hold mode (every page noindexed) the orphan rule still runs.
+    2026-11-13: research pages were missing here, so taking the footer link away while they were noindexed failed all 9 as orphans."""
+    return bool(noindex_of.get(u)) and (kind in ("gauge", "world") or u.startswith("/research/")) and any(not v for v in noindex_of.values())
+
+
 def check_dir(d, only_rebuilt=False):
     """One pass, one page in memory at a time: only small per-page facts (title, links, link count) are kept, so 30,000 pages need megabytes, not gigabytes.
     only_rebuilt (--carry): the one-page rules skip pages build.py carried unchanged; every site-level check (titles, links, sitemap, index state,
@@ -962,7 +968,7 @@ def check_dir(d, only_rebuilt=False):
     except (OSError, ValueError):
         pass
     kept |= {"/embed" + u for u in list(kept)}  # a kept gauge page keeps its embed panel too
-    orphans = [u for u in urls if u not in depth and u not in kept and not (noindex_of.get(u) and kind_of(urls[u]) in ("gauge", "world") and any(not v for v in noindex_of.values()))]  # a noindexed water page (pulled or held) is unlinked on purpose (links rule 5); in hold mode, every page noindexed, the orphan rule still runs
+    orphans = [u for u in urls if u not in depth and u not in kept and not unlinked_ok(u, kind_of(urls[u]), noindex_of)]  # a noindexed water page (pulled or held) is unlinked on purpose (links rule 5); in hold mode, every page noindexed, the orphan rule still runs
     deep = [u for u, k in depth.items() if k > 4]
     for what, us_ in (("not reachable from home", orphans), ("deeper than 4 clicks from home", deep)):  # a water page is held alone (carried or sent back); any other page is site-level
         for u in us_:
@@ -1088,6 +1094,15 @@ def selftest():
         dr_.publisher = lambda: {}
         assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
         assert research_sanity("<p>At <b>90 of 87</b> gauges</p>") and research_sanity("<p>-3 gauges</p>") and not research_sanity("<p>at 33 of 105 gauges, 5 of 720 gauge-years, a -0.5 ft gap</p>"), "selftest: research sanity missed 'X of Y' over the whole or a negative count, or fired on good text"
+        import tempfile as _tf
+        from lib.research import METHOD as _M
+        _sd = _tf.mkdtemp()
+        _old, _new = os.path.join(_sd, "old.html"), os.path.join(_sd, "new.html")
+        open(_old, "w", encoding="utf-8").write("<p>old 100-year page, no method mark</p>")
+        open(_new, "w", encoding="utf-8").write('<div data-method="%s">current</div>' % _M)
+        assert stale_research("research/100-year-floods/index.html", _old) and "being recalculated" in open(_old, encoding="utf-8").read() and 'content="noindex' in open(_old, encoding="utf-8").read(), "selftest: an old-method research copy was carried"
+        assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
+        assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
     finally:
         dr_.publisher = pub_
     from lib import pages as pg_
@@ -1624,6 +1639,27 @@ def too_many(k, n):
     return k > max(CARRY_MAX, n // 20)
 
 
+WITHDRAWN = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow">'
+             '<title>Being recalculated | River Water Levels</title></head><body><main><h1>This finding is being recalculated</h1>'
+             '<p>Its method was corrected, and the earlier version is withdrawn rather than shown. It returns when the data the new method needs has been read for enough gauges. '
+             '<a href="/research/">Other research</a> &middot; <a href="/methodology/#corrections">Corrections</a></p></main></body></html>')
+
+
+def stale_research(rel, dst):
+    """A carried research page made by an older method (no current data-method mark) is replaced by a noindexed recalculation notice: a false page is worse than none,
+    and a missing one would break the links to it (2026-11-13: the old 100-year page was carried by this rule while build.py withdrew it)."""
+    if not rel.replace("\\", "/").startswith("research/"):
+        return False
+    from lib.research import METHOD
+    try:
+        if 'data-method="%s"' % METHOD in open(dst, encoding="utf-8").read():
+            return False
+    except OSError:
+        pass
+    open(dst, "w", encoding="utf-8").write(WITHDRAWN)
+    return True
+
+
 def carry(d, fails, got=None, new=None):
     """The one carry rule (full audit 2026-11-10 #46; check.py, truth_tests, truth_live and truth_world all call it). Each failing page {rel: [why]} of the
     build in d keeps its live copy (dist/ when present, else the live site), its times stay the live copy's (keep_old_times, or the 6 h alarm stays quiet
@@ -1642,6 +1678,9 @@ def carry(d, fails, got=None, new=None):
                 body = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read()
                 open(dst, "wb").write(body)
             got.append(rel)
+            if stale_research(rel, dst):
+                print("WITHDREW", rel, "(its live copy was made by an older research method; a recalculation notice stands in until it rebuilds)")
+                continue
             print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(str(x) for x in fails[rel])[:160] + ")")
         except urllib.error.HTTPError as e:
             if e.code == 404 and new is not None:
