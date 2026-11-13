@@ -1247,6 +1247,14 @@ if __name__ == "__main__":
         assert collect.fetch_stocking_va(37.3, -79.5, 35) == [] and sum("dwr.virginia.gov/fishing" in c for c in calls_) == 1, "Virginia: an empty parse re-downloaded at the next gauge"
     finally:
         collect._VA_ROWS[:], collect.get_text = vr_, gt_
+    # page order debate 2026-11-13: decisions before history. Snowpack in the outlook, key facts with past years, public land in Getting on the water,
+    # coast tide table before the level chart before surf, red tide and king tides; recreation, public land and station air never in the side column
+    pg_ = open(os.path.join(ROOT, "lib", "page.py"), encoding="utf-8").read()
+    at_ = lambda s_: pg_.index(s_)
+    assert at_('"SEC:Rain and longer outlook"') < at_("b_snotel(G)") < at_('"SEC:Getting on the water"') < at_("b3.b_recreation(G), b_land(G)") < at_('"SEC:How today compares with past years"') < at_("b3.b_key_facts(G), b3.b_month_chart"), "page order: snowpack, public land or key facts moved back"
+    assert at_("[b3.b_tides(G), sc, b3.b_surf(G), b3.b_redtide(G), b3.b_kingtide(G)") > 0, "page order: coast lead changed"
+    side_ = re.search(r"SIDE = (\{[^}]*\})", pg_).group(1)
+    assert not any(x in side_ for x in ('"recreation_sites"', '"public_land"', '"air_obs"')), "page order: a section went back to the side column (bottom of a phone)"
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
     from lib import cadence as cad_
     assert "key not in COAST_KEYS and USGS_OUT[0]" in open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read() and not (cad_.WEEKLY & collect.COAST_KEYS) - {"floodtide"}, "a non-USGS weekly source waits on the USGS quota again, or a new place source joined WEEKLY unchecked"
