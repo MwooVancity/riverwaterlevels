@@ -796,6 +796,34 @@ def b_surf(G):
         issued, esc((first.get("sitename") or "").replace("WFO ", "")), esc(first.get("srfprod") or "https://www.weather.gov/beach/")), "nws", amber=age)
 
 
+def b_redtide(G):
+    """PLAN 30, Gulf and Florida coast pages: Karenia brevis (red tide) samples within 25 km in the last 14 days (NOAA NCEI HABSOS; FWC and partners).
+    States: valid (highest count and the latest sample at each site, HABSOS's own category words); valid-empty (no sample nearby: said, never 'no red
+    tide'); unavailable (not read) = Unknown. Dates only: the service does not state its clock zone. Counts are cells per liter as sampled."""
+    if not G.get("coast") or G["row"].get("state") not in ("FL", "AL", "MS", "TX") or not cleared("habsos"):
+        return None
+    r = G["rec"].get("redtide")
+    head = "Red tide (Karenia brevis) samples nearby"
+    src = "Source: NOAA National Centers for Environmental Information, HABSOS cell counts; samples collected by the Florida Fish and Wildlife Conservation Commission and partners"
+    if not r:
+        return block("redtide", head, "agency", "<p>Unknown: NOAA's red tide sample records were not read in this build.</p>", src + ".", "habsos")
+    src += ", read %s. Sample dates as recorded; categories are HABSOS's own words" % esc(tzl(parse_t(r["fetched_at"]), G["zone"]))
+    rows = r.get("rows") or []
+    if not rows:
+        return block("redtide", head, "agency", "<p><b>No red tide sample was recorded within 25 km of this station in the last 14 days.</b> No sample is not the same as no red tide.</p>", src + ".", "habsos", empty=True)
+    latest = {}
+    for x in sorted(rows, key=lambda x: x["date"], reverse=True):
+        latest.setdefault(x["site"], x)
+    top = max(rows, key=lambda x: x["count"])
+    cnt = lambda c: "{:,.0f}".format(c)
+    if top["count"] > 0:
+        lead = "Highest red tide count within 25 km in the last 14 days: %s cells per liter (%s) at %s on %s, %.0f km away." % (cnt(top["count"]), esc(top["cat"] or "no category"), esc(top["site"]), esc(fdate(top["date"])), top["km"])
+    else:
+        lead = "None of the %d red tide samples within 25 km in the last 14 days found Karenia brevis cells (newest %s)." % (len(rows), esc(fdate(max(x["date"] for x in rows))))
+    trs = "".join(tr([esc(x["site"]), "%.0f km" % x["km"], esc(fdate(x["date"])), cnt(x["count"]), esc(x["cat"] or "Unknown")], right=(1, 3)) for x in sorted(latest.values(), key=lambda x: x["km"])[:8])
+    return block("redtide", head, "agency", "<p><b>%s</b></p>" % lead + table(["Sample site", "Distance", "Latest sample", "Cells per liter", "Category (HABSOS)"], trs, right=(1, 3)), src + ".", "habsos")
+
+
 def b_moonphase(G):
     """PLAN 32 (anglers ask for the moon; coast pages have b_moon): the next principal moon phases from the U.S. Naval Observatory, UT shown in local time.
     States: valid; unavailable (not read, or no phase ahead in the list) = Unknown. Only future phases; no 'good fishing' words."""

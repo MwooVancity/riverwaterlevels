@@ -25,6 +25,7 @@
 "peaks": "iso",
 "rating": "iso",
 "record": "iso",
+"redtide": "iso",
 "related": "iso",
 "related_list": "iso",
 "ridb": "iso",
@@ -282,6 +283,11 @@
 "n_days": "num",
 "peak": "dict",
 "prior": "dict"
+},
+"redtide": {
+"fetched_at": "iso",
+"rows": "list",
+"since": "str"
 },
 "related": {
 "fetched_at": "iso",

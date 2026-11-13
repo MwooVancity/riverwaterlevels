@@ -41,7 +41,8 @@
     "hourly_forecast",
     "hourly_heatmap",
     "alerts",
-    "air_obs"
+    "air_obs",
+    "surf"
    ]
   },
   {
@@ -418,7 +419,8 @@
    "summary": "CO-OPS disclaimers: 'The information on government servers are in the public domain'; content 'shall not be modified in content and then presented as official government material'; 'NOS requests that attribution be given whenever NOS material is reproduced and re-disseminated.' Nearest station: list stations.json?type=tidepredictions and pick nearest by distance.",
    "credit": "Data: NOAA National Ocean Service, CO-OPS",
    "blocks": [
-    "tides"
+    "tides",
+    "kingtide"
    ],
    "read_on": "2026-10-20"
   },
@@ -697,7 +699,8 @@
    "summary": "USNO API page (read 2026-11-07 by curl): 'Some of these services work within an application programming interface (API), allowing users to query the calculators and receive results which can be embedded within a web page or mobile application.' The ID parameter is optional. No clause on ads, commercial use or caching. A U.S. Navy (federal) service. Live answer read 2026-11-07 for San Diego: moonrise 04:43, set 15:45 PST, closest phase New Moon 2026-11-08 23:02 (tz=-8).",
    "credit": "Data: U.S. Naval Observatory, Astronomical Applications Department",
    "blocks": [
-    "moon"
+    "moon",
+    "moonphase"
    ],
    "read_on": "2026-11-07",
    "evidence": "WebSearch 2026-11-07 found aa.usno.navy.mil/data/api; the quoted sentence read live from that page by curl the same day",
@@ -764,6 +767,22 @@
    "blocks": [
     "limits"
    ]
+  },
+  {
+   "id": "habsos",
+   "name": "NOAA NCEI Harmful Algal BloomS Observing System (HABSOS), Karenia brevis cell counts (gis.ncdc.noaa.gov ms/HABSOS_CellCounts MapServer/0); samples collected by the Florida Fish and Wildlife Conservation Commission and partners",
+   "status": "quoted",
+   "terms_url": "https://www.ncei.noaa.gov/products/harmful-algal-blooms-observing-system",
+   "summary": "NCEI: HABSOS is a data collection and distribution system designed to provide environmental managers, scientists, and the public with a tool for tracking and observing current and historical harmful algal bloom events. The service iteminfo (read 2026-11-13) lists accessInformation NCEI and an empty licenseInfo: no clause on ads, commercial use or caching. A federal NOAA service. The FWC Hub copy asks sharers to email FWC first, so the FWC copy is not used (PLAN 30). Newest sample read live 2026-11-13: 2026-11-11.",
+   "credit": "Data: NOAA NCEI HABSOS; samples by the Florida Fish and Wildlife Conservation Commission and partners",
+   "blocks": [
+    "redtide"
+   ],
+   "read_on": "2026-11-13",
+   "evidence": "WebSearch 2026-11-13 found the service and NCEI product page; iteminfo and a live query near Sarasota read by curl the same day",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed"
   }
  ]
 }

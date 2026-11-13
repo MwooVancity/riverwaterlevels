@@ -1406,9 +1406,10 @@ def fetch_uv(rec):
 
 
 LAKE_TWDB = {r["site"]: r.get("twdb") for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8"))}
-COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide", "surf"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
+COAST_KEYS = {"cpc", "cpc610", "usdm", "acis", "tides", "airnow", "uv", "access", "land", "twdb", "cdec_res", "glsea", "usbr_lc", "usno", "nid", "floodtide", "surf", "redtide"}  # sources asked by place; the rest are USGS-id lookups a CO-OPS id would only waste
 COAST_BUOY = {r["site"]: (r["buoy"], r["buoy_owner"], r["buoy_km"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("buoy")}  # hand-checked: owner terms read (NDBC = NWS public domain, SCRIPPS = CDIP 'not altered' + credit); partner buoys with unread terms are left out
-COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
+COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8"))}
+RED_TIDE_COASTS = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r["state"] in ("FL", "AL", "MS", "TX")}  # PLAN 30: HABSOS states  # NOAA CO-OPS stations with a coast page (plan 2026-11-06 step 2)
 COAST_TABLES = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if r.get("tables") and re.fullmatch(r"\d+(\.\d+)?", r.get("level_km") or "")}  # tide tables (owner decision 3, 2026-11-08): no live level within 25 km, so the page has predictions only; level_* names the nearest live station, never read
 COAST_LEVEL = {r["site"]: {"id": r["level_from"], "name": r["level_name"], "km": float(r["level_km"])} for r in csv.DictReader(open(os.path.join(ROOT, "data", "coasts.csv"), encoding="utf-8")) if not r.get("tables") and r.get("level_from") and re.fullmatch(r"\d+(\.\d+)?", r.get("level_km") or "")}  # review 2026-11-08: a row without a distance is skipped (its page then fails 'no reading'), never a crash of every gauge's collect  # prediction-only tide stations (owner 2026-11-08): the one real reading is a NOAA live level within 25 km, named on the page with its distance
 AGENCY = {r["site"]: r["source"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "lakes.csv"), encoding="utf-8")) if r.get("source")}  # lakes read from their operator's own feed (cdec:SHA); USGS has no gauge there
@@ -1768,6 +1769,31 @@ def fetch_surf(lat, lon):
     return {"fetched_at": now_iso(), "rows": rows}
 
 
+HABSOS = "https://gis.ncdc.noaa.gov/arcgis/rest/services/ms/HABSOS_CellCounts/MapServer/0/query"
+
+
+def fetch_redtide(lat, lon):
+    """PLAN 30: Karenia brevis (red tide) samples within 25 km in the last 14 days from NOAA NCEI HABSOS (FWC and partners' samples). Sample date only:
+    the service's clock zone is not stated, so no time of day is shown. No sample nearby is an empty list, said as 'no sample', never 'no red tide'.
+    An error reply raises (cache kept). 1 call a day per Gulf or Florida coast."""
+    since = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
+    q = urllib.parse.urlencode({"where": "SAMPLE_DATE >= DATE '%s' AND SPECIES = 'brevis'" % since, "geometry": "%.4f,%.4f" % (lon, lat), "geometryType": "esriGeometryPoint", "inSR": 4326,
+                                "distance": 25, "units": "esriSRUnit_Kilometer", "spatialRel": "esriSpatialRelIntersects", "outFields": "DESCRIPTION,SAMPLE_DATE,CATEGORY,CELLCOUNT,CELLCOUNT_UNIT,LATITUDE,LONGITUDE",
+                                "orderByFields": "SAMPLE_DATE DESC", "returnGeometry": "false", "resultRecordCount": 500, "f": "json"})
+    j = http_json(HABSOS + "?" + q, NWS_H, 60)
+    if "features" not in j:
+        raise RuntimeError("HABSOS query failed: %s" % str(j)[:80])
+    rows = []
+    for f in j["features"]:
+        a = f["attributes"]
+        if a.get("SAMPLE_DATE") is None or a.get("CELLCOUNT") is None or (a.get("CELLCOUNT_UNIT") or "cells/L") != "cells/L":
+            continue  # a sample with no date, count or another unit is not shown, never read as zero
+        km = 6371 * 2 * math.asin(math.sqrt(math.sin(math.radians(a["LATITUDE"] - lat) / 2) ** 2 + math.cos(math.radians(lat)) * math.cos(math.radians(a["LATITUDE"])) * math.sin(math.radians(a["LONGITUDE"] - lon) / 2) ** 2))
+        rows.append({"site": (a.get("DESCRIPTION") or "Unnamed site").strip(), "date": datetime.datetime.fromtimestamp(a["SAMPLE_DATE"] / 1000, datetime.timezone.utc).date().isoformat(),
+                     "count": a["CELLCOUNT"], "cat": (a.get("CATEGORY") or "").strip(), "km": round(km, 1)})
+    return {"fetched_at": now_iso(), "since": since, "rows": rows}
+
+
 def fetch_buoy(st):
     """The newest row of the station's hand-checked buoy (NDBC realtime2 standard meteorological file): wave height, dominant period, mean wave
     direction, sea temperature, in the units the file states (m, s, degT, degC). 'MM' (missing) stays None, shown Unknown, never zero. 1 call."""
@@ -1846,6 +1872,7 @@ def fetch_extras(site, rec, h, log):
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     *((("floodtide", lambda: fetch_floodtide(site)),) if site in COASTS else ()),
                     *((("surf", lambda: fetch_surf(lat, lon)),) if site in COASTS else ()),
+                    *((("redtide", lambda: fetch_redtide(lat, lon)),) if site in RED_TIDE_COASTS else ()),
                     *((("moonphase", fetch_moonphase),) if site not in COASTS else ()),
                     ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code

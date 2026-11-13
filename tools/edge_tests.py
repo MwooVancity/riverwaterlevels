@@ -1079,4 +1079,28 @@ if __name__ == "__main__":
             assert collect._PHASES == [], "moon: a short reply stayed in the shared list"
     finally:
         collect._PHASES[:], collect.http_raw = pr_, hr_
+    # PLAN 30 red tide (HABSOS): highest count named with its site and date; all zero said as no cells found; no sample = 'no sample', never 'no red tide'
+    hj_ = collect.http_json
+    try:
+        collect.http_json = lambda u, *a, **k: {"features": [{"attributes": {"DESCRIPTION": "Siesta Beach", "SAMPLE_DATE": 1794240000000, "CATEGORY": "very low", "CELLCOUNT": 333.0, "CELLCOUNT_UNIT": "cells/L", "LATITUDE": 27.265, "LONGITUDE": -82.553}},
+                                                                {"attributes": {"DESCRIPTION": "X", "SAMPLE_DATE": None, "CATEGORY": "", "CELLCOUNT": 5.0, "CELLCOUNT_UNIT": "cells/L", "LATITUDE": 27.3, "LONGITUDE": -82.5}},
+                                                                {"attributes": {"DESCRIPTION": "Y", "SAMPLE_DATE": 1794240000000, "CATEGORY": "", "CELLCOUNT": None, "CELLCOUNT_UNIT": "cells/L", "LATITUDE": 27.3, "LONGITUDE": -82.5}}]}
+        rr_ = collect.fetch_redtide(27.3317, -82.545)
+        assert [x["site"] for x in rr_["rows"]] == ["Siesta Beach"] and rr_["rows"][0]["date"] == "2026-11-09" and 7 < rr_["rows"][0]["km"] < 8, "red tide: a sample with no date or count kept, or date/distance wrong"
+        collect.http_json = lambda u, *a, **k: {"error": {"code": 400}}
+        try:
+            collect.fetch_redtide(27.3, -82.5)
+            raise AssertionError("red tide: an error reply stored as no samples")
+        except RuntimeError:
+            pass
+    finally:
+        collect.http_json = hj_
+    rt_ = lambda r, st="FL": blocks3.b_redtide({"coast": True, "row": {"state": st}, "zone": zoneinfo.ZoneInfo("America/New_York"), "rec": {"redtide": r}})
+    rd_ = {"fetched_at": "2026-11-13T12:00:00+00:00", "rows": [{"site": "Siesta Beach", "date": "2026-11-09", "count": 0.0, "cat": "not observed", "km": 2.0}, {"site": "North Lido Beach", "date": "2026-11-09", "count": 333.0, "cat": "very low", "km": 1.6}]}
+    b_ = rt_(rd_)["body"]
+    assert "333 cells per liter (very low) at North Lido Beach" in b_ and "Siesta Beach" in b_, "red tide: highest count, its category or a site missing"
+    assert "found Karenia brevis" in rt_(dict(rd_, rows=[dict(rd_["rows"][0])]))["body"] and "None of the 1" in rt_(dict(rd_, rows=[dict(rd_["rows"][0])]))["body"], "red tide: all-zero samples not said"
+    e_ = rt_(dict(rd_, rows=[]))
+    assert e_["empty"] and "No sample is not the same as no red tide" in e_["body"], "red tide: no sample read as no red tide"
+    assert "Unknown" in rt_(None)["body"] and rt_(rd_, "CA") is None, "red tide: missing data shown, or the block on a non-Gulf coast"
     print("selftest OK")
