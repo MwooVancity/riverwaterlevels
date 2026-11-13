@@ -176,6 +176,7 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 - 2026-12-07: Rio Grande at Albuquerque title test (clicks and CTR vs the 28 days before).
 - 2026-12-11: Search Console Links (referring domains) after outreach.
 - 2026-12-21: tide-table pages, impressions after 6 weeks; a page with none is improved or pulled.
+- DECIDED 2026-11-13 (owner asked: snow site / snowpack): no snow site, no snowpack block for now. Keyword Planner US (Nov 2025-Oct 2026): searches are by state, not river: 'colorado snowpack' 10K-100K, other western states 1K-10K, 'snotel' 1K-10K, 'snow water equivalent' 10K-100K; by river almost none ('colorado river snowpack' 100-1K, 'arkansas river snowpack' 10-100, 'yellowstone river snowpack' and 'snowpack and river flows' no data). No advertiser bids on any snowpack term (low ad value) vs CA$28 top bid on 'colorado river water level'. Revisit only with the January checkpoint met.
 - DONE 2026-11-11: AirNow guidelines read in full (no ad or commercial bar; credit, unaltered values, "preliminary" all on the page; EPA AQI colour dot added). stocking, acis, ncwsa, wqp publish no terms (searched 2026-11-11), so nothing bars them; cwms read 2026-11-12 in a browser: USACE information "may be distributed or copied", credit requested (kept).
 - CLOSED 2026-11-11, code review leftovers: tide cycle test (lib/hero.py oscillating) costs about 192 readings a page, milliseconds at 14,000; the duplicate hub helper changes nothing a reader sees; the missing 'updated' note heals at the page's next 2 h rebuild.
 
