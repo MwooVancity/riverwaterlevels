@@ -252,6 +252,8 @@ def credit_line(b):
 
 def block(bid, heading, tag, body, source, src_id, as_of=None, amber=False, empty=False):
     """empty=True: a valid-empty state (one sentence such as "no river forecast issued"), drawn as one grey line, not a card."""
+    if tag not in TAGS:  # 2026-11-13: a new block tagged 'nws' crashed every coast page in the cloud; failing here makes its edge test fail first
+        raise KeyError("block %s: tag %r is not in TAGS" % (bid, tag))
     if not isinstance(amber, bool):  # an age in hours: old by the one table
         amber = amber is not None and amber > stale_after(bid)
     return {"id": bid, "heading": heading, "tag": tag, "body": body, "source": source, "src_id": src_id, "as_of": as_of, "amber": amber, "empty": empty}

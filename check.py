@@ -24,6 +24,12 @@ WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.
 CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
 
 
+def link_count(h):
+    """Links that leave the page, for BUDGET. A jump within the page (href="#...") is not a link to another URL for a reader or for Google
+    (2026-11-13: the 53-entry section menu put Gallatin and Potomac over 125, so their pages stopped updating while their real links were 77)."""
+    return len(re.findall(r"<a\s[^>]*\bhref=\"(?!#)", h))
+
+
 def kind_of(rel):
     parts = rel.replace("\\", "/").split("/")
     if rel == "index.html":
@@ -887,7 +893,7 @@ def check_dir(d, only_rebuilt=False):
                     READ["door_pages"] = READ.get("door_pages", 0) + 1
                 links_of[u] = set(re.findall(r'href="(/[^"#?]*)"', h))
                 noindex_of[u] = bool(re.search(r'<meta name="robots" content="noindex', h))
-                n_links[u] = len(re.findall(r"<a ", h))
+                n_links[u] = link_count(h)
                 vis_of[u] = len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))))
                 OWN[u] = (kind_of(rel), noindex_of[u], len(re.findall(r'class="card blk"', h)))  # every page its own (owner 2026-11-11): data sections a page carries itself
     site_bad = []
@@ -1332,6 +1338,7 @@ def selftest():
     big = [{"site": str(i), "dashboard_url": "/river/x/%d/" % i, "river": "X River", "place": "P%d" % i, "state": "ZZ"} for i in range(700)]
     st = dir_.status_page(big, {str(i): {"age_min": i} for i in range(700)}, "2026-11-04T00:00:00+00:00")
     assert st.count('href="/river/x/') == dir_.STATUS_ROWS and 'href="/river/x/699/"' in st and "400 more gauges" in st, "selftest: the status page links every gauge, so near 600 gauges its link budget stopped the whole deploy"
+    assert link_count('<a href="#fish">x</a><a class="t" href="#moon">y</a><a href="/river/a/">z</a><a rel="noopener" href="https://x.gov/">w</a><a id="top"></a>') == 2, "selftest: link budget counted jumps within the page, or missed a real link"
     ids = block_ids()
     assert ids.get("b_about") == "about_gauge" and ids.get("b_rate") == "rate_of_change", "selftest: block id map"
     assert not world.promise_faults(ids), "selftest: forcing guard: %s" % world.promise_faults(ids)[:3]

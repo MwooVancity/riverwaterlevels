@@ -779,20 +779,20 @@ def b_surf(G):
     s = G["rec"].get("surf")
     head = "Surf zone forecast"
     if not s:
-        return block("surf", head, "nws", "<p>Unknown: the National Weather Service surf zone forecast was not read in this build.</p>", "Source: National Weather Service Surf Zone Forecast.", "nws")
+        return block("surf", head, "official", "<p>Unknown: the National Weather Service surf zone forecast was not read in this build.</p>", "Source: National Weather Service Surf Zone Forecast.", "nws")
     src = "Source: National Weather Service Surf Zone Forecast, beach zones within 15 km of the station, read %s" % esc(tzl(parse_t(s["fetched_at"]), G["zone"]))
     rows = s.get("rows") or []
     if not rows:
-        return block("surf", head, "nws", "<p><b>The National Weather Service issues no surf zone forecast for this stretch of coast now.</b> Many offices issue one only in the beach season.</p>", src + ".", "nws", empty=True)
+        return block("surf", head, "official", "<p><b>The National Weather Service issues no surf zone forecast for this stretch of coast now.</b> Many offices issue one only in the beach season.</p>", src + ".", "nws", empty=True)
     at = nws_issued(rows[0].get("productdat"), rows[0].get("producttim"))
     age = (G["now"] - at).total_seconds() / 3600 if at else None
     if age is not None and age > 72:
-        return block("surf", head, "nws", "<p>Unknown: the newest National Weather Service surf zone forecast read here was issued %d days ago.</p>" % round(age / 24), src + ".", "nws")
+        return block("surf", head, "official", "<p>Unknown: the newest National Weather Service surf zone forecast read here was issued %d days ago.</p>" % round(age / 24), src + ".", "nws")
     issued = esc(tzl(at, G["zone"])) if at else esc("%s %s" % (rows[0].get("productdat"), rows[0].get("producttim")))
     first = rows[0]
     lead = "NWS rip current risk at %s, %s: %s. Surf: %s" % (esc(first["beachname"]), esc(first["period"].lower() if first["period"] in ("Today", "Tonight", "Rest of today") else first["period"]), esc(first["rip"]), esc((first.get("surf") or "Unknown").rstrip(".") + "."))
     body = "<p><b>%s</b></p>" % lead + table(["Beach zone", "Period", "Rip current risk (NWS)", "Surf (NWS)"], "".join(tr([esc(r["beachname"]), esc(r["period"]), esc(r["rip"]), esc(r.get("surf") or "Unknown")]) for r in rows[:6]))
-    return block("surf", head, "nws", body, src + ", issued %s by NWS %s. Rip current risk and surf height are the National Weather Service's words. <a href=\"%s\" rel=\"noopener\">Full NWS product</a>." % (
+    return block("surf", head, "official", body, src + ", issued %s by NWS %s. Rip current risk and surf height are the National Weather Service's words. <a href=\"%s\" rel=\"noopener\">Full NWS product</a>." % (
         issued, esc((first.get("sitename") or "").replace("WFO ", "")), esc(first.get("srfprod") or "https://www.weather.gov/beach/")), "nws", amber=age)
 
 
