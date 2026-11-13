@@ -186,23 +186,17 @@ Reader tools from the 2026-11-03 gap research (never folded in until 2026-11-11;
 11. `_redirects`: rules after the first dynamic one count against 100; single-gauge forwards live in `single-rivers.json` plus the Worker. Link budgets: home 300, state 700.
 12. NOAA CO-OPS: 4 calls per coast per hour, no published limit (300 coasts = 28,800 a day): watch 429s. RISE and CDEC publish no limit.
 
-## Owner only
-- AirNow asks users to tell it they use the data and keep a contact on file: once the contact address exists, send dmc@airnowtech.org one line (site name, URL, contact). Not required for the page to stay up.
-- Request-indexing job stalled since 2026-11-09 (runs 11-10 and 11-11 "succeeded" but requested 0: Chrome asked for site permission and nobody answered): in Chrome, open the Claude extension, allow search.google.com once ("Always allow"). The 9:28 job then runs alone.
-- DONE 2026-11-12, 20 of 40 sent (Claude in Chrome from the owner's Gmail, signed Michael, replies to contact@; each confirmed "Message sent" or "submission was successful"; data/outreach.csv sent_on). Owner by hand (form has a CAPTCHA Claude may not solve): Shasta Cascade upstateca.com/contact-us, Callville Bay callvillebay.com/contact, Cartersville CVB cartersvillemuseumcity.com/contact-us, Kerr Lake Guide kerrlakeguide.com/contact-us, Lake Canyon Yacht Club (site blocks automated visits). Not sent, no fitting route: mycanyonlake, canyonlaketexas.org, lakepowell.com, allatoonalake.org (contact 404), Safe Harbor (slip-sales form only), Sunrise Beach (page gone), Rick's and Fowler guide sites (dead), Red Cove, Holiday Harbor, Frank's, Bones (listing platforms, not the business), KSAT (captioning inbox only), Community Impact and Freedom Boat Club (corporate forms). Earlier text: Links (drawing board 5, 0 sent until now): 40 emails ready in docs/outreach-emails.md, one per organization for the 13 live lake pages, each offering the free embed panel. Send after Email Routing is on (so they can reply to a site address); tell Claude which went and it dates them in data/outreach.csv. Proof: referring domains in Search Console Links, read 2026-12-11.
-- Owner alone decides: publisher name and contact email; pages opened to Google beyond the daily 25; ads and consent; Search Console; source keys; domain renewal; Cloudflare plan; outside uptime monitor; cutting any block.
-- Workers Paid ($5/mo), then GitHub variable `WORKERS_PAID`=1: 100,000 files; free is 100,000 requests a day shared, past it error 1027 until midnight UTC. Needed before ~5,300 gauges.
-- Publisher name and contact address; `data/publisher.json` email is empty.
-- AdSense: turn on consent mode in Privacy & messaging (flags are off by default); add a contact email, then build `/contact/` and link it in the footer.
-- AdSense decision. CSP stays report-only while ads are on pages.
-- Free sign-ups: SEPA registration, OPW courtesy email (with our server IPs, before Irish river pages), NRW key (Wales 1-year storage limit: default accept, keep 12 months). Later keys: Norway NVE, NZ Canterbury.
-- Outside uptime monitor; GitHub Actions failure-email setting; a running Keyword Planner campaign for exact monthly volumes.
-- Decide: a daily scheduled Claude routine that reads GitHub failures and the watchdog report and fixes code (costs tokens daily).
-- Replace the Google robot key `livedatacalc-automation` (printed in chat 2026-10-31); old key starts 73f0baf9.
-- Confirm a phone visit in Analytics Realtime (owner's Chrome blocks the tag). Confirm the test alarm email arrived.
-- 5-second test (owner 2026-11-09 readable-at-a-glance rule): show one river page on a phone to someone who is not Claude for 5 seconds; they say what the river is doing. Tell Claude what they said.
-- LIVE 2026-11-12 (read live: /contact/ 200 with mailto contact@riverwaterlevels.com, footer link on home, About names the contact; inbox delivery not yet tested) (Claude in Chrome at the owner's request; rule and verified inbox already existed, "Add missing records" clicked; MX live on 1.1.1.1): Contact address (Cloudflare Email Routing): Cloudflare dashboard > riverwaterlevels.com > Email > Email Routing > Get started > add the custom address `contact` (contact@riverwaterlevels.com) forwarding to your own inbox > Add records. If the address is already there, open Email Routing > Settings > "Add missing records". Your inbox address is never written in this repo. Then Claude sets data/publisher.json email to contact@riverwaterlevels.com.
-- Cloudflare API token (the Cloudflare load guard, tools/worker_load.py, is blind without it: audit #32): Cloudflare dashboard > My Profile > API Tokens > Edit the token used as CLOUDFLARE_API_TOKEN > Add more > Account > Account Analytics > Read > Continue to summary > Update token (Save).
-- Send the outreach notes in data/outreach.csv.
-- Search Console > Settings > Users and permissions > velocity-engine@asmr-directory-497009.iam.gserviceaccount.com > three dots > Change permissions > Full > Save (Claude's click was blocked: it grants a permission).
-- Outreach emails; domain renews 2027-10-16; source-permission visits (USACE, TVA, Recreation.gov, NID).
+## Owner only (ranked by what it unlocks; rewritten 2026-11-13, done items removed: contact address and publisher email are live)
+1. Search Console robot access: Search Console > Settings > Users and permissions > velocity-engine@asmr-directory-497009.iam.gserviceaccount.com > three dots > Change permissions > Full > Save. Unlocks: Claude reads clicks and impressions per page and submits pages itself (Claude may not grant permissions).
+2. Request-indexing job (stalled since 2026-11-09): in Chrome, Claude extension, allow search.google.com once ("Always allow"). Unlocks: new pages asked into Google daily.
+3. Replace the Google robot key livedatacalc-automation (shown in chat 2026-10-31, starts 73f0baf9): Google Cloud > IAM > Service accounts > Keys > Add key (JSON), delete the old one, put the new file where the old one was. Security.
+4. Cloudflare token: dashboard > My Profile > API Tokens > Edit the CLOUDFLARE_API_TOKEN token > Add more > Account > Account Analytics > Read > Update. Unlocks: the Worker load guard sees traffic.
+5. AdSense: Privacy & messaging > turn on consent mode; reapply after 2026-11-26 (Google re-reads pages with the contact page and shorter notes first).
+6. 5-second test: show one river page on a phone to someone else for 5 seconds; tell Claude what they said the river is doing.
+7. Five outreach forms with a CAPTCHA (Claude may not solve): upstateca.com/contact-us, callvillebay.com/contact, cartersvillemuseumcity.com/contact-us, kerrlakeguide.com/contact-us, Lake Canyon Yacht Club. Text in docs/outreach-emails.md.
+8. Phone check: open the site on your phone, Claude confirms the visit in Analytics Realtime (your desktop Chrome blocks the tag).
+9. Say "send" and Claude emails AirNow one line (site, URL, contact@); optional.
+10. Free sign-ups in your name before those countries: SEPA (Scotland), OPW courtesy email (Ireland), NRW key (Wales); later Norway NVE, NZ Canterbury.
+11. Decide: a daily Claude routine that reads failures and fixes code (costs tokens every day).
+12. Later, dated: Workers Paid $5/mo plus GitHub variable WORKERS_PAID=1 before about 5,300 gauges (about mid-2027); domain renews 2027-10-16.
+Decisions that stay yours: publisher name, pages to Google beyond 25 a day, ads and consent, keys, money, cutting a block.
