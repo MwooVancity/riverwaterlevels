@@ -616,6 +616,17 @@ def fetch_access(lat, lon, radius_m=25000):
 
 
 
+def stat_range(comment):
+    """[first water year, last water year] from a StreamStats statistic comment, or None. Live form (hostile review 2026-11-13, station 02177000):
+    'Statistic Date Range: 10/01/1915 - 09/30/2017' = water years 1916 to 2017; a bare '1931 - 2021' is taken as water years. A date from Oct 1 on is the next water year."""
+    m = re.search(r"Statistic Date Range:\s*(?:(\d{1,2})/\d{1,2}/)?(\d{4})\s*-\s*(?:(\d{1,2})/\d{1,2}/)?(\d{4})", comment or "")
+    if not m:
+        return None
+    wy = lambda mo, y: int(y) + (1 if mo and int(mo) >= 10 else 0)
+    a, b = wy(m.group(1), m.group(2)), wy(m.group(3), m.group(4))
+    return [a, b] if a <= b else None
+
+
 def fetch_floodfreq(site):
     """USGS StreamStats gage statistics: annual exceedance probability (AEP) peak flows with their published confidence intervals.
     Not shown (regulated=True or conflict=True) when the station is regulated or when USGS publishes more than one preferred set that disagree by over 10% at the 1% flow."""
@@ -649,9 +660,9 @@ def fetch_floodfreq(site):
     first = next(iter(best.values()))
     yrs = re.findall(r"\d{4}", first["range"])
     cit = first["cit"]
-    r1 = re.search(r"Statistic Date Range:\s*(\d{4})\s*-\s*(\d{4})", (best.get(1.0) or {}).get("range") or "")  # peer review 2026-11-12 #7: the 1% row's own record years, else none (research leaves the gauge out)
+    r1 = stat_range((best.get(1.0) or {}).get("range"))  # peer review 2026-11-12 #7: the 1% row's own record years, else none (research leaves the gauge out)
     return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "conflict": conflict, "range": ("%s to %s" % (yrs[0], yrs[1])) if len(yrs) >= 2 else None, "years": first["years"],
-            "range1": [int(r1.group(1)), int(r1.group(2))] if r1 else None, "citation": cit.get("title"), "url": cit.get("citationURL"),
+            "range1": r1, "rangev": 2, "citation": cit.get("title"), "url": cit.get("citationURL"),
             "rows": sorted([{k: v for k, v in r.items() if k in ("aep", "q", "lo", "hi")} for r in best.values()], key=lambda r: -r["aep"]), "dur": durs}
 
 
@@ -1786,7 +1797,7 @@ def fetch_extras(site, rec, h, log):
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
         early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))
-        early = early or (key == "floodfreq" and rec.get("floodfreq") is not None and "range1" not in rec["floodfreq"])  # peer review #7: one early refresh for the 1% row's record years, about 264 StreamStats calls once  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
+        early = early or (key == "floodfreq" and rec.get("floodfreq") is not None and rec["floodfreq"].get("rangev") != 2)  # peer review #7: one early refresh for the 1% row's record years, about 264 StreamStats calls once  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
         if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run
