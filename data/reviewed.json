@@ -93,12 +93,14 @@
  },
  "research": {
   "/research/peak-month/": "2026-11-13e",
-  "/research/peak-change/": "2026-11-13b",
-  "/research/flood-stage-years/": "2026-11-13b",
+  "/research/peak-change/": "2026-11-13f",
+  "/research/flood-stage-years/": "2026-11-13f",
   "/research/lake-levels/": "2026-11-13e",
   "/research/": "2026-11-13e",
   "/research/100-year-floods/": "2026-11-13e",
-  "/research/water-temperature/": "2026-11-13e"
+  "/research/water-temperature/": "2026-11-13e",
+  "/research/tides/": "2026-11-13f",
+  "/research/world-rivers/": "2026-11-13f"
  },
  "research_note": "Fresh independent reviews 2026-11-12 to 2026-11-13 (hostile review, fix verification, final check of commit 742da92): these pages PASS at the version shown; any change to a page raises its version in data/research-methods.json and closes it until a fresh review passes."
 }
