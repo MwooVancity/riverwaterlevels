@@ -50,6 +50,14 @@
   "/lake/lake-travis/",
   "/lake/medina-lake/",
   "/lake/shasta-lake/",
+  "/research/",
+  "/research/flood-stage-years/",
+  "/research/lake-levels/",
+  "/research/peak-change/",
+  "/research/peak-month/",
+  "/research/tides/",
+  "/research/water-temperature/",
+  "/research/world-rivers/",
   "/river/alabama-river/claiborne-l-and-d-near-monroeville/",
   "/river/altamaha-river/baxley/",
   "/river/altamaha-river/doctortown/",
@@ -266,5 +274,6 @@
   "/river/youghiogheny-river-pa/below-confluence/",
   "/river/youghiogheny-river-pa/sutersville/",
   "/river/yuba-river/marysville/"
- ]
+ ],
+ "pulled": []
 }

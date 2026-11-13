@@ -866,6 +866,29 @@ def probe(warn, square, pages):
         assert 'href="/research/"' not in _pgx.footer(), "20: the footer links research pages Google may not index"
     finally:
         _pgx.research_open = ro_
+    # PLAN 20: open_wave --open lets a named research page into Google; a page the last build did not serve is refused
+    import importlib.util as _iu
+    _sp = _iu.spec_from_file_location("ow_", os.path.join(os.path.dirname(os.path.abspath(__file__)), "open_wave.py"))
+    ow_ = _iu.module_from_spec(_sp)
+    _sp.loader.exec_module(ow_)
+    td_ = tempfile.mkdtemp()
+    os.makedirs(os.path.join(td_, "dist"))
+    json.dump({"urls": ["/research/", "/research/tides/"]}, open(os.path.join(td_, "dist", "_urls.json"), "w"))
+    ix_ = os.path.join(td_, "ix.json")
+    json.dump({"open": True, "site_pages": True, "allow": ["/river/a/b/"]}, open(ix_, "w"))
+    ow_.IX, ow_.ROOT, argv_ = ix_, td_, sys.argv
+    try:
+        sys.argv = ["open_wave.py", "--open", "/research/tides/"]
+        ow_.main()
+        assert json.load(open(ix_))["allow"] == ["/research/tides/", "/river/a/b/"], "20: --open did not add the page"
+        sys.argv = ["open_wave.py", "--open", "/research/ghost/"]
+        try:
+            ow_.main()
+            raise AssertionError("20: --open let in a page the build does not serve")
+        except SystemExit:
+            pass
+    finally:
+        sys.argv = argv_
     # PLAN 19d: the biggest floods, day by day
     dly = [[(datetime.date(1990, 1, 1) + datetime.timedelta(days=k)).isoformat(), 100.0] for k in range(12000)]
     dv = dict(dly)

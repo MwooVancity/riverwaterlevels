@@ -22,6 +22,18 @@ def main():
         json.dump(cfg, open(IX, "w", encoding="utf-8"), indent=1)
         print("pulled %d page(s); %d remain allowed. Deploy to take effect." % (len(gone), len(cfg["allow"])))
         return
+    if "--open" in sys.argv:  # PLAN 20: a named non-gauge page (research) enters Google through this one door too; only a page the live site serves
+        want = [a for a in sys.argv[sys.argv.index("--open") + 1:] if a.startswith("/")]
+        D = max((os.path.join(ROOT, x) for x in ("dist", "dist_next") if os.path.exists(os.path.join(ROOT, x, "_urls.json"))), key=lambda p: os.path.getmtime(os.path.join(p, "_urls.json")), default=None)
+        live = set(load(os.path.join(D, "_urls.json"), {"urls": []})["urls"]) if D else None
+        bad = [u for u in want if live is not None and u not in live]
+        if bad:
+            sys.exit("refused: not served by the last build: %s" % ", ".join(bad))
+        cfg["allow"] = sorted(set(cfg["allow"]) | set(want))
+        cfg["pulled"] = [u for u in cfg.get("pulled") or [] if u not in want]
+        json.dump(cfg, open(IX, "w", encoding="utf-8"), indent=1)
+        print("opened %d page(s); %d allowed. Deploy to take effect." % (len(want), len(cfg["allow"])))
+        return
     n = int(next((a for a in sys.argv[1:] if a.isdigit()), 25))
     pub = load(os.path.join(ROOT, "data", "publisher.json"), {})
     if "--apply" in sys.argv and "@" not in str(pub.get("email") or "") and not pub.get("waived"):
