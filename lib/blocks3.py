@@ -764,6 +764,11 @@ def b_wpc(G):
     return out_b
 
 
+def wy_of(r):
+    """USGS water year of a peak row (Oct 1 to Sep 30, named for the year it ends in)."""
+    return int(r[0][:4]) + (1 if r[0][5:7] >= "10" else 0)
+
+
 def stage_years(G):
     """(peak rows with a usable stage, NWS flood categories, nwps record), or None: the one rule for the gauge page block and /research/flood-stage-years/."""
     n = G["rec"].get("nwps") or {}
@@ -772,9 +777,14 @@ def stage_years(G):
     if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and "minor" in cats and stage_pair(G)) or datum_gap(G):
         return None
     rows = [r for r in p["rows"] if r[2] is not None and (not r[3] or r[3].replace(" ", "") == "['ESTIMATED']")] if all(len(r) > 3 for r in p["rows"]) else []  # any other USGS qualifier (different datum, backwater, not the annual maximum) can misstate the peak stage
+    drop = {"HISTORIC", "MAXDAILYMEAN", "DAMFAILURE", "MONTHUNKNOWN", "YEARUNKNOWN"}  # peer review 2026-11-12 #1: USGS codes HISTORIC on the flow row only; a historic stage (Louisville 1832) entered 'X of Y years'
+    rows = [r for r in rows if len(r) < 5 or not (set(str(r[4] or "").split()) & drop)]
+    dd = [r[0] for r in p["rows"] if r[3] and "DIFFDATUM" in r[3]]
+    if dd:  # stages before the last datum change can sit on another zero point: only the years after it count
+        rows = [r for r in rows if r[0] > max(dd)]
     wy = {}
     for r in rows:  # PLAN 17: a water year counts once, at its highest stage ('X of Y years' counted secondary peaks as years)
-        y = int(r[0][:4]) + (1 if r[0][5:7] >= "10" else 0)
+        y = wy_of(r)
         if y not in wy or r[2] > wy[y][2]:
             wy[y] = r
     rows = [wy[y] for y in sorted(wy)]
@@ -792,8 +802,8 @@ def b_stage_years(G):
         if k in cats:
             out += tr(["%s flood stage" % k.capitalize(), "%.1f ft" % cats[k], "%d of %d years had a peak at or above it" % (sum(1 for r in rows if r[2] >= cats[k]), len(rows))], right=(1, 2))
     out_b = block("flood_stage_years", "Annual peaks that reached flood stage", "hist", table(["NWS category", "Stage", "Annual peaks"], out, right=(1, 2)),
-                 "Source: USGS annual peak gage heights (%d years with a recorded peak stage, %s to %s; peaks that USGS marks with any qualifier other than estimated are left out) compared with National Weather Service flood stages for forecast point %s. Shown because the USGS and NWS stage readings agree within %.1f ft. Older stages can be on an older gauge datum." % (
-                     len(rows), esc(rows[0][0][:4]), esc(rows[-1][0][:4]), esc(n.get("lid") or ""), DATUM_TOL_FT), "usgs")
+                 "Source: USGS annual peak gage heights (%d water years with a recorded peak stage, water years %d to %d, the highest stage of each; peaks that USGS marks with any stage qualifier other than estimated, or as historic, a daily mean or a dam failure, are left out%s) compared with National Weather Service flood stages for forecast point %s. Shown because the USGS and NWS stage readings agree within %.1f ft. Older stages can be on an older gauge datum." % (
+                     len(rows), wy_of(rows[0]), wy_of(rows[-1]), "; only years after USGS's last change of gauge datum count" if any(r[3] and "DIFFDATUM" in r[3] for r in (G["rec"].get("peaks") or {}).get("rows") or []) else "", esc(n.get("lid") or ""), DATUM_TOL_FT), "usgs")
     out_b["also"] = ["nwps"]
     return out_b
 
