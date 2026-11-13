@@ -839,7 +839,7 @@ def b_fish(G):
         return None
     f = G["rec"].get("fish")
     head = "Fish species recorded nearby"
-    src = "Source: GBIF.org occurrence records (CC0 and CC BY licensed), common names from ITIS"
+    src = "Source: GBIF.org occurrence records shared for reuse with credit (CC0 and CC BY), common names from ITIS"
     if not f:
         return block("fish", head, "agency", "<p>Unknown: fish records near here were not read in this build.</p>", src + ".", "gbif")
     src += ", read %s" % esc(tzl(parse_t(f["fetched_at"]), G["zone"]))
