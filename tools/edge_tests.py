@@ -1168,6 +1168,14 @@ if __name__ == "__main__":
     sk_ = lambda lake, river: blocks3.b_stocking({"lake": lake, "river": river, "zone": datetime.timezone.utc, "now": datetime.datetime(2026, 11, 13, tzinfo=datetime.timezone.utc),
                                                   "rec": {"stocking": {"fetched_at": "2026-11-13T00:00:00+00:00", "source": "S", "credit": "C", "miles": 35, "rows": [own_, {"species": "Rainbow Trout", "date": "2026-10-13", "num": None, "water": "Lake Saltonstall - Haverhill", "size": None, "mi": 3.0}]}}})
     assert "Lake Saltonstall" in sk_("00062", "Lake Saltonstall")["body"] and "Swift River" not in sk_("00062", "Lake Saltonstall")["body"] and "Swift River" in sk_(None, "Swift River")["body"], "stocking: a lake page missed its lake or showed a river's release"
+    # PLAN 36 Georgia: a stream line's distance is its nearest vertex; the fixed species comes from the source entry; no count invented
+    gt_ = collect.get_text
+    try:
+        collect.get_text = lambda u, *a, **k: json.dumps({"features": [{"attributes": {"Name": "Toccoa River (F) DH", "LastStock": 1793725200000}, "geometry": {"paths": [[[-84.0, 34.9], [-84.2, 34.61]]]}}]})
+        ga_ = collect.fetch_stocking(34.6, -84.2)
+        assert ga_["rows"][0]["species"] == "Trout" and ga_["rows"][0]["num"] is None and ga_["rows"][0]["mi"] < 1 and ga_["rows"][0]["date"] == "2026-11-03", "Georgia stocking: line distance, fixed species, count or date wrong"
+    finally:
+        collect.get_text = gt_
     # 2026-11-13: the fish source line said 'licensed' (check.py BANNED) and the cloud refresh stopped; every new block's text now meets the banned list here first
     import check as ck_
     outs_ = [fb_(dict(fi_, fetched_at="2026-11-13T00:00:00+00:00")), sf_(sr_), rt_(rd_), kt_(base_), mf_(mp_), sk_(None, "Swift River")]

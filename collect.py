@@ -545,6 +545,9 @@ STOCK_SOURCES = [
     {"id": "nd", "name": "North Dakota Game & Fish stocking", "url": "https://ndgishub.nd.gov/arcgis/rest/services/Applications/GNF_FishingWaters/MapServer/3/query",
      "bbox": (-104.2, 45.8, -96.5, 49.1), "credit": "North Dakota Game and Fish Department",
      "f": {"species": "Species", "date": "StockDate", "num": "Total_Stocked", "water": "Lake_Name", "size": "StockSizeDescription"}},
+    {"id": "ga", "name": "Georgia DNR recently stocked trout streams", "url": "https://services6.arcgis.com/9QlSLDqa0P1cHLhu/arcgis/rest/services/Recently_Stocked_Streams/FeatureServer/0/query",
+     "bbox": (-85.7, 30.3, -80.8, 35.1), "credit": "Georgia Department of Natural Resources, Wildlife Resources Division", "species": "Trout",  # PLAN 36: one row per stream, its last stocking only; trout by the layer's own name, no count; terms: empty licence, no reuse bar (read 2026-11-13)
+     "f": {"species": None, "date": "LastStock", "num": None, "water": "Name", "size": None}},
 ]
 
 
@@ -615,10 +618,11 @@ def fetch_stocking(lat, lon, miles=35):
             iso = (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=d)).date().isoformat() if isinstance(d, (int, float)) else (str(d)[:10] if d else "")
             if not iso or iso < cut:
                 continue
-            mi = round(hav_km(lat, lon, g["y"], g["x"]) * 0.621371, 1) if g.get("y") is not None and g.get("x") is not None else None
+            vx = [(g["y"], g["x"])] if g.get("y") is not None and g.get("x") is not None else [(p_[1], p_[0]) for part in (g.get("paths") or g.get("rings") or []) for p_ in part]  # a stream line (Georgia): its nearest vertex
+            mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in vx) * 0.621371, 1) if vx else None
             if mi is not None and mi > miles:
                 continue
-            rows.append({"species": a.get(fm["species"]), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
+            rows.append({"species": a.get(fm["species"]) if fm.get("species") else s.get("species"), "date": iso, "num": a.get(fm.get("num", "")), "water": a.get(fm.get("water", "")),
                          "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
         if rows:
             return {"fetched_at": now_iso(), "source": s["name"], "credit": s["credit"], "url": s["url"], "miles": miles, "rows": stock_keep(rows)}
