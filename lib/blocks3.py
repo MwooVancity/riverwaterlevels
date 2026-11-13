@@ -796,6 +796,24 @@ def b_surf(G):
         issued, esc((first.get("sitename") or "").replace("WFO ", "")), esc(first.get("srfprod") or "https://www.weather.gov/beach/")), "nws", amber=age)
 
 
+def b_moonphase(G):
+    """PLAN 32 (anglers ask for the moon; coast pages have b_moon): the next principal moon phases from the U.S. Naval Observatory, UT shown in local time.
+    States: valid; unavailable (not read, or no phase ahead in the list) = Unknown. Only future phases; no 'good fishing' words."""
+    if G.get("coast") or not cleared("usno"):
+        return None
+    m, z = G["rec"].get("moonphase") or {}, G["zone"]
+    src = "Source: U.S. Naval Observatory, Astronomical Applications Department, moon phases"
+    nx = [(ph, parse_t(t)) for ph, t in m.get("phases") or [] if parse_t(t) > G["now"]]
+    if not nx:
+        return block("moonphase", "Moon phases", "agency", "<p>Unknown: the U.S. Naval Observatory's moon phases were not read in this build.</p>", src + ".", "usno")
+    full = next((t for ph, t in nx if ph == "Full Moon"), None)
+    new = next((t for ph, t in nx if ph == "New Moon"), None)
+    lead = "; ".join(x for x in ("Next full moon: %s" % esc(tzl(full, z)) if full else "", "next new moon: %s" % esc(tzl(new, z)) if new else "") if x)
+    rows = "".join(tr([esc(ph), esc(tzl(t, z))]) for ph, t in nx[:4])
+    return block("moonphase", "Moon phases", "agency", "<p><b>%s.</b></p>" % (lead[:1].upper() + lead[1:]) + table(["Phase", "Date and time"], rows),
+                 src + ", read %s. USNO gives the times in UT; local time is our conversion." % esc(tzl(parse_t(m["fetched_at"]), z)), "usno")
+
+
 def b_kingtide(G):
     """PLAN 29, coast pages: the highest predicted tides of the next 12 months (king tides) against NOAA's minor flood level at this station.
     States: valid (highest tides, and the ones at or above the level); valid-empty (none reach it: the gap is said); no level published (said, never

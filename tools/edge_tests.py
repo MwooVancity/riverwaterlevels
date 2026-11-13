@@ -1060,4 +1060,23 @@ if __name__ == "__main__":
     em_ = sf_(dict(sr_, rows=[]))
     assert em_["empty"] and "issues no surf zone forecast" in em_["body"] and "Low" not in em_["body"], "surf: no forecast read as a low risk"
     assert sf_(sr_, coast=False) is None, "surf block on a river page"
+    # PLAN 32 moon phases on river and lake pages: USNO UT shown in local time, past phases dropped, none ahead = Unknown, coasts keep b_moon
+    mp_ = {"fetched_at": "2026-11-13T00:00:00+00:00", "phases": [["New Moon", "2026-11-09T07:02:00+00:00"], ["First Quarter", "2026-11-17T11:48:00+00:00"], ["Full Moon", "2026-11-24T14:53:00+00:00"], ["Last Quarter", "2026-12-01T06:08:00+00:00"], ["New Moon", "2026-12-09T00:52:00+00:00"]]}
+    mf_ = lambda m, **k: blocks3.b_moonphase(dict({"zone": zoneinfo.ZoneInfo("America/Denver"), "now": now_, "rec": {"moonphase": m}}, **k))
+    b_ = mf_(mp_)["body"]
+    assert "Next full moon: Nov 24, 7:53 AM" in b_ or "Next full moon: Nov 24, 7:53 AM" in b_.replace(" ", " "), "moon: UT full moon not shown in local time: " + b_[:200]
+    assert "Nov 9" not in b_ and "Nov 9," not in b_.replace(" ", " "), "moon: a past phase shown as coming"
+    assert "Unknown" in mf_({})["body"] and "Unknown" in mf_(dict(mp_, phases=mp_["phases"][:1]))["body"], "moon: missing or all-past phases shown"
+    assert mf_(mp_, coast=True) is None and not re.search(r"\b(bite|best time|good fishing)\b", b_, re.I), "moon: on a coast page twice, or a fishing verdict"
+    pr_, hr_ = list(collect._PHASES), collect.http_raw
+    try:
+        collect._PHASES.clear()
+        collect.http_raw = lambda u, *a, **k: json.dumps({"phasedata": [{"phase": "Full Moon", "year": 2026, "month": 11, "day": 24, "time": "14:53"}]}).encode()
+        try:
+            collect.fetch_moonphase()
+            raise AssertionError("moon: a short USNO reply was stored")
+        except RuntimeError:
+            assert collect._PHASES == [], "moon: a short reply stayed in the shared list"
+    finally:
+        collect._PHASES[:], collect.http_raw = pr_, hr_
     print("selftest OK")

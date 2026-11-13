@@ -1678,6 +1678,23 @@ def fetch_usno(lat, lon):
     return {"fetched_at": now_iso(), "days": days}
 
 
+_PHASES = []
+
+
+def fetch_moonphase():
+    """PLAN 32 (anglers): the U.S. Naval Observatory's principal moon phases from 8 days ago through about 3 months ahead, in UT. The list is the same
+    everywhere, so it is asked once per collect process and stored on each page that is due (monthly). A time not HH:MM is dropped, never guessed."""
+    if not _PHASES:
+        d = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=8)).date()
+        j = json.loads(http_raw("https://aa.usno.navy.mil/api/moon/phases/date?date=%s&nump=12" % d.isoformat(), 30).decode("utf-8"))
+        _PHASES.extend([p["phase"], "%04d-%02d-%02dT%s:00+00:00" % (p["year"], p["month"], p["day"], p["time"])] for p in j.get("phasedata") or [] if re.fullmatch(r"\d\d:\d\d", p.get("time") or ""))
+        if len(_PHASES) < 8:
+            n = len(_PHASES)
+            del _PHASES[:]
+            raise RuntimeError("USNO returned %d moon phases" % n)
+    return {"fetched_at": now_iso(), "phases": list(_PHASES)}
+
+
 def fetch_lc_mead():
     """Reclamation Lower Colorado Region daily table (usbr.gov/lc/region/g4000/hourly/levels.html, read 2026-11-07): 'AVAILABLE RESERVOIR ELEVATIONS AND
     CONTENTS FOR <MONTH YEAR>', Lake Mead 'AVAILABLE CAPACITY IN A.F. *26120000' at 'ELEVATION IN FEET 1219.6' ('* BOTTOM OF EXCLUSIVE FLOOD CONTROL SPACE'),
@@ -1829,6 +1846,7 @@ def fetch_extras(site, rec, h, log):
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
                     *((("floodtide", lambda: fetch_floodtide(site)),) if site in COASTS else ()),
                     *((("surf", lambda: fetch_surf(lat, lon)),) if site in COASTS else ()),
+                    *((("moonphase", fetch_moonphase),) if site not in COASTS else ()),
                     ("floods", lambda: big_floods(fetch_daily(site, h), rec.get("peaks")) if lake_code(rec) == "00060" else None),  # PLAN 19d: from the stored daily record, no new call when it is under 20 h old
                     ("multiyear", lambda: (lambda pc, m: dict(m, pc=pc) if m else None)(lake_code(rec), multiyear(fetch_daily(site, h, lake_code(rec)))))):  # pc says what the series is: flow, or the lake's elevation code
         if want and key not in want:
