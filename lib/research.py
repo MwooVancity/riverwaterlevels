@@ -609,7 +609,7 @@ def world_rivers(wpages, wkeep, now):
     tb = table(["Country", "Low", "Normal", "High", "Not reporting, tidal or no label"], "".join(
         tr([COUNTRY[f], share(by[f], "low"), share(by[f], "normal"), share(by[f], "high"), str(by[f]["not reporting"] + by[f]["tidal"] + by[f]["no label"])], right=(1, 2, 3, 4)) for f in cs), right=(1, 2, 3, 4))
     lc_ = [f for f in cs if by[f]["low"] + by[f]["normal"] + by[f]["high"]]
-    lead = ("<p><b>Right now, by each country's own label: %s.</b> "
+    lead = ("<p><b>Right now, counted country by country: %s.</b> "
             "Each label has its own basis: %s. So the counts are kept country by country and never added across countries.</p>") % (
         "; ".join("%s, %d of %d gauges low and %d high" % (COUNTRY[f], by[f]["low"], by[f]["low"] + by[f]["normal"] + by[f]["high"], by[f]["high"]) for f in lc_),
         "; ".join({"pegelonline": "the WSV's own marks in Germany", "ea": "the Environment Agency's own typical range in England", "eccc": "our rank against past monthly means in Canada, where Water Survey of Canada publishes no label"}[f] for f in ("pegelonline", "ea", "eccc") if by[f]["low"] + by[f]["normal"] + by[f]["high"]))
@@ -696,6 +696,13 @@ def verify(url, html, data):
         m = re.search(r"Across (\d+) NOAA stations", html)
         if not m or int(m.group(1)) != len(rows):
             bad.append("tide station count against CSV %d" % len(rows))
+        g = re.search(r": ([+-]\d+\.\d\d) ft at", lead)
+        md = re.search(r"median gap between observed water and prediction was ([+-]\d+\.\d\d) ft", html)
+        top_ = max(float(r["max_gap_ft"]) for r in rows) if rows else None
+        if not g or top_ is None or abs(float(g.group(1)) - top_) > 0.011:  # final check 2026-11-13: the headline gap itself, not only the station count (CSV rounds to 0.01)
+            bad.append("tide headline gap %r against CSV max %r" % (g and g.group(1), top_))
+        if not md or abs(float(md.group(1)) - statistics.median(float(r["median_gap_ft"]) for r in rows)) > 0.011:
+            bad.append("tide median gap %r against CSV" % (md and md.group(1)))
     elif url.endswith("/world-rivers/"):
         got_ = {c: (int(a), int(b), int(h)) for c, a, b, h in re.findall(r"(\w+), (\d+) of (\d+) gauges low and (\d+) high", lead)}
         want_ = {}
