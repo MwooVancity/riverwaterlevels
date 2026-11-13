@@ -603,7 +603,7 @@ def fetch_stocking_nh(lat, lon, miles):
         for ft in json.loads(get_text(NH_STOCK + "%d/query?%s" % (layer, q))).get("features", []):
             g, key = ft.get("centroid") or ft.get("geometry") or {}, (ft.get("attributes") or {}).get("BOW_TOWN")
             vx = [(g["y"], g["x"])] if g.get("y") is not None else [(p_[1], p_[0]) for part in (g.get("paths") or []) for p_ in part]
-            if key and vx and re.fullmatch(r"[A-Z0-9 .'&()/-]+_[A-Z0-9 .'-]+", key):
+            if key and vx and "_" in key:  # review 2026-11-13: an uppercase-only pattern dropped keys with commas; quotes are doubled in the query below
                 mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in vx) * 0.621371, 1)
                 if mi <= miles:
                     pos[key] = min(mi, pos.get(key, mi))
@@ -652,6 +652,9 @@ def fetch_stocking_va(lat, lon, miles):
     county to DWR's stocked trout lakes (points) and reaches (lines). A water whose name and county match no feature is left out, never guessed."""
     if not _VA_ROWS:
         _VA_ROWS.extend(va_schedule(get_text(VA_SCHED)))
+        if not _VA_ROWS:  # review 2026-11-13: a markup change parsed to nothing and was re-downloaded at every gauge, unnoticed; now it fails once, named
+            _VA_ROWS.append(("0000-00-00", "", "", []))  # a placeholder no date cut passes: later gauges in this run neither re-download nor show anything
+            raise RuntimeError("Virginia stocking schedule parsed to no rows (page format changed?)")
     dd, pos = miles / 69.0, {}
     for layer in ("DWR_Stocked_Trout_Lakes", "DWR_Stocked_Trout_Reaches"):
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
@@ -675,7 +678,7 @@ def stock_merge(new, prev):
     adapter, nothing found) keeps the old record for its own 12-month window."""
     if not new:
         return new if not prev else prev
-    if prev and set((prev.get("source") or "").split(" and ")) & set(new["source"].split(" and ")):  # a border page's label changes when one state has no row this run
+    if prev and set(prev.get("sources") or [prev.get("source")]) & set(new.get("sources") or [new["source"]]):  # by source name, not label text: agency names hold ' and ' ('NH Fish and Game')
         cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
         new = dict(new, rows=stock_keep(new["rows"] + [r for r in prev.get("rows") or [] if (r.get("date") or "") >= cut]))
     return new
@@ -749,7 +752,17 @@ def fetch_stocking(lat, lon, miles=35):
         ((-114.1, 36.9, -109.0, 42.1), fetch_stocking_ut, "Utah DWR fish stocking report", "Utah Division of Wildlife Resources", "https://dwrapps.utah.gov/fishstocking/Fish"),
         ((-83.7, 36.5, -75.2, 39.5), fetch_stocking_va, "Virginia DWR trout stocking schedule", "Virginia Department of Wildlife Resources (Trout Stocked Streams, Virginia Department of Game and Inland Fisheries)", VA_SCHED))
         if box[0] <= lon <= box[2] and box[1] <= lat <= box[3]]  # two-step states; a border gauge (MA/NH overlap) gets both states' releases, not only the first state's
-    got = [(src, cred, url, r) for fn, src, cred, url in two for r in [fn(lat, lon, miles)] if r]
+    got, asked, failed = [], 0, 0
+    for fn, src, cred, url in two:  # review 2026-11-13: one state's outage must not stop the others (Maryland sits inside Virginia's box)
+        asked += 1
+        try:
+            r = fn(lat, lon, miles)
+        except Exception as e:
+            failed += 1
+            note("stocking", "failed", "%s: %s" % (src, e))
+            continue
+        if r:
+            got.append((src, cred, url, r))
     for s in STOCK_SOURCES:  # every state whose box holds the gauge is asked (Maryland sits inside Virginia's box; a border gauge has two states)
         x0, y0, x1, y1 = s["bbox"]
         if not (x0 <= lon <= x1 and y0 <= lat <= y1):
@@ -758,7 +771,13 @@ def fetch_stocking(lat, lon, miles=35):
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
                                     "spatialRel": "esriSpatialRelIntersects", "outFields": ",".join(v for v in fm.values() if v), "returnGeometry": "true", "resultRecordCount": "500",
                                     "orderByFields": fm["date"] + " DESC", "where": s.get("where", "1=1"), "f": "json"})  # newest first: a 500-row cap on decades of records must cut the oldest, not random ones
-        j = json.loads(get_text(s["url"] + "?" + q))
+        asked += 1
+        try:
+            j = json.loads(get_text(s["url"] + "?" + q))
+        except Exception as e:
+            failed += 1
+            note("stocking", "failed", "%s: %s" % (s["name"], e))
+            continue
         cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
         rows = []
         for ft in j.get("features", []):
@@ -775,8 +794,11 @@ def fetch_stocking(lat, lon, miles=35):
                          "size": a.get(fm["size"]) if fm.get("size") else None, "mi": mi})
         if rows:
             got.append((s["name"], s["credit"], s["url"], rows))
+    if asked and failed == asked:
+        raise RuntimeError("every stocking source for this gauge failed")  # the kept cache stays, never read as 'no stocking'
     if got:
-        return {"fetched_at": now_iso(), "source": " and ".join(g[0] for g in got), "credit": "; ".join(g[1] for g in got), "url": got[0][2], "miles": miles, "rows": stock_keep([x for g in got for x in g[3]])}
+        return {"fetched_at": now_iso(), "source": " and ".join(g[0] for g in got), "sources": [g[0] for g in got], "credit": "; ".join(g[1] for g in got), "url": got[0][2], "miles": miles,
+                "rows": stock_keep([x for g in got for x in g[3]])}
     return None
 
 

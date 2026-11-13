@@ -815,6 +815,7 @@
 "miles": "num",
 "rows": "list",
 "source": "str",
+"sources": "list",
 "url": "str"
 },
 "streamcat": {

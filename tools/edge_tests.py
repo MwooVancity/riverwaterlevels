@@ -1198,7 +1198,7 @@ if __name__ == "__main__":
     nw_ = {"source": "S", "rows": [{"species": "Trout", "date": "2026-11-10", "num": None, "water": "B Creek", "size": None, "mi": 2.0}]}
     mg_ = collect.stock_merge(nw_, old_)
     assert [r["water"] for r in mg_["rows"]] == ["B Creek", "A Creek"], "stocking merge lost a recent release or kept a 2020 one"
-    assert len(collect.stock_merge(dict(nw_, source="S and T"), old_)["rows"]) == 2, "stocking merge: a border page lost its releases when a second state joined"
+    assert len(collect.stock_merge(dict(nw_, source="S and T", sources=["S", "T"]), old_)["rows"]) == 2, "stocking merge: a border page lost its releases when a second state joined"
     assert collect.stock_merge(dict(nw_, source="T"), old_)["rows"] == nw_["rows"] and collect.stock_merge(None, old_) is old_ and collect.stock_merge(None, None) is None, "stocking merge mixed sources or lost the old record"
     # PLAN 37d Utah: future dates held, bad rows dropped, abbreviations expanded so 'Deer Cr Res' reaches the Deer Creek Reservoir page
     ut_html_ = ("<tr><td>DEER CR RES</td><td>WASATCH</td><td>RAINBOW</td><td>2,730</td><td>9.42</td><td>11/10/2026</td></tr>"
@@ -1217,6 +1217,36 @@ if __name__ == "__main__":
         collect.get_text = gt_
     wk_ = blocks3.b_stocking({"river": "Big Pine Creek", "zone": datetime.timezone.utc, "now": datetime.datetime(2026, 11, 13, tzinfo=datetime.timezone.utc), "rec": {"stocking": dict(ca_, fetched_at="2026-11-13T00:00:00+00:00")}})
     assert "Week of Sep 27, 2026" in wk_["body"].replace(" ", " "), "California: a planting week shown as a single day"
+    # review 2026-11-13: one state's outage leaves the others; all down keeps the cache (raises); merge by source name; Virginia empty parse fails once
+    va0_, gt_ = collect.fetch_stocking_va, collect.get_text
+    try:
+        collect.fetch_stocking_va = lambda *a: (_ for _ in ()).throw(OSError("dwr down"))
+        collect.get_text = lambda u, *a, **k: json.dumps({"features": [{"attributes": {"Species": "Rainbow", "ActivityDate": 1793000000000, "NumOfFish": 50, "LOCATION": "Big Hunting Creek"}, "geometry": {"x": -77.45, "y": 39.62}}]})
+        md_ = collect.fetch_stocking(39.6, -77.5)
+        assert md_ and md_["sources"] == ["Maryland DNR trout stocking"], "a Virginia outage stopped Maryland's stocking"
+        collect.get_text = lambda u, *a, **k: (_ for _ in ()).throw(OSError("md down"))
+        try:
+            collect.fetch_stocking(39.6, -77.5)
+            raise AssertionError("every state down was stored as 'no stocking'")
+        except RuntimeError:
+            pass
+    finally:
+        collect.fetch_stocking_va, collect.get_text = va0_, gt_
+    assert len(collect.stock_merge({"source": "NH Fish and Game fish stocking records", "sources": ["NH Fish and Game fish stocking records"], "rows": nw_["rows"]},
+                                   {"source": "NH Fish and Game fish stocking records", "rows": old_["rows"]})["rows"]) == 2, "merge by name failed for an older record without a sources list"
+    vr_, gt_ = list(collect._VA_ROWS), collect.get_text
+    try:
+        collect._VA_ROWS.clear()
+        calls_ = []
+        collect.get_text = lambda u, *a, **k: calls_.append(u) or ("<table></table>" if "dwr.virginia.gov/fishing" in u else json.dumps({"features": []}))
+        try:
+            collect.fetch_stocking_va(37.3, -79.5, 35)
+            raise AssertionError("Virginia: an empty parse passed silently")
+        except RuntimeError:
+            pass
+        assert collect.fetch_stocking_va(37.3, -79.5, 35) == [] and sum("dwr.virginia.gov/fishing" in c for c in calls_) == 1, "Virginia: an empty parse re-downloaded at the next gauge"
+    finally:
+        collect._VA_ROWS[:], collect.get_text = vr_, gt_
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
     from lib import cadence as cad_
     assert "key not in COAST_KEYS and USGS_OUT[0]" in open(os.path.join(ROOT, "collect.py"), encoding="utf-8").read() and not (cad_.WEEKLY & collect.COAST_KEYS) - {"floodtide"}, "a non-USGS weekly source waits on the USGS quota again, or a new place source joined WEEKLY unchecked"
