@@ -251,7 +251,7 @@ def main():
             if wr_ and research.verify(*wr_):  # PLAN 22 lock 2
                 report["failed"].append({"site": "research", "reason": "dropped: " + "; ".join(research.verify(*wr_)), "url": wr_[0]})
                 wr_ = None
-            (rp, rcsv), why_r = research.pages(built, Gs, world=bool(wr_) or bool(prev_page(research.WORLD_URL))), "too few gauges with usable annual peaks (an old cache row waits for its weekly refresh)"
+            (rp, rcsv), why_r = research.pages(built, Gs, world=research.title_of(wr_[1]) if wr_ else ""), "too few gauges with usable annual peaks (an old cache row waits for its weekly refresh)"
         except Exception as e:
             wr_, rp, rcsv, why_r = None, {}, {}, "%s: %s" % (type(e).__name__, str(e)[:100])
         for u_, why_ in research.FAILED:

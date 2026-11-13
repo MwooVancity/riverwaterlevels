@@ -653,7 +653,7 @@ def fetch_floodfreq(site):
     groups = {k: v for k, v in groups.items() if v}
     durs = sorted(dur.values(), key=lambda r: r["p"])
     if not groups:
-        return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "rows": [], "dur": durs} if durs else None
+        return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "rows": [], "dur": durs, "rangev": 2} if durs else None  # rangev here too, or the early refresh refetches this gauge every run (verification 2026-11-13)
     best = max(groups.values(), key=lambda g: (any(r["pref"] for r in g.values()), max(re.findall(r"\d{4}", next(iter(g.values()))["range"]) or ["0"]), len(g)))
     one = [g[1.0]["q"] for g in groups.values() if 1.0 in g and any(r["pref"] for r in g.values())]
     conflict = len(one) > 1 and max(one) > 1.1 * min(one)
@@ -661,7 +661,7 @@ def fetch_floodfreq(site):
     yrs = re.findall(r"\d{4}", first["range"])
     cit = first["cit"]
     r1 = stat_range((best.get(1.0) or {}).get("range"))  # peer review 2026-11-12 #7: the 1% row's own record years, else none (research leaves the gauge out)
-    return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "conflict": conflict, "range": ("%s to %s" % (yrs[0], yrs[1])) if len(yrs) >= 2 else None, "years": first["years"],
+    return {"fetched_at": now_iso(), "regulated": bool(j.get("isRegulated")), "conflict": conflict, "range": ("water years %d to %d" % tuple(r1)) if r1 else ("%s to %s" % (yrs[0], yrs[1])) if len(yrs) >= 2 else None, "years": first["years"],  # the gauge page shows the same water years as the research page
             "range1": r1, "rangev": 2, "citation": cit.get("title"), "url": cit.get("citationURL"),
             "rows": sorted([{k: v for k, v in r.items() if k in ("aep", "q", "lo", "hi")} for r in best.values()], key=lambda r: -r["aep"]), "dur": durs}
 

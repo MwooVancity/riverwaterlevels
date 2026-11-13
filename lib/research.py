@@ -27,7 +27,7 @@ SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on
 SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have their own reading and a page on this site. They are not every US station, "
                "so the results describe these stations only.</p>")
 CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
-METHOD = "2026-11-13a"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
+METHOD = "2026-11-13b"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
 
 
 def _wy(y, m):
@@ -229,6 +229,11 @@ def _page(title, slug, desc, body, sub, data=None, unk=None, sample=None):
         vis, METHOD, esc(title), sub, body, extra), ld=crumb_ld(crumbs)), data
 
 
+def _pl(n, one, many):
+    """'1 regulated gauge is' / '3 regulated gauges are': a count of 1 reads right (verification 2026-11-13)."""
+    return "%d %s" % (n, one if n == 1 else many)
+
+
 def _months(ms):
     return " and ".join(MN[m] for m in ms)
 
@@ -264,14 +269,14 @@ def peak_month(gl, sub, unk):
         MN[top[0][0]], top[0][1], len(nat), "".join(", %s %s (%d)" % ("then" if i == 1 else "and", MN[m], k) for i, (m, k) in enumerate(top[1:], 1))) if top else "<p>"
     lead += "Counted at US river gauges on this site with %d or more years of plain USGS annual peaks and no regulation flag; for each we took the highest peak of every water year and counted the months.%s%s</p>" % (
         MIN_PEAKS, " %d gauge%s split evenly between two or more months and %s not counted." % (ties, "" if ties == 1 else "s", "is" if ties == 1 else "are") if ties else "",
-        " %d regulated gauges are listed but not counted." % (len(rows) - len(nat)) if len(rows) > len(nat) else "")
+        " %s listed but not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are") if len(rows) > len(nat) else "")
     months = table(["Month", "Gauges whose yearly high most often falls in it"], "".join(tr([MN[m], str(lead_n.get(m, 0))], right=(1,)) for m in range(1, 13)), right=(1,))
     st = ""
     for s, c in sorted(by_state.items()):
         k = max(c.values())
         st += tr([esc(STATE_NAMES.get(s, s)), str(sum(c.values())), "%s (%d of %d)" % (_months(sorted(m for m, v in c.items() if v == k)), k, sum(c.values()))], right=(1,))
     gt = table(["Gauge", "Peak month most often", "Average peak date", "How tightly peaks cluster (0 to 1)", "Water years used"], "".join(
-        tr([_name(r) + (" (regulated)" if rg else ""), "%s (%d of %d years, %d%%%s)" % (_months(ms), n, k, round(100 * n / k), " each" if len(ms) > 1 else ""), _doy_name(md_) if rr >= 0.3 else "&ndash; (peaks spread through the year)", "%.2f" % rr, "%d (%d to %d)" % (k, y0, y1)], right=(3, 4))
+        tr([_name(r) + (" (regulated)" if rg else ""), "%s (%d of %d years, %d%%%s)" % (_months(ms), n, k, round(100 * n / k), " each" if len(ms) > 1 else ""), _doy_name(md_) if rr >= 0.3 else "&ndash; (peaks not clustered around one date)", "%.2f" % rr, "%d (%d to %d)" % (k, y0, y1)], right=(3, 4))
         for r, ms, n, k, y0, y1, rg, md_, rr, G in rows[:ROW_CAP]), right=(3, 4))
     data = _csv(G_HEAD + ["peak_month_most_often", "years_in_that_month", "water_years_used", "first_water_year", "last_water_year", "mean_peak_day_of_year", "concentration_r", "regulated", "source", "peaks_fetched_at"],
                 [_g(r) + [" and ".join(MN[m] for m in ms), n, k, y0, y1, round(md_, 1), round(rr, 3), rg, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, ms, n, k, y0, y1, rg, md_, rr, G in rows], _cred("usgs"))
@@ -279,7 +284,7 @@ def peak_month(gl, sub, unk):
             "<h2>Every gauge</h2><p>Find your river: the month its yearly high has come most often, the average date, and how tightly the peaks cluster around it.</p>" + gt + _cap(len(rows)) +
             "<h2>How this was worked out</h2><p>Source: USGS annual peak streamflow (Water Data API), as each gauge page's Largest annual peaks block shows it, with USGS's qualifier codes. An annual peak is the highest instantaneous flow in a water year (October to September); where USGS lists more than one peak in a water year, the highest is used. "
             + EXCL + " A gauge counts as regulated when USGS StreamStats flags the station as regulated or any peak used is coded as affected by regulation or diversion. "
-            "The average date and the clustering figure treat each peak date as a point on the yearly circle (the seasonality measure of Burn, 1997): 1 means every peak fell on the same date, 0 means they are spread evenly through the year. "
+            "The average date and the clustering figure treat each peak date as a point on the yearly circle (the seasonality measure of Burn, 1997): 1 means every peak fell on the same date, 0 means they are spread evenly through the year; under 0.3 no average date is shown, because peaks spread through the year or split between two seasons have no meaningful average date. "
             "The most common month is not a forecast; in many years the high comes in another month, as the share shows.</p>")
     return _page("When US rivers reach their yearly high", "peak-month", "The month each river's yearly high flow most often falls in, its average date and how tightly peaks cluster, from USGS annual peaks at %d US river gauges." % len(nat), body, sub, data, unk)
 
@@ -320,7 +325,7 @@ def peak_change(gl, today, sub, unk):
                 "That is after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%); before it, %d tested higher and %d lower at p &lt; %.2f, against about %.1f each way by chance. "
                 ) % (k, len(nat), P2, P1, bh_up, bh_dn, round(FDR * 100), len(sig_up), len(sig_dn), ALPHA, exp)
     lead = "<p>" + head + "This compares the typical yearly peak in two periods; it does not say why they changed.%s</p>" % (
-        (" %d regulated gauges are listed apart, not counted." % (len(rows) - len(nat))) if len(rows) > len(nat) else "")
+        (" %s listed apart, not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are")) if len(rows) > len(nat) else "")
     hd = ["Gauge", "Median peak %s" % P1, "Median peak %s" % P2, "Shift (Hodges-Lehmann)", "p"]
     rw = lambda xs, f=_link: "".join(tr([f(r) + (" (regulated)" if rg else ""), "%s cfs" % fmtc(a), "%s cfs" % fmtc(b), "%s%s cfs" % ("+" if hl_ > 0 else "", fmtc(hl_)), _pv(pv)], right=(1, 2, 3, 4)) for r, a, b, c, pv, rg, _, _, hl_, G in xs)
     meth = ("<h2>How this was worked out</h2><p>Source: USGS annual peak streamflow (Water Data API), with USGS's qualifier codes. For each gauge we took the highest plain peak in each water year (October to September), "
@@ -370,12 +375,12 @@ def hundred_year(gl, unk):
     gy, hits = sum(len(x[3]) for x in nat), sum(len(x[4]) for x in nat)
     storms = len({y for x in nat for y in x[4]})
     lead = ("<p><b>At %d US river gauges on this site, USGS's '100-year' flow was reached in %d of %d gauge-years after the last year of the record it was computed from.</b> "
-            "If every gauge-year were a separate 1%% chance, about %.1f would be expected. The %d came in %d different water years, so some may have been the same storms. "
-            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century.</p>") % (len(nat), hits, gy, gy / 100, hits, storms)
+            "If every gauge-year were a separate 1%% chance, about %.1f would be expected. The %d came in %s, so some may have been the same storms. "
+            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century.</p>") % (len(nat), hits, gy, gy / 100, hits, _pl(storms, "water year", "different water years"))
     lead += ("<p>Two things push the count above 1%% even when nothing has changed: the 1%% flow is itself estimated from a limited record, so it is reached somewhat more often than its label says, most of all at gauges with short records (the expected-probability effect; Beard, 1960); "
              "and gauges on this site were added where people search, which rises after floods. The two-sided chance of a count this far from %.1f, if every gauge-year were an independent 1%% chance, is %s; neighbouring gauges flood in the same storms, so that chance is too small and is shown only for reference.%s</p>") % (
         gy / 100, _pv(poisson_two(hits, gy / 100)),
-        (" At %d regulated gauges, counted apart: %d of %d gauge-years." % (len(reg), sum(len(x[4]) for x in reg), sum(len(x[3]) for x in reg))) if reg else "")
+        (" At %s, counted apart: %d of %d gauge-years." % (_pl(len(reg), "regulated gauge", "regulated gauges"), sum(len(x[4]) for x in reg), sum(len(x[3]) for x in reg))) if reg else "")
     ci = [x for x in nat if x[8] is not None]
     cis = ("<p>Against the interval USGS publishes with the 1%% flow at %d of these gauges (the interval's level is not stated in the data we read): %d gauge-years reached its lower end and %d its upper end, of %d gauge-years.</p>" % (
         len(ci), sum(x[8] for x in ci), sum(x[9] for x in ci), sum(len(x[3]) for x in ci))) if len(ci) >= MIN_GAUGES else ""
@@ -410,7 +415,7 @@ def flood_stage(gl):
     lead = ("<p><b>On a typical one of these rivers, the yearly peak reached minor flood stage in %.0f%% of years.</b> "
             "That is the median across %d US river gauges on this site where the USGS and National Weather Service stages agree and USGS flags no regulation; it happened in at least half the years at %d gauges, and never at %d.%s "
             "Minor flood stage is the NWS's lowest flood category for each forecast point. This is the record of past years, not a forecast: for flooding now, follow the National Weather Service warnings for your area.</p>") % (
-        statistics.median(sh), len(nat), sum(1 for x in sh if x >= 50), sum(1 for x in sh if x == 0), (" %d regulated gauges are listed but not counted." % (len(rows) - len(nat))) if len(rows) > len(nat) else "")
+        statistics.median(sh), len(nat), sum(1 for x in sh if x >= 50), sum(1 for x in sh if x == 0), (" %s listed but not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are")) if len(rows) > len(nat) else "")
     hd = ["Gauge", "NWS minor flood stage", "Water years a peak reached it", "Water years on file"]
     row = lambda f: lambda x: tr([f(x[0]) + (" (regulated)" if x[8] else ""), "%.1f ft" % x[1], "%d of %d (%d%%)" % (x[2], x[3], round(100 * x[2] / x[3])), "%d to %d" % (x[4], x[5])], right=(1, 2))
     top = sorted(nat, key=lambda x: (-x[2] / x[3], x[0]["river"]))[:HL]
@@ -515,7 +520,7 @@ def lake_levels(built, Gs):
     body = (lead + table(hd, "".join(tr([_link(r), "<br>".join(esc(b[2]) for b in got), "<br>".join(esc(fdate(b[3].date().isoformat()) + " (daily figure)" if b[4] else tzl(b[3], G["zone"])) for b in got)]) for r, G, got in rows)) +
             "<h2>How this was worked out</h2><p>Sources, as each lake page's How full block shows them: US Army Corps of Engineers Corps Water Management System top of conservation (full pool) against the USGS lake reading on the same datum; "
             "California Data Exchange Center storage against its stated capacity and its 1991-2020 average for the month; U.S. Bureau of Reclamation Lower Colorado Region daily contents; Texas Water Development Board daily percent of conservation capacity, used only when its level matches USGS's the same day. "
-            "Differences and percents not published by the agency are our calculation. Below the full mark is not by itself a shortage: some reservoirs are lowered on purpose, and the Corps' full pool already moves with the season.</p>")
+            "Differences and percents not published by the agency are our calculation. Below the full mark is not by itself a shortage: some reservoirs are lowered on purpose, and the Corps' full pool can move with the season.</p>")
     data = _csv(G_HEAD + ["basis", "below_full_mark", "figure", "as_of (date for a daily figure, else UTC time)"], [_g(r) + [b[0], b[1], b[2], b[3].date().isoformat() if b[4] else b[3].astimezone(datetime.timezone.utc).isoformat()] for r, G, got in rows for b in got],
                 lambda row: _cred({"CDEC capacity": "cdec", "USACE full pool": "usace_cwms", "Reclamation capacity": "usbr", "TWDB conservation capacity": "twdb"}.get(row[len(G_HEAD)], "usgs"), "usgs"))
     asof = max(b[3] for _, _, got in rows for b in got)
@@ -549,11 +554,11 @@ def tides(built, Gs):
     days = statistics.median(x[7] for x in rows)
     span = "%d days" % round(days) if days >= 1.5 else "%d hours" % round(days * 24)
     top = max(rows, key=lambda x: x[3][1])
-    lead = ("<p><b>Over the last %s, the sea ran furthest above its tide prediction at %s: %+.2f ft at %s.</b> "
-            "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft. Part of any gap is steady: sea level has risen since the 1983 to 2001 National Tidal Datum Epoch NOAA's datums are based on, and it rises and falls with the seasons; wind, air pressure and river flow add the rest.%s</p>") % (
+    lead = ("<p><b>Over the last %s, the sea ran " + ("furthest above its tide prediction" if top[3][1] > 0 else "closest to its tide prediction") + " at %s: %+.2f ft at %s.</b> "
+            "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft. Part of a gap can be steady: local sea level differs from the long-term level NOAA's tide datums are referenced to (at most US stations it has risen since; where the land is rising, as in parts of Alaska, it has fallen), and a season can run above or below its normal level; wind, air pressure and river flow add the rest.%s</p>") % (
         span, _link(top[0]), top[3][1], esc(tzl(top[3][0], top[1]["zone"])), len(rows), statistics.median(x[5] for x in rows),
         (" %d stations were left out (tide predictions only, or under 24 hours of matched readings)." % left) if left else "")
-    hd = ["Station", "Predicted range in that span", "Largest gap", "Smallest gap", "Median gap"]
+    hd = ["Station", "Predicted range in that span", "Highest (observed minus predicted)", "Lowest (observed minus predicted)", "Median gap"]
     body = (lead + table(hd, "".join(tr([_link(r), ("%.1f ft" % rng) if rng is not None else "–", "%+.2f ft<div class=\"src\">%s</div>" % (up[1], esc(tzl(up[0], G["zone"]))),
                                          "%+.2f ft<div class=\"src\">%s</div>" % (dn[1], esc(tzl(dn[0], G["zone"]))), "%+.2f ft" % md_]) for r, G, rng, up, dn, md_, n, d_ in rows), right=(1, 2, 3, 4)) +
             "<h2>How this was worked out</h2><p>Source: NOAA CO-OPS (Tides and Currents) water level observations and tide predictions for each station, the same data its page shows, on the station datum, in feet. "
@@ -617,6 +622,12 @@ def world_rivers(wpages, wkeep, now):
     return _page("Are rivers in %s low or high right now?" % (", ".join(lab_c[:-1]) + " and " + lab_c[-1] if len(lab_c) > 1 else lab_c[0]), "world-rivers",
                  "Gauges outside the US on River Water Levels by a low, normal or high label right now, each label's basis named, counted country by country.", body,
                  "Agency river levels in %s, for the gauges on this site; newest reading %s UTC. These labels change as the agencies publish; cite them with that date and time." % (", ".join(COUNTRY[f] for f in cs), utc_day(times[-1])), data, sample=sample)
+
+
+def title_of(html):
+    """The page's own title without the brand, or '' (the index links the world page by its real title)."""
+    m = re.search(r"<title>(.*?) \| ", html or "")
+    return m.group(1) if m else ""
 
 
 def _lead(html):
@@ -708,7 +719,7 @@ def pages(built, Gs, today=None, world=False):
     if not got:
         return {}, {}
     items = "".join('<li><a href="%s">%s</a></li>' % (u, esc(h.split("<title>")[1].split(" | ")[0])) for u, h, _ in got)
-    items += ('<li><a href="%s">Are rivers in Canada, Germany, England and Ireland low or high right now?</a></li>' % WORLD_URL) if world else ""
+    items += ('<li><a href="%s">%s</a></li>' % (WORLD_URL, esc(world))) if isinstance(world, str) and world else ""  # the world page's own title (verification 2026-11-13: a hard-coded title named Ireland)
     idx = _page("Research", "", "Original findings from the rivers, lakes and coasts on River Water Levels: our own calculations from agency records.",
                 "<p>Findings worked out from the records behind every page on this site. Each page states its sample, its method and tests, and what it cannot tell you, and offers its data as a CSV file.</p><ul>%s</ul>" % items,
                 "Our own calculations from USGS, NOAA, National Weather Service and other agency records.")
