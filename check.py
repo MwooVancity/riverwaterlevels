@@ -1125,7 +1125,8 @@ def selftest():
         assert research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> a significant rise</div>', "research/x/index.html") and research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> more than chance</div>', "research/x/index.html"), "selftest: 'significant' with no test, or 'more than chance' with no correction, passed"
         assert not research_gate("<h1>This finding is being recalculated</h1>", "research/x/index.html"), "selftest: the recalculation notice was judged as a finding"
         import tempfile as _tf
-        from lib.research import METHOD as _M
+        from lib.research import method_of as _mo
+        _M = _mo("/research/tides/")
         _sd = _tf.mkdtemp()
         _old, _new = os.path.join(_sd, "old.html"), os.path.join(_sd, "new.html")
         open(_old, "w", encoding="utf-8").write("<p>old 100-year page, no method mark</p>")
@@ -1680,9 +1681,9 @@ def stale_research(rel, dst):
     and a missing one would break the links to it (2026-11-13: the old 100-year page was carried by this rule while build.py withdrew it)."""
     if not rel.replace("\\", "/").startswith("research/"):
         return False
-    from lib.research import METHOD
+    from lib.research import method_of
     try:
-        if 'data-method="%s"' % METHOD in open(dst, encoding="utf-8").read():
+        if 'data-method="%s"' % method_of("/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]) in open(dst, encoding="utf-8").read():
             return False
     except OSError:
         pass

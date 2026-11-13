@@ -27,7 +27,12 @@ SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on
 SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have their own reading and a page on this site. They are not every US station, "
                "so the results describe these stations only.</p>")
 CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
-METHOD = "2026-11-13b"  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
+METHOD = "2026-11-13b"  # default only; each page's own version is in data/research-methods.json (raise a page's version the day its text or method changes: its review then reopens alone)
+METHODS = __import__("json").load(open(__import__("os").path.join(ROOT, "data", "research-methods.json"), encoding="utf-8"))
+
+
+def method_of(url):
+    return METHODS.get(url, METHOD)  # raise when a page's method changes: build.py carries a published copy only when it carries this same mark (a copy made by an older method can be wrong: truth first)
 
 
 def _wy(y, m):
@@ -226,7 +231,7 @@ def _page(title, slug, desc, body, sub, data=None, unk=None, sample=None):
         if data:
             extra += '<p><a href="data.csv">Download the data for every gauge (CSV)</a>, one row per gauge with its source fetch time, for checking or reuse with a link back.</p>'
     return url, shell(title + " | " + BRAND, desc, url, '<div class="crumb">%s</div><div class="prose" data-method="%s"><h1>%s</h1><p class="sub">%s</p>%s%s</div>' % (
-        vis, METHOD, esc(title), sub, body, extra), ld=crumb_ld(crumbs)), data
+        vis, method_of(url), esc(title), sub, body, extra), ld=crumb_ld(crumbs)), data
 
 
 def _pl(n, one, many):
@@ -375,8 +380,8 @@ def hundred_year(gl, unk):
     gy, hits = sum(len(x[3]) for x in nat), sum(len(x[4]) for x in nat)
     storms = len({y for x in nat for y in x[4]})
     lead = ("<p><b>At %d US river gauges on this site, USGS's '100-year' flow was reached in %d of %d gauge-years after the last year of the record it was computed from.</b> "
-            "If every gauge-year were a separate 1%% chance, about %.1f would be expected. The %d came in %s, so some may have been the same storms. "
-            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century.</p>") % (len(nat), hits, gy, gy / 100, hits, _pl(storms, "water year", "different water years"))
+            "If every gauge-year were a separate 1%% chance, about %.1f would be expected.%s "
+            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century.</p>") % (len(nat), hits, gy, gy / 100, (" The %d fell in only %s, so some came in the same water year and may be the same storms." % (hits, _pl(storms, "water year", "water years"))) if hits > storms else "")
     lead += ("<p>Two things push the count above 1%% even when nothing has changed: the 1%% flow is itself estimated from a limited record, so it is reached somewhat more often than its label says, most of all at gauges with short records (the expected-probability effect; Beard, 1960); "
              "and gauges on this site were added where people search, which rises after floods. The two-sided chance of a count this far from %.1f, if every gauge-year were an independent 1%% chance, is %s; neighbouring gauges flood in the same storms, so that chance is too small and is shown only for reference.%s</p>") % (
         gy / 100, _pv(poisson_two(hits, gy / 100)),
@@ -458,7 +463,7 @@ def water_temp(gl):
             "<h2>Every gauge</h2>" + table(hd, "".join(map(row(_name), rows[:ROW_CAP])), right=(1, 2, 3, 4)) + _cap(len(rows), "water temperature by month") +
             "<h2>How this was worked out</h2><p>Source: USGS daily mean water temperature (Water Data API), as each gauge page's Typical water temperature by month block shows it: the mean of every published daily value in each calendar month over the record years shown; where USGS publishes two temperature series for one gauge, the first it returns is used. "
             "A month with fewer than 150 daily values is shown as a dash. Sensor records cover different years at different gauges, so gauges are not compared over the same period, and years with more readings weigh more in a mean. "
-            "A sensor can sit in a deep or shaded spot, and a gauge below a dam can read the cold water released from the bottom of the lake, so the coldest rivers in July are often below dams, and the water where you get in can differ.</p>")
+            "A sensor can sit in a deep or shaded spot, and a gauge below a dam can read the cold water released from the bottom of the lake, so a cold July figure can come from dam releases, and the water where you get in can differ.</p>")
     return _page("How warm are US rivers?", "water-temperature", "Typical January, April, July and October water temperature at %d US river gauges, from USGS sensor records." % len(rows), body,
                  "USGS water temperature records, for the US river gauges on this site.", data)
 
@@ -557,13 +562,13 @@ def tides(built, Gs):
     lead = ("<p><b>Over the last %s, the sea ran " + ("furthest above its tide prediction" if top[3][1] > 0 else "closest to its tide prediction") + " at %s: %+.2f ft at %s.</b> "
             "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft. Part of a gap can be steady: local sea level differs from the long-term level NOAA's tide datums are referenced to (at most US stations it has risen since; where the land is rising, as in parts of Alaska, it has fallen), and a season can run above or below its normal level; wind, air pressure and river flow add the rest.%s</p>") % (
         span, _link(top[0]), top[3][1], esc(tzl(top[3][0], top[1]["zone"])), len(rows), statistics.median(x[5] for x in rows),
-        (" %d stations were left out (tide predictions only, or under 24 hours of matched readings)." % left) if left else "")
+        (" %s left out (tide predictions only, or under 24 hours of matched readings)." % _pl(left, "station was", "stations were")) if left else "")
     hd = ["Station", "Predicted range in that span", "Highest (observed minus predicted)", "Lowest (observed minus predicted)", "Median gap"]
     body = (lead + table(hd, "".join(tr([_link(r), ("%.1f ft" % rng) if rng is not None else "–", "%+.2f ft<div class=\"src\">%s</div>" % (up[1], esc(tzl(up[0], G["zone"]))),
                                          "%+.2f ft<div class=\"src\">%s</div>" % (dn[1], esc(tzl(dn[0], G["zone"]))), "%+.2f ft" % md_]) for r, G, rng, up, dn, md_, n, d_ in rows), right=(1, 2, 3, 4)) +
             "<h2>How this was worked out</h2><p>Source: NOAA CO-OPS (Tides and Currents) water level observations and tide predictions for each station, the same data its page shows, on the station datum, in feet. "
             "Each gap is the observed level minus the predicted tide at the same 6-minute time, over the readings this site holds for the station (the span is named above); times missing from either series are skipped, and stations with under 24 hours of matched readings are left out. "
-            "A positive gap means the water stood above the prediction; the smallest gap can still be positive. The predicted range is the highest predicted high tide minus the lowest predicted low tide inside the same span. Observations are preliminary until NOAA verifies them. Stations that publish predictions only are left out, because their level comes from another place.</p>")
+            "A positive gap means the water stood above the prediction; the lowest gap can still be positive. The predicted range is the highest predicted high tide minus the lowest predicted low tide inside the same span. Observations are preliminary until NOAA verifies them. Stations that publish predictions only are left out, because their level comes from another place.</p>")
     data = _csv(["noaa_station", "name", "state", "page", "span_days", "predicted_range_ft_in_span", "max_gap_ft", "max_gap_utc", "min_gap_ft", "min_gap_utc", "median_gap_ft", "matched_readings", "fetched_at"],
                 [[r["site"], r["river"], r["state"], SITE_URL + r["dashboard_url"], round(d_, 2), "" if rng is None else round(rng, 2), round(up[1], 2), up[0].astimezone(datetime.timezone.utc).isoformat(), round(dn[1], 2), dn[0].astimezone(datetime.timezone.utc).isoformat(), round(md_, 2), n, _fa(G, "coops")]
                  for r, G, rng, up, dn, md_, n, d_ in rows], _cred("coops"))
@@ -604,8 +609,9 @@ def world_rivers(wpages, wkeep, now):
     tb = table(["Country", "Low", "Normal", "High", "Not reporting, tidal or no label"], "".join(
         tr([COUNTRY[f], share(by[f], "low"), share(by[f], "normal"), share(by[f], "high"), str(by[f]["not reporting"] + by[f]["tidal"] + by[f]["no label"])], right=(1, 2, 3, 4)) for f in cs), right=(1, 2, 3, 4))
     lead = ("<p><b>Right now %d of %d labelled gauges on this site outside the US read low and %d read high.</b> "
-            "Each label has its own basis: the agency's own marks in Germany and England, and our rank against past monthly means in Canada, where Water Survey of Canada publishes no label. So the table counts them country by country and never adds them into one share.</p>") % (
-        sum(by[f]["low"] for f in cs), len(labelled), sum(by[f]["high"] for f in cs))
+            "Each label has its own basis: %s. So the table counts them country by country and never adds them into one share.</p>") % (
+        sum(by[f]["low"] for f in cs), len(labelled), sum(by[f]["high"] for f in cs),
+        "; ".join({"pegelonline": "the WSV's own marks in Germany", "ea": "the Environment Agency's own typical range in England", "eccc": "our rank against past monthly means in Canada, where Water Survey of Canada publishes no label"}[f] for f in ("pegelonline", "ea", "eccc") if by[f]["low"] + by[f]["normal"] + by[f]["high"]))
     nm_ = lambda p: p.get("river") or p["slug"]
     hubs = "".join('<li><a href="/%s/">%s</a>%s</li>' % (esc(p["slug"]), esc(nm_(p)), "" if nm_(p) == COUNTRY.get(p.get("feed") or "pegelonline") else " (%s)" % COUNTRY.get(p.get("feed") or "pegelonline", "")) for p, d in wpages[:30] if wkeep.get(p["slug"]))
     basis = "".join("<li><b>%s:</b> %s</li>" % (COUNTRY[f], esc(BASIS[f])) for f in cs)
@@ -627,7 +633,7 @@ def world_rivers(wpages, wkeep, now):
 def title_of(html):
     """The page's own title without the brand, or '' (the index links the world page by its real title)."""
     m = re.search(r"<title>(.*?) \| ", html or "")
-    return m.group(1) if m else ""
+    return __import__("html").unescape(m.group(1)) if m else ""
 
 
 def _lead(html):
@@ -718,7 +724,7 @@ def pages(built, Gs, today=None, world=False):
             got.remove(x)
     if not got:
         return {}, {}
-    items = "".join('<li><a href="%s">%s</a></li>' % (u, esc(h.split("<title>")[1].split(" | ")[0])) for u, h, _ in got)
+    items = "".join('<li><a href="%s">%s</a></li>' % (u, esc(title_of(h))) for u, h, _ in got)  # title_of unescapes, so a title is escaped once (final check 2026-11-13: '&amp;#x27;' showed as text)
     items += ('<li><a href="%s">%s</a></li>' % (WORLD_URL, esc(world))) if isinstance(world, str) and world else ""  # the world page's own title (verification 2026-11-13: a hard-coded title named Ireland)
     idx = _page("Research", "", "Original findings from the rivers, lakes and coasts on River Water Levels: our own calculations from agency records.",
                 "<p>Findings worked out from the records behind every page on this site. Each page states its sample, its method and tests, and what it cannot tell you, and offers its data as a CSV file.</p><ul>%s</ul>" % items,

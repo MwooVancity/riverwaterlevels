@@ -29,10 +29,10 @@ def load(root):
 def research_reviewed(root):
     """PLAN 22 lock 1: research pages whose current method version passed a fresh peer review (data/reviewed.json "research": {url: method}).
     METHOD is read from lib/research.py's text (no import: indexing stays light). A torn file or no METHOD = none (fail closed)."""
-    try:
-        m = re.search(r'^METHOD = "([^"]+)"', open(os.path.join(root, "lib", "research.py"), encoding="utf-8").read(), re.M)
+    try:  # each page's own version (data/research-methods.json): a fix reopens only the page it touched
+        ms = json.load(open(os.path.join(root, "data", "research-methods.json"), encoding="utf-8"))
         rv = json.load(open(os.path.join(root, "data", "reviewed.json"), encoding="utf-8")).get("research") or {}
-        return {u for u, v in rv.items() if m and v == m.group(1)}
+        return {u for u, v in rv.items() if ms.get(u) and v == ms[u]}
     except (OSError, ValueError, AttributeError):
         return set()
 

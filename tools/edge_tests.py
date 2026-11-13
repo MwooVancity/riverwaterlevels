@@ -179,7 +179,7 @@ def run():
     riv_ = set(research.URLS) - {"/research/lake-levels/", "/research/tides/"}  # this fixture has no lakes or coasts
     assert set(bp) == riv_ and set(bc) == riv_ - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(riv_ - set(bp))
     hy, fs, wt = bp["/research/100-year-floods/"], bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
-    assert "At 56 US river gauges on this site, USGS's '100-year' flow was reached in 56 of 1400 gauge-years after the last year of the record it was computed from" in hy and "about 14.0 would be expected" in hy and "The 56 came in 2 different water years" in hy and "is &lt;0.001" in hy and "At 10 regulated gauges, counted apart" in hy and "came in 2 different water years" in hy, "edge: 100-year counts or Poisson chance wrong (conflict, no range, no 1% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 400]
+    assert "At 56 US river gauges on this site, USGS's '100-year' flow was reached in 56 of 1400 gauge-years after the last year of the record it was computed from" in hy and "about 14.0 would be expected" in hy and "The 56 fell in only 2 water years, so some came in the same water year" in hy and "is &lt;0.001" in hy and "At 10 regulated gauges, counted apart" in hy, "edge: 100-year counts or Poisson chance wrong (conflict, no range, no 1%% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 400]
     assert "at 56 of these gauges (the interval's level is not stated in the data we read): 56 gauge-years reached its lower end and 0 its upper end" in hy and "expected" not in hy[hy.find("interval USGS publishes"):hy.find("upper end")], "edge: confidence-bound counts wrong"
     assert "not one flood per century" in hy and "1%%" not in hy and "/river/b1/town/" not in hy and "that chance is too small" in hy and "rises after floods" in hy, "edge: 100-year page lost its plain meaning or its independence caveat, shows a double percent, or lists a conflicting statistic"
     assert "reached minor flood stage in 33% of years" in fs and "never at 0" in fs, "edge: flood stage share wrong: %s" % fs[fs.find("<b>"):fs.find("<b>") + 300]
@@ -244,7 +244,7 @@ def run():
             rows_[6] = ["2007-03-15", 900.0, None, None, "GREATERTHAN"]  # a lower bound under it: year unknown, not counted
         hG[r["site"]] = {"rec": {"peaks": {"rows": rows_}, "floodfreq": {"rows": [{"aep": 1, "q": 1000.0}], "range1": [1950, 2000]}}}
     h1 = research.hundred_year(research.gauges(hb, hG), {})[1]
-    assert "reached in 1 of 299 gauge-years" in h1, "review #4: lower-bound peaks mishandled in the 100-year count: %s" % h1[h1.find("<b>"):h1.find("<b>") + 200]
+    assert "reached in 1 of 299 gauge-years" in h1 and "same water year" not in h1, "review #4: lower-bound peaks mishandled in the 100-year count: %s" % h1[h1.find("<b>"):h1.find("<b>") + 200]
     assert research.poisson_two(14, 14.0) == 1.0 and research.poisson_two(0, 14.0) < 0.001 and abs(research.poisson_two(3, 1.0) - 2 * research.poisson_tail(3, 1.0)) < 1e-9, "review #3: two-sided Poisson wrong"
     assert research.hodges_lehmann([1.0, 2.0, 3.0], [11.0, 12.0, 13.0]) == 10.0 and research.bh_count([0.001, 0.01, 0.04, 0.5]) == 3, "review #6: Hodges-Lehmann or Benjamini-Hochberg wrong"
     md1, r1_ = research.circ([60] * 10)
@@ -255,7 +255,7 @@ def run():
                                                                                        + [{"name": "OLD", "cm": 300, "time": (nw_ - datetime.timedelta(hours=30)).isoformat(), "state": "high"}]}),
            ({"slug": "dublin", "feed": "imi", "river": "Dublin"}, {"rows": [{"name": "D", "cm": 1, "time": nw_.isoformat(), "state": "normal"}]})]
     wr = research.world_rivers(wp_, {"rhine": {"A%d" % k for k in range(8)} | {"OLD"}, "dublin": {"D"}}, nw_)
-    assert wr and "Right now 4 of 8 labelled gauges on this site outside the US read low and 2 read high." in wr[1] and "our rank against past monthly means in Canada" in wr[1] and "<td>Germany</td><td class=\"r\">4 of 8</td>" in wr[1] and "Tidal" in wr[1], "PLAN 18c: world labels counted wrong, a stale reading labelled, or a tidal station labelled: %s" % (wr and wr[1][wr[1].find("<b>"):wr[1].find("<b>") + 200])
+    assert wr and "Right now 4 of 8 labelled gauges on this site outside the US read low and 2 read high." in wr[1] and "Each label has its own basis: the WSV's own marks in Germany." in wr[1] and "in Canada" not in wr[1][:wr[1].find("<table")] and "<td>Germany</td><td class=\"r\">4 of 8</td>" in wr[1] and "Tidal" in wr[1], "PLAN 18c: world labels counted wrong, a stale reading labelled, or a tidal station labelled: %s" % (wr and wr[1][wr[1].find("<b>"):wr[1].find("<b>") + 200])
     assert not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", wr[1]), "PLAN 18c: a raw machine timestamp on the world page (check.py BANNED held it, run 43357129006)"
     assert research.world_rivers(wp_[:1], {"rhine": {"A0", "A1"}}, nw_) is None, "PLAN 18c: a world page built from 2 labelled gauges"
     assert 'href="/research/world-rivers/"' not in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/"] and 'href="/research/world-rivers/"' in research.pages(rb, rG, datetime.date(2026, 11, 12), world="World title")[0]["/research/"], "the research index links a world page that was not built"
@@ -881,7 +881,7 @@ def probe(warn, square, pages):
     # PLAN 22 lock 1: review of the exact method version
     td2 = tempfile.mkdtemp()
     os.makedirs(os.path.join(td2, "lib")); os.makedirs(os.path.join(td2, "data"))
-    open(os.path.join(td2, "lib", "research.py"), "w").write('METHOD = "v2"\n')
+    json.dump({"/research/a/": "v2", "/research/b/": "v2"}, open(os.path.join(td2, "data", "research-methods.json"), "w"))  # each page's own version
     json.dump({"research": {"/research/a/": "v2", "/research/b/": "v1"}}, open(os.path.join(td2, "data", "reviewed.json"), "w"))
     assert _ix.research_reviewed(td2) == {"/research/a/"}, "22: a page reviewed at an older method version counted as reviewed"
     open(os.path.join(td2, "data", "reviewed.json"), "w").write("{torn")

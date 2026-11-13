@@ -260,7 +260,7 @@ def main():
             rp[wr_[0]], rcsv[wr_[0]] = wr_[1], wr_[2]
         for url in [u for u in research.URLS + (research.WORLD_URL,) if u not in rp]:  # one finding short of gauges keeps its old copy too
             old = prev_page(url)
-            if old and 'data-method="%s"' % research.METHOD in old:  # a copy made by an older method is never carried: a false page is worse than none
+            if old and 'data-method="%s"' % research.method_of(url) in old:  # a copy made by an older method is never carried: a false page is worse than none
                 rp[url] = old
                 oc = os.path.join(ROOT, "dist", url.strip("/"), "data.csv")  # the carried page links its data.csv: carry it too
                 if os.path.isfile(oc):
