@@ -47,3 +47,17 @@ https://riverwaterlevels.com/lake/falls-lake/
 https://riverwaterlevels.com/lake/great-salt-lake/
 https://riverwaterlevels.com/lake/green-river-lake/
 https://riverwaterlevels.com/lake/jordan-lake/
+https://riverwaterlevels.com/coast/juneau/
+https://riverwaterlevels.com/coast/ketchikan/
+https://riverwaterlevels.com/coast/marco/
+https://riverwaterlevels.com/coast/mayport/
+https://riverwaterlevels.com/lake/lake-brownwood/
+https://riverwaterlevels.com/lake/lake-champlain/
+https://riverwaterlevels.com/lake/lake-conroe/
+https://riverwaterlevels.com/lake/lake-georgetown/
+https://riverwaterlevels.com/lake/lake-limestone/
+https://riverwaterlevels.com/lake/lake-livingston/
+https://riverwaterlevels.com/lake/lake-murray/
+https://riverwaterlevels.com/lake/lake-nacimiento/
+https://riverwaterlevels.com/lake/lake-texana/
+https://riverwaterlevels.com/lake/lavon-lake/
