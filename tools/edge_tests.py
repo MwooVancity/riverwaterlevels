@@ -591,7 +591,7 @@ def run():
     md7 = n0.astimezone(zoneinfo.ZoneInfo("America/Los_Angeles")).date().isoformat()[5:10]
     G7 = mk(lambda k: 500, lambda k: 2.0, {"stats": {md7: [40, 100, 200, 300, 400, 800, 1500, 1800, 2500, 3000]}, "streamcat": {"vals": {"damdensws": 0.1}}}, row={"drainage_sqmi": "1000"})
     h7 = render.hero(G7, None)
-    assert r_.match(r'<p class="status dv">The river here is typical for \w+ \d+ and steady\.</p><p class="answer"', h7), "audit #7: no plain status sentence above the answer strip"
+    assert r_.match(r'<p class="status dv w3">The river here is typical for \w+ \d+ and steady\.</p><p class="answer"', h7), "audit #7: no plain status sentence above the answer strip"
     assert "About 259 dams upstream (our estimate: EPA StreamCat" in h7, "audit #11: the dams-upstream count does not name EPA StreamCat or say it is our arithmetic"
     hl_ = lambda hh, v, k: [(n0 + datetime.timedelta(hours=hh)).isoformat(), v, k]
     cst = mk(None, lambda k: 3.2, {"coops": {"fetched_at": n0.isoformat(), "pred": [[(n0 + datetime.timedelta(minutes=6 * i)).isoformat(), 4.0] for i in range(-10, 240)], "hilo": [hl_(-1, 8.0, "H"), hl_(5, 1.0, "L"), hl_(11, 9.1, "H")]}},

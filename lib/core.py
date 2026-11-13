@@ -8,7 +8,7 @@ SOURCES = {s["id"]: s for s in _SJ["sources"]}
 SOURCES_READ_ON = _SJ["read_on"]  # the date the terms were read for every source without its own read_on
 
 
-CSS = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+CSS = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read() + official_css()  # agency status colours from one table (lib/common.py OFFICIAL)
 ASSETS = {}  # file name -> text: build.py writes each to the site root
 
 

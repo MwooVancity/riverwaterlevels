@@ -298,7 +298,8 @@ def b_drought(G):
     prev = d["rows"][1] if len(d["rows"]) > 1 else None
     rows = ""
     for lab, i in DROUGHT:
-        rows += tr([esc(lab), "%.1f%%" % cur[i], ("%.1f%%" % prev[i]) if prev else "–"], right=(1, 2))
+        dk = "d%d" % (i - 2) if i >= 2 else ""  # each cumulative row starts at its own Drought Monitor class: that class's colour
+        rows += tr([('<i class="sw" style="background:%s"></i>' % OFFICIAL["usdm"][dk] if dk else "") + esc(lab), "%.1f%%" % cur[i], ("%.1f%%" % prev[i]) if prev else "–"], right=(1, 2))
     return block("drought_monitor", "Drought Monitor, %s County" % esc(str(d.get("county") or "").replace(" County", "")), "usdm",
                  '<p class="src">Source figures are cumulative: each row counts the county area in that category or any worse one, so the rows are not shares that add to 100%.</p>' + table(["Category", "Share of county area, week of %s" % fdate(cur[0]), "Previous week"], rows, right=(1, 2)),
                  "Source: U.S. Drought Monitor weekly county statistics (National Drought Mitigation Center, USDA, NOAA), map date %s, fetched %s." % (fdate(cur[0]), esc(tzl(parse_t(d["fetched_at"]), G["zone"]))), "usdm")

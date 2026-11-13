@@ -544,8 +544,8 @@ def conditions(G, pages=None):
                          "cur": cur}
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
-        al = live_alerts(G) or []
-        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "age_h": hours_old(nws["fetched_at"], G["now"]), "ago": age_words(parse_t(nws["fetched_at"]), G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
+        al = sorted(live_alerts(G) or [], key=alert_rank)  # NWS priority order: the banner names and colours the most serious first
+        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "col": alert_col(al), "age_h": hours_old(nws["fetched_at"], G["now"]), "ago": age_words(parse_t(nws["fetched_at"]), G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
         vt = (rn.get("valid_through") or {}).get("last_24h")
@@ -603,7 +603,7 @@ def _aq_time(r):
 AQ_TZ = {"KST": "AKST", "KDT": "AKDT"}  # AirNow labels Alaska time 'KST' (Anchorage 2026-11-07: hour 17:00 'KST' fetched 02:56 UTC = 17:56 AKST; Korea time would be 19 h old): never print Korea's abbreviation on an Alaska page
 
 
-AQI_RGB = {"good": "#00e400", "moderate": "#ffff00", "unhealthy for sensitive groups": "#ff7e00", "unhealthy": "#ff0000", "very unhealthy": "#8f3f97", "hazardous": "#7e0023"}
+AQI_RGB = OFFICIAL["aqi"]
 
 
 def b_air_quality(G):

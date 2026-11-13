@@ -1645,6 +1645,26 @@ def selftest():
     from tools.gsc_read import by_kind
     bk_ = by_kind([("/river/a/b/", 3, 90.0), ("/river/a/c/?x=1", 1, 30.0), ("/river/a/", 2, 10.0), ("/", 1, 5.0), ("(not set)", 1, 0.0)])
     assert bk_ == "gauge 4 sessions (30 s), hub 2 sessions (5 s), home 1 sessions (5 s), other 1 sessions (0 s)", "selftest: GA4 engagement by page kind misfiles a landing page: " + bk_
+    # official colours (PLAN 26): the colour class always names the same class as the word; every colour has a valid hex; unknown alerts get no guessed colour
+    from lib.common import OFFICIAL, ww_cls, band_word, alert_col, official_css
+    for p_, w_ in ((None, ""), (-1, "w1"), (0, "w1"), (9.9, "w1"), (10, "w2"), (24.9, "w2"), (25, "w3"), (75, "w3"), (75.1, "w4"), (90, "w4"), (90.1, "w5"), (101, "w5")):
+        assert ww_cls(p_) == w_, "selftest: percentile %s coloured %r, expected %r" % (p_, ww_cls(p_), w_)
+        assert not w_ or band_word(p_).lower().startswith(OFFICIAL["ww"][w_][0].lower().split()[0]) or (w_ == "w3" and band_word(p_).startswith("Typical")), "selftest: colour and word disagree at %s" % p_
+    assert all(re.fullmatch(r"#[0-9a-f]{6}", h_) for t_ in ("nws_flood", "nws", "usdm", "aqi", "uv") for h_ in OFFICIAL[t_].values()) and all(re.fullmatch(r"#[0-9a-f]{6}", h_) for _, h_ in OFFICIAL["ww"].values()), "selftest: an official colour is not a 6-digit hex"
+    assert set(OFFICIAL["nws"]) == set(OFFICIAL["nws_order"]), "selftest: an NWS event has a colour but no priority, or a priority but no colour"
+    assert alert_col([{"event": "Flood Watch"}, {"event": " flash  FLOOD warning "}]) == "#8b0000", "selftest: alert banner not coloured by the highest-priority alert, or event names not matched case-blind"
+    assert alert_col([{"event": "Made Up Warning"}]) is None and alert_col([]) is None and alert_col(None) is None, "selftest: an unknown or absent alert got a guessed colour"
+    assert alert_col([{"event": "Made Up Warning"}, {"event": "Flood Advisory"}]) == "#00ff7f", "selftest: a known alert lost its colour beside an unknown one"
+    assert all(".status.%s{" % k_ in official_css() and ".dot.%s," % k_ in official_css() for k_ in OFFICIAL["ww"]), "selftest: a WaterWatch class has no page colour"
+    assert alert_col([{"event": "Wind Advisory"}, {"event": "Flood Watch"}, {"event": "Heat Advisory"}, {"event": "Tornado Warning"}]) == "#ff0000", "selftest: banner colour not from the most serious alert"
+    from lib.ui import rangebar
+    rb_ = rangebar(20)
+    assert all('class="w%d"' % i_ in rb_ for i_ in range(1, 6)) and "rba" not in rb_ and all(".rb>.%s{" % k_ in official_css() for k_ in OFFICIAL["ww"]), "selftest: the range bar is not in the same five USGS colours as the tile"
+    assert sum(int(w_) for w_ in re.findall(r'width:(\d+)%', rb_)) == 100 and re.findall(r'width:(\d+)%', rb_)[:2] == [str(BC_) for BC_ in (10, 15)], "selftest: range bar zones do not follow the band cuts"
+    from lib.hero import status_line
+    G_ = {"offline": False, "coast": False, "lake": False}
+    assert 'class="status dv w2"' in status_line(G_, "Below normal for Nov 13", "Steady", "w2") and 'class="status dv"' in status_line(G_, "", "Steady", "w2"), "selftest: status sentence coloured without a comparison in it"
+    assert status_line(dict(G_, offline=True), "Below normal", "Steady", "w2") == "", "selftest: a silent gauge got a coloured status sentence"
     print("selftest OK: good fixture passes, %d broken fixtures all fail, %d incident fixtures fail with their own message" % (len(broken), len(aimed)))
 
 

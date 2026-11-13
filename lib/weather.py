@@ -117,7 +117,7 @@ def uv_line(G):
         return ""
     i = u["index"]
     cat = "Low" if i <= 2 else "Moderate" if i <= 5 else "High" if i <= 7 else "Very high" if i <= 10 else "Extreme"
-    return '<p class="src">UV index today: %d (%s), EPA daily forecast for ZIP %s.</p>' % (i, cat, esc(u["zip"]))
+    return '<p class="src"><i class="sw" style="background:%s"></i>UV index today: %d (%s), EPA daily forecast for ZIP %s.</p>' % (OFFICIAL["uv"][cat.lower()], i, cat, esc(u["zip"]))
 
 
 def b_weather(G, n_periods=14):

@@ -55,14 +55,17 @@ def dial(p):
         arc(0, 0.25, "da"), arc(0.25, 0.75, "db"), arc(0.75, 1, "dp"), ticks, needle))
 
 
+RB_ZONES = "".join('<span class="w%d" style="width:%d%%"></span>' % (i + 1, w) for i, w in enumerate((10, 15, 50, 15, 10)))  # widths = the band cuts (lib/common.py BAND_CUTS)
+
+
 def rangebar(p):
-    """Slim horizontal scale replacing the dial: below the 25th percentile amber, 25th to 75th blue, above the 75th purple (the dial's colours); the marker sits at the percentile (-1 below the 5th, 101 above the 95th, None unknown)."""
+    """Slim horizontal scale replacing the dial: five zones at the band cuts (10, 25, 75, 90) in the USGS Water Data colours (lib/common.py OFFICIAL, the tile border's colours); the marker sits at the percentile (-1 below the 5th, 101 above the 95th, None unknown)."""
     if p is None:  # an empty scale with no marker read as broken (UI review 2026-11-04, every world page)
         return ""
     pos = '<i class="rbm" style="left:%.1f%%"></i>' % (0.0 if p == -1 else 100.0 if p == 101 else max(0.0, min(100.0, float(p))))
-    return ('<div class="rb" role="img" aria-label="%s"><span class="rba"></span><span class="rbb"></span><span class="rbp"></span>%s</div>'
+    return ('<div class="rb" role="img" aria-label="%s">%s%s</div>'
             '<div class="rbl" aria-hidden="true"><span>Lower</span><span>Typical</span><span>Higher</span></div>' % (
-                "Position among past years for this date, from lower to higher" if p is not None else "No comparison with past years available", pos))
+                "Position among past years for this date, from lower to higher" if p is not None else "No comparison with past years available", RB_ZONES, pos))
 
 
 def tile(kind, ico, label, value_html, sub_html, cls=""):
@@ -109,11 +112,12 @@ def spark(values, w=150, h=34, live=None):
 
 
 def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
-    """Flood-stage scale for the stage block: a bar coloured by NWS category (action yellow, minor orange, moderate red, major purple) with a tick for the latest stage and one for the forecast high; the numbers sit in a key under the bar as ordinary text so they never overlap or shrink on a phone. cats = {name: ft}."""
+    """Flood-stage scale for the stage block: a bar coloured by NWS category (the NWS water.noaa.gov colours, lib/common.py OFFICIAL) with a tick for the latest stage and one for the forecast high; the numbers sit in a key under the bar as ordinary text so they never overlap or shrink on a phone. cats = {name: ft}."""
     order = [(k, cats[k]) for k in ("action", "minor", "moderate", "major") if k in cats]
     if not order:
         return ""
-    cols = {"action": "#d6a300", "minor": "#e07b00", "moderate": "#c8341f", "major": "#7a2fa0"}
+    from lib.common import OFFICIAL
+    cols = OFFICIAL["nws_flood"]
     top = max([order[-1][1] * 1.08, cur or 0, fc or 0]) or 1
     lo = min(0.0, cur or 0, fc or 0)
     span = (top - lo) or 1.0
@@ -135,9 +139,9 @@ def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
     return '<div class="lad" role="img" aria-label="%s"><div class="lad-bar">%s%s</div><ul class="lad-key">%s</ul></div>' % (txt, segs, marks, key)
 
 
-def banner(n, names_html):
-    """Alert strip above the tiles when the NWS has active alerts for the gauge location."""
-    return '<a class="abanner" href="#alerts"><i class="ic">%s</i><b>%d active National Weather Service alert%s</b><span>%s</span><em>Details</em></a>' % (icon("bell"), n, "" if n == 1 else "s", names_html)
+def banner(n, names_html, col=None):
+    """Alert strip above the tiles when the NWS has active alerts for the gauge location; col = the NWS map colour of the top alert (lib/common.py alert_col), on the left border only."""
+    return '<a class="abanner" href="#alerts"%s><i class="ic">%s</i><b>%d active National Weather Service alert%s</b><span>%s</span><em>Details</em></a>' % ((' style="border-left:8px solid %s"' % col) if col else "", icon("bell"), n, "" if n == 1 else "s", names_html)
 
 
 def bars(rows, vmax, mark=None):

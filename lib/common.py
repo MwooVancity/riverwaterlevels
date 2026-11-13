@@ -247,7 +247,63 @@ def sig3(v):
     return float("%.3g" % v) if v else v
 
 
-BAND_CUTS = (10, 25, 75, 90)  # percentile cut-offs of the five classes (USGS WaterWatch): under 10 much below, under 25 below, 25 to 75 normal, up to 90 above, over 90 much above. band_word, band_cls and the glossary all read this.
+BAND_CUTS = (10, 25, 75, 90)  # percentile cut-offs of the five classes (USGS WaterWatch): under 10 much below, under 25 below, 25 to 75 normal, up to 90 above, over 90 much above. band_word, ww_cls, the range bar and the glossary all read this.
+
+
+# Each agency's own published colours for its own status classes, read 2026-11-13 from the URL beside each (owner 2026-11-13: "use colors every single API channel would use").
+# One table: page CSS (official_css), the flood ladder, the alert banner, drought, AQI and UV all read it. Colour never stands alone: the agency's word is always beside it.
+OFFICIAL = {
+    # USGS Water Data for the Nation percentile colours ('WDFN_stats' schema in USGS hyswap, github.com/DOI-USGS/hyswap hyswap/utils.py retrieve_schema; WaterWatch itself is retired).
+    # Our five classes are the middle five; -1 and 101 take much below / much above, as band_word says.
+    "ww": {"w1": ("Much below normal", "#8e704f"), "w2": ("Below normal", "#c7a97b"), "w3": ("Normal", "#ddf9c7"), "w4": ("Above normal", "#aacdec"), "w5": ("Much above normal", "#4f97d1")},
+    # NWS water.noaa.gov map colours (its own bundle.js: {major:"#cc33ff",moderate:"#ff0000",minor:"#ff9900",action:"#f1f100"...}).
+    "nws_flood": {"action": "#f1f100", "minor": "#ff9900", "moderate": "#ff0000", "major": "#cc33ff"},
+    # NWS hazard map colours, weather.gov/help-map table; nws_order lists them in that table's priority order (highest first).
+    "nws_order": ["tornado warning", "extreme heat warning", "hurricane warning", "storm surge warning", "tropical storm warning", "flash flood warning", "flash flood statement", "severe thunderstorm warning",
+                  "storm surge watch", "hurricane watch", "tropical storm watch", "coastal flood warning", "flood warning", "flood statement", "winter storm warning", "red flag warning", "extreme heat watch",
+                  "flash flood watch", "flood watch", "coastal flood watch", "heat advisory", "flood advisory", "coastal flood advisory", "coastal flood statement", "high surf advisory", "rip current statement",
+                  "freeze warning", "wind advisory", "dense fog advisory", "small craft advisory", "special weather statement", "air quality alert", "hydrologic outlook"],
+    "nws": {"tornado warning": "#ff0000", "severe thunderstorm warning": "#ffa500", "flash flood warning": "#8b0000", "flash flood statement": "#8b0000", "flash flood watch": "#2e8b57", "flood warning": "#00ff00",
+            "flood watch": "#2e8b57", "flood advisory": "#00ff7f", "flood statement": "#00ff00", "hydrologic outlook": "#90ee90", "coastal flood warning": "#228b22", "coastal flood watch": "#66cdaa",
+            "coastal flood advisory": "#7cfc00", "coastal flood statement": "#6b8e23", "winter storm warning": "#ff69b4", "extreme heat warning": "#c71585", "extreme heat watch": "#800000", "heat advisory": "#ff7f50",
+            "rip current statement": "#40e0d0", "high surf advisory": "#ba55d3", "small craft advisory": "#d8bfd8", "special weather statement": "#ffe4b5", "red flag warning": "#ff1493", "dense fog advisory": "#708090",
+            "wind advisory": "#d2b48c", "freeze warning": "#483d8b", "air quality alert": "#808080", "hurricane warning": "#dc143c", "hurricane watch": "#ff00ff", "tropical storm warning": "#b22222",
+            "tropical storm watch": "#f08080", "storm surge warning": "#b524f7", "storm surge watch": "#db7ff7"},
+    # U.S. Drought Monitor colour scheme, droughtmonitor.unl.edu/DmData/Metadata.aspx.
+    "usdm": {"d0": "#ffff00", "d1": "#fcd37f", "d2": "#ffaa00", "d3": "#e60000", "d4": "#730000"},
+    # EPA AQI Technical Assistance Document (EPA-403/B-26-003), Table 2 standard colours (RGB there, hex here).
+    "aqi": {"good": "#00e400", "moderate": "#ffff00", "unhealthy for sensitive groups": "#ff7e00", "unhealthy": "#ff0000", "very unhealthy": "#8f3f97", "hazardous": "#7e0023"},
+    # EPA UV index scale page's own CSS, epa.gov/sunsafety/uv-index-scale-0.
+    "uv": {"low": "#55cc1e", "moderate": "#ffdf32", "high": "#ffa600", "very high": "#e60073", "extreme": "#9370fe"},
+}
+
+
+def ww_cls(p):
+    """WaterWatch class of a percentile for its colour (OFFICIAL["ww"]): the same cuts and the same -1/101 rule as band_word, '' when unknown."""
+    if p is None:
+        return ""
+    return "w5" if p == 101 or p > BAND_CUTS[3] else "w1" if p == -1 or p < BAND_CUTS[0] else "w2" if p < BAND_CUTS[1] else "w3" if p <= BAND_CUTS[2] else "w4"
+
+
+def alert_rank(a):
+    """Place of an NWS alert in the weather.gov/help-map priority table (event name trimmed, case-blind); an event not in the table sorts last."""
+    o, ev = OFFICIAL["nws_order"], " ".join((a.get("event") or "").lower().split())
+    return o.index(ev) if ev in o else len(o)
+
+
+def alert_col(alerts):
+    """Left-border colour of the alert banner: the NWS map colour of the highest-priority alert (the banner names alerts in this same order).
+    None when that alert is not in the table (a new or renamed event): the banner keeps its plain warning border, never a guessed colour."""
+    al = sorted(alerts or [], key=alert_rank)
+    return OFFICIAL["nws"].get(" ".join((al[0].get("event") or "").lower().split())) if al else None
+
+
+def official_css():
+    """Page CSS for every agency colour, generated from OFFICIAL so no second copy lives in site.css. Colour sits on a border, bar or swatch, never under text."""
+    out = ""
+    for k, (_, hx) in OFFICIAL["ww"].items():
+        out += ".tile.b-%s{border-top:4px solid %s}.status.%s{border-left:6px solid %s;padding-left:10px}.dot.%s,.keyrow b.%s,.rb>.%s{background:%s}" % (k, hx, k, hx, k, k, k, hx)
+    return out + ".sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;box-shadow:0 0 0 1px rgba(0,0,0,.25)}"
 
 
 def band_glossary():
@@ -357,11 +413,6 @@ def dir_lv(G):
     """The flow a list row shows: on a tidal reach the latest reading is a moment in the tide cycle (Freeport swings 1,090 to 12,500 cfs in a day), so lists show the 24 h mean the comparison uses; the gauge page shows the day's range.
     Every list of gauges (home, state, hub, nearby, upstream and downstream) calls this."""
     return G["basis"] if G.get("osc") and G.get("basis_mean") else G["lv"]
-
-
-def band_cls(p):
-    """Colour class of a percentile, one cut for every page: 'la' under the 25th, 'lp' over the 75th, 'lb' between, '' unknown."""
-    return "" if p is None else "la" if p < 25 else "lp" if p > 75 else "lb"
 
 
 def new_fail(d, u, msgs):

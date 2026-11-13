@@ -270,7 +270,7 @@ def tile_dir_word(chip):
     return m.group(1) if m else chip
 
 
-def status_line(G, norm, dirw):
+def status_line(G, norm, dirw, cls=""):
     """One plain sentence above the numbers (owner 2026-11-09 "readable at a glance"; audit 2026-11-10 #7), built only from the comparison and direction labels the tiles show.
     No number in it, so the Worker's newer reading never contradicts it; dv, so it is read as of the build. Nothing to say (no comparison, no clear direction, gauge silent, coast): no sentence."""
     if G.get("offline") or G.get("coast"):
@@ -279,7 +279,7 @@ def status_line(G, norm, dirw):
     n = norm[:1].lower() + norm[1:] if norm else ""
     if not (n or d):
         return ""
-    return '<p class="status dv">The %s here is %s.</p>' % ("lake" if G.get("lake") else "river", esc(" and ".join(x for x in (n, d) if x)))
+    return '<p class="status dv%s">The %s here is %s.</p>' % ((" " + cls) if cls and n else "", "lake" if G.get("lake") else "river", esc(" and ".join(x for x in (n, d) if x)))
 
 
 def strip_dir_word(chip):
@@ -369,7 +369,9 @@ def hero(G, pages=None):
     d24 = G["lt"] - datetime.timedelta(hours=24)
     cmp_ = None  # tiles are assembled flow, stage, direction, comparison, then the rest
     strip, late_ = "", ""
-    bcls = band_cls(p) and "b-" + band_cls(p)
+    daily_ = bool(G.get("agy") and G["agy"]["every"].startswith("daily"))  # a daily agency value is old by nature: only "not reporting" removes its colour
+    wcls = "" if G["offline"] or (not daily_ and (G["now"] - G["lt"]).total_seconds() > STALE_H["chip_ageing"] * 3600) else ww_cls(p)  # a reading the age chip calls stale is not coloured as now
+    bcls = wcls and "b-" + wcls
     if G["feed"]:
         tiles = ""  # this agency publishes level only: no flow tile to explain
     elif G.get("coast"):  # a coast page leads with the next NOAA tide prediction (predictions, never readings)
@@ -560,7 +562,7 @@ def hero(G, pages=None):
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
-    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"]))) if c["alerts"] and c["alerts"]["n"] else ""
+    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"])), c["alerts"].get("col")) if c["alerts"] and c["alerts"]["n"] else ""
     al_ = c["alerts"]
     if al_ is None:
         a_txt, a_cls = "NWS alerts unknown", "ax"
@@ -589,9 +591,9 @@ def hero(G, pages=None):
         norm_txt = "%s of the %s %s-%s average storage (CDEC; our calculation)" % (ca_["pct_avg"], ca_["mon"], ca_["c"]["avg_from"], ca_["c"]["avg_to"])
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
-    answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv %s">%s</span><span class="a1 dv">%s</span>%s</p>' % (
-        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", band_cls(p), esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
-    answer = status_line(G, norm_txt if (p is not None or out_) and not G["feed"] else "", tile_dir_word(dir_chip) if dir_chip else "") + answer
+    answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv">%s</span><span class="a1 dv">%s</span>%s</p>' % (
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+    answer = status_line(G, norm_txt if (p is not None or out_) and not G["feed"] else "", tile_dir_word(dir_chip) if dir_chip else "", wcls) + answer
     if c["rain"]:
         rn_ = c["rain"]
         if rn_["age_h"] is None or rn_["age_h"] > stale_after("rain_totals"):  # an old estimate is not "the last 24 h"

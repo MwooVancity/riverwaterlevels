@@ -79,7 +79,6 @@ tbody tr:hover td{background:color-mix(in srgb,var(--soft) 55%,transparent)}
 .safety{color:var(--mut);font-size:.8rem;margin:6px 0 12px}
 @media(max-width:760px){.hero2{grid-template-columns:1fr 1fr}.tile.wide{grid-column:span 2}.tile b{font-size:1.7rem}.ns{width:100%;margin-left:0;order:3}.ns input{width:100%}h1{font-size:1.7rem}.tile .ic{display:none}}
 .gr[hidden]{display:none}.tile.norm .dial{max-width:210px}
-.dleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.8rem;color:var(--mut);margin:4px 0 2px}.dleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}.dleg .la{background:var(--low)}.dleg .lb{background:var(--accent)}.dleg .lp{background:var(--hi)}
 abbr[title]{text-decoration:underline dotted;text-underline-offset:2px;cursor:help}
 .ladder{display:block;max-width:100%;height:auto;margin:2px 0 10px}.ladder .lg{fill:var(--line)}.ladder .lt{stroke:var(--ink);stroke-width:1.2}.ladder .ll{font:600 11px system-ui;fill:var(--ink)}.ladder .ll2{font:11px system-ui;fill:var(--mut)}.ladder .mk{fill:var(--ink)}.ladder .ml{font:600 12px system-ui;fill:var(--ink)}.ladder .mf{fill:var(--accent)}
 .olinks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}.olinks a{display:block;padding:8px 10px;border-radius:10px;font-size:.88rem}.olinks a:hover{background:var(--soft)}
@@ -183,16 +182,14 @@ details.fold>.blk{border:1px solid var(--line)}
 
 /* reader-first 2026-10-20: one-line answer, slim range bar instead of the 350 px dial */
 .answer{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}.answer span{font-size:.95rem;font-weight:600;line-height:1.25;padding:7px 12px;border-radius:99px;background:var(--soft);border:1px solid var(--line);color:var(--ink)}
-.answer .la{border-color:var(--low)}.answer .lb{border-color:var(--accent)}.answer .lp{border-color:var(--hi)}.answer .ay{background:var(--amber);color:#fff;border-color:var(--amber)}.answer .ax{border-style:dashed}
-.rb{position:relative;display:flex;height:12px;border-radius:6px;margin:16px 2px 6px}.rb>span{height:100%;display:block}.rba{width:25%;background:var(--low);border-radius:6px 0 0 6px}.rbb{width:50%;background:var(--accent)}.rbp{width:25%;background:var(--hi);border-radius:0 6px 6px 0}
+.answer .ay{background:var(--amber);color:#fff;border-color:var(--amber)}.answer .ax{border-style:dashed}
+.rb{position:relative;display:flex;height:12px;border-radius:6px;margin:16px 2px 6px}.rb>span{height:100%;display:block}.rb>span:first-child{border-radius:6px 0 0 6px}.rb>span:nth-child(5){border-radius:0 6px 6px 0}
 .rbm{position:absolute;top:-6px;width:5px;height:24px;margin-left:-2.5px;background:var(--ink);border-radius:3px;border:1px solid var(--card)}
 .rbl{display:flex;justify-content:space-between;font:600 .7rem system-ui;color:var(--mut);margin:0 2px 6px}
 .acts{margin:10px 0 0}.acts .pill{background:none;border-color:transparent;color:var(--mut);padding:6px 10px;font-size:.85rem;text-decoration:underline;text-underline-offset:3px}
 
 /* release A 2026-10-20: strip, quiet sources, phone tabs, band colour */
 .cstrip{scrollbar-width:thin;display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 0 10px;padding:2px 2px 8px;-webkit-overflow-scrolling:touch}.cstrip .tile{flex:0 0 min(210px,62%);scroll-snap-align:start}
-.tile.b-la{border-top:4px solid var(--low)}.tile.b-lb{border-top:4px solid var(--accent)}.tile.b-lp{border-top:4px solid var(--hi)}
-.answer .la{background:color-mix(in srgb,var(--low) 16%,var(--card))}.answer .lb{background:color-mix(in srgb,var(--accent) 12%,var(--card))}.answer .lp{background:color-mix(in srgb,var(--hi) 14%,var(--card))}
 .srcd{margin:8px 0 0}.srcd>summary{cursor:pointer;list-style:none;color:var(--mut);font-size:.8rem;padding:6px 0;display:inline-block;border-bottom:1px dotted var(--mut)}.srcd>summary::-webkit-details-marker{display:none}.srcd[open]>summary{border-bottom-color:transparent}.srcd .src{border-top:0;padding-top:2px;margin-top:2px}
 a.pl{opacity:0;transition:opacity .15s}h2:hover a.pl,a.pl:focus{opacity:.7}
 .gtabs{display:none}
@@ -289,7 +286,7 @@ html.tabsjs .gtabs button{border-radius:0}
   .blk,.card.blk{padding:16px}.answer{font-size:.9rem}h1{font-size:1.6rem}
 }
 @media(max-width:600px){.cstrip{grid-template-columns:1fr}.cstrip .tile.fcst,.cstrip .tile.alrt,.cstrip .tile.air{grid-column:auto}}
-[hidden]{display:none!important}.tile.b-la,.tile.b-lb,.tile.b-lp{border-top:1px solid var(--line)}.answer .la,.answer .lb,.answer .lp,.answer .ay,.answer .an{background:transparent;border:0;color:var(--ink)}
+[hidden]{display:none!important}.answer .ay,.answer .an{background:transparent;border:0;color:var(--ink)}
 
 .cite{margin:6px 0 0;color:var(--mut);font-size:.8rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cite small{font-size:inherit}.cite .cp{font:inherit;font-size:.8rem;padding:2px 8px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--accent);cursor:pointer}
 pre.card{white-space:pre-wrap;word-break:break-all;font-size:.85rem}

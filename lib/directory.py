@@ -19,7 +19,7 @@ EXTRA_CSS = """
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 48px}.item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);color:var(--ink)}.item small{display:block;color:var(--mut);font-size:.78rem}
 .stateh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--line);margin-top:28px}.stateh h2{margin:0 0 6px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.gc{display:block;color:var(--ink)}.gc b{font:600 1.1rem Georgia,serif;display:block}.gc small{color:var(--mut);font-size:.78rem}
-button.pill{font:inherit;cursor:pointer}.pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}.prose{max-width:720px}.gmap{position:relative;line-height:0}.gmap img{width:100%;height:auto;border-radius:8px;display:block}.dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--navy)}.d-lo{background:#d9822b}.d-mid{background:var(--accent)}.d-hi{background:#6b3fa0}.d-na{background:#9aa5b1}.keyrow{font-size:.82rem;color:var(--mut);margin-top:8px;line-height:1.6}.keyrow b{display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 4px 0 12px;vertical-align:-1px}.prose h2{margin-top:26px}.prose p,.prose li{color:var(--ink)}
+button.pill{font:inherit;cursor:pointer}.pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}.prose{max-width:720px}.gmap{position:relative;line-height:0}.gmap img{width:100%;height:auto;border-radius:8px;display:block}.dot{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--navy)}.d-na{background:#9aa5b1}.keyrow{font-size:.82rem;color:var(--mut);margin-top:8px;line-height:1.6}.keyrow b{display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 4px 0 12px;vertical-align:-1px}.prose h2{margin-top:26px}.prose p,.prose li{color:var(--ink)}
 @media(max-width:760px){.cols{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
 """
 DIR_LINK = css_asset("dir", EXTRA_CSS)
@@ -73,13 +73,13 @@ def conus_map(built, Gs, cap=FEATURED):
         if not (lon0 <= G["lon"] <= lon1 and lat0 <= G["lat"] <= lat1):
             continue
         p = G["p"]
-        cls = {"": "d-na", "la": "d-lo", "lp": "d-hi", "lb": "d-mid"}[band_cls(p)]
+        cls = ww_cls(p) or "d-na"
         lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", flow compared with past years on this date: %s" % band_word(p).lower()) if p is not None else "")
         dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s" title="%s" aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], esc(lab), esc(lab))
         shown += 1
     if not shown:
         return ""
-    key = '<div class="keyrow">Gauge color, flow compared with past years on this date: <b class="d-lo"></b>below normal (including very low) <b class="d-mid"></b>typical range <b class="d-hi"></b>above normal (including very high) <b class="d-na"></b>no comparison available. %d gauges shown.</div>' % shown
+    key = '<div class="keyrow">Gauge color, flow compared with past years on this date, in the USGS Water Data colors: %s<b class="d-na"></b>no comparison available. %d gauges shown.</div>' % ("".join('<b class="%s"></b>%s ' % (k, esc(lab.lower())) for k, (lab, _) in OFFICIAL["ww"].items()), shown)
     return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="800" height="%d" fetchpriority="high" decoding="async">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
