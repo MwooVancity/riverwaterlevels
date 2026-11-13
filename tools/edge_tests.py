@@ -175,7 +175,8 @@ def run():
         bp, bc = research.pages(bb, bG, datetime.date(2026, 11, 12))
     finally:
         _b3r.stage_years = st_
-    assert set(bp) == set(research.URLS) and set(bc) == set(research.URLS) - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(set(research.URLS) - set(bp))
+    riv_ = set(research.URLS) - {"/research/lake-levels/", "/research/tides/"}  # this fixture has no lakes or coasts
+    assert set(bp) == riv_ and set(bc) == riv_ - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(riv_ - set(bp))
     hy, fs, wt = bp["/research/100-year-floods/"], bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
     assert "At 56 US river gauges on this site with no regulation flag from USGS, the 1%-chance flow was reached in 56 of 1400 gauge-years" in hy and "implies about 14.0" in hy and "under 0.001" in hy and "At 10 gauges USGS flags" in hy, "edge: 100-year counts or Poisson chance wrong (conflict, no range, no 1% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 400]
     assert "published at 56 of these gauges: 56 gauge-years reached its lower bound and 0 its upper bound" in hy, "edge: confidence-bound counts wrong"
@@ -185,6 +186,41 @@ def run():
     for u_, h_ in bp.items():
         assert h_.count("<a ") <= 60, "edge: %s has %d links (check.py BUDGET trust 60)" % (u_, h_.count("<a "))
         assert u_ == "/research/" or "not a random or representative sample" in h_, "edge: %s does not state its sample" % u_
+    # PLAN 18: lakes and tides (lake_full is the page's own helpers; its counting and staleness are tested here)
+    now_ = datetime.datetime(2026, 11, 12, 18, 0, tzinfo=datetime.timezone.utc)
+    zn_ = zoneinfo.ZoneInfo("America/New_York")
+    lb, lG = [], {}
+    for i in range(7):
+        s_ = "lk%d" % i
+        lb.append({"site": s_, "state": "GA", "river": "Lake %d" % i, "place": "Dam", "dashboard_url": "/lake/l%d/" % i, "_built": True})
+        lG[s_] = {"lake": "00062", "now": now_, "zone": zn_, "rec": {"usace_pool": {"x": 1}}, "_f": [("USACE full pool", i < 4, "%.2f ft below full pool" % i, now_ - datetime.timedelta(hours=100 if i == 6 else 2))]}
+    lf_ = research.lake_full
+    research.lake_full = lambda G: [x for x in G["_f"] if research._age_h(G, x[3]) <= research.CURRENT_H]
+    try:
+        ll = research.lake_levels(lb, lG)
+        assert ll and "Of 6 US lakes on this site with a current agency figure for how full they are, 4 sit below their agency's full mark and 2 at or above it." in ll[1] and "1 more lakes have an agency figure older than 3 days" in ll[1], "edge: lake counts or the stale lake wrong"
+        assert research.lake_levels(lb[:4], lG) is None, "edge: a lake page built from under 5 lakes"
+    finally:
+        research.lake_full = lf_
+    t0 = now_ - datetime.timedelta(days=2)
+    ts_ = [t0 + datetime.timedelta(minutes=6 * k) for k in range(480)]
+    cb, cG = [], {}
+    for i in range(6):
+        s_ = "c%d" % i
+        cb.append({"site": s_, "state": "MA", "river": "Port %d" % i, "place": "", "dashboard_url": "/coast/p%d/" % i, "_built": True})
+        cG[s_] = {"coast": True, "now": now_, "zone": zn_, "sg": [(t, 2.0 + (0.5 if (i == 2 and k == 100) else 0.1)) for k, t in enumerate(ts_)],
+                  "rec": {"coops": {"pred": [(t.isoformat(), 2.0) for t in ts_], "hilo": [(ts_[10].isoformat(), 4.0, "H"), (ts_[70].isoformat(), -0.5, "L")]}}}
+    cG["c5"]["rec"]["coops"]["level"] = {"id": "x", "name": "Next door", "km": 3.0}  # prediction-only: left out
+    cG["c4"]["sg"] = cG["c4"]["sg"][:100]  # under 24 h matched: left out
+    cb.append(cb[0])  # the same station twice
+    tp_ = research.tides(cb, cG)
+    assert tp_ is None, "edge: tide page built from 4 usable stations (floor is 5)"
+    for i in (6, 7):
+        cb.append({"site": "c%d" % i, "state": "ME", "river": "Port %d" % i, "place": "", "dashboard_url": "/coast/p%d/" % i, "_built": True})
+        cG["c%d" % i] = dict(cG["c0"])
+    tp_ = research.tides(cb, cG)
+    assert tp_ and "at 6 NOAA stations" in tp_[1] and "Port 2" in tp_[1][tp_[1].find("<b>"):tp_[1].find("</b>")] and "+0.50 ft" in tp_[1] and "2 stations were left out" in tp_[1] and "4.5 ft" in tp_[1], "edge: tide gaps, range, left-out count or the prediction-only station wrong: %s" % (tp_ and tp_[1][tp_[1].find("<b>"):tp_[1].find("<b>") + 300])
+    assert "/coast/p5/" not in tp_[1] and "noaa_station" in tp_[2], "edge: a prediction-only station listed, or the tide CSV header missing"
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
     from lib.charts import b_like_today
     d = datetime.date(2026, 11, 12)

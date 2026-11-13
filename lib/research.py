@@ -5,7 +5,7 @@ A finding with too few gauges is not published."""
 import calendar, collections, csv, io, math, re, statistics
 import datetime
 from lib.common import *
-from lib.core import table, tr
+from lib.core import table, tr, tzl
 from lib.directory import shell, crumb_ld, STATE_NAMES
 
 MIN_PEAKS = 20  # water years of annual peaks a gauge needs before its peak month is counted
@@ -15,7 +15,8 @@ MIN_GAUGES = 10  # below this a finding is not published
 ALPHA = 0.05  # two-sided significance level of the per-gauge test
 ROW_CAP = 1000  # ponytail: one table of every gauge, about 150 KB at 1,000 rows; per-state pages when the site passes 1,000 river gauges
 HL = 25  # rows in a linked highlight table (check.py BUDGET trust 60, with the nav and footer)
-URLS = ("/research/", "/research/peak-month/", "/research/peak-change/", "/research/100-year-floods/", "/research/flood-stage-years/", "/research/water-temperature/")
+URLS = ("/research/", "/research/peak-month/", "/research/peak-change/", "/research/100-year-floods/", "/research/flood-stage-years/", "/research/water-temperature/", "/research/lake-levels/", "/research/tides/")
+MIN_FEW = 5  # lakes and tide stations are few on this site: 5 is the floor for those pages
 MN = calendar.month_name
 # USGS peak qualifier codes (read live 2026-11-12 on 01646500, 09380000, 07289000, 03294500)
 DROP = {"HISTORIC", "MAXDAILYMEAN", "DAMFAILURE", "MONTHUNKNOWN"}  # outside the systematic record, a daily mean not an instantaneous peak, a dam break, no month
@@ -148,14 +149,14 @@ def _g(r):
 G_HEAD = ["usgs_site", "river", "place", "state", "page"]
 
 
-def _page(title, slug, desc, body, sub, data=None, unk=None):
+def _page(title, slug, desc, body, sub, data=None, unk=None, sample=None):
     """(url, html, csv or None). No build date on the page: the same data must give the same page (Google: fresh dates without change)."""
     url = "/research/%s/" % slug if slug else "/research/"
     crumbs = [("Home", "/"), ("Research", None)] if not slug else [("Home", "/"), ("Research", "/research/"), (title, None)]
     vis = '<a href="/">Home</a> / Research' if not slug else '<a href="/">Home</a> / <a href="/research/">Research</a> / %s' % esc(title)
     extra = ""
     if slug:
-        extra += SAMPLE
+        extra += sample or SAMPLE
         if unk:
             extra += '<p class="src">USGS codes this page does not yet sort: %s. Those peaks are counted as USGS published them.</p>' % ", ".join("%s (%d peaks)" % (esc(k), v) for k, v in sorted(unk.items()))
         if data:
@@ -362,16 +363,125 @@ def water_temp(gl):
                  "USGS water temperature records, for the US river gauges on this site.", data)
 
 
+SAMPLE_LAKE = ("<p class=\"src\"><b>Sample:</b> the US lakes that have a page on this site and an agency figure for how full they are. They are not every US reservoir, "
+               "so the results describe these lakes only.</p>")
+SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have their own reading and a page on this site. They are not every US station, "
+               "so the results describe these stations only.</p>")
+CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
+
+
+def waters(built, Gs, kind):
+    """Lake or coast pages Google may index, each gauge once."""
+    out, seen = [], set()
+    for r in built:
+        G = Gs.get(r["site"])
+        if not G or not r.get("_built") or r["site"] in seen or not (G.get("coast") if kind == "coast" else (G.get("lake") and not G.get("coast"))):
+            continue
+        seen.add(r["site"])
+        out.append((r, G))
+    return sorted(out, key=lambda x: (x[0]["state"], x[0]["river"]))
+
+
+def _age_h(G, t):
+    return (G["now"] - t).total_seconds() / 3600
+
+
+def lake_full(G):
+    """[(basis, below_full: bool, text, as-of datetime)] from the same helpers the lake page's reservoir block uses; [] when none is current."""
+    from lib.blocks3 import usace_full, lc_day, twdb_now
+    from lib.hero import cdec_avg
+    out = []
+    ca = cdec_avg(G)
+    if ca and ca["c"].get("cap_af"):
+        pa = 100 * ca["v"] / ca["c"]["cap_af"]
+        out.append(("CDEC capacity", pa < 100, "%.1f%% of capacity%s" % (pa, ("; %s of the %s average" % (ca["pct_avg"], ca["mon"])) if ca.get("avg") else ""), ca["t"]))
+    uf = usace_full(G)
+    if uf:
+        out.append(("USACE full pool", uf[3] < 0, "%.2f ft %s full pool" % (abs(uf[3]), "below" if uf[3] < 0 else "above"), G["sg"][-1][0]))
+    hit = lc_day(G)
+    if hit:
+        m = G["rec"]["usbr_lc"]
+        out.append(("Reclamation capacity", hit[2] < m["cap_af"], "%.1f%% of capacity to %s ft" % (100 * hit[2] / m["cap_af"], "{:,.0f}".format(m["cap_elev_ft"])), datetime.datetime.fromisoformat(hit[0] + "T12:00:00+00:00")))
+    t = twdb_now(G)
+    if t and t.get("pct_cons") is not None:
+        out.append(("TWDB conservation capacity", t["pct_cons"] < 100, "%.1f%% of conservation capacity" % t["pct_cons"], datetime.datetime.fromisoformat(t["date"] + "T12:00:00+00:00")))
+    return [x for x in out if _age_h(G, x[3]) <= CURRENT_H]
+
+
+def lake_levels(built, Gs):
+    """Every US lake on the site against its agency's own full mark today; each basis named, never mixed into one number."""
+    rows, stale = [], 0
+    for r, G in waters(built, Gs, "lake"):
+        got = lake_full(G)
+        if got:
+            rows.append((r, G, got))
+        elif any(G["rec"].get(k) for k in ("cdec_res", "usace_pool", "usbr_lc", "twdb")):
+            stale += 1
+    if len(rows) < MIN_FEW:
+        return None
+    below = [x for x in rows if all(b[1] for b in x[2])]
+    lead = ("<p><b>Of %d US lakes on this site with a current agency figure for how full they are, %d sit below their agency's full mark and %d at or above it.</b> "
+            "Each agency measures 'full' its own way (feet from the Corps of Engineers' full pool, or a percent of capacity), so the table names the basis for every lake.%s</p>") % (
+        len(rows), len(below), len(rows) - len(below), (" %d more lakes have an agency figure older than 3 days and are left out." % stale) if stale else "")
+    hd = ["Lake", "How full, as the agency measures it", "As of"]
+    tz = lambda G, t: tzl(t, G["zone"])
+    body = (lead + table(hd, "".join(tr([_link(r), "<br>".join(esc(b[2]) for b in got), "<br>".join(esc(tz(G, b[3])) for b in got)]) for r, G, got in rows)) +
+            "<h2>How this was worked out</h2><p>Sources, as each lake page's How full block shows them: US Army Corps of Engineers Corps Water Management System top of conservation (full pool) against the USGS lake reading on the same datum; "
+            "California Data Exchange Center storage against its stated capacity and its 1991-2020 average for the month; U.S. Bureau of Reclamation Lower Colorado Region daily contents; Texas Water Development Board daily percent of conservation capacity, used only when its level matches USGS's the same day. "
+            "Differences and percents not published by the agency are our calculation. Below the full mark is not a shortage: many reservoirs are drawn down on purpose for flood season.</p>")
+    data = _csv(G_HEAD + ["basis", "below_full_mark", "figure", "as_of_utc"], [_g(r) + [b[0], b[1], b[2], b[3].astimezone(datetime.timezone.utc).isoformat()] for r, G, got in rows for b in got])
+    return _page("How full are US lakes?", "lake-levels", "Every US lake on River Water Levels against its agency's own full mark today: %d lakes, each basis named." % len(rows), body,
+                 "Agency lake and reservoir figures, for the US lakes on this site.", data, sample=SAMPLE_LAKE)
+
+
+def tides(built, Gs):
+    """Every NOAA station with its own reading: this week's predicted range and how far the water ran from the prediction (matched 6-minute times)."""
+    from lib.hero import level_of
+    rows, left = [], 0
+    for r, G in waters(built, Gs, "coast"):
+        c = G["rec"].get("coops") or {}
+        if level_of(G) or not G.get("sg"):
+            left += 1  # a prediction-only station reads a neighbour's water: the gap would mix two places
+            continue
+        pr = dict((parse_t(t), v) for t, v in c.get("pred") or [])
+        lo = G["now"] - datetime.timedelta(days=7)
+        gaps = [(t, v - pr[t]) for t, v, *_ in G["sg"] if t >= lo and t in pr and v is not None]
+        if len(gaps) < 240:  # under 24 hours of matched 6-minute readings
+            left += 1
+            continue
+        hl = [(parse_t(t), v, k) for t, v, k in c.get("hilo") or [] if parse_t(t) >= lo]
+        hi_, lo_ = [v for _, v, k in hl if k == "H"], [v for _, v, k in hl if k == "L"]
+        rng = (max(hi_) - min(lo_)) if hi_ and lo_ else None
+        up, dn = max(gaps, key=lambda x: x[1]), min(gaps, key=lambda x: x[1])
+        rows.append((r, G, rng, up, dn, statistics.median(g for _, g in gaps), len(gaps)))
+    if len(rows) < MIN_FEW:
+        return None
+    top = max(rows, key=lambda x: x[3][1])
+    lead = ("<p><b>Over the last 7 days at %d NOAA stations on this site, the water ran furthest above NOAA's tide prediction at %s: %+.2f ft at %s.</b> "
+            "The median gap between observed water and prediction across the stations was %+.2f ft. Wind, air pressure and river flow push the water off the predicted tide.%s</p>") % (
+        len(rows), _link(top[0]), top[3][1], esc(tzl(top[3][0], top[1]["zone"])), statistics.median(x[5] for x in rows),
+        (" %d stations were left out (tide predictions only, or under 24 hours of matched readings)." % left) if left else "")
+    hd = ["Station", "Predicted range this week", "Most above prediction", "Most below prediction", "Median gap"]
+    body = (lead + table(hd, "".join(tr([_link(r), ("%.1f ft" % rng) if rng is not None else "–", "%+.2f ft<div class=\"src\">%s</div>" % (up[1], esc(tzl(up[0], G["zone"]))),
+                                         "%+.2f ft<div class=\"src\">%s</div>" % (dn[1], esc(tzl(dn[0], G["zone"]))), "%+.2f ft" % md_]) for r, G, rng, up, dn, md_, n in rows), right=(1, 2, 3, 4)) +
+            "<h2>How this was worked out</h2><p>Source: NOAA CO-OPS (Tides and Currents) water level observations and tide predictions for each station, the same data its page shows, on the station datum, in feet. "
+            "Each gap is the observed level minus the predicted tide at the same 6-minute time; times missing from either series are skipped, and stations with under 24 hours of matched readings are left out. "
+            "The predicted range is the highest predicted high tide minus the lowest predicted low tide in the 7 days. Observations are preliminary until NOAA verifies them. Stations that publish predictions only are left out, because their level comes from another place.</p>")
+    data = _csv(["noaa_station", "name", "state", "page", "predicted_range_ft_7d", "max_gap_ft", "max_gap_utc", "min_gap_ft", "min_gap_utc", "median_gap_ft", "matched_readings"],
+                [[r["site"], r["river"], r["state"], SITE_URL + r["dashboard_url"], "" if rng is None else round(rng, 2), round(up[1], 2), up[0].astimezone(datetime.timezone.utc).isoformat(), round(dn[1], 2), dn[0].astimezone(datetime.timezone.utc).isoformat(), round(md_, 2), n]
+                 for r, G, rng, up, dn, md_, n in rows])
+    return _page("How far did the sea run from its tide prediction this week?", "tides", "Observed water against NOAA tide predictions over the last 7 days at %d NOAA stations, with this week's predicted tide range." % len(rows), body,
+                 "NOAA water levels and tide predictions, last 7 days, for the stations on this site.", data, sample=SAMPLE_TIDE)
+
+
 def pages(built, Gs, today=None):
     """({url: html}, {url: csv text}): the research index and every finding with enough gauges; ({}, {}) when none has (build.py then carries the published copies)."""
     today = today or datetime.date.today()
     gl = gauges(built, Gs)
-    if not gl:
-        return {}, {}
     unk = unknown_codes(gl)
     wys = [max(p) for _, p, _ in gl if p]
     sub = "USGS annual peaks through water year %d, for the US river gauges on this site." % max(wys) if wys else "USGS annual peaks, for the US river gauges on this site."
-    got = [x for x in (peak_month(gl, sub, unk), peak_change(gl, today, sub, unk), hundred_year(gl, unk), flood_stage(gl), water_temp(gl)) if x]
+    got = [x for x in ((peak_month(gl, sub, unk), peak_change(gl, today, sub, unk), hundred_year(gl, unk), flood_stage(gl), water_temp(gl)) if gl else ()) + (lake_levels(built, Gs), tides(built, Gs)) if x]
     if not got:
         return {}, {}
     items = "".join('<li><a href="%s">%s</a></li>' % (u, esc(h.split("<title>")[1].split(" | ")[0])) for u, h, _ in got)

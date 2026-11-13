@@ -1131,11 +1131,8 @@ def b_reservoir(G):
             return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(fdate(m["date"]))], rows, right=(1,)),
                          "Source: U.S. Bureau of Reclamation, Lower Colorado Region, 'Available reservoir elevations and contents' (usbr.gov/lc/region/g4000/hourly/levels.html), Hoover Dam row for %s (content given in thousand acre-feet), read %s. Capacity is the table's figure at the bottom of the exclusive flood-control space. The percent and the feet below are our calculation." % (
                              esc(fdate(m["date"])), esc(tzl(parse_t(m["fetched_at"]), G["zone"]))), "usbr", amber=age_h)
-    t = G["rec"].get("twdb")
-    if not G.get("lake") or not t or not cleared("twdb"):
-        return None
-    same = [v for d, v, _ in G["sg"] if d.date().isoformat() == t["date"]]  # lake review #9: TWDB's level must match USGS's the same day, or the file may be another lake or datum
-    if not same or t.get("elev_ft") is None or abs(sum(same) / len(same) - t["elev_ft"]) > 0.5:
+    t = twdb_now(G)
+    if not t:
         return None
     age_h = (G["now"] - datetime.datetime.fromisoformat(t["date"] + "T12:00:00+00:00")).total_seconds() / 3600
     rows = "".join(tr([a, b], right=(1,)) for a, b in (
@@ -1148,6 +1145,17 @@ def b_reservoir(G):
     return block("reservoir", "How full the reservoir is", "agency", table(["Measure", "%s" % fdate(t["date"])], rows, right=(1,)),
                  "Source: Texas Water Development Board, Water Data for Texas, daily estimate for %s. TWDB's percent is conservation storage divided by conservation capacity; flood storage is not counted. TWDB values are estimates built from several data providers.%s" % (esc(fdate(t["date"])), "" if G.get("agy") else " TWDB's water level matches the USGS lake elevation (%s) for that day within 0.5 ft." % lake_datum(G)),  # an agency lake's reading is TWDB itself: no USGS to match
                  "twdb", amber=age_h)
+
+
+def twdb_now(G):
+    """TWDB's daily record for this lake, or None: the one rule for the page block and /research/lake-levels/ (lake review #9: TWDB's level must match USGS's the same day, or the file may be another lake or datum)."""
+    t = G["rec"].get("twdb")
+    if not G.get("lake") or not t or not cleared("twdb"):
+        return None
+    same = [v for d, v, _ in G["sg"] if d.date().isoformat() == t["date"]]
+    if not same or t.get("elev_ft") is None or abs(sum(same) / len(same) - t["elev_ft"]) > 0.5:
+        return None
+    return t
 
 
 def b_lake_temp(G):
