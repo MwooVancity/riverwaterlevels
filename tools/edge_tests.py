@@ -97,47 +97,68 @@ def run():
     assert bl and "1001.00 ft" in bl["body"] and "cfs" not in bl["body"] + bl["source"], "edge: lake past years not shown in ft"
     assert b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "62614"}) is None, "edge: lake history in another datum than the page"
     assert last_year_flow({"rec": {"multiyear": my}, "ldate": td}) is None, "edge: a lake level read as last year's flow"
-    # owner 2026-11-12: research pages from every gauge's annual peaks (lib/research.py; each case is listed in PLAN 14)
+    # owner 2026-11-12: research pages (lib/research.py; edge cases in PLAN 14, 15, 17)
     from lib import research
     rb, rG = [], {}
     for i in range(12):  # 12 gauges, peaks 1960-2025: even gauges peak in March and doubled after WY2005, odd in May and unchanged
         s = "g%d" % i
         rb.append({"site": s, "state": "GA" if i < 6 else "TX", "river": "River %d" % i, "place": "Town", "dashboard_url": "/river/r%d/town/" % i, "_built": True})
-        rG[s] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if i % 2 == 0 else "05"), (200.0 if y > 2005 else 100.0) if i % 2 == 0 else 100.0, None, None] for y in range(1960, 2026)]
-                                    + [["1950-00-00", 5.0, None, None], ["1955-03-15", None, 4.0, None], ["1956-03-15", 0.0, None, None], ["2010-04-15", 50.0, None, None]]}}}  # unknown date, stage-only, zero, secondary peak
+        rG[s] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if i % 2 == 0 else "05"), (200.0 + y % 7 if y > 2005 else 100.0 + y % 7) if i % 2 == 0 else 100.0 + y % 7, None, None, ""] for y in range(1960, 2026)]
+                                    + [["1950-00-00", 5.0, None, None, ""], ["1955-03-15", None, 4.0, None, ""], ["1956-03-15", 0.0, None, None, ""], ["2010-04-15", 50.0, None, None, ""],  # unknown date, stage-only, zero, secondary peak
+                                       ["1940-04-15", 900.0, None, None, "HISTORIC"], ["1941-04-15", 900.0, None, None, "MAXDAILYMEAN"], ["1942-04-15", 900.0, None, None, "DAMFAILURE"], ["1943-04-15", 900.0, None, None, "GREATERTHAN"],
+                                       ["1944-04-15", 900.0, None, None, "MONTHUNKNOWN"], ["1945-04-15", 900.0, None, None, "ESTIMATED NEWCODE"]]}}}  # dropped codes; ESTIMATED kept; an unknown code counted
     rb.append({"site": "g0", "state": "GA", "river": "Other Creek", "place": "Town", "dashboard_url": "/river/other/town/", "_built": True})  # the same gauge on a second page
     rb.append({"site": "lk", "state": "GA", "river": "Lake", "place": "Dam", "dashboard_url": "/lake/x/", "_built": True})
-    rG["lk"] = {"lake": "00062", "rec": {"peaks": {"rows": [["%d-01-01" % y, 9.0, None, None] for y in range(1960, 2000)]}}}
+    rG["lk"] = {"lake": "00062", "rec": {"peaks": {"rows": [["%d-01-01" % y, 9.0, None, None, ""] for y in range(1960, 2000)]}}}
     rb.append({"site": "tie", "state": "TX", "river": "Tie River", "place": "Town", "dashboard_url": "/river/tie/town/", "_built": True})
-    rG["tie"] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if y % 2 else "04"), 10.0, None, None] for y in range(1960, 2000)]}}}  # 20 March, 20 April
-    rp = research.pages(rb, rG, datetime.date(2026, 11, 12))
-    assert set(rp) == {"/research/", "/research/peak-month/", "/research/peak-change/"} and set(rp) <= set(research.URLS), "edge: research pages missing, a page with no data built, or build.py's carry list misses one: %s" % sorted(rp)
+    rG["tie"] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if y % 2 else "04"), 10.0, None, None, ""] for y in range(1960, 2000)]}}}  # 20 March, 20 April
+    rb.append({"site": "old", "state": "TX", "river": "Old Cache", "place": "Town", "dashboard_url": "/river/old/town/", "_built": True})
+    rG["old"] = {"rec": {"peaks": {"rows": [["%d-03-15" % y, 10.0, None, None] for y in range(1960, 2026)]}}}  # written before qualifiers were stored
+    rb.append({"site": "dam", "state": "TX", "river": "Dam River", "place": "Town", "dashboard_url": "/river/dam/town/", "_built": True})
+    rG["dam"] = {"rec": {"peaks": {"rows": [["%d-06-15" % y, 50.0 + y % 5, None, None, "REGULATED"] for y in range(1960, 2026)]}}}
+    rp, rc = research.pages(rb, rG, datetime.date(2026, 11, 12))
+    assert set(rp) == {"/research/", "/research/peak-month/", "/research/peak-change/"} and set(rp) <= set(research.URLS) and set(rc) == {"/research/peak-month/", "/research/peak-change/"}, "edge: research pages or CSVs missing, a page with no data built, or build.py's carry list misses one: %s %s" % (sorted(rp), sorted(rc))
     pm, pc_ = rp["/research/peak-month/"], rp["/research/peak-change/"]
-    assert "Of 13 US river gauges" in pm and "most often comes in March (6 gauges), then May (6)" in pm, "edge: peak month counts wrong (duplicate gauge counted twice, or a lake counted)"
+    assert "Of 13 US river gauges" in pm and "most often comes in March (6 gauges), then May (6)" in pm, "edge: peak month counts wrong (duplicate gauge, lake, old cache row or regulated gauge counted)"
+    assert "1 gauges whose peaks USGS mostly marks as affected by dams" in pm and "Dam River at Town (regulated)" in pm and "Old Cache" not in pm + pc_, "edge: regulated gauge not apart, or an old cache row (no qualifiers) used"
     assert "/lake/x/" not in pm + pc_ and "/river/other/town/" not in pm, "edge: lake or second page of one gauge listed"
-    assert "(66 of 66 years, 100%)" in pm, "edge: a secondary peak, unknown date or no-flow row was counted"
+    assert "March (66 of 67 years, 99%)" in pm, "edge: a secondary peak, unknown date, no-flow row or a dropped code was counted (1945 ESTIMATED is kept: 67 water years)"
+    assert "NEWCODE (12 peaks)" in pm, "edge: an unknown USGS code was not named on the page"
     assert "1 gauge split evenly between two or more months and is not counted" in pm and "March and April (20 of 40 years, 50% each)" in pm, "edge: tie not named"
-    assert research._wy(datetime.date(2020, 10, 1)) == 2021 and research._wy(datetime.date(2020, 9, 30)) == 2020, "edge: water-year boundary"
-    assert "more than 10% higher than in 1987 to 2006 at 6 gauges, more than 10% lower at 0, and within 10% at 6" in pc_ and "water years 2007 to 2026" in pc_, "edge: peak change windows or counts wrong (2026 not yet published must still count)"
-    assert "not a trend test" in pc_ and "does not say why" in pc_, "edge: peak change lost its limits"
-    assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == rp, "edge: same data on another day gave a different page (fresh date without change)"
-    assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == {} and research.pages([], {}) == {}, "edge: research published from under 10 gauges, or empty cache crashed"
+    assert research._wy(2020, 10) == 2021 and research._wy(2020, 9) == 2020, "edge: water-year boundary"
+    assert "statistically significant amount at 6: higher at 6, lower at 0" in pc_ and "Chance alone would flag about 1 of 12" in pc_ and "water years 2007 to 2026" in pc_, "edge: peak change test counts or windows wrong: %s" % pc_[pc_.find("<b>"):pc_.find("<b>") + 400]
+    assert "not a trend analysis" in pc_ and "does not say why" in pc_ and "Mann-Whitney" in pc_ and "not a random or representative sample" in pc_, "edge: peak change lost its limits, its test or its sample statement"
+    assert research.mwu_p([5.0] * 20, [5.0] * 20) == 1.0 and research.mwu_p(list(range(20)), list(range(100, 120))) < 0.001 and 0.1 < research.mwu_p([1.0, 3.0, 5.0, 7.0] * 5, [2.0, 4.0, 6.0, 8.0] * 5) <= 1.0 and abs(research.mwu_p([1, 2, 3, 4, 5], [6, 7, 8, 9, 10]) - 0.0122) < 0.0005, "edge: Mann-Whitney wrong on ties, separation or overlap"
+    assert abs(research.poisson_tail(3, 1.0) - 0.0803) < 0.001 and abs(research.poisson_tail(0, 2.0) - 0.1353) < 0.001 and 0 <= research.poisson_tail(400, 300.0) < 0.001, "edge: Poisson tail wrong or underflows at 300"
+    assert "usgs_site,river,place,state,page" in rc["/research/peak-change/"] and "mann_whitney_p" in rc["/research/peak-change/"] and 'href="data.csv"' in pc_, "edge: CSV header or download link missing"
+    assert research._csv(["a"], [["=SUM(A1)"], [-3], ["-x"]]) == "a\n'=SUM(A1)\n-3\n'-x\n", "edge: CSV formula cell not neutralised, or a negative number changed"
+    assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == (rp, rc), "edge: same data on another day gave a different page (fresh date without change)"
+    assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == ({}, {}) and research.pages([], {}) == ({}, {}), "edge: research published from under 10 gauges, or empty cache crashed"
     same = [(r, research._peaks(rG[r["site"]]), rG[r["site"]]) for r in rb[:12] if int(r["site"][1:]) % 2 == 0] * 2
-    one = research.peak_month(same, 2025)[1]
+    one = research.peak_month(same, "", {})[1]
     assert "most often comes in March (12 gauges)." in one, "edge: every gauge in one month broke the lead"
     cap_, research.ROW_CAP = research.ROW_CAP, 5
     try:
-        assert "8 more gauges are not listed here" in research.pages(rb, rG, datetime.date(2026, 11, 12))["/research/peak-month/"], "edge: a cut table did not say so"
+        assert "9 more gauges are not listed here" in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/peak-month/"], "edge: a cut table did not say so"
     finally:
         research.ROW_CAP = cap_
     assert "BreadcrumbList" in pm and 'href="/research/peak-change/"' in rp["/research/"], "edge: research index or breadcrumb missing"
-    # PLAN 15: 100-year floods, flood stage years, water temperature; 70 gauges so the link budget is tested at size
+    # gauge page: a water year counts once at its highest stage (PLAN 17)
     from lib import blocks3 as _b3r
+    sy_g = {"rec": {"nwps": {"categories": {"minor": 10.0}}, "peaks": {"rows": [["%d-03-01" % y, 1.0, 9.0, None, ""] for y in range(2000, 2012)] + [["2005-04-01", 1.0, 11.0, None, ""]]}}}
+    sp_, dg_ = _b3r.stage_pair, _b3r.datum_gap
+    _b3r.stage_pair, _b3r.datum_gap = (lambda G: (1, 1, None)), (lambda G: None)
+    try:
+        sy = _b3r.stage_years(sy_g)
+    finally:
+        _b3r.stage_pair, _b3r.datum_gap = sp_, dg_
+    assert sy and len(sy[0]) == 12 and sum(1 for x in sy[0] if x[2] >= 10.0) == 1, "edge: a secondary stage peak counted as its own year on the gauge page"
+    # PLAN 15: 100-year floods, flood stage years, water temperature; 70 gauges so the link budget is tested at size
     bb, bG = [], {}
     for i in range(70):
         s_ = "h%d" % i
         bb.append({"site": s_, "state": "GA", "river": "Big %d" % i, "place": "Town", "dashboard_url": "/river/b%d/town/" % i, "_built": True})
-        ff = {"rows": [{"aep": 1, "q": 1000.0}, {"aep": 10, "q": 500.0}], "range": "1950 to 2000", "regulated": i % 7 == 0}
+        ff = {"rows": [{"aep": 1, "q": 1000.0, "lo": 800.0, "hi": 1300.0}, {"aep": 10, "q": 500.0}], "range": "1950 to 2000", "regulated": i % 7 == 0}
         if i == 1: ff["conflict"] = True
         if i == 2: ff["range"] = None
         if i == 3: ff["rows"] = [{"aep": 10, "q": 500.0}]
@@ -146,22 +167,24 @@ def run():
         mo["7"] = [12.0 + i * 0.25, 400]
         if i == 5: mo["7"] = [30.0, 100]  # July with too few days: gauge has no July
         if i == 6: mo["1"] = "bad"
-        bG[s_] = {"rec": {"peaks": {"rows": [["%d-03-15" % y, 1200.0 if (y in (2010, 2020) and i % 2 == 0) else 400.0, 10.0 + (y % 3), None] for y in range(1950, 2026)]}, "floodfreq": ff,
+        bG[s_] = {"rec": {"peaks": {"rows": [["%d-03-15" % y, 1200.0 if (y in (2010, 2020) and i % 2 == 0) else 400.0, 10.0 + (y % 3), None, ""] for y in range(1950, 2026)]}, "floodfreq": ff,
                           "wtemp": {"months": mo, "first_year": "1990", "last_year": "2026"}}, "_minor": 11.5}
     st_ = _b3r.stage_years
     _b3r.stage_years = lambda G: ([r for r in G["rec"]["peaks"]["rows"]], {"minor": G["_minor"]}, {}) if G.get("_minor") else None
     try:
-        bp = research.pages(bb, bG, datetime.date(2026, 11, 12))
+        bp, bc = research.pages(bb, bG, datetime.date(2026, 11, 12))
     finally:
         _b3r.stage_years = st_
-    assert set(bp) == set(research.URLS), "edge: a research page missing: %s" % sorted(set(research.URLS) - set(bp))
+    assert set(bp) == set(research.URLS) and set(bc) == set(research.URLS) - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(set(research.URLS) - set(bp))
     hy, fs, wt = bp["/research/100-year-floods/"], bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
-    assert "At 56 US river gauges on this site that USGS does not mark as regulated, the 1%-chance flow was reached or passed in 56 of 1400 gauge-years" in hy and "At 10 gauges USGS marks as regulated" in hy, "edge: 100-year counts wrong (conflict, no range, no 1% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 300]
-    assert "not one flood per century" in hy and "1%%" not in hy and "/river/b1/town/" not in hy, "edge: 100-year page lost its plain meaning, shows a double percent, or lists a conflicting statistic"
+    assert "At 56 US river gauges on this site with no regulation flag from USGS, the 1%-chance flow was reached in 56 of 1400 gauge-years" in hy and "implies about 14.0" in hy and "under 0.001" in hy and "At 10 gauges USGS flags" in hy, "edge: 100-year counts or Poisson chance wrong (conflict, no range, no 1% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 400]
+    assert "published at 56 of these gauges: 56 gauge-years reached its lower bound and 0 its upper bound" in hy, "edge: confidence-bound counts wrong"
+    assert "not one flood per century" in hy and "1%%" not in hy and "/river/b1/town/" not in hy and "chance shown is too small" in hy, "edge: 100-year page lost its plain meaning or its independence caveat, shows a double percent, or lists a conflicting statistic"
     assert "reached NWS minor flood stage in a median 33% of years" in fs and "never at 0" in fs, "edge: flood stage share wrong: %s" % fs[fs.find("<b>"):fs.find("<b>") + 300]
-    assert "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt and max(len(re.findall(r"<th ", t_)) for t_ in wt.split("</table>")) <= 5, "edge: water temperature kept a thin July, crashed on a bad month, or lost the record years"
+    assert "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt and max(len(re.findall(r"<th ", t_)) for t_ in wt.split("</table>")) <= 5, "edge: water temperature kept a thin July, crashed on a bad month, lost the record years, or a table is over 5 columns"
     for u_, h_ in bp.items():
         assert h_.count("<a ") <= 60, "edge: %s has %d links (check.py BUDGET trust 60)" % (u_, h_.count("<a "))
+        assert u_ == "/research/" or "not a random or representative sample" in h_, "edge: %s does not state its sample" % u_
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
     from lib.charts import b_like_today
     d = datetime.date(2026, 11, 12)

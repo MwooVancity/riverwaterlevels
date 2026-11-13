@@ -261,9 +261,11 @@ def fetch_peaks(site, h):
             by.setdefault(str(q["time"])[:10], {})[k] = v
             if k == "stage" and q.get("qualifier"):
                 by[str(q["time"])[:10]]["sq"] = str(q["qualifier"])
+            if k == "flow":  # PLAN 17: the flow codes (REGULATED, MAXDAILYMEAN, HISTORIC ...), "" when USGS gives none; research reads them, so a row without this field is an old cache row
+                by[str(q["time"])[:10]]["fq"] = " ".join(str(c) for c in (q.get("qualifier") or []))
     if not by:
         return None
-    return {"fetched_at": now_iso(), "rows": [[t, v.get("flow"), v.get("stage"), v.get("sq")] for t, v in sorted(by.items())]}
+    return {"fetched_at": now_iso(), "rows": [[t, v.get("flow"), v.get("stage"), v.get("sq"), v.get("fq")] for t, v in sorted(by.items())]}
 
 
 def fetch_wtemp(site, h):
@@ -1757,6 +1759,7 @@ def fetch_extras(site, rec, h, log):
         if key in WEEKLY and USGS_OUT[0]:
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
+        early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
         if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("near_wtemp", "cameras") else 6)):
             continue
         if run_source(rec, key, fn, log) or (log and ("404" in log[-1] or "out of range" in log[-1])):  # collect review #7: a source this gauge does not have (404, empty list) waits for its timer, not every hourly run

@@ -772,6 +772,12 @@ def stage_years(G):
     if not (SOURCES["nwps"]["status"] in ("quoted", "owner-permission") and p and "minor" in cats and stage_pair(G)) or datum_gap(G):
         return None
     rows = [r for r in p["rows"] if r[2] is not None and (not r[3] or r[3].replace(" ", "") == "['ESTIMATED']")] if all(len(r) > 3 for r in p["rows"]) else []  # any other USGS qualifier (different datum, backwater, not the annual maximum) can misstate the peak stage
+    wy = {}
+    for r in rows:  # PLAN 17: a water year counts once, at its highest stage ('X of Y years' counted secondary peaks as years)
+        y = int(r[0][:4]) + (1 if r[0][5:7] >= "10" else 0)
+        if y not in wy or r[2] > wy[y][2]:
+            wy[y] = r
+    rows = [wy[y] for y in sorted(wy)]
     return (rows, cats, n) if len(rows) >= 10 else None
 
 

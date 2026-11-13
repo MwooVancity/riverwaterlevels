@@ -221,16 +221,21 @@ def main():
         for url, html in directory.trust_pages(len(built), built).items():
             emit(url, html)
         try:  # research pages (owner 2026-11-12, PLAN 14): a fault or an empty cache carries the published copies (never a 404) and is named in the failed list
-            rp, why_r = research.pages(built, Gs), "too few gauges with annual peaks"
+            (rp, rcsv), why_r = research.pages(built, Gs), "too few gauges with usable annual peaks (an old cache row waits for its weekly refresh)"
         except Exception as e:
-            rp, why_r = {}, "%s: %s" % (type(e).__name__, str(e)[:100])
+            rp, rcsv, why_r = {}, {}, "%s: %s" % (type(e).__name__, str(e)[:100])
         for url in [u for u in research.URLS if u not in rp]:  # one finding short of gauges keeps its old copy too
             old = prev_page(url)
             if old:
                 rp[url] = old
+                oc = os.path.join(ROOT, "dist", url.strip("/"), "data.csv")  # the carried page links its data.csv: carry it too
+                if os.path.isfile(oc):
+                    rcsv[url] = open(oc, encoding="utf-8").read()
                 report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); published copy carried" % why_r, "url": url})
         for url, html in rp.items():
             emit(url, html)
+        for url, text in rcsv.items():  # PLAN 17: every finding's table as CSV beside its page
+            open(os.path.join(nxt, url.strip("/"), "data.csv"), "w", encoding="utf-8", newline="").write(text)
         world_rows = []
         wnow, wpages = datetime.datetime.now(datetime.timezone.utc), []
         for page in directory.world_pages():
