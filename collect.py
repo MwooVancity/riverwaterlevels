@@ -548,8 +548,46 @@ STOCK_SOURCES = [
 ]
 
 
+_MA_SP = {}
+MA_STOCK = "https://services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/"  # MassWildlife trout stocking report (PLAN 36, read 2026-11-13): item licence is a no-warranty note, no reuse bar
+
+
+def fetch_stocking_ma(lat, lon, miles):
+    """Massachusetts: stocking events (water, town, species, date) sit in a table with no position; each water's code is a point in the joined view.
+    2 calls: the points in the box, then the events for those codes. Same row shape as the other states; no count is published (num None)."""
+    dd = miles / 69.0
+    q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
+                                "spatialRel": "esriSpatialRelIntersects", "outFields": "STK_WB_ID", "returnGeometry": "true", "resultRecordCount": "500", "f": "json"})
+    pts = {}
+    for ft in json.loads(get_text(MA_STOCK + "Stocking_Waterbodies_(Joined_View)/FeatureServer/1/query?" + q)).get("features", []):
+        g, code = ft.get("geometry") or {}, (ft.get("attributes") or {}).get("STK_WB_ID")
+        if code and g.get("y") is not None:
+            mi = round(hav_km(lat, lon, g["y"], g["x"]) * 0.621371, 1)
+            if mi <= miles and re.fullmatch(r"[0-9A-Za-z-]+", code):
+                pts[code] = mi
+    if not pts:
+        return []
+    cut = (datetime.date.today() - datetime.timedelta(days=550)).isoformat()
+    q = urllib.parse.urlencode({"where": "Water_Town_Code IN (%s) AND Stocked_Date >= DATE '%s'" % (",".join("'%s'" % c for c in sorted(pts)[:200]), cut),
+                                "outFields": "Waterbody,Species,Stocked_Date,Water_Town_Code", "orderByFields": "Stocked_Date DESC", "resultRecordCount": "500", "f": "json"})
+    rows = []
+    if not _MA_SP:  # the layer's own code list (RT = Rainbow Trout...), read once per process so a new code is never guessed
+        _MA_SP.update({c["code"]: c["name"] for f in json.loads(get_text(MA_STOCK + "StockedFish_View/FeatureServer/0?f=json")).get("fields", []) if f["name"] == "Species" for c in (f.get("domain") or {}).get("codedValues", [])})
+    req = urllib.request.Request(MA_STOCK + "StockedFish_View/FeatureServer/0/query", data=q.encode(), headers={"User-Agent": "riverwaterlevels.com"})  # POST: 200 codes in a GET address answer 404
+    for ft in json.loads(urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")).get("features", []):
+        a = ft.get("attributes") or {}
+        if isinstance(a.get("Stocked_Date"), (int, float)) and a.get("Water_Town_Code") in pts:
+            rows.append({"species": _MA_SP.get(a.get("Species"), a.get("Species")), "date": (datetime.datetime(1970, 1, 1) + datetime.timedelta(milliseconds=a["Stocked_Date"])).date().isoformat(), "num": None,
+                         "water": a.get("Waterbody"), "size": None, "mi": pts[a["Water_Town_Code"]]})
+    return rows
+
+
 def fetch_stocking(lat, lon, miles=35):
     """Recent hatchery stocking near the gauge, from the state's public stocking layer (species, date, count, water). Returns None where the state has no adapter or no record. Stocking is a release event, not a fish-population measure."""
+    if -73.6 <= lon <= -69.8 and 41.2 <= lat <= 42.9:  # Massachusetts (MassWildlife), a two-step source; a border gauge with no MA water nearby falls through to the rest
+        rows = sorted(fetch_stocking_ma(lat, lon, miles), key=lambda r: r["date"], reverse=True)
+        if rows:
+            return {"fetched_at": now_iso(), "source": "MassWildlife trout stocking report", "credit": "Massachusetts Division of Fisheries and Wildlife (MassWildlife)", "url": MA_STOCK + "StockedFish_View/FeatureServer/0", "miles": miles, "rows": rows[:12]}
     for s in STOCK_SOURCES:
         x0, y0, x1, y1 = s["bbox"]
         if not (x0 <= lon <= x1 and y0 <= lat <= y1):

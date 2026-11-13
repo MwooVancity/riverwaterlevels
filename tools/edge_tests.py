@@ -1144,4 +1144,17 @@ if __name__ == "__main__":
     assert "Moon overhead today" in mo_(un_) and "4:42 PM" in mo_(un_) and "disputed" in mo_(un_), "solunar: moon overhead time missing, wrong zone, or the theory not called disputed"
     old_ = {**un_, "days": [dict(un_["days"][0], moon=[["Rise", "2026-11-13T16:28:00+00:00"]]), un_["days"][1]]}
     assert "overhead" not in mo_(old_) and "Solunar" not in mo_(old_), "solunar: a cache without the overhead time said 'none' or kept the note"
+    # PLAN 36 Massachusetts stocking: points in the box, events by code (POST), species decoded from the layer's own list, a water beyond the radius dropped
+    import io as io_
+    gt_, uo_, sp_ = collect.get_text, collect.urllib.request.urlopen, dict(collect._MA_SP)
+    try:
+        collect._MA_SP.clear()
+        collect.get_text = lambda u, *a, **k: json.dumps({"features": [{"attributes": {"STK_WB_ID": "1-1"}, "geometry": {"x": -72.6, "y": 42.26}}, {"attributes": {"STK_WB_ID": "2-2"}, "geometry": {"x": -70.0, "y": 42.26}}]}) if "Joined_View" in u else json.dumps({"fields": [{"name": "Species", "domain": {"codedValues": [{"code": "RT", "name": "Rainbow Trout"}]}}]})
+        collect.urllib.request.urlopen = lambda req, *a, **k: io_.BytesIO(json.dumps({"features": [{"attributes": {"Species": "RT", "Stocked_Date": 1791928800000, "Waterbody": "Loon Pond - Springfield", "Water_Town_Code": "1-1"}},
+                                                                                                {"attributes": {"Species": "ZZ", "Stocked_Date": 1791928800000, "Waterbody": "Far Pond", "Water_Town_Code": "2-2"}}]}).encode())
+        ma_ = collect.fetch_stocking_ma(42.25, -72.6, 35)
+        assert [(r["species"], r["water"], r["num"]) for r in ma_] == [("Rainbow Trout", "Loon Pond - Springfield", None)], "MA stocking: code not decoded, a far water kept, or a count invented"
+    finally:
+        collect.get_text, collect.urllib.request.urlopen = gt_, uo_
+        collect._MA_SP.clear(); collect._MA_SP.update(sp_)
     print("selftest OK")
