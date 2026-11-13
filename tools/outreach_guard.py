@@ -29,6 +29,8 @@ def sent_keys(rows):
     for r in rows:
         if r.get("sent_on"):
             keys |= {("sha", r["email_sha"])} if r.get("email_sha") else set()
+            if "BOUNCED" in (r.get("sent_via") or ""):
+                continue  # never reached them: the dead address stays blocked; one working address may be tried, and --record adds its own row, which blocks the org from then on
             keys |= {("dom", d) for d in (dom(r.get("website")), dom(r.get("contact_page_url"))) if d and d not in FREE}
             keys |= {("org", " ".join(r["org_name"].lower().split()))}
     return keys
@@ -63,6 +65,9 @@ def selftest():
     assert stamp(lg_, [{"org_name": "Not Sent Yet", "email": "a@notsent.com"}, {"org_name": "Brand New", "email": "b@new.com"}], {norm("not sent yet\r"), norm("Brand New")}, "2026-11-13") == {"not sent yet", "brand new"}, "a name with a Windows line end was not recorded"
     assert len(lg_) == 2 and lg_[0]["sent_on"] == "2026-11-13" and lg_[0]["email_sha"] == sha("a@notsent.com"), "an unsent row was duplicated instead of stamped"
     assert clashes({"org_name": "x", "email": "A@notsent.com", "website": ""}, sent_keys(lg_)), "a just-recorded address can be emailed again"
+    kb = sent_keys([{"org_name": "Dead Box Marina", "website": "https://deadbox.com", "contact_page_url": "", "sent_on": "2026-11-13", "sent_via": "email inf@; 2026-11-13 BOUNCED (550)", "email_sha": sha("info@deadbox.com")}])
+    assert clashes({"org_name": "Dead Box Marina", "email": "info@deadbox.com", "website": ""}, kb), "a bounced dead address can be emailed again"
+    assert not clashes({"org_name": "Dead Box Marina", "email": "office@deadbox.com", "website": "https://deadbox.com"}, kb), "a bounced org cannot be tried once at a working address"
     print("outreach_guard selftest OK")
 
 
