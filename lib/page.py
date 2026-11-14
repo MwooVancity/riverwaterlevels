@@ -37,7 +37,9 @@ def b_related(G, pages):
             if x["relation"] == rel and pr:
                 nodes.append({"name": nm_(pr), "flow": "%s cfs" % fmtc(x["flow"]),
                               "sub": rel_(x, pr) + away(pr) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
-    stale = any(old_(x) for x in items if pages.get(x["site"]))
+    # the block also shows "This gauge" with its own reading: an old own reading is not live either (break_blocks stale26h, 2026-11-14)
+    own_old = not G.get("lt") or (G["now"] - G["lt"]).total_seconds() > 24 * 3600  # the same 24 h cut as the neighbour rows' "(older than 24 h)"
+    stale = own_old or any(old_(x) for x in items if pages.get(x["site"]))
     dirs_ = {x["relation"] for x in items if pages.get(x["site"])}
     return block("related_gauges", "Upstream and downstream gauges" if len(dirs_) == 2 else ("Upstream gauge" if "upstream" in dirs_ else "Downstream gauge") + ("s" if sum(1 for x in items if x["relation"] in dirs_ and pages.get(x["site"])) > 1 else ""), "agency" if stale else "live", ui.strip(nodes),
                  "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; gauges that report flow are listed; those without a page on this site are named without a link.", "usgs")

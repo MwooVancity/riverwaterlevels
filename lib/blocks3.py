@@ -832,7 +832,7 @@ def b_redtide(G):
     if top["count"] > 0:
         lead = "Highest red tide count within 25 km in the last 14 days: %s cells per liter (%s) at %s on %s, %.0f km away." % (cnt(top["count"]), esc(top["cat"] or "no category"), esc(top["site"]), esc(fdate(top["date"])), top["km"])
     else:
-        lead = "None of the %d red tide samples within 25 km in the last 14 days found Karenia brevis cells (newest %s)." % (len(rows), esc(fdate(max(x["date"] for x in rows))))
+        lead = "No Karenia brevis cells were found in the %d red tide sample%s within 25 km in the last 14 days (newest %s)." % (len(rows), "" if len(rows) == 1 else "s", esc(fdate(max(x["date"] for x in rows))))  # "None of" tripped check.py's leaked-None ban (2026-11-14)
     trs = "".join(tr([esc(x["site"]), "%.0f km" % x["km"], esc(fdate(x["date"])), cnt(x["count"]), esc(x["cat"] or "Unknown")], right=(1, 3)) for x in sorted(latest.values(), key=lambda x: x["km"])[:8])
     return block("redtide", head, "agency", "<p><b>%s</b></p>" % lead + table(["Sample site", "Distance", "Latest sample", "Cells per liter", "Category (HABSOS)"], trs, right=(1, 3)), src + ".", "habsos")
 
@@ -851,7 +851,7 @@ def b_fish(G):
     if not f.get("rows"):
         return block("fish", head, "agency", "<p><b>No fish record within %d km since %d is in GBIF.</b> No record is not the same as no fish.</p>" % (f["km"], f["since"]), src + ".", "gbif", empty=True)
     n = ("%d or more" % f["species"]) if f.get("capped") else "%d" % f["species"]
-    nm = lambda r: esc(r[1].split(", ")[0] if r[1] else r[0])
+    nm = lambda r: esc(r[1].split(", ")[0]) if r[1] else "<i>%s</i>" % esc(r[0])
     lead = "%s fish species have records within %d km since %d. Most recorded: %s." % (n, f["km"], f["since"], ", ".join(nm(r) for r in f["rows"][:4]))
     trs = "".join(tr([esc(r[1] or "No common name listed"), "<i>%s</i>" % esc(r[0]), "{:,}".format(r[2])], right=(2,)) for r in f["rows"])
     sets = "; ".join("%s (%s records)" % (esc(t), "{:,}".format(c)) for t, c in f.get("datasets") or [])

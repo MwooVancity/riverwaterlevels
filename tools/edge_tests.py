@@ -1099,7 +1099,10 @@ if __name__ == "__main__":
     rd_ = {"fetched_at": "2026-11-13T12:00:00+00:00", "rows": [{"site": "Siesta Beach", "date": "2026-11-09", "count": 0.0, "cat": "not observed", "km": 2.0}, {"site": "North Lido Beach", "date": "2026-11-09", "count": 333.0, "cat": "very low", "km": 1.6}]}
     b_ = rt_(rd_)["body"]
     assert "333 cells per liter (very low) at North Lido Beach" in b_ and "Siesta Beach" in b_, "red tide: highest count, its category or a site missing"
-    assert "found Karenia brevis" in rt_(dict(rd_, rows=[dict(rd_["rows"][0])]))["body"] and "None of the 1" in rt_(dict(rd_, rows=[dict(rd_["rows"][0])]))["body"], "red tide: all-zero samples not said"
+    z1_ = rt_(dict(rd_, rows=[dict(rd_["rows"][0])]))["body"]
+    import check as check_
+    pg = lambda t: '<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t
+    assert "No Karenia brevis cells were found in the 1 red tide sample within" in z1_ and not [b for b in check_.check_html(pg(z1_), "x") if "banned" in b], "red tide: all-zero samples not said, or said in words check.py bans"
     e_ = rt_(dict(rd_, rows=[]))
     assert e_["empty"] and "No sample is not the same as no red tide" in e_["body"], "red tide: no sample read as no red tide"
     assert "Unknown" in rt_(None)["body"] and rt_(rd_, "CA") is None, "red tide: missing data shown, or the block on a non-Gulf coast"
@@ -1396,6 +1399,10 @@ if __name__ == "__main__":
     br_ = brl_(Gr_, {"A": {"river": "Rio Grande", "place": "San Felipe", "water_url": "/river/a/", "_built": False}, "B": {"river": "Rio Grande", "place": "Isleta", "water_url": "/river/b/", "_built": True}})
     assert br_ and "San Felipe" in br_["body"] and "/river/a/" not in br_["body"] and "/river/b/" in br_["body"] and br_["heading"] == "Upstream and downstream gauges", "related gauges: unbuilt neighbour"
     assert brl_(Gr_, {}) is None, "related gauges: no known neighbour must show no block"
+    pr_ = {"A": {"river": "Rio Grande", "place": "San Felipe", "water_url": "/river/a/", "_built": False}}
+    assert brl_(dict(Gr_, lt=t_), pr_)["tag"] == "live" and brl_(dict(Gr_, lt=t_ - dt_.timedelta(hours=26)), pr_)["tag"] == "agency", "related gauges: this gauge's 26 h old reading shown as live (break_blocks stale26h)"
+    # 2026-11-14: species names in <i> are names, not typos; doubled words elsewhere still fail
+    assert not [b for b in check_.check_html(pg("Atlantic silverside | <i>Menidia menidia</i>"), "x") if "doubled" in b] and [b for b in check_.check_html(pg("the the river"), "x") if "doubled" in b], "doubled word: a scientific name failed or a typo passed"
     # PLAN 39g: the world hub's plain sentence counts only live rows; tide hubs and dead feeds say nothing
     from lib.directory import world_status as ws_
     ts_ = "2026-11-13T10:30:00Z"

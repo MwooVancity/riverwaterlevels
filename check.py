@@ -259,7 +259,7 @@ def check_html(h, rel):
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
     own = re.sub(r'(?s)<section[^>]*id="(?:flood_impacts|low_water|alerts|hydronotes)".*?</section>', " ", body)  # quoted NWS text is never reworded: "Meramec State Park park is flooded" is the NWS's own sentence (release 2026-11-07)
-    own = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code)\b.*?</\1>", " ", own)))
+    own = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code|i)\b.*?</\1>", " ", own)))  # <i>: scientific names, where "Menidia menidia" is the name (2026-11-14)
     for mm in re.finditer(r"\b([A-Za-z]+) \1\b", own, re.I):  # words only: "19 19" is a day and an hour in "2026-10-19 19:38", not a typo
         if mm.group(1).lower() not in ("had", "that", "walla", "ro", "bora", "baden"):  # real names: Walla Walla River, a German "Ro Ro Anlage" ramp (2026-11-03)
             bad.append("doubled word %r near %r" % (mm.group(0), own[max(0, mm.start() - 40):mm.end() + 40].strip()))
@@ -652,8 +652,9 @@ def hater_rules(h):
         bad.append("a gauge number inside the page name: add a line to data/name-overrides.csv")
     if re.search(r'(?:NWS|National Weather Service)\s*<span class="tag t-official">', h):  # newcomer review: "...as issued by NWS  OFFICIAL NWS" says it twice
         bad.append("a block heading ends in NWS right before its 'Official NWS' tag")
-    if re.search(r"[A-Za-z] \)", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", h)))):  # "StreamCat )" and "thinned for display)": a stray bracket in a source line
-        bad.append("a space before a closing bracket in reader text")
+    sb_ = re.search(r"[A-Za-z] \)", re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", h))))  # "StreamCat )" and "thinned for display)": a stray bracket in a source line
+    if sb_:
+        bad.append("a space before a closing bracket in reader text near %r" % sb_.string[max(0, sb_.start() - 50):sb_.end() + 10])
     if re.search(r"Thunderstorms: none", t):
         row = re.search(r"Thunder %((?:\s+[\d\u2013-]+)+)", t)
         if row and any(x.isdigit() and int(x) > 0 for x in row.group(1).split()):
@@ -944,8 +945,9 @@ def check_dir(d, only_rebuilt=False):
                 results[rel].append("links to noindexed water page %s (links rule 5: only built, indexable pages are linked)" % href)
         graph[u] = links
         k = kind_of(rel)
-        if n_links[u] > BUDGET[k]:
-            results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, BUDGET[k]))
+        cap = BUDGET[k] + (2 * len(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"]) if rel == "data-sources/index.html" else 0)  # the sources page links each source (terms, data): it grows with sources.json, not with padding (61 > 60 carried it, 2026-11-14)
+        if n_links[u] > cap:
+            results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, cap))
         if not noindex_of.get(u) and k in FLOOR and vis_of.get(u, 0) < FLOOR[k]:
             results[rel].append("thin: %d visible chars on an indexable %s page (min %d) - enrich it (noindex is never the fix)" % (vis_of.get(u, 0), k, FLOOR[k]))
     water_ = {u for u in links_of if kind_of(rel_of[u]) in ("gauge", "world")}
