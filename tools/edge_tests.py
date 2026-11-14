@@ -1358,6 +1358,12 @@ if __name__ == "__main__":
     if rb_:
         vis_ = rb_["body"].split("All 6 sites")[0]
         assert "Phone" not in re.findall(r"<th[^>]*>([^<]*)</th>", rb_["body"]) and vis_.count("Phone: (") == 3 and "All 6 sites" in rb_["body"], "recreation: phone column back, or more than 3 sites before the fold"
+    # owner 2026-11-13 ('black screen on my phone'): pages open light (white cards) whatever the phone's dark-mode setting; dark only by the button
+    from lib import page as pgm_
+    assert "prefers-color-scheme" not in pgm_.THEME_JS and "'dark'" in pgm_.THEME_JS, "theme follows the phone's dark mode again"
+    for f_ in ("page.py", "directory.py"):
+        t_ = open(os.path.join(ROOT, "lib", f_), encoding="utf-8").read()
+        assert '<html lang="en"><head>' not in t_, "%s: a page template opens without data-theme=light (dark until the script runs)" % f_
     # page order debate 2026-11-13: decisions before history. Snowpack in the outlook, key facts with past years, public land in Getting on the water,
     # coast tide table before the level chart before surf, red tide and king tides; recreation, public land and station air never in the side column
     pg_ = open(os.path.join(ROOT, "lib", "page.py"), encoding="utf-8").read()

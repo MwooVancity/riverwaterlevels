@@ -29,7 +29,7 @@ if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEac
 
 
 def shell(title, desc, url, body, extra_main_class="", ld=""):
-    return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
+    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s%s%s</head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
                 esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS_LINK, DIR_LINK, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
@@ -843,7 +843,7 @@ def not_found(built=()):
     sts = sorted({r["state"] for r in built}, key=lambda s: STATE_NAMES.get(s, s))
     lst = ('<p class="sub">Rivers by state: %s. <a href="/">All rivers on this site</a></p>' % " &middot; ".join('<a href="/rivers/%s/">%s</a>' % (s.lower(), esc(STATE_NAMES.get(s, s))) for s in sts)) if sts else '<p class="sub"><a href="/">All rivers on this site</a></p>'
     body = '<h1>Page not found</h1><p class="sub">That page is not on %s. Try the <a href="/">home page</a> or search for a river.</p>%s' % (esc(BRAND), lst)
-    return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found | %s</title><meta name="robots" content="noindex">%s%s%s</head><body>%s<main>%s</main>%s</body></html>' % (
+    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page not found | %s</title><meta name="robots" content="noindex">%s%s%s</head><body>%s<main>%s</main>%s</body></html>' % (
         esc(BRAND), HEAD_EXTRA + PWA_HEAD, CSS_LINK, DIR_LINK, nav(), body, footer()))
 
 
