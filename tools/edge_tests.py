@@ -1352,6 +1352,12 @@ if __name__ == "__main__":
     finally:
         collect._NM_ROWS[:], collect.get_text, collect.http_raw = nr_, gt_, hr_
         collect._NM_PTS.clear(); collect._NM_PTS.update(np_)
+    # review shots 2026-11-13: recreation sites on a phone: 3 columns (phone under the site), 3 nearest shown, the rest folded
+    sites_ = [{"name": "Site %d Campground" % i, "mi": 1.0 + i, "fee": "", "url": "https://www.recreation.gov/x%d" % i, "phone": "406-522-252%d" % i, "type": "Campground", "activities": ["Fishing"], "org": "USFS", "reservable": True} for i in range(6)]
+    rb_ = blocks3.b_recreation({"zone": datetime.timezone.utc, "rec": {"ridb": {"sites": sites_, "radius_mi": 15, "fetched_at": "2026-11-13T00:00:00+00:00"}}})
+    if rb_:
+        vis_ = rb_["body"].split("All 6 sites")[0]
+        assert "Phone" not in re.findall(r"<th[^>]*>([^<]*)</th>", rb_["body"]) and vis_.count("Phone: (") == 3 and "All 6 sites" in rb_["body"], "recreation: phone column back, or more than 3 sites before the fold"
     # page order debate 2026-11-13: decisions before history. Snowpack in the outlook, key facts with past years, public land in Getting on the water,
     # coast tide table before the level chart before surf, red tide and king tides; recreation, public land and station air never in the side column
     pg_ = open(os.path.join(ROOT, "lib", "page.py"), encoding="utf-8").read()

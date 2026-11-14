@@ -674,11 +674,15 @@ def b_recreation(G):
     if not r["sites"]:
         return None
     said = {}  # 28 pages held 2026-11-12: sites run by one office share an address or description; the second says whose it is, never the text again
-    rows = "".join(tr([_ridb_site(x, said), "%.1f mi" % x["mi"], _ridb_fee(x), esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"])], right=(1,)) for x in r["sites"])
+    # review shots 2026-11-13: out of the side column this was a 4-column, many-screen table on a phone (the phone column cut off, stocking and fish pushed far
+    # down): 3 columns (the phone sits under the site), the 3 nearest shown, the rest folded
+    trs = [tr([_ridb_site(x, said) + '<br><small>Phone: %s</small>' % esc("not listed" if (x.get("phone") or "").strip().upper() in ("", "N/A", "NA") else x["phone"]), "%.1f mi" % x["mi"], _ridb_fee(x)], right=(1,)) for x in r["sites"]]
+    hd = ["Site", "Distance", "Fees and reservations"]
+    rows = None
     shared = '<p class="src">Text that several of these sites share on Recreation.gov (an office address, a booking note) is listed once, under the first site that has it.</p>' if said.get("_dropped") else ""
     return block("recreation_sites", "Recreation sites within %d miles" % r["radius_mi"], "agency",
                  '<p>%d federal site%s within %d miles, nearest %s at %.1f mi. Fees, reservations and directions are as Recreation.gov lists them.</p>' % (len(r["sites"]), "" if len(r["sites"]) == 1 else "s", r["radius_mi"], esc(_ridb_name(r["sites"][0]["name"])), r["sites"][0]["mi"])
-                 + table(["Site", "Distance", "Fees and reservations", "Phone"], rows, right=(1,)) + shared,
+                 + table(hd, "".join(trs[:3]), right=(1,)) + (more("All %d sites" % len(trs), table(hd, "".join(trs[3:]), right=(1,))) if len(trs) > 3 else "") + shared,
                  "Source: Recreation.gov Recreation Information Database (RIDB), federal sites only; state and private ramps are not in it. Fees, reservations, addresses, directions and descriptions are Recreation.gov's own words. Distances are straight-line from the gauge. Fetched %s." % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), "ridb")  # was a table row that phones showed as a fake site card (hater 2026-10-27)
 
 
