@@ -280,10 +280,6 @@ def check_html(h, rel):
         except ValueError:
             bad.append("structured data is not valid JSON")
     bad += google_rules(h, body)
-    if "/research/" in rel.replace("\\", "/") or 'data-method="' in body:
-        bad += research_sanity(body) + research_gate(body, rel)
-        if 'data-method="' in body and not research_title_ok(h, "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]):
-            bad.append("research: the title carries no Keyword Planner-measured seed for this page (data/research-keywords.csv)")
     if not title_promise_ok(h, body):
         bad.append("title names the NWS forecast or a tide chart the page does not show (PLAN 25a, 25c)")
     md = re.search(r'<meta name="description" content="([^"]*)"', h)
@@ -434,69 +430,12 @@ GOOGLE = {
 }
 
 
-RESEARCH_BANNED = (r"\bproves?\b", r"\bcaused by\b", r"\bbecause of climate\b", r"\bclimate change\b", r"\bdangerous\b", r"\bsafe\b", r"\bunsafe\b", r"\bguarantee")
-
-
-_SEEDS = None
-
-
 def title_promise_ok(h, body):
     """PLAN 25a: 'NWS forecast' in the title only while the page carries the river forecast section (a gate or carry dropping the block breaks the promise)."""
     m = re.search(r"<title>(.*?)</title>", h, re.S)
     t = m.group(1) if m else ""
     sc = re.search(r'(?s)<section[^>]*id="stage_chart".*?</section>', body)  # the build's own rule (lib/page.py: "predicted tide" in the stage chart block), inside that block only; the hero caption also says predicted tide
     return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tubing rules" not in t or 'id="limits"' in body) and ("tide chart" not in t or bool(sc and "predicted tide" in sc.group(0)))
-
-
-def research_title_ok(h, url):
-    """PLAN 24: a research page's title carries the words of at least one Keyword Planner-measured seed for that page (order, case and hyphens ignored).
-    True for a page with no seed row (the indexing lock keeps such a page out of Google anyway)."""
-    global _SEEDS
-    if _SEEDS is None:
-        import csv
-        norm = lambda k: " ".join(str(k or "").lower().replace("-", " ").split())
-        _SEEDS = {}
-        try:  # a missing or torn file must not stop the whole deploy: lib/indexing.research_demand keeps every research page out of Google then (fail closed)
-            kw = {norm(r["keyword"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-tiers-water.csv"), encoding="utf-8")) if str(r.get("tier") or "0").replace(".", "", 1).isdigit() and float(r["tier"]) > 0}
-            for r in csv.DictReader(open(os.path.join(ROOT, "data", "research-keywords.csv"), encoding="utf-8")):
-                if norm(r["seed"]) in kw:
-                    _SEEDS.setdefault(r["url"], []).append(set(norm(r["seed"]).split()))
-        except (OSError, ValueError, KeyError):
-            _SEEDS = {}
-    m = re.search(r"<title>(.*?)(?: \| [^|<]*)?</title>", h, re.S)  # the brand suffix (River Water Levels) must not supply seed words (title review 2026-11-13)
-    words = set(re.sub(r"[^a-z0-9 ]", " ", (m.group(1) if m else "").lower().replace("-", " ")).split())
-    return url not in _SEEDS or any(s <= words for s in _SEEDS[url])
-
-
-def research_gate(body, rel):
-    """PLAN 22 locks 3 and 4: a research finding carries every part a reviewer needs and no claim stronger than its test. The index page needs the lead only.
-    A recalculation notice (no data-method) is not a finding and is not judged here."""
-    if 'data-method="' not in body:
-        return []
-    t = re.sub(r"<[^>]+>", " ", body)
-    bad = []
-    is_index = rel.replace("\\", "/").rstrip("/").endswith("research/index.html") or rel.replace("\\", "/") in ("research/index.html",)
-    if not is_index:
-        for need, why in (("<p><b>", "a bold lead finding"), ("<b>Sample:</b>", "the Sample paragraph"), ("How this was worked out", "the method section"), ('href="data.csv"', "the CSV link")):
-            if need not in body:
-                bad.append("research: missing %s" % why)
-        if "more than chance" in t and "correction" not in t:
-            bad.append("research: 'more than chance' without the multiple-testing correction")
-        for m in re.finditer(r"\bsignificant\b", t):
-            if not re.search(r"\bp\b|p &lt;|p <|Mann-Whitney|test", t[max(0, m.start() - 200): m.end() + 200]):
-                bad.append("research: 'significant' with no test named near it")
-                break
-    tc = re.sub(r"(?i)Environment\s+and\s+Climate\s+Change\s+Canada", " ", t)  # 2026-11-14: the agency's own name withdrew the world page on every build; a name is a credit, not a claim
-    bad += ["research: claim word %r" % re.search(p, tc, re.I).group(0) for p in RESEARCH_BANNED if re.search(p, tc, re.I)]
-    return bad[:5]
-
-
-def research_sanity(body):
-    """Harm audit 2026-11-12 #5: one data bug must not become a quoted headline. A research page fails when its text says 'X of Y' with X over Y, or shows a negative count of gauges, years or lakes."""
-    t = re.sub(r"<[^>]+>", " ", body)
-    bad = ["research: '%s of %s' says more than the whole" % (a, b) for a, b in re.findall(r"\b(\d[\d,]*) of (\d[\d,]*)\b", t) if int(a.replace(",", "")) > int(b.replace(",", ""))]
-    bad += ["research: negative count '%s'" % m for m in re.findall(r"-\d+ (?:gauges?|years?|lakes?|stations?|gauge-years)\b", t)]
-    return bad[:3]
 
 
 def google_rules(h, body):
@@ -858,9 +797,8 @@ def carried_unchanged(d):
 
 
 def unlinked_ok(u, kind, noindex_of):
-    """A noindexed water or research page is unlinked on purpose (links rule 5: only indexable pages are linked), so it is no orphan; in hold mode (every page noindexed) the orphan rule still runs.
-    2026-11-13: research pages were missing here, so taking the footer link away while they were noindexed failed all 9 as orphans."""
-    return bool(noindex_of.get(u)) and (kind in ("gauge", "world") or u.startswith("/research/")) and any(not v for v in noindex_of.values())
+    """A noindexed water page is unlinked on purpose (links rule 5: only indexable pages are linked), so it is no orphan; in hold mode (every page noindexed) the orphan rule still runs."""
+    return bool(noindex_of.get(u)) and kind in ("gauge", "world") and any(not v for v in noindex_of.values())
 
 
 def check_dir(d, only_rebuilt=False):
@@ -1162,32 +1100,7 @@ def selftest():
         assert all("run by Pat" in tp_[u_] for u_ in ("/contact/", "/about/", "/terms/")), "selftest: the named person is missing from contact, about or terms"
         dr_.publisher = lambda: {}
         assert "/contact/" not in dr_.trust_pages(1, []), "selftest: /contact/ built with no email"
-        assert research_sanity("<p>At <b>90 of 87</b> gauges</p>") and research_sanity("<p>-3 gauges</p>") and not research_sanity("<p>at 33 of 105 gauges, 5 of 720 gauge-years, a -0.5 ft gap</p>"), "selftest: research sanity missed 'X of Y' over the whole or a negative count, or fired on good text"
-        _good = '<div data-method="x"><p><b>Lead.</b></p><b>Sample:</b> s <h2>How this was worked out</h2> Mann-Whitney test, statistically significant at p &lt; 0.05 <a href="data.csv">csv</a></div>'
-        assert not research_gate(_good, "research/tides/index.html"), "selftest: research gate failed a complete page: %s" % research_gate(_good, "research/tides/index.html")
-        assert research_gate(_good.replace("<b>Sample:</b>", ""), "research/tides/index.html") and research_gate(_good.replace("Lead.", "This proves floods are worse."), "research/tides/index.html") and research_gate(_good + "<p>the river is safe</p>", "research/tides/index.html"), "selftest: research gate passed a missing Sample, 'proves' or 'safe'"
-        assert research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> a significant rise</div>', "research/x/index.html") and research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> more than chance</div>', "research/x/index.html"), "selftest: 'significant' with no test, or 'more than chance' with no correction, passed"
-        assert not research_gate("<h1>This finding is being recalculated</h1>", "research/x/index.html"), "selftest: the recalculation notice was judged as a finding"
-        assert not research_gate(_good + "<p>Source: Water Survey of Canada, Environment and Climate Change Canada</p>", "research/world-rivers/index.html") and research_gate(_good + "<p>floods rose because of climate change</p>", "research/x/index.html"), "selftest: the ECCC agency name withdrew a page, or a climate change claim passed"
-        import tempfile as _tf
-        from lib.research import method_of as _mo
-        _M = _mo("/research/tides/")
-        _sd = _tf.mkdtemp()
-        _old, _new = os.path.join(_sd, "old.html"), os.path.join(_sd, "new.html")
-        open(_old, "w", encoding="utf-8").write("<p>old 100-year page, no method mark</p>")
-        open(_new, "w", encoding="utf-8").write('<div data-method="%s">current</div>' % _M)
-        assert stale_research("research/100-year-floods/index.html", _old) and "being recalculated" in open(_old, encoding="utf-8").read() and 'content="noindex' in open(_old, encoding="utf-8").read(), "selftest: an old-method research copy was carried"
-        assert unlinked_ok("/research/tides/", "trust", {"/research/tides/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/research/tides/", "trust", {"/research/tides/": True}), "selftest: a noindexed research page counted as an orphan, a site page exempted, or hold mode exempted"
-        assert not stale_research("research/tides/index.html", _new) and not stale_research("river/x/y/index.html", _old), "selftest: a current research copy or a gauge page was withdrawn"
-        _sm = os.path.join(_sd, "sitemap-1.xml")
-        open(_sm, "w", encoding="utf-8").write("<urlset><url>\n  <loc>https://riverwaterlevels.com/research/world-rivers/</loc><lastmod>x</lastmod></url><url><loc>https://riverwaterlevels.com/research/tides/</loc></url></urlset>")
-        unlist(_sd, "research\\world-rivers\\index.html")
-        assert "world-rivers" not in open(_sm, encoding="utf-8").read() and "research/tides/" in open(_sm, encoding="utf-8").read(), "selftest: a withdrawn page stayed in the sitemap, or a neighbour was dropped"
-        os.makedirs(os.path.join(_sd, "research"), exist_ok=True)
-        _ix = os.path.join(_sd, "research", "index.html")
-        open(_ix, "w", encoding="utf-8").write('<ul><li><a href="/research/tides/">Tides</a></li><li><a href="/research/world-rivers/">World</a></li></ul>')
-        unlink_index(_sd, "research\\world-rivers\\index.html")
-        assert "world-rivers" not in open(_ix, encoding="utf-8").read() and "/research/tides/" in open(_ix, encoding="utf-8").read(), "selftest: the research index still links a withdrawn finding, or lost a live one"
+        assert unlinked_ok("/river/x/y/", "gauge", {"/river/x/y/": True, "/": False}) and not unlinked_ok("/about/", "trust", {"/about/": True, "/": False}) and not unlinked_ok("/river/x/y/", "gauge", {"/river/x/y/": True}), "selftest: a noindexed gauge page counted as an orphan, a site page exempted, or hold mode exempted"
         _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
         _u = "<title>X River at Y, TX: live water level and flow, tubing rules (USGS 1)</title>"
         assert not title_promise_ok(_u, "<main></main>") and title_promise_ok(_u, '<section class="card blk" id="limits">'), "selftest: a title promised tubing rules without the agency rules block"
@@ -1755,52 +1668,6 @@ def too_many(k, n):
     return k > max(CARRY_MAX, n // 20)
 
 
-WITHDRAWN = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow">'
-             '<title>Being recalculated | River Water Levels</title></head><body><main><h1>This finding is being recalculated</h1>'
-             '<p>Its method was corrected, and the earlier version is withdrawn rather than shown. It returns when the data the new method needs has been read for enough gauges. '
-             '<a href="/research/">Other research</a> &middot; <a href="/methodology/#corrections">Corrections</a></p></main></body></html>')
-
-
-def stale_research(rel, dst):
-    """A carried research page made by an older method (no current data-method mark) is replaced by a noindexed recalculation notice: a false page is worse than none,
-    and a missing one would break the links to it (2026-11-13: the old 100-year page was carried by this rule while build.py withdrew it)."""
-    if not rel.replace("\\", "/").startswith("research/"):
-        return False
-    from lib.research import method_of
-    try:
-        if 'data-method="%s"' % method_of("/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]) in open(dst, encoding="utf-8").read():
-            return False
-    except OSError:
-        pass
-    open(dst, "w", encoding="utf-8").write(WITHDRAWN)
-    return True
-
-
-def unlink_index(d, rel):
-    """A withdrawn finding leaves the research index's list too: a reader never taps through to a 'being recalculated' notice."""
-    path = "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
-    ix = os.path.join(d, "research", "index.html")
-    if path == "/research/" or not os.path.isfile(ix):
-        return
-    s = open(ix, encoding="utf-8").read()
-    s2 = re.sub(r'<li><a href="%s">.*?</a></li>' % re.escape(path), "", s)
-    if s2 != s:
-        open(ix, "w", encoding="utf-8").write(s2)
-
-
-def unlist(d, rel):
-    """A withdrawn (noindexed) page leaves every sitemap file of build d: a sitemap never names a noindex page (2026-11-13: /research/world-rivers/ was both)."""
-    path = rel.replace("\\", "/").rsplit("index.html", 1)[0]
-    rx = re.compile(r"<url>\s*<loc>\s*https?://(?:www\.)?riverwaterlevels\.com/" + re.escape(path) + r"\s*</loc>.*?</url>\s*", re.S)  # any spacing the sitemap writer uses
-    for f in os.listdir(d):
-        if f.startswith("sitemap") and f.endswith(".xml"):
-            p = os.path.join(d, f)
-            s = open(p, encoding="utf-8").read()
-            s2 = rx.sub("", s)
-            if s2 != s:
-                open(p, "w", encoding="utf-8").write(s2)
-
-
 def carry(d, fails, got=None, new=None):
     """The one carry rule (full audit 2026-11-10 #46; check.py, truth_tests, truth_live and truth_world all call it). Each failing page {rel: [why]} of the
     build in d keeps its live copy (dist/ when present, else the live site), its times stay the live copy's (keep_old_times, or the 6 h alarm stays quiet
@@ -1808,7 +1675,7 @@ def carry(d, fails, got=None, new=None):
     `new` when the caller passes a list (the caller records it for quarantine.py), else it fails the carry. True when every page was carried or listed new."""
     import shutil, urllib.request, urllib.error
     got = [] if got is None else got
-    ok, n0, withdrawn = True, len(got), []
+    ok, n0 = True, len(got)
     for rel in fails:
         dst, old = os.path.join(d, rel), os.path.join(ROOT, "dist", rel)
         try:
@@ -1819,11 +1686,6 @@ def carry(d, fails, got=None, new=None):
                 body = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read()
                 open(dst, "wb").write(body)
             got.append(rel)
-            if stale_research(rel, dst):
-                unlist(d, rel)
-                withdrawn.append(rel)  # its index link goes after the loop: a carried index copied later would bring the link back
-                print("WITHDREW", rel, "(this build's page failed: %s; its live copy was made by an older research method, so a recalculation notice stands in until it rebuilds)" % "; ".join(str(x) for x in fails.get(rel) or [])[:200])
-                continue
             print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(str(x) for x in fails[rel])[:160] + ")")
         except urllib.error.HTTPError as e:
             if e.code == 404 and new is not None:
@@ -1834,8 +1696,6 @@ def carry(d, fails, got=None, new=None):
         except Exception as e:
             print("could not carry", rel, e)
             ok = False
-    for rel in withdrawn:  # read-through 2026-11-14: the research index still linked the withdrawn world page, a dead end for a reader
-        unlink_index(d, rel)
     if len(got) > n0:
         keep_old_times(d, set(got[n0:]))
         cp = os.path.join(d, "_carried.json")

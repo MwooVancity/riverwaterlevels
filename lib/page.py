@@ -343,19 +343,9 @@ def embed_page(G, pages):
     return lake_words(out, G) if G.get("lake") else out  # lake review #6: the embed copy said flow and gage height
 
 
-@__import__("functools").lru_cache(maxsize=1)
-def research_open():
-    """PLAN 20, links rule: the footer links /research/ only when Google may index it (open_wave added it to the allow list)."""
-    from lib import indexing
-    try:
-        return indexing.indexable("/research/", indexing.load(ROOT))
-    except (OSError, ValueError):
-        return False
-
-
 def footer():
     return ('<footer><span>%s &middot; Data: USGS, NOAA, NWS.</span><span><a href="/about/">About</a><a href="/data-sources/">Data sources</a><a href="/disclaimer/">Disclaimer</a>'
-            '<a href="/faq/">FAQ</a><a href="/methodology/">Methodology</a>%s<a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/glossary/">Glossary</a><a href="/status/">Data status</a><a href="/embed/">Add to your site</a>%s</span></footer>' % (esc(BRAND), '<a href="/research/">Research</a>' if research_open() else "", '<a href="/contact/">Contact</a>' if publisher().get("email") else ""))
+            '<a href="/faq/">FAQ</a><a href="/methodology/">Methodology</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="/glossary/">Glossary</a><a href="/status/">Data status</a><a href="/embed/">Add to your site</a>%s</span></footer>' % (esc(BRAND), '<a href="/contact/">Contact</a>' if publisher().get("email") else ""))
 
 
 def og_tags(title, desc, url):

@@ -1,5 +1,5 @@
 """SVG chart helpers and the chart blocks."""
-import statistics, os, re, json, math, collections, hashlib, datetime, zoneinfo
+import statistics, os, re, json, math, collections, hashlib, datetime, zoneinfo, calendar
 from lib.common import *
 from lib.core import *
 
@@ -313,6 +313,30 @@ def b_floods(G):
                  "floods before the daily record began are skipped. A daily mean averages the whole day, so it runs below the instantaneous peak. Two peaks within 14 days count as one flood. Days are counted inside that 14-day window.", "usgs")
 
 
+def peak_month_line(rows, least=20):
+    """When this river's yearly high usually comes (research gain audit 2026-11-14: the one per-gauge answer no agency states; the national research
+    page was cut). The highest plain peak of each water year; peaks USGS codes historic, dam failure, unknown month or year, or as a bound are left out;
+    an old cache row without codes gives no line. Under 20 water years, or a tie for first, says nothing rather than a weak month."""
+    if not rows or any(len(r) < 5 for r in rows):
+        return ""
+    best = {}
+    for r in rows:
+        t, v = str(r[0]), r[1]
+        if not v or v <= 0 or set(str(r[4] or "").split()) & (DROP | LOWER | UPPER) or not t[5:7].isdigit() or not 1 <= int(t[5:7]) <= 12:
+            continue
+        wy = int(t[:4]) + (1 if int(t[5:7]) >= 10 else 0)
+        if wy not in best or v > best[wy][1]:
+            best[wy] = (int(t[5:7]), v)
+    if len(best) < least:
+        return ""
+    c = collections.Counter(m for m, _ in best.values()).most_common()
+    if len(c) > 1 and c[0][1] == c[1][1]:
+        return ""
+    nxt = (", then %s (%d)" % (calendar.month_name[c[1][0]], c[1][1])) if len(c) > 1 else ""
+    rest = "In other years it came in other months; this" if c[0][1] < len(best) else "This"  # every year in one month: no 'other months' sentence
+    return "<p><b>The yearly high here has come most often in %s: %d of %d water years%s.</b> %s is the record, not a forecast.</p>" % (calendar.month_name[c[0][0]], c[0][1], len(best), nxt, rest)
+
+
 def b_peaks(G):
     p = G["rec"].get("peaks")
     rows = [r for r in (p or {}).get("rows", []) if r[1] is not None]
@@ -326,7 +350,7 @@ def b_peaks(G):
         dec.setdefault(r[0][:3] + "0s", []).append(r[1])
     drows = "".join(tr([d, str(len(v)), "%s cfs" % fmtc(sorted(v)[len(v) // 2] if len(v) % 2 else (sorted(v)[len(v) // 2 - 1] + sorted(v)[len(v) // 2]) / 2), "%s cfs" % fmtc(max(v))], right=(1, 2, 3)) for d, v in sorted(dec.items()) if len(v) >= 5)
     by_decade = ("<h3>Median annual peak by decade (calendar year of the peak date)</h3>" + table(["Decade", "Peaks on file", "Median peak", "Largest peak"], drows, right=(1, 2, 3))) if drows else ""
-    return block("annual_peaks", "Largest annual peaks", "hist", "<h3>Ten largest peaks of record</h3>" + table(heads, top, right=(1, 2)) + "<h3>Five most recent annual peaks</h3>" + table(heads, recent, right=(1, 2)) + by_decade,
+    return block("annual_peaks", "Largest annual peaks", "hist", peak_month_line(rows) + "<h3>Ten largest peaks of record</h3>" + table(heads, top, right=(1, 2)) + "<h3>Five most recent annual peaks</h3>" + table(heads, recent, right=(1, 2)) + by_decade,
                  "Source: USGS annual peak streamflow (Water Data API), %d annual peaks, %s to %s. A water year's peak is its highest instantaneous flow. Gage height at older peaks can be on a different datum. Decades with fewer than 5 peaks are left out." % (len(rows), rows[0][0][:4], rows[-1][0][:4]), "usgs")
 
 

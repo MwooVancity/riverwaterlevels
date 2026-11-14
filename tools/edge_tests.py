@@ -97,49 +97,6 @@ def run():
     assert bl and "1001.00 ft" in bl["body"] and "cfs" not in bl["body"] + bl["source"], "edge: lake past years not shown in ft"
     assert b_multiyear({"rec": {"multiyear": my}, "ldate": td, "lake": "62614"}) is None, "edge: lake history in another datum than the page"
     assert last_year_flow({"rec": {"multiyear": my}, "ldate": td}) is None, "edge: a lake level read as last year's flow"
-    # owner 2026-11-12: research pages (lib/research.py; edge cases in PLAN 14, 15, 17)
-    from lib import research
-    rb, rG = [], {}
-    for i in range(12):  # 12 gauges, peaks 1960-2025: even gauges peak in March and doubled after WY2005, odd in May and unchanged
-        s = "g%d" % i
-        rb.append({"site": s, "state": "GA" if i < 6 else "TX", "river": "River %d" % i, "place": "Town", "dashboard_url": "/river/r%d/town/" % i, "_built": True})
-        rG[s] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if i % 2 == 0 else "05"), (200.0 + y % 7 if y > 2005 else 100.0 + y % 7) if i % 2 == 0 else 100.0 + y % 7, None, None, ""] for y in range(1960, 2026)]
-                                    + [["1950-00-00", 5.0, None, None, ""], ["1955-03-15", None, 4.0, None, ""], ["1956-03-15", 0.0, None, None, ""], ["2010-04-15", 50.0, None, None, ""],  # unknown date, stage-only, zero, secondary peak
-                                       ["1940-04-15", 900.0, None, None, "HISTORIC"], ["1941-04-15", 900.0, None, None, "MAXDAILYMEAN"], ["1942-04-15", 900.0, None, None, "DAMFAILURE"], ["1943-04-15", 900.0, None, None, "GREATERTHAN"],
-                                       ["1944-04-15", 900.0, None, None, "MONTHUNKNOWN"], ["1945-04-15", 900.0, None, None, "ESTIMATED NEWCODE"]]}}}  # dropped codes; ESTIMATED kept; an unknown code counted
-    rb.append({"site": "g0", "state": "GA", "river": "Other Creek", "place": "Town", "dashboard_url": "/river/other/town/", "_built": True})  # the same gauge on a second page
-    rb.append({"site": "lk", "state": "GA", "river": "Lake", "place": "Dam", "dashboard_url": "/lake/x/", "_built": True})
-    rG["lk"] = {"lake": "00062", "rec": {"peaks": {"rows": [["%d-01-01" % y, 9.0, None, None, ""] for y in range(1960, 2000)]}}}
-    rb.append({"site": "tie", "state": "TX", "river": "Tie River", "place": "Town", "dashboard_url": "/river/tie/town/", "_built": True})
-    rG["tie"] = {"rec": {"peaks": {"rows": [["%d-%s-15" % (y, "03" if y % 2 else "04"), 10.0, None, None, ""] for y in range(1960, 2000)]}}}  # 20 March, 20 April
-    rb.append({"site": "old", "state": "TX", "river": "Old Cache", "place": "Town", "dashboard_url": "/river/old/town/", "_built": True})
-    rG["old"] = {"rec": {"peaks": {"rows": [["%d-03-15" % y, 10.0, None, None] for y in range(1960, 2026)]}}}  # written before qualifiers were stored
-    rb.append({"site": "dam", "state": "TX", "river": "Dam River", "place": "Town", "dashboard_url": "/river/dam/town/", "_built": True})
-    rG["dam"] = {"rec": {"peaks": {"rows": [["%d-06-15" % y, 50.0 + y % 5, None, None, "REGULATED"] for y in range(1960, 2026)]}}}
-    rp, rc = research.pages(rb, rG, datetime.date(2026, 11, 12))
-    assert set(rp) == {"/research/", "/research/peak-month/"} and set(rp) <= set(research.URLS) and set(rc) == {"/research/peak-month/"}, "edge: research pages or CSVs missing, a page with no data built, or build.py's carry list misses one: %s %s" % (sorted(rp), sorted(rc))
-    pm = rp["/research/peak-month/"]
-    assert "most often comes in March: at 6 of 13 gauges, then May (6)" in pm, "edge: peak month counts wrong (duplicate gauge, lake, old cache row or regulated gauge counted)"
-    assert "1 regulated gauge is listed but not counted" in pm and "Dam River at Town (regulated)" in pm and "Old Cache" not in pm, "edge: regulated gauge not apart, or an old cache row (no qualifiers) used"
-    assert "/lake/x/" not in pm and "/river/other/town/" not in pm, "edge: lake or second page of one gauge listed"
-    assert "March (66 of 67 years, 99%)" in pm, "edge: a secondary peak, unknown date, no-flow row or a dropped code was counted (1945 ESTIMATED is kept: 67 water years)"
-    assert "NEWCODE (12 peaks)" in pm, "edge: an unknown USGS code was not named on the page"
-    assert "1 gauge split evenly between two or more months and is not counted" in pm and "March and April (20 of 40 years, 50% each)" in pm, "edge: tie not named"
-    assert research._wy(2020, 10) == 2021 and research._wy(2020, 9) == 2020, "edge: water-year boundary"
-    assert "usgs_site,river,place,state,page" in rc["/research/peak-month/"] and 'href="data.csv"' in pm, "edge: CSV header or download link missing"
-    assert research._csv(["a", "b"], [["=SUM(A1)", ""], [-3, "x"], ["-x", ""]]) == "a,b\n'=SUM(A1),\n-3,x\n'-x,\n", "edge: CSV formula cell not neutralised, a negative number changed, or an empty cell got an apostrophe (live 100-year CSV, 2026-11-12)"
-    assert 'data-method="%s"' % research.method_of("/research/peak-month/") in pm, "edge: research page lacks its method mark, so build.py could never carry it (and could carry an old-method copy)"
-    assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == (rp, rc), "edge: same data on another day gave a different page (fresh date without change)"
-    assert research.pages(rb[:5], rG, datetime.date(2026, 11, 12)) == ({}, {}) and research.pages([], {}) == ({}, {}), "edge: research published from under 10 gauges, or empty cache crashed"
-    same = [(r, research._peaks(rG[r["site"]]), rG[r["site"]]) for r in rb[:12] if int(r["site"][1:]) % 2 == 0] * 2
-    one = research.peak_month(same, "", {})[1]
-    assert "most often comes in March: at 12 of 12 gauges.</b>" in one, "edge: every gauge in one month broke the lead"
-    cap_, research.ROW_CAP = research.ROW_CAP, 5
-    try:
-        assert "9 more gauges are not listed here" in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/peak-month/"], "edge: a cut table did not say so"
-    finally:
-        research.ROW_CAP = cap_
-    assert "BreadcrumbList" in pm and 'href="/research/peak-month/"' in rp["/research/"], "edge: research index or breadcrumb missing"
     # gauge page: a water year counts once at its highest stage (PLAN 17)
     from lib import blocks3 as _b3r
     sy_g = {"rec": {"nwps": {"categories": {"minor": 10.0}}, "peaks": {"rows": [["%d-03-01" % y, 1.0, 9.0, None, ""] for y in range(2000, 2012)] + [["2005-04-01", 1.0, 11.0, None, ""]]}}}
@@ -150,71 +107,6 @@ def run():
     finally:
         _b3r.stage_pair, _b3r.datum_gap = sp_, dg_
     assert sy and len(sy[0]) == 12 and sum(1 for x in sy[0] if x[2] >= 10.0) == 1, "edge: a secondary stage peak counted as its own year on the gauge page"
-    # PLAN 15: 100-year floods, flood stage years, water temperature; 70 gauges so the link budget is tested at size
-    bb, bG = [], {}
-    for i in range(70):
-        s_ = "h%d" % i
-        bb.append({"site": s_, "state": "GA", "river": "Big %d" % i, "place": "Town", "dashboard_url": "/river/b%d/town/" % i, "_built": True})
-        ff = {"rows": [{"aep": 1, "q": 1000.0, "lo": 800.0, "hi": 1300.0}, {"aep": 10, "q": 500.0}], "range": "1950 to 2000", "range1": [1950, 2000], "regulated": i % 7 == 0}
-        if i == 1: ff["conflict"] = True
-        if i == 2: ff["range1"] = None  # the 1% row states no date range
-        if i == 3: ff["rows"] = [{"aep": 10, "q": 500.0}]
-        if i == 4: ff["range1"] = [1950, 2024]  # under 5 years after
-        mo = {str(m): [10.0 + i * 0.2, 400] for m in range(1, 13)}
-        mo["7"] = [12.0 + i * 0.25, 400]
-        if i == 5: mo["7"] = [30.0, 100]  # July with too few days: gauge has no July
-        if i == 6: mo["1"] = "bad"
-        bG[s_] = {"rec": {"peaks": {"rows": [["%d-03-15" % y, 1200.0 if (y in (2010, 2020) and i % 2 == 0) else 400.0, 10.0 + (y % 3), None, ""] for y in range(1950, 2026)]}, "floodfreq": ff,
-                          "wtemp": {"months": mo, "first_year": "1990", "last_year": "2026"}}, "_minor": 11.5}
-    st_ = _b3r.stage_years
-    _b3r.stage_years = lambda G: ([r for r in G["rec"]["peaks"]["rows"]], {"minor": G["_minor"]}, {}) if G.get("_minor") else None
-    try:
-        bp, bc = research.pages(bb, bG, datetime.date(2026, 11, 12))
-    finally:
-        _b3r.stage_years = st_
-    riv_ = set(research.URLS) - {"/research/lake-levels/", "/research/tides/"}  # this fixture has no lakes or coasts
-    assert set(bp) == riv_ and set(bc) == riv_ - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(riv_ - set(bp))
-    fs, wt = bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
-    assert "reached minor flood stage in 33% of years" in fs and "never at 0" in fs, "edge: flood stage share wrong: %s" % fs[fs.find("<b>"):fs.find("<b>") + 300]
-    assert "In July, the median gauge on these rivers averages" in wt and "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt and max(len(re.findall(r"<th ", t_)) for t_ in wt.split("</table>")) <= 5, "edge: water temperature kept a thin July, crashed on a bad month, lost the record years, or a table is over 5 columns"
-    for u_, h_ in bp.items():
-        assert h_.count("<a ") <= 60, "edge: %s has %d links (check.py BUDGET trust 60)" % (u_, h_.count("<a "))
-        assert u_ == "/research/" or "not a random or representative sample" in h_, "edge: %s does not state its sample" % u_
-    # PLAN 18: lakes and tides (lake_full is the page's own helpers; its counting and staleness are tested here)
-    now_ = datetime.datetime(2026, 11, 12, 18, 0, tzinfo=datetime.timezone.utc)
-    zn_ = zoneinfo.ZoneInfo("America/New_York")
-    lb, lG = [], {}
-    for i in range(7):
-        s_ = "lk%d" % i
-        lb.append({"site": s_, "state": "GA", "river": "Lake %d" % i, "place": "Dam", "dashboard_url": "/lake/l%d/" % i, "_built": True})
-        lG[s_] = {"lake": "00062", "now": now_, "zone": zn_, "rec": {"usace_pool": {"x": 1}}, "_f": [("USACE full pool", i < 4, "%.2f ft below full pool" % i, now_ - datetime.timedelta(hours=100 if i == 6 else 2), i == 5)]}
-    lf_ = research.lake_full
-    research.lake_full = lambda G: [x for x in G["_f"] if research._age_h(G, x[3]) <= research.CURRENT_H]
-    try:
-        ll = research.lake_levels(lb, lG)
-        assert ll and "4 of 6 US lakes on this site sit below their agency's full mark right now." in ll[1] and "1 more lake has an agency figure older than 3 days and is left out" in ll[1] and "(daily figure)" in ll[1], "edge: lake counts or the stale lake wrong"
-        assert research.lake_levels(lb[:4], lG) is None, "edge: a lake page built from under 5 lakes"
-    finally:
-        research.lake_full = lf_
-    t0 = now_ - datetime.timedelta(days=2)
-    ts_ = [t0 + datetime.timedelta(minutes=6 * k) for k in range(480)]
-    cb, cG = [], {}
-    for i in range(6):
-        s_ = "c%d" % i
-        cb.append({"site": s_, "state": "MA", "river": "Port %d" % i, "place": "", "dashboard_url": "/coast/p%d/" % i, "_built": True})
-        cG[s_] = {"coast": True, "now": now_, "zone": zn_, "sg": [(t, 2.0 + (0.5 if (i == 2 and k == 100) else 0.1)) for k, t in enumerate(ts_)],
-                  "rec": {"coops": {"pred": [(t.isoformat(), 2.0) for t in ts_], "hilo": [(ts_[10].isoformat(), 4.0, "H"), (ts_[70].isoformat(), -0.5, "L")]}}}
-    cG["c5"]["rec"]["coops"]["level"] = {"id": "x", "name": "Next door", "km": 3.0}  # prediction-only: left out
-    cG["c4"]["sg"] = cG["c4"]["sg"][:100]  # under 24 h matched: left out
-    cb.append(cb[0])  # the same station twice
-    tp_ = research.tides(cb, cG)
-    assert tp_ is None, "edge: tide page built from 4 usable stations (floor is 5)"
-    for i in (6, 7):
-        cb.append({"site": "c%d" % i, "state": "ME", "river": "Port %d" % i, "place": "", "dashboard_url": "/coast/p%d/" % i, "_built": True})
-        cG["c%d" % i] = dict(cG["c0"])
-    tp_ = research.tides(cb, cG)
-    assert tp_ and "Across 6 NOAA stations" in tp_[1] and "Port 2" in tp_[1][tp_[1].find("<b>"):tp_[1].find("</b>")] and "+0.50 ft" in tp_[1] and "2 stations were left out" in tp_[1] and "4.5 ft" in tp_[1], "edge: tide gaps, range, left-out count or the prediction-only station wrong: %s" % (tp_ and tp_[1][tp_[1].find("<b>"):tp_[1].find("<b>") + 300])
-    assert "/coast/p5/" not in tp_[1] and "noaa_station" in tp_[2], "edge: a prediction-only station listed, or the tide CSV header missing"
     # peer review 2026-11-12 fixes
     sp_, dg_ = _b3r.stage_pair, _b3r.datum_gap
     _b3r.stage_pair, _b3r.datum_gap = (lambda G: (1, 1, None)), (lambda G: None)
@@ -225,63 +117,15 @@ def run():
         assert all(r[0] > "1990" for r in _b3r.stage_years(dd)[0]), "review #1: stages before the last datum change counted"
     finally:
         _b3r.stage_pair, _b3r.datum_gap = sp_, dg_
-    lb_ = {"rec": {"peaks": {"rows": [["2010-03-01", 1500.0, None, None, "MAXDAILYMEAN"], ["2011-03-01", 500.0, None, None, "GREATERTHAN"], ["1900-00-00", 9.0, None, None, "YEARUNKNOWN"]]}}}
-    pk_ = research._peaks(lb_)
-    assert pk_[2010][3] and pk_[2011][3] and 1900 not in pk_ and research._plain(pk_) == {}, "review #4/#5: lower bounds not marked, a year-unknown peak kept, or a lower bound used as a plain peak"
-    hb = [dict(r, site="x%d" % k) for k, r in enumerate(bb[:12])]
-    hG = {}
-    for k, r in enumerate(hb):
-        rows_ = [["%d-03-15" % y, 400.0, None, None, ""] for y in range(2001, 2026)]
-        if k == 0:
-            rows_[5] = ["2006-03-15", 1500.0, None, None, "MAXDAILYMEAN"]  # a lower bound over the 1% flow: a certain exceedance
-            rows_[6] = ["2007-03-15", 900.0, None, None, "GREATERTHAN"]  # a lower bound under it: year unknown, not counted
-        hG[r["site"]] = {"rec": {"peaks": {"rows": rows_}, "floodfreq": {"rows": [{"aep": 1, "q": 1000.0}], "range1": [1950, 2000]}}}
-    md1, r1_ = research.circ([60] * 10)
-    md2, r2_ = research.circ([1, 92, 183, 274] * 5)
-    assert abs(md1 - 60) < 0.6 and r1_ > 0.999 and r2_ < 0.01 and (research.circ([360, 5])[0] > 360 or research.circ([360, 5])[0] < 6), "circular mean or concentration wrong (incl. the year-end wrap)"
-    nw_ = datetime.datetime.now(datetime.timezone.utc)
-    wp_ = [({"slug": "rhine", "feed": "pegelonline", "river": "Rhine"}, {"rows": [{"name": "A%d" % k, "cm": 300, "time": (nw_ - datetime.timedelta(hours=1)).isoformat(), "state": ("low", "normal", "high", "low")[k % 4]} for k in range(8)]
-                                                                                       + [{"name": "OLD", "cm": 300, "time": (nw_ - datetime.timedelta(hours=30)).isoformat(), "state": "high"}]}),
-           ({"slug": "dublin", "feed": "imi", "river": "Dublin"}, {"rows": [{"name": "D", "cm": 1, "time": nw_.isoformat(), "state": "normal"}]})]
-    wr = research.world_rivers(wp_, {"rhine": {"A%d" % k for k in range(8)} | {"OLD"}, "dublin": {"D"}}, nw_)
-    assert wr and "Right now, counted country by country: Germany, 4 of 8 gauges low and 2 high." in wr[1] and "never added across countries" in wr[1] and "Each label has its own basis: the WSV's own marks in Germany." in wr[1] and "in Canada" not in wr[1][:wr[1].find("<table")] and "<td>Germany</td><td class=\"r\">4 of 8</td>" in wr[1] and "Tidal" in wr[1], "PLAN 18c: world labels counted wrong, a stale reading labelled, or a tidal station labelled: %s" % (wr and wr[1][wr[1].find("<b>"):wr[1].find("<b>") + 200])
-    assert not re.search(r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", wr[1]), "PLAN 18c: a raw machine timestamp on the world page (check.py BANNED held it, run 43357129006)"
-    assert research.world_rivers(wp_[:1], {"rhine": {"A0", "A1"}}, nw_) is None, "PLAN 18c: a world page built from 2 labelled gauges"
-    assert 'href="/research/world-rivers/"' not in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/"] and 'href="/research/world-rivers/"' in research.pages(rb, rG, datetime.date(2026, 11, 12), world="World title")[0]["/research/"], "the research index links a world page that was not built"
-    # PLAN 23: hostile review fixes
+    # gain audit 2026-11-14: the usual peak month moved from the cut research page onto each gauge's Largest annual peaks block
+    from lib.charts import peak_month_line as pml_
+    pk_r = [["%d-03-15" % y, 100.0, None, None, ""] for y in range(1990, 2015)] + [["%d-06-15" % y, 90.0, None, None, ""] for y in range(2015, 2020)]
+    pk_r += [["1950-03-15", 999.0, None, None, "HISTORIC"], ["2020-10-02", 50.0, None, None, ""], ["2020-11-02", 60.0, None, None, ""]]  # a dropped code; Oct and Nov 2020 are one water year (2021), counted once
+    assert "most often in March: 25 of 31 water years, then June (5)" in pml_(pk_r), "peak month: count, water year or dropped code wrong: %r" % pml_(pk_r)
+    assert "other months" not in pml_([["%d-06-01" % y, 5.0, None, None, ""] for y in range(1980, 2020)]), "peak month: every year in one month still said 'other months'"
+    assert pml_(pk_r[:10]) == "" and pml_([r[:4] for r in pk_r]) == "" and pml_([["%d-%s-01" % (y, "03" if y % 2 else "04"), 5.0, None, None, ""] for y in range(1980, 2020)]) == "", "peak month: under 20 years, an old cache row, or a tie said a month"
     assert collect.stat_range("Statistic Date Range: 10/01/1915 - 09/30/2017") == [1916, 2017] and collect.stat_range("Statistic Date Range: 1931 - 2021") == [1931, 2021] and collect.stat_range("Statistic Date Range: 10/01/2000 - 10/15/2017") == [2001, 2018] and collect.stat_range("") is None and collect.stat_range("Statistic Date Range: 2020 - 1990") is None, "23: StreamStats date range parse wrong (the live form is MM/DD/YYYY; the old pattern matched nothing)"
-    assert "Over the last 2 days" in tp_[1] and "Lowest (observed minus predicted)" in tp_[1] and "Most below" not in tp_[1] and "Smallest" not in tp_[1] and "this week" not in tp_[1].lower() and "tide datums are referenced to" in tp_[1] and "parts of Alaska" in tp_[1], "23: tide page names a span the data does not cover, calls a positive gap 'below', or omits the steady sea-level offset"
-    assert research._pl(1, "regulated gauge is", "regulated gauges are") == "1 regulated gauge is" and research._pl(2, "x", "ys") == "2 ys", "23: count-1 grammar"
-    assert 'href="/research/world-rivers/">River levels in Germany' in research.pages(rb, rG, datetime.date(2026, 11, 12), world=research.title_of(wr[1]))[0]["/research/"], "23: the index link does not use the world page's own title"
     assert collect.fetch_floodfreq.__doc__ and "rangev" in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "collect.py"), encoding="utf-8").read().split('"dur": durs')[1][:40], "23: a duration-only StreamStats record lacks rangev, so the early refresh refetches it every run"
-    assert "Germany" in wr[1][:wr[1].find("</title>")] and "Ireland" not in wr[1][:wr[1].find("</title>")], "23: the world title names a country with no labelled gauge"
-    assert "not a forecast" in fs and "National Weather Service warnings" in fs, "23: flood-stage page lacks its not-a-forecast line"
-    # PLAN 22 lock 2: every headline reproduced from its own CSV; a doctored CSV drops the page
-    for u_, h_ in list(bp.items()):
-        if u_ != "/research/":
-            assert research.verify(u_, h_, bc[u_]) == [], "22: %s does not reproduce from its own CSV: %s" % (u_, research.verify(u_, h_, bc[u_]))
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    import check as _ck
-    for u_, h_ in bp.items():
-        assert not _ck.research_gate(h_, u_.strip("/") + "/index.html") and not _ck.research_sanity(h_), "22: the gate fails a real research page (false alarm): %s %s" % (u_, _ck.research_gate(h_, u_.strip("/") + "/index.html") + _ck.research_sanity(h_))
-    for u_, h_ in bp.items():  # PLAN 24: every real title carries a measured seed's words
-        assert _ck.research_title_ok(h_, u_), "24: %s title carries no measured seed: %s" % (u_, research.title_of(h_))
-    assert not _ck.research_title_ok("<title>How warm are US rivers? | River Water Levels</title>", "/research/water-temperature/"), "24: a title with no measured seed passed"
-    assert not _ck.research_title_ok("<title>Canada now | River Water Levels</title>", "/research/world-rivers/") and not _ck.research_title_ok("<title>Lake Erie | River Water Levels</title>", "/research/lake-levels/"), "24: the brand suffix supplied seed words to a title"
-    assert research.verify("/research/new-thing/", "<p><b>x</b></p>", "a\n1\n"), "22: a research page with no reproducibility check passed"
-    # owner 2026-11-14: the information-gain test comes before any polish; no keep verdict with an exists and a gain line, no page
-    assert not research.gain_ok("/research/peak-change/") and not research.gain_ok("/research/100-year-floods/") and not research.gain_ok("/research/never-written/"), "gain: a cut or unwritten finding would be built"
-    assert all(research.gain_ok(u_) for u_ in research.URLS + (research.WORLD_URL,)), "gain: a published finding has no keep verdict in data/research-gain.json"
-    assert "/research/peak-change/" not in research.URLS and "/research/100-year-floods/" not in research.URLS, "gain: a cut finding is still in the build list"
-    # PLAN 21 harm audit: chance-level counts never called more than chance; licence credit in every CSV; cite-with-date line on snapshot pages; CSVs noindex
-    nul = [({"site": "n%d" % i, "state": "GA", "river": "N%d" % i, "place": "T", "dashboard_url": "/river/n%d/t/" % i, "_built": True}) for i in range(40)]
-    import random as _rnd
-    _r = _rnd.Random(7)
-    nG = {"n%d" % i: {"rec": {"peaks": {"rows": [["%d-03-15" % y, 100.0 + _r.random() * 50, None, None, ""] for y in range(1960, 2026)]}}} for i in range(40)}
-    assert rc["/research/peak-month/"].splitlines()[0].endswith(",credit") and "Data: U.S. Geological Survey" in rc["/research/peak-month/"], "21: a research CSV lacks the source credit"
-    assert "PEGELONLINE" in wr[2] and "CC BY 4.0" in wr[2] and wr[2].splitlines()[0].endswith(",credit"), "21: the world CSV lacks the OGL or CC BY credit its terms require"
-    assert "cite them with that date and time" in wr[1] and "cite them with that date and time" in tp_[1], "21: a snapshot page lacks its cite-with-date line"
-    assert "/*.csv\n  X-Robots-Tag: noindex" in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "_headers"), encoding="utf-8").read(), "21: research CSVs can be indexed as bare files"
     # owner 2026-11-12: what happened next in years like this one (collect.next_days + charts.b_like_today)
     from lib.charts import b_like_today
     d = datetime.date(2026, 11, 12)
@@ -866,27 +710,8 @@ def probe(warn, square, pages):
     h2 = b3r.b_recreation({"rec": {"ridb": sh}, "zone": zoneinfo.ZoneInfo("America/New_York")})["body"]
     assert h2.count("first-come, first-served") == 1 and h2.count("P.O. Box 309, Carbondale, CO") == 1 and h2.count("Own words for") == 3 and h2.count("is listed once, under the first site") == 1 and "same as listed" not in h2, "RIDB: a shared address or sentence was repeated, an address was split, a note repeated, or a site's own words were dropped"
     assert not b3r._ridb_ok("Follow Highway 131 to the fork and and stay left.") and not b3r._ridb_ok("the picnic pavilion Pavilion is 15 miles") and not b3r._ridb_ok("Open (May to Sept.") and not b3r._ridb_ok("None.") and b3r._ridb_ok("Open (May to Sept.)") and not b3r._ridb_ok("take the second left ( Look for the sign )"), "RIDB: a doubled word, a lone bracket or 'None.' passed into a page"
-    # PLAN 20: gate gaps (research outside open_wave; new block types without a review)
-    from lib import indexing as _ix, page as _pgx
-    cfg_ = {"open": True, "site_pages": True, "allow": {"/research/peak-month/", "/research/tides/"}, "pulled": set(), "held": (), "research_ok": {"/research/peak-month/"}, "research_demand": {"/research/peak-month/", "/research/tides/"}}  # tides allowed but not reviewed at this version
-    assert not _ix.indexable("/research/", cfg_) and not _ix.indexable("/research/tides/", cfg_) and _ix.indexable("/research/peak-month/", cfg_) and _ix.indexable("/about/", cfg_), "20: research pages indexable without open_wave, or a site page lost"
-    assert not _ix.sitemap_ok("/research/tides/", cfg_), "20: a research page not opened is in the sitemap"
-    # PLAN 22 lock 1: review of the exact method version
-    td2 = tempfile.mkdtemp()
-    os.makedirs(os.path.join(td2, "lib")); os.makedirs(os.path.join(td2, "data"))
-    json.dump({"/research/a/": "v2", "/research/b/": "v2"}, open(os.path.join(td2, "data", "research-methods.json"), "w"))  # each page's own version
-    json.dump({"research": {"/research/a/": "v2", "/research/b/": "v1"}}, open(os.path.join(td2, "data", "reviewed.json"), "w"))
-    assert _ix.research_reviewed(td2) == {"/research/a/"}, "22: a page reviewed at an older method version counted as reviewed"
-    open(os.path.join(td2, "data", "reviewed.json"), "w").write("{torn")
-    assert _ix.research_reviewed(td2) == set(), "22: a torn reviewed.json opened research pages (must fail closed)"
-    # PLAN 24 lock 6: measured search demand
-    open(os.path.join(td2, "data", "keyword-tiers-water.csv"), "w").write("keyword,tier,bid_high_cad,kind\nLake  Levels,5000,1.0,lake\nflood stage,0,0,river\n")
-    open(os.path.join(td2, "data", "research-keywords.csv"), "w").write("url,seed\n/research/a/,lake levels\n/research/b/,flood stage\n/research/c/,never asked phrase\n")
-    assert _ix.research_demand(td2) == {"/research/a/"}, "24: demand wrong (case and spaces, 0 searches, or a never-asked seed)"
-    cfg2 = dict(cfg_, allow={"/research/", "/research/peak-month/"}, research_ok={"/research/", "/research/peak-month/"}, research_demand=set())
-    assert not _ix.indexable("/research/peak-month/", cfg2) and not _ix.indexable("/research/", cfg2), "24: a research page or the index opened with no measured demand"
-    cfg2["research_demand"] = {"/research/peak-month/"}
-    assert _ix.indexable("/research/peak-month/", cfg2) and _ix.indexable("/research/", cfg2), "24: a reviewed, allowed page with measured demand stayed closed, or the index did not follow it"
+    # PLAN 20: new block types without a review stay hidden
+    from lib import page as _pgx
     rb_, rv_ = _pgx.reviewed_blocks, os.environ.pop("RWL_REVIEW", None)
     try:
         _pgx.reviewed_blocks = lambda: frozenset({"water_speed"})
@@ -898,36 +723,6 @@ def probe(warn, square, pages):
         os.environ.pop("RWL_REVIEW", None)
         if rv_ is not None:
             os.environ["RWL_REVIEW"] = rv_
-    _pgx.research_open.cache_clear()
-    ro_ = _pgx.research_open
-    _pgx.research_open = lambda: False
-    try:
-        assert 'href="/research/"' not in _pgx.footer(), "20: the footer links research pages Google may not index"
-    finally:
-        _pgx.research_open = ro_
-    # PLAN 20: open_wave --open lets a named research page into Google; a page the last build did not serve is refused
-    import importlib.util as _iu
-    _sp = _iu.spec_from_file_location("ow_", os.path.join(os.path.dirname(os.path.abspath(__file__)), "open_wave.py"))
-    ow_ = _iu.module_from_spec(_sp)
-    _sp.loader.exec_module(ow_)
-    td_ = tempfile.mkdtemp()
-    os.makedirs(os.path.join(td_, "dist"))
-    json.dump({"urls": ["/research/", "/research/tides/"]}, open(os.path.join(td_, "dist", "_urls.json"), "w"))
-    ix_ = os.path.join(td_, "ix.json")
-    json.dump({"open": True, "site_pages": True, "allow": ["/river/a/b/"]}, open(ix_, "w"))
-    ow_.IX, ow_.ROOT, argv_ = ix_, td_, sys.argv
-    try:
-        sys.argv = ["open_wave.py", "--open", "/research/tides/"]
-        ow_.main()
-        assert json.load(open(ix_))["allow"] == ["/research/tides/", "/river/a/b/"], "20: --open did not add the page"
-        sys.argv = ["open_wave.py", "--open", "/research/ghost/"]
-        try:
-            ow_.main()
-            raise AssertionError("20: --open let in a page the build does not serve")
-        except SystemExit:
-            pass
-    finally:
-        sys.argv = argv_
     # PLAN 19d: the biggest floods, day by day
     dly = [[(datetime.date(1990, 1, 1) + datetime.timedelta(days=k)).isoformat(), 100.0] for k in range(12000)]
     dv = dict(dly)
