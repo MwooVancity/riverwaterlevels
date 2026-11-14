@@ -2357,6 +2357,7 @@ def fetch_extras(site, rec, h, log):
         if key in WEEKLY and key not in COAST_KEYS and USGS_OUT[0]:  # only USGS history waits for the USGS quota; NOAA king tides (floodtide) do not (2026-11-13: every coast showed Unknown)
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
+        early = early or (key == "floodtide" and rec.get("floodtide") is None and (stamp.get(key) or "") < "2026-11-14T15")  # one early refetch: a 404 for flood levels was stamped as read (Clearwater 8726706, 2026-11-14); 3 NOAA calls per coast once
         early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))
         early = early or (key == "floodfreq" and rec.get("floodfreq") is not None and rec["floodfreq"].get("rangev") != 2)  # peer review #7: one early refresh for the 1% row's record years, about 264 StreamStats calls once  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
         if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("near_wtemp", "cameras") else 6)):
