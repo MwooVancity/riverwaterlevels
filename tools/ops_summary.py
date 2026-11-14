@@ -40,7 +40,7 @@ def stop_reason(wf="refresh.yml"):
         keep = []
         for ln in text.splitlines():
             ln = re.sub(r"^.*?Z ", "", ln)
-            if re.match(r"\s*(STOPPED|SITE FAIL|FAIL |refresh FAILED|refresh OK|release DROPPED|release committed|[A-Za-z]*Error:|CARRIED|could not carry)", ln) and "36;1m" not in ln:
+            if re.match(r"\s*(STOPPED|SITE FAIL|FAIL |refresh FAILED|refresh OK|promote: code not bug-reviewed|release DROPPED|release committed|[A-Za-z]*Error:|CARRIED|could not carry)", ln) and "36;1m" not in ln:
                 keep.append(ln.strip()[:200])
         return run, keep[-25:]
     except Exception as e:
@@ -73,9 +73,11 @@ def main():
         ahead = None
     if ahead:
         run, lines = stop_reason("dryrun.yml")
-        if not any(x.startswith("refresh OK") for x in lines):
+        held = any(x.startswith("promote: code not bug-reviewed") for x in lines)  # owner 2026-11-14: a promote held for a missing review must not be silent
+        if held or not any(x.startswith("refresh OK") for x in lines):
             out.append("## Code changes waiting to go live")
-            out.append("**%d commit(s) on check are not on main: the newest check run did not pass, so nothing was promoted.**%s" % (ahead, " Run %s:" % run["databaseId"] if run else ""))
+            out.append(("**%d commit(s) on check are not on main: the checks passed but the code has no bug review yet (data/last-review), so nothing was promoted. Claude reviews it next session.**%s" if held else
+                        "**%d commit(s) on check are not on main: the newest check run did not pass, so nothing was promoted.**%s") % (ahead, " Run %s:" % run["databaseId"] if run else ""))
             out += ["    " + x for x in lines if not x.startswith("CARRIED")] or ["    (no stop line found)"]
             out.append("")
 

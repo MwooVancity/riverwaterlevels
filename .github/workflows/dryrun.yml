@@ -127,6 +127,7 @@ jobs:
           git config user.name "riverwaterlevels-bot"; git config user.email "actions@users.noreply.github.com"
           git checkout -q -- . && git clean -fdq -e refresh-out.log
           git fetch -q --unshallow origin 2>/dev/null || true  # full history only here (the checkout stays shallow for every other run)
+          if ! python -I tools/review_gate.py --ci; then echo "promote: code not bug-reviewed, main untouched"; exit 0; fi  # owner 2026-11-14: no unreviewed code goes live (data/last-review)
           for try in 1 2 3; do  # two runs promoting at once: the loser fetches the winner's main and tries again (code review 2026-11-09)
             git fetch -q origin main
             if ! git merge -q --no-edit origin/main; then git merge --abort; echo "promote skipped: check and main conflict, a session merges"; exit 0; fi
