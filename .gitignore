@@ -19,3 +19,5 @@ data/geo/*.geojson
 .dev.vars
 research_notes/
 reports/
+
+.claude/last-review
