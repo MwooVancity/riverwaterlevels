@@ -248,26 +248,33 @@ def main():
                 emit("/%s/" % page["slug"], wp.replace("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page.").replace("-0.00 m", "0.00 m"))
         try:  # research pages (owner 2026-11-12, PLAN 14): a fault or an empty cache carries the published copies (never a 404) and is named in the failed list
             wr_ = research.world_rivers(wpages, wkeep, wnow)  # PLAN 18c
+            why_w = "fewer than %d published world gauges carry a low, normal or high label right now (agency marks in Germany and England, our rank in Canada)" % research.MIN_FEW if not wr_ else ""  # 2026-11-14: the world page was named with the river pages' reason
             if wr_ and research.verify(*wr_):  # PLAN 22 lock 2
+                why_w = "its CSV does not reproduce its headline"
                 report["failed"].append({"site": "research", "reason": "dropped: " + "; ".join(research.verify(*wr_)), "url": wr_[0]})
                 wr_ = None
             (rp, rcsv), why_r = research.pages(built, Gs, world=research.title_of(wr_[1]) if wr_ else ""), "too few gauges with usable annual peaks (an old cache row waits for its weekly refresh)"
         except Exception as e:
             wr_, rp, rcsv, why_r = None, {}, {}, "%s: %s" % (type(e).__name__, str(e)[:100])
+            why_w = why_r
         for u_, why_ in research.FAILED:
             report["failed"].append({"site": "research", "reason": "dropped, its CSV does not reproduce its headline: " + why_, "url": u_})
         if wr_:
             rp[wr_[0]], rcsv[wr_[0]] = wr_[1], wr_[2]
         for url in [u for u in research.URLS + (research.WORLD_URL,) if u not in rp]:  # one finding short of gauges keeps its old copy too
             old = prev_page(url)
+            why_ = why_w if url == research.WORLD_URL else why_r
             if old and 'data-method="%s"' % research.method_of(url) in old:  # a copy made by an older method is never carried: a false page is worse than none
                 rp[url] = old
                 oc = os.path.join(ROOT, "dist", url.strip("/"), "data.csv")  # the carried page links its data.csv: carry it too
                 if os.path.isfile(oc):
                     rcsv[url] = open(oc, encoding="utf-8").read()
-                report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); published copy carried" % why_r, "url": url})
+                report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); published copy carried" % why_, "url": url})
             elif old:
-                report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); the published copy was made by an older method and is withdrawn, not carried" % why_r, "url": url})
+                report["failed"].append({"site": "research", "reason": "research page not rebuilt (%s); the published copy was made by an older method and is withdrawn, not carried" % why_, "url": url})
+        for f_ in report["failed"]:
+            if f_["site"] == "research":
+                print("RESEARCH NOT BUILT %s: %s" % (f_["url"], f_["reason"][:220]))  # read-through 2026-11-14: the reason sat only in runs/report.json, which nobody reads
         for url, html in rp.items():
             emit(url, html)
         for url, text in rcsv.items():  # PLAN 17: every finding's table as CSV beside its page

@@ -40,7 +40,7 @@ def stop_reason(wf="refresh.yml"):
         keep = []
         for ln in text.splitlines():
             ln = re.sub(r"^.*?Z ", "", ln)
-            if re.match(r"\s*(STOPPED|SITE FAIL|FAIL |refresh FAILED|refresh OK|promote: code not bug-reviewed|release DROPPED|release committed|[A-Za-z]*Error:|CARRIED|could not carry)", ln) and "36;1m" not in ln:
+            if re.match(r"\s*(STOPPED|SITE FAIL|FAIL |refresh FAILED|refresh OK|promote: code not bug-reviewed|RESEARCH NOT BUILT|release DROPPED|release committed|[A-Za-z]*Error:|CARRIED|could not carry)", ln) and "36;1m" not in ln:
                 keep.append(ln.strip()[:200])
         return run, keep[-25:]
     except Exception as e:
