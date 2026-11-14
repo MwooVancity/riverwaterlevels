@@ -517,6 +517,23 @@ HUB_SRC = {"eccc": "Label: our calculation, today's level against past monthly m
            "imi": "Label: Tidal, sea level rises and falls about twice a day, so no normal range applies. Level in metres above Ordnance Datum Malin. Source: Marine Institute, Irish National Tide Gauge Network, CC BY 4.0,"}
 
 
+def world_status(rows, now, tide=False):
+    """The hub's one plain sentence (readable-at-a-glance rule, PLAN 39g): counted from the table below, nothing else. '' for tide hubs or no live gauge."""
+    live = [r for r in rows if world_live(r, now)]
+    if tide or not live:
+        return ""
+    tol = 0.02 if any(r.get("unit") == "m" for r in live) else 2  # 2 cm: a smaller move is gauge noise, said as 'about the same'
+    ch = [r["cm"] - r["then"] for r in live if r.get("then") is not None]
+    up, dn = sum(1 for c in ch if c >= tol), sum(1 for c in ch if c <= -tol)
+    parts = ["%d higher than 24 hours earlier" % up, "%d lower" % dn] + (["%d about the same" % (len(ch) - up - dn)] if len(ch) - up - dn else [])
+    g_ = "gauge" if len(live) == 1 else "gauges"
+    s = "Of %d %s reporting now: %s." % (len(live), g_, ", ".join(parts)) if ch else "%d %s reporting now." % (len(live), g_)
+    labs = collections.Counter(WSV_LABEL[r["state"]] for r in live if r.get("state") in WSV_LABEL)
+    if labs:
+        s += " Agency label: %s%s." % (", ".join("%d %s" % (labs[k], k) for k in ("High", "Normal", "Low") if labs[k]), ("; %d without one" % (len(live) - sum(labs.values()))) if len(live) > sum(labs.values()) else "")
+    return s
+
+
 def world_live(r, now):
     """A reading under 24 hours old: the only kind a hub table, chart or ranking uses (older = 'Not reporting', named, never drawn)."""
     return r.get("cm") is not None and bool(r.get("time")) and (now - parse_t(r["time"].replace("Z", "+00:00"))).total_seconds() <= 24 * 3600
@@ -615,6 +632,7 @@ def world_page(page, d, now, linked=None):
     label, agency = HUB_SRC.get(page.get("feed"), HUB_SRC["pegelonline"]).split(" Source: ")  # check.py: the source line starts with "Source"
     body = ('<div class="crumb"><a href="/">Home</a> / %s</div><h1>%s water levels today</h1>'
             '<p class="sub">%s A gauge reading is not the depth of the water.</p>' % (esc(page["river"]), esc(world_name(page)), esc(page["lead"])) +
+            (lambda s_: ('<p class="status">%s</p>' % esc(s_)) if s_ else "")(world_status(rows, now, tide)) +
             _sec("world_gauges", "Every gauge now", '<div class="scroll"><table><thead><tr><th scope="col">Gauge</th><th scope="col" class="r">Level</th><th scope="col" class="r">24 h change</th><th scope="col">Compared with normal</th>'
                  '<th scope="col">Time</th></tr></thead><tbody>%s</tbody></table></div>' % trs,
                  "Source: %s fetched %s. The site rebuilds about once an hour. %s %s" % (agency, esc(tzl(datetime.datetime.fromisoformat(d["fetched_at"]), zone)), label, order)) +

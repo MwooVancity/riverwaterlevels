@@ -1396,4 +1396,12 @@ if __name__ == "__main__":
     br_ = brl_(Gr_, {"A": {"river": "Rio Grande", "place": "San Felipe", "water_url": "/river/a/", "_built": False}, "B": {"river": "Rio Grande", "place": "Isleta", "water_url": "/river/b/", "_built": True}})
     assert br_ and "San Felipe" in br_["body"] and "/river/a/" not in br_["body"] and "/river/b/" in br_["body"] and br_["heading"] == "Upstream and downstream gauges", "related gauges: unbuilt neighbour"
     assert brl_(Gr_, {}) is None, "related gauges: no known neighbour must show no block"
+    # PLAN 39g: the world hub's plain sentence counts only live rows; tide hubs and dead feeds say nothing
+    from lib.directory import world_status as ws_
+    ts_ = "2026-11-13T10:30:00Z"
+    wr_ = [{"cm": 266, "then": 255, "time": ts_, "state": "unknown"}, {"cm": 216, "then": 205, "time": ts_, "state": "normal"}, {"cm": 303, "then": 321, "time": ts_, "state": "normal"},
+           {"cm": 259, "then": 258, "time": ts_}, {"cm": 100, "then": 50, "time": "2026-11-10T10:00:00Z", "state": "high"}]
+    assert ws_(wr_, t_) == "Of 4 gauges reporting now: 2 higher than 24 hours earlier, 1 lower, 1 about the same. Agency label: 2 Normal; 2 without one.", ws_(wr_, t_)
+    assert ws_(wr_, t_, tide=True) == "" and ws_([{"cm": None, "time": ts_}], t_) == "" and ws_([], t_) == "", "world status: tide or no live gauge must say nothing"
+    assert ws_([{"cm": 1.50, "then": 1.49, "time": ts_, "unit": "m"}], t_) == "Of 1 gauge reporting now: 0 higher than 24 hours earlier, 0 lower, 1 about the same.", "world status: metres tolerance"
     print("selftest OK")
