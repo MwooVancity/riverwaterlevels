@@ -1181,6 +1181,11 @@ def selftest():
         open(_sm, "w", encoding="utf-8").write("<urlset><url>\n  <loc>https://riverwaterlevels.com/research/world-rivers/</loc><lastmod>x</lastmod></url><url><loc>https://riverwaterlevels.com/research/tides/</loc></url></urlset>")
         unlist(_sd, "research\\world-rivers\\index.html")
         assert "world-rivers" not in open(_sm, encoding="utf-8").read() and "research/tides/" in open(_sm, encoding="utf-8").read(), "selftest: a withdrawn page stayed in the sitemap, or a neighbour was dropped"
+        os.makedirs(os.path.join(_sd, "research"), exist_ok=True)
+        _ix = os.path.join(_sd, "research", "index.html")
+        open(_ix, "w", encoding="utf-8").write('<ul><li><a href="/research/tides/">Tides</a></li><li><a href="/research/world-rivers/">World</a></li></ul>')
+        unlink_index(_sd, "research\\world-rivers\\index.html")
+        assert "world-rivers" not in open(_ix, encoding="utf-8").read() and "/research/tides/" in open(_ix, encoding="utf-8").read(), "selftest: the research index still links a withdrawn finding, or lost a live one"
         _t = "<title>X River at Y, TX: live water level and flow, NWS forecast (USGS 1)</title>"
         _u = "<title>X River at Y, TX: live water level and flow, tubing rules (USGS 1)</title>"
         assert not title_promise_ok(_u, "<main></main>") and title_promise_ok(_u, '<section class="card blk" id="limits">'), "selftest: a title promised tubing rules without the agency rules block"
@@ -1769,6 +1774,18 @@ def stale_research(rel, dst):
     return True
 
 
+def unlink_index(d, rel):
+    """A withdrawn finding leaves the research index's list too: a reader never taps through to a 'being recalculated' notice."""
+    path = "/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
+    ix = os.path.join(d, "research", "index.html")
+    if path == "/research/" or not os.path.isfile(ix):
+        return
+    s = open(ix, encoding="utf-8").read()
+    s2 = re.sub(r'<li><a href="%s">.*?</a></li>' % re.escape(path), "", s)
+    if s2 != s:
+        open(ix, "w", encoding="utf-8").write(s2)
+
+
 def unlist(d, rel):
     """A withdrawn (noindexed) page leaves every sitemap file of build d: a sitemap never names a noindex page (2026-11-13: /research/world-rivers/ was both)."""
     path = rel.replace("\\", "/").rsplit("index.html", 1)[0]
@@ -1789,7 +1806,7 @@ def carry(d, fails, got=None, new=None):
     `new` when the caller passes a list (the caller records it for quarantine.py), else it fails the carry. True when every page was carried or listed new."""
     import shutil, urllib.request, urllib.error
     got = [] if got is None else got
-    ok, n0 = True, len(got)
+    ok, n0, withdrawn = True, len(got), []
     for rel in fails:
         dst, old = os.path.join(d, rel), os.path.join(ROOT, "dist", rel)
         try:
@@ -1802,7 +1819,8 @@ def carry(d, fails, got=None, new=None):
             got.append(rel)
             if stale_research(rel, dst):
                 unlist(d, rel)
-                print("WITHDREW", rel, "(its live copy was made by an older research method; a recalculation notice stands in until it rebuilds)")
+                withdrawn.append(rel)  # its index link goes after the loop: a carried index copied later would bring the link back
+                print("WITHDREW", rel, "(this build's page failed: %s; its live copy was made by an older research method, so a recalculation notice stands in until it rebuilds)" % "; ".join(str(x) for x in fails.get(rel) or [])[:200])
                 continue
             print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(str(x) for x in fails[rel])[:160] + ")")
         except urllib.error.HTTPError as e:
@@ -1814,6 +1832,8 @@ def carry(d, fails, got=None, new=None):
         except Exception as e:
             print("could not carry", rel, e)
             ok = False
+    for rel in withdrawn:  # read-through 2026-11-14: the research index still linked the withdrawn world page, a dead end for a reader
+        unlink_index(d, rel)
     if len(got) > n0:
         keep_old_times(d, set(got[n0:]))
         cp = os.path.join(d, "_carried.json")

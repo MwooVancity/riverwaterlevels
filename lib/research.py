@@ -177,12 +177,12 @@ def _pv(p):
 
 
 def _link(r):
-    return '<a href="%s">%s at %s</a>' % (r["dashboard_url"], esc(r["river"]), esc(r["place"]))
+    return '<a href="%s">%s</a>' % (r["dashboard_url"], esc(river_at(r["river"], r["place"])))  # read-through 2026-11-14: 'Garibaldi at Garibaldi'; the site's one naming rule
 
 
 def _name(r):
     """Full tables name the gauge without a link (check.py BUDGET trust 60): only the short highlight tables link, and the site search finds any river."""
-    return "%s at %s" % (esc(r["river"]), esc(r["place"]))
+    return esc(river_at(r["river"], r["place"]))
 
 
 def _cap(n, what="annual peaks"):
@@ -321,10 +321,10 @@ def peak_change(gl, today, sub, unk):
     bh_up, bh_dn = sum(1 for x in nat if x[4] <= thr and x[8] > 0), sum(1 for x in nat if x[4] <= thr and x[8] < 0)
     exp = ALPHA / 2 * len(nat)
     if not k:  # harm audit 2026-11-12 #1: 3 up and 1 down of 87 was called 'more than chance' while chance gives about 2.2 each way
-        head = ("<b>Are floods getting worse? On these %d gauges, not in a way this test can tell from chance: no gauge's change in yearly peaks between water years %s and %s stands out after the correction for testing many gauges at once.</b> "
-                "%d tested higher and %d lower at p &lt; %.2f, about what chance gives (about %.1f each way), and none survives the Benjamini-Hochberg correction (false discovery rate %d%%). "
+        head = ("<b>No clear change: at these %d river gauges, the yearly high of water years %s was not clearly bigger or smaller than in %s.</b> "  # read-through 2026-11-14: the answer first, in plain words; the test after
+                "A few gauges moved either way (%d higher, %d lower at p &lt; %.2f), about as many as chance alone gives (about %.1f each way), and none still stands out after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%). "
                 "A test on about 20 years a period can miss a real change, so this is not evidence that nothing changed. "
-                ) % (len(nat), P1, P2, len(sig_up), len(sig_dn), ALPHA, exp, round(FDR * 100))
+                ) % (len(nat), P2, P1, len(sig_up), len(sig_dn), ALPHA, exp, round(FDR * 100))
     else:
         head = ("<b>Are floods getting worse? At %d of %d gauges, yearly peaks in water years %s differ from %s by more than chance alone explains: %d higher, %d lower.</b> "
                 "That is after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%); before it, %d tested higher and %d lower at p &lt; %.2f, against about %.1f each way by chance. "
@@ -381,7 +381,7 @@ def hundred_year(gl, unk):
     storms = len({y for x in nat for y in x[4]})
     lead = ("<p><b>At %d US river gauges on this site, USGS's '100-year' flow was reached in %d of %d gauge-years after the last year of the record it was computed from.</b> "
             "If every gauge-year were a separate 1%% chance, about %.1f would be expected.%s "
-            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century.</p>") % (len(nat), hits, gy, gy / 100, (" The %d fell in only %s, so some came in the same water year and may be the same storms." % (hits, _pl(storms, "water year", "water years"))) if hits > storms else "")
+            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century: over 10 years that is about a %d%% chance of at least one, over a 30-year mortgage about %d%%, and over 100 years about %d%% (our arithmetic, 1 minus 0.99 to the power of the years).</p>") % (len(nat), hits, gy, gy / 100, (" The %d fell in only %s, so some came in the same water year and may be the same storms." % (hits, _pl(storms, "water year", "water years"))) if hits > storms else "", *[round(100 * (1 - 0.99 ** n)) for n in (10, 30, 100)])
     lead += ("<p>Two things push the count above 1%% even when nothing has changed: the 1%% flow is itself estimated from a limited record, so it is reached somewhat more often than its label says, most of all at gauges with short records (the expected-probability effect; Beard, 1960); "
              "and gauges on this site were added where people search, which rises after floods. The two-sided chance of a count this far from %.1f, if every gauge-year were an independent 1%% chance, is %s; neighbouring gauges flood in the same storms, so that chance is too small and is shown only for reference.%s</p>") % (
         gy / 100, _pv(poisson_two(hits, gy / 100)),
@@ -560,7 +560,7 @@ def tides(built, Gs):
     span = "%d days" % round(days) if days >= 1.5 else "%d hours" % round(days * 24)
     top = max(rows, key=lambda x: x[3][1])
     lead = ("<p><b>Over the last %s, the sea ran " + ("furthest above its tide prediction" if top[3][1] > 0 else "nearest to rising above its tide prediction") + " at %s: %+.2f ft at %s.</b> "
-            "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft. Part of a gap can be steady: local sea level differs from the long-term level NOAA's tide datums are referenced to (at most US stations it has risen since; where the land is rising, as in parts of Alaska, it has fallen), and a season can run above or below its normal level; wind, air pressure and river flow add the rest.%s</p>") % (
+            "Across %d NOAA stations on this site, the median gap between observed water and prediction was %+.2f ft (a plus means the water stood that much higher than the tide table said, so a predicted high tide reached that much higher on a beach, ramp or seawall). Part of a gap can be steady: local sea level differs from the long-term level NOAA's tide datums are referenced to (at most US stations it has risen since; where the land is rising, as in parts of Alaska, it has fallen), and a season can run above or below its normal level; wind, air pressure and river flow add the rest.%s</p>") % (
         span, _link(top[0]), top[3][1], esc(tzl(top[3][0], top[1]["zone"])), len(rows), statistics.median(x[5] for x in rows),
         (" %s left out (tide predictions only, or under 24 hours of matched readings)." % _pl(left, "station was", "stations were")) if left else "")
     hd = ["Station", "Predicted range in that span", "Highest (observed minus predicted)", "Lowest (observed minus predicted)", "Median gap"]
@@ -665,9 +665,9 @@ def verify(url, html, data):
         up = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) > 0)
         dn = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) < 0)
         k = bh_count([float(r["mann_whitney_p"]) for r in nat])
-        m = re.search(r"(\d+) tested higher and (\d+) lower", html) or re.search(r"before it, (\d+) tested higher and (\d+) lower", html)
-        g = re.search(r"On these (\d+) gauges|of (\d+) gauges, yearly peaks", lead)
-        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != ("not in a way this test can tell from chance" in lead):
+        m = re.search(r"\((\d+) higher, (\d+) lower at p", html) or re.search(r"before it, (\d+) tested higher and (\d+) lower", html)
+        g = re.search(r"at these (\d+) river gauges|of (\d+) gauges, yearly peaks", lead)
+        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != lead.startswith("No clear change"):
             bad.append("peak change counts on the page differ from the CSV (up %d, down %d, gauges %d, corrected %d)" % (up, dn, len(nat), k))
     elif url.endswith("/100-year-floods/"):
         nat = [r for r in rows if not T(r["regulated"])]

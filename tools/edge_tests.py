@@ -279,6 +279,7 @@ def run():
         assert _ck.research_title_ok(h_, u_), "24: %s title carries no measured seed: %s" % (u_, research.title_of(h_))
     assert not _ck.research_title_ok("<title>How warm are US rivers? | River Water Levels</title>", "/research/water-temperature/"), "24: a title with no measured seed passed"
     assert not _ck.research_title_ok("<title>Canada now | River Water Levels</title>", "/research/world-rivers/") and not _ck.research_title_ok("<title>Lake Erie | River Water Levels</title>", "/research/lake-levels/"), "24: the brand suffix supplied seed words to a title"
+    assert "about a 10% chance of at least one, over a 30-year mortgage about 26%, and over 100 years about 63%" in bp["/research/100-year-floods/"], "read-through 2026-11-14: the 100-year page lost the odds a reader came for"
     lines_ = bc["/research/100-year-floods/"].splitlines()
     assert research.verify("/research/100-year-floods/", bp["/research/100-year-floods/"], "\n".join(lines_[:-3])), "22: a CSV missing rows still reproduced the 100-year headline"
     assert research.verify("/research/new-thing/", "<p><b>x</b></p>", "a\n1\n"), "22: a research page with no reproducibility check passed"
@@ -288,7 +289,7 @@ def run():
     _r = _rnd.Random(7)
     nG = {"n%d" % i: {"rec": {"peaks": {"rows": [["%d-03-15" % y, 100.0 + _r.random() * 50, None, None, ""] for y in range(1960, 2026)]}}} for i in range(40)}
     np_ = research.pages(nul, nG, datetime.date(2026, 11, 12))[0]["/research/peak-change/"]
-    assert "On these 40 gauges, not in a way this test can tell from chance" in np_ and "not evidence that nothing changed" in np_ and "more than chance alone explains" not in np_, "21: noise across 40 gauges was called more than chance"
+    assert "No clear change: at these 40 river gauges" in np_ and "not evidence that nothing changed" in np_ and "more than chance alone explains" not in np_, "21: noise across 40 gauges was called more than chance"
     assert rc["/research/peak-change/"].splitlines()[0].endswith(",credit") and "Data: U.S. Geological Survey" in rc["/research/peak-change/"], "21: a research CSV lacks the source credit"
     assert "PEGELONLINE" in wr[2] and "CC BY 4.0" in wr[2] and wr[2].splitlines()[0].endswith(",credit"), "21: the world CSV lacks the OGL or CC BY credit its terms require"
     assert "cite them with that date and time" in wr[1] and "cite them with that date and time" in tp_[1], "21: a snapshot page lacks its cite-with-date line"
