@@ -28,7 +28,7 @@ At this water today, on a phone, 30 seconds: fish, paddle, swim, tube, wade, boa
 Before any build, and on "what's missing", answer for THIS site: state (measured), owner, next action (PLAN.md "Drawing board"): 1 Demand 2 Intent 3 Better than #1 4 Trust 5 Links (who, by name) 6 Discovery 7 Click 8 Experience 9 Proof. "Not started", "nobody owns it" or "owner only, no plan" goes before ALL polish; an owner-only item gets a full plan, the owner only clicks.
 
 ## HARD: readable at a glance (owner 2026-11-09)
-A page fails if a person can't say what the river is doing after 5 seconds on a phone. Reference: the Weather Channel / Apple Weather, not agency pages. First screen: place, one plain status sentence, the number. Each block: one answer sentence first, the table is proof. Table rules: `check.py` `wide_tables`, `colour_contrast`, first-screen rule; tools/source_fix.md "Tables a person can read". A new layout ships after one 5-second test by a person who is not Claude.
+A page fails if a person can't say what the river is doing after 5 seconds on a phone. Reference: the Weather Channel / Apple Weather, not agency pages. First screen: place, one plain status sentence, the number. Each block: one answer sentence first, the table is proof. Table rules: `check.py` `wide_tables`, `colour_contrast`, first-screen rule; tools/source_fix.md "Tables a person can read". A new layout ships after one 5-second test, done by Claude on the cloud phone shots (owner 2026-11-13: 'stop asking me, just do it'); never asked of the owner.
 
 ## Page rules
 - Nothing that helps ranking but not the reader. No verdicts ("safe", "runnable", "fishable"): labels and attributed source text only (`check.py` BANNED); delete a sentence no source can check.
