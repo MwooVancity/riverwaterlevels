@@ -16,12 +16,15 @@ def b_related(G, pages):
     rel_ = lambda x, pr: "Tributary upstream" if x["relation"] == "upstream" and pr["river"].split()[0].lower() != G["river"].split()[0].lower() else x["relation"].capitalize()  # same rule as the hero tile
     old_ = lambda x: (lambda h: h is None or h > 24)(hours_old(x["time"], G["now"]))
     away = lambda pr: (" &middot; %d mi away" % round(miles_between(G["lat"], G["lon"], pr["_ll"][0], pr["_ll"][1]))) if pr.get("_ll") else ""  # hater w4: chain gauges with no distance
+    # PLAN 39 (Albuquerque, 2026-11-13): a same-river gauge without a page of its own is still the reading a reader checks next; it is named
+    # without a link (links rule: only built pages are linked), so the block no longer vanishes where the neighbours are not released yet
+    nm_ = lambda pr: ('<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"])))) if pr.get("_built") else esc(river_at(pr["river"], pr["place"]))
     for x in items:
         pr = pages.get(x["site"])
-        if not pr or not pr.get("_built"):
+        if not pr:
             continue
         lag = ("about %d h (r %.2f)" % (x["lag_h"], x["lag_r"])) if x.get("lag_h") else "–"
-        rows += tr(['<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), rel_(x, pr), "%s cfs" % fmtc(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
+        rows += tr([nm_(pr), rel_(x, pr), "%s cfs" % fmtc(x["flow"]), esc(tzl(parse_t(x["time"]), G["zone"])), lag], right=(2,))
     if not rows:
         return None
     from lib import ui
@@ -31,13 +34,13 @@ def b_related(G, pages):
             nodes.append({"name": "<span>This gauge</span>", "flow": ("%.2f ft" % G["sg"][-1][1]) if G.get("lake") and G["sg"] else "%s cfs" % fmtc(dir_lv(G)), "sub": esc(G["obs"]), "cur": True})
         for x in items:
             pr = pages.get(x["site"])
-            if x["relation"] == rel and pr and pr.get("_built"):
-                nodes.append({"name": '<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"]))), "flow": "%s cfs" % fmtc(x["flow"]),
+            if x["relation"] == rel and pr:
+                nodes.append({"name": nm_(pr), "flow": "%s cfs" % fmtc(x["flow"]),
                               "sub": rel_(x, pr) + away(pr) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
-    stale = any(old_(x) for x in items if pages.get(x["site"]) and pages[x["site"]].get("_built"))
-    dirs_ = {x["relation"] for x in items if pages.get(x["site"]) and pages[x["site"]].get("_built")}
-    return block("related_gauges", "Upstream and downstream gauges" if len(dirs_) == 2 else ("Upstream gauge" if "upstream" in dirs_ else "Downstream gauge") + ("s" if sum(1 for x in items if x["relation"] in dirs_ and pages.get(x["site"]) and pages[x["site"]].get("_built")) > 1 else ""), "agency" if stale else "live", ui.strip(nodes),
-                 "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; only gauges on this site that report flow are listed.", "usgs")
+    stale = any(old_(x) for x in items if pages.get(x["site"]))
+    dirs_ = {x["relation"] for x in items if pages.get(x["site"])}
+    return block("related_gauges", "Upstream and downstream gauges" if len(dirs_) == 2 else ("Upstream gauge" if "upstream" in dirs_ else "Downstream gauge") + ("s" if sum(1 for x in items if x["relation"] in dirs_ and pages.get(x["site"])) > 1 else ""), "agency" if stale else "live", ui.strip(nodes),
+                 "Source: USGS NLDI river network and USGS Water Data API. Relation is along the NLDI main stem; gauges that report flow are listed; those without a page on this site are named without a link.", "usgs")
 
 
 def b_land(G):

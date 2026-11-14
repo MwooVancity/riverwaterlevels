@@ -1387,4 +1387,13 @@ if __name__ == "__main__":
     assert "%s" not in n_ and "McAlpine Lower" in n_ and "nearby place" not in n_, "NWS point note: %r" % n_
     from lib.page import flood_stage_txt as fst_
     assert fst_({"categories": {"minor": 30.0}}) == "flood stage 30 ft" and fst_({"categories": {"minor": -9999}}) == "", "description flood stage"
+    # PLAN 39 (Albuquerque): a same-river neighbour without a page is named, unlinked; a built one keeps its link
+    import datetime as dt_
+    from lib.page import b_related as brl_
+    t_ = dt_.datetime(2026, 11, 13, 11, tzinfo=dt_.timezone.utc)
+    Gr_ = {"rec": {"related": {"items": [{"site": "A", "relation": "upstream", "flow": 100.0, "time": "2026-11-13T10:00:00+00:00"}, {"site": "B", "relation": "downstream", "flow": 90.0, "time": "2026-11-13T10:00:00+00:00"}]}},
+           "river": "Rio Grande", "now": t_, "lat": 35.0, "lon": -106.6, "zone": __import__("zoneinfo").ZoneInfo("America/Denver"), "lake": True, "sg": [(t_, 5.0, "ft")], "obs": "Nov 13"}
+    br_ = brl_(Gr_, {"A": {"river": "Rio Grande", "place": "San Felipe", "water_url": "/river/a/", "_built": False}, "B": {"river": "Rio Grande", "place": "Isleta", "water_url": "/river/b/", "_built": True}})
+    assert br_ and "San Felipe" in br_["body"] and "/river/a/" not in br_["body"] and "/river/b/" in br_["body"] and br_["heading"] == "Upstream and downstream gauges", "related gauges: unbuilt neighbour"
+    assert brl_(Gr_, {}) is None, "related gauges: no known neighbour must show no block"
     print("selftest OK")
