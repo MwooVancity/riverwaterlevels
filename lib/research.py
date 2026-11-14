@@ -9,15 +9,13 @@ from lib.core import table, tr, tzl, fdate
 from lib.directory import shell, crumb_ld, STATE_NAMES, utc_day
 
 MIN_PEAKS = 20  # water years of annual peaks a gauge needs before its peak month is counted
-WIN = 20  # water years in each period of the two-period comparison
-MIN_IN_WIN = 15  # of the 20, how many must have a usable peak
 MIN_GAUGES = 10  # below this a finding is not published
 MIN_FEW = 5  # lakes and tide stations are few on this site: 5 is the floor for those pages
-ALPHA = 0.05  # two-sided significance level of the per-gauge test
-FDR = 0.10  # Benjamini-Hochberg false discovery rate across gauges
+# Cut 2026-11-14 (owner, information-gain test): 'Are floods getting worse?' and '100-year floods' answered national questions from a small, search-picked
+# sample while USGS, EPA and FEMA publish the same on thousands of gauges. data/research-gain.json now holds every finding's gain line; no line, no page.
 ROW_CAP = 1000  # ponytail: one table of every gauge, about 150 KB at 1,000 rows; per-state pages when the site passes 1,000 river gauges
 HL = 25  # rows in a linked highlight table (check.py BUDGET trust 60, with the nav and footer)
-URLS = ("/research/", "/research/peak-month/", "/research/peak-change/", "/research/100-year-floods/", "/research/flood-stage-years/", "/research/water-temperature/", "/research/lake-levels/", "/research/tides/")
+URLS = ("/research/", "/research/peak-month/", "/research/flood-stage-years/", "/research/water-temperature/", "/research/lake-levels/", "/research/tides/")
 WORLD_URL = "/research/world-rivers/"
 MN = calendar.month_name
 SAMPLE = ("<p class=\"src\"><b>Sample:</b> the US river gauges that have a page on this site, chosen by what people search for. They are not a random or representative sample of US rivers: "
@@ -29,6 +27,18 @@ SAMPLE_TIDE = ("<p class=\"src\"><b>Sample:</b> the NOAA tide stations that have
 CURRENT_H = 72  # an agency figure older than 3 days is not 'today'
 METHOD = "2026-11-13b"  # default only; each page's own version is in data/research-methods.json (raise a page's version the day its text or method changes: its review then reopens alone)
 METHODS = __import__("json").load(open(__import__("os").path.join(ROOT, "data", "research-methods.json"), encoding="utf-8"))
+
+
+def gain_ok(url):
+    """True only for a finding with a 'keep' verdict, an 'exists' line and a 'gain' line in data/research-gain.json (owner 2026-11-14: the information-gain test
+    comes before any polish). A missing or torn file builds no finding (fail closed); the index needs no line."""
+    if url == "/research/":
+        return True
+    try:
+        g = __import__("json").load(open(__import__("os").path.join(ROOT, "data", "research-gain.json"), encoding="utf-8")).get(url) or {}
+    except (OSError, ValueError):
+        return False
+    return g.get("verdict") == "keep" and bool(str(g.get("exists") or "").strip()) and bool(str(g.get("gain") or "").strip())
 
 
 def method_of(url):
@@ -103,61 +113,9 @@ def gauges(built, Gs):
     return sorted(out, key=lambda x: (x[0]["state"], x[0]["river"], x[0]["place"]))
 
 
-def mwu_p(a, b):
-    """Two-sided Mann-Whitney U test, normal approximation with tie correction and continuity correction. 1.0 when every value is tied."""
-    n1, n2 = len(a), len(b)
-    allv = sorted([(v, 0) for v in a] + [(v, 1) for v in b])
-    ranks, i, ties = [0.0] * len(allv), 0, 0.0
-    while i < len(allv):
-        j = i
-        while j + 1 < len(allv) and allv[j + 1][0] == allv[i][0]:
-            j += 1
-        for k in range(i, j + 1):
-            ranks[k] = (i + j) / 2 + 1
-        t = j - i + 1
-        ties += t ** 3 - t
-        i = j + 1
-    u = sum(rk for rk, (_, g) in zip(ranks, allv) if g == 0) - n1 * (n1 + 1) / 2
-    n = n1 + n2
-    var = n1 * n2 / 12 * ((n + 1) - ties / (n * (n - 1)))
-    if var <= 0:
-        return 1.0
-    z = (abs(u - n1 * n2 / 2) - 0.5) / math.sqrt(var)
-    return min(1.0, math.erfc(max(z, 0) / math.sqrt(2)))
 
 
-def hodges_lehmann(a, b):
-    """Median of every later-minus-earlier difference: the shift the Mann-Whitney test is about (review #6). 400 pairs at 20 x 20."""
-    return statistics.median(y - x for x in a for y in b)
 
-
-def bh_count(ps, q=FDR):
-    """How many p-values survive the Benjamini-Hochberg false discovery rate q."""
-    s, k = sorted(ps), 0
-    for i, p in enumerate(s, 1):
-        if p <= q * i / len(s):
-            k = i
-    return k
-
-
-def poisson_tail(k, lam):
-    """Chance of a count at least k (k >= lam) or at most k (k < lam) when the count is Poisson with mean lam; in log space (no underflow at lam = 300)."""
-    if lam <= 0:
-        return 1.0
-    terms = range(0, k) if k >= lam else range(0, k + 1)
-    logs = [-lam + i * math.log(lam) - math.lgamma(i + 1) for i in terms]
-    s = 0.0
-    if logs:
-        mx = max(logs)
-        s = math.exp(mx) * sum(math.exp(x - mx) for x in logs)
-    return max(0.0, min(1.0, 1 - s if k >= lam else s))
-
-
-def poisson_two(k, lam):
-    """Two-sided (review #3): twice the smaller tail, at most 1."""
-    up = poisson_tail(k, lam) if k >= lam else 1.0
-    dn = poisson_tail(k, lam) if k < lam else 1 - poisson_tail(k + 1, lam) if k + 1 >= lam else 1.0
-    return min(1.0, 2 * min(up, dn))
 
 
 def circ(doys):
@@ -294,113 +252,6 @@ def peak_month(gl, sub, unk):
     return _page("Flood season: when US rivers reach their yearly high", "peak-month", "The month each river's yearly high flow most often falls in, its average date and how tightly peaks cluster, from USGS annual peaks at %d US river gauges." % len(nat), body, sub, data, unk)
 
 
-def peak_change(gl, today, sub, unk):
-    """Yearly peaks of the last 20 complete water years against the 20 before, per gauge: Mann-Whitney test, Hodges-Lehmann shift, Benjamini-Hochberg across gauges."""
-    end = _wy(today.year, today.month) - 1  # the last complete water year; changes once a year, on Oct 1
-    have = [p for _, p, _ in gl if p]
-    if have and sum(1 for p in have if end in p) < len(have) / 2:
-        end -= 1  # hostile review #11: USGS publishes a year's peaks months after it ends; the period ends at the last water year most gauges have
-    rows = []
-    for r, p, G in gl:
-        q = _plain(p)
-        rec = [q[y][1] for y in range(end - WIN + 1, end + 1) if y in q]
-        old = [q[y][1] for y in range(end - 2 * WIN + 1, end - WIN + 1) if y in q]
-        if len(rec) >= MIN_IN_WIN and len(old) >= MIN_IN_WIN:
-            a, b = statistics.median(old), statistics.median(rec)
-            rows.append((r, a, b, (b - a) / a * 100, mwu_p(old, rec), regulated(G, p, range(end - 2 * WIN + 1, end + 1)), len(old), len(rec), hodges_lehmann(old, rec), G))
-    nat = [x for x in rows if not x[5]]
-    if len(nat) < MIN_GAUGES:
-        return None
-    span = lambda a, b: "%d to %d" % (a, b)
-    P1, P2 = span(end - 2 * WIN + 1, end - WIN), span(end - WIN + 1, end)
-    sig_up = [x for x in nat if x[4] < ALPHA and x[8] > 0]
-    sig_dn = [x for x in nat if x[4] < ALPHA and x[8] < 0]
-    ps = [x[4] for x in nat]
-    k = bh_count(ps)
-    thr = sorted(ps)[k - 1] if k else -1
-    bh_up, bh_dn = sum(1 for x in nat if x[4] <= thr and x[8] > 0), sum(1 for x in nat if x[4] <= thr and x[8] < 0)
-    exp = ALPHA / 2 * len(nat)
-    if not k:  # harm audit 2026-11-12 #1: 3 up and 1 down of 87 was called 'more than chance' while chance gives about 2.2 each way
-        head = ("<b>No clear change: at these %d river gauges, the yearly high of water years %s was not clearly bigger or smaller than in %s.</b> "  # read-through 2026-11-14: the answer first, in plain words; the test after
-                "A few gauges moved either way (%d higher, %d lower at p &lt; %.2f), about as many as chance alone gives (about %.1f each way), and none still stands out after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%). "
-                "A test on about 20 years a period can miss a real change, so this is not evidence that nothing changed. "
-                ) % (len(nat), P2, P1, len(sig_up), len(sig_dn), ALPHA, exp, round(FDR * 100))
-    else:
-        head = ("<b>Are floods getting worse? At %d of %d gauges, yearly peaks in water years %s differ from %s by more than chance alone explains: %d higher, %d lower.</b> "
-                "That is after the Benjamini-Hochberg correction for testing many gauges at once (false discovery rate %d%%); before it, %d tested higher and %d lower at p &lt; %.2f, against about %.1f each way by chance. "
-                ) % (k, len(nat), P2, P1, bh_up, bh_dn, round(FDR * 100), len(sig_up), len(sig_dn), ALPHA, exp)
-    lead = "<p>" + head + "This compares the typical yearly peak in two periods at these gauges, which are not every US river; it says nothing about flood damage or why peaks changed.%s</p>" % (
-        (" %s listed apart, not counted." % _pl(len(rows) - len(nat), "regulated gauge is", "regulated gauges are")) if len(rows) > len(nat) else "")
-    hd = ["Gauge", "Median peak %s" % P1, "Median peak %s" % P2, "Shift (Hodges-Lehmann)", "p"]
-    rw = lambda xs, f=_link: "".join(tr([f(r) + (" (regulated)" if rg else ""), "%s cfs" % fmtc(a), "%s cfs" % fmtc(b), "%s%s cfs" % ("+" if hl_ > 0 else "", fmtc(hl_)), _pv(pv)], right=(1, 2, 3, 4)) for r, a, b, c, pv, rg, _, _, hl_, G in xs)
-    meth = ("<h2>How this was worked out</h2><p>Source: USGS annual peak streamflow (Water Data API), with USGS's qualifier codes. For each gauge we took the highest plain peak in each water year (October to September), "
-            "then compared the %d water years %s with the %d before, keeping gauges with at least %d plain peaks in each period (USGS publishes the newest year's peak months after it ends). " + EXCL + " "
-            "A gauge USGS StreamStats flags as regulated, or with any peak in either period coded as affected by regulation or diversion, is listed apart. "
-            "The test is a two-sided Mann-Whitney U test (normal approximation, corrected for ties) of whether one period's peaks tend to be larger than the other's, significant at p &lt; %.2f; the shift is the Hodges-Lehmann estimate, the median of every later-minus-earlier difference, and its sign gives the direction. "
-            "Testing many gauges at once lets some differences appear by chance, so the expected chance count and the Benjamini-Hochberg count are given. Peaks in neighbouring years and at neighbouring gauges are not independent, so every p is approximate and tends to be too small. "
-            "Reasons a gauge changes include rain and snow patterns, water use, land development and gauge moves. This is a comparison of two periods, not a trend analysis of the whole record.</p>") % (WIN, P2, WIN, MIN_IN_WIN, ALPHA)
-    data = _csv(G_HEAD + ["median_peak_cfs_wy%s" % P1.replace(" to ", "_"), "median_peak_cfs_wy%s" % P2.replace(" to ", "_"), "change_pct", "hodges_lehmann_shift_cfs", "mann_whitney_p", "regulated", "plain_peaks_first_period", "plain_peaks_second_period", "source", "peaks_fetched_at"],
-                [_g(r) + [round(a, 1), round(b, 1), round(c, 1), round(hl_, 1), round(pv, 4), rg, n1, n2, "USGS annual peak streamflow (Water Data API)", _fa(G, "peaks")] for r, a, b, c, pv, rg, n1, n2, hl_, G in rows], _cred("usgs"))
-    body = (lead + ("<h2>Higher at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_up, key=lambda x: -x[8])[:12]), right=(1, 2, 3, 4)) if sig_up else "") +
-            ("<h2>Lower at p &lt; 0.05 (before the correction; some are chance)</h2>" + table(hd, rw(sorted(sig_dn, key=lambda x: x[8])[:12]), right=(1, 2, 3, 4)) if sig_dn else "") +
-            "<h2>Every gauge</h2>" + table(hd, rw(rows[:ROW_CAP], _name), right=(1, 2, 3, 4)) + _cap(len(rows)) + meth)
-    return _page("Are floods getting worse? Yearly river peaks, water years %s against %s" % (P2, P1), "peak-change", "Yearly peak flows of water years %s against %s, tested gauge by gauge, at %d US river gauges, from USGS annual peaks." % (P2, P1, len(nat)), body, sub, data, unk)
-
-
-def hundred_year(gl, unk):
-    """How often the USGS 1%-chance ('100-year') flow was reached in the years after the record USGS computed it from (out of sample)."""
-    rows = []
-    for r, p, G in gl:
-        if not p:
-            continue
-        f = G["rec"].get("floodfreq") or {}
-        one = next((x for x in f.get("rows") or [] if x.get("aep") == 1 and x.get("q")), None)
-        r1 = f.get("range1")  # review #7: the 1% row's own 'Statistic Date Range', never another row's comment
-        if f.get("conflict") or not one or not r1:
-            continue
-        end, Q = r1[1], one["q"]
-        yrs, hit = [], []
-        for y in sorted(p):
-            if y <= end:
-                continue
-            m, v, rg, lb, _ = p[y]
-            if lb and v < Q:
-                continue  # a lower bound under the 1% flow: whether the true peak reached it is unknown, so the year is not counted either way
-            yrs.append(y)
-            if v >= Q:
-                hit.append(y)  # review #4: a lower bound at or above the 1% flow is a certain exceedance
-        if len(yrs) < 5:
-            continue
-        lo, hi = one.get("lo"), one.get("hi")
-        rows.append((r, Q, end, yrs, hit, regulated(G, p, yrs), lo, hi,
-                     sum(1 for y in yrs if p[y][1] >= lo) if lo and hi else None, sum(1 for y in yrs if p[y][1] >= hi) if lo and hi else None, G, f))
-    nat, reg = [x for x in rows if not x[5]], [x for x in rows if x[5]]
-    if len(nat) < MIN_GAUGES:
-        return None
-    gy, hits = sum(len(x[3]) for x in nat), sum(len(x[4]) for x in nat)
-    storms = len({y for x in nat for y in x[4]})
-    lead = ("<p><b>At %d US river gauges on this site, USGS's '100-year' flow was reached in %d of %d gauge-years after the last year of the record it was computed from.</b> "
-            "If every gauge-year were a separate 1%% chance, about %.1f would be expected.%s "
-            "A '100-year flood' is a flow with a 1%% chance of being reached in any year, not one flood per century: over 10 years that is about a %d%% chance of at least one, over a 30-year mortgage about %d%%, and over 100 years about %d%% (our arithmetic, 1 minus 0.99 to the power of the years).</p>") % (len(nat), hits, gy, gy / 100, (" The %d fell in only %s, so some came in the same water year and may be the same storms." % (hits, _pl(storms, "water year", "water years"))) if hits > storms else "", *[round(100 * (1 - 0.99 ** n)) for n in (10, 30, 100)])
-    lead += ("<p>Two things push the count above 1%% even when nothing has changed: the 1%% flow is itself estimated from a limited record, so it is reached somewhat more often than its label says, most of all at gauges with short records (the expected-probability effect; Beard, 1960); "
-             "and gauges on this site were added where people search, which rises after floods. The two-sided chance of a count this far from %.1f, if every gauge-year were an independent 1%% chance, is %s; neighbouring gauges flood in the same storms, so that chance is too small and is shown only for reference.%s</p>") % (
-        gy / 100, _pv(poisson_two(hits, gy / 100)),
-        (" At %s, counted apart: %d of %d gauge-years." % (_pl(len(reg), "regulated gauge", "regulated gauges"), sum(len(x[4]) for x in reg), sum(len(x[3]) for x in reg))) if reg else "")
-    ci = [x for x in nat if x[8] is not None]
-    cis = ("<p>Against the interval USGS publishes with the 1%% flow at %d of these gauges (the interval's level is not stated in the data we read): %d gauge-years reached its lower end and %d its upper end, of %d gauge-years.</p>" % (
-        len(ci), sum(x[8] for x in ci), sum(x[9] for x in ci), sum(len(x[3]) for x in ci))) if len(ci) >= MIN_GAUGES else ""
-    hit = sorted([x for x in rows if x[4]], key=lambda x: (-len(x[4]), x[0]["river"]))
-    hd = ["Gauge", "1%-chance flow (USGS StreamStats)", "USGS record used ends", "Water years since", "Years it was reached"]
-    tb = table(hd, "".join(tr([_link(x[0]) + (" (regulated)" if x[5] else ""), "%s cfs" % fmtc(x[1]), "Water year %d" % x[2], str(len(x[3])), ", ".join(str(y) for y in x[4])], right=(1, 3)) for x in hit[:HL]), right=(1, 3)) if hit else "<p>None of these gauges has reached its 1%-chance flow since.</p>"
-    data = _csv(G_HEAD + ["q_1pct_cfs", "interval_lower_cfs", "interval_upper_cfs", "statistic_record_start_wy", "statistic_record_end_wy", "water_years_counted", "years_reached", "years_at_or_above_lower", "years_at_or_above_upper", "regulated", "statistic_citation", "streamstats_fetched_at", "peaks_fetched_at"],
-                [_g(x[0]) + [x[1], x[6] or "", x[7] or "", x[11]["range1"][0], x[2], len(x[3]), " ".join(str(y) for y in x[4]), "" if x[8] is None else x[8], "" if x[9] is None else x[9], x[5], x[11].get("citation") or "", _fa(x[10], "floodfreq"), _fa(x[10], "peaks")] for x in rows], _cred("usgs"))
-    body = (lead + cis + "<h2>Gauges that reached it since</h2>" + tb + ("<p>%d more gauges; the CSV lists them all.</p>" % (len(hit) - HL) if len(hit) > HL else "") +
-            "<h2>How this was worked out</h2><p>Sources: USGS StreamStats gage statistics (the '1-percent AEP flood' statistic for the gauge, the preferred one where USGS publishes several, as each gauge page shows it; the interval published with it; and the 'Statistic Date Range' stated on that statistic) and USGS annual peak streamflow (Water Data API) with its qualifier codes, as each gauge page shows them. "
-            "For each gauge we took the highest peak of every water year after the last year of the statistic's own date range, so the count uses only years the statistic never saw; gauges with fewer than 5 such years, or whose statistic states no date range, are left out. "
-            "A peak coded as a lower bound (maximum daily mean, or greater than) counts as reaching the 1% flow when it is already at or above it, and its year is left out when it is below. "
-            "Left out: peaks coded historic, dam failure, less than, or with an unknown month or year; statistics USGS publishes in conflicting versions. A gauge USGS flags as regulated, or with a later peak coded as affected by regulation or diversion, is counted apart.</p>")
-    return _page("What is a 100-year flood, and how often does it happen?", "100-year-floods", "How often the USGS 100-year (1%%-chance) flood flow was reached after USGS computed it, at %d US river gauges, with the limits of the count." % len(nat), body,
-                 "USGS flood statistics and annual peaks, for the US river gauges on this site.", data, unk)
 
 
 def flood_stage(gl):
@@ -660,21 +511,6 @@ def verify(url, html, data):
         m = re.search(r"comes in (\w+): at (\d+) of (\d+) gauges", lead)
         if not m or c.most_common(1)[0] != (m.group(1), int(m.group(2))) or len(nat) != int(m.group(3)):
             bad.append("peak month lead %r against CSV %s of %d" % (m and m.group(0), c.most_common(1), len(nat)))
-    elif url.endswith("/peak-change/"):
-        nat = [r for r in rows if not T(r["regulated"])]
-        up = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) > 0)
-        dn = sum(1 for r in nat if float(r["mann_whitney_p"]) < ALPHA and float(r["hodges_lehmann_shift_cfs"]) < 0)
-        k = bh_count([float(r["mann_whitney_p"]) for r in nat])
-        m = re.search(r"\((\d+) higher, (\d+) lower at p", html) or re.search(r"before it, (\d+) tested higher and (\d+) lower", html)
-        g = re.search(r"at these (\d+) river gauges|of (\d+) gauges, yearly peaks", lead)
-        if not m or (int(m.group(1)), int(m.group(2))) != (up, dn) or not g or int(g.group(1) or g.group(2)) != len(nat) or (k == 0) != lead.startswith("No clear change"):
-            bad.append("peak change counts on the page differ from the CSV (up %d, down %d, gauges %d, corrected %d)" % (up, dn, len(nat), k))
-    elif url.endswith("/100-year-floods/"):
-        nat = [r for r in rows if not T(r["regulated"])]
-        hit, yrs = sum(len(r["years_reached"].split()) for r in nat), sum(int(r["water_years_counted"]) for r in nat)
-        m = re.search(r"At (\d+) US river gauges.*?reached in (\d+) of (\d+) gauge-years", lead)
-        if not m or (int(m.group(1)), int(m.group(2)), int(m.group(3))) != (len(nat), hit, yrs):
-            bad.append("100-year lead %r against CSV %d gauges, %d of %d" % (m and m.group(0), len(nat), hit, yrs))
     elif url.endswith("/flood-stage-years/"):
         sh = [100 * int(r["water_years_peak_reached_it"]) / int(r["water_years_with_peak_stage"]) for r in rows if not T(r.get("regulated"))]
         m = re.search(r"in (\d+)% of years", lead)
@@ -727,7 +563,8 @@ def pages(built, Gs, today=None, world=False):
     unk = unknown_codes(gl)
     wys = [max(p) for _, p, _ in gl if p]
     sub = "USGS annual peaks through water year %d at most gauges, for the US river gauges on this site." % statistics.median_low(wys) if wys else "USGS annual peaks, for the US river gauges on this site."  # review #10: the typical newest year, not the newest at any one gauge
-    got = [x for x in ((peak_month(gl, sub, unk), peak_change(gl, today, sub, unk), hundred_year(gl, unk), flood_stage(gl), water_temp(gl)) if gl else ()) + (lake_levels(built, Gs), tides(built, Gs)) if x]
+    got = [x for x in ((peak_month(gl, sub, unk), flood_stage(gl), water_temp(gl)) if gl else ()) + (lake_levels(built, Gs), tides(built, Gs)) if x]
+    got = [x for x in got if gain_ok(x[0])]  # no gain line, no page
     FAILED.clear()
     for x in list(got):  # PLAN 22 lock 2: a page whose headline its own CSV does not reproduce is never published
         why = verify(*x)

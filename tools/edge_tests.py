@@ -117,20 +117,16 @@ def run():
     rb.append({"site": "dam", "state": "TX", "river": "Dam River", "place": "Town", "dashboard_url": "/river/dam/town/", "_built": True})
     rG["dam"] = {"rec": {"peaks": {"rows": [["%d-06-15" % y, 50.0 + y % 5, None, None, "REGULATED"] for y in range(1960, 2026)]}}}
     rp, rc = research.pages(rb, rG, datetime.date(2026, 11, 12))
-    assert set(rp) == {"/research/", "/research/peak-month/", "/research/peak-change/"} and set(rp) <= set(research.URLS) and set(rc) == {"/research/peak-month/", "/research/peak-change/"}, "edge: research pages or CSVs missing, a page with no data built, or build.py's carry list misses one: %s %s" % (sorted(rp), sorted(rc))
-    pm, pc_ = rp["/research/peak-month/"], rp["/research/peak-change/"]
+    assert set(rp) == {"/research/", "/research/peak-month/"} and set(rp) <= set(research.URLS) and set(rc) == {"/research/peak-month/"}, "edge: research pages or CSVs missing, a page with no data built, or build.py's carry list misses one: %s %s" % (sorted(rp), sorted(rc))
+    pm = rp["/research/peak-month/"]
     assert "most often comes in March: at 6 of 13 gauges, then May (6)" in pm, "edge: peak month counts wrong (duplicate gauge, lake, old cache row or regulated gauge counted)"
-    assert "1 regulated gauge is listed but not counted" in pm and "Dam River at Town (regulated)" in pm and "Old Cache" not in pm + pc_, "edge: regulated gauge not apart, or an old cache row (no qualifiers) used"
-    assert "/lake/x/" not in pm + pc_ and "/river/other/town/" not in pm, "edge: lake or second page of one gauge listed"
+    assert "1 regulated gauge is listed but not counted" in pm and "Dam River at Town (regulated)" in pm and "Old Cache" not in pm, "edge: regulated gauge not apart, or an old cache row (no qualifiers) used"
+    assert "/lake/x/" not in pm and "/river/other/town/" not in pm, "edge: lake or second page of one gauge listed"
     assert "March (66 of 67 years, 99%)" in pm, "edge: a secondary peak, unknown date, no-flow row or a dropped code was counted (1945 ESTIMATED is kept: 67 water years)"
     assert "NEWCODE (12 peaks)" in pm, "edge: an unknown USGS code was not named on the page"
     assert "1 gauge split evenly between two or more months and is not counted" in pm and "March and April (20 of 40 years, 50% each)" in pm, "edge: tie not named"
     assert research._wy(2020, 10) == 2021 and research._wy(2020, 9) == 2020, "edge: water-year boundary"
-    assert "At 6 of 12 gauges, yearly peaks in water years 2006 to 2025 differ from 1986 to 2005 by more than chance alone explains: 6 higher, 0 lower." in pc_ and "about 0.3 each way by chance" in pc_ and "Hodges-Lehmann" in pc_, "edge: peak change test counts or windows wrong: %s" % pc_[pc_.find("<b>"):pc_.find("<b>") + 400]
-    assert "not a trend analysis" in pc_ and "says nothing about flood damage or why" in pc_ and "Mann-Whitney" in pc_ and "not a random or representative sample" in pc_, "edge: peak change lost its limits, its test or its sample statement"
-    assert research.mwu_p([5.0] * 20, [5.0] * 20) == 1.0 and research.mwu_p(list(range(20)), list(range(100, 120))) < 0.001 and 0.1 < research.mwu_p([1.0, 3.0, 5.0, 7.0] * 5, [2.0, 4.0, 6.0, 8.0] * 5) <= 1.0 and abs(research.mwu_p([1, 2, 3, 4, 5], [6, 7, 8, 9, 10]) - 0.0122) < 0.0005, "edge: Mann-Whitney wrong on ties, separation or overlap"
-    assert abs(research.poisson_tail(3, 1.0) - 0.0803) < 0.001 and abs(research.poisson_tail(0, 2.0) - 0.1353) < 0.001 and 0 <= research.poisson_tail(400, 300.0) < 0.001, "edge: Poisson tail wrong or underflows at 300"
-    assert "usgs_site,river,place,state,page" in rc["/research/peak-change/"] and "mann_whitney_p" in rc["/research/peak-change/"] and 'href="data.csv"' in pc_, "edge: CSV header or download link missing"
+    assert "usgs_site,river,place,state,page" in rc["/research/peak-month/"] and 'href="data.csv"' in pm, "edge: CSV header or download link missing"
     assert research._csv(["a", "b"], [["=SUM(A1)", ""], [-3, "x"], ["-x", ""]]) == "a,b\n'=SUM(A1),\n-3,x\n'-x,\n", "edge: CSV formula cell not neutralised, a negative number changed, or an empty cell got an apostrophe (live 100-year CSV, 2026-11-12)"
     assert 'data-method="%s"' % research.method_of("/research/peak-month/") in pm, "edge: research page lacks its method mark, so build.py could never carry it (and could carry an old-method copy)"
     assert research.pages(rb, rG, datetime.date(2026, 11, 20)) == (rp, rc), "edge: same data on another day gave a different page (fresh date without change)"
@@ -143,7 +139,7 @@ def run():
         assert "9 more gauges are not listed here" in research.pages(rb, rG, datetime.date(2026, 11, 12))[0]["/research/peak-month/"], "edge: a cut table did not say so"
     finally:
         research.ROW_CAP = cap_
-    assert "BreadcrumbList" in pm and 'href="/research/peak-change/"' in rp["/research/"], "edge: research index or breadcrumb missing"
+    assert "BreadcrumbList" in pm and 'href="/research/peak-month/"' in rp["/research/"], "edge: research index or breadcrumb missing"
     # gauge page: a water year counts once at its highest stage (PLAN 17)
     from lib import blocks3 as _b3r
     sy_g = {"rec": {"nwps": {"categories": {"minor": 10.0}}, "peaks": {"rows": [["%d-03-01" % y, 1.0, 9.0, None, ""] for y in range(2000, 2012)] + [["2005-04-01", 1.0, 11.0, None, ""]]}}}
@@ -178,10 +174,7 @@ def run():
         _b3r.stage_years = st_
     riv_ = set(research.URLS) - {"/research/lake-levels/", "/research/tides/"}  # this fixture has no lakes or coasts
     assert set(bp) == riv_ and set(bc) == riv_ - {"/research/"}, "edge: a research page or CSV missing: %s" % sorted(riv_ - set(bp))
-    hy, fs, wt = bp["/research/100-year-floods/"], bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
-    assert "At 56 US river gauges on this site, USGS's '100-year' flow was reached in 56 of 1400 gauge-years after the last year of the record it was computed from" in hy and "about 14.0 would be expected" in hy and "The 56 fell in only 2 water years, so some came in the same water year" in hy and "is &lt;0.001" in hy and "At 10 regulated gauges, counted apart" in hy, "edge: 100-year counts or Poisson chance wrong (conflict, no range, no 1%% row or too few years counted; regulated not split): %s" % hy[hy.find("<b>"):hy.find("<b>") + 400]
-    assert "at 56 of these gauges (the interval's level is not stated in the data we read): 56 gauge-years reached its lower end and 0 its upper end" in hy and "expected" not in hy[hy.find("interval USGS publishes"):hy.find("upper end")], "edge: confidence-bound counts wrong"
-    assert "not one flood per century" in hy and "1%%" not in hy and "/river/b1/town/" not in hy and "that chance is too small" in hy and "rises after floods" in hy, "edge: 100-year page lost its plain meaning or its independence caveat, shows a double percent, or lists a conflicting statistic"
+    fs, wt = bp["/research/flood-stage-years/"], bp["/research/water-temperature/"]
     assert "reached minor flood stage in 33% of years" in fs and "never at 0" in fs, "edge: flood stage share wrong: %s" % fs[fs.find("<b>"):fs.find("<b>") + 300]
     assert "In July, the median gauge on these rivers averages" in wt and "Across 69 US river gauges" in wt and "–" in wt and "1990 to 2026" in wt and max(len(re.findall(r"<th ", t_)) for t_ in wt.split("</table>")) <= 5, "edge: water temperature kept a thin July, crashed on a bad month, lost the record years, or a table is over 5 columns"
     for u_, h_ in bp.items():
@@ -243,10 +236,6 @@ def run():
             rows_[5] = ["2006-03-15", 1500.0, None, None, "MAXDAILYMEAN"]  # a lower bound over the 1% flow: a certain exceedance
             rows_[6] = ["2007-03-15", 900.0, None, None, "GREATERTHAN"]  # a lower bound under it: year unknown, not counted
         hG[r["site"]] = {"rec": {"peaks": {"rows": rows_}, "floodfreq": {"rows": [{"aep": 1, "q": 1000.0}], "range1": [1950, 2000]}}}
-    h1 = research.hundred_year(research.gauges(hb, hG), {})[1]
-    assert "reached in 1 of 299 gauge-years" in h1 and "same water year" not in h1, "review #4: lower-bound peaks mishandled in the 100-year count: %s" % h1[h1.find("<b>"):h1.find("<b>") + 200]
-    assert research.poisson_two(14, 14.0) == 1.0 and research.poisson_two(0, 14.0) < 0.001 and abs(research.poisson_two(3, 1.0) - 2 * research.poisson_tail(3, 1.0)) < 1e-9, "review #3: two-sided Poisson wrong"
-    assert research.hodges_lehmann([1.0, 2.0, 3.0], [11.0, 12.0, 13.0]) == 10.0 and research.bh_count([0.001, 0.01, 0.04, 0.5]) == 3, "review #6: Hodges-Lehmann or Benjamini-Hochberg wrong"
     md1, r1_ = research.circ([60] * 10)
     md2, r2_ = research.circ([1, 92, 183, 274] * 5)
     assert abs(md1 - 60) < 0.6 and r1_ > 0.999 and r2_ < 0.01 and (research.circ([360, 5])[0] > 360 or research.circ([360, 5])[0] < 6), "circular mean or concentration wrong (incl. the year-end wrap)"
@@ -279,18 +268,17 @@ def run():
         assert _ck.research_title_ok(h_, u_), "24: %s title carries no measured seed: %s" % (u_, research.title_of(h_))
     assert not _ck.research_title_ok("<title>How warm are US rivers? | River Water Levels</title>", "/research/water-temperature/"), "24: a title with no measured seed passed"
     assert not _ck.research_title_ok("<title>Canada now | River Water Levels</title>", "/research/world-rivers/") and not _ck.research_title_ok("<title>Lake Erie | River Water Levels</title>", "/research/lake-levels/"), "24: the brand suffix supplied seed words to a title"
-    assert "about a 10% chance of at least one, over a 30-year mortgage about 26%, and over 100 years about 63%" in bp["/research/100-year-floods/"], "read-through 2026-11-14: the 100-year page lost the odds a reader came for"
-    lines_ = bc["/research/100-year-floods/"].splitlines()
-    assert research.verify("/research/100-year-floods/", bp["/research/100-year-floods/"], "\n".join(lines_[:-3])), "22: a CSV missing rows still reproduced the 100-year headline"
     assert research.verify("/research/new-thing/", "<p><b>x</b></p>", "a\n1\n"), "22: a research page with no reproducibility check passed"
+    # owner 2026-11-14: the information-gain test comes before any polish; no keep verdict with an exists and a gain line, no page
+    assert not research.gain_ok("/research/peak-change/") and not research.gain_ok("/research/100-year-floods/") and not research.gain_ok("/research/never-written/"), "gain: a cut or unwritten finding would be built"
+    assert all(research.gain_ok(u_) for u_ in research.URLS + (research.WORLD_URL,)), "gain: a published finding has no keep verdict in data/research-gain.json"
+    assert "/research/peak-change/" not in research.URLS and "/research/100-year-floods/" not in research.URLS, "gain: a cut finding is still in the build list"
     # PLAN 21 harm audit: chance-level counts never called more than chance; licence credit in every CSV; cite-with-date line on snapshot pages; CSVs noindex
     nul = [({"site": "n%d" % i, "state": "GA", "river": "N%d" % i, "place": "T", "dashboard_url": "/river/n%d/t/" % i, "_built": True}) for i in range(40)]
     import random as _rnd
     _r = _rnd.Random(7)
     nG = {"n%d" % i: {"rec": {"peaks": {"rows": [["%d-03-15" % y, 100.0 + _r.random() * 50, None, None, ""] for y in range(1960, 2026)]}}} for i in range(40)}
-    np_ = research.pages(nul, nG, datetime.date(2026, 11, 12))[0]["/research/peak-change/"]
-    assert "No clear change: at these 40 river gauges" in np_ and "not evidence that nothing changed" in np_ and "more than chance alone explains" not in np_, "21: noise across 40 gauges was called more than chance"
-    assert rc["/research/peak-change/"].splitlines()[0].endswith(",credit") and "Data: U.S. Geological Survey" in rc["/research/peak-change/"], "21: a research CSV lacks the source credit"
+    assert rc["/research/peak-month/"].splitlines()[0].endswith(",credit") and "Data: U.S. Geological Survey" in rc["/research/peak-month/"], "21: a research CSV lacks the source credit"
     assert "PEGELONLINE" in wr[2] and "CC BY 4.0" in wr[2] and wr[2].splitlines()[0].endswith(",credit"), "21: the world CSV lacks the OGL or CC BY credit its terms require"
     assert "cite them with that date and time" in wr[1] and "cite them with that date and time" in tp_[1], "21: a snapshot page lacks its cite-with-date line"
     assert "/*.csv\n  X-Robots-Tag: noindex" in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "_headers"), encoding="utf-8").read(), "21: research CSVs can be indexed as bare files"

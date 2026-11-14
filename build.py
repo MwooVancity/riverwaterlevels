@@ -247,7 +247,7 @@ def main():
             if wp:
                 emit("/%s/" % page["slug"], wp.replace("Data: USGS, NOAA, NWS.", "Data: official agencies, listed on each page.").replace("-0.00 m", "0.00 m"))
         try:  # research pages (owner 2026-11-12, PLAN 14): a fault or an empty cache carries the published copies (never a 404) and is named in the failed list
-            wr_ = research.world_rivers(wpages, wkeep, wnow)  # PLAN 18c
+            wr_ = research.world_rivers(wpages, wkeep, wnow) if research.gain_ok(research.WORLD_URL) else None  # PLAN 18c; owner 2026-11-14: no gain line, no page
             why_w = "fewer than %d published world gauges carry a low, normal or high label right now (agency marks in Germany and England, our rank in Canada)" % research.MIN_FEW if not wr_ else ""  # 2026-11-14: the world page was named with the river pages' reason
             if wr_ and research.verify(*wr_):  # PLAN 22 lock 2
                 why_w = "its CSV does not reproduce its headline"
