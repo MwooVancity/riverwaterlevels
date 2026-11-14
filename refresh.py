@@ -37,6 +37,9 @@ with open(os.path.join(ROOT, "runs", "refresh.log"), "a", encoding="utf-8") as l
             s = s + ["--checked"]  # audit 2026-11-10 #35: no gate carried a page in after the page checks, so publish does not run check.py again (40 min at 14,000 pages)
         p = subprocess.run(s, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
         log.write("$ %s -> %d\n%s\n" % (" ".join(s), p.returncode, (p.stdout + p.stderr)[-1500:]))
+        for ln in p.stdout.splitlines():  # 2026-11-14: a passing run showed none of these, so a research page dropped every run went unseen; CI shows stdout, not runs/refresh.log
+            if ln.lstrip().startswith(("RESEARCH NOT BUILT", "WITHDREW", "CARRIED", "NEW PAGE FAILED")):
+                print(ln.strip()[:300])
         census(p.stdout)
         if name in GATE_NAMES:
             caught[name] = catches(name, p.stdout, p.returncode)
