@@ -688,7 +688,7 @@ def b_recreation(G):
 
 def _ridb_ok(t):
     """RIDB text a page can carry: check.py BANNED holds a page on a bare 'None' and on the word licence (builder jargon), so a field saying either is left out, never reworded."""
-    return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().strip(".").upper() not in ("NONE", "N/A", "NA", "TBD") and not re.search(r"(?i)\b(\w+) \1\b", t) and t.count("(") == t.count(")") and t.count("[") == t.count("]")  # 2026-11-12: RIDB's own 'and and', 'pavilion Pavilion' and a lone bracket held pages; such a field is left out, never rewritten  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
+    return bool(t) and not re.search(r"(?i)licen[cs]e", t) and t.strip().strip(".").upper() not in ("NONE", "N/A", "NA", "TBD") and not re.search(r"(?i)\b(\w+) \1\b", t) and t.count("(") == t.count(")") and t.count("[") == t.count("]") and not re.search(r"[A-Za-z]\s+\)", t)  # 2026-11-14: White Bird '( Look for the Campground sign )' tripped check.py's bracket rule  # 2026-11-12: RIDB's own 'and and', 'pavilion Pavilion' and a lone bracket held pages; such a field is left out, never rewritten  # ponytail: two of BANNED's patterns copied; import check.BANNED if a third bites
 
 
 def _ridb_site(x, said=None):
