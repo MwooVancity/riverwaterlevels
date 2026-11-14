@@ -164,6 +164,8 @@ def fetch_related(site, inv, h, prev=None):
     for x in out:
         if x["site"] in got:
             x["flow"], x["time"] = got[x["site"]]
+            if x["site"] in inv and inv[x["site"]].get("lat"):  # a neighbour without a page has no _ll: its distance comes from here (fresh review 2026-11-14)
+                x["ll"] = (round(float(inv[x["site"]]["lat"]), 4), round(float(inv[x["site"]]["lon"]), 4))
             if x["site"] in lag0:  # related_lag refreshes these on its own timer
                 x["lag_h"], x["lag_r"] = lag0[x["site"]]["lag_h"], lag0[x["site"]].get("lag_r")
             res.append(x)
@@ -2168,6 +2170,7 @@ def fetch_floodtide(st):
     except urllib.error.HTTPError as e:  # 2026-11-14: Clearwater 8726706 has no floodlevels file (404) = no level published, not "not read"; other errors stay Unknown
         if e.code != 404:
             raise
+        http_json(MD % (st, "datums"), NWS_H, 60)  # the station itself must answer: a moved or renamed NOAA URL raises here and stays Unknown, never 'no level published' (fresh review 2026-11-14)
         fl = {}
     who, lvl = next(((k[:3], fl[k]) for k in ("nos_minor", "nws_minor") if fl.get(k) is not None), (None, None))
     today = datetime.datetime.now(datetime.timezone.utc)
@@ -2357,7 +2360,7 @@ def fetch_extras(site, rec, h, log):
         if key in WEEKLY and key not in COAST_KEYS and USGS_OUT[0]:  # only USGS history waits for the USGS quota; NOAA king tides (floodtide) do not (2026-11-13: every coast showed Unknown)
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
-        early = early or (key == "floodtide" and rec.get("floodtide") is None and (stamp.get(key) or "") < "2026-11-14T15")  # one early refetch: a 404 for flood levels was stamped as read (Clearwater 8726706, 2026-11-14); 3 NOAA calls per coast once
+        early = early or (key == "floodtide" and rec.get("floodtide") is None and (stamp.get(key) or "") < "2026-11-14T15" and now_iso() < "2026-11-21")  # one early refetch: a 404 for flood levels was stamped as read (Clearwater 8726706, 2026-11-14); 3 NOAA calls per coast once
         early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))
         early = early or (key == "floodfreq" and rec.get("floodfreq") is not None and rec["floodfreq"].get("rangev") != 2)  # peer review #7: one early refresh for the 1% row's record years, about 264 StreamStats calls once  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
         if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("near_wtemp", "cameras") else 6)):

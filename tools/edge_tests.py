@@ -1019,10 +1019,21 @@ if __name__ == "__main__":
         assert ft_["level"] == 4.51 and ft_["who"] == "nos" and ft_["over"] == [("2027-01-23T16:03:00+00:00", 4.6)],"king tide: flood level not moved from station datum to MLLW, or a low tide counted"
         collect.http_json = lambda u, *a, **k: {"nos_minor": None, "nws_minor": None}
         assert collect.fetch_floodtide("x")["level"] is None and collect.fetch_floodtide("x")["top"], "king tide: a station with no flood level lost its highest tides"
-        def nf_(u, *a, **k):  # 2026-11-14 Clearwater 8726706: NOAA answers 404 where a station has no flood levels
-            raise collect.urllib.error.HTTPError(u, 404 if "floodlevels" in u else 500, "x", {}, None)
+        def nf_(u, *a, **k):  # 2026-11-14 Clearwater 8726706: NOAA answers 404 where a station has no flood levels; its datums still answer
+            if "floodlevels" in u:
+                raise collect.urllib.error.HTTPError(u, 404, "x", {}, None)
+            return {"datums": []}
         collect.http_json = nf_
         assert collect.fetch_floodtide("x")["level"] is None, "king tide: a 404 for flood levels showed Unknown instead of 'no level published'"
+        def gone_(u, *a, **k):  # NOAA moved the URL: every metadata file 404s, which must stay Unknown (raise), never 'no level published'
+            raise collect.urllib.error.HTTPError(u, 404, "x", {}, None)
+        collect.http_json = gone_
+        try:
+            collect.fetch_floodtide("x")
+            raise AssertionError("king tide: a moved NOAA URL read as 'no flood level published'")
+        except collect.urllib.error.HTTPError:
+            pass
+        collect.http_json = lambda u, *a, **k: {"nos_minor": None, "nws_minor": None}
         collect.coops_get = lambda st, q: yr_[:40]
         try:
             collect.fetch_floodtide("x")
@@ -1099,7 +1110,9 @@ if __name__ == "__main__":
             pass
     finally:
         collect.http_json = hj_
-    rt_ = lambda r, st="FL": blocks3.b_redtide({"coast": True, "row": {"state": st}, "zone": zoneinfo.ZoneInfo("America/New_York"), "rec": {"redtide": r}})
+    rtn_ = datetime.datetime(2026, 11, 14, 12, tzinfo=datetime.timezone.utc)
+    rt_ = lambda r, st="FL", now=rtn_: blocks3.b_redtide({"coast": True, "row": {"state": st}, "zone": zoneinfo.ZoneInfo("America/New_York"), "rec": {"redtide": r}, "now": now})
+    assert "last read" in rt_({"fetched_at": "2026-11-13T12:00:00+00:00", "rows": []}, now=rtn_ + datetime.timedelta(days=10))["body"], "red tide: a 10-day-old copy said 'last 14 days' as if current"
     rd_ = {"fetched_at": "2026-11-13T12:00:00+00:00", "rows": [{"site": "Siesta Beach", "date": "2026-11-09", "count": 0.0, "cat": "not observed", "km": 2.0}, {"site": "North Lido Beach", "date": "2026-11-09", "count": 333.0, "cat": "very low", "km": 1.6}]}
     b_ = rt_(rd_)["body"]
     assert "333 cells per liter (very low) at North Lido Beach" in b_ and "Siesta Beach" in b_, "red tide: highest count, its category or a site missing"
@@ -1405,6 +1418,16 @@ if __name__ == "__main__":
     assert brl_(Gr_, {}) is None, "related gauges: no known neighbour must show no block"
     pr_ = {"A": {"river": "Rio Grande", "place": "San Felipe", "water_url": "/river/a/", "_built": False}}
     assert brl_(dict(Gr_, lt=t_), pr_)["tag"] == "live" and brl_(dict(Gr_, lt=t_ - dt_.timedelta(hours=26)), pr_)["tag"] == "agency", "related gauges: this gauge's 26 h old reading shown as live (break_blocks stale26h)"
+    # fresh review 2026-11-14: an unbuilt neighbour's reading has passed no page gate
+    nb_ = lambda **kw: dict({"site": "A", "relation": "upstream", "flow": 100.0, "time": "2026-11-13T10:00:00+00:00", "ll": (35.3, -106.5)}, **kw)
+    rb_ = lambda it, nm="San Felipe": brl_(dict(Gr_, lt=t_, rec={"related": {"items": [it]}}), {"A": {"river": "Rio Grande", "place": nm, "water_url": "/river/a/", "_built": False}})
+    assert "mi away" in rb_(nb_())["body"], "related gauges: an unbuilt neighbour lost its distance"
+    assert rb_(nb_(time="2026-11-13T15:00:00+00:00")) is None and rb_(nb_(time="2026-10-01T10:00:00+00:00")) is None and rb_(nb_(flow=-999999.0)) is None and rb_(nb_(), "abv 08313000") is None, "related gauges: a future time, a month-old reading, the -999999 fill or a gauge-number name was shown"
+    assert brl_(dict(Gr_, lt=t_ - dt_.timedelta(hours=5)), pr_)["tag"] == "agency", "related gauges: this gauge's 5 h old reading kept the live badge the rest of the page dropped"
+    from lib.directory import world_status as ws_
+    ts_ = "2026-11-13T10:30:00Z"
+    assert ws_([{"cm": 10, "then": None, "time": ts_}, {"cm": 10, "then": 5, "time": ts_}], t_) == "Of 2 gauges reporting now: 1 higher than 24 hours earlier, 0 lower, 1 with no reading 24 hours earlier.", "world status: counts do not add up"
+    assert "Our label: 1 High" in ws_([{"cm": 10, "then": 5, "time": ts_, "state": "high"}], t_, ours=True) and ws_([{"cm": 10, "then": 5, "time": "2026-11-13T13:00:00Z"}], t_) == "", "world status: Canada's own calculation called the agency's, or a future time counted as reporting"
     # 2026-11-14: species names in <i> are names, not typos; doubled words elsewhere still fail
     assert not [b for b in check_.check_html(pg("Atlantic silverside | <i>Menidia menidia</i>"), "x") if "doubled" in b] and [b for b in check_.check_html(pg("the the river"), "x") if "doubled" in b], "doubled word: a scientific name failed or a typo passed"
     # PLAN 39g: the world hub's plain sentence counts only live rows; tide hubs and dead feeds say nothing

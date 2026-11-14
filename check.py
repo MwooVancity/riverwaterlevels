@@ -945,7 +945,7 @@ def check_dir(d, only_rebuilt=False):
                 results[rel].append("links to noindexed water page %s (links rule 5: only built, indexable pages are linked)" % href)
         graph[u] = links
         k = kind_of(rel)
-        cap = BUDGET[k] + (2 * len(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"]) if rel == "data-sources/index.html" else 0)  # the sources page links each source (terms, data): it grows with sources.json, not with padding (61 > 60 carried it, 2026-11-14)
+        cap = BUDGET[k] + (2 * len(json.load(open(os.path.join(ROOT, "data", "sources.json"), encoding="utf-8"))["sources"]) if rel.replace("\\", "/") == "data-sources/index.html" else 0)  # the sources page links each source (terms, data): it grows with sources.json, not with padding (61 > 60 carried it, 2026-11-14)
         if n_links[u] > cap:
             results[rel].append("link budget: %d links on a %s page (max %d)" % (n_links[u], k, cap))
         if not noindex_of.get(u) and k in FLOOR and vis_of.get(u, 0) < FLOOR[k]:

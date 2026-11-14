@@ -820,6 +820,8 @@ def b_redtide(G):
     src = "Source: NOAA National Centers for Environmental Information, HABSOS cell counts; samples collected by the Florida Fish and Wildlife Conservation Commission and partners"
     if not r:
         return block("redtide", head, "agency", "<p>Unknown: NOAA's red tide sample records were not read in this build.</p>", src + ".", "habsos")
+    if (hours_old(r.get("fetched_at"), G["now"]) or 1e9) > 48:  # a daily source; an old copy's "last 14 days" would hide a bloom that began since (fresh review 2026-11-14)
+        return block("redtide", head, "agency", "<p>Unknown: NOAA's red tide sample records were last read %s; newer samples were not read.</p>" % esc(tzl(parse_t(r["fetched_at"]), G["zone"])), src + ".", "habsos")
     src += ", read %s. Sample dates as recorded; categories are HABSOS's own words" % esc(tzl(parse_t(r["fetched_at"]), G["zone"]))
     rows = r.get("rows") or []
     if not rows:

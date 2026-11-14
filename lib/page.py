@@ -15,10 +15,18 @@ def b_related(G, pages):
     rows = ""
     rel_ = lambda x, pr: "Tributary upstream" if x["relation"] == "upstream" and pr["river"].split()[0].lower() != G["river"].split()[0].lower() else x["relation"].capitalize()  # same rule as the hero tile
     old_ = lambda x: (lambda h: h is None or h > 24)(hours_old(x["time"], G["now"]))
-    away = lambda pr: (" &middot; %d mi away" % round(miles_between(G["lat"], G["lon"], pr["_ll"][0], pr["_ll"][1]))) if pr.get("_ll") else ""  # hater w4: chain gauges with no distance
+    away = lambda pr, x=None: (lambda ll: (" &middot; %d mi away" % round(miles_between(G["lat"], G["lon"], ll[0], ll[1]))) if ll else "")(pr.get("_ll") or (x or {}).get("ll"))  # hater w4: chain gauges with no distance; an unbuilt neighbour's position is stored with it
     # PLAN 39 (Albuquerque, 2026-11-13): a same-river gauge without a page of its own is still the reading a reader checks next; it is named
     # without a link (links rule: only built pages are linked), so the block no longer vanishes where the neighbours are not released yet
     nm_ = lambda pr: ('<a href="%s">%s</a>' % (pr["water_url"], esc(river_at(pr["river"], pr["place"])))) if pr.get("_built") else esc(river_at(pr["river"], pr["place"]))
+    # fresh review 2026-11-14: a neighbour's reading has not passed its own page's gates; a time in the future, the USGS -999999 fill value,
+    # or (for a gauge without a page) a reading over 24 h old or a gauge-number name is left out, never shown as a reading
+    def ok_(x, pr):
+        h = hours_old(x.get("time"), G["now"])
+        if h is None or h < -1 / 6 or not isinstance(x.get("flow"), (int, float)) or x["flow"] <= -999990:
+            return False
+        return bool(pr.get("_built")) or (h <= 24 and not re.search(r"\b\d{7,}\b", river_at(pr["river"], pr["place"])))
+    items = [x for x in items if pages.get(x["site"]) and ok_(x, pages[x["site"]])]
     for x in items:
         pr = pages.get(x["site"])
         if not pr:
@@ -36,9 +44,9 @@ def b_related(G, pages):
             pr = pages.get(x["site"])
             if x["relation"] == rel and pr:
                 nodes.append({"name": nm_(pr), "flow": "%s cfs" % fmtc(x["flow"]),
-                              "sub": rel_(x, pr) + away(pr) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
+                              "sub": rel_(x, pr) + away(pr, x) + " &middot; " + esc(tzl(parse_t(x["time"]), G["zone"])) + (" (older than 24 h)" if old_(x) else ""), "cur": False})
     # the block also shows "This gauge" with its own reading: an old own reading is not live either (break_blocks stale26h, 2026-11-14)
-    own_old = not G.get("lt") or (G["now"] - G["lt"]).total_seconds() > 24 * 3600  # the same 24 h cut as the neighbour rows' "(older than 24 h)"
+    own_old = not G.get("lt") or (G["now"] - G["lt"]).total_seconds() > stale_after("usgs") * 3600  # the page-wide cut (3 h) that drops every other live badge; this block is exempt there because its rows are neighbours
     stale = own_old or any(old_(x) for x in items if pages.get(x["site"]))
     dirs_ = {x["relation"] for x in items if pages.get(x["site"])}
     return block("related_gauges", "Upstream and downstream gauges" if len(dirs_) == 2 else ("Upstream gauge" if "upstream" in dirs_ else "Downstream gauge") + ("s" if sum(1 for x in items if x["relation"] in dirs_ and pages.get(x["site"])) > 1 else ""), "agency" if stale else "live", ui.strip(nodes),
