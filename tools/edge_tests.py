@@ -1381,4 +1381,10 @@ if __name__ == "__main__":
     for o_ in outs_:
         for pat_ in ck_.BANNED:
             assert not re.search(pat_, o_["body"] + " " + o_["source"]), "banned text in block %s: %s" % (o_["id"], pat_)
+    # PLAN 39 (2026-11-13): a comment placed after the format string swallowed its arguments, so the note printed a literal %s
+    from lib.hero import nws_point_note as npn_
+    n_ = npn_({"rec": {"nwps": {"name": "Ohio River at McAlpine Lower", "impacts": []}}, "place": "Louisville", "river": "Ohio River", "sg": [], "lv": None})
+    assert "%s" not in n_ and "McAlpine Lower" in n_ and "nearby place" not in n_, "NWS point note: %r" % n_
+    from lib.page import flood_stage_txt as fst_
+    assert fst_({"categories": {"minor": 30.0}}) == "flood stage 30 ft" and fst_({"categories": {"minor": -9999}}) == "", "description flood stage"
     print("selftest OK")

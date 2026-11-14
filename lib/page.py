@@ -359,6 +359,16 @@ def dash_tail(wt, fc, tb=False):
     return (", tubing rules" if tb else "") + (", NWS forecast" if fc else "") + (", water temperature" if wt else "")
 
 
+def flood_stage_txt(n):
+    """'flood stage 30 ft' from the NWS minor flood category (static: no reading), '' when unset, zero or not a number."""
+    v = (n.get("categories") or {}).get("minor")
+    return ("flood stage %g %s" % (round(v, 1), (n.get("stage_units") or "ft").lower())) if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else ""
+
+
+assert flood_stage_txt({"categories": {"minor": 30.0}}) == "flood stage 30 ft" and flood_stage_txt({"categories": {"minor": 23.5}, "stage_units": "FT"}) == "flood stage 23.5 ft", "page: flood stage text"
+assert flood_stage_txt({}) == "" and flood_stage_txt({"categories": {"minor": -9999}}) == "" and flood_stage_txt({"categories": {"action": 5}}) == "" and flood_stage_txt({"categories": {"minor": True}}) == "", "page: flood stage unset"
+
+
 TUBING_RULE = re.compile(r"tubing|all recreation|all water activities", re.I)  # PLAN 25b: an agency rule that covers tubing ('<river> tubing' 1K-10K at Comal, Guadalupe, Chattahoochee)
 assert dash_tail(True, True) == ", NWS forecast, water temperature" and dash_tail(False, False) == "" and dash_tail(False, True, True) == ", tubing rules, NWS forecast", "page: title tail"
 assert TUBING_RULE.search("tubing within city limits") and TUBING_RULE.search("All water activities") and not TUBING_RULE.search("expert paddlers only") and not TUBING_RULE.search("life jackets"), "page: tubing rule match"
@@ -678,7 +688,10 @@ def build_tab(tab, G, pages):
     # Keyword Planner 2026-11-13 (US): '<river> forecast' is the largest river phrasing on live waters (PLAN 25a); named only while the forecast block shows
     fc_ = tab == "dashboard" and not G.get("coast") and b_river_forecast(G) is not None
     tb_ = tab == "dashboard" and not G.get("coast") and any(TUBING_RULE.search(r["activity"]) for r in b3.limits_for(G["site"])) and b3.b_limits(G) is not None
-    title = mk_title("%s, %s: %swater level and flow%s (USGS %s)" % (rp, st, live, dash_tail(wt_, fc_, tb_), G["site"])) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
+    # PLAN 39 (page-two gap 2026-11-13): the gauge id sat past Google's ~60-character cut on every river title; it stays only where two gauges
+    # share a river, place and state (their address carries the id), so two pages never share a title (check.py duplicate title)
+    _id = (" (USGS %s)" % G["site"]) if G["site"] in (G["row"].get("dashboard_url") or "") else ""
+    title = mk_title("%s, %s: %swater level and flow%s%s" % (rp, st, live, dash_tail(wt_, fc_, tb_), _id)) if tab == "dashboard" else mk_title(T["title"] % (rp, st))
     if tab == "dashboard" and G["site"] in TITLE_TODAY and live:  # PLAN 0k test 2026-11-09: Search Console's top query on this page is "rio grande water level albuquerque today" (49 of 364 impressions); read clicks after 28 days (gsc_read)
         title = title.replace(": live water level and flow", ": water level and flow today", 1)
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
@@ -691,9 +704,14 @@ def build_tab(tab, G, pages):
         _np = (G["rec"].get("nwps") or {})
         _yrs = (G["rec"].get("record") or {}).get("first_year")
         # GSC week 1: "rio grande water level albuquerque today" is the top query; no number here (a cached snippet would go stale)
-        desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s%s%s." % (rp, st, live, G["site"], (", vs records since %s" % _yrs) if _yrs else "", ", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
-        if len(desc) > 155:  # SEO review: Google cuts descriptions near 155 characters
-            desc = "%s, %s: today's flow and water level, %sfrom USGS gauge %s." % (rp, st, live, G["site"])
+        # PLAN 39: a fixed NWS number, never stale (the no-reading rule above holds); only where the page proved the NWS and USGS read one scale
+        # (a 30 ft flood stage beside a 72.5 ft USGS gage height on another zero point would mislead: Baxley, audit 2026-11-10 #5)
+        _fs = flood_stage_txt(_np) if stage_pair(G) is not None and datum_gap(G) is None and scale_clash(G) is None else ""
+        _nw = ((", NWS forecast and " if _np.get("forecast") else ", NWS ") + _fs) if _fs else (", NWS forecast and flood stages" if _np.get("forecast") else (", NWS flood stages" if _np.get("categories") else ""))
+        _ys = (", vs records since %s" % _yrs) if _yrs else ""
+        _head = "%s, %s: today's flow and water level, %sfrom USGS gauge %s" % (rp, st, live, G["site"])
+        # SEO review: Google cuts descriptions near 155 characters; drop the records span first, then the NWS part (PLAN 39: the flood stage outranks the span)
+        desc = next(d_ for d_ in (_head + _ys + _nw + ".", _head + _nw + ".", _head + ".") if len(d_) <= 155 or d_ == _head + ".")
         if G.get("stage_only"):
             desc = desc.replace("today's flow and water level", "today's water level")
         if G.get("coast"):  # review 2026-11-09: coast descriptions said "flow"
