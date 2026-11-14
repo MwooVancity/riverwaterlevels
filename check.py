@@ -486,7 +486,8 @@ def research_gate(body, rel):
             if not re.search(r"\bp\b|p &lt;|p <|Mann-Whitney|test", t[max(0, m.start() - 200): m.end() + 200]):
                 bad.append("research: 'significant' with no test named near it")
                 break
-    bad += ["research: claim word %r" % re.search(p, t, re.I).group(0) for p in RESEARCH_BANNED if re.search(p, t, re.I)]
+    tc = re.sub(r"(?i)Environment\s+and\s+Climate\s+Change\s+Canada", " ", t)  # 2026-11-14: the agency's own name withdrew the world page on every build; a name is a credit, not a claim
+    bad += ["research: claim word %r" % re.search(p, tc, re.I).group(0) for p in RESEARCH_BANNED if re.search(p, tc, re.I)]
     return bad[:5]
 
 
@@ -1167,6 +1168,7 @@ def selftest():
         assert research_gate(_good.replace("<b>Sample:</b>", ""), "research/tides/index.html") and research_gate(_good.replace("Lead.", "This proves floods are worse."), "research/tides/index.html") and research_gate(_good + "<p>the river is safe</p>", "research/tides/index.html"), "selftest: research gate passed a missing Sample, 'proves' or 'safe'"
         assert research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> a significant rise</div>', "research/x/index.html") and research_gate('<div data-method="x"><p><b>L</b></p><b>Sample:</b> How this was worked out <a href="data.csv">c</a> more than chance</div>', "research/x/index.html"), "selftest: 'significant' with no test, or 'more than chance' with no correction, passed"
         assert not research_gate("<h1>This finding is being recalculated</h1>", "research/x/index.html"), "selftest: the recalculation notice was judged as a finding"
+        assert not research_gate(_good + "<p>Source: Water Survey of Canada, Environment and Climate Change Canada</p>", "research/world-rivers/index.html") and research_gate(_good + "<p>floods rose because of climate change</p>", "research/x/index.html"), "selftest: the ECCC agency name withdrew a page, or a climate change claim passed"
         import tempfile as _tf
         from lib.research import method_of as _mo
         _M = _mo("/research/tides/")
