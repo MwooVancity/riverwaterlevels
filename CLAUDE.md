@@ -63,5 +63,6 @@ A link exists only because a reader here would tap it next; links come from data
 - HARD practice every kind (owner 2026-11-08): the nightly practice release (`-f release=true`, `tools/release.py --every-kind`) adds one queued page of each kind and collects world feeds; a new kind or feed joins the day it is added; a kind with none queued is named in PLAN.md.
 
 ## Reviews
+- HARD (owner 2026-11-14 "I don't want to ship nonperfect pages"): no code reaches `check` unreviewed. `tools/review_gate.py` (PreToolUse hook) refuses a push while code changed since `.claude/last-review`; run `/code-review medium` on that range, fix findings, then write HEAD there. Writing the mark without a review is lying.
 - Phone shots once per template variant (`lib/pages.py` `variant`, `data/reviewed.json`) and new block type, before Google (reviewer brief `tools/review_brief.md`); a reviewed variant publishes on machine gates alone.
 - A defect found twice becomes a `check.py` rule that batch; delete a gate with no catch in 10 runs (`tools/helpful_audit.md`). Gates hold only the wrong page; only a whole-site fault stops a deploy. Fresh gate audit after a new kind or feed.
