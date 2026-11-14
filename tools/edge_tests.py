@@ -1019,6 +1019,10 @@ if __name__ == "__main__":
         assert ft_["level"] == 4.51 and ft_["who"] == "nos" and ft_["over"] == [("2027-01-23T16:03:00+00:00", 4.6)],"king tide: flood level not moved from station datum to MLLW, or a low tide counted"
         collect.http_json = lambda u, *a, **k: {"nos_minor": None, "nws_minor": None}
         assert collect.fetch_floodtide("x")["level"] is None and collect.fetch_floodtide("x")["top"], "king tide: a station with no flood level lost its highest tides"
+        def nf_(u, *a, **k):  # 2026-11-14 Clearwater 8726706: NOAA answers 404 where a station has no flood levels
+            raise collect.urllib.error.HTTPError(u, 404 if "floodlevels" in u else 500, "x", {}, None)
+        collect.http_json = nf_
+        assert collect.fetch_floodtide("x")["level"] is None, "king tide: a 404 for flood levels showed Unknown instead of 'no level published'"
         collect.coops_get = lambda st, q: yr_[:40]
         try:
             collect.fetch_floodtide("x")

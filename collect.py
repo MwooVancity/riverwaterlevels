@@ -2163,7 +2163,12 @@ def fetch_floodtide(st):
     every one at or above that level. floodlevels.json is on the station datum (STND); predictions are above MLLW, so the level is moved by MLLW's
     height on STND (datums.json): Clearwater 8726724 nos_minor 6.24 - MLLW 1.73 = 4.51 ft above MLLW. NOAA (NOS) level first, else the NWS one.
     No level published = level None (the page says NOAA publishes none here, never 'no flooding tides'). 3 calls a week per coast."""
-    fl = http_json(MD % (st, "floodlevels"), NWS_H, 60)
+    try:
+        fl = http_json(MD % (st, "floodlevels"), NWS_H, 60)
+    except urllib.error.HTTPError as e:  # 2026-11-14: Clearwater 8726706 has no floodlevels file (404) = no level published, not "not read"; other errors stay Unknown
+        if e.code != 404:
+            raise
+        fl = {}
     who, lvl = next(((k[:3], fl[k]) for k in ("nos_minor", "nws_minor") if fl.get(k) is not None), (None, None))
     today = datetime.datetime.now(datetime.timezone.utc)
     hi = [(p["t"].replace(" ", "T") + ":00+00:00", float(p["v"])) for p in coops_get(st, "product=predictions&datum=MLLW&interval=hilo&begin_date=%s&end_date=%s" % (
