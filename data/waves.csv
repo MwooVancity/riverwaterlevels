@@ -70,7 +70,7 @@ queue,2,01457000,Musconetcong River,Bloomsbury,NJ,87.6,100,67,70,"wsr-rec,wsr",,
 queue,2,01632000,North Fork Shenandoah River,Cootes Store,VA,87.6,100,69,70,fame,,,auto2,/river/north-fork-shenandoah-river/cootes-store/
 queue,2,05395000,Wisconsin River,Merrill,WI,87.5,100,67,70,"nri,fame",,,high,/river/wisconsin-river/merrill/
 queue,2,03528000,Clinch River,Above Tazewell,TN,87.5,100,67,70,"nri,nri-paddle,fame",,12745,high,/river/clinch-river-tn/above-tazewell/
-queue,2,01189995,Farmington River,Tariffville,CT,87.4,100,72,70,"wsr-rec,wsr,fame",,6017,high,/river/farmington-river/tariffville/
+live,2,01189995,Farmington River,Tariffville,CT,87.4,100,72,70,"wsr-rec,wsr,fame",,6017,high,/river/farmington-river/tariffville/
 queue,2,02398000,Chattooga River,Summerville,GA,87.4,100,66,70,fame,,,high,/river/chattooga-river-ga/summerville/
 queue,2,02034000,Rivanna River,Palmyra,VA,87.2,100,65,70,"nri,fame",,3985,high,/river/rivanna-river/palmyra/
 queue,2,03455000,French Broad River,Newport,TN,87.1,100,64,70,fame,,,high,/river/french-broad-river-tn/newport/
@@ -89,7 +89,7 @@ queue,3,01411300,Tuckahoe River,Head Of River,NJ,86.8,100,70,70,"wsr-rec,wsr",,,
 queue,3,01608500,South Branch Potomac River,Springfield,WV,86.7,100,61,70,"nri,fame",,,high,/river/south-branch-potomac-river/springfield/
 queue,3,09073400,Roaring Fork River,Aspen,CO,86.7,100,61,70,fame,,,high,/river/roaring-fork-river/aspen/
 queue,3,09503700,Verde River,Paulden,AZ,86.6,100,60,70,"nri,fame",,,high,/river/verde-river/paulden/
-queue,3,01318500,Hudson River,Hadley,NY,86.6,100,61,70,"nri,fame",,,high,/river/hudson-river/hadley/
+live,3,01318500,Hudson River,Hadley,NY,86.6,100,61,70,"nri,fame",,,high,/river/hudson-river/hadley/
 queue,3,03456500,East Fork Pigeon River,Canton,NC,86.6,100,61,70,fame,,,high,/river/east-fork-pigeon-river/canton/
 queue,3,10336610,Upper Truckee River,South Lake Tahoe,CA,86.6,100,71,70,fame,,,high,/river/upper-truckee-river/south-lake-tahoe/
 queue,3,03524000,Clinch River,Cleveland,VA,86.5,100,60,70,fame,,12745,high,/river/clinch-river-va/cleveland/
@@ -182,7 +182,7 @@ queue,7,04113000,Grand River,Lansing,MI,82.9,85,81,70,"nri,nri-paddle,nri-fish,f
 queue,7,03427500,East Fork Stones River,Lascassas,TN,82.9,85,81,70,"nri,nri-paddle",,,high,/river/east-fork-stones-river/lascassas/
 queue,7,01595800,North Branch Potomac River,Barnum,WV,82.8,100,55,70,fame,,,high,/river/north-branch-potomac-river-wv/barnum/
 queue,7,04112500,Red Cedar River,East Lansing,MI,82.7,85,79,70,"nri,nri-paddle,nri-fish",,,high,/river/red-cedar-river-mi/east-lansing/
-queue,7,06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,82.7,100,27,90,"tail,fame",,8559,high,/river/big-hole-river/below-big-lake-creek-at-wisdom/
+live,7,06024450,Big Hole River,Below Big Lake Creek At Wisdom,MT,82.7,100,27,90,"tail,fame",,8559,high,/river/big-hole-river/below-big-lake-creek-at-wisdom/
 queue,7,03436100,Red River,Port Royal,TN,82.6,85,79,70,"nri,nri-paddle",,,high,/river/red-river-tn/port-royal/
 queue,7,03266000,Stillwater River,Englewood,OH,82.6,85,79,70,"nri,nri-paddle",,,high,/river/stillwater-river-oh/englewood/
 queue,7,02329000,Ochlockonee River,Havana,FL,82.6,85,80,70,"nri,nri-paddle",,,auto2,/river/ochlockonee-river-fl/havana/
@@ -201,7 +201,7 @@ queue,7,04148500,Flint River,Flint,MI,82.3,85,77,70,"nri,nri-paddle,nri-fish",,,
 queue,7,04164000,Clinton River,Fraser,MI,82.3,85,77,70,"nri,nri-paddle,nri-fish",,4821,high,/river/clinton-river/fraser/
 queue,8,03571000,Sequatchie River,Whitwell,TN,82.3,85,77,70,"nri,nri-paddle",,,high,/river/sequatchie-river/whitwell/
 queue,8,01094000,Souhegan River,Merrimack,NH,82.3,85,77,70,"nri,nri-paddle,nri-fish",,,high,/river/souhegan-river/merrimack/
-queue,8,02392000,Etowah River,Canton,GA,82.1,85,75,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/etowah-river/canton/
+live,8,02392000,Etowah River,Canton,GA,82.1,85,75,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/etowah-river/canton/
 queue,8,09188500,Green River,Warren Bridge Near Daniel,WY,82.1,100,31,70,"nri,fame",,31349,high,/river/green-river-wy/warren-bridge-near-daniel/
 queue,8,03272000,Twin Creek,Germantown,OH,82.1,85,75,70,"nri,nri-paddle,nri-fish",,,high,/river/twin-creek-oh/germantown/
 queue,8,09383400,Little Colorado River,Greer,AZ,82.1,100,53,70,"nri,fame",,,high,/river/little-colorado-river/greer/
@@ -315,7 +315,7 @@ queue,12,03309000,Green River,Mammoth Cave,KY,80.3,100,59,70,"nri,nri-fish,fame"
 queue,12,02335870,Sope Creek,Marietta,GA,80.3,85,86,70,"nri,nri-paddle",,,high,/river/sope-creek/marietta/
 queue,12,02359500,Econfina Creek,Bennett,FL,80.3,85,65,70,"nri,nri-paddle",,,auto2,/river/econfina-creek/bennett/
 queue,12,02080500,Roanoke River,Roanoke Rapids,NC,80.2,100,68,40,fame,,,high,/river/roanoke-river-nc/roanoke-rapids/
-queue,12,02337170,Chattahoochee River,Fairburn,GA,80.2,100,85,70,fame,,,high,/river/chattahoochee-river/fairburn/
+live,12,02337170,Chattahoochee River,Fairburn,GA,80.2,100,85,70,fame,,,high,/river/chattahoochee-river/fairburn/
 live,12,12484500,Yakima River,Umtanum,WA,80.2,85,63,70,"nri,nri-paddle,nri-fish",,,high,/river/yakima-river/umtanum/
 queue,12,06928000,Gasconade River,Hazelgreen,MO,80.2,85,63,70,"nri,nri-paddle,nri-fish,fame",,7240,high,/river/gasconade-river/hazelgreen/
 queue,12,01351500,Schoharie Creek,Burtonsville,NY,80.2,85,63,70,"nri,nri-paddle",,,high,/river/schoharie-creek/burtonsville/
@@ -455,7 +455,7 @@ queue,18,11463200,Big Sulphur Creek,Cloverdale,CA,78.4,85,63,70,"nri,nri-paddle,
 queue,18,05292000,Minnesota River,Ortonville,MN,78.3,85,50,70,"nri,nri-paddle,nri-fish",,,high,/river/minnesota-river/ortonville/
 live,18,04213500,Cattaraugus Creek,Gowanda,NY,78.3,85,50,70,"nri,nri-paddle,nri-fish",,,high,/river/cattaraugus-creek/gowanda/
 queue,18,01529950,Chemung River,Corning,NY,78.3,85,67,70,"nri,nri-paddle,nri-fish",,,high,/river/chemung-river/corning/
-queue,18,02379500,Cartecay River,Ellijay,GA,78.3,85,52,70,"nri,nri-paddle",,,high,/river/cartecay-river/ellijay/
+live,18,02379500,Cartecay River,Ellijay,GA,78.3,85,52,70,"nri,nri-paddle",,,high,/river/cartecay-river/ellijay/
 queue,18,14153500,Coast Fork Willamette River,Below Cottage Grove Dam,OR,78.3,70,62,90,"tail,fame",,,high,/river/coast-fork-willamette-river/below-cottage-grove-dam/
 queue,18,04128990,Pigeon River,Vanderbilt,MI,78.3,85,51,70,"nri,nri-paddle,nri-fish",,,high,/river/pigeon-river-mi/vanderbilt/
 queue,18,04197170,Rock Creek,Tiffin,OH,78.3,85,70,70,"nri,nri-paddle",,,high,/river/rock-creek-oh/tiffin/
@@ -890,7 +890,7 @@ queue,35,03078000,Casselman River,Grantsville,MD,72.3,70,55,70,fame,,,high,/rive
 queue,35,02075500,Dan River,Paces,VA,72.3,70,57,70,"nri,fame",,,auto2,/river/dan-river-va/paces/
 queue,35,07170060,Elk River,Below Elk City Lake,KS,72.3,65,61,90,tail,,,high,/river/elk-river-ks/below-elk-city-lake/
 queue,35,01596500,Savage River,Barton,MD,72.3,70,56,70,fame,,,high,/river/savage-river/barton/
-queue,35,11467000,Russian River,Hacienda Bridge Near Guerneville,CA,72.3,85,78,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/russian-river/hacienda-bridge-near-guerneville/
+live,35,11467000,Russian River,Hacienda Bridge Near Guerneville,CA,72.3,85,78,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/russian-river/hacienda-bridge-near-guerneville/
 queue,35,01549700,Pine Creek,Below Little Pine Creek Near Waterville,PA,72.3,70,57,70,fame,,,auto2,/river/pine-creek-pa/below-little-pine-creek-near-waterville/
 queue,35,03351310,Crooked Creek,Indianapolis,IN,72.3,75,94,40,"nri,nri-fish",,,high,/river/crooked-creek-in/indianapolis/
 queue,35,07332390,Blue River,Connerville,OK,72.3,85,50,70,"nri,nri-paddle,nri-fish",,,high,/river/blue-river-ok/connerville/
@@ -1087,7 +1087,7 @@ queue,43,06713000,Cherry Creek,Below Cherry Creek Lake,CO,70.4,65,91,50,tail,,,h
 queue,43,02356000,Flint River,Bainbridge,GA,70.3,100,69,40,"nri,nri-paddle,nri-fish,fame",,,high,/river/flint-river-ga/bainbridge/
 queue,43,02143000,Henry Fork,Henry River,NC,70.3,60,72,70,nri,,,high,/river/henry-fork/henry-river/
 queue,43,08287000,Rio Chama,Below Abiquiu Dam,NM,70.3,75,0,90,"nri,nri-fish,tail",,,auto2,/river/rio-chama/below-abiquiu-dam/
-queue,43,08170500,San Marcos River,San Marcos,TX,70.3,70,75,70,fame,,9102,high,/river/san-marcos-river/san-marcos/
+live,43,08170500,San Marcos River,San Marcos,TX,70.3,70,75,70,fame,,9102,high,/river/san-marcos-river/san-marcos/
 queue,43,05280000,Crow River,Rockford,MN,70.2,60,71,70,nri,,,high,/river/crow-river/rockford/
 queue,43,02102000,Deep River,Moncure,NC,70.2,60,71,70,nri,,,high,/river/deep-river-nc/moncure/
 queue,43,02361000,Choctawhatchee River,Newton,AL,70.2,60,71,70,nri,,,high,/river/choctawhatchee-river-al/newton/
@@ -1416,7 +1416,7 @@ queue,56,12344000,Bitterroot River,Darby,MT,67.5,100,0,70,fame,,,high,/river/bit
 queue,56,13011000,Snake River,Moran,WY,67.5,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/snake-river-wy/moran/
 queue,56,01315500,Hudson River,North Creek,NY,67.5,100,0,70,"nri,fame",,,high,/river/hudson-river/north-creek/
 queue,56,13042500,Henrys Fork,Island Park,ID,67.5,100,0,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/henrys-fork-id/island-park/
-queue,56,06037500,Madison River,West Yellowstone,MT,67.5,100,0,70,"nri,nri-fish,fame",,,high,/river/madison-river/west-yellowstone/
+live,56,06037500,Madison River,West Yellowstone,MT,67.5,100,0,70,"nri,nri-fish,fame",,,high,/river/madison-river/west-yellowstone/
 queue,56,03404000,Cumberland River,Williamsburg,KY,67.5,85,61,70,"nri,nri-paddle,fame",,,high,/river/cumberland-river-ky/williamsburg/
 queue,56,01605500,South Branch Potomac River,Franklin,WV,67.5,100,0,70,fame,,,high,/river/south-branch-potomac-river/franklin/
 queue,56,01334000,Walloomsac River,North Bennington,VT,67.5,60,53,70,nri,,,high,/river/walloomsac-river/north-bennington/
@@ -9115,8 +9115,8 @@ live,,8447435,Chatham,Chatham,MA,0,,,0,coast,"retry after 2026-11-08: release un
 live,,9413450,Monterey,Monterey,CA,0,,,0,coast,,,human,/coast/monterey/
 live,,8729840,Pensacola,Pensacola,FL,0,,,0,coast,,,human,/coast/pensacola/
 live,,8729210,Panama City Beach,Panama City Beach,FL,0,,,0,coast,,,human,/coast/panama-city-beach/
-queue,,9444090,Port Angeles,Port Angeles,WA,0,,,0,coast,,,human,/coast/port-angeles/
-queue,,8518750,The Battery,New York,NY,0,,,0,coast,,,human,/coast/new-york/
+live,,9444090,Port Angeles,Port Angeles,WA,0,,,0,coast,,,human,/coast/port-angeles/
+live,,8518750,The Battery,New York,NY,0,,,0,coast,,,human,/coast/new-york/
 live,,8534720,Atlantic City,Atlantic City,NJ,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/atlantic-city/
 live,,8443970,Boston,Boston,MA,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/boston/
 live,,8771450,Galveston Pier 21,Galveston,TX,0,,,0,coast,,,human,/coast/galveston/
@@ -9137,15 +9137,15 @@ live,,9452210,Juneau,Juneau,AK,0,,,0,coast,,,human,/coast/juneau/
 live,,9450460,Ketchikan,Ketchikan,AK,0,,,0,coast,,,human,/coast/ketchikan/
 live,,8720218,Mayport Bar Pilots Dock,Mayport,FL,0,,,0,coast,,,human,/coast/mayport/
 live,,8725114,Naples Bay North,Naples,FL,0,,,0,coast,,,human,/coast/naples/
-queue,,8775237,Port Aransas,Port Aransas,TX,0,,,0,coast,,,human,/coast/port-aransas/
-queue,,9444900,Port Townsend,Port Townsend,WA,0,,,0,coast,,,human,/coast/port-townsend/
+live,,8775237,Port Aransas,Port Aransas,TX,0,,,0,coast,,,human,/coast/port-aransas/
+live,,9444900,Port Townsend,Port Townsend,WA,0,,,0,coast,,,human,/coast/port-townsend/
 live,,9414290,San Francisco,San Francisco,CA,0,,,0,coast,,,human,/coast/san-francisco/
 live,,8531680,Sandy Hook,Sandy Hook,NJ,0,,,0,coast,,,human,/coast/sandy-hook/
 live,,9411340,Santa Barbara,Santa Barbara,CA,0,,,0,coast,,,human,/coast/santa-barbara/
-queue,,9447130,Seattle,Seattle,WA,0,,,0,coast,,,human,/coast/seattle/
+live,,9447130,Seattle,Seattle,WA,0,,,0,coast,,,human,/coast/seattle/
 queue,,8779748,South Padre Island CG Station,South Padre Island,TX,0,,,0,coast,page-check: Google keyword stuffing: the title repeats 'south padre',,human,/coast/south-padre-island/
 live,,9446484,Tacoma,Tacoma,WA,0,,,0,coast,,,human,/coast/tacoma/
-queue,,8658163,Wrightsville Beach,Wrightsville Beach,NC,0,,,0,coast,,,human,/coast/wrightsville-beach/
+live,,8658163,Wrightsville Beach,Wrightsville Beach,NC,0,,,0,coast,,,human,/coast/wrightsville-beach/
 live,,9432780,Charleston,Coos Bay,OR,0,,,0,coast,"retry after 2026-11-08: release undone 2026-11-08, the refresh did not pass with it",,human,/coast/coos-bay/
 live,,9418767,North Spit,Eureka,CA,0,,,0,coast,,,human,/coast/eureka/
 live,,8720226,Southbank Riverwalk,Jacksonville,FL,0,,,0,coast,,,human,/coast/jacksonville/
@@ -9182,43 +9182,43 @@ live,,9455558,Homer,Homer,AK,0,,,0,coast,,,human,/coast/homer/
 live,,8558690,Indian River Inlet,Indian River Inlet,DE,0,,,0,coast,,,human,/coast/indian-river-inlet/
 live,,8720291,Jacksonville Beach,Jacksonville Beach,FL,0,,,0,coast,,,human,/coast/jacksonville-beach/
 live,,8724991,Marco,Marco,FL,0,,,0,coast,,,human,/coast/marco/
-queue,,9434939,Waldport,Waldport,OR,0,,,0,coast,,,human,/coast/waldport/
+live,,9434939,Waldport,Waldport,OR,0,,,0,coast,,,human,/coast/waldport/
 live,,9410196,Mission Bay,Mission Bay,CA,0,,,0,coast,,,human,/coast/mission-bay/
-queue,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,"retry after 2026-11-10: release undone 2026-11-10, the refresh did not pass with it",,human,/coast/bradenton/
+live,,8726247,Bradenton,Bradenton,FL,0,,,0,coast,,,human,/coast/bradenton/
 live,,8465233,Branford,Branford,CT,0,,,0,coast,,,human,/coast/branford/
-queue,,8535962,Cape May,Cape May,NJ,0,,,0,coast,,,human,/coast/cape-may/
+live,,8535962,Cape May,Cape May,NJ,0,,,0,coast,,,human,/coast/cape-may/
 live,,8726706,Clearwater,Clearwater,FL,0,,,0,coast,,,human,/coast/clearwater/
 live,,8444601,Nantasket Beach,Nantasket Beach,MA,0,,,0,coast,,,human,/coast/nantasket-beach/
 queue,,8660642,North Myrtle Beach,North Myrtle Beach,SC,0,,,0,coast,,,human,/coast/north-myrtle-beach/
 live,,8670681,Savannah,Savannah,GA,0,,,0,coast,,,human,/coast/savannah/
-queue,,8726668,Tampa,Tampa,FL,0,,,0,coast,,,human,/coast/tampa/
+live,,8726668,Tampa,Tampa,FL,0,,,0,coast,,,human,/coast/tampa/
 live,,9437331,Tillamook,Tillamook,OR,0,,,0,coast,,,human,/coast/tillamook/
-queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,,,human,/coast/bandon/
-queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,,,human,/coast/belmar/
-queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,,,human,/coast/boca-raton/
-queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,,,human,/coast/duxbury/
-queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,,,human,/coast/edisto-beach/
-queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,,,human,/coast/englewood/
-queue,,9447659,Everett,Everett,WA,0,,,0,coast,,,human,/coast/everett/
-queue,,9434032,Florence,Florence,OR,0,,,0,coast,,,human,/coast/florence/
-queue,,8722219,Fort Pierce,Fort Pierce,FL,0,,,0,coast,,,human,/coast/fort-pierce/
-queue,,8731439,Gulf Shores,Gulf Shores,AL,0,,,0,coast,,,human,/coast/gulf-shores/
-queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,,,human,/coast/jupiter/
-queue,,8722495,Jupiter Inlet,Jupiter Inlet,FL,0,,,0,coast,,,human,/coast/jupiter-inlet/
-queue,,8532591,Manasquan Inlet,Manasquan Inlet,NJ,0,,,0,coast,,,human,/coast/manasquan-inlet/
-queue,,8724967,Marco Island,Marco Island,FL,0,,,0,coast,,,human,/coast/marco-island/
-queue,,8720692,Matanzas Inlet,Matanzas Inlet,FL,0,,,0,coast,,,human,/coast/matanzas-inlet/
-queue,,8727001,New Port Richey,New Port Richey,FL,0,,,0,coast,,,human,/coast/new-port-richey/
-queue,,8721164,New Smyrna Beach,New Smyrna Beach,FL,0,,,0,coast,,,human,/coast/new-smyrna-beach/
-queue,,8659182,Oak Island,Oak Island,NC,0,,,0,coast,,,human,/coast/oak-island/
-queue,,9446969,Olympia,Olympia,WA,0,,,0,coast,,,human,/coast/olympia/
-queue,,8721138,Ponce Inlet,Ponce Inlet,FL,0,,,0,coast,,,human,/coast/ponce-inlet/
-queue,,8446121,Provincetown,Provincetown,MA,0,,,0,coast,,,human,/coast/provincetown/
-queue,,9415316,Rio Vista,Rio Vista,CA,0,,,0,coast,,,human,/coast/rio-vista/
-queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,,,human,/coast/sarasota/
-queue,,8445138,Scituate,Scituate,MA,0,,,0,coast,,,human,/coast/scituate/
-queue,,8726034,Siesta Key,Siesta Key,FL,0,,,0,coast,,,human,/coast/siesta-key/
-queue,,8722357,Stuart,Stuart,FL,0,,,0,coast,,,human,/coast/stuart/
-queue,,9411189,Ventura,Ventura,CA,0,,,0,coast,,,human,/coast/ventura/
-queue,,8720554,Vilano Beach,Vilano Beach,FL,0,,,0,coast,,,human,/coast/vilano-beach/
-queue,,8446613,Wellfleet,Wellfleet,MA,0,,,0,coast,,,human,/coast/wellfleet/
+queue,,9432373,Bandon,Bandon,OR,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/bandon/
+queue,,8532337,Belmar,Belmar,NJ,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/belmar/
+queue,,8722816,Boca Raton,Boca Raton,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/boca-raton/
+queue,,8446166,Duxbury,Duxbury,MA,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/duxbury/
+queue,,8667630,Edisto Beach,Edisto Beach,SC,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/edisto-beach/
+queue,,8725747,Englewood,Englewood,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/englewood/
+queue,,9447659,Everett,Everett,WA,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/everett/
+queue,,9434032,Florence,Florence,OR,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/florence/
+queue,,8722219,Fort Pierce,Fort Pierce,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/fort-pierce/
+queue,,8731439,Gulf Shores,Gulf Shores,AL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/gulf-shores/
+queue,,8722499,Jupiter,Jupiter,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/jupiter/
+queue,,8722495,Jupiter Inlet,Jupiter Inlet,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/jupiter-inlet/
+queue,,8532591,Manasquan Inlet,Manasquan Inlet,NJ,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/manasquan-inlet/
+queue,,8724967,Marco Island,Marco Island,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/marco-island/
+queue,,8720692,Matanzas Inlet,Matanzas Inlet,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/matanzas-inlet/
+queue,,8727001,New Port Richey,New Port Richey,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/new-port-richey/
+queue,,8721164,New Smyrna Beach,New Smyrna Beach,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/new-smyrna-beach/
+queue,,8659182,Oak Island,Oak Island,NC,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/oak-island/
+queue,,9446969,Olympia,Olympia,WA,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/olympia/
+queue,,8721138,Ponce Inlet,Ponce Inlet,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/ponce-inlet/
+queue,,8446121,Provincetown,Provincetown,MA,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/provincetown/
+queue,,9415316,Rio Vista,Rio Vista,CA,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/rio-vista/
+queue,,8726083,Sarasota,Sarasota,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/sarasota/
+queue,,8445138,Scituate,Scituate,MA,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/scituate/
+queue,,8726034,Siesta Key,Siesta Key,FL,0,,,0,coast,retry after 2026-11-14: practice: page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/siesta-key/
+queue,,8722357,Stuart,Stuart,FL,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/stuart/
+queue,,9411189,Ventura,Ventura,CA,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/ventura/
+queue,,8720554,Vilano Beach,Vilano Beach,FL,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/vilano-beach/
+queue,,8446613,Wellfleet,Wellfleet,MA,0,,,0,coast,page-check: info gain: missing tide chart that https://www.tide-forecast.com/locations/Boston-Massachusetts/tides/latest shows,,human,/coast/wellfleet/
