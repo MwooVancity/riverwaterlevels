@@ -234,6 +234,8 @@ def b_official_links(G):
     bw = BEACH_WATER.get(G["row"]["state"]) if G.get("coast") else None  # PLAN 8: swimmers ask "can I swim today?"; the state's own advisories, linked (TX terms bar reuse, FL is HTML only, CA's open file is months old)
     if bw:
         links.append(("Swim advisories and beach water samples: %s" % bw[0], bw[1]))
+    if G.get("coast") and G["row"]["state"] == "WA":  # PLAN 33b: WDFW creel counts (fish per angler at each ramp) are linked, not copied: wdfw.wa.gov/privacy allows non-commercial use only
+        links.append(("Puget Sound creel reports: fish caught per angler at each ramp (WDFW)", "https://wdfw.wa.gov/fishing/reports/creel/puget"))
     if G.get("coast") and G["row"]["state"] == "FL":  # PLAN 30: FWC's red tide samples, linked: its data terms ask anyone sharing it further to email FWC first (owner decision 7: no permission requests), read 2026-11-13 on the Hub item
         links.append(("Red tide: FWC's Karenia brevis samples near the coast, last 8 days, updated daily", "https://myfwc.com/research/redtide/statewide/"))
     from lib.directory import STATE_NAMES  # here, not at the top: directory imports render
