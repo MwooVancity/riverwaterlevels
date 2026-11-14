@@ -275,7 +275,7 @@ def data_meta(G, name, page_url, observed):
             "cite": "%s water data, %s. %s%s. %s" % (name, BRAND, src, (", observed %s" % observed) if observed else "", page_url)}
 
 
-REVIEW_BLOCKS = {"like_today", "water_speed", "big_floods"}  # PLAN 20: a new block type shows only after its phone review passes (data/reviewed.json "blocks"); add each new block id here the day it is built
+REVIEW_BLOCKS = {"like_today", "water_speed", "big_floods", "surf", "redtide", "kingtide", "fish", "moonphase"}  # PLAN 20: a new block type shows only after its phone review passes (data/reviewed.json "blocks"); add each new block id here the day it is built
 
 
 @__import__("functools").lru_cache(maxsize=1)
@@ -699,8 +699,9 @@ def build_tab(tab, G, pages):
     # The title names water temperature only while the tile shows it (fresh under 24 h, Celsius, not held as suspect): never a promise the page breaks.
     wt_ = bool(b3.conditions(G).get("wt"))
     # Keyword Planner 2026-11-13 (US): '<river> forecast' is the largest river phrasing on live waters (PLAN 25a); named only while the forecast block shows
-    fc_ = tab == "dashboard" and not G.get("coast") and b_river_forecast(G) is not None
-    tb_ = tab == "dashboard" and not G.get("coast") and any(TUBING_RULE.search(r["activity"]) for r in b3.limits_for(G["site"])) and b3.b_limits(G) is not None
+    by_id = {b["id"]: b for b in shown}  # the blocks this page shows, already built (bug review 2026-11-14: each was rendered a second time for the title)
+    fc_ = tab == "dashboard" and not G.get("coast") and "river_forecast" in by_id
+    tb_ = tab == "dashboard" and not G.get("coast") and "limits" in by_id and any(TUBING_RULE.search(r["activity"]) for r in b3.limits_for(G["site"]))
     # PLAN 39 (page-two gap 2026-11-13): the gauge id sat past Google's ~60-character cut on every river title; it stays only where two gauges
     # share a river, place and state (their address carries the id), so two pages never share a title (check.py duplicate title)
     _id = (" (USGS %s)" % G["site"]) if G["site"] in (G["row"].get("dashboard_url") or "") else ""
@@ -710,7 +711,7 @@ def build_tab(tab, G, pages):
     if G.get("coast"):  # keyword debate 2026-11-06: the title leads with the searched words ("san diego tides" 50,000), the station after; 'tide chart' 5,000 at all 13 coasts
         stn = river if [w for w in re.findall(r"[A-Za-z]{4,}", river) if w.lower() not in place.lower()] else ""  # "Sewells Point at Norfolk": the station's own name is in the H1, so the title carries it (release 2026-11-11); "San Diego Bay" adds no word
         # Keyword Planner 2026-11-13 (US): '<place> tide chart' 1K-10K at all 30 live coasts (PLAN 25c); named only while the chart draws NOAA's predicted tide
-        _sc = None if G.get("tables") else b2.b_stage_chart(G)
+        _sc = None if G.get("tables") else by_id.get("stage_chart")
         tc_ = "tide chart, " if _sc and "predicted tide" in _sc["body"] else ""
         title = mk_title("%s tides: %s%stide times and water level%s, %s" % (place, (stn + " ") if stn else "", tc_, ", water temperature" if wt_ else "", st))  # audit #27: was up to 141 characters with the place twice; searched words first. Must keep every H1 word (check.py rank_checks: the 60-char cut broke the gate 2026-11-11); a tide-table page's swap turns "tide times and water level" into "tide times and tide table"
     if tab == "dashboard":

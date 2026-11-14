@@ -102,5 +102,13 @@
   "/research/tides/": "2026-11-13f",
   "/research/world-rivers/": "2026-11-13f"
  },
- "research_note": "Fresh independent reviews 2026-11-12 to 2026-11-13 (hostile review, fix verification, final check of commit 742da92): these pages PASS at the version shown; any change to a page raises its version in data/research-methods.json and closes it until a fresh review passes."
+ "research_note": "Fresh independent reviews 2026-11-12 to 2026-11-13 (hostile review, fix verification, final check of commit 742da92): these pages PASS at the version shown; any change to a page raises its version in data/research-methods.json and closes it until a fresh review passes.",
+ "blocks": [
+  "fish",
+  "kingtide",
+  "moonphase",
+  "redtide",
+  "surf"
+ ],
+ "blocks_evidence": "2026-11-13 phone shots, dryrun review run 43530117823 (Jacksonville Beach: surf, red tide, king tides, moon; Gallatin: fish, moon phases); judged by Claude (owner 2026-11-13)"
 }

@@ -1050,6 +1050,7 @@ if __name__ == "__main__":
     assert "3.7 ft" in b_ and "0.8 ft below NOAA" in b_ and "9.0" not in b_, "king tide: gap to the flood level wrong, or a past tide shown as coming"
     assert "reach" in kt_(dict(base_, over=[["2027-01-23T16:03:00+00:00", 4.6]]))["body"] and "1 predicted high tide" in kt_(dict(base_, over=[["2027-01-23T16:03:00+00:00", 4.6]]))["body"], "king tide: a tide at the flood level not named"
     assert "publishes no flood level" in kt_(dict(base_, level=None))["body"], "king tide: no published level read as no flooding"
+    assert "Aug 2, 2027" in b_, "king tide: a date 12 months ahead shown without its year (reads as a past date): %r" % re.findall(r"Aug[^<]{0,30}", b_)[:2]
     assert "Unknown" in kt_({})["body"] and "Unknown" in kt_(dict(base_, top=[["2026-11-01T15:00:00+00:00", 9.0]]))["body"], "king tide: missing or all-past data shown as a coming tide"
     assert kt_(base_, coast=False) is None, "king tide block on a river page"
     assert not re.search(r"\bwill flood\b|\bsafe\b", b_), "king tide: a verdict in the text"
@@ -1264,9 +1265,44 @@ if __name__ == "__main__":
             raise AssertionError("Virginia: an empty parse passed silently")
         except RuntimeError:
             pass
-        assert collect.fetch_stocking_va(37.3, -79.5, 35) == [] and sum("dwr.virginia.gov/fishing" in c for c in calls_) == 1, "Virginia: an empty parse re-downloaded at the next gauge"
+        try:  # bug review 2026-11-14: the next gauge raises at once (its cache is kept), never downloads again, never reads as 'no stocking'
+            collect.fetch_stocking_va(37.3, -79.5, 35)
+            raise AssertionError("Virginia: the next gauge after a failed load read as no stocking")
+        except RuntimeError:
+            pass
+        assert sum("dwr.virginia.gov/fishing" in c for c in calls_) == 1 and not collect._VA_ROWS, "Virginia: an empty parse re-downloaded at the next gauge, or left a placeholder"
+        collect._LOAD_FAILED.clear()
+        calls_.clear()
+        def down_(u, *a, **k):  # a network error, not a parse: the same once-only rule
+            calls_.append(u)
+            raise OSError("timed out")
+        collect.get_text = down_
+        for _ in range(3):
+            try:
+                collect.fetch_stocking_va(37.3, -79.5, 35)
+            except (RuntimeError, OSError):
+                pass
+        assert len(calls_) == 1, "Virginia: a network error re-downloaded the schedule at every gauge (%d calls)" % len(calls_)
     finally:
         collect._VA_ROWS[:], collect.get_text = vr_, gt_
+        collect._LOAD_FAILED.clear()
+    s0_, r0_ = dict(collect._MI_SEC), list(collect._MI_ROWS)
+    try:  # Michigan: a PLSS failure half way leaves neither rows nor points
+        collect._MI_ROWS.clear(); collect._MI_SEC.clear()
+        def mil_(today):
+            collect._MI_ROWS.append(("MI1", "Au Sable River", "Brown Trout", 100, "2026-10-01"))
+            raise OSError("PLSS down")
+        ml0_, collect.mi_load = collect.mi_load, mil_
+        try:
+            collect.fetch_stocking_mi(44.6, -84.1, 35)
+        except OSError:
+            pass
+        assert not collect._MI_ROWS and not collect._MI_SEC and "mi" in collect._LOAD_FAILED, "Michigan: a half-finished load was kept as complete"
+    finally:
+        collect.mi_load = ml0_
+        collect._MI_ROWS[:], collect._MI_SEC = r0_, collect._MI_SEC
+        collect._MI_SEC.clear(); collect._MI_SEC.update(s0_)
+        collect._LOAD_FAILED.clear()
     # Michigan stocking: DNR table rows placed by town/range/section through BLM PLSS; future dates, rows with no section and a section returned twice are left out
     assert collect.mi_secid("29N", "04W", "11") == "MI190290N0040W0SN110" and collect.mi_secid("2S", "12E", "1") == "MI190020S0120E0SN010", "Michigan section id wrong"
     assert collect.mi_secid(None, "04W", "11") is None and collect.mi_secid("29X", "04W", "11") is None, "Michigan: a bad town/range parsed"
@@ -1292,9 +1328,16 @@ if __name__ == "__main__":
             raise AssertionError("Michigan: an empty table passed silently")
         except RuntimeError:
             pass
-        assert collect.fetch_stocking_mi(44.757, -85.62, 35) == [] and len(calls_) == 1, "Michigan: an empty table re-downloaded at the next gauge"
+        n_ = len(calls_)
+        try:
+            collect.fetch_stocking_mi(44.757, -85.62, 35)
+            raise AssertionError("Michigan: the next gauge after a failed load read as no stocking")
+        except RuntimeError:
+            pass
+        assert len(calls_) == n_, "Michigan: an empty table re-downloaded at the next gauge"
     finally:
         collect._MI_ROWS[:], collect.http_json, collect.get_text = mr_, hj_, gt_
+        collect._LOAD_FAILED.clear()
         collect._MI_SEC.clear(); collect._MI_SEC.update(ms_)
     # Iowa community trout: past dates only, postponed and future dropped, ambiguous or missing names left out, format change raises once
     td = datetime.date.today()
@@ -1323,11 +1366,16 @@ if __name__ == "__main__":
             assert False, "format change must raise"
         except RuntimeError:
             pass
-        collect.get_text = lambda u, *a, **k: 1 / 0  # no re-download after the failure
-        assert collect.fetch_stocking_ia(42.0, -93.6, 35) == []
+        collect.get_text = lambda u, *a, **k: 1 / 0  # no re-download after the failure: a download here would raise ZeroDivisionError
+        try:
+            collect.fetch_stocking_ia(42.0, -93.6, 35)
+            assert False, "Iowa: the next gauge after a failed load read as no stocking"
+        except RuntimeError:
+            pass
     finally:
         collect.get_text = old
         collect._IA.clear()
+        collect._LOAD_FAILED.clear()
     # NM: weekly PDF parsed with stdlib only; species from section headers (carried over a page break); future, TOTAL rows dropped; exact name join
     import zlib as zl_
     def pg_(items):
@@ -1368,9 +1416,29 @@ if __name__ == "__main__":
             raise AssertionError("NM: an empty parse passed silently")
         except RuntimeError:
             pass
-        assert collect.fetch_stocking_nm(35.85, -106.72, 35) == [] and len(calls_) == 2, "NM: an empty parse re-downloaded at the next gauge"
+        try:
+            collect.fetch_stocking_nm(35.85, -106.72, 35)
+            raise AssertionError("NM: the next gauge after a failed load read as no stocking")
+        except RuntimeError:
+            pass
+        assert len(calls_) == 2 and not collect._NM_ROWS, "NM: an empty parse re-downloaded at the next gauge, or left rows"
+        collect._LOAD_FAILED.clear(); calls_.clear()
+        n2_ = [0]
+        def half_(u, *a, **k):  # the second week's PDF fails: no week of this run is kept (all or nothing)
+            n2_[0] += 1
+            if n2_[0] == 2:
+                raise OSError("PDF timed out")
+            return pdf_
+        collect.get_text = lambda u, *a, **k: '<a href="https://wildlife.dgf.nm.gov/download/stocking-report-11-13-26/?wpdmdl=1"><a href="https://wildlife.dgf.nm.gov/download/stocking-report-11-06-26/?wpdmdl=2">' if "weekly-report" in u else json.dumps(lay_)
+        collect.http_raw = half_
+        try:
+            collect.fetch_stocking_nm(35.85, -106.72, 35)
+        except OSError:
+            pass
+        assert not collect._NM_ROWS, "NM: a half-read set of weekly reports was kept as the whole record"
     finally:
         collect._NM_ROWS[:], collect.get_text, collect.http_raw = nr_, gt_, hr_
+        collect._LOAD_FAILED.clear()
         collect._NM_PTS.clear(); collect._NM_PTS.update(np_)
     # review shots 2026-11-13: recreation sites on a phone: 3 columns (phone under the site), 3 nearest shown, the rest folded
     sites_ = [{"name": "Site %d Campground" % i, "mi": 1.0 + i, "fee": "", "url": "https://www.recreation.gov/x%d" % i, "phone": "406-522-252%d" % i, "type": "Campground", "activities": ["Fishing"], "org": "USFS", "reservable": True} for i in range(6)]

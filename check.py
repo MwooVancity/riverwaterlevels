@@ -444,7 +444,8 @@ def title_promise_ok(h, body):
     """PLAN 25a: 'NWS forecast' in the title only while the page carries the river forecast section (a gate or carry dropping the block breaks the promise)."""
     m = re.search(r"<title>(.*?)</title>", h, re.S)
     t = m.group(1) if m else ""
-    return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tubing rules" not in t or 'id="limits"' in body) and ("tide chart" not in t or "last 7 days and NOAA" in body)  # the chart label only; the hero caption also says predicted tide
+    sc = re.search(r'(?s)<section[^>]*id="stage_chart".*?</section>', body)  # the build's own rule (lib/page.py: "predicted tide" in the stage chart block), inside that block only; the hero caption also says predicted tide
+    return ("NWS forecast" not in t or 'id="river_forecast"' in body) and ("tubing rules" not in t or 'id="limits"' in body) and ("tide chart" not in t or bool(sc and "predicted tide" in sc.group(0)))
 
 
 def research_title_ok(h, url):
@@ -454,11 +455,14 @@ def research_title_ok(h, url):
     if _SEEDS is None:
         import csv
         norm = lambda k: " ".join(str(k or "").lower().replace("-", " ").split())
-        kw = {norm(r["keyword"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-tiers-water.csv"), encoding="utf-8")) if str(r.get("tier") or "0").replace(".", "", 1).isdigit() and float(r["tier"]) > 0}
         _SEEDS = {}
-        for r in csv.DictReader(open(os.path.join(ROOT, "data", "research-keywords.csv"), encoding="utf-8")):
-            if norm(r["seed"]) in kw:
-                _SEEDS.setdefault(r["url"], []).append(set(norm(r["seed"]).split()))
+        try:  # a missing or torn file must not stop the whole deploy: lib/indexing.research_demand keeps every research page out of Google then (fail closed)
+            kw = {norm(r["keyword"]) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-tiers-water.csv"), encoding="utf-8")) if str(r.get("tier") or "0").replace(".", "", 1).isdigit() and float(r["tier"]) > 0}
+            for r in csv.DictReader(open(os.path.join(ROOT, "data", "research-keywords.csv"), encoding="utf-8")):
+                if norm(r["seed"]) in kw:
+                    _SEEDS.setdefault(r["url"], []).append(set(norm(r["seed"]).split()))
+        except (OSError, ValueError, KeyError):
+            _SEEDS = {}
     m = re.search(r"<title>(.*?)(?: \| [^|<]*)?</title>", h, re.S)  # the brand suffix (River Water Levels) must not supply seed words (title review 2026-11-13)
     words = set(re.sub(r"[^a-z0-9 ]", " ", (m.group(1) if m else "").lower().replace("-", " ")).split())
     return url not in _SEEDS or any(s <= words for s in _SEEDS[url])
@@ -1181,7 +1185,7 @@ def selftest():
         _u = "<title>X River at Y, TX: live water level and flow, tubing rules (USGS 1)</title>"
         assert not title_promise_ok(_u, "<main></main>") and title_promise_ok(_u, '<section class="card blk" id="limits">'), "selftest: a title promised tubing rules without the agency rules block"
         _c = "<title>X tides: tide chart, tide times and water level, CA</title>"
-        assert not title_promise_ok(_c, "<p>NOAA&#x27;s predicted tide of 2 ft</p>") and title_promise_ok(_c, "<svg aria-label=\"Water level in feet over the last 7 days and NOAA&#x27;s predicted tide\">") and not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
+        assert not title_promise_ok(_c, "<p>NOAA&#x27;s predicted tide of 2 ft</p>") and title_promise_ok(_c, "<section class=\"card blk\" id=\"stage_chart\"><svg aria-label=\"Water level in feet over the past week and NOAA&#x27;s predicted tide\"></svg></section>") and not title_promise_ok(_c, "<p class=\"cap\">predicted tide</p><section class=\"card blk\" id=\"stage_chart\"><svg></svg></section>") and not title_promise_ok(_t, "<main></main>") and title_promise_ok(_t, '<section class="card blk" id="river_forecast">') and title_promise_ok("<title>X: live water level and flow</title>", ""), "selftest: a title promised the NWS forecast without the section, or a forecast page failed"
     finally:
         dr_.publisher = pub_
     from lib import pages as pg_

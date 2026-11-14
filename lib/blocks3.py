@@ -895,7 +895,7 @@ def b_kingtide(G):
         return block("kingtide", head, "noaa", "<p>Unknown: NOAA's 12-month tide predictions for this station were not read in this build.</p>", src + ".", "coops")
     lv = f.get("level")
     whose = "NOAA's minor high-tide flooding level" if f.get("who") == "nos" else "the National Weather Service's minor flood level"
-    when = lambda t: esc(tzl(t, z))
+    when = lambda t: esc(tzl(t, z).replace(", ", ", %d, " % t.astimezone(z).year, 1))  # 12 months ahead: 'Nov 10' next year must not read as last week (bug review 2026-11-14)
     if lv is None:
         lead = "The highest predicted tide in the next 12 months is %.1f ft on %s. NOAA publishes no flood level for this station." % (top[0][1], when(top[0][0]))
     elif over:

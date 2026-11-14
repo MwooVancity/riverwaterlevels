@@ -557,6 +557,22 @@ STOCK_SOURCES = [
 ]
 
 
+_LOAD_FAILED = {}
+
+
+def _load_once(key, load, reset):
+    """A once-per-process statewide download (bug review 2026-11-14): all or nothing. A failure, network or parse, empties what it half-filled (reset)
+    and is remembered, so later gauges in this run raise at once (their stocking cache is kept) instead of downloading it all again."""
+    if key in _LOAD_FAILED:
+        raise RuntimeError("%s (failed earlier this run)" % _LOAD_FAILED[key])
+    try:
+        load()
+    except Exception as e:
+        reset()
+        _LOAD_FAILED[key] = "%s: %s" % (type(e).__name__, str(e)[:120])
+        raise
+
+
 _MA_SP = {}
 MA_STOCK = "https://services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/"  # MassWildlife trout stocking report (PLAN 36, read 2026-11-13): item licence is a no-warranty note, no reuse bar
 
@@ -581,7 +597,7 @@ def fetch_stocking_ma(lat, lon, miles):
                                 "outFields": "Waterbody,Species,Stocked_Date,Water_Town_Code", "orderByFields": "Stocked_Date DESC", "resultRecordCount": "500", "f": "json"})
     rows = []
     if not _MA_SP:  # the layer's own code list (RT = Rainbow Trout...), read once per process so a new code is never guessed
-        _MA_SP.update({c["code"]: c["name"] for f in json.loads(get_text(MA_STOCK + "StockedFish_View/FeatureServer/0?f=json")).get("fields", []) if f["name"] == "Species" for c in (f.get("domain") or {}).get("codedValues", [])})
+        _load_once("ma", lambda: _MA_SP.update({c["code"]: c["name"] for f in json.loads(get_text(MA_STOCK + "StockedFish_View/FeatureServer/0?f=json")).get("fields", []) if f["name"] == "Species" for c in (f.get("domain") or {}).get("codedValues", [])}), _MA_SP.clear)
     req = urllib.request.Request(MA_STOCK + "StockedFish_View/FeatureServer/0/query", data=q.encode(), headers={"User-Agent": "riverwaterlevels.com"})  # POST: 200 codes in a GET address answer 404
     for ft in json.loads(urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "ignore")).get("features", []):
         a = ft.get("attributes") or {}
@@ -653,10 +669,11 @@ def fetch_stocking_va(lat, lon, miles):
     """Virginia (PLAN 37c): the DWR schedule page (dated releases by county and water, no positions; read once per process) joined by water name and
     county to DWR's stocked trout lakes (points) and reaches (lines). A water whose name and county match no feature is left out, never guessed."""
     if not _VA_ROWS:
-        _VA_ROWS.extend(va_schedule(get_text(VA_SCHED)))
-        if not _VA_ROWS:  # review 2026-11-13: a markup change parsed to nothing and was re-downloaded at every gauge, unnoticed; now it fails once, named
-            _VA_ROWS.append(("0000-00-00", "", "", []))  # a placeholder no date cut passes: later gauges in this run neither re-download nor show anything
-            raise RuntimeError("Virginia stocking schedule parsed to no rows (page format changed?)")
+        def load():
+            _VA_ROWS.extend(va_schedule(get_text(VA_SCHED)))
+            if not _VA_ROWS:  # review 2026-11-13: a markup change parsed to nothing and was re-downloaded at every gauge, unnoticed; now it fails once, named
+                raise RuntimeError("Virginia stocking schedule parsed to no rows (page format changed?)")
+        _load_once("va", load, _VA_ROWS.clear)
     dd, pos = miles / 69.0, {}
     for layer in ("DWR_Stocked_Trout_Lakes", "DWR_Stocked_Trout_Reaches"):
         q = urllib.parse.urlencode({"geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326", "outSR": "4326",
@@ -713,7 +730,7 @@ def fetch_stocking_ut(lat, lon, miles):
     today = datetime.date.today()
     for y in (today.year, today.year - 1):
         if y not in _UT_ROWS:
-            _UT_ROWS[y] = ut_table(get_text(UT_TABLE % y), today)
+            _load_once("ut", lambda: _UT_ROWS.__setitem__(y, ut_table(get_text(UT_TABLE % y), today)), _UT_ROWS.clear)
     dd, pos = miles / 69.0, {}
     for layer in (0, 1):
         q = urllib.parse.urlencode({"where": "Stocked_YN='Yes'", "geometry": "%.4f,%.4f,%.4f,%.4f" % (lon - dd, lat - dd, lon + dd, lat + dd), "geometryType": "esriGeometryEnvelope", "inSR": "4326",
@@ -789,8 +806,8 @@ def fetch_stocking_mi(lat, lon, miles):
     """Michigan: DNR's statewide stocking report (a table, no position) placed by its town/range/section through BLM's PLSS sections. All network work is
     once per process (mi_load); each gauge is a distance check. A section is about a mile across, so a distance can be off by up to about half a mile."""
     today = datetime.date.today()
-    if not _MI_ROWS:
-        mi_load(today)
+    if not _MI_ROWS:  # rows and section points together or neither: a PLSS failure half way left the rows with no points, silently empty (bug review 2026-11-14)
+        _load_once("mi", lambda: mi_load(today), lambda: (_MI_ROWS.clear(), _MI_SEC.clear()))
     cut, out = (today - datetime.timedelta(days=550)).isoformat(), []
     for k, w, sp, n, d in _MI_ROWS:
         p = _MI_SEC.get(k)
@@ -836,18 +853,18 @@ def fetch_stocking_ia(lat, lon, miles):
     The page names only 'trout' and 'about 1,500 trout each stocking', so species is 'Trout' and no count is shown. Coldwater streams: the DNR
     trout-stream layer has no dated releases, so none are shown."""
     if not _IA:
-        today = datetime.date.today()
-        seen, rows = ia_schedule(get_text(IA_SCHED), today)
-        pts = {}
-        for ft in json.loads(get_text(IA_ATLAS)).get("features", []):
-            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
-            k = re.sub(r"\s+", " ", (a.get("lakeName") or "").strip().lower())
-            if k and g.get("y") is not None:
-                pts.setdefault(k, {}).setdefault(a.get("lakeCode"), (g["y"], g["x"]))
-        _IA.update(rows=rows, pos={k: next(iter(v.values())) for k, v in pts.items() if len(v) == 1})
-        if not seen or not pts:  # one failure per run, named; later gauges neither re-download nor show anything
-            _IA.update(rows=[], pos={})
-            raise RuntimeError("Iowa trout stocking schedule or community atlas parsed to nothing (page format changed?)")
+        def load():
+            seen, rows = ia_schedule(get_text(IA_SCHED), datetime.date.today())
+            pts = {}
+            for ft in json.loads(get_text(IA_ATLAS)).get("features", []):
+                a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+                k = re.sub(r"\s+", " ", (a.get("lakeName") or "").strip().lower())
+                if k and g.get("y") is not None:
+                    pts.setdefault(k, {}).setdefault(a.get("lakeCode"), (g["y"], g["x"]))
+            if not seen or not pts:  # one failure per run, named
+                raise RuntimeError("Iowa trout stocking schedule or community atlas parsed to nothing (page format changed?)")
+            _IA.update(rows=rows, pos={k: next(iter(v.values())) for k, v in pts.items() if len(v) == 1})
+        _load_once("ia", load, _IA.clear)
     cut, out = (datetime.date.today() - datetime.timedelta(days=550)).isoformat(), []
     for d, w, city in _IA["rows"]:
         p = _IA["pos"].get(re.sub(r"\s+", " ", w.strip().lower()))
@@ -907,25 +924,27 @@ def fetch_stocking_nm(lat, lon, miles):
     FIMS water codes, or a report name with a reach in brackets the layer does not carry ('RIO GRANDE (PILAR TO COCHITI LAKE)'), is left out, never guessed."""
     today = datetime.date.today()
     if not _NM_ROWS:
-        links = sorted(set(re.findall(r"https://wildlife\.dgf\.nm\.gov/download/stocking-report-[\d-]+/\?wpdmdl=\d+", get_text(NM_PAGE))))
-        for u in links:
-            _NM_ROWS.extend(nm_pdf(http_raw(u, 60), today))
-        if not _NM_ROWS:  # a page or PDF format change: fail once, named; the placeholder stops later gauges re-downloading
-            _NM_ROWS.append(("", "", 0, None, "0000-00-00"))
-            raise RuntimeError("New Mexico stocking reports parsed to no rows (%d links; format changed?)" % len(links))
+        def load_rows():  # all weeks or none: a week missing from this run would show the rest as the whole record
+            links = sorted(set(re.findall(r"https://wildlife\.dgf\.nm\.gov/download/stocking-report-[\d-]+/\?wpdmdl=\d+", get_text(NM_PAGE))))
+            for u in links:
+                _NM_ROWS.extend(nm_pdf(http_raw(u, 60), today))
+            if not _NM_ROWS:  # a page or PDF format change: fail once, named
+                raise RuntimeError("New Mexico stocking reports parsed to no rows (%d links; format changed?)" % len(links))
+        _load_once("nm", load_rows, _NM_ROWS.clear)
     if not _NM_PTS:
-        fims = {}
-        for i, ft in enumerate(json.loads(get_text(NM_LAYER + "?where=1%3D1&outFields=Waterbody_Name,FIMS_Code&returnGeometry=true&outSR=4326&resultRecordCount=2000&f=json")).get("features", [])):
-            a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
-            k = re.sub(r"\s+", " ", (a.get("Waterbody_Name") or "").strip().upper())
-            if k and g.get("y") is not None:  # a blank FIMS code is its own unknown water: two blank points of one name are not assumed the same
-                fims.setdefault(k, set()).add((a.get("FIMS_Code") or "").strip().lstrip("0") or "?%d" % i)
-                _NM_PTS.setdefault(k, []).append((g["y"], g["x"]))
-        if not _NM_PTS:  # same once-only failure as the reports
-            _NM_PTS[""] = [(0.0, 0.0)]
-            raise RuntimeError("New Mexico fishing access layer returned no points")
-        for k in [k for k in _NM_PTS if len(fims[k]) > 1]:  # one name, two waters: no position is trusted
-            del _NM_PTS[k]
+        def load_pts():
+            fims = {}
+            for i, ft in enumerate(json.loads(get_text(NM_LAYER + "?where=1%3D1&outFields=Waterbody_Name,FIMS_Code&returnGeometry=true&outSR=4326&resultRecordCount=2000&f=json")).get("features", [])):
+                a, g = ft.get("attributes") or {}, ft.get("geometry") or {}
+                k = re.sub(r"\s+", " ", (a.get("Waterbody_Name") or "").strip().upper())
+                if k and g.get("y") is not None:  # a blank FIMS code is its own unknown water: two blank points of one name are not assumed the same
+                    fims.setdefault(k, set()).add((a.get("FIMS_Code") or "").strip().lstrip("0") or "?%d" % i)
+                    _NM_PTS.setdefault(k, []).append((g["y"], g["x"]))
+            if not _NM_PTS:  # same once-only failure as the reports
+                raise RuntimeError("New Mexico fishing access layer returned no points")
+            for k in [k for k in _NM_PTS if len(fims[k]) > 1]:  # one name, two waters: no position is trusted
+                del _NM_PTS[k]
+        _load_once("nm_pts", load_pts, _NM_PTS.clear)
     pos = {}
     for k, pts in _NM_PTS.items():
         mi = round(min(hav_km(lat, lon, y_, x_) for y_, x_ in pts) * 0.621371, 1)  # nearest access point of the water
