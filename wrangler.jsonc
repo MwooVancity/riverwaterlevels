@@ -11,7 +11,7 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash",
-    "run_worker_first": ["/river/*", "/live/*"]
+    "run_worker_first": ["/river/*", "/live/*", "/research", "/research/*"]  // /research: the deleted section answers 410 from the Worker; the asset layer alone would only give the 404 page (owner 2026-11-14)
   },
   "kv_namespaces": [
     { "binding": "LIVE", "id": "8f6e5bd9236e4d508dfaaf2b5e6e52e5" }

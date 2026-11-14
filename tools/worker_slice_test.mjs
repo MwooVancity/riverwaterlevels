@@ -29,4 +29,8 @@ want(siteOf(list, "/river/a/"), null, "a prefix of a page is not that page");
 want(siteOf(list, "/river/zz/"), null, "an absent page");
 want(siteOf(list, "America/Denver"), null, "a time zone is not a page");
 want(siteOf("<!doctype html>", "/river/a/b/"), null, "an error page instead of the list");
+// owner 2026-11-14: the deleted research section answers 410 Gone, its CSVs too; nothing else does
+const gone = fnOf("gone");
+for (const p of ["/research", "/research/", "/research/tides/", "/research/peak-month/data.csv", "/research/world-rivers/", "/Research/Tides/"]) want(gone(p), true, "410 for " + p);
+for (const p of ["/", "/researcher/", "/river/research-creek/x/", "/coast/clearwater/", "/data-sources/"]) want(gone(p), false, "a live page answered 410: " + p);
 console.log("worker slice selftest OK");

@@ -35,6 +35,9 @@ export default {
         if (d) o.headers.set("x-rwl-build-trigger", d); // the last time the cron asked GitHub for a build, and GitHub's answer
         return secure(o, url);
       }
+      if (gone(url.pathname)) // owner 2026-11-14: the research section was deleted; 410 tells Google it is gone for good (a 404 can be retried for months)
+        return secure(new Response('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Removed | River Water Levels</title></head><body><p>This page was removed. <a href="/">River Water Levels</a> has a live page for every river, lake and coast it covers.</p></body></html>',
+          { status: 410, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=86400", "x-robots-tag": "noindex" } }), url);
       if (!url.pathname.startsWith("/river/")) return perm(await env.ASSETS.fetch(req));
       let res = await env.ASSETS.fetch(req);
       if (res.status === 307) return secure(perm(res), url);
@@ -183,6 +186,11 @@ const SECURITY = {
   "x-frame-options": "DENY",
   "permissions-policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
 };
+
+function gone(p) {
+  p = p.toLowerCase();
+  return p === "/research" || p.startsWith("/research/"); // the deleted research section and its data.csv files (owner 2026-11-14)
+}
 
 function secure(res, url) {
   const o = new Response(res.body, res);

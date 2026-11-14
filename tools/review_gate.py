@@ -5,7 +5,7 @@ import json, os, re, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MARK = os.path.join(ROOT, "data", "last-review")  # committed, so the cloud promote reads the same record (--ci): a push from any machine is judged
-CODE = ("*.py", "*.js", "*.yml", "*.yaml", "*.html", "*.css", "*.sh", "*.toml", "data/sources.json", "data/state-rules.json")  # code, plus the rule files that switch reader blocks on or off
+CODE = ("*.py", "*.js", "*.yml", "*.yaml", "*.html", "*.css", "*.sh", "*.toml", "*.jsonc","data/sources.json", "data/state-rules.json")  # code, plus the rule files that switch reader blocks on or off
 
 
 def git(*a):
