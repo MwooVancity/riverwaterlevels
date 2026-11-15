@@ -18,8 +18,9 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 def cause(gate):
     """A gate message reduced to its cause: numbers, urls and quoted text out, so 30 pages with one bug read as one line."""
-    g = re.sub(r"https?://\S+", "<url>", gate or "")
-    g = re.sub(r"'[^']*'|\"[^\"]*\"", "'...'", g)
+    g = re.sub(r"https?://\S+", "<url>", gate or "").split(" near ")[0]
+    if not g.startswith("page-check: banned "):  # review 2026-11-15: a banned gate keeps its pattern, so fixing one banned pattern reopens only its pages
+        g = re.sub(r"'[^']*'|\"[^\"]*\"", "'...'", g)
     g = re.sub(r"\d+(\.\d+)?", "N", g)
     return g.split(" near ")[0][:90].strip()
 

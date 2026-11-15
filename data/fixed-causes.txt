@@ -1,4 +1,4 @@
 # date<TAB>cause, the cause exactly as tools/fix_list.py prints it: queued gauges held by it are picked again for 3 days from the date, then not (one that still fails is not re-picked forever).
 2026-11-15	page-check: info gain: missing tide chart that <url> shows
 2026-11-15	page-check: doubled word '...'
-2026-11-15	page-check: banned '...'
+2026-11-15	page-check: banned '-?N\\d{N,}\\b'
