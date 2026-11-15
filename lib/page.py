@@ -201,7 +201,14 @@ def embed_code(G):
     if G.get("feed"):
         return ""
     name = "%s water level" % river_at(G["river"], G["place"])
-    return '<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea><small>Free. The credit line under the panel is optional.</small></details>' % esc(embed_snippet(G["row"]["dashboard_url"], name))
+    copy = ('<button type="button" onclick="var t=this.previousElementSibling;t.select();'
+            '(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});'
+            'this.textContent=&quot;Copied&quot;">Copy code</button>')  # owner 2026-11-15: easy for anyone; the old browser path copies the selected text
+    steps = ("<ol><li>Press <b>Copy code</b>.</li><li>On your site add an HTML box: WordPress <b>Custom HTML</b> block, Wix <b>Embed Code</b>, "
+             "Squarespace <b>Code</b> block, or your editor's HTML option.</li><li>Paste and save. The panel keeps itself up to date.</li></ol>")
+    return ('<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
+            % esc(embed_snippet(G["row"]["dashboard_url"], name))) + copy + steps + \
+        "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
 
 
 # Each URL fetched 2026-11-11 by the PLAN 8 research; a state not listed had no verified program page.
