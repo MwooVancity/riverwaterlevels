@@ -423,6 +423,7 @@ GOOGLE = {
     "scraping": "every block adds a comparison, label or join the agency page lacks (three tests); not machine-checked",
     "sneaky redirects": "_redirects are same-content moves only; not machine-checked",
     "structured data relevance": "google_rules: a borrowed level's station is the one the markup names",
+    "Dataset required and recommended fields (Search Console 2026-11-12: license)": "google_rules: every Dataset carries license",
     "fresh dates without change": "build.py lastmod from a content hash; dateModified = reading time",
     "who / about / contact": "selftest: a named person in data/publisher.json shows on /contact/ and /about/; /terms/ always built",
     "factual errors": "truth_tests, truth_live, truth_world",
@@ -457,6 +458,8 @@ def google_rules(h, body):
     lds = [ld for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', h, re.S) if "Dataset" in ld]
     if lv and lds and not any(lv.group(1) in ld for ld in lds):  # an embed panel carries no Dataset markup: nothing to mismatch (release 2026-11-11 false alarm)
         bad.append("Google structured data: the readings come from station %s but the Dataset markup does not name it" % lv.group(1))
+    if any('"license"' not in ld for ld in lds):  # Search Console 2026-11-12 'Missing field license' on 24 Dataset pages; every Dataset names its source's licence or terms page
+        bad.append("Google structured data: a Dataset without a license (the source's terms page, data/sources.json terms_url)")
     return bad
 
 
@@ -1434,6 +1437,7 @@ def selftest():
     assert not google_rules("<html>", '<small class="lvl">At NOAA station 9447130,'), "selftest: an embed panel without Dataset markup flagged (release 2026-11-11)"
     assert google_rules('<textarea>&lt;a href="x"&gt;Yuba River water level&lt;/a&gt;</textarea>', ""), "selftest: a followed keyword link in embed code passed"
     assert google_rules('<script type="application/ld+json">{"@type":"Dataset","description":"station 8726706"}</script>', '<small class="lvl">At NOAA station 8726724,'), "selftest: markup naming the wrong station passed"
+    assert google_rules('<script type="application/ld+json">{"@type":"Dataset","name":"x"}</script>', "") and not google_rules('<script type="application/ld+json">{"@type":"Dataset","name":"x","license":"https://x"}</script>', ""), "selftest: a Dataset without a license passed, or one with it was held"
     import datetime as _dtm
     from lib.blocks2 import _time_svg  # PLAN 6 chart readout: only drawn readings, forecasts marked (a 6 h gap is never filled in)
     _t0 = _dtm.datetime(2026, 11, 10, tzinfo=_dtm.timezone.utc)

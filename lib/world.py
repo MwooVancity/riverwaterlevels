@@ -125,6 +125,10 @@ def world_ld(page, r, url, feed, html):
          "mainEntity": {"@type": "Dataset", "name": "%s gauge %s, %s: water level" % (feed["agency"], feed["station"], where), "url": common.SITE_URL + url,
                         "description": "Recent water level readings at %s gauge %s (%s); the agency can revise them." % (feed["agency"], feed["station"], feed["api"]),
                         "creator": {"@type": "Organization", "name": feed["name"]}, "temporalCoverage": r["time"]}}
+    from lib.core import SOURCES
+    lic = (SOURCES.get(page.get("feed", "pegelonline")) or {}).get("terms_url")  # Search Console 2026-11-12: Dataset 'Missing field license'; the agency's own licence or terms page, never a guess
+    if lic:
+        j["mainEntity"]["license"] = lic
     return '<script type="application/ld+json">%s</script>' % json.dumps(j, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/")
 
 
