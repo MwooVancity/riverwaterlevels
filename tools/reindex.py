@@ -27,9 +27,11 @@ def main_copy(name):
 
 def rank(state):
     """Request order by Google's last URL Inspection answer (data/index-inspect.json, tools/index_inspect.py; audit 2026-11-10 #19):
-    0 'Excluded by noindex' (the pre-launch header crawl of 10-17; the page is open now), 1 discovered or crawled, not indexed, 2 never inspected or no answer,
+    0 'Excluded by noindex' (the pre-launch header crawl of 10-17; the page is open now), 1 discovered, not yet crawled, 2 never inspected or no answer,
     3 any other state (redirect, duplicate, ...); None = indexed, no request needed."""
     s = (state or "").lower()
+    if s.startswith("crawled"):  # owner 2026-11-15: Google read it and said no; asking again without changing the page is pushing a page Google judged thin (fix the page, never re-ask)
+        return None
     return 0 if "noindex" in s else 1 if "not indexed" in s else 2 if not s or s.startswith("no answer") else None if "indexed" in s else 3
 
 
@@ -75,9 +77,10 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if a == ["--selftest"]:
         assert pick(["https://x/a/", "https://x/b/"], ["https://x/n1/", "https://x/n2/"], ["https://x/a/\t2026-11-10"], 3) == ["https://x/n2/", "https://x/n1/", "https://x/b/"], "reindex: new pages not first, a done page repeated, or the backlog lost"
-        S = {"https://x/b/": {"state": "Excluded by ‘noindex’ tag"}, "https://x/n1/": {"state": "Submitted and indexed"}, "https://x/z/": {"state": "Crawled - currently not indexed"}, "https://x/y/": {"state": "Indexed, not submitted in sitemap"}}
+        S = {"https://x/b/": {"state": "Excluded by ‘noindex’ tag"}, "https://x/n1/": {"state": "Submitted and indexed"}, "https://x/z/": {"state": "Discovered - currently not indexed"}, "https://x/y/": {"state": "Indexed, not submitted in sitemap"}}
         assert pick(["https://x/a/", "https://x/b/"], ["https://x/n1/", "https://x/n2/"], [], 5, S) == ["https://x/b/", "https://x/z/", "https://x/n2/", "https://x/a/"], "reindex: noindex pages not first, an indexed page requested, or a not-indexed page outside the queue missed"
         assert pick([], [], [], 3, {u: {"state": "Excluded by noindex"} for u in ("https://x/s/", "https://x/b/")}, {"https://x/b/": 90, "https://x/s/": 5}) == ["https://x/b/", "https://x/s/"], "reindex: a small page asked before a big one in the same state"
+        assert rank("Crawled - currently not indexed") is None and rank("Discovered - currently not indexed") == 1, "reindex: a page Google crawled and declined was asked again, or a never-crawled one was dropped"
         print("selftest OK")
     elif a[:1] == ["next"]:
         print("\n".join(pick(main_copy("queue"), main_copy("new"), main_copy("done") + local_done(), int(a[1]) if a[1:] else 10, inspected(), scores())))
