@@ -750,7 +750,8 @@ def page(p, r, now, rows=(), keep=(), idx=None):
 def embed_fold(url, name):
     """The same 'Embed this live panel' fold as a US page (lib/page.py embed_code), for a page outside the US."""
     from lib import page as pg_
-    return pg_.embed_fold_html(pg_.embed_snippet(url, name))
+    f = pg_.embed_fold_html(pg_.embed_snippet(url, name))
+    return f.replace("</details>", '<p><a href="/embed%s">See the panel</a></p></details>' % url, 1)  # a reader previews it; it also keeps the panel reachable like a US one
 
 
 def embed_page(url, html, feed):
