@@ -241,6 +241,9 @@ def main():
                     continue
                 gp = world.page(page, r, wnow, d["rows"], keep, near)
                 emit(gp[0], gp[1])
+                ep_ = world.embed_page(gp[0], gp[1], page.get("feed", "pegelonline"))
+                if ep_:
+                    write(nxt, "/embed" + gp[0], ep_)  # owner 2026-11-15: the embed panel for pages outside the US too
                 built_map[gp[0]] = {"at": iso(now)}  # keyed by URL: check.py keep_old_times keeps a carried world page's old time, so the watchdog's 6 h alarm sees it
                 world_rows.append([(r.get("title") or "%s at %s" % (page["river"], r["name"].replace(" UP", "").title())), gp[0], round(r["lat"], 4), round(r["lon"], 4), {"eccc": "Canada", "ea": "England UK", "imi": "Ireland"}.get(page.get("feed"), "Germany Europe")])
             wp = directory.world_page(page, d, wnow, keep)

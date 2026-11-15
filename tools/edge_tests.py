@@ -1295,6 +1295,12 @@ if __name__ == "__main__":
     from lib.core import credit_once as co1_
     c_ = co1_('<p class="src">Source: a. Credit: Data: U.S. Geological Survey. Credit: NWS x.</p><p class="src">Source: b. Credit: NWS x.</p><p class="src">Source: c. Credit: Data: U.S. Geological Survey.</p>')
     assert c_.count("Credit: NWS x.") == 1 and c_.count("U.S. Geological Survey.") == 1 and c_.count("Source:") == 3, "a source credit repeated on one page, or a Source line was lost"
+    # owner 2026-11-15: the embed panel on pages outside the US too, with the agency credit its licence asks for
+    wh_ = '<main id="main"><h1>Rhine at Kaub water level today</h1><p class="sub">Gauge KAUB</p><p class="answer">Low</p><div class="hero hero2"><div class="tile">60 cm</div></div><section>x</section></main>'
+    we_ = world.embed_page("/rhine/kaub/", wh_, "pegelonline")
+    assert we_ and "60 cm" in we_ and "<section>" not in we_ and "noindex" in we_ and "/rhine/kaub/" in we_ and (core_mod_credit := __import__("lib.core", fromlist=["SOURCES"]).SOURCES["pegelonline"]["credit"]) and core_mod_credit.split(":")[0] in we_, "world embed: tiles missing, the full page leaked in, indexable, or the agency credit lost"
+    assert world.embed_page("/x/", "<main>no hero</main>", "ea") is None, "a world page with no tiles produced an empty embed"
+    assert "Copy code" in world.embed_fold("/rhine/kaub/", "Rhine at Kaub") and "/embed/rhine/kaub/" in world.embed_fold("/rhine/kaub/", "Rhine at Kaub"), "world page lost the embed fold"
     # fix list 2026-11-15: NWS long-range outlook -999 (no chance for a category) showed as '-99900%' and held three pages
     assert b3t_.lro_ok(0.25) and b3t_.lro_ok("<0.05") and b3t_.lro_ok(0) and not b3t_.lro_ok(-999) and not b3t_.lro_ok("-999") and not b3t_.lro_ok(None) and not b3t_.lro_ok(1.5) and not b3t_.lro_ok(True), "flood outlook: a fill value or a non-chance was shown as a chance"
     # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it

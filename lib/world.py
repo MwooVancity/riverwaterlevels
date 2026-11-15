@@ -742,4 +742,40 @@ def page(p, r, now, rows=(), keep=(), idx=None):
             html = FC_NONE.sub(ui.tile("fcst", "crest", "Next tide (prediction)", "%s %.2f <small>m</small>" % ("High" if nxt_[0][2] == "H" else "Low", nxt_[0][1]),
                           "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1)
     html = localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
+    name = (re.search(r"<h1>([^<]*)</h1>", html) or [None, "%s water level" % p["river"]])[1]
+    html = html.replace("</main>", embed_fold(row["dashboard_url"], name) + "</main>", 1)  # owner 2026-11-15: the embed panel on every page, any country
     return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)
+
+
+def embed_fold(url, name):
+    """The same 'Embed this live panel' fold as a US page (lib/page.py embed_code), for a page outside the US."""
+    from lib import page as pg_
+    return pg_.embed_fold_html(pg_.embed_snippet(url, name))
+
+
+def embed_page(url, html, feed):
+    """The embeddable panel for a page outside the US, cut from its built page: title line, observed line, the answer and the tiles, the agency's
+    credit (its licence asks for it: OGL, DL-DE, Canada's open licence) and one link back. noindex, like the US panel."""
+    from lib import page as pg_
+    h1 = re.search(r"<h1>.*?</h1>", html, re.S)
+    sub = re.search(r'<p class="sub">.*?</p>', html, re.S)
+    ans = re.search(r'<p class="answer".*?</p>', html, re.S)
+    i = html.find('<div class="hero')
+    if not (h1 and i > 0):
+        return None
+    depth, j = 0, i
+    for m in re.finditer(r"<(/?)div\b", html[i:]):
+        depth += -1 if m.group(1) else 1
+        if depth == 0:
+            j = i + m.end()
+            break
+    hero = html[i:html.find(">", j) + 1] if j > i else ""
+    if not hero:
+        return None
+    credit = (core.SOURCES.get(feed) or {}).get("credit") or ""
+    full = common.SITE_URL + url
+    title = re.sub(r"<[^>]+>", "", h1.group(0)) + " (embed)"
+    body = h1.group(0) + (sub.group(0) if sub else "") + (ans.group(0) if ans else "") + hero + (('<p class="src">%s</p>' % esc(credit)) if credit else "") + \
+        '<p class="src"><a href="%s" target="_top" rel="noopener">Full page with history and official links on riverwaterlevels.com</a></p>' % full
+    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>'
+            % (esc(title), common.SITE_URL + "/embed" + url, pg_.HEAD_EXTRA, pg_.CSS, body))

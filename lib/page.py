@@ -197,18 +197,21 @@ def embed_snippet(url, name):
 
 
 def embed_code(G):
-    """A closed fold under the official links with this page's own embed code, ready to copy. None on a world page: build.py writes no embed panel for it."""
+    """A closed fold under the official links with this page's own embed code, ready to copy. A world page gets the same fold from lib/world.py."""
     if G.get("feed"):
         return ""
-    name = "%s water level" % river_at(G["river"], G["place"])
+    return embed_fold_html(embed_snippet(G["row"]["dashboard_url"], "%s water level" % river_at(G["river"], G["place"])))
+
+
+def embed_fold_html(snippet):
+    """The fold itself (one copy for every country): the code, a Copy button and the HTML box to use in each site builder (owner 2026-11-15: easy for anyone)."""
     copy = ('<button type="button" onclick="var t=this.previousElementSibling;t.select();'
             '(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});'
-            'this.textContent=&quot;Copied&quot;">Copy code</button>')  # owner 2026-11-15: easy for anyone; the old browser path copies the selected text
+            'this.textContent=&quot;Copied&quot;">Copy code</button>')
     steps = ("<ol><li>Press <b>Copy code</b>.</li><li>On your site add an HTML box: WordPress <b>Custom HTML</b> block, Wix <b>Embed Code</b>, "
              "Squarespace <b>Code</b> block, or your editor's HTML option.</li><li>Paste and save. The panel keeps itself up to date.</li></ol>")
     return ('<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
-            % esc(embed_snippet(G["row"]["dashboard_url"], name))) + copy + steps + \
-        "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
+            % esc(snippet)) + copy + steps + "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
 
 
 # Each URL fetched 2026-11-11 by the PLAN 8 research; a state not listed had no verified program page.
