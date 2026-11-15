@@ -1285,6 +1285,13 @@ if __name__ == "__main__":
     assert "next 28 hours" in b3t_._tide_chart(Gt_), "a 28 h NOAA file labelled as another span"
     assert "6-minute tide predictions" in b3t_._tide_chart(Gt_) and "our calculation" not in b3t_._tide_chart(Gt_), "NOAA's own curve credited to us"
     assert b3t_._tide_chart(dict(Gt_, tables=False)) == "", "a coast with a live level got a second tide chart"
+    # AdSense review 2026-11-15: a column that is Unknown on every row is said once, not drawn as a wall of Unknown
+    from lib.core import table as tbl_, tr as tr_
+    t_ = tbl_(["Time", "Compared", "Height"], "".join(tr_([a, "Unknown", b]) for a, b in (("1", "4.1 ft"), ("2", "4.3 ft"))))
+    assert "<th scope=\"col\">Compared" not in t_ and "Compared: Unknown for every row" in t_ and t_.count("<td>") == 4, "an all-Unknown column was drawn, or its note lost"
+    t2_ = tbl_(["Time", "Compared"], tr_(["1", "Unknown"]) + tr_(["2", "3 ft"]))
+    assert "Compared</th>" in t2_ and "for every row" not in t2_, "a column with one real value was dropped"
+    assert "for every row" not in tbl_(["Time", "Compared"], tr_(["1", "Unknown"])), "a one-row table lost its only Unknown column (one row says it plainly)"
     # fix list 2026-11-15: NWS long-range outlook -999 (no chance for a category) showed as '-99900%' and held three pages
     assert b3t_.lro_ok(0.25) and b3t_.lro_ok("<0.05") and b3t_.lro_ok(0) and not b3t_.lro_ok(-999) and not b3t_.lro_ok("-999") and not b3t_.lro_ok(None) and not b3t_.lro_ok(1.5) and not b3t_.lro_ok(True), "flood outlook: a fill value or a non-chance was shown as a chance"
     # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it

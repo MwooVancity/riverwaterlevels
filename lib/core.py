@@ -318,8 +318,26 @@ def render_block(b):
     return ('<section class="card blk" data-f="%s" id="%s"><h2>%s <span class="tag t-%s">%s</span>%s<a class="pl" href="#%s" aria-label="Link to %s">#</a></h2>%s%s</section>' % (fam, b["id"], esc(b["heading"]), b["tag"], esc(TAGS[b["tag"]]), amber, b["id"], esc(b["heading"]), src, b["body"]))
 
 
+def unknown_cols(heads, rows):
+    """Columns whose every cell reads 'Unknown' (2+ rows, no colspan): AdSense review 2026-11-15 read whole Unknown columns (Anchorage future tides
+    'Compared with the flood level') as an empty page. Said once in a sentence instead."""
+    if "colspan" in rows:
+        return []
+    grid = [[re.sub(r"<[^>]+>", "", c).strip() for c in re.findall(r"<td[^>]*>(.*?)</td>", r, re.S)] for r in rows.split("</tr>") if "<td" in r]
+    if len(grid) < 2 or any(len(g) != len(heads) for g in grid):
+        return []
+    return [i for i in range(len(heads)) if all(g[i] == "Unknown" for g in grid)]
+
+
 def table(heads, rows, right=(), hide=(), stack=False):
-    th = "".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
+    gone = unknown_cols(heads, rows)
+    if gone and len(gone) < len(heads) - 1:
+        cut = lambda r: "".join(c for i, c in enumerate(re.findall(r"<td[^>]*>.*?</td>", r, re.S)) if i not in gone)
+        rows = "".join(re.sub(r"(<tr[^>]*>).*", lambda m: m.group(1) + cut(r_), r_, count=1, flags=re.S) + "</tr>" for r_ in rows.split("</tr>") if "<td" in r_)
+        note = '<p class="src">%s: Unknown for every row, so the column is left out.</p>' % esc(", ".join(heads[i] for i in gone))
+        keep = [i for i in range(len(heads)) if i not in gone]
+        return table([heads[i] for i in keep], rows, tuple(keep.index(i) for i in right if i in keep), tuple(keep.index(i) for i in hide if i in keep), stack) + note
+    th ="".join('<th scope="col"%s>%s</th>' % (' class="r"' if i in right else "", esc(h)) for i, h in enumerate(heads))
     names = ["hc%d" % i for i in hide]
     if len(heads) - len(hide) > 5 or stack:  # owner 2026-11-09: stacked cards repeat every label and read worse than a 5-column table; tables are capped at 5 (check.py wide_tables)  # on a phone a wide table becomes stacked rows (label: value) instead of columns cut off at the edge
         names.append("stk")
