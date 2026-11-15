@@ -1291,6 +1291,7 @@ if __name__ == "__main__":
     Ga_["rec"]["nws"]["alerts"][0]["event"] = "Flood Warning"
     css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
     assert ".abanner.fl b" in css_ and ".alert.fl>b:first-child" in css_ and "#b3261e" in css_, "flood alert red style gone"
+    assert us_.index("b3.b_dam_facts(G)") > us_.index('"FOLD:Watershed, water quality and land"'), "dam facts (history) back above the water and weather"
     assert on_('"SEC:Level and flow"', "imp if near else None", '"SEC:Getting on the water"', '"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"
     side_ = re.search(r"SIDE = (\{[^}]*\})", pg_).group(1)
     assert not any(x in side_ for x in ('"recreation_sites"', '"public_land"', '"air_obs"')), "page order: a section went back to the side column (bottom of a phone)"

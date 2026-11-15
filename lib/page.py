@@ -318,8 +318,8 @@ def tab_blocks(tab, G, pages):
         # water, the weather, the level and flow, and how to get on the water come first; the forecast and outlook next; flood statements only while
         # the river is near a flood level (impacts_near), else with the flood record in the fold. A live alert still opens the page.
         lead = ([b3.b_tides(G), sc, b3.b_surf(G), b3.b_redtide(G), b3.b_kingtide(G), b3.b_waves(G), b3.b_moon(G)] if coast else
-                [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_dam_facts(G), b3.b_waves(G)] if lake else
-                [b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
+                [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_waves(G)] if lake else
+                [b3.b_reservoir(G), b3.b_waves(G)])  # dam facts (year built, owner, height) are history, not water today: in the watershed fold (phone review 2026-11-14)
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), b3.b_speed(G), None if coast else b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G)] + ([] if has_al else [b_alerts(G)]) + [
@@ -330,7 +330,7 @@ def tab_blocks(tab, G, pages):
                 "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_key_facts(G), b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G),
                 "FOLD:Flood record and history", None if near else imp, b_peaks(G), b_floods(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G),
-                "FOLD:Watershed, water quality and land", b3.b_samples(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G),
+                "FOLD:Watershed, water quality and land", b3.b_dam_facts(G), b3.b_samples(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G),
                 b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]
     return []  # only the dashboard tab is built (one page per gauge)
 
