@@ -1048,6 +1048,8 @@ def ad_gaps(rel, h):
     bad = []
     if "adsbygoogle.js" in h and not -1 < h.find('gtag("consent","default"') < h.find("adsbygoogle.js"):
         bad.append("Google ad tag before the consent defaults")
+    if "adsbygoogle.js" in h and "/" + rel.replace("\\", "/").replace("index.html", "") in __import__("lib.common", fromlist=["NO_ADS"]).NO_ADS:
+        bad.append("ad tag on a legal or contact page (AdSense review 2026-11-15: lib/common.py NO_ADS)")
     if rel.replace("\\", "/") == "privacy/index.html":
         bad += ["privacy page lost %r" % w for w in ("use cookies to serve ads", "opt out of personalized advertising", "aboutads.info", "adssettings.google.com", "consent message") if w not in h]
     return bad
@@ -1116,6 +1118,7 @@ def selftest():
     assert pg_.review_ok("06893000", "/river/x/y/", rv_) and pg_.review_ok("9410170", "/coast/san-diego/", rv_) and not pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", rv_) and pg_.review_ok("CDEC-SHA", "/lake/shasta-lake/", (set(), {"lake-agency-CDEC"})) and not pg_.review_ok("USACE-X", "/lake/x/", (set(), {"lake-agency-CDEC"})), "selftest: review per template variant (owner 2026-11-08) let an unreviewed variant through or held a reviewed one"
     W_ ={"/a/x/", "/b/y/", "/c/z/", "/d/w/"}
     ad ='<script>gtag("consent","default",{})</script><script src="adsbygoogle.js"></script>'
+    assert ad_gaps("contact/index.html", ad) and not ad_gaps("contact/index.html", '<script>gtag("consent","default",{})</script>'), "selftest: ads on the contact page passed, or analytics alone was flagged"
     assert not ad_gaps("a/index.html", ad) and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script><script>gtag("consent","default",{})</script>') and ad_gaps("a/index.html", '<script src="adsbygoogle.js"></script>'), "selftest: the consent order rule did not fire"
     assert ad_gaps("privacy/index.html", "<p>none</p>"), "selftest: the privacy wording rule did not fire"
     from lib.common import interp_pct

@@ -31,7 +31,7 @@ if(i)i.addEventListener('input',ap);document.querySelectorAll('[data-f]').forEac
 def shell(title, desc, url, body, extra_main_class="", ld=""):
     return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s%s%s</head><body>%s<main id="main"%s>%s</main>%s</body></html>' % (
-                esc(title), esc(desc), SITE_URL + url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS_LINK, DIR_LINK, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
+                esc(title), esc(desc), SITE_URL + url, (ANALYTICS if url in NO_ADS else ADSENSE) + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, SITE_URL + url) + ld + robots_meta(url), CSS_LINK, DIR_LINK, nav(), (' class="%s"' % extra_main_class) if extra_main_class else "", body, footer()))
 
 
 NEAR_JS = """<script>(function(){var b=document.getElementById('nearbtn'),o=document.getElementById('near');if(!b||!o||!navigator.geolocation||!window.fetch)return;b.hidden=false;
