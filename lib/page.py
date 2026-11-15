@@ -301,6 +301,11 @@ def tab_blocks(tab, G, pages):
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
         has_al = bool(live_alerts(G))
+        try:
+            near = impacts_near(G)
+        except Exception:  # an odd feed never hides the statements: they stay high
+            near = True
+        imp = b_impacts(G)  # calm day: NWS impact statements go to the flood history fold (owner 2026-11-14)
         # Search order (Keyword Planner, fresh agent 2026-11-06): coasts 'tides' 1.15M + 'tide times' 620k + 'tide chart' 96k a month, so the
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
@@ -310,14 +315,14 @@ def tab_blocks(tab, G, pages):
                 [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_dam_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [
-                "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_impacts(G), b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
+                "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), imp if near else None, b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), b3.b_speed(G), None if coast else b3.b_tides(G),
                 "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
                 "SEC:River forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_like_today(G), "AD",
                 "SEC:Rain and longer outlook", b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_snotel(G), b_cpc(G),
                 "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b_land(G), b3.b_stocking(G), b3.b_fish(G), b3.b_moonphase(G), b3.b_dam(G),
                 "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_key_facts(G), b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G),
-                "FOLD:Flood record and history", b_peaks(G), b_floods(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
+                "FOLD:Flood record and history", None if near else imp, b_peaks(G), b_floods(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G),
                 "FOLD:Watershed, water quality and land", b3.b_samples(G), b2.b_drought(G), b2.b_attains(G), b3.b_streamcat(G),
                 b_related(G, pages), b_nearby(G, pages), b3.b_nws_point(G, pages), b_map(G), b_official_links(G), b2.b_about(G)]

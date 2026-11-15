@@ -231,6 +231,23 @@ def b_low_water(G):
                  "Source: National Weather Service forecast point %s (%s), low-water impacts and historic low stages. Statements are quoted from the NWS." % (esc(n.get("lid") or ""), esc(n.get("name") or "")), "nwps")
 
 
+def impacts_near(G):
+    """True when the NWS impact statements belong high on the page: a live alert, a reading that is old or unknown, or the latest reading or the NWS forecast within 10% of the lowest impact level.
+    A calm day (owner 2026-11-14: flood statements sat above the weather and the water on a normal day) is False, and the statements go to the flood history fold; the gage tile still names the next impact."""
+    by = impact_list(G)
+    al = live_alerts(G)
+    if not by or al is None or al or G.get("age_min") is None or G["age_min"] > stale_after("usgs") * 60:
+        return True  # unknown is never calm
+    flow_ = impact_flow(G)
+    cur = G.get("lv") if flow_ else impact_cur(G, datum_gap(G))
+    if cur is None:
+        return True
+    fc = (G["rec"].get("nwps") or {}).get("forecast") or {}
+    ahead = [x[2] if flow_ else x[1] for x in fc_points(fc) if x[0] >= G["now"]] if fc.get("points") else []
+    low = min(by)
+    return max([cur] + [v for v in ahead if v is not None]) >= low - max(0.1 * abs(low), 0 if flow_ else 1.0)  # at least 1 ft on a stage: a 1 ft impact on a small creek
+
+
 def b_impacts(G):
     n = G["rec"].get("nwps") or {}
     im = n.get("impacts") or []

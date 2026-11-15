@@ -1242,6 +1242,31 @@ if __name__ == "__main__":
     at_ = lambda s_: pg_.index(s_)
     assert at_('"SEC:Rain and longer outlook"') < at_("b_snotel(G)") < at_('"SEC:Getting on the water"') < at_("b3.b_recreation(G), b_land(G)") < at_('"SEC:How today compares with past years"') < at_("b3.b_key_facts(G), b3.b_month_chart"), "page order: snowpack, public land or key facts moved back"
     assert at_("[b3.b_tides(G), sc, b3.b_surf(G), b3.b_redtide(G), b3.b_kingtide(G)") > 0, "page order: coast lead changed"
+    # owner 2026-11-14: NWS flood statements sat above the weather and the water on a calm day; they go to the flood fold unless near, alerted, forecast or unknown
+    from lib import forecast as fo_
+    now_ = datetime.datetime(2026, 11, 14, 20, tzinfo=datetime.timezone.utc)
+    imp_ = lambda **k: dict({"rec": {"nwps": {"impacts": [{"stage": 8.0, "statement": "Water reaches the low end of the riverside park trail near the bridge."}], "stage_units": "ft"}},
+                              "now": now_, "age_min": 20, "lv": 1200.0, "sg": [], "fl": [], "alerts": [], "site": "x"}, **k)
+    orig_ = fo_.impact_cur, fo_.live_alerts
+    try:
+        fo_.live_alerts = lambda G: G.get("alerts")
+        fo_.impact_cur = lambda G, gap: G.get("_cur")
+        assert not fo_.impacts_near(imp_(_cur=3.6)), "calm: 3.6 ft against an 8 ft impact kept the statements high"
+        assert fo_.impacts_near(imp_(_cur=7.5)), "near: 7.5 ft against 8 ft moved the statements down"
+        assert fo_.impacts_near(imp_(_cur=None)), "unknown reading treated as calm"
+        assert fo_.impacts_near(imp_(_cur=3.6, age_min=999)), "an old reading treated as calm"
+        assert fo_.impacts_near(imp_(_cur=3.6, alerts=[{"event": "Flood Watch"}])), "a live alert moved the statements down"
+        assert fo_.impacts_near(imp_(_cur=3.6, alerts=None)), "alert feed down (unknown) treated as calm"
+        G_ = imp_(_cur=0.2); G_["rec"]["nwps"]["impacts"][0]["stage"] = 1.0
+        assert fo_.impacts_near(G_), "small creek: 0.2 ft against a 1 ft impact counted as calm"
+        fc_ = {"primary_units": "ft", "points": [{"t": "2026-11-15T12:00:00Z", "primary": 8.4}]}
+        G_ = imp_(_cur=3.6); G_["rec"]["nwps"]["forecast"] = fc_
+        assert fo_.impacts_near(G_), "a forecast reaching the impact moved the statements down"
+        fc_["points"][0]["t"] = "2026-11-13T12:00:00Z"
+        assert not fo_.impacts_near(G_), "a past forecast point kept a calm day high"
+    finally:
+        fo_.impact_cur, fo_.live_alerts = orig_
+    assert at_("imp if near else None") < at_('"SEC:What the water is like now"') < at_('"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"
     side_ = re.search(r"SIDE = (\{[^}]*\})", pg_).group(1)
     assert not any(x in side_ for x in ('"recreation_sites"', '"public_land"', '"air_obs"')), "page order: a section went back to the side column (bottom of a phone)"
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
