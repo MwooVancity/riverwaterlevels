@@ -370,7 +370,7 @@ def footer():
 
 
 def og_tags(title, desc, url):
-    return ('<meta property="og:type" content="website"><meta property="og:site_name" content="%s"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:url" content="%s"><meta property="og:image" content="%s/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="River Water Levels: current flow, gage height and how it compares with normal for US river gauges"><meta name="twitter:card" content="summary_large_image">'
+    return ('<meta property="og:type" content="website"><meta property="og:site_name" content="%s"><meta property="og:title" content="%s"><meta property="og:description" content="%s"><meta property="og:url" content="%s"><meta property="og:image" content="%s/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="River Water Levels: current flow, gage height and how it compares with normal at river gauges"><meta name="twitter:card" content="summary_large_image">'
             % (esc(BRAND), esc(title), esc(desc), esc(url), SITE_URL))
 
 

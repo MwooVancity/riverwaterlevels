@@ -774,8 +774,11 @@ def embed_page(url, html, feed):
         return None
     credit = (core.SOURCES.get(feed) or {}).get("credit") or ""
     full = common.SITE_URL + url
-    title = re.sub(r"<[^>]+>", "", h1.group(0)) + " (embed)"
+    import html as _h
+    name = _h.unescape(re.sub(r"<[^>]+>", "", h1.group(0)))
+    title = name + " (embed)"
+    desc = ("Live water level panel for " + name + " from official agency data, with time and source.")[:200]
     body = h1.group(0) + (sub.group(0) if sub else "") + (ans.group(0) if ans else "") + hero + (('<p class="src">%s</p>' % esc(credit)) if credit else "") + \
         '<p class="src"><a href="%s" target="_top" rel="noopener">Full page with history and official links on riverwaterlevels.com</a></p>' % full
-    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>'
-            % (esc(title), common.SITE_URL + "/embed" + url, pg_.HEAD_EXTRA, pg_.CSS, body))
+    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">%s<link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>'
+            % (esc(title), esc(desc), pg_.og_tags(title, desc, common.SITE_URL + "/embed" + url), common.SITE_URL + "/embed" + url, pg_.HEAD_EXTRA, pg_.CSS, body))
