@@ -1,0 +1,3 @@
+# One cause per line, exactly as tools/fix_list.py prints it; every queued gauge held by it is picked again by the next release.
+page-check: info gain: missing tide chart that <url> shows
+page-check: doubled word '...'

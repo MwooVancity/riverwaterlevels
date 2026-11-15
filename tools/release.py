@@ -23,7 +23,9 @@ cached = {f[:-5] for f in os.listdir(os.path.join(ROOT, "cache")) if f.endswith(
 live_ = {r["site"]: r for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8"))}
 import datetime as _dt
 TODAY = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
-open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY) or g.startswith("page-check: info gain: missing tide chart")  # 2026-11-14: tide-table coasts now draw the NOAA tide chart; the ones held for lacking it get picked again (ponytail: drop this clause once none is gated so)  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
+import fix_list as _fl
+_FIXED = {l.strip() for l in open(os.path.join(ROOT, "data", "fixed-causes.txt"), encoding="utf-8") if l.strip() and not l.startswith("#")} if os.path.exists(os.path.join(ROOT, "data", "fixed-causes.txt")) else set()
+open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY) or _fl.cause(g) in _FIXED  # owner 2026-11-15 "make sure shit gets fixed": a cause fixed in code (data/fixed-causes.txt, as tools/fix_list.py prints it) reopens every gauge it held  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
 picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and open_gate(live_.get(r["site"], {}).get("gate"))] if os.path.exists(lst) else []
 seen_ = {r["site"] for r in picks}
 picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and open_gate(r.get("gate")) and r["site"] not in seen_),
@@ -128,12 +130,9 @@ from lib import pages as _pages
 _rv = _pages.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # owner 2026-11-08 fully automatic: a page passes when its url or its template variant passed a review
 _url = lambda x: str(x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url") or "")
 _u = lambda x: x[1] == 1 and not _pages.review_ok(x[3]["site"], _url(x), _rv)
-import open_wave as _ow  # owner 2026-11-15 "never push out thin pages again": a kind Google is declining as thin gets no new pages until its pages are improved
-_held = _ow.held_now()
-_kind_now = lambda x: ("world-" + (x[3].get("feed") or "pegelonline")) if x[1] == 0 else (_pages.variant(x[3]["site"], _url(x)) or "river")
-for k_, (d_, j_) in sorted(_held.items()):
-    print("HELD KIND %s: Google declined %d of %d judged pages; no new %s page today" % (k_, d_, j_, k_))
-both = [x for x in both if _kind_now(x) not in _held]
+import open_wave as _ow  # owner 2026-11-15: a kind Google declines is named first on the fix list (tools/fix_list.py), never held ("I don't want a page ever blocked ... make sure it gets fixed")
+for k_, (d_, j_) in sorted(_ow.held_now().items()):
+    print("FIX FIRST kind %s: Google declined %d of %d judged pages (tools/fix_list.py)" % (k_, d_, j_))
 _k, _cut = [], 0
 for x in both:
     if len(_k) >= n:

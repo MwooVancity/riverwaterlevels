@@ -74,10 +74,9 @@ def main():
     from lib import pages as pages_
     rv = pages_.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # urls and template variants that passed a phone review; a missing file opens no lake or coast
     rows_ = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
-    kind_of = kinds()[0]
     held = held_now()
     for k_, (d_, j_) in sorted(held.items()):
-        print("HELD KIND %s: Google declined %d of the %d pages it judged ('Crawled - currently not indexed'); no new %s page opens until its pages are improved" % (k_, d_, j_, k_))
+        print("FIX FIRST kind %s: Google declined %d of the %d pages it judged ('Crawled - currently not indexed'); still opening (owner 2026-11-15: never held), first on tools/fix_list.py" % (k_, d_, j_))
     stuck = []  # live pages held for a reason a fix can clear (not a river's short record, which is by design): the watchdog alarms on these (ChatGPT round 1: open_wave exited 0 while skipping every lake)
     for row in rows_:
         u = row["url"]
@@ -90,9 +89,6 @@ def main():
         if not pages_.review_ok(row["site"], u, rv):  # CLAUDE.md: every new page kind is screenshotted at phone width before Google; a lake or coast opens only once its review passed (data/reviewed.json)
             skipped["not reviewed"] += 1
             unreviewed.append(u)
-            continue
-        if kind_of.get(u) in held:  # owner 2026-11-15: Google is declining this kind as thin; opening more of it would teach Google the site is thin
-            skipped["kind Google declines"] = skipped.get("kind Google declines", 0) + 1
             continue
         # owner 2026-11-08: "no such thing as thin content if it's literally a different river/lake": no block-count or years-of-record gate; the page says what it lacks
         pick.append((u, row["river"], row["place"], row["score"]))
