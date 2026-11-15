@@ -1271,6 +1271,21 @@ if __name__ == "__main__":
         assert not fo_.impacts_near(G_), "a past forecast point kept a calm day high"
     finally:
         fo_.impact_cur, fo_.live_alerts = orig_
+    # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it
+    from lib import ui as ui_, core as co_
+    u_ = co_.nws_url({"lat": 37.2753, "lon": -107.8801})
+    assert u_ == "https://forecast.weather.gov/MapClick.php?lat=37.2753&lon=-107.8801" and co_.nws_url({"lat": None, "lon": 1.0}) is None, "official NWS link wrong, or built without a position"
+    bn_ = ui_.banner(1, "Flood Warning", None, u_, True)
+    assert 'class="abanner fl"' in bn_ and 'href="%s"' % u_ in bn_ and "Verify on weather.gov" in bn_, "flood banner not red or not linked to weather.gov"
+    assert "class=\"abanner\"" in ui_.banner(1, "Wind Advisory", None, None, False) and "href=\"#alerts\"" in ui_.banner(1, "x") and "Verify on" not in ui_.banner(1, "x"), "a non-flood banner turned red, or no position lost the fallback link"
+    Ga_ = {"rec": {"nws": {"fetched_at": "2026-11-14T19:50:00Z", "alerts": [{"event": "Flood Warning", "severity": "Severe", "areaDesc": "La Plata", "headline": "Flood Warning issued", "ends": "2026-11-15T20:00:00Z"}]}},
+           "now": now_, "zone": zoneinfo.ZoneInfo("America/Denver"), "lat": 37.2753, "lon": -107.8801, "site": "x"}
+    ab_ = fo_.b_alerts(Ga_)["body"]
+    assert 'class="alert sev-severe fl"' in ab_ and u_ in ab_, "flood alert card not red, or no official link to verify"
+    Ga_["rec"]["nws"]["static"] = {"marine": "AMZ452"}
+    assert "shmrn.php?mz=amz452" in fo_.b_alerts(Ga_)["body"], "coast: marine-zone alerts have no official page to verify on"
+    css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
+    assert ".abanner.fl b" in css_ and ".alert.fl>b:first-child" in css_ and "#b3261e" in css_, "flood alert red style gone"
     assert on_('"SEC:Level and flow"', "imp if near else None", '"SEC:Getting on the water"', '"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"
     side_ = re.search(r"SIDE = (\{[^}]*\})", pg_).group(1)
     assert not any(x in side_ for x in ('"recreation_sites"', '"public_land"', '"air_obs"')), "page order: a section went back to the side column (bottom of a phone)"

@@ -562,7 +562,7 @@ def hero(G, pages=None):
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
-    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"])), c["alerts"].get("col")) if c["alerts"] and c["alerts"]["n"] else ""
+    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"])), c["alerts"].get("col"), nws_url(G), c["alerts"].get("flood")) if c["alerts"] and c["alerts"]["n"] else ""
     al_ = c["alerts"]
     if al_ is None:
         a_txt, a_cls = "NWS alerts unknown", "ax"

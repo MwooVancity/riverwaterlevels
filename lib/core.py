@@ -49,6 +49,12 @@ DISCLAIMER = ("Percentile is estimated from USGS published daily percentiles. Re
 IGNORED_ALERTS = {"Test Message", "Administrative Message"}
 
 
+def nws_url(G):
+    """The official NWS page for the gauge location: its forecast and every active alert there, so a reader can verify an alert we show (owner 2026-11-14). None without a position."""
+    la, lo = G.get("lat"), G.get("lon")
+    return "https://forecast.weather.gov/MapClick.php?lat=%.4f&lon=%.4f" % (la, lo) if isinstance(la, (int, float)) and isinstance(lo, (int, float)) else None
+
+
 def live_alerts(G):
     """The NWS alerts still in force at build time: system test messages and alerts past their end (or message expiry) are left out. None when alerts could not be loaded."""
     al = (G["rec"].get("nws") or {}).get("alerts")

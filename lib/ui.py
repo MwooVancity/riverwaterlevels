@@ -143,9 +143,10 @@ def ladder(cats, cur, fc=None, now_label="Latest", fc_label="Forecast high"):
     return '<div class="lad" role="img" aria-label="%s"><div class="lad-bar">%s%s</div><ul class="lad-key">%s</ul></div>' % (txt, segs, marks, key)
 
 
-def banner(n, names_html, col=None):
-    """Alert strip above the tiles when the NWS has active alerts for the gauge location; col = the NWS map colour of the top alert (lib/common.py alert_col), on the left border only."""
-    return '<a class="abanner" href="#alerts"%s><i class="ic">%s</i><b>%d active National Weather Service alert%s</b><span>%s</span><em>Details</em></a>' % ((' style="border-left:8px solid %s"' % col) if col else "", icon("bell"), n, "" if n == 1 else "s", names_html)
+def banner(n, names_html, col=None, url=None, flood=False):
+    """Alert strip above the tiles when the NWS has active alerts for the gauge location; col = the NWS map colour of the top alert (lib/common.py alert_col), on the left border only.
+    Owner 2026-11-14: a flood alert reads bold red, and the strip opens the official NWS page for this point (url) so a reader can verify it; the alert cards sit right below it."""
+    return '<a class="abanner%s" href="%s"%s><i class="ic">%s</i><b>%d active National Weather Service alert%s</b><span>%s</span><em>%s</em></a>' % (" fl" if flood else "", url or "#alerts", (' style="border-left:8px solid %s"' % col) if col else "", icon("bell"), n, "" if n == 1 else "s", names_html, "Verify on weather.gov" if url else "Details")
 
 
 def bars(rows, vmax, mark=None):
