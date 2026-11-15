@@ -825,6 +825,7 @@ def build_tab(tab, G, pages):
                 esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (((AGE_JS if G.get("lake") or G.get("stage_only") else LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"])) + GTABS_JS + TAP_JS.replace("@TZ@", G["tzname"]) + RANGE_JS + CITE_JS + (TIDE_JS.replace("@TZ@", G["tzname"]) if G.get("coast") else "")) if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@MZ@", re.sub(r"[^A-Z0-9]", "", (((G["rec"].get("nws") or {}).get("static") or {}).get("marine") or ""))).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
     if G.get("lake"):
         page = lake_words(page, G)
+    page = credit_once(page)
     meta = {"site": G["site"], "tab": tab, "url": row[tab + "_url"] if tab != "dashboard" else row["dashboard_url"], "title": title, "blocks": [b["id"] for b in shown], "age_min": round(G["age_min"]),
             "hash": hashlib.sha256(page.encode()).hexdigest()[:16]}
     return page, meta

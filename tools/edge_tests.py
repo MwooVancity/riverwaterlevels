@@ -1292,6 +1292,9 @@ if __name__ == "__main__":
     t2_ = tbl_(["Time", "Compared"], tr_(["1", "Unknown"]) + tr_(["2", "3 ft"]))
     assert "Compared</th>" in t2_ and "for every row" not in t2_, "a column with one real value was dropped"
     assert "for every row" not in tbl_(["Time", "Compared"], tr_(["1", "Unknown"])), "a one-row table lost its only Unknown column (one row says it plainly)"
+    from lib.core import credit_once as co1_
+    c_ = co1_('<p class="src">Source: a. Credit: Data: U.S. Geological Survey. Credit: NWS x.</p><p class="src">Source: b. Credit: NWS x.</p><p class="src">Source: c. Credit: Data: U.S. Geological Survey.</p>')
+    assert c_.count("Credit: NWS x.") == 1 and c_.count("U.S. Geological Survey.") == 1 and c_.count("Source:") == 3, "a source credit repeated on one page, or a Source line was lost"
     # fix list 2026-11-15: NWS long-range outlook -999 (no chance for a category) showed as '-99900%' and held three pages
     assert b3t_.lro_ok(0.25) and b3t_.lro_ok("<0.05") and b3t_.lro_ok(0) and not b3t_.lro_ok(-999) and not b3t_.lro_ok("-999") and not b3t_.lro_ok(None) and not b3t_.lro_ok(1.5) and not b3t_.lro_ok(True), "flood outlook: a fill value or a non-chance was shown as a chance"
     # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it

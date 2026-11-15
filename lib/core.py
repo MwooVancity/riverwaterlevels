@@ -254,6 +254,20 @@ def _normalise(rec):
     return out
 
 
+def credit_once(h):
+    """Each source's credit sentence once per page, under its first block (AdSense review 2026-11-15: the NWS credit repeated 5 times on one page read as
+    template filler). Later Source notes keep their source line; the terms ask for a credit, not one under every block."""
+    seen = set()
+
+    def one(m):
+        k = m.group(0)
+        if k in seen:
+            return ""
+        seen.add(k)
+        return k
+    return re.sub(r" Credit: [^<]*?\.(?=( Credit: |</p>))", one, h)
+
+
 def credit_line(b):
     """The credit sentence the source's terms ask for (data/sources.json `credit`), printed once under every block of that source; '' when the register has none."""
     out = []
