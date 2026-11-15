@@ -2,6 +2,9 @@
 
 Status: PLAN.md (history docs/plan-history.md). Calcscrape rules do not apply. Where a rule names code, the code is the rule.
 
+## HARD, FIRST: who the reader is (owner 2026-11-14, said twice)
+A swimmer, kayaker, sailor, surfer, angler, tuber, boater going out on this water for fun today. Water fun first on every page, template and block order: the water, the weather, the level and flow, how to get on the water. Flood material only when a flood is near or an alert is out (`impacts_near`); otherwise it goes at the bottom. A fresh session judges every page as that person on a phone, never as a hydrologist or flood planner.
+
 ## HARD, ABOVE ALL: the three tests (owner 2026-11-09)
 Only (1) maximum helpfulness to the reader at this water, (2) information gain over what ranks, (3) passing Google's helpful-content review (HCU). Every change, rule, gate, block and link is judged on all three before build and before ship; fail one = not built, or deleted. One line per change: "Helpful / Gain / HCU". Nothing for a count or ranking trick: no forced links, no padding, no block for Google but not the reader. These win over every rule below.
 
