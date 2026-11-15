@@ -13,6 +13,45 @@ def load(p, default):
     return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else default
 
 
+def held_kinds(states, kind_of, today, least=3, share=0.15, max_age=14):
+    """Kinds of page Google is calling thin (owner 2026-11-15 "never push out thin pages again"): {kind: (declined, judged)} for each kind where
+    Google's URL Inspection says 'Crawled - currently not indexed' for at least `least` pages and `share` of the pages it has judged (indexed or declined).
+    Pages never crawled ('Discovered'), noindex-era pages and pages of unknown kind are not judged. States older than `max_age` days count for nothing
+    (no file, or a stale one = no hold: the page checks still stand, and a pause on old news would stop growth for nothing). The fix is the page, never noindex."""
+    import datetime
+    old = (datetime.date.fromisoformat(today) - datetime.timedelta(days=max_age)).isoformat()
+    tally = {}
+    for u, v in (states or {}).items():
+        k, st = kind_of.get(u.replace("https://riverwaterlevels.com", "")), str((v or {}).get("state") or "")
+        if not k or str((v or {}).get("date") or "") < old:
+            continue
+        if st == "Submitted and indexed" or st.startswith("Crawled"):
+            d, j = tally.get(k, (0, 0))
+            tally[k] = (d + st.startswith("Crawled"), j + 1)
+    return {k: dj for k, dj in tally.items() if dj[0] >= least and dj[0] >= share * dj[1]}
+
+
+def kinds():
+    """{url: kind} for every page a release can add: US gauges by template variant ('river', 'lake-usgs', 'coast-tables'...), world gauge pages by feed
+    ('world-ea', 'world-eccc'...; data/world-pages.json slug = the first path part)."""
+    from lib import pages as pages_
+    out = {r["url"]: pages_.variant(r["site"], r["url"]) or "river" for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r.get("url")}
+    feed = {p["slug"]: "world-" + (p.get("feed") or "pegelonline") for p in load(os.path.join(ROOT, "data", "world-pages.json"), [])}
+    return out, feed
+
+
+def kind_of_url(u, us, feed):
+    return us.get(u) or feed.get(u.strip("/").split("/")[0]) if u.count("/") == 3 else us.get(u)
+
+
+def held_now():
+    """The kinds held today (see held_kinds), from the committed Google states."""
+    import datetime
+    us, feed = kinds()
+    st = load(os.path.join(ROOT, "data", "index-inspect.json"), {})
+    return held_kinds(st, {u.replace("https://riverwaterlevels.com", ""): kind_of_url(u.replace("https://riverwaterlevels.com", ""), us, feed) for u in st}, datetime.date.today().isoformat())
+
+
 def main():
     cfg = load(IX, {"open": False, "site_pages": False, "allow": []})
     if "--pull" in sys.argv:
@@ -34,8 +73,13 @@ def main():
     unreviewed = []  # live lake and coast pages waiting for their screenshot review: the next session's to-do
     from lib import pages as pages_
     rv = pages_.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # urls and template variants that passed a phone review; a missing file opens no lake or coast
+    rows_ = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
+    kind_of = kinds()[0]
+    held = held_now()
+    for k_, (d_, j_) in sorted(held.items()):
+        print("HELD KIND %s: Google declined %d of the %d pages it judged ('Crawled - currently not indexed'); no new %s page opens until its pages are improved" % (k_, d_, j_, k_))
     stuck = []  # live pages held for a reason a fix can clear (not a river's short record, which is by design): the watchdog alarms on these (ChatGPT round 1: open_wave exited 0 while skipping every lake)
-    for row in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")):
+    for row in rows_:
         u = row["url"]
         if u in have or u not in live:
             continue
@@ -46,6 +90,9 @@ def main():
         if not pages_.review_ok(row["site"], u, rv):  # CLAUDE.md: every new page kind is screenshotted at phone width before Google; a lake or coast opens only once its review passed (data/reviewed.json)
             skipped["not reviewed"] += 1
             unreviewed.append(u)
+            continue
+        if kind_of.get(u) in held:  # owner 2026-11-15: Google is declining this kind as thin; opening more of it would teach Google the site is thin
+            skipped["kind Google declines"] = skipped.get("kind Google declines", 0) + 1
             continue
         # owner 2026-11-08: "no such thing as thin content if it's literally a different river/lake": no block-count or years-of-record gate; the page says what it lacks
         pick.append((u, row["river"], row["place"], row["score"]))
@@ -68,4 +115,23 @@ def main():
         print("written to data/index-allow.json (open=true, %d pages allowed). Now build, check, deploy." % len(cfg["allow"]))
 
 
-main()
+if __name__ != "__main__":
+    pass
+elif sys.argv[1:] == ["--selftest"]:
+    S = {"https://riverwaterlevels.com/lake/a/": {"state": "Crawled - currently not indexed", "date": "2026-11-15"}}
+    K = {"/lake/%s/" % c: "lake-usgs" for c in "abcdefghij"} | {"/river/r/x/": "river"}
+    S.update({"https://riverwaterlevels.com/lake/%s/" % c: {"state": "Crawled - currently not indexed", "date": "2026-11-15"} for c in "bc"})
+    S.update({"https://riverwaterlevels.com/lake/%s/" % c: {"state": "Submitted and indexed", "date": "2026-11-15"} for c in "defg"})
+    S["https://riverwaterlevels.com/lake/h/"] = {"state": "Discovered - currently not indexed", "date": "2026-11-15"}
+    S["https://riverwaterlevels.com/river/r/x/"] = {"state": "Crawled - currently not indexed", "date": "2026-11-15"}
+    assert held_kinds(S, K, "2026-11-15") == {"lake-usgs": (3, 7)}, "thin gate: 3 of 7 lakes declined did not hold lakes, or 1 declined river held rivers, or a never-crawled page counted"
+    assert held_kinds(S, K, "2026-12-15") == {} and held_kinds({}, K, "2026-11-15") == {}, "thin gate: stale or missing Google states held a kind"
+    more = {"/lake/m%d/" % i: "lake-usgs" for i in range(14)}
+    K.update(more)
+    S.update({"https://riverwaterlevels.com" + u: {"state": "Submitted and indexed", "date": "2026-11-15"} for u in more})
+    assert held_kinds(S, K, "2026-11-15") == {}, "thin gate: 3 declined of 21 judged (under 15%) held lakes"
+    assert kind_of_url("/river/a/b/", {"/river/a/b/": "river"}, {}) == "river" and kind_of_url("/rivers/co/", {}, {}) is None, "thin gate: a gauge page lost its kind, or a hub got one"
+    assert kind_of_url("/england/river-trent-at-colwick/", {}, {"england": "world-ea"}) == "world-ea", "thin gate: a world page has no kind, so Google declining it held nothing"
+    print("selftest OK")
+else:
+    main()

@@ -128,6 +128,12 @@ from lib import pages as _pages
 _rv = _pages.reviewed(os.path.join(ROOT, "data", "reviewed.json"))  # owner 2026-11-08 fully automatic: a page passes when its url or its template variant passed a review
 _url = lambda x: str(x[3].get("url") or (live_.get(x[3]["site"]) or {}).get("url") or "")
 _u = lambda x: x[1] == 1 and not _pages.review_ok(x[3]["site"], _url(x), _rv)
+import open_wave as _ow  # owner 2026-11-15 "never push out thin pages again": a kind Google is declining as thin gets no new pages until its pages are improved
+_held = _ow.held_now()
+_kind_now = lambda x: ("world-" + (x[3].get("feed") or "pegelonline")) if x[1] == 0 else (_pages.variant(x[3]["site"], _url(x)) or "river")
+for k_, (d_, j_) in sorted(_held.items()):
+    print("HELD KIND %s: Google declined %d of %d judged pages; no new %s page today" % (k_, d_, j_, k_))
+both = [x for x in both if _kind_now(x) not in _held]
 _k, _cut = [], 0
 for x in both:
     if len(_k) >= n:
