@@ -1285,6 +1285,8 @@ if __name__ == "__main__":
     assert "next 28 hours" in b3t_._tide_chart(Gt_), "a 28 h NOAA file labelled as another span"
     assert "6-minute tide predictions" in b3t_._tide_chart(Gt_) and "our calculation" not in b3t_._tide_chart(Gt_), "NOAA's own curve credited to us"
     assert b3t_._tide_chart(dict(Gt_, tables=False)) == "", "a coast with a live level got a second tide chart"
+    # fix list 2026-11-15: NWS long-range outlook -999 (no chance for a category) showed as '-99900%' and held three pages
+    assert b3t_.lro_ok(0.25) and b3t_.lro_ok("<0.05") and b3t_.lro_ok(0) and not b3t_.lro_ok(-999) and not b3t_.lro_ok("-999") and not b3t_.lro_ok(None) and not b3t_.lro_ok(1.5) and not b3t_.lro_ok(True), "flood outlook: a fill value or a non-chance was shown as a chance"
     # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it
     from lib import ui as ui_, core as co_
     u_ = co_.nws_url({"lat": 37.2753, "lon": -107.8801})

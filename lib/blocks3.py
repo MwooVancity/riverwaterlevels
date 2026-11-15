@@ -1062,6 +1062,16 @@ SEASONS = {"JFM": "January to March", "FMA": "February to April", "MAM": "March 
            "SON": "September to November", "OND": "October to December", "NDJ": "November to January", "DJF": "December to February"}
 
 
+def lro_ok(v):
+    """An NWS long-range outlook chance we can show: a fraction 0-1, or '<x' with x in 0-1. NWS writes -999 for a category it has no chance for
+    (fix list 2026-11-15: South Fork Clearwater, Salcha and Situk showed '-99900%')."""
+    try:
+        x = float(str(v).strip().lstrip("<").strip()) if not isinstance(v, bool) else None
+    except ValueError:
+        return False
+    return x is not None and 0 <= x <= 1
+
+
 def _chance(v):
     if isinstance(v, (int, float)):
         return "%.0f%%" % (v * 100)
@@ -1075,7 +1085,7 @@ def _chance(v):
 def lro_ended(G):
     """The produced date (text) of a long-range flood outlook whose three-month period ended before today at the gauge; None when there is none, when it is current, or when its period cannot be worked out (then it stays shown)."""
     lro = (G["rec"].get("nwps") or {}).get("lro")
-    if not isinstance(lro, dict) or not any(lro.get(k) is not None for k in ("minorCS", "moderateCS", "majorCS")):
+    if not isinstance(lro, dict) or not any(lro_ok(lro.get(k)) for k in ("minorCS", "moderateCS", "majorCS")):
         return None
     try:
         pt = datetime.date.fromisoformat(str(lro["producedTime"])[:10])
@@ -1092,10 +1102,10 @@ def lro_ended(G):
 def b_flood_outlook(G):
     n = G["rec"].get("nwps") or {}
     lro = n.get("lro")
-    if not lro or not any(lro.get(k) is not None for k in ("minorCS", "moderateCS", "majorCS")) or lro_ended(G):
+    if not lro or not any(lro_ok(lro.get(k)) for k in ("minorCS", "moderateCS", "majorCS")) or lro_ended(G):
         return None
     period = SEASONS.get(str(lro.get("interval") or "").upper())
-    rows = "".join(tr([lab, _chance(lro[k])], right=(1,)) for k, lab in (("minorCS", "Minor flooding"), ("moderateCS", "Moderate flooding"), ("majorCS", "Major flooding")) if lro.get(k) is not None)
+    rows = "".join(tr([lab, _chance(lro[k])], right=(1,)) for k, lab in (("minorCS", "Minor flooding"), ("moderateCS", "Moderate flooding"), ("majorCS", "Major flooding")) if lro_ok(lro.get(k)))
     when = (" produced %s" % fdate(str(lro["producedTime"])[:10])) if lro.get("producedTime") else ""
     _od = (G["ldate"] - datetime.date.fromisoformat(str(lro["producedTime"])[:10])).days if lro.get("producedTime") else None
     _old = ('<p class="src">The NWS produced this outlook %d days ago, on %s, and has not published a newer one for this point.</p>' % (_od, esc(fdate(str(lro["producedTime"])[:10])))) if _od is not None and _od > 120 else ""

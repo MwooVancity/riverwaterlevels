@@ -4,7 +4,7 @@ A hold is only allowed while this list names it; the daily session job fixes the
 python -I tools/fix_list.py        -> one line per cause: count, cause, three example gauges
 python -I tools/fix_list.py --selftest
 
-After a cause is fixed in code, add its line (as printed here) to data/fixed-causes.txt: the next release picks those gauges again (tools/release.py open_gate).
+After a cause is fixed in code, add "date<TAB>cause" (the cause as printed here) to data/fixed-causes.txt: releases pick those gauges again for 3 days (tools/release.py open_gate).
 Causes read: queue gauges carrying a gate in data/waves.csv (a page or truth check sent them back), kinds Google is declining
 (tools/open_wave.py held_kinds), and single pages Google crawled and declined (data/index-inspect.json). A 'retry after' gate heals by itself
 the next day and is not listed; a feed with no readings ('no-usgs-rows') is listed apart, since only the agency can fix it.

@@ -24,7 +24,7 @@ live_ = {r["site"]: r for r in csv.DictReader(open(os.path.join(ROOT, "data", "w
 import datetime as _dt
 TODAY = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
 import fix_list as _fl
-_FIXED = {l.strip() for l in open(os.path.join(ROOT, "data", "fixed-causes.txt"), encoding="utf-8") if l.strip() and not l.startswith("#")} if os.path.exists(os.path.join(ROOT, "data", "fixed-causes.txt")) else set()
+_FIXED = {c for d, _, c in (l.strip().partition("	") for l in open(os.path.join(ROOT, "data", "fixed-causes.txt"), encoding="utf-8") if l.strip() and not l.startswith("#")) if d >= (_dt.date.fromisoformat(TODAY) - _dt.timedelta(days=3)).isoformat()} if os.path.exists(os.path.join(ROOT, "data", "fixed-causes.txt")) else set()  # review 2026-11-15: a fix reopens its pages for 3 days, then stops (a gauge that still fails must not be re-picked forever)
 open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY) or _fl.cause(g) in _FIXED  # owner 2026-11-15 "make sure shit gets fixed": a cause fixed in code (data/fixed-causes.txt, as tools/fix_list.py prints it) reopens every gauge it held  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
 picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and open_gate(live_.get(r["site"], {}).get("gate"))] if os.path.exists(lst) else []
 seen_ = {r["site"] for r in picks}
