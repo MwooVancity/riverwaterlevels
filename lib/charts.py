@@ -5,7 +5,7 @@ from lib.core import *
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
-def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs"):
+def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs", aria=None, xfmt="%b %d"):
     """Several gauges' last 7 days on one time axis (river hub, owner 2026-11-11 option 2): series = [(label, [(datetime, cfs), ...])], up to 4 lines.
     Same axis rules as the gauge chart: round ticks, labels in the gauge's own time zone. ponytail: linear axis; a log axis if a river's gauges differ 100-fold."""
     pts = [p for _, s in series for p in s]
@@ -20,10 +20,10 @@ def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs"):
         L, W - 14, Y(tv), Y(tv), L - 6, Y(tv) + 4, fs, tf(tv, ticks)) for tv in ticks)
     xl = "".join('<text x="%.1f" y="%d" font-size="%d" fill="var(--mut)" text-anchor="%s">%s</text>' % (
         X(t0 + datetime.timedelta(seconds=span * k / (nx - 1))), Hh - 8, fs, "start" if k == 0 else "end" if k == nx - 1 else "middle",
-        (t0 + datetime.timedelta(seconds=span * k / (nx - 1))).astimezone(zone).strftime("%b %d").replace(" 0", " ")) for k in range(nx))
+        (t0 + datetime.timedelta(seconds=span * k / (nx - 1))).astimezone(zone).strftime(xfmt).replace(" 0", " ")) for k in range(nx))
     lines = "".join('<polyline points="%s" fill="none" stroke="%s" stroke-width="2.2"%s/>' % (
         " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in s), YCOL[n], (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "") for n, (_, s) in enumerate(series))
-    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s at %d gauges over the last 7 days">%s%s%s</svg>' % (cls, W, Hh, what, len(series), grid, xl, lines)
+    return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s">%s%s%s</svg>' % (cls, W, Hh, esc(aria or "%s at %d gauges over the last 7 days" % (what, len(series))), grid, xl, lines)
 
 
 def axis_l(L, fs, ticks):

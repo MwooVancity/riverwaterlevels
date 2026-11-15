@@ -23,7 +23,7 @@ cached = {f[:-5] for f in os.listdir(os.path.join(ROOT, "cache")) if f.endswith(
 live_ = {r["site"]: r for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8"))}
 import datetime as _dt
 TODAY = _dt.datetime.now(_dt.timezone.utc).date().isoformat()
-open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY)  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
+open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY) or g.startswith("page-check: info gain: missing tide chart")  # 2026-11-14: tide-table coasts now draw the NOAA tide chart; the ones held for lacking it get picked again (ponytail: drop this clause once none is gated so)  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
 picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and open_gate(live_.get(r["site"], {}).get("gate"))] if os.path.exists(lst) else []
 seen_ = {r["site"] for r in picks}
 picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and open_gate(r.get("gate")) and r["site"] not in seen_),

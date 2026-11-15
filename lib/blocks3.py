@@ -738,6 +738,42 @@ def _tide_t(s, with_date):
     return clock(d, "", with_date)
 
 
+def tide_curve(hilo, t0, t1, step_min=20):
+    """Points from t0 to t1 between NOAA's predicted highs and lows [(datetime, ft)], joined by a half-cosine (our curve, the usual tide-table drawing); [] without a low and a high around the window."""
+    hl = sorted(hilo)
+    out = []
+    for (ta, va), (tb, vb) in zip(hl, hl[1:]):
+        if tb < t0 or ta > t1 or tb <= ta:
+            continue
+        t = max(ta, t0)
+        while t <= min(tb, t1):
+            f = (t - ta).total_seconds() / (tb - ta).total_seconds()
+            out.append((t, va + (vb - va) * (1 - math.cos(math.pi * f)) / 2))
+            t += datetime.timedelta(minutes=step_min)
+    return out
+
+
+def _tide_chart(G):
+    """Tide-table coasts (no live level within 25 km): the next 48 h of NOAA predicted tide as a chart, the search 'tide chart' (owner 2026-11-14: 6 such pages a day failed the info-gain check and never shipped).
+    NOAA's 6-minute predictions where it publishes them; else NOAA's highs and lows joined by our curve, said so."""
+    if not G.get("tables"):
+        return ""
+    c, now = G["rec"].get("coops") or {}, G["now"]
+    end = now + datetime.timedelta(hours=48)
+    pts = [(parse_t(t), v) for t, v in c.get("pred") or [] if now <= parse_t(t) <= end][::3]
+    ours = len(pts) < 16
+    if ours:
+        pts = tide_curve([(parse_t(x[0]), x[1]) for x in c.get("hilo") or []], now, end)
+    if len(pts) < 16:
+        return ""
+    hrs = int(round((pts[-1][0] - pts[0][0]).total_seconds() / 3600))  # review: NOAA's 6-minute file starts at midnight UTC, so late in the day fewer than 48 h remain; the label says what is drawn
+    aria = "NOAA predicted tide at this station, next %d hours, feet above MLLW" % hrs
+    svg = "".join(river_svg([("NOAA predicted tide", pts)], G["zone"], w, 220, fs, nx, cl, "Tide in ft above MLLW", aria, "%a %I %p") for w, fs, nx, cl in ((760, 11, 7, "cw"), (340, 12, 4, "cn")))
+    how = ("NOAA's predicted highs and lows at this station, joined by a smooth curve we draw between them (our calculation: NOAA publishes only high and low tides here, so heights between them are approximate)"
+           if ours else "NOAA's 6-minute tide predictions at this station")
+    return '<p><b>NOAA predicted tide, next %d hours</b></p>%s<p class="src">Feet above MLLW, station local time. %s. Predictions, not observations.</p>' % (hrs, svg, how)
+
+
 def b_tides(G):
     """High and low tide predictions at the nearest NOAA station, shown on reaches whose flow cycles within the day (tidal)."""
     t = G["rec"].get("tides")
@@ -767,7 +803,7 @@ def b_tides(G):
         head = "%s for %s at %s" % (kind, _tide_t(t["rows"][0]["t"], True).rsplit(",", 1)[0], stn)
     if fa is not None and fa > 12:
         head += " (fetched %d h ago)" % fa
-    return block("tides", head, "noaa", near + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
+    return block("tides", head, "noaa", near + _tide_chart(G) + table(["Time (station local)", "Tide", "Height above the tide datum (MLLW)"], rows, right=(2,)),
                  "Source: NOAA National Ocean Service, CO-OPS tide predictions for station %s (%s), %sfetched %s. Predictions, not observations; the river level here also depends on flow from upstream." % (esc(t["station"]), esc(t["name"] or ""), ("%.0f mi from the gauge, " % t["mi"]) if t["mi"] >= 0.5 else "", esc(tzl(parse_t(t["fetched_at"]), G["zone"]))), "coops", amber=fa)
 
 

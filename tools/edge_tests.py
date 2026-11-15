@@ -1271,6 +1271,20 @@ if __name__ == "__main__":
         assert not fo_.impacts_near(G_), "a past forecast point kept a calm day high"
     finally:
         fo_.impact_cur, fo_.live_alerts = orig_
+    # owner 2026-11-14 "25 a day": tide-table coasts failed info gain for want of a tide chart; NOAA predictions drawn, our curve said so
+    from lib import blocks3 as b3t_
+    t0_ = now_
+    hl_ = [(t0_ + datetime.timedelta(hours=h), v) for h, v in ((-2, 0.5), (4, 5.0), (10, 0.8), (16, 4.6), (22, 0.4), (28, 5.1), (34, 0.6), (40, 4.8), (46, 0.5), (52, 5.0))]
+    cv_ = b3t_.tide_curve(hl_, t0_, t0_ + datetime.timedelta(hours=48))
+    assert cv_ and all(0.4 <= v <= 5.1 for _, v in cv_) and abs(dict(cv_)[t0_ + datetime.timedelta(hours=4)] - 5.0) < 1e-9, "tide curve leaves NOAA's highs and lows or misses a high"
+    assert b3t_.tide_curve(hl_[:1], t0_, t0_ + datetime.timedelta(hours=48)) == [], "one tide point drew a curve"
+    Gt_ = {"tables": True, "now": now_, "zone": zoneinfo.ZoneInfo("America/New_York"), "rec": {"coops": {"pred": [], "hilo": [[t.isoformat(), v, "H" if v > 2 else "L"] for t, v in hl_]}}}
+    ch_ = b3t_._tide_chart(Gt_)
+    assert "NOAA predicted tide" in ch_ and "our calculation" in ch_ and "<svg" in ch_, "tide-table coast: no chart, or our curve not said to be ours"
+    Gt_["rec"]["coops"]["pred"] = [[(t0_ + datetime.timedelta(minutes=6 * i)).isoformat(), 2.0] for i in range(280)]
+    assert "next 28 hours" in b3t_._tide_chart(Gt_), "a 28 h NOAA file labelled as another span"
+    assert "6-minute tide predictions" in b3t_._tide_chart(Gt_) and "our calculation" not in b3t_._tide_chart(Gt_), "NOAA's own curve credited to us"
+    assert b3t_._tide_chart(dict(Gt_, tables=False)) == "", "a coast with a live level got a second tide chart"
     # owner 2026-11-14: a flood alert reads bold red and links to the official NWS page so a reader can verify it
     from lib import ui as ui_, core as co_
     u_ = co_.nws_url({"lat": 37.2753, "lon": -107.8801})
