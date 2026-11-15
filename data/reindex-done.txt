@@ -24,3 +24,14 @@ https://riverwaterlevels.com/lake/lake-nacimiento/	2026-11-12
 https://riverwaterlevels.com/lake/lake-murray/	2026-11-12
 https://riverwaterlevels.com/lake/lake-livingston/	2026-11-12
 https://riverwaterlevels.com/lake/lake-limestone/	2026-11-12
+https://riverwaterlevels.com/river/chattahoochee-river/atlanta/	2026-11-14
+https://riverwaterlevels.com/river/truckee-river-ca/farad/	2026-11-14
+https://riverwaterlevels.com/river/rogue-river-or/grants-pass/	2026-11-14
+https://riverwaterlevels.com/river/new-river-va/radford/	2026-11-14
+https://riverwaterlevels.com/river/pigeon-river-tn/newport/	2026-11-14
+https://riverwaterlevels.com/river/north-fork-shenandoah-river/strasburg/	2026-11-14
+https://riverwaterlevels.com/river/roaring-fork-river/glenwood-springs/	2026-11-14
+https://riverwaterlevels.com/river/suwannee-river-fl/white-springs/	2026-11-14
+https://riverwaterlevels.com/river/pere-marquette-river/scottville/	2026-11-14
+https://riverwaterlevels.com/river/penns-creek/penns-creek/	2026-11-14
+https://riverwaterlevels.com/river/north-fork-flathead-river/columbia-falls/	2026-11-14
