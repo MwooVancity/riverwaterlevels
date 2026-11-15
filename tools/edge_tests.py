@@ -1284,6 +1284,11 @@ if __name__ == "__main__":
     assert 'class="alert sev-severe fl"' in ab_ and u_ in ab_, "flood alert card not red, or no official link to verify"
     Ga_["rec"]["nws"]["static"] = {"marine": "AMZ452"}
     assert "shmrn.php?mz=amz452" in fo_.b_alerts(Ga_)["body"], "coast: marine-zone alerts have no official page to verify on"
+    assert co_.flood_red("Flood Warning") and co_.flood_red("Flash Flood Warning") and co_.flood_red("Coastal Flood Warning") and not co_.flood_red("Flood Advisory") and not co_.flood_red("Flood Watch") and not co_.flood_red("Coastal Flood Statement"), "red set on the wrong flood alerts"
+    assert pg_.count("/%s/i.test(p.event||'')" % co_.FLOOD_RED) == 2, "page script and build disagree on which flood alerts are red"
+    Ga_["rec"]["nws"]["alerts"][0]["event"] = "Flood Advisory"
+    assert " fl\"" not in fo_.b_alerts(Ga_)["body"], "a flood advisory turned red"
+    Ga_["rec"]["nws"]["alerts"][0]["event"] = "Flood Warning"
     css_ = open(os.path.join(ROOT, "templates", "site.css"), encoding="utf-8").read()
     assert ".abanner.fl b" in css_ and ".alert.fl>b:first-child" in css_ and "#b3261e" in css_, "flood alert red style gone"
     assert on_('"SEC:Level and flow"', "imp if near else None", '"SEC:Getting on the water"', '"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"

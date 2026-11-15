@@ -554,7 +554,7 @@ def conditions(G, pages=None):
     nws = rec.get("nws") or {}
     if ok("nws") and nws.get("alerts") is not None and nws.get("fetched_at"):
         al = sorted(live_alerts(G) or [], key=alert_rank)  # NWS priority order: the banner names and colours the most serious first
-        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "flood": any("flood" in (x.get("event") or "").lower() for x in al), "col": alert_col(al), "age_h": hours_old(nws["fetched_at"], G["now"]), "ago": age_words(parse_t(nws["fetched_at"]), G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
+        out["alerts"] = {"n": len(al), "names": [x.get("event") or "" for x in al[:3]], "flood": any(flood_red(x.get("event")) for x in al), "col": alert_col(al), "age_h": hours_old(nws["fetched_at"], G["now"]), "ago": age_words(parse_t(nws["fetched_at"]), G["now"]), "asof": tzl(parse_t(nws["fetched_at"]), zone)}
     rn = rec.get("rain") or {}
     if ok("rfc") and (rn.get("inches") or {}).get("last_24h") is not None:
         vt = (rn.get("valid_through") or {}).get("last_24h")

@@ -49,6 +49,14 @@ DISCLAIMER = ("Percentile is estimated from USGS published daily percentiles. Re
 IGNORED_ALERTS = {"Test Message", "Administrative Message"}
 
 
+FLOOD_RED = r"flood (warning|emergency)"  # owner 2026-11-14 asked red for flood alerts; argued down to warnings only: a red Flood Advisory or Watch teaches readers that red means little (the page script uses the same pattern)
+
+
+def flood_red(event):
+    """True for a flood warning (river, flash, coastal, lakeshore): the one alert kind set in bold red."""
+    return bool(re.search(FLOOD_RED, event or "", re.I))
+
+
 def nws_url(G):
     """The official NWS page for the gauge location: its forecast and every active alert there, so a reader can verify an alert we show (owner 2026-11-14). None without a position."""
     la, lo = G.get("lat"), G.get("lon")
