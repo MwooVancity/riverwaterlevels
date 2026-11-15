@@ -295,8 +295,12 @@ def block_ready(bid):
 def tab_blocks(tab, G, pages):
     if tab == "dashboard" and G.get("feed"):  # a gauge outside the US: same page, only the blocks its feed can fill; each country's sources join this list
         has_al = bool(live_alerts(G))
-        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_key_facts(G), "SEC:Level and official marks", b3.b_also(G), b2.b_stage_chart(G), b3.b_world_flow(G), b3.b_world_rate(G), b3.b_world_forecast(G), b3.b_official_marks(G), b3.b_world_history(G), b3.b_world_peaks(G), b3.b_world_wt30(G), b3.b_world_drought(G), b3.b_along(G), b3.b_world_near(G), b3.b_access(G)] + ([] if has_al else [b_alerts(G)]) + [
-                "SEC:Weather at the river", b_hourly(G), b_weather(G), b3.b_world_rain(G), b_air(G), b3.b_world_aq(G), b3.b_world_normals(G), b3.b_world_links(G), b3.b_world_about(G)]
+        # owner 2026-11-14: the reader is out on the water (fish, paddle, swim, surf), so the water and the weather come first, records last
+        return [b2.b_offline(G)] + ([b_alerts(G)] if has_al else []) + [
+                "SEC:Level and flow", b3.b_also(G), b3.b_world_wt30(G), b2.b_stage_chart(G), b3.b_world_flow(G), b3.b_world_rate(G), b3.b_world_forecast(G), b3.b_official_marks(G),
+                "SEC:Weather at the river", b_hourly(G), b_weather(G), b3.b_world_rain(G), b_air(G), b3.b_world_aq(G)] + ([] if has_al else [b_alerts(G)]) + [
+                "SEC:Getting on the water", b3.b_access(G), b3.b_along(G), b3.b_world_near(G),
+                "SEC:Records at this gauge", b3.b_key_facts(G), b3.b_world_history(G), b3.b_world_peaks(G), b3.b_world_drought(G), b3.b_world_normals(G), b3.b_world_links(G), b3.b_world_about(G)]
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
@@ -309,18 +313,19 @@ def tab_blocks(tab, G, pages):
         # Search order (Keyword Planner, fresh agent 2026-11-06): coasts 'tides' 1.15M + 'tide times' 620k + 'tide chart' 96k a month, so the
         # tide chart and table lead; lakes 'water level' + 'level' 2.2M, so the level chart follows the storage block. Rivers unchanged.
         coast, lake, sc = G.get("coast"), G.get("lake"), b2.b_stage_chart(G)
-        # Page order debate 2026-11-13 (owner asked; ChatGPT as editor, converged in 2 rounds): decisions first, history after. Coast: tide table, the
-        # live level, surf, red tide, king tides; key facts (history) moved to 'How today compares'; snowpack to the outlook (it says what is coming).
+        # Page order (owner 2026-11-14, replaces the 11-13 'danger first' order): the reader goes out on the water to fish, paddle, swim or surf, so the
+        # water, the weather, the level and flow, and how to get on the water come first; the forecast and outlook next; flood statements only while
+        # the river is near a flood level (impacts_near), else with the flood record in the fold. A live alert still opens the page.
         lead = ([b3.b_tides(G), sc, b3.b_surf(G), b3.b_redtide(G), b3.b_kingtide(G), b3.b_waves(G), b3.b_moon(G)] if coast else
                 [b3.b_lake_temp(G), b3.b_reservoir(G), sc, b3.b_dam_facts(G), b3.b_waves(G)] if lake else
                 [b3.b_dam_facts(G), b3.b_reservoir(G), b3.b_waves(G)])
         return [b2.b_offline(G), b2.b_flow_behind(G)] + ([b_alerts(G)] if has_al else []) + [b3.b_limits(G)] + lead + [
-                "SEC:Level, flow and flood risk", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), imp if near else None, b_low_water(G), b2.b_rate(G)] + ([] if has_al else [b_alerts(G)]) + [
                 "SEC:What the water is like now", cam_now, b_quality(G), b3.b_depth(G), b3.b_speed(G), None if coast else b3.b_tides(G),
-                "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G),
+                "SEC:Weather at the river", b_heatmap(G) or b_hourly(G), b_weather(G), b_air(G), b3.b_air_quality(G), b_rain(G), b_radar(G)] + ([] if has_al else [b_alerts(G)]) + [
+                "SEC:Level and flow", b_flow_chart(G), (None if coast or lake else sc) or (None if sc else b_flood_stages(G)), b3.b_official_marks(G), b_low_water(G), b2.b_rate(G), b3.b_dam(G), imp if near else None,
+                "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b_land(G), b3.b_stocking(G), b3.b_fish(G), b3.b_moonphase(G),
                 "SEC:River forecast", b_river_forecast(G), b_nwm(G), b2.b_nwm_medium(G), b2.b_noforecast(G), b_like_today(G), "AD",
                 "SEC:Rain and longer outlook", b3.b_wpc(G), b3.b_acis(G), b2.b_qpf(G), b_snotel(G), b_cpc(G),
-                "SEC:Getting on the water", b3.b_access(G), b3.b_recreation(G), b_land(G), b3.b_stocking(G), b3.b_fish(G), b3.b_moonphase(G), b3.b_dam(G),
                 "SEC:Camera at the gauge", cam_old, "SEC:How today compares with past years", b3.b_key_facts(G), b3.b_month_chart(G), b3.b_year_chart(G), b_multiyear(G), b3.b_sustained(G), b_record(G), b3.b_flowdur(G), b_wtemp(G),
                 "FOLD:Flood record and history", None if near else imp, b_peaks(G), b_floods(G), b3.b_stage_years(G), b3.b_floodfreq(G), b_crests(G), b3.b_flood_outlook(G),
                 "FOLD:Daily values, measurements and rating", b_daily(G), b3.b_field_meas(G), b2.b_rating(G),
@@ -437,7 +442,7 @@ SAFETY = '<p class="src safety">Government data, shown with the time it was obse
 
 
 # the phone tab of a block: by id, because a gauge with no river forecast has no "Forecast" heading to start the weather group
-# phone tab of a block: its "SEC:" heading decides (What the water / Level, flow = Now; Forecast = Forecast; How today = History; folds and the side column = Data / Area); these few ids override their section
+# phone tab of a block: its "SEC:" heading decides (What the water / Level and flow = Now; Forecast = Forecast; How today = History; folds and the side column = Data / Area); these few ids override their section
 GROUP_OF = {"rate_of_change": "history", "snowpack": "data", "water_temp_months": "data", "forecast_rain_totals": "weather", "wpc_outlooks": "weather", "cpc_outlook": "weather"}
 
 
@@ -558,7 +563,7 @@ def lake_words(h, G):
                  ("E. coli results at stations on this river within", "E. coli results at stations on the rivers within"), ("E. coli samples on this stretch", "E. coli samples nearby"), ("within 40 mi on this river", "within 40 mi on the rivers here"), ("for this stretch", "near this lake"), ("Gage height", "Lake elevation"), ("gage height", "lake elevation"),
                  ("Height above the gauge's zero point, not water depth", "Water surface above %s, not depth" % d),
                  ("cfs = cubic feet of water passing the gauge each second. Gage height is the gauge’s own scale, not water depth.", "Lake elevation is the water surface above %s, in feet; it is not depth." % d),
-                 ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), ("Level, flow and flood risk", "Lake level and flood risk"),
+                 ("<span>River forecast</span>", "<span>Level forecast</span>"), (">River forecast<", ">Level forecast<"), ("Weather at the river", "Weather at the lake"), (">Level and flow<", ">Lake level<"),
                  ("USGS gauge %s" % G["site"], "USGS lake gauge %s" % G["site"])):
         h = h.replace(a, b)
     if G.get("agy"):
@@ -572,7 +577,7 @@ def lake_words(h, G):
                      ("Data: USGS, NWS.", "Data: NOAA CO-OPS, NWS."), ("USGS sensor", "NOAA sensor"), ("Solid line: USGS readings", "Solid line: NOAA readings (preliminary)"), (" &middot; dashed curve: NWS forecast", " &middot; dashed curve: NOAA predicted tide, next 24 h"), ("Source: USGS Water Data API (continuous lake elevation)", "Source: NOAA CO-OPS 6-minute water level above MLLW, preliminary data that NOAA has not quality-checked"), ("Source: USGS Water Data API (continuous values)", "Source: NOAA CO-OPS (preliminary)"),
                      ("Percentile is estimated from USGS published daily percentiles. Readings are provisional until USGS reviews them.", "Water levels are preliminary until NOAA verifies them."),
                      ("The National Weather Service has no river forecast point for this gauge. The weather forecast below is not a river forecast.", "The National Weather Service has no forecast point for this station. NOAA tide predictions are under Tides."),
-                     ("Lake elevation", "Water level"), ("lake elevation", "water level"), ("Weather at the lake", "Weather at the coast"), ("Lake level and flood risk", "Weather and flood alerts"), ("near this lake", "near this station"),
+                     ("Lake elevation", "Water level"), ("lake elevation", "water level"), ("Weather at the lake", "Weather at the coast"), (">Lake level<", ">Water level<"), ("near this lake", "near this station"),
                      ("Latest USGS water level", "Latest NOAA water level"), (" Predictions, not observations; the river level here also depends on flow from upstream.", " Predictions, not observations."),
                      ("river access not confirmed", "shore access not confirmed"), ("Live gauge", "Live station"), ("this gauge", "this station"), ("the gauge location", "the station location"), ("from the gauge", "from the station"), ("Gauge location", "Station location"), ("this gauge's", "this station's"), ("this gauge&#x27;s", "this station&#x27;s"),
                      ("The National Weather Service publishes no flood stages for this station, so none are drawn.", ""), ("(USGS, NOAA National Weather Service)", "(NOAA CO-OPS, NOAA National Weather Service)")):
@@ -784,7 +789,7 @@ def build_tab(tab, G, pages):
             continue
         if isinstance(b, str) and b.startswith("SEC:"):
             flush()
-            grp[0] = "weather" if b[4:].startswith("Forecast") else "history" if b[4:].startswith("How today") else "now" if b[4:].startswith(("What the water", "Level, flow")) else grp[0]
+            grp[0] = "weather" if b[4:].startswith("Forecast") else "history" if b[4:].startswith(("How today", "Records")) else "now" if b[4:].startswith(("What the water", "Level and flow")) else grp[0]
             pending = gtag('<h2 class="secth">%s</h2>' % esc(b[4:]), grp[0])  # 'Every page its own' 1 (2026-11-11): the 30-word window key repeated what each card already names; it lives once on /methodology/#windows
             continue
         if isinstance(b, str) and b.startswith("FOLD:"):

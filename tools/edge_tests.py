@@ -1240,7 +1240,12 @@ if __name__ == "__main__":
     # coast tide table before the level chart before surf, red tide and king tides; recreation, public land and station air never in the side column
     pg_ = open(os.path.join(ROOT, "lib", "page.py"), encoding="utf-8").read()
     at_ = lambda s_: pg_.index(s_)
-    assert at_('"SEC:Rain and longer outlook"') < at_("b_snotel(G)") < at_('"SEC:Getting on the water"') < at_("b3.b_recreation(G), b_land(G)") < at_('"SEC:How today compares with past years"') < at_("b3.b_key_facts(G), b3.b_month_chart"), "page order: snowpack, public land or key facts moved back"
+    us_ = pg_[pg_.index('if tab == "dashboard":  # one page per gauge'):]  # owner 2026-11-14: the reader is on the water to fish, paddle, swim or surf; water and weather first, flood last
+    on_ = lambda *xs: all(us_.index(a) < us_.index(b) for a, b in zip(xs, xs[1:]))
+    assert on_('"SEC:What the water is like now"', '"SEC:Weather at the river"', '"SEC:Level and flow"', '"SEC:Getting on the water"', '"SEC:River forecast"', '"SEC:Rain and longer outlook"', '"SEC:How today compares with past years"', '"FOLD:Flood record and history"'), "page order: water, weather, level, access, forecast, outlook, past years, flood fold"
+    assert on_('"SEC:Rain and longer outlook"', "b_snotel(G)", '"SEC:How today compares with past years"', "b3.b_key_facts(G), b3.b_month_chart") and on_('"SEC:Getting on the water"', "b3.b_recreation(G), b_land(G)", '"SEC:River forecast"'), "page order: snowpack, public land or key facts moved"
+    w_ = pg_[pg_.index('G.get("feed"):  # a gauge outside the US'):pg_.index('if tab == "dashboard":  # one page per gauge')]
+    assert w_.index('"SEC:Level and flow"') < w_.index('"SEC:Weather at the river"') < w_.index('"SEC:Getting on the water"') < w_.index('"SEC:Records at this gauge"') < w_.index("b3.b_key_facts(G)"), "world page order: records came back above the water"
     assert at_("[b3.b_tides(G), sc, b3.b_surf(G), b3.b_redtide(G), b3.b_kingtide(G)") > 0, "page order: coast lead changed"
     # owner 2026-11-14: NWS flood statements sat above the weather and the water on a calm day; they go to the flood fold unless near, alerted, forecast or unknown
     from lib import forecast as fo_
@@ -1266,7 +1271,7 @@ if __name__ == "__main__":
         assert not fo_.impacts_near(G_), "a past forecast point kept a calm day high"
     finally:
         fo_.impact_cur, fo_.live_alerts = orig_
-    assert at_("imp if near else None") < at_('"SEC:What the water is like now"') < at_('"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"
+    assert on_('"SEC:Level and flow"', "imp if near else None", '"SEC:Getting on the water"', '"FOLD:Flood record and history", None if near else imp'), "page order: calm-day impacts placement changed"
     side_ = re.search(r"SIDE = (\{[^}]*\})", pg_).group(1)
     assert not any(x in side_ for x in ('"recreation_sites"', '"public_land"', '"air_obs"')), "page order: a section went back to the side column (bottom of a phone)"
     # 2026-11-13: a low USGS quota skipped every weekly source, NOAA king tides included, so every coast showed Unknown
