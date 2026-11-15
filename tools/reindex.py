@@ -33,7 +33,7 @@ def rank(state):
     return 0 if "noindex" in s else 1 if "not indexed" in s else 2 if not s or s.startswith("no answer") else None if "indexed" in s else 3
 
 
-def pick(queue, new, done, n, seen_state=None):
+def pick(queue, new, done, n, seen_state=None, score=None):
     """New release pages, then the backlog, then every other page the inspection found not indexed; ordered by rank (stable, so new pages lead
     within a rank); never a URL already confirmed, twice, or one Google already indexed."""
     st = seen_state or {}
@@ -42,7 +42,8 @@ def pick(queue, new, done, n, seen_state=None):
         if u not in seen and rank((st.get(u) or {}).get("state")) is not None:
             seen.add(u)
             out.append(u)
-    return sorted(out, key=lambda u: rank((st.get(u) or {}).get("state")))[:n]
+    sc = score or {}  # owner 2026-11-14 "request indexing of our biggest pages": within a rank, the most-searched page first (waves.csv score); stable, so ties keep release order
+    return sorted(out, key=lambda u: (rank((st.get(u) or {}).get("state")), -sc.get(u, 0)))[:n]
 
 
 def inspected():
@@ -56,6 +57,16 @@ def inspected():
         return {}
 
 
+def scores():
+    """{url: search score} from main's data/waves.csv (the release's ranking); {} when it cannot be read (the old order then)."""
+    import csv
+    r = subprocess.run(["git", "show", "origin/main:data/waves.csv"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    try:
+        return {SITE + w["url"]: float(w.get("score") or 0) for w in csv.DictReader(r.stdout.splitlines()) if w.get("url")} if r.returncode == 0 else {}
+    except (ValueError, KeyError):
+        return {}
+
+
 def local_done():
     return [l.strip() for l in open(F["done"], encoding="utf-8")] if os.path.exists(F["done"]) else []
 
@@ -66,9 +77,10 @@ if __name__ == "__main__":
         assert pick(["https://x/a/", "https://x/b/"], ["https://x/n1/", "https://x/n2/"], ["https://x/a/\t2026-11-10"], 3) == ["https://x/n2/", "https://x/n1/", "https://x/b/"], "reindex: new pages not first, a done page repeated, or the backlog lost"
         S = {"https://x/b/": {"state": "Excluded by ‘noindex’ tag"}, "https://x/n1/": {"state": "Submitted and indexed"}, "https://x/z/": {"state": "Crawled - currently not indexed"}, "https://x/y/": {"state": "Indexed, not submitted in sitemap"}}
         assert pick(["https://x/a/", "https://x/b/"], ["https://x/n1/", "https://x/n2/"], [], 5, S) == ["https://x/b/", "https://x/z/", "https://x/n2/", "https://x/a/"], "reindex: noindex pages not first, an indexed page requested, or a not-indexed page outside the queue missed"
+        assert pick([], [], [], 3, {u: {"state": "Excluded by noindex"} for u in ("https://x/s/", "https://x/b/")}, {"https://x/b/": 90, "https://x/s/": 5}) == ["https://x/b/", "https://x/s/"], "reindex: a small page asked before a big one in the same state"
         print("selftest OK")
     elif a[:1] == ["next"]:
-        print("\n".join(pick(main_copy("queue"), main_copy("new"), main_copy("done") + local_done(), int(a[1]) if a[1:] else 10, inspected())))
+        print("\n".join(pick(main_copy("queue"), main_copy("new"), main_copy("done") + local_done(), int(a[1]) if a[1:] else 10, inspected(), scores())))
     elif a[:1] == ["done"]:
         with open(F["done"], "a", encoding="utf-8") as f:
             for u in a[1:]:
