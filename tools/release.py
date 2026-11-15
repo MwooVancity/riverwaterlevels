@@ -151,9 +151,17 @@ if "--every-kind" in sys.argv:  # practice only (owner 2026-11-08 "practice run 
             _k.append(x)
             _have.add(_kind(x))
             print("  practice: one %s page added despite its gate (%s: %s)" % (_kind(x), r_["site"], (r_.get("gate") or "")[:60]))
+# Spares (owner 2026-11-14 "I want 25 a day"): 9 releases in 12 days added 175 gauges, about 19 a release, because a pick that fails a page or
+# truth check went back and nothing took its place (11-14: 6 tide-table coasts). The next river, lake or coast picks in the same order are
+# collected and built too; the first ones that pass fill the day up to the cap and the rest go back to the queue with no gate, first in line tomorrow.
+SPARE = n // 3  # ponytail: a third more collects (8 at 25: about 40 USGS calls); raise it if a day still ships short
+_in = {id(x) for x in _k}
+_spare = [x for x in both if id(x) not in _in and x[1] == 1 and not _u(x)][:SPARE] if any(x[1] == 1 for x in _k) else []  # review: world gauges took every slot = no spares (they would be trimmed to nothing and fail the day)
 both = _k
 world_add = [x[3] for x in both if x[1] == 0]
 picks = [x[3] for x in both if x[1] == 1]
+target_us = len(picks)  # the day's US cap after world gauges took their slots
+picks += [x[3] for x in _spare]
 if world_add or gone_ or held_before_ != _json.dumps([p.get("held") for p in wpages]):
     for w in world_add:
         page = next(p for p in wpages if p["slug"] == w["page"])
@@ -175,7 +183,7 @@ for r in picks:
     r["url"] = r.get("url") or (live_.get(r["site"]) or {}).get("url")  # picks.csv holds the order, waves.csv the address: a pick with no address once sent the whole day back
 if not picks and not world_add:
     sys.exit("nothing to add: every gauge in %s already has a cache" % lst)
-print("adding %d gauges:" % len(picks))
+print("adding %d gauges (%d of them spares that ship only if a pick fails):" % (len(picks), len(picks) - target_us))
 for r in picks:
     print("  %s  %s at %s, %s  (%s)" % (r["site"], r["river"], r["place"], r["state"], r["category"]))
 if dry:
@@ -282,10 +290,15 @@ def truth_check(picks_):
 failed = page_check(picks)  # robustness (owner 2026-10-29): one bad page must never block the day's release; it goes back to the queue with its reason and the rest ship
 for s_, m_ in truth_check([r for r in picks if r["site"] not in failed]).items():
     failed[s_] = m_
-if failed:
+extra = {r["site"] for r in [r for r in picks if r["site"] not in failed][target_us:]}  # passing spares beyond the cap: back to the queue, no gate
+if extra:
+    print("spares not needed today, back to the queue: %s" % ", ".join(sorted(extra)))
+if failed or extra:
     rows = list(csv.DictReader(open(wp, encoding="utf-8")))
     for r in rows:
-        if r["site"] in failed:
+        if r["site"] in extra:
+            r["status"], r["gate"] = "queue", ""
+        elif r["site"] in failed:
             r["status"], r["gate"] = "queue", (failed[r["site"]] if failed[r["site"]].startswith("truth: ") else "page-check: " + failed[r["site"]]).replace("\n", " ")[:300]
     with open(wp, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -293,8 +306,8 @@ if failed:
         w.writerows(rows)
     for s_, m_ in sorted(failed.items()):
         print("not released (%s): %s  %s" % ("truth contract" if m_.startswith("truth: ") else "page check", s_, m_))
-    picks = [r for r in picks if r["site"] not in failed]
-    for s_ in failed:  # practice 2026-11-08: a sent-back pick kept its cache file, so the refresh built it anyway and truth_tests stopped the whole deploy
+    picks = [r for r in picks if r["site"] not in failed and r["site"] not in extra]
+    for s_ in set(failed) | extra:  # practice 2026-11-08: a sent-back pick kept its cache file, so the refresh built it anyway and truth_tests stopped the whole deploy
         try:
             os.remove(os.path.join(ROOT, "cache", s_ + ".json"))
         except OSError:
