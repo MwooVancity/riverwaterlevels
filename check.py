@@ -258,7 +258,7 @@ def check_html(h, rel):
     for pat in BANNED:
         for mm in re.finditer(pat, text):
             bad.append("banned %r near %r" % (pat, text[max(0, mm.start() - 25):mm.end() + 25].strip()))
-    own = re.sub(r'(?s)<section[^>]*id="(?:flood_impacts|low_water|alerts|hydronotes)".*?</section>', " ", body)  # quoted NWS text is never reworded: "Meramec State Park park is flooded" is the NWS's own sentence (release 2026-11-07)
+    own = re.sub(r'(?s)<section[^>]*id="(?:flood_impacts|low_water|alerts|hydronotes|wpc_outlooks)".*?</section>', " ", body)  # quoted NWS text is never reworded: "Meramec State Park park is flooded" is the NWS's own sentence (release 2026-11-07); wpc_outlooks quotes NWS storm reports ("Flooding on on ramp to north bound 101", Russian River 2026-11-15)
     own = re.sub(r"<[^>]+>", " ", re.sub(r"<br\s*/?>|</t[dh]>", " | ", re.sub(r"(?s)<(pre|code|i)\b.*?</\1>", " ", own)))  # <i>: scientific names, where "Menidia menidia" is the name (2026-11-14)
     for mm in re.finditer(r"\b([A-Za-z]+) \1\b", own, re.I):  # words only: "19 19" is a day and an hour in "2026-10-19 19:38", not a typo
         if mm.group(1).lower() not in ("had", "that", "walla", "ro", "bora", "baden"):  # real names: Walla Walla River, a German "Ro Ro Anlage" ramp (2026-11-03)

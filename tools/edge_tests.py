@@ -1346,6 +1346,8 @@ if __name__ == "__main__":
     assert ws_([{"cm": 10, "then": None, "time": ts_}, {"cm": 10, "then": 5, "time": ts_}], t_) == "Of 2 gauges reporting now: 1 higher than 24 hours earlier, 0 lower, 1 with no reading 24 hours earlier.", "world status: counts do not add up"
     assert "Our label: 1 High" in ws_([{"cm": 10, "then": 5, "time": ts_, "state": "high"}], t_, ours=True) and ws_([{"cm": 10, "then": 5, "time": "2026-11-13T13:00:00Z"}], t_) == "", "world status: Canada's own calculation called the agency's, or a future time counted as reporting"
     # 2026-11-14: species names in <i> are names, not typos; doubled words elsewhere still fail
+    q_ = '<section class="card blk" id="wpc_outlooks"><p>Flooding on on ramp to north bound 101.</p></section>'
+    assert not [b for b in check_.check_html(pg(q_), "x") if "doubled" in b] and [b for b in check_.check_html(pg("lanes on on the bridge"), "x") if "doubled" in b], "quoted NWS storm report held a page, or our own 'on on' passed (Russian River 2026-11-15)"
     assert not [b for b in check_.check_html(pg("Atlantic silverside | <i>Menidia menidia</i>"), "x") if "doubled" in b] and [b for b in check_.check_html(pg("the the river"), "x") if "doubled" in b], "doubled word: a scientific name failed or a typo passed"
     # PLAN 39g: the world hub's plain sentence counts only live rows; tide hubs and dead feeds say nothing
     from lib.directory import world_status as ws_
