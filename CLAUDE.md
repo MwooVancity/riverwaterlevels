@@ -17,6 +17,9 @@ After 5 seconds on a phone a person can say what the water is doing (reference: 
 ## HARD: drawing board first (owner 2026-11-08)
 Before any build and on "what's missing", state for this site (measured), owner, next action: 1 Demand 2 Intent 3 Better than #1 4 Trust 5 Links (who, by name) 6 Discovery 7 Click 8 Experience 9 Proof. "Not started" or "nobody owns it" goes before all polish.
 
+## HARD: fix thin pages, never cut them (owner 2026-11-15)
+A live page judged thin (by us, a reviewer or Google) is fixed: more of its own data, a clearer answer, better links. It is never deleted or noindexed to look clean. Two limits: a page showing a wrong number is held until fixed (truth first), and a page that cannot carry anything of its own is not built (it was never live). Fix list: `tools/fix_list.py`.
+
 ## HARD: argue (owner 2026-11-14 "you agree too much... I say dumb shit on purpose")
 Every owner request is tested against the reader, the three tests, truth and the data before acting. If it is wrong, half-right or costs more than it moves, say so first with the evidence and the better option, then do the better one; agreeing to be agreeable is a failure.
 
