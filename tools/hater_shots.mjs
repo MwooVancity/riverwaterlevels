@@ -34,9 +34,11 @@ for (const [site, url] of pages) {
   const dir = path.join(OUT, site);
   fs.mkdirSync(dir, { recursive: true });
   for (const f of fs.readdirSync(dir)) fs.unlinkSync(path.join(dir, f));
+  const ANALYTICS = /google-analytics\.com|googletagmanager\.com|googlesyndication\.com|doubleclick\.net|adservice\.google/;
   const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   const p = await phone.newPage();
   if (!REMOTE) await p.route(/^https?:\/\/(?!localhost)/, (r) => r.abort()); // a local build: no outside calls while shooting
+  else await p.route(ANALYTICS, (r) => r.abort()); // 2026-11-15: shooting live pages counted as 40+ 'direct' visits from Des Moines in Analytics (Nov 13); our robot is not a reader
   await p.goto(BASE + url + '?tabs=off', { waitUntil: 'load' });
   await p.waitForTimeout(REMOTE ? 2500 : 300); // live: let the page's own refresh land, as a visitor sees it
   // scroll like a visitor so lazy images (radar loop, map) load; a shot of an unloaded image is a false "blank box" (hater 2026-10-27)
@@ -62,6 +64,7 @@ for (const [site, url] of pages) {
   const desk = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const d = await desk.newPage();
   if (!REMOTE) await d.route(/^https?:\/\/(?!localhost)/, (r) => r.abort());
+  else await d.route(ANALYTICS, (r) => r.abort());
   await d.goto(BASE + url, { waitUntil: 'load' });
   await d.screenshot({ path: path.join(dir, 'desktop-01.png') });
   await desk.close();
