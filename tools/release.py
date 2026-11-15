@@ -124,6 +124,24 @@ both = sorted([(-tier_.get(r["site"], 0) * rate(kw_.get(r["site"]), None, BIDS, 
 # person reviews it. Owner 2026-11-07 ("worried about oceans and lakes, the new stuff"): the 2026-11-07 phone review failed 20 of 26 new lakes and coasts
 # that every machine check passed, so a new lake or coast is published only after its review passed (truth first: a false page is worse than none);
 # the review is run on a local preview (tools/hater_shots.mjs) before the release. Rivers, drilled for weeks, fill the other slots.
+def thin_state_first(both, live_rows, n_max=3, least=3, top=200):
+    """AdSense review 2026-11-15: state hubs with 1-2 gauges (AL, IL, ND, NV: about 200 words) read as thin. Fix, never cut: up to n_max US picks
+    a day from states with fewer than `least` live gauges move to the front, taken only from the best `top` of the money order (never a junk creek)."""
+    import collections
+    have = collections.Counter(r.get("state") for r in live_rows if r.get("status") == "live")
+    us_top = [x for x in both[:top] if x[1] == 1 and 0 < have.get(x[3].get("state"), 0) < least]  # review: only states already live (a new state would add another one-gauge hub)
+    pick, seen = [], collections.Counter()
+    for x in us_top:
+        st = x[3].get("state")
+        if len(pick) < n_max and have.get(st, 0) + seen[st] < least:
+            pick.append(x)
+            seen[st] += 1
+    ids = {id(x) for x in pick}
+    return pick + [x for x in both if id(x) not in ids]
+
+
+both = thin_state_first(both, list(live_.values()))
+assert [x[3]["site"] for x in thin_state_first([(0, 1, 0, {"site": "a", "state": "TX"}), (0, 1, 1, {"site": "b", "state": "AL"}), (0, 1, 2, {"site": "c", "state": "AL"}), (0, 1, 3, {"site": "d", "state": "AL"})], [{"state": "TX", "status": "live"}] * 5 + [{"state": "AL", "status": "live"}])][:3] == ["b", "c", "a"], "release: a one-gauge state was not grown first, or grown past 3"
 UNREVIEWED_MAX = 0
 import json as _json
 from lib import pages as _pages
