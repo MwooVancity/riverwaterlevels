@@ -1375,4 +1375,7 @@ if __name__ == "__main__":
     assert ws_(wr_, t_) == "Of 4 gauges reporting now: 2 higher than 24 hours earlier, 1 lower, 1 about the same. Agency label: 2 Normal; 2 without one.", ws_(wr_, t_)
     assert ws_(wr_, t_, tide=True) == "" and ws_([{"cm": None, "time": ts_}], t_) == "" and ws_([], t_) == "", "world status: tide or no live gauge must say nothing"
     assert ws_([{"cm": 1.50, "then": 1.49, "time": ts_, "unit": "m"}], t_) == "Of 1 gauge reporting now: 0 higher than 24 hours earlier, 0 lower, 1 about the same.", "world status: metres tolerance"
+    from lib.hero import impact_flow as if_
+    g_ = lambda cats, sg: {"rec": {"nwps": {"categories": cats, "impacts": [{"stage": 25000.0}]}}, "sg": sg}
+    assert if_(g_({}, [["t", 3.2, {}]])) and not if_({"rec": {"nwps": {"categories": {}, "impacts": [{"stage": 12.0}]}}, "sg": [["t", 3.2, {}]]}) and if_(g_({"minor": 10.0}, [])) and not if_(g_({}, [])) and not if_({"rec": {"nwps": {"categories": {}, "impacts": [{"stage": 6.0}]}}, "sg": [["t", 0.4, {}]]}), "impact_flow: cfs impacts at a point with no flood stages read as feet (fix list 2026-11-16 Cowlitz)"
     print("selftest OK")

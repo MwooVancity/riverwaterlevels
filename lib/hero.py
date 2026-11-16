@@ -744,6 +744,9 @@ def impact_flow(G):
     n = G["rec"].get("nwps") or {}
     cats = [v for v in (n.get("categories") or {}).values() if isinstance(v, (int, float)) and v > 0]
     imp = [i["stage"] for i in n.get("impacts") or [] if isinstance(i.get("stage"), (int, float))]
+    if not cats:  # fix list 2026-11-16 (Cowlitz below Mayfield Dam, Snoqualmie): no flood stages published, so measure the impacts against the gage height itself
+        g_ = G.get("sg") or []
+        cats = [max(g_[-1][1], 10.0)] if g_ and isinstance(g_[-1][1], (int, float)) and g_[-1][1] > 0 and stage_is_ft(g_[-1][2]) else []  # floor 10 ft: a stage impact under 100 ft is never read as flow on a low-water day
     return bool(cats and imp and min(imp) > 10 * max(cats))
 
 

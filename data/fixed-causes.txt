@@ -2,3 +2,4 @@
 2026-11-15	page-check: info gain: missing tide chart that <url> shows
 2026-11-15	page-check: doubled word '...'
 2026-11-15	page-check: banned '-?N\\d{N,}\\b'
+2026-11-16	page-check: next NWS impact N ft above the reading: the thresholds are not stages (publish
