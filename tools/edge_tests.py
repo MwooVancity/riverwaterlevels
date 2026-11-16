@@ -253,7 +253,7 @@ def run():
     assert wx_mod.dwd_obs(beob, "10628", [50, 8, "X"])["obs"]["temp_c"] == 7.2, "an empty newest DWD row hid the station's weather"
     from lib.hero import beyond
     row = [13, None, 398.2, None, 624.0, 1470.0, 2525.0, None, 4516.0, None]
-    assert beyond(row, 9000)[0] == "above 90th" and "4,520 cfs" in beyond(row, 9000)[1] and beyond(row, 100)[0] == "below 10th" and beyond(row, 1000) is None, "a flood past the published percentiles read as no statistics"
+    assert beyond(row, 9000)[0] == "above 90th" and "4,520 cfs" in beyond(row, 9000)[1] and beyond(row, 100)[0] == "below 10th" and beyond(row, 1000)[0] == "25th to 50th" and beyond([8, None, None, 337.0, 406.0, 692.0, 1130.0, 1280.0, None, None], 350)[0] == "20th to 25th", "a flood past the published percentiles read as no statistics"
     assert beyond([7, None, None, None, 3543.6, 3572.2, 3590.7, None, None, None], 3537.3, "ft")[0] == "below 25th", "a lake under the lowest published percentile (Powell: 25th) read as no statistics"
     import check as check_
     pg = lambda t: '<html><head><link rel="canonical" href="x"></head><body><h1>x</h1><main>%s</main></body></html>' % t

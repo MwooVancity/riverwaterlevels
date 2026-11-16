@@ -331,6 +331,9 @@ def beyond(srow, v, unit="cfs"):
         return "above %s" % ordinal(hp), "Above the %s percentile (%s %s), the highest USGS publishes for this date, from %d years." % (ordinal(hp), show(hi), unit, srow[0])
     if v < lo:
         return "below %s" % ordinal(lp), "Below the %s percentile (%s %s), the lowest USGS publishes for this date, from %d years." % (ordinal(lp), show(lo), unit, srow[0])
+    for (p0, v0), (p1, v1) in zip(pub, pub[1:]):  # fix list 2026-11-16 (Ocoee at Copperhill, 8 years: 20th to 80th only): a reading inside a short record said "no published statistics"
+        if v0 <= v <= v1:
+            return "%s to %s" % (ordinal(p0), ordinal(p1)), "Between the %s (%s %s) and %s (%s %s) percentiles USGS publishes for this date, from %d years." % (ordinal(p0), show(v0), unit, ordinal(p1), show(v1), unit, srow[0])
     return None
 
 

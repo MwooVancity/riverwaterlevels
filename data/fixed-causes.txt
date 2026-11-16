@@ -3,3 +3,5 @@
 2026-11-15	page-check: doubled word '...'
 2026-11-15	page-check: banned '-?N\\d{N,}\\b'
 2026-11-16	page-check: next NWS impact N ft above the reading: the thresholds are not stages (publish
+2026-11-16	page-check: says '...' while legacy/stats holds this gauge's USGS daily statistics
+2026-11-16	site-check: says '...' while legacy/stats holds this gauge's USGS daily statistics
