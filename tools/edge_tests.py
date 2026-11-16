@@ -1378,4 +1378,8 @@ if __name__ == "__main__":
     from lib.hero import impact_flow as if_
     g_ = lambda cats, sg: {"rec": {"nwps": {"categories": cats, "impacts": [{"stage": 25000.0}]}}, "sg": sg}
     assert if_(g_({}, [["t", 3.2, {}]])) and not if_({"rec": {"nwps": {"categories": {}, "impacts": [{"stage": 12.0}]}}, "sg": [["t", 3.2, {}]]}) and if_(g_({"minor": 10.0}, [])) and not if_(g_({}, [])) and not if_({"rec": {"nwps": {"categories": {}, "impacts": [{"stage": 6.0}]}}, "sg": [["t", 0.4, {}]]}), "impact_flow: cfs impacts at a point with no flood stages read as feet (fix list 2026-11-16 Cowlitz)"
+    from lib import world as wl_
+    h_ = '<main><a class="abanner" href="https://forecast.weather.gov/MapClick.php?lat=50.0&lon=7.7"><b>1 alert</b><em>Verify on weather.gov</em></a><section id="alerts"><p>Frost</p><p><a href="https://forecast.weather.gov/MapClick.php?lat=50.0&lon=7.7">Check these alerts on the official NWS page for this location (weather.gov)</a></p></section></main>'
+    o_ = wl_.localize(h_, __import__("collections").defaultdict(str, wl_.FEEDS["pegelonline"], station="Kaub"), "Rhine", "Kaub", "/rhine/")
+    assert "weather.gov" not in o_ and 'href="#alerts"' in o_, "world page kept the US NWS alert link (fix list 2026-11-16: 44 world pages held)"
     print("selftest OK")

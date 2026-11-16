@@ -163,6 +163,8 @@ def localize(h, feed, river, place, hub, flat=False):
         h = h.replace("Weather at the river", "Weather at the lake").replace("<span>River forecast</span>", "<span>Level forecast</span>").replace(">River forecast<", ">Level forecast<")
     h = re.sub(r'<small class="cold">.*?</small>', "", h, flags=re.S)  # the US line cites NWS; no agency here says it
     h = re.sub(r"<script>\(function\(\)\{var (?:m=document\.querySelector\('\[data-wxst\]'\)|b=document\.getElementById\('alerts'\))(?:(?!</script>).)*</script>", "", h, flags=re.S)  # those two refresh from the US weather service: never from a phone abroad
+    h = re.sub(r'<p><a href="https://(?:forecast\.|www\.)?weather\.gov/[^"]*">[^<]*</a></p>', "", h)  # fix list 2026-11-16: the US "verify on the NWS page" link (nws_url) would send a reader abroad to a US page; 44 world pages were held on it
+    h = re.sub(r'(<a class="abanner[^"]*" href=")https://forecast\.weather\.gov/[^"]*"', r'\1#alerts"', h).replace("<em>Verify on weather.gov</em>", "<em>Details</em>")
     h = re.sub(r" Credit: [^<]*?subject to copyright\.", "", h).replace(">Official NWS<", ">Official<")  # the US credit is a false statement about any other agency's data
     h = h.replace("National Weather Service", feed["wx"]).replace("USGS sensor", "%s sensor" % feed["agency"]).replace("check weather.gov", "check " + feed["wx_site"]).replace("NWS estimate for this spot", "Station rain total")
     h = h.replace("NWS forecast", "forecast").replace("NWS station", "Station").replace("NWS ", feed["wx"] + " ")
