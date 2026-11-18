@@ -225,7 +225,8 @@ def embed_fold_html(snippet):
             '(Google Sites: Insert, Embed, By URL; Wix: Add, Embed, Embed a site; Notion: type /embed).</p>'
             '<input readonly aria-label="Panel link" value="%s" style="width:100%%;font:13px monospace">'
             '<button type="button" onclick="var t=this.previousElementSibling;t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});this.textContent=&quot;Copied&quot;">Copy link</button>'
-            % esc(src.group(1))) if src else ""  # owner 2026-11-18 "make it simpler": a link is one paste, no HTML box; sign-in with Google cannot reach the host's editor
+            '<p>Under the panel, a text line credits the source: <i>Live data from River Water Levels</i>, linked to %s</p>'
+            % (esc(src.group(1)), esc(src.group(1).replace("/embed/", "/", 1)))) if src else ""  # review 2026-11-18: a link-only embed carries no visible credit link on the host page  # owner 2026-11-18 "make it simpler": a link is one paste, no HTML box; sign-in with Google cannot reach the host's editor
     see = ('<p><a href="%s" target="_blank" rel="noopener">See how the panel looks</a> (it fits any width; on a phone it stacks).</p>' % esc(src.group(1))) if src else ""
     return ('<details class="emb" id="embed" open><summary>Embed this live panel on your site (free)</summary>' + see + link + '<p><b>Or paste the code:</b></p><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
             % esc(snippet)) + copy + steps + "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
