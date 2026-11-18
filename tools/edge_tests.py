@@ -1387,4 +1387,11 @@ if __name__ == "__main__":
     assert 'style="border:0' in sn_ and "rwlH" in sn_ and 'e.origin=="https://riverwaterlevels.com"' in sn_ and "rwlH" in pe_.EMBED_JS, "embed: the box no longer sizes to the panel (owner 2026-11-18: Lake Conroe saw a scrolling box)"
     fo_ = pe_.embed_fold_html(sn_)
     assert 'id="embed" open' in fo_ and 'href="https://riverwaterlevels.com/embed/lake/a/"' in fo_, "embed: the fold is closed, unlinked from the top, or has no preview link"
+    real_hero_ = pe_.hero
+    try:
+        pe_.hero = lambda G, pages=None: '<div class="hero"><div class="tile flow">1</div></div>'
+        up_ = pe_.embed_page({"row": {"dashboard_url": "/river/a/b/"}, "river": "A River", "place": "B", "st": "TX", "site": "01234567", "obs": "Nov 18, 2:45 PM CST"}, [])
+    finally:
+        pe_.hero = real_hero_
+    assert up_.startswith("<!doctype html>") and "rwlH" in up_ and up_.rstrip().endswith("</html>"), "embed: the US panel did not build (2026-11-18 release stopped on a format error)"
     print("selftest OK")

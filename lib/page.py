@@ -218,11 +218,16 @@ def embed_fold_html(snippet):
     copy = ('<button type="button" onclick="var t=this.previousElementSibling;t.select();'
             '(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});'
             'this.textContent=&quot;Copied&quot;">Copy code</button>')
-    steps = ("<ol><li>Press <b>Copy code</b>.</li><li>On your site add an HTML box: WordPress <b>Custom HTML</b> block, Wix <b>Embed Code</b>, "
-             "Squarespace <b>Code</b> block, or your editor's HTML option.</li><li>Paste and save. The panel keeps itself up to date.</li></ol>")
+    steps = ("<p><b>Other sites (WordPress, Squarespace):</b> press <b>Copy code</b>, add an HTML box (WordPress <b>Custom HTML</b> block, "
+             "Squarespace <b>Code</b> block), paste and save. The panel keeps itself up to date.</p>")
     src = re.search(r'src="([^"]+)"', snippet)
+    link = ('<p><b>Easiest, no code (Google Sites, Wix, Notion):</b> copy this link and paste it into your editor\'s <b>Embed</b> box '
+            '(Google Sites: Insert, Embed, By URL; Wix: Add, Embed, Embed a site; Notion: type /embed).</p>'
+            '<input readonly aria-label="Panel link" value="%s" style="width:100%%;font:13px monospace">'
+            '<button type="button" onclick="var t=this.previousElementSibling;t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});this.textContent=&quot;Copied&quot;">Copy link</button>'
+            % esc(src.group(1))) if src else ""  # owner 2026-11-18 "make it simpler": a link is one paste, no HTML box; sign-in with Google cannot reach the host's editor
     see = ('<p><a href="%s" target="_blank" rel="noopener">See how the panel looks</a> (it fits any width; on a phone it stacks).</p>' % esc(src.group(1))) if src else ""
-    return ('<details class="emb" id="embed" open><summary>Embed this live panel on your site (free)</summary>' + see + '<textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
+    return ('<details class="emb" id="embed" open><summary>Embed this live panel on your site (free)</summary>' + see + link + '<p><b>Or paste the code:</b></p><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
             % esc(snippet)) + copy + steps + "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
 
 
@@ -371,8 +376,8 @@ def embed_page(G, pages):
     body = '<h1>%s, %s</h1><p class="sub">USGS gauge %s &middot; observed %s</p>%s<p class="src"><a href="%s" target="_top" rel="noopener">Live page with forecast, history and flood record on riverwaterlevels.com</a></p>' % (esc(rp), esc(st), G["site"], esc(G["obs"]), h, full)
     if G.get("tables"):
         body = body.replace("USGS gauge %s &middot; observed %s" % (G["site"], esc(G["obs"])), "NOAA tide station %s &middot; tide predictions" % G["site"]).replace("Live page with forecast, history and flood record", "Full page with the 7-day tide table")
-    out = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main>' + EMBED_JS + '</body></html>' % (
-        esc(title), esc(desc), SITE_URL + "/embed" + row["dashboard_url"], HEAD_EXTRA + og_tags(title, desc, full), CSS + EMBED_CSS, body))
+    out = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main>%s</body></html>' % (
+        esc(title), esc(desc), SITE_URL + "/embed" + row["dashboard_url"], HEAD_EXTRA + og_tags(title, desc, full), CSS + EMBED_CSS, body, EMBED_JS))
     return lake_words(out, G) if G.get("lake") else out  # lake review #6: the embed copy said flow and gage height
 
 
