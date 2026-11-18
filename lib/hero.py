@@ -606,9 +606,14 @@ def hero(G, pages=None):
             strip += ui.tile("rain", "drop", "Rain, last 24 h", '%.2f <small>in</small>' % rn_["in"], '<small data-h="%.1f">NWS estimate for this spot%s</small>' % (rn_["age_h"], (" to " + esc(rn_["to"])) if rn_["to"] else ""))
     if c["air"]:
         a = c["air"]
-        wtxt = ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
+        wtxt = "" if (G.get("lake") or G.get("coast")) and a["wind"] is not None else ", ".join(x for x in (("wind calm" if a["wind"] < 1 else ("wind %s %.0f mph" % (esc(a["dir"]), a["wind"])) if a["dir"] else ("wind %.0f mph" % a["wind"])) if a["wind"] is not None else "", ("gusts %.0f mph" % a["gust"]) if a["gust"] is not None else "") if x)
         # a station name that opens with a sensor code ("070W10895RWS1RP1 at Canyon Creek Rd") keeps only the place
         strip += ui.tile("air", "wind", "Air temperature", '<span data-wx="temp0">%.0f</span><small>&deg;F</small>' % a["f"], ('<small data-wx="wind0">%s</small>' % wtxt if wtxt else "") + '<small>Weather station %s%s%s, <span data-wx="t">%s</span></small>' % (esc(a["st"]), (" (" + esc(re.sub(r"^\S*\d\S*\s+(at|near)\s+", "", a["name"])) + ")") if a.get("name") else "", (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])) + point_temp_note(G, a["f"]).replace("<small>", '<small data-wx="note">', 1) + ('<span hidden data-wxst="%s" data-t="%s"></span>' % (esc(a["st"]), esc(a["iso"])) if a.get("iso") else ""))  # inside the tile (hater r6: the note floated loose)
+    if c["air"] and (G.get("lake") or G.get("coast")) and c["air"]["wind"] is not None:  # ChatGPT review 2026-11-18, kept: on open water wind decides a paddle; the station's own reading, refreshed by WX_JS like the air tile
+        a = c["air"]
+        wd_ = "Calm" if a["wind"] < 1 else ("%s %.0f mph" % (esc(a["dir"]), a["wind"]) if a["dir"] else "%.0f mph" % a["wind"])
+        strip += ui.tile("air", "wind", "Wind", '<span data-wx="wind">%s</span>' % wd_,
+                         '<small>Gusts <span data-wx="gust">%s</span></small><small>Weather station %s%s, <span data-wx="t">%s</span></small>' % (("%.0f mph" % a["gust"]) if a["gust"] is not None else "not reported", esc(a["st"]), (", %d mi away" % a["mi"]) if a.get("mi") is not None else "", esc(a["t"])))
     td_ = G["now"].astimezone(G["zone"]).date()  # today at the gauge (a gauge offline for days must not show an old sunset as today's)
     st_ = sun_times(G["lat"], G["lon"], td_)
     nx_ = sun_times(G["lat"], G["lon"], td_ + datetime.timedelta(days=1)) if st_ and G["now"] > st_[1] else None
