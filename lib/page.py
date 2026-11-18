@@ -225,7 +225,7 @@ def embed_fold_html(snippet):
           '.then(function(){b.textContent=&quot;Copied&quot;},function(){var t=document.createElement(&quot;textarea&quot;);t.value=c;document.body.appendChild(t);t.select();document.execCommand(&quot;copy&quot;);t.remove();b.textContent=&quot;Copied&quot;})">%s</button>')
     return ('<div class="emb-bar"><button type="button" class="emb-open" onclick="var d=document.getElementById(&quot;embed&quot;);'
             'var f=d.querySelector(&quot;iframe[data-src]&quot;);if(f){f.src=f.getAttribute(&quot;data-src&quot;);f.removeAttribute(&quot;data-src&quot;)}d.showModal()">'
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Add this live level to your website</button></div>'
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Add this live level to your website</button></div>'
             '<dialog class="emb" id="embed" aria-labelledby="emb-h"><form method="dialog"><button class="emb-x" aria-label="Close">&times;</button></form>'
             '<h2 id="emb-h">Share this live level</h2>'
             '<div class="emb-opt"><h3>1. Link to it <span>works on any site</span></h3><p>Add this page to your links or resources page.</p>' + cp % (esc(page_url), "Copy link") + '</div>'
