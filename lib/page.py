@@ -191,9 +191,19 @@ def b_nearby(G, pages):
 def embed_snippet(url, name):
     """The code a club, marina or county page pastes (owner 2026-11-08 backlinks): the live panel in an iframe plus one plain, visible link under it,
     because a link inside an iframe sits on our own domain and earns nothing. The anchor is the place's name, never stuffed keywords (Google: widget links
-    must be visible and natural)."""
-    return ('<iframe src="%s/embed%s" width="100%%" height="520" loading="lazy" title="%s"></iframe>\n<p>Live data from <a href="%s%s" rel="nofollow">River Water Levels</a></p>'
-            % (SITE_URL, url, esc(name), SITE_URL, url))
+    must be visible and natural). Owner 2026-11-18 (Lake Conroe asked for help): the panel is 600-1,000 px tall, so a fixed 520 px box scrolled inside the
+    host page; the panel now reports its height (EMBED_JS) and the small script sizes the box; a host that strips scripts keeps a 640 px box that scrolls."""
+    return ('<iframe src="%s/embed%s" width="100%%" height="640" style="border:0;max-width:720px" loading="lazy" title="%s"></iframe>\n'
+            '<script>addEventListener("message",function(e){if(e.origin=="%s"&&e.data&&e.data.rwlH)document.querySelectorAll("iframe").forEach(function(f){if(f.contentWindow==e.source)f.style.height=e.data.rwlH+"px"})})</script>\n'
+            '<p>Live data from <a href="%s%s" rel="nofollow">River Water Levels</a></p>' % (SITE_URL, url, esc(name), SITE_URL, SITE_URL, url))
+
+
+EMBED_CSS = ("body{margin:0;background:transparent}.embed{max-width:none;margin:0;padding:18px 20px;background:#fff;border:1px solid #e3e6ea;border-radius:14px}"
+             ".embed h1{font-size:19px;line-height:1.2;margin:0 0 2px}.embed .sub{font-size:12px;margin:0 0 10px;color:#5b6470}.embed .status{display:none}"
+             ".embed .answer{font-size:15px;margin:0 0 12px}.embed .hero{display:flex;flex-wrap:wrap;gap:10px;margin:0}.embed .hero>.tile{flex:1 1 140px;margin:0;padding:12px 14px}"
+             ".embed .hero>.tile.wide{flex-basis:100%}.embed .hero>.tile:nth-child(n+4),.embed .tile>small,.embed .tile>p{display:none}.embed .src{font-size:12px;margin:10px 0 0}")
+# owner 2026-11-18 "design it for Forbes": one clean card, the answer and three numbers with their units (a unit sits in the value's own <b><small>, which stays); tested in 340 and 640 px host columns
+EMBED_JS = '<script>(function(){function s(){parent.postMessage({rwlH:document.documentElement.scrollHeight},"*")}addEventListener("load",s);addEventListener("resize",s);setTimeout(s,800)})()</script>'  # the panel tells the host page its height (embed_snippet sizes the box)
 
 
 def embed_code(G):
@@ -210,7 +220,9 @@ def embed_fold_html(snippet):
             'this.textContent=&quot;Copied&quot;">Copy code</button>')
     steps = ("<ol><li>Press <b>Copy code</b>.</li><li>On your site add an HTML box: WordPress <b>Custom HTML</b> block, Wix <b>Embed Code</b>, "
              "Squarespace <b>Code</b> block, or your editor's HTML option.</li><li>Paste and save. The panel keeps itself up to date.</li></ol>")
-    return ('<details class="emb"><summary>Embed this live panel on your site</summary><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
+    src = re.search(r'src="([^"]+)"', snippet)
+    see = ('<p><a href="%s" target="_blank" rel="noopener">See how the panel looks</a> (it fits any width; on a phone it stacks).</p>' % esc(src.group(1))) if src else ""
+    return ('<details class="emb" id="embed" open><summary>Embed this live panel on your site (free)</summary>' + see + '<textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
             % esc(snippet)) + copy + steps + "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
 
 
@@ -359,8 +371,8 @@ def embed_page(G, pages):
     body = '<h1>%s, %s</h1><p class="sub">USGS gauge %s &middot; observed %s</p>%s<p class="src"><a href="%s" target="_top" rel="noopener">Live page with forecast, history and flood record on riverwaterlevels.com</a></p>' % (esc(rp), esc(st), G["site"], esc(G["obs"]), h, full)
     if G.get("tables"):
         body = body.replace("USGS gauge %s &middot; observed %s" % (G["site"], esc(G["obs"])), "NOAA tide station %s &middot; tide predictions" % G["site"]).replace("Live page with forecast, history and flood record", "Full page with the 7-day tide table")
-    out = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>' % (
-        esc(title), esc(desc), SITE_URL + "/embed" + row["dashboard_url"], HEAD_EXTRA + og_tags(title, desc, full), CSS, body))
+    out = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s"><link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main>' + EMBED_JS + '</body></html>' % (
+        esc(title), esc(desc), SITE_URL + "/embed" + row["dashboard_url"], HEAD_EXTRA + og_tags(title, desc, full), CSS + EMBED_CSS, body))
     return lake_words(out, G) if G.get("lake") else out  # lake review #6: the embed copy said flow and gage height
 
 
@@ -777,7 +789,7 @@ def build_tab(tab, G, pages):
                        "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}}))
     off_html = "".join(render_block(b) for b in shown if b["id"] == "gauge_not_reporting")  # the not-reporting banner sits right under the H1, above the tiles
     ids = {b["id"] for b in shown}
-    jl = [(i, t) for i, t in JUMP if i in ids]
+    jl = [(i, t) for i, t in JUMP if i in ids] + ([("embed", "Add to your website")] if not G.get("feed") else [])  # owner 2026-11-18: site owners could not find the embed code at the bottom
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
     SIDE = {"related_gauges", "nearby_gauges", "nws_forecast_point", "flood_stages", "about_gauge", "gauge_map", "sun", "official_links"}  # 2026-11-13: recreation sites, public land and station air readings stay in their sections (on a phone the side column falls to the very bottom)
     body = ""

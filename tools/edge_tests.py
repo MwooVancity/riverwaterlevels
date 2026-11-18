@@ -1382,4 +1382,9 @@ if __name__ == "__main__":
     h_ = '<main><a class="abanner" href="https://forecast.weather.gov/MapClick.php?lat=50.0&lon=7.7"><b>1 alert</b><em>Verify on weather.gov</em></a><section id="alerts"><p>Frost</p><p><a href="https://forecast.weather.gov/MapClick.php?lat=50.0&lon=7.7">Check these alerts on the official NWS page for this location (weather.gov)</a></p></section></main>'
     o_ = wl_.localize(h_, __import__("collections").defaultdict(str, wl_.FEEDS["pegelonline"], station="Kaub"), "Rhine", "Kaub", "/rhine/")
     assert "weather.gov" not in o_ and 'href="#alerts"' in o_, "world page kept the US NWS alert link (fix list 2026-11-16: 44 world pages held)"
+    from lib import page as pe_
+    sn_ = pe_.embed_snippet("/lake/a/", "A water level")
+    assert 'style="border:0' in sn_ and "rwlH" in sn_ and 'e.origin=="https://riverwaterlevels.com"' in sn_ and "rwlH" in pe_.EMBED_JS, "embed: the box no longer sizes to the panel (owner 2026-11-18: Lake Conroe saw a scrolling box)"
+    fo_ = pe_.embed_fold_html(sn_)
+    assert 'id="embed" open' in fo_ and 'href="https://riverwaterlevels.com/embed/lake/a/"' in fo_, "embed: the fold is closed, unlinked from the top, or has no preview link"
     print("selftest OK")

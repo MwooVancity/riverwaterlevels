@@ -752,8 +752,7 @@ def page(p, r, now, rows=(), keep=(), idx=None):
 def embed_fold(url, name):
     """The same 'Embed this live panel' fold as a US page (lib/page.py embed_code), for a page outside the US."""
     from lib import page as pg_
-    f = pg_.embed_fold_html(pg_.embed_snippet(url, name))
-    return f.replace("</details>", '<p><a href="/embed%s">See the panel</a></p></details>' % url, 1)  # a reader previews it; it also keeps the panel reachable like a US one
+    return pg_.embed_fold_html(pg_.embed_snippet(url, name))  # the fold's "See how the panel looks" link keeps the panel reachable like a US one
 
 
 def embed_page(url, html, feed):
@@ -783,5 +782,5 @@ def embed_page(url, html, feed):
     desc = ("Live water level panel for " + name + " from official agency data, with time and source.")[:200]
     body = h1.group(0) + (sub.group(0) if sub else "") + (ans.group(0) if ans else "") + hero + (('<p class="src">%s</p>' % esc(credit)) if credit else "") + \
         '<p class="src"><a href="%s" target="_top" rel="noopener">Full page with history and official links on riverwaterlevels.com</a></p>' % full
-    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">%s<link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main></body></html>'
-            % (esc(title), esc(desc), pg_.og_tags(title, desc, common.SITE_URL + "/embed" + url), common.SITE_URL + "/embed" + url, pg_.HEAD_EXTRA, pg_.CSS, body))
+    return ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">%s<link rel="canonical" href="%s">%s<meta name="robots" content="noindex,follow"><style>%s</style></head><body><main id="main" class="embed">%s</main>%s</body></html>'
+            % (esc(title), esc(desc), pg_.og_tags(title, desc, common.SITE_URL + "/embed" + url), common.SITE_URL + "/embed" + url, pg_.HEAD_EXTRA, pg_.CSS + pg_.EMBED_CSS, body, pg_.EMBED_JS))
