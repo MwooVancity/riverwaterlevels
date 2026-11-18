@@ -399,6 +399,7 @@ def hero(G, pages=None):
                             "<small>USACE full pool today %s ft %s%s; the difference from the USGS reading is our calculation.</small>" % ("{:,.2f}".format(uf_[0]), esc(uf_[1]), " (USACE estimate)" if uf_[2] else ""))
         else:  # audit 2026-11-10 #8: a tile with no number never leads; it follows the elevation (late_ above)
             tiles = ""
+        late_, tiles = tiles + late_, ""  # owner 2026-11-18 "one set template": the lake level leads like every page's water level; storage or full pool follows it
     elif G.get("stage_only"):  # ice: never an old flow; the Worker keeps out too, it swaps only a reading that has a value
         tiles = ui.tile("flow", "flow", "Latest flow", "Not published", "<small>USGS is publishing gage height but no flow for this gauge now.</small>@@DIR@@", bcls)
     else:
