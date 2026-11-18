@@ -1384,7 +1384,9 @@ if __name__ == "__main__":
     assert "weather.gov" not in o_ and 'href="#alerts"' in o_, "world page kept the US NWS alert link (fix list 2026-11-16: 44 world pages held)"
     from lib import page as pe_
     sn_ = pe_.embed_snippet("/lake/a/", "A water level")
-    assert 'style="border:0' in sn_ and "rwlH" in sn_ and 'e.origin=="https://riverwaterlevels.com"' in sn_ and "rwlH" in pe_.EMBED_JS, "embed: the box no longer sizes to the panel (owner 2026-11-18: Lake Conroe saw a scrolling box)"
+    assert 'style="border:0' in sn_ and 'height="640"' in sn_ and "<script" not in sn_ and "Live data from" in sn_, "embed: the snippet needs a script, a frame border or lost its credit line (WordPress strips scripts, 2026-11-18)"
+    ol_ = pe_.oembed_link("/lake/a/", "A water level")
+    assert 'type="application/json+oembed"' in ol_ and "oembed?url=https%3A%2F%2Friverwaterlevels.com%2Flake%2Fa%2F&amp;format=json" in ol_, "embed: the oEmbed discovery line is missing or malformed"
     fo_ = pe_.embed_fold_html(sn_)
     assert 'id="embed"' in fo_ and 'data-src="https://riverwaterlevels.com/embed/lake/a/"' in fo_ and 'data-c="https://riverwaterlevels.com/lake/a/"' in fo_ and fo_.index("Copy link") < fo_.index("Copy code") and "Live data from" in fo_, "embed: the pop-up lost the page link (first), the code or its credit line, or the lazy preview"
     h_ = '<main><h1>X</h1><div class="hero"><div class="tile">1</div></div><p>rest</p></main>'

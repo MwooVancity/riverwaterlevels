@@ -192,10 +192,9 @@ def embed_snippet(url, name):
     """The code a club, marina or county page pastes (owner 2026-11-08 backlinks): the live panel in an iframe plus one plain, visible link under it,
     because a link inside an iframe sits on our own domain and earns nothing. The anchor is the place's name, never stuffed keywords (Google: widget links
     must be visible and natural). Owner 2026-11-18 (Lake Conroe asked for help): the panel is 600-1,000 px tall, so a fixed 520 px box scrolled inside the
-    host page; the panel now reports its height (EMBED_JS) and the small script sizes the box; a host that strips scripts keeps a 640 px box that scrolls."""
+    host page; WordPress strips scripts from unknown providers (research 2026-11-18), so the box is a fixed 640 px with no script."""
     return ('<iframe src="%s/embed%s" width="100%%" height="640" style="border:0;max-width:720px" loading="lazy" title="%s"></iframe>\n'
-            '<script>addEventListener("message",function(e){if(e.origin=="%s"&&e.data&&e.data.rwlH)document.querySelectorAll("iframe").forEach(function(f){if(f.contentWindow==e.source)f.style.height=e.data.rwlH+"px"})})</script>\n'
-            '<p>Live data from <a href="%s%s" rel="nofollow">River Water Levels</a></p>' % (SITE_URL, url, esc(name), SITE_URL, SITE_URL, url))
+            '<p>Live data from <a href="%s%s" rel="nofollow">River Water Levels</a></p>' % (SITE_URL, url, esc(name), SITE_URL, url))
 
 
 EMBED_CSS = ("body{margin:0;background:transparent}.embed{max-width:none;margin:0;padding:18px 20px;background:#fff;border:1px solid #e3e6ea;border-radius:14px}"
@@ -203,6 +202,13 @@ EMBED_CSS = ("body{margin:0;background:transparent}.embed{max-width:none;margin:
              ".embed .answer{font-size:15px;margin:0 0 12px}.embed .hero{display:flex;flex-wrap:wrap;gap:10px;margin:0}.embed .hero>.tile{flex:1 1 140px;margin:0;padding:12px 14px}"
              ".embed .hero>.tile.wide{flex-basis:100%}.embed .hero>.tile:nth-child(n+4),.embed .tile>small,.embed .tile>p{display:none}.embed .src{font-size:12px;margin:10px 0 0}")
 # owner 2026-11-18 "design it for Forbes": one clean card, the answer and three numbers with their units (a unit sits in the value's own <b><small>, which stays); tested in 340 and 640 px host columns
+def oembed_link(url, name):
+    """oEmbed discovery for a page with an embed panel (owner 2026-11-18): WordPress and Iframely (Notion) turn a pasted page link into the panel.
+    The Worker answers /oembed on request (no file per gauge)."""
+    from urllib.parse import quote
+    return '<link rel="alternate" type="application/json+oembed" href="%s/oembed?url=%s&amp;format=json" title="%s">' % (SITE_URL, quote(SITE_URL + url, safe=""), esc(name))
+
+
 EMBED_JS = '<script>(function(){function s(){parent.postMessage({rwlH:document.documentElement.scrollHeight},"*")}addEventListener("load",s);addEventListener("resize",s);setTimeout(s,800)})()</script>'  # the panel tells the host page its height (embed_snippet sizes the box)
 
 
@@ -228,7 +234,7 @@ def embed_fold_html(snippet):
             '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Add this live level to your website</button></span>'
             '<dialog class="emb" id="embed" aria-labelledby="emb-h"><form method="dialog"><button class="emb-x" aria-label="Close">&times;</button></form>'
             '<h2 id="emb-h">Share this live level</h2>'
-            '<div class="emb-opt"><h3>1. Link to it <span>works on any site</span></h3><p>Add this page to your links or resources page.</p>' + cp % (esc(page_url), "Copy link") + '</div>'
+            '<div class="emb-opt"><h3>1. Link to it <span>works on any site</span></h3><p>Add this page to your links or resources page. In Notion and on many WordPress sites, paste it into an <b>Embed</b> block and the live panel appears; if you only see a link, use the code below.</p>' + cp % (esc(page_url), "Copy link") + '</div>'
             '<div class="emb-opt"><h3>2. Show the live panel <span>WordPress, Wix, Squarespace, Google Sites</span></h3>'
             "<p>Paste the code into your site's HTML or Embed box (WordPress: Custom HTML. Wix: Embed Code. Squarespace: Code. Google Sites: Embed).</p>"
             + cp % (esc(snippet), "Copy code") +
@@ -856,7 +862,7 @@ def build_tab(tab, G, pages):
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s%s</head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub + ((" &middot; " + emb_bar) if emb_bar and T["hero"] else ""), tabs_html, off_html, (hero(G, pages) + SAFETY + emb_dlg + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (((AGE_JS if G.get("lake") or G.get("stage_only") else LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"])) + GTABS_JS + TAP_JS.replace("@TZ@", G["tzname"]) + RANGE_JS + CITE_JS + (TIDE_JS.replace("@TZ@", G["tzname"]) if G.get("coast") else "")) if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@MZ@", re.sub(r"[^A-Z0-9]", "", (((G["rec"].get("nws") or {}).get("static") or {}).get("marine") or ""))).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ((oembed_link(row["dashboard_url"], "%s water level" % river_at(G["river"], G["place"]))) if emb_bar else "") + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub + ((" &middot; " + emb_bar) if emb_bar and T["hero"] else ""), tabs_html, off_html, (hero(G, pages) + SAFETY + emb_dlg + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (((AGE_JS if G.get("lake") or G.get("stage_only") else LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"])) + GTABS_JS + TAP_JS.replace("@TZ@", G["tzname"]) + RANGE_JS + CITE_JS + (TIDE_JS.replace("@TZ@", G["tzname"]) if G.get("coast") else "")) if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@MZ@", re.sub(r"[^A-Z0-9]", "", (((G["rec"].get("nws") or {}).get("static") or {}).get("marine") or ""))).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
     if G.get("lake"):
         page = lake_words(page, G)
     page = credit_once(page)

@@ -747,7 +747,12 @@ def page(p, r, now, rows=(), keep=(), idx=None):
     name = (re.search(r"<h1>([^<]*)</h1>", html) or [None, "%s water level" % p["river"]])[1]
     bar_, _, dlg_ = embed_fold(row["dashboard_url"], name).partition("<dialog")  # owner 2026-11-18: share button on the line under the title, pop-up after the readings
     html = after_hero(re.sub(r'(<p class="sub">.*?)(</p>)', lambda m: m.group(1) + " &middot; " + bar_ + m.group(2), html, count=1, flags=re.S), "<dialog" + dlg_)
-    return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)
+    return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + pg_oembed(row["dashboard_url"], name) + "</head>", 1)
+
+
+def pg_oembed(url, name):
+    from lib import page as pg_
+    return pg_.oembed_link(url, name)
 
 
 def after_hero(html, add):

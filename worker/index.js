@@ -35,6 +35,7 @@ export default {
         if (d) o.headers.set("x-rwl-build-trigger", d); // the last time the cron asked GitHub for a build, and GitHub's answer
         return secure(o, url);
       }
+      if (url.pathname === "/oembed") return secure(await oembed(env, url), url); // owner 2026-11-18: a pasted page link becomes the live panel (WordPress discovery, Notion via Iframely); built on request, no file per gauge (20,000-file deploy cap)
       if (gone(url.pathname)) // owner 2026-11-14: the research section was deleted; 410 tells Google it is gone for good (a 404 can be retried for months)
         return secure(new Response('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Removed | River Water Levels</title></head><body><p>This page was removed. <a href="/">River Water Levels</a> has a live page for every river, lake and coast it covers.</p></body></html>',
           { status: 410, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=86400", "x-robots-tag": "noindex" } }), url);
@@ -186,6 +187,21 @@ const SECURITY = {
   "x-frame-options": "DENY",
   "permissions-policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
 };
+
+// oEmbed for one of our own pages: only our host, only a page that has an embed panel. Never a fetch of an outside address.
+async function oembed(env, url) {
+  let u;
+  try { u = new URL(url.searchParams.get("url") || ""); } catch (e) { return new Response("bad url", { status: 400 }); }
+  if (!/^(www\.)?riverwaterlevels\.com$/.test(u.hostname) || !/^\/[a-z0-9-]+(\/[a-z0-9-]+){1,2}\/$/.test(u.pathname)) return new Response("not ours", { status: 404 });
+  const panel = await env.ASSETS.fetch("https://riverwaterlevels.com/embed" + u.pathname);
+  if (!panel.ok) return new Response("no panel", { status: 404 });
+  const t = ((await panel.text()).match(/<title>([^<]*)<\/title>/) || [, "Live water level"])[1].replace(/ \(embed\)$/, "");
+  const w = Math.max(240, Math.min(720, parseInt(url.searchParams.get("maxwidth") || "720", 10) || 720)), h = 640;
+  const src = "https://riverwaterlevels.com/embed" + u.pathname;
+  const html = '<iframe src="' + src + '" width="' + w + '" height="' + h + '" style="border:0;max-width:100%" loading="lazy" title="' + t.replace(/"/g, "&quot;") + '"></iframe>';
+  return new Response(JSON.stringify({ version: "1.0", type: "rich", provider_name: "River Water Levels", provider_url: "https://riverwaterlevels.com/", title: t, html, width: w, height: h }),
+    { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600", "access-control-allow-origin": "*" } });
+}
 
 function gone(p) {
   p = p.toLowerCase();
