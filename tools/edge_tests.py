@@ -1386,7 +1386,9 @@ if __name__ == "__main__":
     sn_ = pe_.embed_snippet("/lake/a/", "A water level")
     assert 'style="border:0' in sn_ and "rwlH" in sn_ and 'e.origin=="https://riverwaterlevels.com"' in sn_ and "rwlH" in pe_.EMBED_JS, "embed: the box no longer sizes to the panel (owner 2026-11-18: Lake Conroe saw a scrolling box)"
     fo_ = pe_.embed_fold_html(sn_)
-    assert 'id="embed" open' in fo_ and 'href="https://riverwaterlevels.com/embed/lake/a/"' in fo_, "embed: the fold is closed, unlinked from the top, or has no preview link"
+    assert 'id="embed"' in fo_ and 'data-src="https://riverwaterlevels.com/embed/lake/a/"' in fo_ and 'data-c="https://riverwaterlevels.com/lake/a/"' in fo_ and fo_.index("Copy link") < fo_.index("Copy code") and "Live data from" in fo_, "embed: the pop-up lost the page link (first), the code or its credit line, or the lazy preview"
+    h_ = '<main><h1>X</h1><div class="hero"><div class="tile">1</div></div><p>rest</p></main>'
+    assert world.after_hero(h_, "[A]") == '<main><h1>X</h1><div class="hero"><div class="tile">1</div></div>[A]<p>rest</p></main>', "embed: the share button is not right under the readings"
     real_hero_ = pe_.hero
     try:
         pe_.hero = lambda G, pages=None: '<div class="hero"><div class="tile flow">1</div></div>'

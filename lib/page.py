@@ -214,22 +214,26 @@ def embed_code(G):
 
 
 def embed_fold_html(snippet):
-    """The fold itself (one copy for every country): the code, a Copy button and the HTML box to use in each site builder (owner 2026-11-15: easy for anyone)."""
-    copy = ('<button type="button" onclick="var t=this.previousElementSibling;t.select();'
-            '(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});'
-            'this.textContent=&quot;Copied&quot;">Copy code</button>')
-    steps = ("<p><b>Other sites (WordPress, Squarespace):</b> press <b>Copy code</b>, add an HTML box (WordPress <b>Custom HTML</b> block, "
-             "Squarespace <b>Code</b> block), paste and save. The panel keeps itself up to date.</p>")
+    """The share button under the readings and the pop-up it opens (owner 2026-11-18, the YouTube/Google Maps share pattern): first a plain link to this
+    page, the one thing any site can add and the one a search engine counts; then the live panel code (embed_snippet) for sites that want it.
+    A native <dialog>: no library, the preview loads only when opened."""
     src = re.search(r'src="([^"]+)"', snippet)
-    link = ('<p><b>Easiest, no code (Google Sites, Wix, Notion):</b> copy this link and paste it into your editor\'s <b>Embed</b> box '
-            '(Google Sites: Insert, Embed, By URL; Wix: Add, Embed, Embed a site; Notion: type /embed).</p>'
-            '<input readonly aria-label="Panel link" value="%s" style="width:100%%;font:13px monospace">'
-            '<button type="button" onclick="var t=this.previousElementSibling;t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).catch(function(){document.execCommand(&quot;copy&quot;)});this.textContent=&quot;Copied&quot;">Copy link</button>'
-            '<p>Under the panel, a text line credits the source: <i>Live data from River Water Levels</i>, linked to %s</p>'
-            % (esc(src.group(1)), esc(src.group(1).replace("/embed/", "/", 1)))) if src else ""  # review 2026-11-18: a link-only embed carries no visible credit link on the host page  # owner 2026-11-18 "make it simpler": a link is one paste, no HTML box; sign-in with Google cannot reach the host's editor
-    see = ('<p><a href="%s" target="_blank" rel="noopener">See how the panel looks</a> (it fits any width; on a phone it stacks).</p>' % esc(src.group(1))) if src else ""
-    return ('<details class="emb" id="embed" open><summary>Embed this live panel on your site (free)</summary>' + see + link + '<p><b>Or paste the code:</b></p><textarea readonly rows="4" aria-label="Embed code" style="width:100%%;font:12px monospace">%s</textarea>'
-            % esc(snippet)) + copy + steps + "<small>Free. The credit line under the panel is optional. Facebook and Instagram do not show embedded panels: share the page link there.</small></details>"
+    if not src:
+        return ""
+    panel, page_url = src.group(1), src.group(1).replace("/embed/", "/", 1)
+    cp = ('<button type="button" class="emb-btn" data-c="%s" onclick="var b=this,c=b.getAttribute(&quot;data-c&quot;);(navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject())'
+          '.then(function(){b.textContent=&quot;Copied&quot;},function(){var t=document.createElement(&quot;textarea&quot;);t.value=c;document.body.appendChild(t);t.select();document.execCommand(&quot;copy&quot;);t.remove();b.textContent=&quot;Copied&quot;})">%s</button>')
+    return ('<div class="emb-bar"><button type="button" class="emb-open" onclick="var d=document.getElementById(&quot;embed&quot;);'
+            'var f=d.querySelector(&quot;iframe[data-src]&quot;);if(f){f.src=f.getAttribute(&quot;data-src&quot;);f.removeAttribute(&quot;data-src&quot;)}d.showModal()">'
+            'Add this live level to your website</button></div>'
+            '<dialog class="emb" id="embed" aria-labelledby="emb-h"><form method="dialog"><button class="emb-x" aria-label="Close">&times;</button></form>'
+            '<h2 id="emb-h">Share this live level</h2>'
+            '<div class="emb-opt"><h3>1. Link to it <span>works on any site</span></h3><p>Add this page to your links or resources page.</p>' + cp % (esc(page_url), "Copy link") + '</div>'
+            '<div class="emb-opt"><h3>2. Show the live panel <span>WordPress, Wix, Squarespace, Google Sites</span></h3>'
+            "<p>Paste the code into your site's HTML or Embed box (WordPress: Custom HTML. Wix: Embed Code. Squarespace: Code. Google Sites: Embed).</p>"
+            + cp % (esc(snippet), "Copy code") +
+            '<div class="emb-prev"><iframe data-src="' + esc(panel) + '" title="Preview of the live panel" height="520"></iframe></div></div></dialog>')
+
 
 
 # Each URL fetched 2026-11-11 by the PLAN 8 research; a state not listed had no verified program page.
@@ -287,7 +291,7 @@ def b_official_links(G):
             links.append(("%s in %s (%s)" % (what, STATE_NAMES.get(G["row"]["state"], G["row"]["state"]), e["agency"]), e["url"]))
     links.append(("This page's data as JSON: 3-day water level readings (NOAA CO-OPS, preliminary)" if G.get("coast") else "This page's data as JSON: 7-day flow and gage height readings, daily mean flow by year (USGS, provisional)", G["row"]["dashboard_url"] + "data.json"))
     links.append(("Put this gauge's live panel on your own site (free embed, links back here)", "/embed" + G["row"]["dashboard_url"]))
-    body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links) + embed_code(G)
+    body = cite_line(G) + '<ul class="olinks">%s</ul>' % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a></li>' % (esc(h), esc(t)) for t, h in links)
     return block("official_links", "Official pages for this gauge", "agency", body, "Source: links to the agencies that publish the data on this page (USGS, NOAA National Weather Service); they open in a new tab.", "usgs")
 
 
@@ -795,7 +799,7 @@ def build_tab(tab, G, pages):
                        "temporalCoverage": ("%s/%s" % (iso(min(fl7)), iso(G["lt"]))) if fl7 else iso(G["lt"]), "distribution": [{"@type": "DataDownload", "encodingFormat": "application/json", "contentUrl": url + "data.json"}]}}))
     off_html = "".join(render_block(b) for b in shown if b["id"] == "gauge_not_reporting")  # the not-reporting banner sits right under the H1, above the tiles
     ids = {b["id"] for b in shown}
-    jl = [(i, t) for i, t in JUMP if i in ids] + ([("embed", "Add to your website")] if not G.get("feed") else [])  # owner 2026-11-18: site owners could not find the embed code at the bottom
+    jl = [(i, t) for i, t in JUMP if i in ids]
     jump_html = ('<nav class="jump" aria-label="On this page">%s</nav>' % " ".join('<a href="#%s">%s</a>' % (i, t) for i, t in jl)) if tab == "dashboard" and len(jl) >= 4 else ""
     SIDE = {"related_gauges", "nearby_gauges", "nws_forecast_point", "flood_stages", "about_gauge", "gauge_map", "sun", "official_links"}  # 2026-11-13: recreation sites, public land and station air readings stay in their sections (on a phone the side column falls to the very bottom)
     body = ""
@@ -850,7 +854,7 @@ def build_tab(tab, G, pages):
         body = '<div class="cols"><div class="main2">%s</div><aside class="side" aria-label="Around this gauge">%s</aside></div>' % (body, side)
     page = ('<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s%s</head><body>%s<main id="main">%s<h1>%s, %s: water level and flow</h1><p class="sub">%s</p><p><span class="tabs">%s</span></p>%s%s%s%s</main>%s%s</body></html>' % (
-                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (((AGE_JS if G.get("lake") or G.get("stage_only") else LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"])) + GTABS_JS + TAP_JS.replace("@TZ@", G["tzname"]) + RANGE_JS + CITE_JS + (TIDE_JS.replace("@TZ@", G["tzname"]) if G.get("coast") else "")) if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@MZ@", re.sub(r"[^A-Z0-9]", "", (((G["rec"].get("nws") or {}).get("static") or {}).get("marine") or ""))).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
+                esc(title), esc(desc), url, ADSENSE + HEAD_EXTRA + PWA_HEAD + og_tags(title, desc, url) + ld + robots_meta(row[tab + "_url"]), CSS_LINK, nav(), crumb, esc(rp), esc(st), sub, tabs_html, off_html, (hero(G, pages) + SAFETY + embed_code(G) + jump_html + gt_html) if T["hero"] else "", body, sources_block(shown, G) + (((AGE_JS if G.get("lake") or G.get("stage_only") else LIVE_JS.replace("@SITE@", G["site"]).replace("@TZ@", G["tzname"])) + GTABS_JS + TAP_JS.replace("@TZ@", G["tzname"]) + RANGE_JS + CITE_JS + (TIDE_JS.replace("@TZ@", G["tzname"]) if G.get("coast") else "")) if T["hero"] else AGE_JS) + (WX_JS.replace("@TZ@", G["tzname"]) if (G["rec"].get("nws") or {}).get("obs") else "") + (ALERTS_JS.replace("@LAT@", "%.4f" % G["lat"]).replace("@LON@", "%.4f" % G["lon"]).replace("@MZ@", re.sub(r"[^A-Z0-9]", "", (((G["rec"].get("nws") or {}).get("static") or {}).get("marine") or ""))).replace("@TZ@", G["tzname"]).replace("@CTY@", ((((G["rec"].get("meta") or {}).get("loc")) or {}).get("county_name") or "").replace('"', "")) if any(b["id"] == "alerts" for b in shown) else "") + (RADAR_JS if any(b["id"] == "radar" for b in shown) else ""), footer(), tabbar))
     if G.get("lake"):
         page = lake_words(page, G)
     page = credit_once(page)

@@ -1007,7 +1007,7 @@ def block_ids():
     return out
 
 
-WORLD_HOSTS = ("pagead2.googlesyndication.com", "www.googletagmanager.com")  # all a world page's scripts, images and calls may reach; its own origin needs no entry
+WORLD_HOSTS = ("pagead2.googlesyndication.com", "www.googletagmanager.com", "riverwaterlevels.com")  # own origin written absolute: the embed preview iframe (2026-11-18); all a world page's scripts, images and calls may reach; its own origin needs no entry
 
 
 def world_rules(h):

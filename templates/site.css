@@ -307,7 +307,11 @@ table.hlist.hsky td,table.hlist.hsky th{padding:8px 3px}table.hlist.hsky td:last
 .offl{margin:0 0 10px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft);color:var(--mut);font-size:.88rem}
 .tile b{overflow-wrap:normal;word-break:normal}
 
-.emb>summary{cursor:pointer;color:var(--accent);min-height:44px;line-height:44px}
+.emb-bar{margin:10px 0 4px}.emb-open{min-height:44px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--accent);font:600 .95rem system-ui,sans-serif;cursor:pointer}.emb-open:hover{border-color:var(--accent)}
+dialog.emb{width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 48px);border:0;border-radius:16px;padding:24px;background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(15,42,74,.25)}dialog.emb::backdrop{background:rgba(15,29,43,.55)}.emb h2{margin:0 36px 16px 0;font-size:1.25rem}.emb-x{position:absolute;top:12px;right:12px;width:40px;height:40px;border:0;border-radius:50%;background:var(--soft);color:var(--ink);font-size:1.4rem;cursor:pointer}
+.emb-opt{padding:16px 0;border-top:1px solid var(--line)}.emb-opt h3{margin:0 0 4px;font-size:1rem}.emb-opt h3 span{font-weight:400;color:var(--mut);font-size:.85rem;margin-left:6px}.emb-opt p{margin:0 0 12px;color:var(--mut);font-size:.92rem}
+.emb-btn{display:block;width:100%;min-height:48px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:700 1rem system-ui,sans-serif;cursor:pointer}.emb-btn:focus-visible,.emb-open:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.emb-prev{margin-top:14px;background:var(--soft);border-radius:12px;padding:10px}.emb-prev iframe{display:block;width:100%;border:0;border-radius:10px}
 .tmore{margin-top:6px}.tmore>summary{cursor:pointer;color:var(--accent);font:500 .85rem system-ui,sans-serif;min-height:32px;line-height:32px;list-style:none}.tmore>summary::-webkit-details-marker{display:none}.tmore>summary::after{content:" ▾"}.tmore[open]>summary::after{content:" ▴"}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .answer{font-size:1.08rem;line-height:1.45;margin:6px 0 14px}.answer .a2{font-weight:700}@media(max-width:760px){.answer{font-size:1.02rem}}

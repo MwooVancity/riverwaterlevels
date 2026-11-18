@@ -745,8 +745,22 @@ def page(p, r, now, rows=(), keep=(), idx=None):
                           "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1)
     html = localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
     name = (re.search(r"<h1>([^<]*)</h1>", html) or [None, "%s water level" % p["river"]])[1]
-    html = html.replace("</main>", embed_fold(row["dashboard_url"], name) + "</main>", 1)  # owner 2026-11-15: the embed panel on every page, any country
+    html = after_hero(html, embed_fold(row["dashboard_url"], name))  # owner 2026-11-18: the share button sits under the readings, as on a US page
     return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)
+
+
+def after_hero(html, add):
+    """html with add placed right after the hero block (the readings), or before </main> when a page has no hero."""
+    i = html.find('<div class="hero')
+    if i < 0:
+        return html.replace("</main>", add + "</main>", 1)
+    depth = 0
+    for m in re.finditer(r"<(/?)div\b", html[i:]):
+        depth += -1 if m.group(1) else 1
+        if depth == 0:
+            j = html.find(">", i + m.end()) + 1
+            return html[:j] + add + html[j:]
+    return html.replace("</main>", add + "</main>", 1)
 
 
 def embed_fold(url, name):
