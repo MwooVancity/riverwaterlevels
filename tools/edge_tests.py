@@ -1396,4 +1396,7 @@ if __name__ == "__main__":
     finally:
         pe_.hero = real_hero_
     assert up_.startswith("<!doctype html>") and "rwlH" in up_ and up_.rstrip().endswith("</html>"), "embed: the US panel did not build (2026-11-18 release stopped on a format error)"
+    pg_html_ = '<main><h1>K</h1><p class="sub">WSV gauge &middot; <span class="emb-bar"><button class="emb-open">Add this live level to your website</button></span></p><div class="hero"><div>2 m</div></div></main>'
+    ep2_ = world.embed_page("/rhine/kaub/", pg_html_, "pegelonline")
+    assert "Add this live level" not in ep2_ and "WSV gauge" in ep2_, "embed: the share button was copied into the panel other sites show"
     print("selftest OK")

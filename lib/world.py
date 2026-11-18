@@ -745,7 +745,8 @@ def page(p, r, now, rows=(), keep=(), idx=None):
                           "<small>At %s (%.1f ft)</small><small>Then: %s. Marine Institute prediction above OD Malin; weather can move the sea away from it.</small>" % (esc(render.tzl(datetime.datetime.fromisoformat(nxt_[0][0]), z_, date=False)), nxt_[0][1] * 3.28084,esc("; ".join(w_(x) for x in nxt_[1:])))), html, count=1)
     html = localize(html, rec["feed"], p["river"], row["place"], row["hub_url"], p.get("flat"))
     name = (re.search(r"<h1>([^<]*)</h1>", html) or [None, "%s water level" % p["river"]])[1]
-    html = after_hero(html, embed_fold(row["dashboard_url"], name))  # owner 2026-11-18: the share button sits under the readings, as on a US page
+    bar_, _, dlg_ = embed_fold(row["dashboard_url"], name).partition("<dialog")  # owner 2026-11-18: share button on the line under the title, pop-up after the readings
+    html = after_hero(re.sub(r'(<p class="sub">.*?)(</p>)', lambda m: m.group(1) + " &middot; " + bar_ + m.group(2), html, count=1, flags=re.S), "<dialog" + dlg_)
     return row["dashboard_url"], html.replace("</head>", world_ld(p, r, row["dashboard_url"], rec["feed"], html) + "</head>", 1)
 
 
@@ -774,7 +775,7 @@ def embed_page(url, html, feed):
     credit (its licence asks for it: OGL, DL-DE, Canada's open licence) and one link back. noindex, like the US panel."""
     from lib import page as pg_
     h1 = re.search(r"<h1>.*?</h1>", html, re.S)
-    sub = re.search(r'<p class="sub">.*?</p>', html, re.S)
+    sub = re.search(r'<p class="sub">.*?</p>', re.sub(r' &middot; <span class="emb-bar">.*?</span>', "", html, count=1, flags=re.S), re.S)  # the share button never travels into a host's copy
     ans = re.search(r'<p class="answer".*?</p>', html, re.S)
     i = html.find('<div class="hero')
     if not (h1 and i > 0):
