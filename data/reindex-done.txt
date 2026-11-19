@@ -35,3 +35,10 @@ https://riverwaterlevels.com/river/suwannee-river-fl/white-springs/	2026-11-14
 https://riverwaterlevels.com/river/pere-marquette-river/scottville/	2026-11-14
 https://riverwaterlevels.com/river/penns-creek/penns-creek/	2026-11-14
 https://riverwaterlevels.com/river/north-fork-flathead-river/columbia-falls/	2026-11-14
+https://riverwaterlevels.com/river/nantahala-river/rainbow-springs/	2026-11-19
+https://riverwaterlevels.com/river/chattooga-river-sc/clayton/	2026-11-19
+https://riverwaterlevels.com/river/current-river/doniphan/	2026-11-19
+https://riverwaterlevels.com/river/missouri-river-mo/kansas-city/	2026-11-19
+https://riverwaterlevels.com/river/potomac-river-md/little-falls/	2026-11-19
+https://riverwaterlevels.com/river/madison-river/below-hebgen-lake-near-grayling/	2026-11-19
+https://riverwaterlevels.com/river/brule-river-wi/commonwealth/	2026-11-19
