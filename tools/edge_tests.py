@@ -1401,4 +1401,16 @@ if __name__ == "__main__":
     pg_html_ = '<main><h1>K</h1><p class="sub">WSV gauge &middot; <span class="emb-bar"><button class="emb-open">Add this live level to your website</button></span></p><div class="hero"><div>2 m</div></div></main>'
     ep2_ = world.embed_page("/rhine/kaub/", pg_html_, "pegelonline")
     assert "Add this live level" not in ep2_ and "WSV gauge" in ep2_, "embed: the share button was copied into the panel other sites show"
+    from lib import blocks3 as b3f_
+    rf_ = os.path.join(ROOT, "data", "affiliate-ref.txt")
+    old_ = open(rf_, encoding="utf-8").read() if os.path.exists(rf_) else ""
+    try:
+        open(rf_, "w", encoding="utf-8").write(""); b3f_._AFF.clear()
+        assert b3f_.fishing_trips({"row": {"dashboard_url": "/lake/lake-conroe/"}, "river": "Lake Conroe"}) == "", "affiliate: a line showed before the owner's affiliate reference exists"
+        open(rf_, "w", encoding="utf-8").write("a_aid=T"); b3f_._AFF.clear()
+        fl_ = b3f_.fishing_trips({"row": {"dashboard_url": "/lake/lake-conroe/"}, "river": "Lake Conroe"})
+        assert 'rel="sponsored' in fl_ and "a_aid=T" in fl_ and "commission" in fl_, "affiliate: the link lost its sponsored label, reference or disclosure"
+        assert b3f_.fishing_trips({"row": {"dashboard_url": "/lake/unlisted/"}, "river": "X"}) == "", "affiliate: a water without checked trips got a link"
+    finally:
+        open(rf_, "w", encoding="utf-8").write(old_); b3f_._AFF.clear()
     print("selftest OK")

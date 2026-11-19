@@ -88,6 +88,36 @@ def b_sustained(G):
                  "Source: USGS daily mean flow for each date through %s compared with USGS daily statistics for those same dates; the percentile shown is the average of the daily percentiles over the window." % esc(fdate(G["rec"]["multiyear"]["as_of"])), "usgs")
 
 
+def _affiliates():
+    """(reference, {water_url: row}) read once per process (review 2026-11-19: not once per page); missing files mean no links."""
+    import csv
+    if _AFF:
+        return _AFF[0]
+    root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    try:
+        got = (open(os.path.join(root, "affiliate-ref.txt"), encoding="utf-8").read().strip(),
+               {r["water_url"]: r for r in csv.DictReader(open(os.path.join(root, "affiliates.csv"), encoding="utf-8"))})
+    except (OSError, KeyError):
+        got = ("", {})
+    _AFF.append(got)
+    return got
+
+
+_AFF = []
+
+
+def fishing_trips(G):
+    """One disclosed FishingBooker line (owner 2026-11-19), only for a water in data/affiliates.csv (a destination page checked by hand to list trips on
+    that water) and only once the owner's affiliate reference is in data/affiliate-ref.txt; else nothing. rel=sponsored per Google's paid-link rule."""
+    ref, rows = _affiliates()
+    r = rows.get(G["row"].get("dashboard_url"))
+    if not (ref and r and r.get("fishingbooker_url", "").startswith("https://fishingbooker.com/")):
+        return ""
+    url = r["fishingbooker_url"] + ("&" if "?" in r["fishingbooker_url"] else "?") + ref
+    return ('<p class="aff">Looking for a guided fishing trip here? <a href="%s" rel="sponsored nofollow noopener" target="_blank">Browse %s fishing charters on FishingBooker</a>. '
+            '<small>We may earn a commission if you book through this link, at no extra cost to you.</small></p>' % (esc(url), esc(G.get("river") or "local")))
+
+
 def b_access(G):
     """Boat ramps, put-ins and marinas near the gauge (OpenStreetMap). Where people get on the water."""
     a = G["rec"].get("access")
@@ -103,6 +133,7 @@ def b_access(G):
     if unnamed:
         far = max(x["mi"] for x in unnamed)
         body += '<p>%d %sunnamed %s within %.1f mi. <a href="#gauge_map">Map of the gauge location</a></p>' % (len(unnamed), "more " if named else "", "ramp or access point" if len(unnamed) == 1 else "ramps or access points", far)
+    body += fishing_trips(G)
     return block("access_points", "Boat ramps, put-ins and marinas nearby", "map", body,
                  "Source: OpenStreetMap (boat ramps, canoe and whitewater put-ins, marinas) within about 15 miles of the gauge, %d found, nearest shown, fetched %s. © OpenStreetMap contributors, ODbL. Positions are community-mapped and may be approximate." % (a["count"], esc(tzl(parse_t(a["fetched_at"]), G["zone"]))), "osm")
 
