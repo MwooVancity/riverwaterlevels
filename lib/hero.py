@@ -566,7 +566,7 @@ def hero(G, pages=None):
     if c["up"]:
         up = c["up"]
         strip += ui.tile("upst", "up", "Upstream gauge" if up["name"].split()[0].lower() == G["river"].split()[0].lower() else "Tributary upstream", '%s <small>cfs</small>' % fmtc(up["flow"]), '<small><a href="%s">%s</a>%s</small>' % (up["url"], esc(up["name"]), "" + ((" &middot; " + esc(up["time"])) if up.get("time") else "")) + ('<small>A much smaller stream than this river: a tributary, not a stand-in for the water on its way.</small>' if G["lv"] and up["flow"] < 0.2 * G["lv"] else ""))
-    ban = ui.banner(c["alerts"]["n"], esc("; ".join(c["alerts"]["names"])), c["alerts"].get("col"), nws_url(G), c["alerts"].get("flood")) if c["alerts"] and c["alerts"]["n"] else ""
+    ban = ui.banner(c["alerts"]["n"], esc("; ".join(dict.fromkeys(c["alerts"]["names"]))), c["alerts"].get("col"), nws_url(G), c["alerts"].get("flood")) if c["alerts"] and c["alerts"]["n"] else ""
     al_ = c["alerts"]
     if al_ is None:
         a_txt, a_cls = "NWS alerts unknown", "ax"
@@ -586,6 +586,7 @@ def hero(G, pages=None):
     strip_chip = strip_dir_word(dir_chip) if shown_ else dir_chip  # "Steady" is said by the flow tile and the change card, not a third time
     lv = G.get("lv")
     lead = ("%s cfs" % fmtc(lv)) if lv is not None else None
+    lead_lvl = ("Level %s %s" % (stage_txt, stage_unit)) if lead is None and sg and not G.get("tables") else None  # fresh check 2026-11-19: a lake or world summary line opened without its own level (Lake Conroe, Kaub)
     feed_chg = ({"m": "%+.2f m in 24 h" % (G["stage_chg"] / 3.28084)}.get(G["feed"].get("unit"), "%+.0f cm in 24 h" % (G["stage_chg"] * 30.48))) if G["feed"] and G.get("stage_chg") is not None else ""
     norm_txt = G["feed"]["norm"] if G["feed"] else ("%s for %s" % (norm_word.replace(" for this date", ""), md(G["ldate"]))) if p is not None or out_ else ("%s at %s now" % (norm_word, level_of(G)["name"]) if level_of(G) else "%s now" % norm_word) if an_ else "No past-years comparison for this date"
     if G.get("tables"):
@@ -596,7 +597,7 @@ def hero(G, pages=None):
     # lead the summary with the actual reading so the line answers "how much / is it normal / which way / any alert" at a glance; each part stays a sourced fact, no verdict
     # dv = derived from the reading: when a newer reading is swapped in (worker/index.js, LIVE_JS) each dv element is stamped with the reading time it was computed from
     answer = ('<p class="answer" aria-label="Summary">%s<span class="a2 dv">%s</span><span class="a1 dv">%s</span>%s</p>' % (
-        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else "", esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
+        ('<span class="a1" data-live="lead">%s</span>' % esc(lead)) if lead else ('<span class="a1 dv">%s</span>' % esc(lead_lvl)) if lead_lvl else "", esc(norm_txt), esc(strip_chip or feed_chg or (("Next tide: %s" % _nt_txt(G)) if G.get("coast") else "Direction unclear")), ('<span class="a3 %s">%s</span>' % (a_cls, esc(a_txt))) if a_txt else ""))
     answer = status_line(G, norm_txt if (p is not None or out_) and not G["feed"] else "", tile_dir_word(dir_chip) if dir_chip else "", wcls) + answer
     if c["rain"]:
         rn_ = c["rain"]
