@@ -595,6 +595,22 @@ def conditions(G, pages=None):
 
 
 
+def b_webcams(G):
+    """Webcams others run on this water (owner 2026-11-19: Lake Conroe had none), from data/webcams.csv, checked by hand. Linked, never copied:
+    their images stay on their site. Shown when the page has no USGS camera of its own."""
+    import csv
+    try:
+        rows = [r for r in csv.DictReader(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "webcams.csv"), encoding="utf-8"))
+                if r.get("water_url") == G["row"].get("dashboard_url") and (r.get("url") or "").startswith("https://")]
+    except (OSError, KeyError):
+        return None
+    if not rows:
+        return None
+    body = "<ul>%s</ul>" % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a> <small>run by %s</small></li>' % (esc(r["url"]), esc(r["label"]), esc(r["operator"])) for r in rows)
+    return block("webcams", "Live webcams on this water", "ext", body,
+                 "Links to webcams run by others, checked %s; their images stay on their sites. We do not control what they show or when." % esc(max(r["checked_on"] for r in rows)), "webcams")
+
+
 def b_camera(G):
     """USGS gaging-station camera at this site: the newest image (720 px), with the timelapse link and the HIVIS page."""
     c = G["rec"].get("cameras")

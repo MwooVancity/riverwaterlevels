@@ -1414,4 +1414,7 @@ if __name__ == "__main__":
         assert b3f_.fishing_trips({"row": {"dashboard_url": "/lake/unlisted/"}, "river": "X"}) == "", "affiliate: a water without checked trips got a link"
     finally:
         open(rf_, "w", encoding="utf-8").write(old_); b3f_._AFF.clear()
+    from lib import blocks3 as b3w_
+    wb_ = b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})
+    assert wb_ and wb_["tag"] == "ext" and 'href="https://lakeconroe.com/' in wb_["body"] and "<img" not in wb_["body"] and b3w_.b_webcams({"row": {"dashboard_url": "/lake/none/"}}) is None, "webcams: the hand-checked link is missing, an image was copied, or an unlisted water got a block"
     print("selftest OK")

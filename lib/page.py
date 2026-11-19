@@ -314,7 +314,7 @@ def data_meta(G, name, page_url, observed):
             "cite": "%s water data, %s. %s%s. %s" % (name, BRAND, src, (", observed %s" % observed) if observed else "", page_url)}
 
 
-REVIEW_BLOCKS = {"like_today", "water_speed", "big_floods", "surf", "redtide", "kingtide", "fish", "moonphase"}  # PLAN 20: a new block type shows only after its phone review passes (data/reviewed.json "blocks"); add each new block id here the day it is built
+REVIEW_BLOCKS = {"webcams", "like_today", "water_speed", "big_floods", "surf", "redtide", "kingtide", "fish", "moonphase"}  # PLAN 20: a new block type shows only after its phone review passes (data/reviewed.json "blocks"); add each new block id here the day it is built
 
 
 @__import__("functools").lru_cache(maxsize=1)
@@ -343,6 +343,8 @@ def tab_blocks(tab, G, pages):
     if tab == "dashboard":  # one page per gauge, ordered by what a person at the water asks: is it dangerous, what is the water like, what is coming, how does it compare; "SEC:" is a heading, "FOLD:" a closed group
         cam = b3.b_camera(G)
         cam_now, cam_old = (cam, None) if cam and cam["tag"] == "live" else (None, cam)
+        if not cam_now:  # review 2026-11-19: hand-checked webcams others run sit with "what the water is like now", not under "Camera at the gauge"
+            cam_now = b3.b_webcams(G)
         has_al = bool(live_alerts(G))
         try:
             near = impacts_near(G)

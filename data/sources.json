@@ -799,6 +799,20 @@
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed"
+  },
+  {
+   "id": "webcams",
+   "name": "Webcam pages run by others (hand-checked links)",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://lakeconroe.com/live-web-cams-on-lake-conroe/",
+   "summary": "We only link to the operator's public webcam page; no image or video is copied, framed or cached (cache: our own link list only).",
+   "credit": "Webcams: their operators",
+   "blocks": [
+    "webcams"
+   ]
   }
  ]
 }
