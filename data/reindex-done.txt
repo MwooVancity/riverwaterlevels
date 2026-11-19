@@ -42,3 +42,6 @@ https://riverwaterlevels.com/river/missouri-river-mo/kansas-city/	2026-11-19
 https://riverwaterlevels.com/river/potomac-river-md/little-falls/	2026-11-19
 https://riverwaterlevels.com/river/madison-river/below-hebgen-lake-near-grayling/	2026-11-19
 https://riverwaterlevels.com/river/brule-river-wi/commonwealth/	2026-11-19
+https://riverwaterlevels.com/river/madison-river/below-ennis-lake/	2026-11-19
+https://riverwaterlevels.com/river/delaware-river-nj/trenton/	2026-11-19
+https://riverwaterlevels.com/river/yellowstone-river-mt/billings/	2026-11-19
