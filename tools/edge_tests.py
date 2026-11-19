@@ -414,7 +414,7 @@ def run():
     assert render.last_year_flow(dict(G3, rec=dict(G3["rec"], multiyear=dict(G3["rec"]["multiyear"], ly={})))) is None, "audit #3: a missing last-year day was filled from another date"
     lake_row = {"lake": "1", "river": "Lake Lanier", "place": "Buford Dam"}
     h4 = render.hero(mk(None, lambda k: 1062.4, row=lake_row, codes=[("72036", lambda k: 1643, "Kacre-ft")]), None)
-    assert r_.search(r'<p class="answer"[^>]*><span class="a1 dv">1062\.40 ft</span>', h4), "summary: a lake's answer line opened without its own level (fresh check 2026-11-19)"
+    assert r_.search(r'<p class="answer"[^>]*><span class="a1 dv">Level 1062\.40 ft</span>', h4), "summary: a lake's answer line opened without its own level (fresh check 2026-11-19)"
     assert "1,643,000" in h4 and "publishes no storage" not in h4 and r_.findall(r'<div class="tile (\w+)', h4)[:2] == ["stage", "flow"], "audit #4 (and owner 2026-11-18, level first): USGS storage published as 72036 (thousand acre-ft) not read; the page said USGS publishes none (Lanier, Allatoona)"
     h8 = render.hero(mk(None, lambda k: 1062.4, row=lake_row), None)
     assert r_.findall(r'<div class="tile (\w+)', h8)[0] == "stage" and "publishes no storage" in h8 and r_.search(r'class="tile wtemp[^"]*">(?:(?!</div>).)*<b>Unknown</b>', h8, r_.S), "audit #8: an empty storage tile leads the lake page, or a missing water temperature has no word"
