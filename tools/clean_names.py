@@ -80,7 +80,7 @@ def main():
             continue
         river, place, bad, had_place = clean(r["raw_name"])
         raw = r["raw_name"]
-        if "&" in raw or re.search(r"\b[A-Za-z]\.\s", raw) or re.search(r"\b[A-Za-z]{4,}\.\s", raw) or re.match(r"(?i)ar\s", raw) or re.search(r"\b\d+(st|nd|rd|th)?\s+st\b", raw, re.I):
+        if "&" in raw or re.search(r"\b[A-Za-z]\.\s", raw) or re.search(r"\b[A-Za-z]{4,}\.\s", raw) or re.match(r"(?i)ar\s", raw):  # '60TH ST' is read by street() (2026-11-19)
             left += 1
             continue
         if bad or not had_place or len(place) > 48 or re.search(r"\d", river):
