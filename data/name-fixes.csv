@@ -41,7 +41,7 @@ site,river,place,raw_name
 02365500,Choctawhatchee River,Caryville,"CHOCTAWHATCHEE RIVER AT CARYVILLE, FLA."
 05484500,Raccoon River,Van Meter,"Raccoon River at Van Meter, IA"
 06884400,Little Blue River,Barnes,"L BLUE R NR BARNES, KS"
-06916600,Marais Des Cygnes River,Ks-mo Saint Line,"MARAIS DES CYGNES R NR KS-MO ST LINE, KS"
+06916600,Marais Des Cygnes River,Ks-mo State Line,"MARAIS DES CYGNES R NR KS-MO ST LINE, KS"
 06441500,Bad River,Fort Pierre,"BAD RIVER NEAR FORT PIERRE, SD"
 01610000,Potomac River,Paw Paw,"POTOMAC RIVER AT PAW PAW, WV"
 11477000,Eel River,Scotia,EEL R A SCOTIA CA
@@ -538,7 +538,7 @@ site,river,place,raw_name
 05530000,Weller Creek,Des Plaines,"WELLER CREEK AT DES PLAINES, IL"
 11119500,Carpinteria Creek,Carpinteria,CARPINTERIA C NR CARPINTERIA CA
 02367900,Yellow River,Oak Grove,"YELLOW RIVER NR OAK GROVE, FLA."
-11059300,Santa Ana River,East Saint Near San Bernardino,SANTA ANA R A E ST NR SAN BERNARDINO CA
+11059300,Santa Ana River,East Street Near San Bernardino,SANTA ANA R A E ST NR SAN BERNARDINO CA
 11152050,Arroyo Seco,Below Reliz Creek Near Soledad,ARROYO SECO BL RELIZ C NR SOLEDAD CA
 02097314,New Hope Creek,Blands,"NEW HOPE CREEK NEAR BLANDS, NC"
 02146507,Little Sugar Creek,Archdale Drive At Charlotte,"LITTLE SUGAR C AT ARCHDALE DR AT CHARLOTTE, NC"
@@ -597,7 +597,7 @@ site,river,place,raw_name
 02450825,Clear Creek,New Hope Church Near Poplar Springs,"CLEAR C AT NEW HOPE CHURCH NR POPLAR SPRINGS, AL."
 01652500,Fourmile Run,Alexandria,"FOURMILE RUN AT ALEXANDRIA, VA"
 10336676,Ward Creek,Highway 89 Near Tahoe Pines,WARD C AT HWY 89 NR TAHOE PINES CA
-11119750,Mission Creek,Mission Saint Near Santa Barbara,MISSION C NR MISSION ST NR SANTA BARBARA CA
+11119750,Mission Creek,Mission Street Near Santa Barbara,MISSION C NR MISSION ST NR SANTA BARBARA CA
 05478265,East Fork Des Moines River,Algona,"East Fork Des Moines River near Algona, IA"
 11463682,Russian River,Jimtown,RUSSIAN R A JIMTOWN CA
 06442900,Elm Creek,Gann Valley,"ELM CREEK NEAR GANN VALLEY, SD"
@@ -949,7 +949,7 @@ site,river,place,raw_name
 11284400,Big Creek,Above Whites Gulch Near Groveland,BIG C AB WHITES GULCH NR GROVELAND CA
 07027720,South Fork Forked Deer River,Owl City,"SOUTH FORK FORKED DEER RIVER NEAR OWL CITY, TN"
 06228350,South Fork Little Wind River,Above Washakie Reservoir Near Fort Washakie,"SF L WIND RIV AB WASHAKIE RES, NR FT WASHAKIE, WY"
-11046530,San Juan Creek,La Novia Saint Branch At San Juan Capis,SAN JUAN C AT LA NOVIA ST BR AT SAN JUAN CAPIS CA
+11046530,San Juan Creek,La Novia Street Branch At San Juan Capis,SAN JUAN C AT LA NOVIA ST BR AT SAN JUAN CAPIS CA
 11070270,Perris Valley Storm Drive,Nuevo Road Near Perris,PERRIS VALLEY STORM DR A NUEVO RD NR PERRIS CA
 03360652,Bee Hunter Ditch,Linton,"BEE HUNTER DITCH AT LINTON, IN"
 11162619,Pilarcitos Creek,Above Stone Dam Near Hillsborough,PILARCITOS C AB STONE DAM NR HILLSBOROUGH CA
@@ -1096,7 +1096,7 @@ site,river,place,raw_name
 15055500,Antler River,Below Antler Lake Near Auke Bay,ANTLER R BL ANTLER LK NR AUKE BAY AK
 08083420,Cat Claw Creek,Abilene,"Cat Claw Ck at Abilene, TX"
 11044250,Rainbow Creek,Fallbrook,RAINBOW C NR FALLBROOK CA
-07144490,Cowskin Creek,Kellogg Saint Wichita,"COWSKIN C AT KELLOGG ST, WICHITA, KS"
+07144490,Cowskin Creek,Kellogg Street Wichita,"COWSKIN C AT KELLOGG ST, WICHITA, KS"
 15283700,Moose Creek,Palmer,MOOSE C NR PALMER AK
 01464907,Little Neshaminy Creek,Valley Road Near Neshaminy,Little Neshaminy C at Valley Road nr Neshaminy PA
 11126400,Santa Ynez River,Highway 154 Near Santa Ynez,SANTA YNEZ R A HWY 154 NR SANTA YNEZ CA
@@ -1243,7 +1243,7 @@ site,river,place,raw_name
 04188252,Shallow Run,Dunkirk,Shallow Run nr Dunkirk OH
 07358253,Whittington Creek,Tunnel Ent At Hot Springs,"Whittington Cr at Tunnel Ent at Hot Springs, AR"
 01208420,Hop Brook,Naugatuck,"HOP BROOK NEAR NAUGATUCK, CT"
-0546494170,West Branch Wapsinonoc Creek,College Saint At West Branch,"WB Wapsinonoc Cr at College St at West Branch, IA"
+0546494170,West Branch Wapsinonoc Creek,College Street At West Branch,"WB Wapsinonoc Cr at College St at West Branch, IA"
 11466065,Brush Creek,Santa Rosa,BRUSH C A SANTA ROSA CA
 03124800,Tuscarawas River,New Philadelphia,Tuscarawas River at New Philadelphia OH
 15087585,Twelvemile Creek,Petersburg,TWELVEMILE C NR PETERSBURG AK
@@ -1352,7 +1352,7 @@ site,river,place,raw_name
 011020635,Proctor Brook,Veterans Mem Park Peabody,"PROCTOR BROOK NR VETERANS MEM PARK, PEABODY, MA"
 0357587400,Pinhook Creek,Mastin Lake Road At Huntsville,"PINHOOK C AT MASTIN LAKE RD AT HUNTSVILLE, ALA"
 03085100,Streets Run,Hays,"Streets Run at Hays, PA"
-030850498,Ninemile Run,Above McFarren Saint Near Swissvale,"Ninemile Run above McFarren St nr Swissvale, PA"
+030850498,Ninemile Run,Above McFarren Street Near Swissvale,"Ninemile Run above McFarren St nr Swissvale, PA"
 0357526200,Big Cove Creek,Dug Hill Road Near Huntsville,"BIG COVE CREEK AT DUG HILL ROAD NR HUNTSVILLE, AL."
 09486570,Las Moras Wash (lower Station),Sasabe,"LAS MORAS WASH (LOWER STATION) NEAR SASABE, AZ"
 09486565,Las Moras Wash (middle Station),Sasabe,"LAS MORAS WASH (MIDDLE STATION) NEAR SASABE, AZ"
@@ -1375,7 +1375,7 @@ site,river,place,raw_name
 09193700,New Fork River,Above Willow Creek Near Cora,"New Fork River ab Willow Cr, nr Cora, WY"
 08069852,Winters Bayou,Tony Tap Road Near Cleveland,"Winters Bayou at Tony Tap Rd nr Cleveland, TX"
 08068002,Stewarts Creek,Silverdale Drive Near Conroe,"Stewarts Ck at Silverdale Dr nr Conroe, TX"
-07358570,Gulpha Creek,Ridgeway Saint At Hot Springs,"Gulpha Cr at Ridgeway St at Hot Springs, AR"
+07358570,Gulpha Creek,Ridgeway Street At Hot Springs,"Gulpha Cr at Ridgeway St at Hot Springs, AR"
 07355860,Board Camp Creek,Wolf Pen Gap Rec Near Nunley,"Board Camp Cr nr Wolf Pen Gap Rec nr Nunley, AR"
 04027655,Bad River,The Mouth Near Odanah,"BAD RIVER AT THE MOUTH NEAR ODANAH, WI"
 02423545,Buck Creek,Pelham,"BUCK CREEK NR PELHAM, ALA"

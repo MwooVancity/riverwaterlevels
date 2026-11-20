@@ -20,6 +20,25 @@ PREP = r"(?:at|near|nr|below|bl|blw|bel|above|ab|abv|downstream|dstrm|upstream|u
 SMALL_OK = set("of the and at on in to la el san old big red dry elk oak fox cow bear us mi run new rio des de dam elm hot bay las mud gap los two paw bow dee van tar no fe au le up lee ash bad bay bee box cat dog eel fig gum hog ice jay key lag log mad man mil mow nut oil pea pig pot rat raw rye sac saw sea sun tin toy wet wolf yes zoo ten six one fox lac mill fall".split())
 
 
+SAINTS = set("Louis Peters Paul Charles Joseph Johns Cloud Augustine George Marys Mary Clair Helens Petersburg Francis Albans Croix Lucie James Joe Ignace Johnsbury Regis Maries Michael Vrain Elmo Lawrence Andrews Anthony Clairsville Simons Matthews Helena Martinville Francisville Ann Bernard Landry Tammany Gabriel Rose Genevieve Clements Ansgar Johnsville Stephens Marks Pauls Josephs Joes".split())
+SAINT_PRE = {"a", "nr", "near", "at", "above", "below", "in", "of", "and", "to", "from", "lake", "mount", "fort", "port", "la"}
+
+
+def street(place):
+    """'St' read as Saint is a street after a street name ('14th St', 'Main St') and a state on 'KS-MO St Line' (fix list 2026-11-19: '14th Saint At Columbus'
+    held the release; 91 queued names said Saint). Saint stays at the start, after at/near/above/below, and before a saint's name (St Louis, St Peters)."""
+    w = place.split(" ")
+    for i, t in enumerate(w):
+        nxt = w[i + 1] if i + 1 < len(w) else ""
+        if t != "Saint" or i == 0:
+            continue
+        if nxt == "Line" and "-" in w[i - 1]:
+            w[i] = "State"
+        elif w[i - 1].lower() not in SAINT_PRE and nxt not in SAINTS:
+            w[i] = "Street"
+    return " ".join(w)
+
+
 def clean(raw):
     s = raw.strip()
     for _ in range(2):
@@ -45,7 +64,7 @@ def clean(raw):
     river, b1 = toks(river_raw)
     place, b2 = toks(place_raw) if place_raw else ("", 0)
     pre = {"below": "Below ", "bl": "Below ", "blw": "Below ", "bel": "Below ", "above": "Above ", "ab": "Above ", "abv": "Above "}.get(prep, "")
-    place = (pre + place).strip()
+    place = street((pre + place).strip())
     if not place:
         place = river
     return river, place, b1 + b2, bool(place_raw)
@@ -80,4 +99,5 @@ def main():
         print("  %-48s -> %s | %s" % (raw, rv, pl))
 
 
-main()
+if __name__ == "__main__":
+    main()

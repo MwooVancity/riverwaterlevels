@@ -1063,7 +1063,7 @@ queue,42,02344396,Flint River,Woolsey Road Near Woolsey,GA,70.6,100,69,70,"nri,n
 queue,42,03277075,Gunpowder Creek,Camp Ernst Road Near Union,KY,70.6,70,81,70,fame,,,high,/river/gunpowder-creek/camp-ernst-road-near-union/
 queue,42,05389000,Yellow River,Ion,IA,70.6,75,55,70,"nri,nri-fish",,,auto2,/river/yellow-river-ia/ion/
 queue,42,09408150,Virgin River,Hurricane,UT,70.5,60,76,70,nri,,33047,high,/river/virgin-river-ut/hurricane/
-queue,42,02341460,Chattahoochee River,14th Saint At Columbus,GA,70.5,100,82,40,fame,,,medium,/river/chattahoochee-river/14th-saint-at-columbus/
+queue,42,02341460,Chattahoochee River,14th Street At Columbus,GA,70.5,100,82,40,fame,,,medium,/river/chattahoochee-river/14th-street-at-columbus/
 queue,42,02049500,Blackwater River,Franklin,VA,70.5,60,73,70,nri,,,high,/river/blackwater-river-va/franklin/
 queue,42,01551500,West Branch Susquehanna River,Williamsport,PA,70.5,100,71,40,fame,,,auto2,/river/west-branch-susquehanna-river/williamsport/
 queue,42,01101000,Parker River,Byfield,MA,70.5,60,74,70,nri,,,high,/river/parker-river/byfield/
@@ -1381,7 +1381,7 @@ queue,55,03348000,White River,Anderson,IN,67.8,75,77,70,"nri,nri-fish,fame",,,hi
 queue,55,02053200,Potecasi Creek,Union,NC,67.8,60,55,70,nri,,,high,/river/potecasi-creek/union/
 queue,55,04296000,Black River,Coventry,VT,67.8,60,55,70,nri,,,high,/river/black-river-vt/coventry/
 live,55,12210000,South Fork Nooksack River,Saxon Bridge,WA,67.8,75,60,70,"nri,nri-fish,fame",,,high,/river/south-fork-nooksack-river/saxon-bridge/
-queue,55,12080010,Deschutes River,East Saint Bridge At Tumwater,WA,67.8,100,77,30,fame,,,high,/river/deschutes-river-wa/east-saint-bridge-at-tumwater/
+queue,55,12080010,Deschutes River,East Street Bridge At Tumwater,WA,67.8,100,77,30,fame,,,high,/river/deschutes-river-wa/east-street-bridge-at-tumwater/
 queue,55,05058000,Sheyenne River,Below Baldhill Dam,ND,67.7,65,56,60,tail,,,high,/river/sheyenne-river/below-baldhill-dam/
 queue,55,12419000,Spokane River,Post Falls,ID,67.7,70,75,40,fame,,,high,/river/spokane-river-id/post-falls/
 queue,55,01502500,Unadilla River,Rockdale,NY,67.7,60,55,70,nri,,,high,/river/unadilla-river/rockdale/
@@ -1393,7 +1393,7 @@ queue,55,02312000,Withlacoochee River,US 301 At Trilby,FL,67.7,85,58,70,"nri,nri
 queue,55,01661500,Saint Marys River,Great Mills,MD,67.7,60,54,70,nri,,,high,/river/saint-marys-river-md/great-mills/
 queue,55,05573540,Sangamon River,Route 48 At Decatur,IL,67.7,85,77,70,"nri,nri-paddle,nri-fish",,,medium,/river/sangamon-river/route-48-at-decatur/
 queue,55,05412020,Turkey River,Above French Hollow Creek At Elkader,IA,67.7,75,51,70,"nri,nri-fish",,,high,/river/turkey-river/above-french-hollow-creek-at-elkader/
-queue,55,03146402,North Fork Licking River,East Main Saint At Newark,OH,67.7,70,76,70,fame,,,high,/river/north-fork-licking-river-oh/east-main-saint-at-newark/
+queue,55,03146402,North Fork Licking River,East Main Street At Newark,OH,67.7,70,76,70,fame,,,high,/river/north-fork-licking-river-oh/east-main-street-at-newark/
 queue,55,03133500,Clear Fork,Below Pleasant Hill Dam Near Perrysville,OH,67.7,65,68,90,tail,,,high,/river/clear-fork-oh/below-pleasant-hill-dam-near-perrysville/
 queue,55,03589500,Tennessee River,Florence,AL,67.6,70,74,40,fame,no-usgs-rows,,high,/river/tennessee-river/florence/
 queue,55,06177000,Missouri River,Wolf Point,MT,67.6,100,51,40,fame,,,high,/river/missouri-river-mt/wolf-point/
@@ -1621,7 +1621,7 @@ queue,64,14194150,South Yamhill River,Mcminnville,OR,65.8,60,75,70,nri,,,high,/r
 live,64,12039005,Humptulips River,Below Highway 101 Near Humptulips,WA,65.8,85,21,70,"nri,nri-paddle,nri-fish",,1306,medium,/river/humptulips-river/below-highway-101-near-humptulips/
 queue,64,09404900,East Fork Virgin River,Springdale,UT,65.8,90,48,30,"wsr-fish,wsr,nri",,,high,/river/east-fork-virgin-river/springdale/
 queue,64,05542500,Illinois River,Morris,IL,65.7,85,75,40,"nri,nri-paddle,nri-fish",,,high,/river/illinois-river-il/morris/
-queue,64,02217770,North Oconee River,College Saint At Athens,GA,65.7,60,83,70,nri,,,high,/river/north-oconee-river/college-saint-at-athens/
+queue,64,02217770,North Oconee River,College Street At Athens,GA,65.7,60,83,70,nri,,,high,/river/north-oconee-river/college-street-at-athens/
 queue,64,01379780,Green Pond Brook,Below Picatinny Lake At Picatinny Ars,NJ,65.7,65,67,60,tail,,,auto2,/river/green-pond-brook/below-picatinny-lake-at-picatinny-ars/
 queue,64,02407000,Coosa River,Childersburg,AL,65.6,70,61,40,fame,,,high,/river/coosa-river/childersburg/
 queue,65,03357000,White River,Spencer,IN,65.7,75,71,70,"nri,nri-fish,fame",,,high,/river/white-river-in/spencer/
@@ -2011,7 +2011,7 @@ queue,80,0208521324,Little River,Sr1461 Near Orange Factory,NC,60.7,70,83,70,fam
 queue,80,02358754,Apalachicola R.ab Chipola Cutoff,Wewahitchka,FL,60.6,85,0,40,"nri,nri-paddle",,,high,/river/apalachicola-r-ab-chipola-cutoff/wewahitchka/
 queue,80,05536000,North Branch Chicago River,Niles,IL,60.6,30,98,70,,,,high,/river/north-branch-chicago-river/niles/
 queue,80,14163900,Mckenzie River,Walterville,OR,60.6,70,71,70,"nri,fame",,,high,/river/mckenzie-river/walterville/
-queue,80,01467048,Pennypack Creek,Lower Rhawn Saint Bridge Phila,PA,60.6,30,97,70,,,,high,/river/pennypack-creek/lower-rhawn-saint-bridge-phila/
+queue,80,01467048,Pennypack Creek,Lower Rhawn Street Bridge Phila,PA,60.6,30,97,70,,,,high,/river/pennypack-creek/lower-rhawn-street-bridge-phila/
 queue,80,04153725,Chippewa River,Drew Road Near Drew,MI,60.6,85,62,70,"nri,nri-paddle,nri-fish",,,high,/river/chippewa-river-mi/drew-road-near-drew/
 queue,80,03306000,Green River,Campbellsville,KY,60.6,100,61,30,fame,,,high,/river/green-river-ky/campbellsville/
 queue,80,06090300,Missouri River,Great Falls,MT,60.5,100,70,40,fame,,,high,/river/missouri-river-mt/great-falls/
@@ -2686,7 +2686,7 @@ queue,107,01477120,Raccoon Creek,Swedesboro,NJ,56.6,30,71,70,,,,high,/river/racc
 queue,107,03262500,Great Miami River,Piqua,OH,56.6,70,71,70,fame,,,high,/river/great-miami-river/piqua/
 queue,107,02329500,Little River,Quincy,FL,56.6,30,78,70,,,,auto2,/river/little-river-fl/quincy/
 queue,107,06050000,Hyalite Creek,Hyalite River South Near Bozeman,MT,56.6,30,72,70,,,,auto2,/river/hyalite-creek/hyalite-river-south-near-bozeman/
-queue,107,08048543,West Fork Trinity River,Beach Saint Fort Worth,TX,56.6,70,96,30,fame,,,high,/river/west-fork-trinity-river/beach-saint-fort-worth/
+queue,107,08048543,West Fork Trinity River,Beach Street Fort Worth,TX,56.6,70,96,30,fame,,,high,/river/west-fork-trinity-river/beach-street-fort-worth/
 queue,107,11276600,Tuolumne River,Above Early Intake Near Mather,CA,56.6,100,0,30,"wsr-rec,wsr-fish,wsr,nri,nri-fish,fame",,,high,/river/tuolumne-river/above-early-intake-near-mather/
 queue,107,01047200,Sandy River,Madrid Maine,ME,56.6,70,0,70,fame,,,high,/river/sandy-river-me/madrid-maine/
 queue,107,08329918,Rio Grande,Alameda Bridge At Alameda,NM,56.6,100,90,0,fame,,,auto2,/river/rio-grande-nm/alameda-bridge-at-alameda/
@@ -2900,7 +2900,7 @@ queue,115,01480300,West Branch Brandywine Creek,Honey Brook,PA,55.9,70,63,40,fam
 queue,115,02234324,Howell Creek,Slavia,FL,55.9,30,73,70,,,,high,/river/howell-creek/slavia/
 queue,115,11481000,Mad River,Arcata,CA,55.9,30,68,70,,,,auto2,/river/mad-river-ca/arcata/
 queue,116,08068800,Cypress Creek,Grant Road Near Cypress,TX,55.9,30,95,70,,,,high,/river/cypress-creek-tx/grant-road-near-cypress/
-queue,116,08178050,San Antonio River,Mitchell Saint San Antonio,TX,55.9,30,98,70,,,,high,/river/san-antonio-river-tx/mitchell-saint-san-antonio/
+queue,116,08178050,San Antonio River,Mitchell Street San Antonio,TX,55.9,30,98,70,,,,high,/river/san-antonio-river-tx/mitchell-street-san-antonio/
 queue,116,11063510,Cajon Creek,Below Lone Pine Creek Near Keenbrook,CA,55.9,30,81,70,,,,auto2,/river/cajon-creek/below-lone-pine-creek-near-keenbrook/
 queue,116,14208000,Clackamas River,Big Bottom,OR,55.9,100,0,30,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/clackamas-river/big-bottom/
 queue,116,03105500,Beaver River,Wampum,PA,55.8,30,66,70,,,,high,/river/beaver-river-pa/wampum/
@@ -3065,7 +3065,7 @@ queue,122,04058200,Schweitzer Creek,Palmer,MI,55.3,30,62,70,,,,high,/river/schwe
 queue,122,01658000,Mattawoman Creek,Pomonkey,MD,55.3,30,76,70,,,,high,/river/mattawoman-creek/pomonkey/
 queue,122,394839104570300,Sand Creek,Mouth Near Commerce City,CO,55.3,30,92,70,,,,high,/river/sand-creek-co/mouth-near-commerce-city/
 queue,122,05427718,Yahara River,Windsor,WI,55.3,30,83,70,,,,high,/river/yahara-river/windsor/
-queue,122,03402900,Cumberland River,Pine Saint Branch At Pineville,KY,55.3,70,58,70,fame,,,high,/river/cumberland-river-ky/pine-saint-branch-at-pineville/
+queue,122,03402900,Cumberland River,Pine Street Branch At Pineville,KY,55.3,70,58,70,fame,,,high,/river/cumberland-river-ky/pine-street-branch-at-pineville/
 queue,122,07346050,Little Cypress Creek,Ore City,TX,55.3,30,74,70,,,,auto2,/river/little-cypress-creek/ore-city/
 queue,122,0208758850,Swift Creek,Mccullars Crossroads,NC,55.3,30,87,70,,,,high,/river/swift-creek/mccullars-crossroads/
 queue,122,01349950,Batavia Kill,Red Falls Near Prattsville,NY,55.3,85,0,30,"nri,nri-paddle",,,high,/river/batavia-kill/red-falls-near-prattsville/
@@ -3333,7 +3333,7 @@ queue,133,02423130,Cahaba River,Trussville,AL,54.5,70,79,40,fame,,,high,/river/c
 queue,133,08047050,Marys Creek,Benbrook,TX,54.5,30,93,70,,,,high,/river/marys-creek-tx/benbrook/
 queue,133,07031692,Fletcher Creek,Sycamore View Road At Memphis,TN,54.5,30,90,70,,,,high,/river/fletcher-creek/sycamore-view-road-at-memphis/
 queue,133,04096515,South Branch Hog Creek,Allen,MI,54.5,30,62,70,,,,auto2,/river/south-branch-hog-creek/allen/
-queue,133,08178500,San Pedro Creek,Furnish Saint San Antonio,TX,54.5,30,99,70,,,,high,/river/san-pedro-creek-tx/furnish-saint-san-antonio/
+queue,133,08178500,San Pedro Creek,Furnish Street San Antonio,TX,54.5,30,99,70,,,,high,/river/san-pedro-creek-tx/furnish-street-san-antonio/
 queue,133,11463682,Russian River,Jimtown,CA,54.5,85,77,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/russian-river/jimtown/
 queue,133,02479160,Black Creek,Wiggins,MS,54.5,60,52,30,nri,,1189,high,/river/black-creek-ms/wiggins/
 queue,133,01399100,Middle Brook,Burnt Mills,NJ,54.5,60,69,40,nri,,,high,/river/middle-brook/burnt-mills/
@@ -3592,7 +3592,7 @@ queue,143,02321000,New River,Lake Butler,FL,53.5,30,55,70,,,,auto2,/river/new-ri
 queue,143,06402500,Beaver Creek,Buffalo Gap,SD,53.5,30,52,70,,,,auto2,/river/beaver-creek-sd/buffalo-gap/
 queue,143,01405030,Lawrence Brook,Westons Mills,NJ,53.5,30,77,70,,,,high,/river/lawrence-brook/westons-mills/
 queue,143,07288955,Yazoo River,Below Steele Bayou Near Long Lake,MS,53.5,65,64,20,tail,,,high,/river/yazoo-river/below-steele-bayou-near-long-lake/
-queue,143,08076997,Clear Creek,Mykawa Saint Near Pearland,TX,53.5,30,96,70,,,,high,/river/clear-creek-tx/mykawa-saint-near-pearland/
+queue,143,08076997,Clear Creek,Mykawa Street Near Pearland,TX,53.5,30,96,70,,,,high,/river/clear-creek-tx/mykawa-street-near-pearland/
 queue,143,09486350,Canada Del Oro,Below Ina Road Near Tucson,AZ,53.5,30,85,70,,,,auto2,/river/canada-del-oro/below-ina-road-near-tucson/
 queue,143,07124000,Arkansas River,Las Animas,CO,53.5,100,34,0,fame,,104327,auto2,/river/arkansas-river-co/las-animas/
 queue,143,06190540,Boiling River,"Mammoth,YNP",WY,53.5,75,0,40,"nri,nri-fish",,,high,/river/boiling-river/mammoth-ynp/
@@ -3721,7 +3721,7 @@ queue,148,01516350,Tioga River,Mansfield,PA,52.8,30,57,70,,,,high,/river/tioga-r
 queue,148,03346500,Embarras River,Lawrenceville,IL,52.8,60,63,70,nri,,,high,/river/embarras-river/lawrenceville/
 queue,148,08092000,Nolan River,Blum,TX,52.8,30,66,70,,,,high,/river/nolan-river/blum/
 queue,148,06888000,Vermillion Creek,Wamego,KS,52.8,30,53,70,,,,auto2,/river/vermillion-creek/wamego/
-queue,148,01105554,Neponset River,Greenlodge Saint Near Canton,MA,52.8,30,88,70,,,,high,/river/neponset-river/greenlodge-saint-near-canton/
+queue,148,01105554,Neponset River,Greenlodge Street Near Canton,MA,52.8,30,88,70,,,,high,/river/neponset-river/greenlodge-street-near-canton/
 queue,148,06803486,Oak Creek,Air Park Road At Lincoln,NE,52.8,30,85,70,,,,auto2,/river/oak-creek-ne/air-park-road-at-lincoln/
 queue,148,09216050,Big Sandy River,Gasson Bridge Near Eden,WY,52.8,70,21,30,fame,,1119,high,/river/big-sandy-river-wy/gasson-bridge-near-eden/
 queue,149,02295580,Little Charlie Creek,Mouth Near Wauchula,FL,52.8,60,59,40,nri,,,high,/river/little-charlie-creek/mouth-near-wauchula/
@@ -3840,7 +3840,7 @@ queue,153,02300018,Gamble Creek,Parrish,FL,51.9,30,79,70,,,,high,/river/gamble-c
 queue,153,06610765,Little Papillion Creek,Ak-Sar-Ben At Omaha,NE,51.9,30,92,70,,,,high,/river/little-papillion-creek/ak-sar-ben-at-omaha/
 queue,153,08355050,Rio Grande,Bridge Near Escondida,NM,51.9,100,61,0,fame,,,auto2,/river/rio-grande-nm/bridge-near-escondida/
 queue,153,15243900,Snow River,Seward,AK,51.9,60,48,30,nri,,,high,/river/snow-river/seward/
-queue,153,040850684,Ashwaubenon Creek,Grant Saint Near West Depere,WI,51.9,60,77,30,nri,,,high,/river/ashwaubenon-creek/grant-saint-near-west-depere/
+queue,153,040850684,Ashwaubenon Creek,Grant Street Near West Depere,WI,51.9,60,77,30,nri,,,high,/river/ashwaubenon-creek/grant-street-near-west-depere/
 queue,153,03403910,Clear Fork,Saxton,KY,51.8,30,55,70,,,,high,/river/clear-fork-ky/saxton/
 queue,153,06795500,Shell Creek,Columbus,NE,51.8,30,67,70,,,,high,/river/shell-creek-ne/columbus/
 queue,153,02121500,Abbotts Creek,Lexington,NC,51.8,30,65,70,,,1039,high,/river/abbotts-creek/lexington/
@@ -3886,7 +3886,7 @@ queue,155,08022040,Sabine River,Beckville,TX,51.5,60,63,40,nri,,,high,/river/sab
 live,155,14231000,Cowlitz River,Randle,WA,51.5,75,0,70,"nri,nri-fish",,,high,/river/cowlitz-river/randle/
 queue,155,06436190,Whitewood Creek,Whitewood,SD,51.5,30,54,70,,,536,high,/river/whitewood-creek/whitewood/
 queue,155,01414000,Platte Kill,Dunraven,NY,51.5,30,48,70,,,,high,/river/platte-kill/dunraven/
-queue,155,06730200,Boulder Creek,North 75th Saint Near Boulder,CO,51.5,30,72,70,,,3992,medium,/river/boulder-creek-co/north-75th-saint-near-boulder/
+queue,155,06730200,Boulder Creek,North 75th Street Near Boulder,CO,51.5,30,72,70,,,3992,medium,/river/boulder-creek-co/north-75th-street-near-boulder/
 queue,155,05342000,Kinnickinnic River,River Falls,WI,51.5,30,73,70,,,,high,/river/kinnickinnic-river/river-falls/
 queue,155,01576787,Pequea Creek,Martic Forge,PA,51.5,30,72,70,,,,high,/river/pequea-creek/martic-forge/
 queue,155,03177710,Bluestone River,Falls Mills,VA,51.5,30,61,70,,,,high,/river/bluestone-river-va/falls-mills/
@@ -3903,7 +3903,7 @@ queue,156,03031500,Allegheny River,Parker,PA,51.4,70,33,40,"nri,fame",,62819,hig
 queue,156,09118450,Cochetopa Creek,Below Rock Creek Near Parlin,CO,51.4,30,53,70,,,,high,/river/cochetopa-creek/below-rock-creek-near-parlin/
 queue,156,06896000,Wakenda Creek,Carrollton,MO,51.4,30,57,70,,,,high,/river/wakenda-creek/carrollton/
 queue,156,03539600,Daddys Creek,Hebbertsburg,TN,51.4,30,60,70,,,,high,/river/daddys-creek/hebbertsburg/
-queue,156,04235440,Owasco Outlet,Genesee Saint Auburn,NY,51.4,30,73,70,,,,high,/river/owasco-outlet/genesee-saint-auburn/
+queue,156,04235440,Owasco Outlet,Genesee Street Auburn,NY,51.4,30,73,70,,,,high,/river/owasco-outlet/genesee-street-auburn/
 queue,156,02164110,Reedy River,Above Fork Shoals,SC,51.4,30,67,70,,,3744,high,/river/reedy-river/above-fork-shoals/
 queue,156,02319394,Withlacoochee River,Lee,FL,51.4,60,55,70,nri,,,auto2,/river/withlacoochee-river-fl/lee/
 queue,156,06610788,South Papillion Creek,Chalco,NE,51.4,30,88,70,,,,high,/river/south-papillion-creek/chalco/
@@ -4071,7 +4071,7 @@ queue,162,03597860,Duck River,Shelbyville,TN,50.2,70,72,30,fame,,,high,/river/du
 queue,162,01465798,Poquessing Creek,Grant Avenue At Philadelphia,PA,50.2,30,96,30,,,,high,/river/poquessing-creek/grant-avenue-at-philadelphia/
 queue,162,14018500,Walla Walla River,Touchet,WA,50.1,30,27,70,,,9530,high,/river/walla-walla-river/touchet/
 queue,162,02453500,Mulberry Fork,Cordova,AL,50.1,30,62,70,,,,high,/river/mulberry-fork/cordova/
-queue,162,12422000,Spokane River,Below North Greene Saint At Spokane,WA,50.1,70,79,40,fame,,12447,high,/river/spokane-river-wa/below-north-greene-saint-at-spokane/
+queue,162,12422000,Spokane River,Below North Greene Street At Spokane,WA,50.1,70,79,40,fame,,12447,high,/river/spokane-river-wa/below-north-greene-street-at-spokane/
 queue,162,04152238,South Branch Tobacco River,Beaverton,MI,50.1,30,51,70,,,,high,/river/south-branch-tobacco-river/beaverton/
 queue,162,07375800,Tickfaw River,Liverpool,LA,50.1,30,50,70,,,,high,/river/tickfaw-river/liverpool/
 queue,163,07030050,Hatchie River,Rialto,TN,50.1,60,60,70,nri,,,high,/river/hatchie-river-tn/rialto/
@@ -4085,7 +4085,7 @@ queue,163,04193999,Wolf Creek,Holland,OH,50.1,30,84,70,,,,high,/river/wolf-creek
 queue,163,09513860,Skunk Creek,Phoenix,AZ,50.1,30,95,30,,,,high,/river/skunk-creek-az/phoenix/
 queue,163,11467200,Austin Creek,Cazadero,CA,50.1,30,64,70,,,,auto2,/river/austin-creek/cazadero/
 queue,163,05389400,Bloody Run Creek,Marquette,IA,50.1,30,58,70,,,,auto2,/river/bloody-run-creek/marquette/
-queue,163,08075400,Sims Bayou,Hiram Clarke Saint Houston,TX,50.1,30,97,30,,,,high,/river/sims-bayou/hiram-clarke-saint-houston/
+queue,163,08075400,Sims Bayou,Hiram Clarke Street Houston,TX,50.1,30,97,30,,,,high,/river/sims-bayou/hiram-clarke-street-houston/
 queue,163,06934500,Missouri River,Hermann,MO,50.0,100,0,40,fame,,,high,/river/missouri-river-mo/hermann/
 queue,163,11520500,Klamath River,Seiad Valley,CA,50.0,100,0,40,"wsr-fish,wsr,fame",,,high,/river/klamath-river-ca/seiad-valley/
 queue,163,06335500,Little Missouri River,Marmarth,ND,50.0,100,0,40,"nri,fame",,,high,/river/little-missouri-river-nd/marmarth/
@@ -4595,13 +4595,13 @@ queue,183,05442300,Rock River,Dixon,IL,46.1,85,69,40,"nri,nri-paddle,nri-fish,fa
 queue,183,02083500,Tar River,Tarboro,NC,46.1,30,69,70,,,,auto2,/river/tar-river/tarboro/
 queue,183,04026561,Tyler Forks River,Stricker Road Near Mellen,WI,46.1,30,53,70,,,,high,/river/tyler-forks-river/stricker-road-near-mellen/
 queue,183,03371600,South Fork Salt Creek,Kurtz,IN,46.1,30,50,70,,,,high,/river/south-fork-salt-creek/kurtz/
-queue,183,01351298,Cobleskill Creek,South Grand Saint At Cobleskill,NY,46.1,30,60,70,,,,high,/river/cobleskill-creek/south-grand-saint-at-cobleskill/
+queue,183,01351298,Cobleskill Creek,South Grand Street At Cobleskill,NY,46.1,30,60,70,,,,high,/river/cobleskill-creek/south-grand-street-at-cobleskill/
 queue,183,08063800,Waxahachie Creek,Bardwell,TX,46.1,30,68,30,,,,high,/river/waxahachie-creek/bardwell/
 queue,183,05594450,Silver Creek,Troy,IL,46.1,30,67,30,,,,high,/river/silver-creek-il/troy/
 queue,183,01069500,Mousam River,West Kennebunk Maine,ME,46.1,30,67,30,,,,high,/river/mousam-river/west-kennebunk-maine/
 queue,184,05382284,Silver Creek,State Highway 21 Near Angelo,WI,46.1,30,63,70,,,,medium,/river/silver-creek-wi/state-highway-21-near-angelo/
 queue,184,05502000,Bear Creek,Hannibal,MO,46.1,30,68,30,,,,high,/river/bear-creek-mo/hannibal/
-queue,184,07160300,Boggy Creek,30th Saint At Enid,OK,46.1,30,76,70,,,,medium,/river/boggy-creek-ok/30th-saint-at-enid/
+queue,184,07160300,Boggy Creek,30th Street At Enid,OK,46.1,30,76,70,,,,medium,/river/boggy-creek-ok/30th-street-at-enid/
 queue,184,11141280,Lopez Creek,Arroyo Grande,CA,46.1,30,70,30,,,,auto2,/river/lopez-creek/arroyo-grande/
 queue,184,021622845,South Saluda River,Rocky Bottom,SC,46.1,70,56,0,fame,,,high,/river/south-saluda-river/rocky-bottom/
 queue,184,06827500,South Fork Republican River,Benkelman,NE,46.0,30,0,70,,,,high,/river/south-fork-republican-river-ne/benkelman/
@@ -4959,7 +4959,7 @@ queue,198,04219915,Johnson Creek,Kuckville,NY,44.8,30,55,70,,,,high,/river/johns
 queue,198,02462000,Valley Creek,Oak Grove,AL,44.8,30,65,30,,,,high,/river/valley-creek-al/oak-grove/
 queue,198,07105490,Cheyenne Creek,Evans Avenue At Colorado Springs,CO,44.8,30,88,30,,,,high,/river/cheyenne-creek/evans-avenue-at-colorado-springs/
 queue,198,08074020,Whiteoak Bayou,Alabonson Road Houston,TX,44.8,30,99,30,,,,high,/river/whiteoak-bayou/alabonson-road-houston/
-queue,198,11046530,San Juan Creek,La Novia Saint Branch At San Juan Capis,CA,44.8,30,82,30,,,,auto2,/river/san-juan-creek/la-novia-saint-branch-at-san-juan-capis/
+queue,198,11046530,San Juan Creek,La Novia Street Branch At San Juan Capis,CA,44.8,30,82,30,,,,auto2,/river/san-juan-creek/la-novia-street-branch-at-san-juan-capis/
 queue,198,01197145,Housatonic River,Lenoxdale,MA,44.8,70,71,30,fame,,,high,/river/housatonic-river-ma/lenoxdale/
 queue,198,08181800,San Antonio River,Elmendorf,TX,44.7,30,58,70,,,,high,/river/san-antonio-river-tx/elmendorf/
 queue,198,08095000,North Bosque River,Clifton,TX,44.7,30,58,70,,,,high,/river/north-bosque-river/clifton/
@@ -5172,7 +5172,7 @@ queue,206,11044350,Sandia Creek,Fallbrook,CA,43.4,30,77,30,,,,auto2,/river/sandi
 queue,206,05452200,Walnut Creek,Hartwick,IA,43.3,30,49,70,,,,high,/river/walnut-creek-ia/hartwick/
 queue,206,04216418,Tonawanda Creek,Attica,NY,43.3,30,61,70,,,,high,/river/tonawanda-creek/attica/
 queue,206,03292500,South Fork Beargrass Creek,Louisville,KY,43.3,10,92,40,,,,high,/river/south-fork-beargrass-creek/louisville/
-queue,206,01451650,Little Lehigh Creek,Tenth Saint Branch At Allentown,PA,43.3,30,72,70,,,1336,high,/river/little-lehigh-creek/tenth-saint-branch-at-allentown/
+queue,206,01451650,Little Lehigh Creek,Tenth Street Branch At Allentown,PA,43.3,30,72,70,,,1336,high,/river/little-lehigh-creek/tenth-street-branch-at-allentown/
 queue,206,08087300,Clear Fork Brazos River,Eliasville,TX,43.3,70,56,0,fame,,,high,/river/clear-fork-brazos-river/eliasville/
 queue,207,11480390,Mad River,Above Ruth Reservoir Near Forest Glen,CA,43.3,30,0,70,,,,auto2,/river/mad-river-ca/above-ruth-reservoir-near-forest-glen/
 queue,207,09424447,Burro Creek,Old US 93 Bridge Near Bagdad,AZ,43.3,60,0,30,nri,,,medium,/river/burro-creek/old-us-93-bridge-near-bagdad/
@@ -5273,7 +5273,7 @@ queue,210,08013250,Calcasieu River,Oakdale,LA,42.7,85,61,40,"nri,nri-paddle,nri-
 queue,210,09272400,Green River,Ouray Utah,UT,42.6,100,0,40,"nri,nri-paddle,nri-fish,fame",,,high,/river/green-river-ut/ouray-utah/
 queue,210,13075910,Portneuf River,Tyhee,ID,42.6,30,73,70,,,,high,/river/portneuf-river/tyhee/
 queue,210,06634620,Little Medicine Bow River,Boles Spring Near Medicine Bow,WY,42.6,30,0,70,,,,auto2,/river/little-medicine-bow-river/boles-spring-near-medicine-bow/
-queue,210,11059300,Santa Ana River,East Saint Near San Bernardino,CA,42.6,30,84,70,,,,auto2,/river/santa-ana-river/east-saint-near-san-bernardino/
+queue,210,11059300,Santa Ana River,East Street Near San Bernardino,CA,42.6,30,84,70,,,,auto2,/river/santa-ana-river/east-street-near-san-bernardino/
 queue,211,11173575,Alameda Creek,Below Welch Creek Near Sunol,CA,42.6,30,84,70,,,,auto2,/river/alameda-creek/below-welch-creek-near-sunol/
 queue,211,07247000,Poteau River,Cauthron,AR,42.6,30,53,30,,,2339,high,/river/poteau-river-ar/cauthron/
 queue,211,08062800,Cedar Creek,Kemp,TX,42.6,30,57,30,,,,high,/river/cedar-creek-tx/kemp/
@@ -5343,7 +5343,7 @@ queue,213,04280450,Mettawee River,Middle Granville,NY,42.0,30,0,70,,,,high,/rive
 queue,213,08033900,East Fork Angelina River,Cushing,TX,42.0,30,0,70,,,,high,/river/east-fork-angelina-river/cushing/
 queue,213,06142400,Clear Creek,Chinook,MT,42.0,30,0,70,,,,high,/river/clear-creek-mt/chinook/
 queue,213,12392155,Lightning Creek,Clark Fork,ID,42.0,30,0,70,,,,high,/river/lightning-creek-id/clark-fork/
-queue,213,01113895,Blackstone River,Roosevelt Saint At Pawtucket,RI,42.0,30,83,70,,,,high,/river/blackstone-river-ri/roosevelt-saint-at-pawtucket/
+queue,213,01113895,Blackstone River,Roosevelt Street At Pawtucket,RI,42.0,30,83,70,,,,high,/river/blackstone-river-ri/roosevelt-street-at-pawtucket/
 queue,213,05454220,Clear Creek,Oxford,IA,42.0,30,72,70,,,,high,/river/clear-creek-ia/oxford/
 queue,213,11182500,San Ramon Creek,San Ramon,CA,42.0,10,85,40,,,,auto2,/river/san-ramon-creek/san-ramon/
 queue,213,08186500,Ecleto Creek,Runge,TX,42.0,30,52,30,,,,high,/river/ecleto-creek/runge/
@@ -5451,7 +5451,7 @@ queue,217,06819185,East Fork 102 River,Bedford,IA,41.2,30,0,70,,,,medium,/river/
 queue,217,04095380,Trail Creek,Michigan City Harbor,IN,41.2,30,72,70,,,,high,/river/trail-creek-in/michigan-city-harbor/
 queue,218,08023080,Bayou Grand Cane,Stanley,LA,41.2,30,51,30,,,,high,/river/bayou-grand-cane/stanley/
 queue,218,02147801,Lake Wateree Tailrace,Above Camden,SC,41.2,60,59,0,nri,,,high,/river/lake-wateree-tailrace/above-camden/
-queue,218,07144490,Cowskin Creek,Kellogg Saint Wichita,KS,41.2,30,87,30,,,,auto2,/river/cowskin-creek/kellogg-saint-wichita/
+queue,218,07144490,Cowskin Creek,Kellogg Street Wichita,KS,41.2,30,87,30,,,,auto2,/river/cowskin-creek/kellogg-street-wichita/
 queue,218,05527500,Kankakee River,Wilmington,IL,41.1,10,77,40,,,,high,/river/kankakee-river-il/wilmington/
 queue,218,06446700,Bear In The Lodge Creek,Wanblee,SD,41.1,30,0,70,,,,high,/river/bear-in-the-lodge-creek/wanblee/
 queue,218,02301900,Fox Branch,Socrum,FL,41.1,10,77,40,,,,high,/river/fox-branch/socrum/
@@ -5545,7 +5545,7 @@ queue,221,01021480,Old Stream,Wesley Maine,ME,40.4,30,0,70,,,,high,/river/old-st
 queue,221,14180300,Blowout Creek,Detroit,OR,40.4,30,0,70,,,,high,/river/blowout-creek/detroit/
 queue,221,09413500,Virgin River,Saint George,UT,40.4,60,77,0,nri,,33047,high,/river/virgin-river-ut/saint-george/
 queue,221,08177300,Perdido Creek,FM 622 Near Fannin,TX,40.4,30,0,70,,,,medium,/river/perdido-creek/fm-622-near-fannin/
-queue,221,11119750,Mission Creek,Mission Saint Near Santa Barbara,CA,40.4,10,80,40,,,,auto2,/river/mission-creek-ca/mission-saint-near-santa-barbara/
+queue,221,11119750,Mission Creek,Mission Street Near Santa Barbara,CA,40.4,10,80,40,,,,auto2,/river/mission-creek-ca/mission-street-near-santa-barbara/
 queue,221,03266560,Mad River,West Liberty,OH,40.4,30,62,70,,,,auto2,/river/mad-river-oh/west-liberty/
 queue,221,05540290,Du Page River,Plainfield,IL,40.4,30,82,70,,,,auto2,/river/du-page-river/plainfield/
 queue,221,05557500,East Bureau Creek,Bureau,IL,40.4,30,59,30,,,,high,/river/east-bureau-creek/bureau/
@@ -5608,7 +5608,7 @@ queue,224,04282581,East Branch Dead Creek,Bridport,VT,40.0,60,49,0,nri,,,high,/r
 queue,224,07337000,Red River,Index,AR,39.9,10,69,40,,,,high,/river/red-river-ar/index/
 queue,224,10126000,Bear River,Corinne,UT,39.9,10,70,40,,,16121,high,/river/bear-river-ut/corinne/
 queue,224,06185110,Big Muddy Creek,Mouth Near Culbertson,MT,39.9,30,0,70,,,,high,/river/big-muddy-creek-mt/mouth-near-culbertson/
-queue,224,06827000,South Fork Republican River,Co-ks Saint Line,KS,39.9,30,0,70,,,,high,/river/south-fork-republican-river-ks/co-ks-saint-line/
+queue,224,06827000,South Fork Republican River,Co-ks State Line,KS,39.9,30,0,70,,,,high,/river/south-fork-republican-river-ks/co-ks-state-line/
 queue,224,06773500,Prairie Creek,Silver Creek,NE,39.9,30,0,70,,,,high,/river/prairie-creek-ne/silver-creek/
 queue,224,02207220,Yellow River,Pleasant Hill Road Near Lithonia,GA,39.9,30,68,70,,,3059,high,/river/yellow-river-ga/pleasant-hill-road-near-lithonia/
 queue,224,02477045,Chickasawhay River,Quitman,MS,39.9,60,0,70,nri,,,high,/river/chickasawhay-river/quitman/
@@ -5655,7 +5655,7 @@ queue,226,03353200,Eagle Creek,Zionsville,IN,39.5,30,90,70,,,,high,/river/eagle-
 queue,226,07077555,Cache River,Cotton Plant,AR,39.5,30,48,70,,,,high,/river/cache-river-ar/cotton-plant/
 queue,226,02202040,Ogeechee River,Rocky Ford Road Near Rocky Ford,GA,39.5,30,66,70,,,,high,/river/ogeechee-river/rocky-ford-road-near-rocky-ford/
 queue,226,09367000,La Plata River,La Plata,NM,39.5,30,69,70,,,,high,/river/la-plata-river/la-plata/
-queue,226,02162093,Smith Branch,North Main Saint At Columbia,SC,39.5,10,79,40,,,,high,/river/smith-branch/north-main-saint-at-columbia/
+queue,226,02162093,Smith Branch,North Main Street At Columbia,SC,39.5,10,79,40,,,,high,/river/smith-branch/north-main-street-at-columbia/
 queue,226,01017960,Meduxnekeag River,Above South Branch Medux River Near Houlton,ME,39.5,30,0,70,,,,high,/river/meduxnekeag-river/above-south-branch-medux-river-near-houlton/
 queue,226,12113344,Green River,200th Street At Kent,WA,39.5,30,88,70,,,,medium,/river/green-river-wa/200th-street-at-kent/
 queue,226,14362000,Applegate River,Copper,OR,39.5,60,0,30,nri,,,high,/river/applegate-river/copper/
@@ -5697,7 +5697,7 @@ queue,227,02238500,Ocklawaha River,Moss Bluff,FL,39.2,30,70,70,,,,high,/river/oc
 queue,227,09246500,Elkhead Creek,Craig,CO,39.2,30,60,70,,,,high,/river/elkhead-creek/craig/
 queue,227,07375960,Tickfaw River,Montpelier,LA,39.2,30,62,70,,,,high,/river/tickfaw-river/montpelier/
 queue,227,11507500,Link River,Klamath Falls,OR,39.2,30,71,0,,,,high,/river/link-river/klamath-falls/
-queue,227,08156800,Shoal Creek,West 12th Saint Austin,TX,39.2,10,98,40,,,,medium,/river/shoal-creek-tx/west-12th-saint-austin/
+queue,227,08156800,Shoal Creek,West 12th Street Austin,TX,39.2,10,98,40,,,,medium,/river/shoal-creek-tx/west-12th-street-austin/
 queue,227,02203800,South River,Bouldercrest Road At Atlanta,GA,39.2,30,88,70,,,,high,/river/south-river-ga/bouldercrest-road-at-atlanta/
 queue,228,07363400,Hurricane Creek,Below Sheridan,AR,39.2,30,55,30,,,,high,/river/hurricane-creek-ar/below-sheridan/
 queue,228,07247250,Black Fork,Below Big Creek Near Page,OK,39.2,30,51,30,,,,high,/river/black-fork-ok/below-big-creek-near-page/
@@ -5849,7 +5849,7 @@ queue,233,04015438,Saint Louis River,Skibo,MN,38.1,30,0,70,,,,high,/river/saint-
 queue,233,03275500,East Fork Whitewater River,Richmond,IN,38.1,30,73,70,,,,high,/river/east-fork-whitewater-river/richmond/
 queue,233,06920520,Weaubleau Creek,Weaubleau,MO,38.1,30,0,70,,,,high,/river/weaubleau-creek/weaubleau/
 queue,233,14138900,North Fork Bull Run River,Multnomah Falls,OR,38.1,10,59,40,,,,auto2,/river/north-fork-bull-run-river/multnomah-falls/
-queue,234,0214627970,Stewart Creek,State Saint At Charlotte,NC,38.1,10,96,40,,,,high,/river/stewart-creek/state-saint-at-charlotte/
+queue,234,0214627970,Stewart Creek,State Street At Charlotte,NC,38.1,10,96,40,,,,high,/river/stewart-creek/state-street-at-charlotte/
 queue,234,03026500,Sevenmile Run,Rasselas,PA,38.1,10,59,40,,,,auto2,/river/sevenmile-run/rasselas/
 queue,234,02266500,Reedy Creek,Loughman,FL,38.1,30,81,30,,,,high,/river/reedy-creek-fl/loughman/
 queue,234,07372050,Dugdemona River,Joyce,LA,38.1,30,57,30,,,,high,/river/dugdemona-river/joyce/
@@ -5944,7 +5944,7 @@ queue,237,06110020,Judith River,Above Carr Creek Near Utica,MT,37.4,30,0,70,,,,h
 queue,237,02485700,Hanging Moss Creek,Jackson,MS,37.4,10,81,40,,,,high,/river/hanging-moss-creek/jackson/
 queue,237,01575598,Codorus Creek,Saginaw,PA,37.4,30,71,70,,,,high,/river/codorus-creek/saginaw/
 queue,237,12444550,Bonaparte Creek,Tonasket,WA,37.4,30,0,70,,,,high,/river/bonaparte-creek/tonasket/
-queue,237,02095271,North Buffalo Creek,Church Saint At Greensboro,NC,37.4,10,89,40,,,,high,/river/north-buffalo-creek/church-saint-at-greensboro/
+queue,237,02095271,North Buffalo Creek,Church Street At Greensboro,NC,37.4,10,89,40,,,,high,/river/north-buffalo-creek/church-street-at-greensboro/
 queue,237,06893557,Brush Creek,Ward Parkway In Kansas City,MO,37.4,10,89,40,,,,high,/river/brush-creek-mo/ward-parkway-in-kansas-city/
 queue,237,07343840,White Oak Creek,Ih 30 Near Omaha,TX,37.4,30,61,70,,,,auto2,/river/white-oak-creek-tx/ih-30-near-omaha/
 queue,237,10336676,Ward Creek,Highway 89 Near Tahoe Pines,CA,37.4,10,61,40,,,,auto2,/river/ward-creek/highway-89-near-tahoe-pines/
@@ -6014,7 +6014,7 @@ queue,240,06904010,Chariton River,Moulton,IA,36.8,30,56,70,,,,high,/river/charit
 queue,240,15514000,Chena River,Fairbanks,AK,36.8,30,72,30,,,,high,/river/chena-river/fairbanks/
 queue,240,10259540,Whitewater River,Mecca,CA,36.8,30,72,30,,,,high,/river/whitewater-river-ca/mecca/
 queue,240,03566420,Wolftever Creek,Ooltewah,TN,36.8,10,80,40,,,,high,/river/wolftever-creek/ooltewah/
-queue,240,07165562,Haikey Creek,101st Saint South At Tulsa,OK,36.8,10,87,40,,,,medium,/river/haikey-creek/101st-saint-south-at-tulsa/
+queue,240,07165562,Haikey Creek,101st Street South At Tulsa,OK,36.8,10,87,40,,,,medium,/river/haikey-creek/101st-street-south-at-tulsa/
 queue,240,04102776,Middle Branch Black River,South Haven,MI,36.8,30,56,30,,,,high,/river/middle-branch-black-river/south-haven/
 queue,240,16501200,Oheo Gulch,Dam Near Kipahulu Maui,HI,36.8,60,0,0,nri,,,high,/river/oheo-gulch/dam-near-kipahulu-maui/
 queue,240,09087500,Elk Creek,New Castle,CO,36.8,30,60,30,,,,auto2,/river/elk-creek-co/new-castle/
@@ -6045,7 +6045,7 @@ queue,241,13140335,Big Wood River,South Broadford Bridge Near Bellevue,ID,36.6,3
 queue,241,02312667,Shady Brook,Sumterville,FL,36.6,10,67,40,,,,high,/river/shady-brook/sumterville/
 queue,241,06436170,Whitewood Creek,Deadwood,SD,36.6,30,55,70,,,536,high,/river/whitewood-creek/deadwood/
 queue,241,08385522,Pecos River,Below Taiban Creek Near Fort Sumner,NM,36.6,70,32,0,fame,,46027,high,/river/pecos-river-nm/below-taiban-creek-near-fort-sumner/
-queue,241,04087234,Root River,60th Saint Near Caledonia,WI,36.6,30,75,70,,,3071,medium,/river/root-river-wi/60th-saint-near-caledonia/
+queue,241,04087234,Root River,60th Street Near Caledonia,WI,36.6,30,75,70,,,3071,medium,/river/root-river-wi/60th-street-near-caledonia/
 queue,241,02142914,Gum Branch,Thrift,NC,36.6,10,92,40,,,,auto2,/river/gum-branch/thrift/
 queue,241,08156675,Shoal Creek,Silverway Drive Austin,TX,36.6,10,96,40,,,,auto2,/river/shoal-creek-tx/silverway-drive-austin/
 queue,241,07287150,Abiaca Creek,Seven Pines,MS,36.6,30,50,30,,,131,high,/river/abiaca-creek/seven-pines/
@@ -6203,7 +6203,7 @@ queue,248,10262700,Mojave River,Daggett,CA,35.9,30,66,70,,,,auto2,/river/mojave-
 queue,248,07280400,Tillatoba Creek,Charleston,MS,35.9,30,56,30,,,,high,/river/tillatoba-creek/charleston/
 queue,248,02185010,Eastatoee Creek On Cleo Chapman Highway,Sunset,SC,35.9,30,63,30,,,,high,/river/eastatoee-creek-on-cleo-chapman-highway/sunset/
 queue,248,06884400,Little Blue River,Barnes,KS,35.8,30,50,40,,,,auto2,/river/little-blue-river-ks/barnes/
-queue,248,06916600,Marais Des Cygnes River,Ks-mo Saint Line,KS,35.8,30,50,40,,,,auto2,/river/marais-des-cygnes-river/ks-mo-saint-line/
+queue,248,06916600,Marais Des Cygnes River,Ks-mo State Line,KS,35.8,30,50,40,,,,auto2,/river/marais-des-cygnes-river/ks-mo-state-line/
 queue,248,06873000,South Fork Solomon River,Above Webster Re,KS,35.8,30,0,70,,,,auto2,/river/south-fork-solomon-river/above-webster-re/
 queue,248,06848500,Prairie Dog Creek,Woodruff,KS,35.8,30,0,70,,,,auto2,/river/prairie-dog-creek/woodruff/
 queue,248,11342000,Sacramento River,Delta,CA,35.8,30,0,70,,,,auto2,/river/sacramento-river/delta/
@@ -6293,7 +6293,7 @@ queue,251,03151600,Little Kanawha River,Burnsville,WV,35.1,30,54,70,,,3346,high,
 queue,251,01174565,West Branch Swift River,Shutesbury,MA,35.1,10,69,40,,,,high,/river/west-branch-swift-river/shutesbury/
 queue,251,08037180,Angelina River,Highway 59 Near Lufkin,TX,35.1,30,68,70,,,,medium,/river/angelina-river/highway-59-near-lufkin/
 queue,251,02297251,Horse Creek,Limestone,FL,35.1,30,56,70,,,,high,/river/horse-creek-fl/limestone/
-queue,251,07386880,Vermilion River,Surrey Saint At Lafayette,LA,35.1,10,75,40,,,5350,high,/river/vermilion-river-la/surrey-saint-at-lafayette/
+queue,251,07386880,Vermilion River,Surrey Street At Lafayette,LA,35.1,10,75,40,,,5350,high,/river/vermilion-river-la/surrey-street-at-lafayette/
 queue,251,12464800,Coal Creek,Mohler,WA,35.1,30,22,30,,,1804,high,/river/coal-creek-wa/mohler/
 queue,251,05292704,North Fork Yellow Bank River,Odessa,MN,35.1,30,50,30,,,,high,/river/north-fork-yellow-bank-river/odessa/
 queue,251,15227090,Valdez Glacier River,Valdez Glacier Lake Near Valdez,AK,35.1,30,52,30,,,,high,/river/valdez-glacier-river/valdez-glacier-lake-near-valdez/
@@ -6461,14 +6461,14 @@ queue,258,12137290,South Fork Sultan River,Sultan,WA,33.4,10,55,40,,,,high,/rive
 queue,258,01073785,Winnicut River,Greenland Near Portsmouth,NH,33.4,10,68,40,,,,high,/river/winnicut-river/greenland-near-portsmouth/
 queue,258,01407290,Big Brook,Marlboro,NJ,33.4,10,69,40,,,,high,/river/big-brook/marlboro/
 queue,258,06710605,Bear Creek,Above Bear Creek Lake Near Morrison,CO,33.4,30,74,30,,,4480,high,/river/bear-creek-co/above-bear-creek-lake-near-morrison/
-queue,258,07031740,Wolf River,Hollywood Saint At Memphis,TN,33.4,30,91,30,,,,high,/river/wolf-river-tn/hollywood-saint-at-memphis/
+queue,258,07031740,Wolf River,Hollywood Street At Memphis,TN,33.4,30,91,30,,,,high,/river/wolf-river-tn/hollywood-street-at-memphis/
 queue,258,06803300,Antelope Creek,27th Street At Lincoln,NE,33.4,10,91,40,,,,medium,/river/antelope-creek-ne/27th-street-at-lincoln/
 queue,258,01399190,Lamington (Black) River,Succasunna,NJ,33.4,60,66,0,nri,,,high,/river/lamington-black-river/succasunna/
 queue,258,08158827,Onion Creek,Twin Creeks Road Near Manchaca,TX,33.3,30,91,70,,,,high,/river/onion-creek/twin-creeks-road-near-manchaca/
 queue,258,02346310,Potato Creek,County Line Road Near Orchard Hill,GA,33.3,10,68,40,,,,high,/river/potato-creek/county-line-road-near-orchard-hill/
 queue,258,07178200,Bird Creek,State Highway 266 Near Catoosa,OK,33.3,30,87,30,,,,medium,/river/bird-creek/state-highway-266-near-catoosa/
 queue,258,08056500,Turtle Creek,Dallas,TX,33.3,10,99,0,,,,high,/river/turtle-creek-tx/dallas/
-queue,258,07104905,Monument Creek,Bijou Saint At Colo Springs,CO,33.3,30,90,30,,,,high,/river/monument-creek/bijou-saint-at-colo-springs/
+queue,258,07104905,Monument Creek,Bijou Street At Colo Springs,CO,33.3,30,90,30,,,,high,/river/monument-creek/bijou-street-at-colo-springs/
 queue,258,03084800,Thompson Run,Turtle Creek,PA,33.3,10,84,40,,,,auto2,/river/thompson-run/turtle-creek/
 queue,258,07367005,Ouachita River,West Monroe,LA,33.2,10,74,40,,,17076,high,/river/ouachita-river-la/west-monroe/
 queue,258,06768020,Spring Creek,Overton,NE,33.2,10,59,40,,,,high,/river/spring-creek-ne/overton/
@@ -6540,7 +6540,7 @@ queue,261,01354500,Mohawk River,Freeman's Bridge At Schenectady,NY,32.4,30,78,40
 queue,261,02310280,Pithlachascotee River,Fivay Junction,FL,32.4,30,62,30,,,,high,/river/pithlachascotee-river/fivay-junction/
 queue,261,02300017,Gamble Creek,County Road 675 Near Parrish,FL,32.4,10,79,40,,,,medium,/river/gamble-creek/county-road-675-near-parrish/
 queue,261,06881380,Turkey Creek,DeWitt,NE,32.4,10,60,40,,,,high,/river/turkey-creek-ne/dewitt/
-queue,261,05540228,East Branch Dupage River,Short Saint At Lisle,IL,32.4,10,81,40,,,,high,/river/east-branch-dupage-river/short-saint-at-lisle/
+queue,261,05540228,East Branch Dupage River,Short Street At Lisle,IL,32.4,10,81,40,,,,high,/river/east-branch-dupage-river/short-street-at-lisle/
 queue,261,03259000,Mill Creek,Carthage,OH,32.4,30,87,30,,,,high,/river/mill-creek-oh/carthage/
 queue,261,06800500,Elkhorn River,Waterloo,NE,32.3,10,86,40,,,,high,/river/elkhorn-river/waterloo/
 queue,261,08117995,Colorado River,Gail,TX,32.3,30,0,70,,,,high,/river/colorado-river-tx/gail/
@@ -6558,7 +6558,7 @@ queue,262,02479560,Escatawpa River,Agricola,MS,32.2,30,55,30,,,2072,high,/river/
 queue,262,01618100,Rockymarsh Run,Scrabble,WV,32.2,10,68,40,,,,auto2,/river/rockymarsh-run/scrabble/
 queue,262,02205522,Pew Creek,Patterson Road Near Lawrenceville,GA,32.2,10,73,40,,,,auto2,/river/pew-creek/patterson-road-near-lawrenceville/
 queue,262,11070210,San Jacinto River,Ramona Expressway Near Lakeview,CA,32.2,30,82,30,,,,auto2,/river/san-jacinto-river/ramona-expressway-near-lakeview/
-queue,262,03292550,South Fork Beargrass Creek,East Oak Saint At Louisville,KY,32.2,30,91,30,,,,high,/river/south-fork-beargrass-creek/east-oak-saint-at-louisville/
+queue,262,03292550,South Fork Beargrass Creek,East Oak Street At Louisville,KY,32.2,30,91,30,,,,high,/river/south-fork-beargrass-creek/east-oak-street-at-louisville/
 queue,262,08083480,Cedar Creek,Ih 20 Abilene,TX,32.2,30,82,30,,,,auto2,/river/cedar-creek-tx/ih-20-abilene/
 queue,262,12091100,Flett Creek,Tacoma,WA,32.1,10,84,0,,,,high,/river/flett-creek/tacoma/
 queue,262,15129500,Situk River,Yakutat,AK,32.1,30,0,30,,"page-check: banned '-?999\\d{2,}\\b' near '% |    Major flooding |  -99900% |          Daily values'",,high,/river/situk-river/yakutat/
@@ -6595,7 +6595,7 @@ queue,263,11055800,City Creek,Highland,CA,31.8,10,84,0,,,,auto2,/river/city-cree
 queue,263,15081497,Staney Creek,Klawock,AK,31.8,30,0,30,,,,auto2,/river/staney-creek/klawock/
 queue,263,15297610,Russell Creek,Cold Bay,AK,31.8,30,0,30,,,,auto2,/river/russell-creek-ak/cold-bay/
 queue,263,05463050,Cedar River,Cedar Falls,IA,31.7,30,75,40,,,,high,/river/cedar-river-ia/cedar-falls/
-queue,263,04182769,Saint Marys River,Main Saint At Fort Wayne,IN,31.7,30,89,70,,,,high,/river/saint-marys-river-in/main-saint-at-fort-wayne/
+queue,263,04182769,Saint Marys River,Main Street At Fort Wayne,IN,31.7,30,89,70,,,,high,/river/saint-marys-river-in/main-street-at-fort-wayne/
 queue,263,10129900,Silver Creek,Silver Creek Junction,UT,31.7,10,55,40,,,483,high,/river/silver-creek-ut/silver-creek-junction/
 queue,263,06817700,Nodaway River,Graham,MO,31.7,30,57,30,,,1982,high,/river/nodaway-river-mo/graham/
 queue,263,02203950,Snapfinger Creek,Decatur,GA,31.7,10,68,40,,,233,high,/river/snapfinger-creek/decatur/
@@ -6832,7 +6832,7 @@ queue,273,07185090,Tar Creek,Commerce,OK,28.8,30,64,30,,,,auto2,/river/tar-creek
 queue,273,07381490,Atchafalaya River,Simmesport,LA,28.7,10,50,40,,,,high,/river/atchafalaya-river/simmesport/
 queue,273,07052000,Wilson Creek,Springfield,MO,28.7,10,85,40,,,,high,/river/wilson-creek-mo/springfield-07052000/
 queue,273,12099600,Boise Creek,Buckley,WA,28.7,10,74,0,,,,high,/river/boise-creek/buckley/
-queue,273,12101470,Puyallup River,5th Saint Bridge At Puyallup,WA,28.7,30,81,30,,,,medium,/river/puyallup-river/5th-saint-bridge-at-puyallup/
+queue,273,12101470,Puyallup River,5th Street Bridge At Puyallup,WA,28.7,30,81,30,,,,medium,/river/puyallup-river/5th-street-bridge-at-puyallup/
 queue,273,03209800,Levisa Fork,Prestonsburg,KY,28.6,30,58,70,,,,high,/river/levisa-fork-ky/prestonsburg/
 queue,273,01184100,Stony Brook,West Suffield,CT,28.6,10,77,0,,,,high,/river/stony-brook-ct/west-suffield/
 queue,273,07191179,Spavinaw Creek,Cherokee City,AR,28.6,30,58,30,,,934,high,/river/spavinaw-creek-ar/cherokee-city/
@@ -6883,7 +6883,7 @@ queue,275,06125600,Musselshell River,Above Big Coulee Creek At Lavina,MT,28.1,30
 queue,275,01350120,Platter Kill,Gilboa,NY,28.1,10,0,40,,,,high,/river/platter-kill/gilboa/
 queue,275,0817887350,Medina River,Patterson Road At Medina,TX,28.1,30,0,70,,,,high,/river/medina-river/patterson-road-at-medina/
 queue,275,12415135,Saint Joe River,Ramsdell Near Saint Maries,ID,28.1,30,0,70,,,,auto2,/river/saint-joe-river/ramsdell-near-saint-maries/
-queue,275,03351710,Fall Creek,79th Saint At Indianapolis,IN,28.1,30,90,70,,,,medium,/river/fall-creek-in/79th-saint-at-indianapolis/
+queue,275,03351710,Fall Creek,79th Street At Indianapolis,IN,28.1,30,90,70,,,,medium,/river/fall-creek-in/79th-street-at-indianapolis/
 queue,275,01493500,Morgan Creek,Kennedyville,MD,28.1,10,57,0,,,,high,/river/morgan-creek-md/kennedyville/
 queue,275,02232415,Taylor Creek,Cocoa,FL,28.1,30,68,30,,,,high,/river/taylor-creek-fl/cocoa/
 queue,275,03286200,Dix River,Dix Dam Near Burgin,KY,28.1,30,67,30,,,,auto2,/river/dix-river/dix-dam-near-burgin/
@@ -6891,7 +6891,7 @@ queue,275,15519100,Tolovana River,Below Rosebud Creek Near Livengood,AK,28.1,30,
 queue,275,03342000,Wabash River,Riverton,IN,28.0,10,57,40,,,,high,/river/wabash-river-in/riverton/
 queue,275,08170950,Blanco River,Fischer Store Road Near Fischer,TX,28.0,30,70,70,,,,high,/river/blanco-river/fischer-store-road-near-fischer/
 queue,275,08158930,Williamson Creek,Manchaca Road Austin,TX,28.0,10,94,40,,,,high,/river/williamson-creek/manchaca-road-austin/
-queue,275,02146285,Stewart Creek,West Morehead Saint At Charlotte,NC,28.0,10,96,40,,,,high,/river/stewart-creek/west-morehead-saint-at-charlotte/
+queue,275,02146285,Stewart Creek,West Morehead Street At Charlotte,NC,28.0,10,96,40,,,,high,/river/stewart-creek/west-morehead-street-at-charlotte/
 queue,275,12323720,Willow Creek,Opportunity,MT,28.0,30,56,30,,,323,high,/river/willow-creek-mt/opportunity/
 queue,275,12115500,Rex River,Cedar Falls,WA,28.0,10,58,0,,,,auto2,/river/rex-river/cedar-falls/
 queue,275,08074150,Cole Creek,Deihl Road Houston,TX,28.0,10,100,0,,,,high,/river/cole-creek-tx/deihl-road-houston/
@@ -6943,7 +6943,7 @@ queue,277,10322800,Pine Creek,Modarelli Mine Road Near Hay Ranch,NV,27.5,30,0,70
 queue,277,07017260,Big River,Below Desloge,MO,27.5,30,64,30,,,,high,/river/big-river/below-desloge/
 queue,277,08116400,Dry Creek,Rosenberg,TX,27.5,10,77,0,,,,high,/river/dry-creek-tx/rosenberg/
 queue,277,05576195,Sugar Creek,Chatham,IL,27.5,30,77,30,,,,high,/river/sugar-creek-il/chatham/
-queue,277,08075763,Hunting Bayou,Hoffman Saint Houston,TX,27.5,10,100,0,,,,high,/river/hunting-bayou/hoffman-saint-houston/
+queue,277,08075763,Hunting Bayou,Hoffman Street Houston,TX,27.5,10,100,0,,,,high,/river/hunting-bayou/hoffman-street-houston/
 queue,277,07234000,Beaver River,Beaver,OK,27.4,10,0,40,,,,high,/river/beaver-river-ok/beaver/
 queue,277,0423406130,Seneca River,Free Bridge Corners,NY,27.4,30,65,70,,,5642,high,/river/seneca-river/free-bridge-corners/
 queue,277,09067000,Beaver Creek,Avon,CO,27.4,10,62,40,,,,high,/river/beaver-creek-co/avon/
@@ -6973,9 +6973,9 @@ queue,278,08147000,Colorado River,San Saba,TX,27.1,10,51,40,,,,high,/river/color
 queue,278,01106000,Adamsville Brook,Adamsville,RI,27.1,10,74,0,,,,high,/river/adamsville-brook/adamsville/
 queue,278,04087070,Little Menomonee River,Milwaukee,WI,27.1,10,90,0,,,,high,/river/little-menomonee-river/milwaukee/
 queue,278,03219781,Mill Creek,Above Marysville,OH,27.1,30,71,30,,,,high,/river/mill-creek-oh/above-marysville/
-queue,278,08074250,Brickhouse Gully,Costa Rica Saint Houston,TX,27.1,10,100,0,,,,high,/river/brickhouse-gully/costa-rica-saint-houston/
+queue,278,08074250,Brickhouse Gully,Costa Rica Street Houston,TX,27.1,10,100,0,,,,high,/river/brickhouse-gully/costa-rica-street-houston/
 queue,279,14353000,West Fork Ashland Creek,Ashland,OR,27.0,10,72,0,,,,high,/river/west-fork-ashland-creek/ashland/
-queue,279,07165565,Little Haikey Creek,101st Saint South At Tulsa,OK,27.0,10,87,0,,,,medium,/river/little-haikey-creek/101st-saint-south-at-tulsa/
+queue,279,07165565,Little Haikey Creek,101st Street South At Tulsa,OK,27.0,10,87,0,,,,medium,/river/little-haikey-creek/101st-street-south-at-tulsa/
 queue,279,10328475,South Fork Little Humboldt River,Paradise Valley,NV,27.0,30,0,30,,,,auto2,/river/south-fork-little-humboldt-river/paradise-valley/
 queue,279,05092000,Red River Of The North,Drayton,ND,26.9,10,49,40,,,,high,/river/red-river-of-the-north/drayton/
 queue,279,09479350,Gila River,Maricopa,AZ,26.9,10,82,40,,,,high,/river/gila-river-az/maricopa/
@@ -7117,7 +7117,7 @@ queue,284,01104370,Stony Brook,Viles Street Near Weston,MA,25.0,10,87,0,,,,high,
 queue,284,13204640,Cottonwood Creek,Below Fivemile Creek Near Boise,ID,25.0,10,83,0,,,,high,/river/cottonwood-creek-id/below-fivemile-creek-near-boise/
 queue,284,04097528,Prairie River,Orland Road Near Bronson,MI,25.0,30,60,30,,,,high,/river/prairie-river-mi/orland-road-near-bronson/
 queue,284,08206910,Choke Canyon Reservoir Owc,Three Rivers,TX,24.9,10,0,40,,,,auto2,/river/choke-canyon-reservoir-owc/three-rivers/
-queue,284,05355092,Cannon River,9th Saint Bridge In Cannon Falls,MN,24.9,30,62,70,,,3598,medium,/river/cannon-river/9th-saint-bridge-in-cannon-falls/
+queue,284,05355092,Cannon River,9th Street Bridge In Cannon Falls,MN,24.9,30,62,70,,,3598,medium,/river/cannon-river/9th-street-bridge-in-cannon-falls/
 queue,284,12158010,West Fork Tulalip Creek,Tulalip,WA,24.9,10,76,0,,,,high,/river/west-fork-tulalip-creek/tulalip/
 queue,284,10321925,Simon Creek,Highway 766 Near Carlin,NV,24.9,30,0,30,,,,medium,/river/simon-creek/highway-766-near-carlin/
 queue,284,02072000,Smith River,Philpott,VA,24.8,30,58,30,,,1659,high,/river/smith-river-va/philpott/
@@ -7171,7 +7171,7 @@ queue,286,01209105,Aspetuck River,Aspetuck,CT,23.9,10,79,0,,,,high,/river/aspetu
 queue,286,01115276,Westconnaug Stream,Plainfield Pike,RI,23.9,10,78,0,,,,high,/river/westconnaug-stream/plainfield-pike/
 queue,286,01115110,Huntinghouse Brook,Elmdale Road At North Scituate,RI,23.9,10,80,0,,,,auto2,/river/huntinghouse-brook/elmdale-road-at-north-scituate/
 queue,286,05464420,Cedar River,Blairs Ferry Road At Palo,IA,23.8,10,78,40,,,,high,/river/cedar-river-ia/blairs-ferry-road-at-palo/
-queue,286,0208734795,Walnut Creek,South Wilmington Saint At Raleigh,NC,23.8,10,90,40,,,,high,/river/walnut-creek-nc/south-wilmington-saint-at-raleigh/
+queue,286,0208734795,Walnut Creek,South Wilmington Street At Raleigh,NC,23.8,10,90,40,,,,high,/river/walnut-creek-nc/south-wilmington-street-at-raleigh/
 queue,286,01195100,Indian River,Clinton,CT,23.8,10,46,0,,,,high,/river/indian-river-ct/clinton/
 queue,286,01115265,Hemlock Brook,King Road Near Foster,RI,23.8,10,78,0,,,,high,/river/hemlock-brook/king-road-near-foster/
 queue,287,10327500,Humboldt River,Comus,NV,24.0,10,30,40,,,25156,high,/river/humboldt-river/comus/
@@ -7208,9 +7208,9 @@ queue,288,08053009,Indian Creek,FM 2281 Carrollton,TX,23.2,10,83,0,,,,medium,/ri
 queue,288,02430615,Mud Creek,Fairview,MS,23.2,10,53,0,,,,auto2,/river/mud-creek-ms/fairview/
 queue,288,01480638,Broad Run,Northbrook,PA,23.2,10,71,0,,,,auto2,/river/broad-run-pa/northbrook/
 queue,288,04159130,Saint Clair River,Port Huron,MI,23.1,10,73,0,,,,high,/river/saint-clair-river/port-huron/
-queue,288,02423571,Shades Creek,Elder Saint Near Springdale,AL,23.1,10,84,40,,,,high,/river/shades-creek/elder-saint-near-springdale/
+queue,288,02423571,Shades Creek,Elder Street Near Springdale,AL,23.1,10,84,40,,,,high,/river/shades-creek/elder-street-near-springdale/
 queue,288,05579630,Kickapoo Creek,Bloomington,IL,23.1,10,76,0,,,,high,/river/kickapoo-creek-il/bloomington/
-queue,288,08132450,Red Arroyo,South Chadbourne Saint Near San Angelo,TX,23.1,10,82,0,,,,high,/river/red-arroyo/south-chadbourne-saint-near-san-angelo/
+queue,288,08132450,Red Arroyo,South Chadbourne Street Near San Angelo,TX,23.1,10,82,0,,,,high,/river/red-arroyo/south-chadbourne-street-near-san-angelo/
 queue,288,02196835,Butler Creek,Below 7th Avenue At Fort Gordon,GA,23.1,10,83,0,,,,medium,/river/butler-creek/below-7th-avenue-at-fort-gordon/
 queue,288,06023000,Ruby River,Twin Bridges,MT,23.0,30,0,70,,,,high,/river/ruby-river/twin-bridges/
 queue,288,02142900,Long Creek,Paw Creek,NC,23.0,10,92,40,,,,auto2,/river/long-creek-nc/paw-creek/
@@ -7282,7 +7282,7 @@ queue,291,05289985,Big Coulee Creek,Peever,SD,21.8,10,0,40,,,,high,/river/big-co
 queue,291,10246835,Big Warm Springs,Duckwater,NV,21.8,10,0,40,,,,high,/river/big-warm-springs/duckwater/
 queue,291,01069700,Branch Brook,Kennebunk Maine,ME,21.8,10,64,0,,,,high,/river/branch-brook/kennebunk-maine/
 queue,291,10172765,Clover Creek,Above Big Hollow Near Clover,UT,21.8,10,65,0,,,,high,/river/clover-creek-ut/above-big-hollow-near-clover/
-queue,291,04085074,Dutchman Creek,Cyrus Saint Near Ashwaubenon,WI,21.8,10,76,0,,,,high,/river/dutchman-creek/cyrus-saint-near-ashwaubenon/
+queue,291,04085074,Dutchman Creek,Cyrus Street Near Ashwaubenon,WI,21.8,10,76,0,,,,high,/river/dutchman-creek/cyrus-street-near-ashwaubenon/
 queue,291,04127885,Saint Marys River,Sault Ste Marie Ontario,MI,21.7,10,65,0,,foreign-or-wrong-state,,auto2,/river/saint-marys-river-mi/sault-ste-marie-ontario/
 queue,291,09470700,Banning Creek,Bisbee,AZ,21.7,10,55,0,,,,high,/river/banning-creek/bisbee/
 queue,291,01581960,Beetree Run,Bentley Springs,MD,21.7,10,57,0,,,,auto2,/river/beetree-run/bentley-springs/
@@ -7293,7 +7293,7 @@ queue,291,13311450,Sugar Creek,Stibnite,ID,21.6,10,0,40,,,,high,/river/sugar-cre
 queue,291,09027100,Fraser River,Tabernash,CO,21.6,30,23,30,,,2332,high,/river/fraser-river/tabernash/
 queue,291,05400625,Little Plover River,Plover,WI,21.6,10,69,0,,,,high,/river/little-plover-river/plover/
 queue,291,10258700,Murray Canyon Creek,Palm Springs,CA,21.6,10,74,0,,,,auto2,/river/murray-canyon-creek/palm-springs/
-queue,291,08157560,Waller Creek,East 1st Saint Austin,TX,21.4,10,82,40,,,3281,medium,/river/waller-creek/east-1st-saint-austin/
+queue,291,08157560,Waller Creek,East 1st Street Austin,TX,21.4,10,82,40,,,3281,medium,/river/waller-creek/east-1st-street-austin/
 queue,291,11162619,Pilarcitos Creek,Above Stone Dam Near Hillsborough,CA,21.4,10,78,40,,,,auto2,/river/pilarcitos-creek/above-stone-dam-near-hillsborough/
 queue,291,04201526,Abram Creek,Kolthoff Drive At Brook Park,OH,21.4,10,68,0,,,405,high,/river/abram-creek-oh/kolthoff-drive-at-brook-park/
 queue,291,02444160,Tombigbee River,Bevill L&d Near Pickensville,AL,21.3,10,29,40,,,19573,high,/river/tombigbee-river-al/bevill-l-and-d-near-pickensville/
@@ -7337,7 +7337,7 @@ queue,293,06101200,Willow Creek,Galata,MT,20.0,30,17,30,,,323,high,/river/willow
 queue,293,04183979,Platter Creek,Sherwood,OH,20.0,10,61,0,,,,high,/river/platter-creek/sherwood/
 queue,293,021623957,Big Falls Creek,Tigerville,SC,20.0,10,61,0,,,,high,/river/big-falls-creek/tigerville/
 queue,293,14070900,Bridge Creek,Below Intake Near Bend,OR,20.0,10,63,0,,,549,high,/river/bridge-creek/below-intake-near-bend/
-queue,293,13212549,Conway Gulch,Below 1st Saint At Notus,ID,20.0,10,74,0,,,,medium,/river/conway-gulch/below-1st-saint-at-notus/
+queue,293,13212549,Conway Gulch,Below 1st Street At Notus,ID,20.0,10,74,0,,,,medium,/river/conway-gulch/below-1st-street-at-notus/
 queue,293,07239500,North Canadian River,El Reno,OK,19.9,10,70,40,,,,high,/river/north-canadian-river/el-reno/
 queue,293,09472050,San Pedro River,Redington Bridge Near Redington,AZ,19.9,30,0,40,,,,high,/river/san-pedro-river/redington-bridge-near-redington/
 queue,293,06351200,Cannonball River,Raleigh,ND,19.9,30,0,30,,,,high,/river/cannonball-river/raleigh/
@@ -7604,7 +7604,7 @@ held-names,,02395980,Etowah River,Ga 1 Loop Near Rome,GA,63.4,85,72,70,"nri,nri-
 held-names,,02423414,Little Cahaba River,Cah Bea Road Near Cahaba Hts,AL,62.9,85,81,30,"nri,nri-paddle,nri-fish,fame",,,low,/river/little-cahaba-river/cah-bea-road-near-cahaba-hts/
 held-names,,06188000,Lamar River,Tower Ranger Station Ynp,WY,62.6,75,0,70,"nri,nri-fish",,,low,/river/lamar-river/tower-ranger-station-ynp/
 held-names,,06191000,Gardner River,Mammoth Ynp,MT,62.6,75,0,70,"nri,nri-fish",,,low,/river/gardner-river/mammoth-ynp/
-held-names,,06892360,Kill C,95th Saint Near Desoto,KS,62.6,85,78,30,"nri,nri-paddle",,,low,/river/kill-c/95th-saint-near-desoto/
+held-names,,06892360,Kill C,95th Street Near Desoto,KS,62.6,85,78,30,"nri,nri-paddle",,,low,/river/kill-c/95th-street-near-desoto/
 held-names,,03353611,White River,Stout Gen Stn At Indianapolis,IN,62.0,75,94,70,"nri,nri-fish,fame",,,low,/river/white-river-in/stout-gen-stn-at-indianapolis/
 held-names,,053813595,Black River Ds Saint Highway 54,Black River Falls,WI,61.9,70,59,70,"nri,fame",,,low,/river/black-river-ds-saint-highway-54/black-river-falls/
 held-names,,02215900,Little Ocmulgee River,Ga 149 At Scotland,GA,61.4,70,57,70,fame,,,low,/river/little-ocmulgee-river/ga-149-at-scotland/
@@ -7666,20 +7666,20 @@ held-names,,08202700,Seco Creek,Rowe Rh Near D'Hanis,TX,51.3,30,59,70,,,,low,/ri
 held-names,,02146381,Sugar Creek,Nc 51 Near Pineville,NC,51.3,30,92,70,,,,low,/river/sugar-creek-nc/nc-51-near-pineville/
 held-names,,02353265,Ichawaynochaway Creek,Ga 37 Near Morgan,GA,51.2,85,0,70,"nri,nri-paddle",,,low,/river/ichawaynochaway-creek/ga-37-near-morgan/
 held-names,,11460151,Redwood C A Highway 1 Bridge A Muir Beach,Redwood C A Highway 1 Bridge A Muir Beach,CA,51.2,60,75,40,nri,,,low,/river/redwood-c-a-highway-1-bridge-a-muir-beach/redwood-c-a-highway-1-bridge-a-muir-beach/
-held-names,,11072100,Temescal C,Above Main Saint A Corona,CA,50.9,30,84,70,,,,low,/river/temescal-c/above-main-saint-a-corona/
+held-names,,11072100,Temescal C,Above Main Street A Corona,CA,50.9,30,84,70,,,,low,/river/temescal-c/above-main-street-a-corona/
 held-names,,08149900,South Llano River,Flat Rock Ln At Junction,TX,50.7,70,56,30,fame,,,low,/river/south-llano-river/flat-rock-ln-at-junction/
 held-names,,0214266000,Mcdowell Creek,Charlotte Nc Csw10,NC,50.6,30,90,70,,,,low,/river/mcdowell-creek/charlotte-nc-csw10/
 held-names,,08201500,Seco Creek,Miller Rh Near Utopia,TX,50.5,30,54,70,,,,low,/river/seco-creek/miller-rh-near-utopia/
 held-names,,11172175,Coyote C,Above Highway 237 A Milpitas,CA,50.5,30,91,70,,,,low,/river/coyote-c/above-highway-237-a-milpitas/
 held-names,,02338660,New River,Ga 100 Near Corinth,GA,50.4,30,67,70,,,,low,/river/new-river-ga/ga-100-near-corinth/
-held-names,,06803170,Middle Creek,Sw 63rd Saint At Lincoln,NE,50.4,30,85,70,,,,low,/river/middle-creek-ne/sw-63rd-saint-at-lincoln/
+held-names,,06803170,Middle Creek,Sw 63rd Street At Lincoln,NE,50.4,30,85,70,,,,low,/river/middle-creek-ne/sw-63rd-street-at-lincoln/
 held-names,,01302020,Bronx River,Ny Botanical Garden At Bronx,NY,50.4,30,100,70,,,,low,/river/bronx-river/ny-botanical-garden-at-bronx/
-held-names,,06803093,Haines Branch,Sw 56th Saint At Lincoln,NE,50.2,30,85,70,,,,low,/river/haines-branch/sw-56th-saint-at-lincoln/
+held-names,,06803093,Haines Branch,Sw 56th Street At Lincoln,NE,50.2,30,85,70,,,,low,/river/haines-branch/sw-56th-street-at-lincoln/
 held-names,,11460400,Lagunitas C A Samuel P Taylor State Park,Lagunitas C A Samuel P Taylor State Park,CA,50.1,30,70,70,,,,low,/river/lagunitas-c-a-samuel-p-taylor-state-park/lagunitas-c-a-samuel-p-taylor-state-park/
 held-names,,11066460,Santa Ana River A Mwd Crossing,Santa Ana River A Mwd Crossing,CA,49.8,30,88,70,,,,low,/river/santa-ana-river-a-mwd-crossing/santa-ana-river-a-mwd-crossing/
 held-names,,08108700,Brazos River,Sh 21 Near Bryan,TX,49.7,70,75,40,fame,,,low,/river/brazos-river/sh-21-near-bryan/
 held-names,,301141089320300,East Pearl River,Csx Railroad Near Claiborne,MS,49.5,85,64,40,"nri,nri-paddle",,,low,/river/east-pearl-river/csx-railroad-near-claiborne/
-held-names,,07144480,Cowskin C,119th Saint At Wichita,KS,49.5,30,87,70,,,,low,/river/cowskin-c/119th-saint-at-wichita/
+held-names,,07144480,Cowskin C,119th Street At Wichita,KS,49.5,30,87,70,,,,low,/river/cowskin-c/119th-street-at-wichita/
 held-names,,02233475,Lt Econlockhatchee River,State Hwy434 Near Oviedo,FL,49.4,30,82,70,,,,low,/river/lt-econlockhatchee-river/state-hwy434-near-oviedo/
 held-names,,08375300,Rio Grande,Rio Grande Village Big Bnd Np,TX,49.2,100,0,40,"wsr-rec,wsr,fame",,,low,/river/rio-grande-tx/rio-grande-village-big-bnd-np/
 held-names,,10168000,Little Cottonwood Creek @ Jordan River,Slc,UT,49.1,30,82,70,,,,low,/river/little-cottonwood-creek-jordan-river/slc/
@@ -7746,7 +7746,7 @@ held-names,,12413210,South Fork Coeur D Alene,Elizabeth Park Near Kellogg,ID,38.
 held-names,,06893150,Blue River,Blue Ridge Blvd Ext In Kc,MO,38.7,30,83,70,,,,low,/river/blue-river-mo/blue-ridge-blvd-ext-in-kc/
 held-names,,08181435,Leon Creek,Lp 410 At San Antonio,TX,38.6,30,97,70,,,,low,/river/leon-creek/lp-410-at-san-antonio/
 held-names,,06919020,Sac River,Highway J Below Stockton,MO,38.5,30,49,70,,,,low,/river/sac-river/highway-j-below-stockton/
-held-names,,02231342,Fort Drum Creek,Sunshine Saint Pky Near Fort Drum,FL,38.4,30,52,30,,,,low,/river/fort-drum-creek/sunshine-saint-pky-near-fort-drum/
+held-names,,02231342,Fort Drum Creek,Sunshine Street Pky Near Fort Drum,FL,38.4,30,52,30,,,,low,/river/fort-drum-creek/sunshine-street-pky-near-fort-drum/
 held-names,,03227107,Olentangy River,J H Herrick Dr At Columbus,OH,38.3,30,97,70,,,,low,/river/olentangy-river/j-h-herrick-dr-at-columbus/
 held-names,,06610770,Big Papillion Creek,Q Street At Omaha,NE,38.2,30,90,70,,,,low,/river/big-papillion-creek/q-street-at-omaha/
 held-names,,09328920,Green River,Mineral Bottom Near Cynlnds Ntl Park,UT,38.0,100,0,0,"wsr,fame",,,low,/river/green-river-ut/mineral-bottom-near-cynlnds-ntl-park/
@@ -7769,7 +7769,7 @@ held-names,,11180825,San Lorenzo C,Above Don Castro Reservoir Near Castro V,CA,3
 held-names,,05063398,South Branch Wild Rice River,Co Road 27 Near Felton,MN,35.8,30,0,70,,,,low,/river/south-branch-wild-rice-river/co-road-27-near-felton/
 held-names,,02146409,Ltl Sugar Creek,Medical Center Dr At Charlotte,NC,35.8,10,99,40,,,,low,/river/ltl-sugar-creek/medical-center-dr-at-charlotte/
 held-names,,08059350,Indian Creek,Sh 78 Near Farmersville,TX,35.8,30,70,30,,,,low,/river/indian-creek-tx/sh-78-near-farmersville/
-held-names,,07164600,Joe Creek,61st Saint At Tulsa,OK,35.4,10,89,40,,,,low,/river/joe-creek/61st-saint-at-tulsa/
+held-names,,07164600,Joe Creek,61st Street At Tulsa,OK,35.4,10,89,40,,,,low,/river/joe-creek/61st-street-at-tulsa/
 held-names,,07298500,Pr Dog Twn Fork Red River,Brice,TX,35.3,85,0,40,"nri,nri-paddle,fame",,,low,/river/pr-dog-twn-fork-red-river/brice/
 held-names,,11121900,Gibraltar Dam Div Weir A Gibraltar Dam,Gibraltar Dam Div Weir A Gibraltar Dam,CA,35.1,10,75,40,,,,low,/river/gibraltar-dam-div-weir-a-gibraltar-dam/gibraltar-dam-div-weir-a-gibraltar-dam/
 held-names,,02302010,Hillsborough River,Below Crystal Spr Near Zephyrhills,FL,34.7,60,75,40,nri,,,low,/river/hillsborough-river/below-crystal-spr-near-zephyrhills/
@@ -7798,8 +7798,8 @@ held-names,,11449255,Scotts C,Above State Route 29 A Upper Lake,CA,30.8,30,55,30
 held-names,,02335790,Willeo Creek,Ga 120 Near Roswell,GA,30.6,10,79,40,,,,low,/river/willeo-creek/ga-120-near-roswell/
 held-names,,08437710,Pecos River,Rr 1776 Near Grandfalls,TX,30.5,70,32,40,fame,,46027,low,/river/pecos-river-tx/rr-1776-near-grandfalls/
 held-names,,10301300,Walker River,Below Mason Vly Wma At Rr Xing Near Wabuska,NV,30.4,70,50,40,fame,,,low,/river/walker-river/below-mason-vly-wma-at-rr-xing-near-wabuska/
-held-names,,07241506,Crutcho Creek,Se 29th Saint At Boone Township,OK,29.7,10,92,40,,,,low,/river/crutcho-creek/se-29th-saint-at-boone-township/
-held-names,,02308950,Saint Joe Creek,62nd Saint Near Pinellas Park,FL,29.6,10,85,40,,,,low,/river/saint-joe-creek/62nd-saint-near-pinellas-park/
+held-names,,07241506,Crutcho Creek,Se 29th Street At Boone Township,OK,29.7,10,92,40,,,,low,/river/crutcho-creek/se-29th-street-at-boone-township/
+held-names,,02308950,Saint Joe Creek,62nd Street Near Pinellas Park,FL,29.6,10,85,40,,,,low,/river/saint-joe-creek/62nd-street-near-pinellas-park/
 held-names,,07380401,Bayou Lafourche Sw Of Donaldsonville,Bayou Lafourche Sw Of Donaldsonville,LA,29.0,10,63,40,,,,low,/river/bayou-lafourche-sw-of-donaldsonville/bayou-lafourche-sw-of-donaldsonville/
 held-names,,07250550,Ar River,James West Trimble L&d Near Van Buren,AR,28.9,10,78,40,,,,low,/river/ar-river/james-west-trimble-l-and-d-near-van-buren/
 held-names,,02392920,Noonday Creek US Chastain Meadows Pkwy Marietta,Noonday Creek US Chastain Meadows Pkwy Marietta,GA,28.4,10,75,40,,,,low,/river/noonday-creek-us-chastain-meadows-pkwy-marietta/noonday-creek-us-chastain-meadows-pkwy-marietta/
@@ -7829,7 +7829,7 @@ held-names,,11119745,Mission C A Rocky Nook Park A Santa Barbara,Mission C A Roc
 held-names,,02466030,Black Warrior River,Selden L & D Near Eutaw,AL,21.7,10,52,40,,,,low,/river/black-warrior-river/selden-l-and-d-near-eutaw/
 held-names,,02465292,Cribbs Mill Creek,Ww Plant At Tuscaloosa,AL,21.5,10,79,0,,,,low,/river/cribbs-mill-creek/ww-plant-at-tuscaloosa/
 held-names,,07176321,Bird Creek,Sh 99 At Pawhuska,OK,21.3,30,57,30,,,,low,/river/bird-creek/sh-99-at-pawhuska/
-held-names,,07144486,Calfskin C,119th Saint Wichita,KS,21.2,10,87,0,,,,low,/river/calfskin-c/119th-saint-wichita/
+held-names,,07144486,Calfskin C,119th Street Wichita,KS,21.2,10,87,0,,,,low,/river/calfskin-c/119th-street-wichita/
 held-names,,054279465,South Fork Pheasant Branch @ Deming Way @ Middleton,South Fork Pheasant Branch @ Deming Way @ Middleton,WI,21.1,10,86,0,,,,low,/river/south-fork-pheasant-branch-deming-way-middleton/south-fork-pheasant-branch-deming-way-middleton/
 held-names,,08069800,East Fork San Jacinto River,Sh 150 Near Coldspring,TX,20.9,30,52,30,,,,low,/river/east-fork-san-jacinto-river/sh-150-near-coldspring/
 held-names,,05427930,Dorn (spring) Creek,Ct Highway M Near Waunakee,WI,20.9,10,87,0,,,,low,/river/dorn-spring-creek/ct-highway-m-near-waunakee/
@@ -7889,7 +7889,7 @@ excluded,,01365505,Neversink Reservoir Diversion Channel,Grahamsville,NY,62.3,85
 excluded,,13038000,Dry Bed,Ririe,ID,62.2,85,67,0,"nri,nri-paddle,nri-fish",tiny-basin,,auto2,/river/dry-bed/ririe/
 excluded,,11089500,Fullerton Creek,Below Fullerton Dam Near Brea,CA,61.9,65,86,20,tail,tiny-basin,,auto2,/river/fullerton-creek/below-fullerton-dam-near-brea/
 excluded,,05227530,Mississippi River Diversion,Aitkin,MN,61.6,100,0,40,fame,excluded-name,,high,/river/mississippi-river-diversion/aitkin/
-excluded,,040970647,Little Portage Creek,Lane Saint At Mendon,MI,60.8,85,68,30,"nri,nri-paddle,nri-fish",short-record,,high,/river/little-portage-creek/lane-saint-at-mendon/
+excluded,,040970647,Little Portage Creek,Lane Street At Mendon,MI,60.8,85,68,30,"nri,nri-paddle,nri-fish",short-record,,high,/river/little-portage-creek/lane-street-at-mendon/
 excluded,,04097345,Portage River,Fifth Avenue At Three Rivers,MI,60.3,85,65,30,"nri,nri-paddle,nri-fish",short-record,,high,/river/portage-river-mi/fifth-avenue-at-three-rivers/
 excluded,,08177520,Guadalupe River,Bloomington,TX,60.2,100,72,40,fame,short-record,,high,/river/guadalupe-river-tx/bloomington/
 excluded,,04026900,Potato River,Gurney,WI,60.2,85,0,70,"nri,nri-paddle,nri-fish",short-record,,high,/river/potato-river/gurney/
@@ -8035,7 +8035,7 @@ excluded,,01103455,Trout Brook,Dover,MA,46.9,60,86,0,nri,tiny-basin,,high,/river
 excluded,,02131135,Jefferies Creek,James Jones Avenue Near Florence,SC,46.7,30,75,70,,short-record,,high,/river/jefferies-creek/james-jones-avenue-near-florence/
 excluded,,11222975,North Fork Kings River,24th Avenue Branch Near Lemoore,CA,46.7,70,70,0,fame,short-record,,auto2,/river/north-fork-kings-river/24th-avenue-branch-near-lemoore/
 excluded,,07263115,Fourche La Fave River,Houston,AR,46.5,30,71,70,,short-record,,high,/river/fourche-la-fave-river/houston/
-excluded,,14211542,Crystal Springs Creek,Bybee Saint Portland,OR,46.5,60,92,0,nri,tiny-basin,,high,/river/crystal-springs-creek/bybee-saint-portland/
+excluded,,14211542,Crystal Springs Creek,Bybee Street Portland,OR,46.5,60,92,0,nri,tiny-basin,,high,/river/crystal-springs-creek/bybee-street-portland/
 excluded,,12446995,Salmon Creek,Above Diversion Near Okanogan,WA,46.4,30,57,70,,excluded-name,,high,/river/salmon-creek-wa/above-diversion-near-okanogan/
 excluded,,06425050,Stagebarn Canyon Creek,Above Elk Creek Near Summerset,SD,46.3,30,72,70,,short-record,,high,/river/stagebarn-canyon-creek/above-elk-creek-near-summerset/
 excluded,,02172002,Lake Moultrie Tailrace Canal,Moncks Corner,SC,46.2,60,69,0,nri,excluded-name,,high,/river/lake-moultrie-tailrace-canal/moncks-corner/
@@ -8187,7 +8187,7 @@ excluded,,08158030,Boggy Creek,Manor Road Austin,TX,37.0,10,97,40,,tiny-basin,,h
 excluded,,0214643820,Edwards Branch,Sheffield Drive At Charlotte,NC,37.0,10,96,40,,tiny-basin,,auto2,/river/edwards-branch/sheffield-drive-at-charlotte/
 excluded,,11046325,San Mateo Creek,San Mateo Road Near San Onofre,CA,37.0,30,76,30,,short-record,,auto2,/river/san-mateo-creek/san-mateo-road-near-san-onofre/
 excluded,,08158035,Boggy Creek,Webberville Road Austin,TX,36.9,10,96,40,,tiny-basin,,high,/river/boggy-creek-tx/webberville-road-austin/
-excluded,,02301793,East Lake Outfall,East Chelsea Saint Near Tampa,FL,36.9,10,88,40,,excluded-name,,high,/river/east-lake-outfall/east-chelsea-saint-near-tampa/
+excluded,,02301793,East Lake Outfall,East Chelsea Street Near Tampa,FL,36.9,10,88,40,,excluded-name,,high,/river/east-lake-outfall/east-chelsea-street-near-tampa/
 excluded,,08025356,Sabine River,Toledo Bd Pwrhouse Near Burkeville,TX,36.9,85,52,0,"nri,nri-paddle",short-record,,low,/river/sabine-river-tx/toledo-bd-pwrhouse-near-burkeville/
 excluded,,02301745,Delaney Creek Popoff Canal,Tampa,FL,36.8,10,87,40,,excluded-name,,high,/river/delaney-creek-popoff-canal/tampa/
 excluded,,02249007,Eau Gallie River,Heather Glen Cir At Melbourne,FL,36.8,10,80,40,,tiny-basin,,auto2,/river/eau-gallie-river/heather-glen-cir-at-melbourne/
@@ -8235,7 +8235,7 @@ excluded,,02307780,Long Branch,Pinellas Park,FL,35.6,10,84,40,,tiny-basin,,high,
 excluded,,04164151,North Branch Clinton River,26 Mile Near Meade,MI,35.6,30,77,30,,short-record,,medium,/river/north-branch-clinton-river/26-mile-near-meade/
 excluded,,04166700,Johnson Creek,7 Mile Road At Northville,MI,35.6,30,77,30,,short-record,,medium,/river/johnson-creek-mi/7-mile-road-at-northville/
 excluded,,08017250,West Caddo Creek,Ih 30 Near Caddo Mills,TX,35.6,30,69,30,,short-record,,auto2,/river/west-caddo-creek/ih-30-near-caddo-mills/
-excluded,,14211814,Fairview Creek,Glisan Saint Near Gresham,OR,35.5,10,71,40,,tiny-basin,472,high,/river/fairview-creek/glisan-saint-near-gresham/
+excluded,,14211814,Fairview Creek,Glisan Street Near Gresham,OR,35.5,10,71,40,,tiny-basin,472,high,/river/fairview-creek/glisan-street-near-gresham/
 excluded,,0209722970,Sandy Creek,Cornwallis Road Near Durham,NC,35.5,10,88,40,,tiny-basin,,high,/river/sandy-creek-nc/cornwallis-road-near-durham/
 excluded,,03238140,Taylor Creek,Donnermeyer Drive At Bellevue,KY,35.5,10,88,40,,tiny-basin,,high,/river/taylor-creek-ky/donnermeyer-drive-at-bellevue/
 excluded,,01649150,Paint Branch Tributary,Colesville,MD,35.5,10,88,40,,tiny-basin,,high,/river/paint-branch-tributary/colesville/
@@ -8305,7 +8305,7 @@ excluded,,02214265,Ocmulgee River,Ga 96 Near Bonaire,GA,33.7,70,76,0,"nri,fame",
 excluded,,02393377,Butler Creek,Mack Dobbs Road Near Kennesaw,GA,33.6,10,74,40,,tiny-basin,,high,/river/butler-creek/mack-dobbs-road-near-kennesaw/
 excluded,,02217274,Wheeler Creek,Bill Cheek Road Near Auburn,GA,33.6,10,68,40,,tiny-basin,,high,/river/wheeler-creek/bill-cheek-road-near-auburn/
 excluded,,02211375,Cabin Creek,North Second Street Near Griffin,GA,33.5,10,70,40,,tiny-basin,,high,/river/cabin-creek-ga/north-second-street-near-griffin/
-excluded,,08157540,Waller Creek,Red River Saint Austin,TX,33.5,10,82,40,,tiny-basin,3281,high,/river/waller-creek/red-river-saint-austin/
+excluded,,08157540,Waller Creek,Red River Street Austin,TX,33.5,10,82,40,,tiny-basin,3281,high,/river/waller-creek/red-river-street-austin/
 excluded,,14326300,Middle Fork Coquille River,Below Mcmullen Creek Near Bridge,OR,33.5,30,51,30,,short-record,,high,/river/middle-fork-coquille-river/below-mcmullen-creek-near-bridge/
 excluded,,01463740,Shabakunk Creek,Sylva Lake Dam At Ewingville,NJ,33.4,10,79,40,,tiny-basin,,auto2,/river/shabakunk-creek/sylva-lake-dam-at-ewingville/
 excluded,,05450400,Iowa River,Steamboat Rock,IA,33.4,30,53,70,,short-record,,high,/river/iowa-river/steamboat-rock/
@@ -8328,7 +8328,7 @@ excluded,,01017550,Williams Brook,Phair Maine,ME,32.8,10,61,40,,tiny-basin,,high
 excluded,,16244000,Pukele Stream,Honolulu Oahu,HI,32.8,10,88,0,,tiny-basin,,high,/river/pukele-stream/honolulu-oahu/
 excluded,,0208732593,Pigeon House Creek,Fenton Street At Raleigh,NC,32.8,10,92,40,,short-record,,high,/river/pigeon-house-creek/fenton-street-at-raleigh/
 excluded,,01656903,Flatlick Branch,Above Frog Branch At Chantilly,VA,32.7,10,69,40,,tiny-basin,,high,/river/flatlick-branch/above-frog-branch-at-chantilly/
-excluded,,02169505,Rocky Branch,Pickens Saint At Columbia,SC,32.7,10,79,40,,tiny-basin,,high,/river/rocky-branch-sc/pickens-saint-at-columbia/
+excluded,,02169505,Rocky Branch,Pickens Street At Columbia,SC,32.7,10,79,40,,tiny-basin,,high,/river/rocky-branch-sc/pickens-street-at-columbia/
 excluded,,11120520,San Pedro Creek,Goleta,CA,32.7,10,76,40,,tiny-basin,,auto2,/river/san-pedro-creek-ca/goleta/
 excluded,,16409000,Waihanau Stream,Kalaupapa Molokai,HI,32.7,60,0,0,nri,tiny-basin,,high,/river/waihanau-stream/kalaupapa-molokai/
 excluded,,07332440,Blue River,Kenefic,OK,32.7,85,64,0,"nri,nri-paddle,nri-fish",short-record,,high,/river/blue-river-ok/kenefic/
@@ -8423,12 +8423,12 @@ excluded,,16283200,Kahaluu Stream,Ahuimanu Oahu,HI,29.1,10,85,0,,tiny-basin,,aut
 excluded,,01473730,Schuylkill River,Conshohocken,PA,29.1,30,91,30,,short-record,82843,high,/river/schuylkill-river/conshohocken/
 excluded,,05089995,Park River Diversion,Grafton,ND,29.0,10,58,40,,excluded-name,,high,/river/park-river-diversion/grafton/
 excluded,,10254730,Alamo River,Niland,CA,29.0,10,64,0,,tiny-basin,4932,high,/river/alamo-river/niland/
-excluded,,07241513,Soldier Creek South Of Se 15th Saint Boone Township,Soldier Creek South Of Se 15th Saint Boone Township,OK,29.0,10,91,40,,short-record,,low,/river/soldier-creek-south-of-se-15th-saint-boone-township/soldier-creek-south-of-se-15th-saint-boone-township/
+excluded,,07241513,Soldier Creek South Of Se 15th Saint Boone Township,Soldier Creek South Of Se 15th Street Boone Township,OK,29.0,10,91,40,,short-record,,low,/river/soldier-creek-south-of-se-15th-street-boone-township/soldier-creek-south-of-se-15th-saint-boone-township/
 excluded,,02208487,Little Cornish Creek County Road 95,Oxford,GA,28.9,10,64,40,,tiny-basin,,medium,/river/little-cornish-creek-county-road-95/oxford/
 excluded,,10336715,Marlette Creek,Carson City,NV,28.9,10,72,0,,tiny-basin,,high,/river/marlette-creek/carson-city/
 excluded,,09419625,Corn Creek Springs,National Fish & Wildlife Hdqrs,NV,28.9,10,87,0,,tiny-basin,,high,/river/corn-creek-springs/national-fish-and-wildlife-hdqrs/
 excluded,,16417800,Lb Honoulimaloo Str US Diversion Molokai,Lb Honoulimaloo Str US Diversion Molokai,HI,28.9,60,0,0,nri,excluded-name,,low,/river/lb-honoulimaloo-str-us-diversion-molokai/lb-honoulimaloo-str-us-diversion-molokai/
-excluded,,07375175,Bogue Falaya River,Boston Saint At Covington,LA,28.9,10,66,40,,short-record,,high,/river/bogue-falaya-river/boston-saint-at-covington/
+excluded,,07375175,Bogue Falaya River,Boston Street At Covington,LA,28.9,10,66,40,,short-record,,high,/river/bogue-falaya-river/boston-street-at-covington/
 excluded,,08069840,Winters Bayou,Sh 150 Near Coldspring,TX,28.8,60,73,0,nri,short-record,,low,/river/winters-bayou/sh-150-near-coldspring/
 excluded,,07386700,Ruth Canal,Ruth,LA,28.7,10,78,0,,excluded-name,,high,/river/ruth-canal/ruth/
 excluded,,11162735,San Mateo C,Above Junction Box A Dam1 Near Hillsborough,CA,28.7,10,83,40,,tiny-basin,,low,/river/san-mateo-c/above-junction-box-a-dam1-near-hillsborough/
@@ -8448,7 +8448,7 @@ excluded,,02411590,Coosa River,Highway 14 Near Wetumpka,AL,28.2,75,78,0,"nri,nri
 excluded,,09359082,Cascade Creek,Below Cascade Creek Diversion Near Rockwood,CO,28.1,30,0,30,,excluded-name,,high,/river/cascade-creek/below-cascade-creek-diversion-near-rockwood/
 excluded,,09530200,Yuma Mesa Outlet Drain,Yuma,AZ,28.0,10,73,0,,excluded-name,,high,/river/yuma-mesa-outlet-drain/yuma/
 excluded,,06879650,Kings Creek,Manhattan,KS,28.0,10,73,0,,tiny-basin,,auto2,/river/kings-creek-ks/manhattan/
-excluded,,07263605,Fourche Creek,Lindsey Saint East Of Little Rock,AR,27.9,30,82,30,,short-record,,high,/river/fourche-creek/lindsey-saint-east-of-little-rock/
+excluded,,07263605,Fourche Creek,Lindsey Street East Of Little Rock,AR,27.9,30,82,30,,short-record,,high,/river/fourche-creek/lindsey-street-east-of-little-rock/
 excluded,,01309950,Bellmore Creek,Bellmore,NY,27.9,10,74,0,,tiny-basin,,high,/river/bellmore-creek/bellmore/
 excluded,,11051502,Sar Supp Gage,Mentone,CA,27.9,10,81,0,,tiny-basin,,auto2,/river/sar-supp-gage/mentone/
 excluded,,04212895,Conneaut Creek,Dickonsburg,PA,27.9,10,59,40,,short-record,,high,/river/conneaut-creek-pa/dickonsburg/
@@ -8462,9 +8462,9 @@ excluded,,10172630,Goggin Drain,Magna Utah,UT,27.6,10,81,0,,excluded-name,,high,
 excluded,,11062800,Fontana Water Co Spill Ch From Afterbay,Fontana,CA,27.6,10,84,0,,tiny-basin,,low,/river/fontana-water-co-spill-ch-from-afterbay/fontana/
 excluded,,040871473,Wilson Park Creek,Gmia Infall At Milwaukee,WI,27.5,10,88,0,,tiny-basin,,high,/river/wilson-park-creek/gmia-infall-at-milwaukee/
 excluded,,11062400,Fontana Water Co Surface Div,Fontana,CA,27.5,10,83,0,,tiny-basin,,low,/river/fontana-water-co-surface-div/fontana/
-excluded,,11119770,Mission C,Below West Gutierrez Saint Branch A Santa Barbara,CA,27.5,10,81,40,,short-record,,low,/river/mission-c/below-west-gutierrez-saint-branch-a-santa-barbara/
+excluded,,11119770,Mission C,Below West Gutierrez Street Branch A Santa Barbara,CA,27.5,10,81,40,,short-record,,low,/river/mission-c/below-west-gutierrez-street-branch-a-santa-barbara/
 excluded,,04292810,Jewett Brook,Vt 38 Near Saint Albans,VT,27.4,10,59,40,,tiny-basin,,low,/river/jewett-brook/vt-38-near-saint-albans/
-excluded,,03130647,Touby Run,West 6th Saint At Mansfield,OH,27.3,10,77,40,,short-record,,low,/river/touby-run/west-6th-saint-at-mansfield/
+excluded,,03130647,Touby Run,West 6th Street At Mansfield,OH,27.3,10,77,40,,short-record,,low,/river/touby-run/west-6th-street-at-mansfield/
 excluded,,13058520,Willow Creek Floodway Channel,Ucon,ID,27.3,10,73,0,,excluded-name,,high,/river/willow-creek-floodway-channel/ucon/
 excluded,,13058510,Sand Creek,Ucon,ID,27.3,10,73,0,,tiny-basin,,high,/river/sand-creek-id/ucon/
 excluded,,11062450,Fontana Ph Forebay Spillway,Fontana,CA,27.3,10,83,0,,excluded-name,,low,/river/fontana-ph-forebay-spillway/fontana/
@@ -8475,7 +8475,7 @@ excluded,,02461405,Valley Creek,Below Brighton,AL,27.2,30,80,30,,short-record,,a
 excluded,,09378630,Recapture Creek,Blanding,UT,27.1,10,51,0,,tiny-basin,,high,/river/recapture-creek/blanding/
 excluded,,040872342,Root River,West Eight Mile Road Near Caledonia,WI,27.1,30,75,30,,short-record,3071,high,/river/root-river-wi/west-eight-mile-road-near-caledonia/
 excluded,,08329700,Campus Wash,Albuquerque,NM,27.1,10,94,0,,excluded-name,,high,/river/campus-wash/albuquerque/
-excluded,,08075605,Berry Bayou,Nevada Saint Houston,TX,27.1,10,97,0,,tiny-basin,,high,/river/berry-bayou/nevada-saint-houston/
+excluded,,08075605,Berry Bayou,Nevada Street Houston,TX,27.1,10,97,0,,tiny-basin,,high,/river/berry-bayou/nevada-street-houston/
 excluded,,11313433,Dutch Slough,Below Jersey Island Road A Jersey Island,CA,27.1,10,78,40,,short-record,,low,/river/dutch-slough/below-jersey-island-road-a-jersey-island/
 excluded,,09428505,Gardner Lateral Spill,Parker,AZ,27.0,10,50,0,,tiny-basin,,high,/river/gardner-lateral-spill/parker/
 excluded,,07010090,MacKenzie Creek,Shrewsbury,MO,27.0,10,85,0,,tiny-basin,,high,/river/mackenzie-creek/shrewsbury/
@@ -8548,12 +8548,12 @@ excluded,,11491950,Miller Creek,Beaver Marsh,OR,25.7,30,0,30,,short-record,,high
 excluded,,040871476,Holmes Avenue Creek Tributary @ Gmia Outfall 1,Milwaukee,WI,25.7,10,89,0,,excluded-name,,medium,/river/holmes-avenue-creek-tributary-gmia-outfall-1/milwaukee/
 excluded,,08105886,Lake Creek,Lake Creek Pkwy Near Austin,TX,25.6,10,91,40,,tiny-basin,,high,/river/lake-creek-tx/lake-creek-pkwy-near-austin/
 excluded,,01209761,Fivemile River,New Canaan,CT,25.6,10,79,0,,tiny-basin,,auto2,/river/fivemile-river/new-canaan/
-excluded,,12102190,Swan Creek,80th Saint East Near Tacoma,WA,25.5,10,83,0,,tiny-basin,,medium,/river/swan-creek-wa/80th-saint-east-near-tacoma/
+excluded,,12102190,Swan Creek,80th Street East Near Tacoma,WA,25.5,10,83,0,,tiny-basin,,medium,/river/swan-creek-wa/80th-street-east-near-tacoma/
 excluded,,07311600,North Wichita River,Paducah,TX,25.5,30,0,70,,short-record,,high,/river/north-wichita-river/paducah/
 excluded,,13071010,Portneuf River,Above Toponce Road Near Chesterfield,ID,25.5,30,0,70,,short-record,,high,/river/portneuf-river/above-toponce-road-near-chesterfield/
 excluded,,16294900,Waikane Stream,Alt 75 Fort At Waikane Oahu,HI,25.5,10,83,0,,tiny-basin,,auto2,/river/waikane-stream/alt-75-fort-at-waikane-oahu/
 excluded,,09203500,East Fork River,Above East Fork Canal Near Boulder,WY,25.5,30,0,30,,excluded-name,,high,/river/east-fork-river/above-east-fork-canal-near-boulder/
-excluded,,04157550,Sebewaing River,Center Saint At Sebewaing,MI,25.5,30,0,30,,short-record,,high,/river/sebewaing-river/center-saint-at-sebewaing/
+excluded,,04157550,Sebewaing River,Center Street At Sebewaing,MI,25.5,30,0,30,,short-record,,high,/river/sebewaing-river/center-street-at-sebewaing/
 excluded,,05119410,Bonnes Coulee,Velva,ND,25.5,30,0,30,,short-record,,high,/river/bonnes-coulee/velva/
 excluded,,14150250,Fall Creek,Above Tiller Creek Near Lowell,OR,25.5,30,0,30,,short-record,,high,/river/fall-creek-or/above-tiller-creek-near-lowell/
 excluded,,07191315,Saline Creek,Bull Hollow,OK,25.5,30,0,30,,short-record,,high,/river/saline-creek/bull-hollow/
@@ -8572,7 +8572,7 @@ excluded,,01104455,Stony Brook Unnamed Tributary 1,Waltham,MA,25.2,10,87,0,,tiny
 excluded,,03327528,Pipe Creek,Lewisburg,IN,25.2,30,64,30,,short-record,,high,/river/pipe-creek/lewisburg/
 excluded,,12115700,Boulder Creek,Cedar Falls,WA,25.1,10,59,0,,tiny-basin,,high,/river/boulder-creek-wa/cedar-falls/
 excluded,,09319000,Ephraim Tunnel,Ephraim,UT,25.1,10,56,0,,tiny-basin,,high,/river/ephraim-tunnel/ephraim/
-excluded,,16238000,Makiki Stream,King Saint Bridge Oahu,HI,25.1,10,90,0,,tiny-basin,,high,/river/makiki-stream/king-saint-bridge-oahu/
+excluded,,16238000,Makiki Stream,King Street Bridge Oahu,HI,25.1,10,90,0,,tiny-basin,,high,/river/makiki-stream/king-street-bridge-oahu/
 excluded,,022907647,Levee 31 North Extension 1 Mile,West Miami,FL,25.1,10,80,0,,tiny-basin,,medium,/river/levee-31-north-extension-1-mile/west-miami/
 excluded,,16241600,Manoa Stream,Woodlawn Drive Oahu,HI,25.0,10,89,0,,tiny-basin,,high,/river/manoa-stream/woodlawn-drive-oahu/
 excluded,,11452800,Cache Creek Overflow Weir From Settling Bas,Wood'ld,CA,25.0,10,86,0,,tiny-basin,,auto2,/river/cache-creek-overflow-weir-from-settling-bas/woodld/
@@ -8604,7 +8604,7 @@ excluded,,06709740,Lee Gulch,Littleton,CO,24.3,10,88,0,,tiny-basin,,auto2,/river
 excluded,,02414300,Tallapoosa River,Malone Alabama,AL,24.3,30,58,30,,short-record,7272,high,/river/tallapoosa-river-al/malone-alabama/
 excluded,,01644371,Little Seneca Creek Tributary,Clarksburg,MD,24.2,10,75,40,,tiny-basin,,high,/river/little-seneca-creek-tributary/clarksburg/
 excluded,,01115170,Moswansicut Stream,North Scituate,RI,24.2,10,80,0,,tiny-basin,,high,/river/moswansicut-stream/north-scituate/
-excluded,,08074540,Little Whiteoak Bayou,Trimble Saint Houston,TX,24.2,10,100,0,,short-record,,high,/river/little-whiteoak-bayou/trimble-saint-houston/
+excluded,,08074540,Little Whiteoak Bayou,Trimble Street Houston,TX,24.2,10,100,0,,short-record,,high,/river/little-whiteoak-bayou/trimble-street-houston/
 excluded,,083299377,San Antonio Arroyo,Rio Grande Confluence In Abq,NM,24.2,10,92,0,,tiny-basin,,auto2,/river/san-antonio-arroyo/rio-grande-confluence-in-abq/
 excluded,,08181725,San Antonio River,Braunig Lake Near Elmendorf,TX,24.2,30,58,30,,short-record,,high,/river/san-antonio-river-tx/braunig-lake-near-elmendorf/
 excluded,,12201950,Anderson Creek,Bellingham,WA,24.1,10,74,0,,tiny-basin,,high,/river/anderson-creek-wa/bellingham/
@@ -8647,7 +8647,7 @@ excluded,,16247150,Makiki Stream,Archie Baker Park Oahu,HI,23.4,10,90,0,,tiny-ba
 excluded,,10172640,Lee Creek,Magna,UT,23.4,10,80,0,,tiny-basin,,auto2,/river/lee-creek-ut/magna/
 excluded,,08072520,Clodine Ditch,Noble Road Near Addicks,TX,23.4,10,96,0,,excluded-name,,high,/river/clodine-ditch/noble-road-near-addicks/
 excluded,,08158045,Fort Branch Boggy Creek,Manor Road Austin,TX,23.4,10,96,0,,short-record,,high,/river/fort-branch-boggy-creek/manor-road-austin/
-excluded,,02458148,Village Creek,86th Saint North At Roebuck,AL,23.3,10,83,40,,tiny-basin,,medium,/river/village-creek-al/86th-saint-north-at-roebuck/
+excluded,,02458148,Village Creek,86th Street North At Roebuck,AL,23.3,10,83,40,,tiny-basin,,medium,/river/village-creek-al/86th-street-north-at-roebuck/
 excluded,,07103965,Pine Creek,Above Briargate Pkwy Above Colo Springs,CO,23.3,10,88,0,,tiny-basin,,high,/river/pine-creek-co/above-briargate-pkwy-above-colo-springs/
 excluded,,01362342,Hollow Tree Brook,Lanesville,NY,23.2,10,61,0,,tiny-basin,,high,/river/hollow-tree-brook/lanesville/
 excluded,,14199704,Nate Creek Tributary,Colton,OR,23.2,10,67,0,,tiny-basin,,high,/river/nate-creek-tributary/colton/
@@ -8657,7 +8657,7 @@ excluded,,07358253,Whittington Creek,Tunnel Ent At Hot Springs,AR,23.2,10,74,0,,
 excluded,,07103791,Lehman Run,Below Stadium Blvd At Usafa,CO,23.2,10,87,0,,tiny-basin,,auto2,/river/lehman-run/below-stadium-blvd-at-usafa/
 excluded,,03010747,Ischua Creek,Ischua Valley Cc Near Franklinville,NY,23.1,10,50,40,,short-record,,low,/river/ischua-creek/ischua-valley-cc-near-franklinville/
 excluded,,452755122234100,Sunshine Creek,Mouth Near Gresham,OR,23.1,10,87,0,,tiny-basin,,high,/river/sunshine-creek/mouth-near-gresham/
-excluded,,01104405,Hobbs Brook,Mill Saint Near Lincoln,MA,23.1,10,87,0,,tiny-basin,,high,/river/hobbs-brook/mill-saint-near-lincoln/
+excluded,,01104405,Hobbs Brook,Mill Street Near Lincoln,MA,23.1,10,87,0,,tiny-basin,,high,/river/hobbs-brook/mill-street-near-lincoln/
 excluded,,07332335,Blue River,Above Little West Blue Creek Near Connerville,OK,23.1,85,0,0,"nri,nri-paddle,nri-fish",short-record,,high,/river/blue-river-ok/above-little-west-blue-creek-near-connerville/
 excluded,,07019072,Keifer Creek,Ballwin,MO,23.0,10,58,0,,tiny-basin,175,high,/river/keifer-creek/ballwin/
 excluded,,07103784,Goat Camp Creek,Above Reservoir No 4 At Usafa,CO,23.0,10,86,0,,tiny-basin,,auto2,/river/goat-camp-creek/above-reservoir-no-4-at-usafa/
@@ -8674,7 +8674,7 @@ excluded,,0214265828,Mcdowell Creek Tributary,Sr2131 Near Hicks Crossroads,NC,22
 excluded,,071948095,Mud Creek,Johnson,AR,22.6,10,80,0,,tiny-basin,,auto2,/river/mud-creek-ar/johnson/
 excluded,,06893619,Rock Creek,East Wilson Road In Independence,MO,22.6,10,90,0,,short-record,,high,/river/rock-creek-mo/east-wilson-road-in-independence/
 excluded,,251341080291200,Stillwater Creek,Homestead,FL,22.5,10,58,0,,tiny-basin,,high,/river/stillwater-creek-fl/homestead/
-excluded,,02458190,Tributary To Village Creek,50th Saint In Birmingham,AL,22.5,10,85,0,,tiny-basin,,medium,/river/tributary-to-village-creek/50th-saint-in-birmingham/
+excluded,,02458190,Tributary To Village Creek,50th Street In Birmingham,AL,22.5,10,85,0,,tiny-basin,,medium,/river/tributary-to-village-creek/50th-street-in-birmingham/
 excluded,,11071760,Coldwater Canyon Creek,Corona,CA,22.5,10,82,0,,tiny-basin,,auto2,/river/coldwater-canyon-creek/corona/
 excluded,,01022840,Otter Creek,Bar Harbor Maine,ME,22.4,10,0,40,,tiny-basin,,auto2,/river/otter-creek-me/bar-harbor-maine/
 excluded,,13210980,Mason Creek,Caldwell,ID,22.4,10,78,0,,tiny-basin,,high,/river/mason-creek-id/caldwell/
@@ -8694,11 +8694,11 @@ excluded,,14142580,Kelly Creek,Kane Road Near Gresham,OR,22.1,10,87,0,,short-rec
 excluded,,09527597,Coachella Canal,Desert Beach,CA,22.0,10,67,0,,excluded-name,,high,/river/coachella-canal/desert-beach/
 excluded,,11125600,Hilton Canyon Creek,Santa Ynez,CA,22.0,10,71,0,,tiny-basin,,auto2,/river/hilton-canyon-creek/santa-ynez/
 excluded,,01653719,North Branch Little Hunting Creek,Gum Springs,VA,22.0,10,88,0,,short-record,,auto2,/river/north-branch-little-hunting-creek/gum-springs/
-excluded,,0546494170,West Branch Wapsinonoc Creek,College Saint At West Branch,IA,21.9,10,73,0,,tiny-basin,,auto2,/river/west-branch-wapsinonoc-creek/college-saint-at-west-branch/
+excluded,,0546494170,West Branch Wapsinonoc Creek,College Street At West Branch,IA,21.9,10,73,0,,tiny-basin,,auto2,/river/west-branch-wapsinonoc-creek/college-street-at-west-branch/
 excluded,,03575980,Mcdonald Creek,Patton Road Near Huntsville,AL,21.9,10,86,0,,short-record,,high,/river/mcdonald-creek-al/patton-road-near-huntsville/
 excluded,,08025240,Housen Bayou,Sh 87 Near Hemphill,TX,21.9,30,0,30,,short-record,,low,/river/housen-bayou/sh-87-near-hemphill/
 excluded,,011020635,Proctor Brook,Veterans Mem Park Peabody,MA,21.9,10,87,0,,short-record,,auto2,/river/proctor-brook/veterans-mem-park-peabody/
-excluded,,030850498,Ninemile Run,Above McFarren Saint Near Swissvale,PA,21.9,10,87,0,,short-record,,auto2,/river/ninemile-run/above-mcfarren-saint-near-swissvale/
+excluded,,030850498,Ninemile Run,Above McFarren Street Near Swissvale,PA,21.9,10,87,0,,short-record,,auto2,/river/ninemile-run/above-mcfarren-street-near-swissvale/
 excluded,,07381482,Old River Outflow Channel,Below Hydropower Channel,LA,21.8,10,0,40,,excluded-name,,high,/river/old-river-outflow-channel/below-hydropower-channel/
 excluded,,10260200,Pipes Wash,Yucca Valley,CA,21.8,10,66,0,,excluded-name,,high,/river/pipes-wash/yucca-valley/
 excluded,,01484695,Beaverdam Ditch,Millville,DE,21.8,10,56,0,,excluded-name,,high,/river/beaverdam-ditch/millville/
@@ -8706,7 +8706,7 @@ excluded,,01115278,Swamp Brook,Ponagansett Road Near Clayville,RI,21.8,10,78,0,,
 excluded,,07048493,Town Branch,South Morningside At Fayetteville,AR,21.8,10,81,0,,tiny-basin,,high,/river/town-branch-ar/south-morningside-at-fayetteville/
 excluded,,08329840,Hahn Arroyo In Albuquerque,Hahn Arroyo In Albuquerque,NM,21.8,10,92,0,,tiny-basin,,low,/river/hahn-arroyo-in-albuquerque/hahn-arroyo-in-albuquerque/
 excluded,,01115297,Wilbur Hollow Brook,Old Plainfield Peak Near Clayville,RI,21.8,10,79,0,,tiny-basin,,auto2,/river/wilbur-hollow-brook/old-plainfield-peak-near-clayville/
-excluded,,02461130,Valley Creek,Center Saint At Birmingham,AL,21.8,10,85,40,,short-record,,high,/river/valley-creek-al/center-saint-at-birmingham/
+excluded,,02461130,Valley Creek,Center Street At Birmingham,AL,21.8,10,85,40,,short-record,,high,/river/valley-creek-al/center-street-at-birmingham/
 excluded,,08017900,Sabine River,FM 17 Near Golden,TX,21.8,30,54,30,,short-record,,medium,/river/sabine-river-tx/fm-17-near-golden/
 excluded,,03085100,Streets Run,Hays,PA,21.8,10,87,0,,short-record,,auto2,/river/streets-run/hays/
 excluded,,01104453,Stony Brook Unnamed Tributary 2,Weston Station,MA,21.7,10,87,0,,tiny-basin,,medium,/river/stony-brook-unnamed-tributary-2/weston-station/
@@ -8723,7 +8723,7 @@ excluded,,01376534,Richmond Creek,Lighthouse Avenue At Richmond,NY,21.5,10,79,0,
 excluded,,0164578734,Snakeden Branch,Above Lake Audubon At Reston,VA,21.5,10,76,0,,tiny-basin,,high,/river/snakeden-branch/above-lake-audubon-at-reston/
 excluded,,0164579522,The Glade,Howland Drive At Reston,VA,21.5,10,76,0,,tiny-basin,,high,/river/the-glade/howland-drive-at-reston/
 excluded,,0357586650,Fagan Creek,Adams Street At Huntsville,AL,21.5,10,84,0,,short-record,,high,/river/fagan-creek/adams-street-at-huntsville/
-excluded,,0357587728,Dallas Branch,Coleman Saint In Huntsville,AL,21.5,10,83,0,,short-record,,high,/river/dallas-branch/coleman-saint-in-huntsville/
+excluded,,0357587728,Dallas Branch,Coleman Street In Huntsville,AL,21.5,10,83,0,,short-record,,high,/river/dallas-branch/coleman-street-in-huntsville/
 excluded,,05056678,Tolna Coulee,Tolna,ND,21.4,10,0,40,,tiny-basin,,high,/river/tolna-coulee/tolna/
 excluded,,13212890,Dixie Drain,Wilder,ID,21.4,10,71,0,,excluded-name,,high,/river/dixie-drain/wilder/
 excluded,,01538510,Little Nescopeck Creek Tributary,Freeland,PA,21.4,10,70,0,,tiny-basin,,auto2,/river/little-nescopeck-creek-tributary/freeland/
@@ -8779,7 +8779,7 @@ excluded,,16226700,South Halawa Stream,H-3 Freeway Oahu,HI,20.3,10,87,0,,short-r
 excluded,,01477070,Raccoon Creek,Wrights Mill,NJ,20.2,10,69,0,,tiny-basin,,high,/river/raccoon-creek-nj/wrights-mill/
 excluded,,07381670,Giww,Bayou Sale Ridge Near Franklin,LA,20.2,10,57,0,,tiny-basin,,high,/river/giww/bayou-sale-ridge-near-franklin/
 excluded,,12492900,Oak Creek,Above Tieton River Near Naches,WA,20.2,10,72,0,,short-record,,high,/river/oak-creek-wa/above-tieton-river-near-naches/
-excluded,,08474107,Town Resaca,East 6th Saint Brownsville,TX,20.2,10,82,0,,tiny-basin,,medium,/river/town-resaca/east-6th-saint-brownsville/
+excluded,,08474107,Town Resaca,East 6th Street Brownsville,TX,20.2,10,82,0,,tiny-basin,,medium,/river/town-resaca/east-6th-street-brownsville/
 excluded,,10141410,Howard Slough,Howard Slough Wma Near Hooper,UT,20.2,10,74,0,,short-record,,auto2,/river/howard-slough/howard-slough-wma-near-hooper/
 excluded,,08072470,Mason Creek,Prince Creek Court Near Houston,TX,20.2,10,75,0,,short-record,,high,/river/mason-creek-tx/prince-creek-court-near-houston/
 excluded,,07386190,Bayou Fusilier,Above Weir At Arnaudville,LA,20.2,10,75,0,,short-record,,high,/river/bayou-fusilier/above-weir-at-arnaudville/
@@ -8799,7 +8799,7 @@ excluded,,07358250,Whittington Creek,Whitt Peak At Hot Springs,AR,19.8,10,74,0,,
 excluded,,07103792,Reservoir No 1 Spillway,Husted Road At Usafa,CO,19.8,10,87,0,,excluded-name,,low,/river/reservoir-no-1-spillway/husted-road-at-usafa/
 excluded,,381917121411701,Liberty Island,Lower Stair Step Near Courtland,CA,19.8,10,73,0,,short-record,,auto2,/river/liberty-island/lower-stair-step-near-courtland/
 excluded,,11455276,Shag Slough,Liberty Island Near Courtland,CA,19.8,10,73,0,,short-record,,auto2,/river/shag-slough/liberty-island-near-courtland/
-excluded,,07358570,Gulpha Creek,Ridgeway Saint At Hot Springs,AR,19.8,10,73,0,,short-record,,auto2,/river/gulpha-creek/ridgeway-saint-at-hot-springs/
+excluded,,07358570,Gulpha Creek,Ridgeway Street At Hot Springs,AR,19.8,10,73,0,,short-record,,auto2,/river/gulpha-creek/ridgeway-street-at-hot-springs/
 excluded,,07074670,Tuckerman Ditch,Tuckerman,AR,19.7,10,59,0,,excluded-name,,high,/river/tuckerman-ditch/tuckerman/
 excluded,,01119001,Poquonnock River,Long Hill,CT,19.7,10,70,0,,short-record,,high,/river/poquonnock-river/long-hill/
 excluded,,412630070400301,Blackwater Brook,Lamberts Cove,MA,19.7,10,71,0,,short-record,,high,/river/blackwater-brook/lamberts-cove/
@@ -8814,7 +8814,7 @@ excluded,,16720000,Kawainui Stream,Kamuela,HI,19.5,10,0,0,,tiny-basin,,high,/riv
 excluded,,16725000,Alakahi Stream,Kamuela,HI,19.5,10,0,0,,tiny-basin,,high,/river/alakahi-stream/kamuela/
 excluded,,16587000,Honopou Stream,Huelo Maui,HI,19.5,10,0,0,,tiny-basin,,high,/river/honopou-stream/huelo-maui/
 excluded,,01671200,South Anna River,Gordonsville,VA,19.4,10,67,0,,short-record,,high,/river/south-anna-river/gordonsville/
-excluded,,07358257,Hot Sprngs Creek US Of T.e,Glade Saint At Hot Springs,AR,19.4,10,74,0,,tiny-basin,,low,/river/hot-sprngs-creek-us-of-t-e/glade-saint-at-hot-springs/
+excluded,,07358257,Hot Sprngs Creek US Of T.e,Glade Street At Hot Springs,AR,19.4,10,74,0,,tiny-basin,,low,/river/hot-sprngs-creek-us-of-t-e/glade-street-at-hot-springs/
 excluded,,07191165,Columbia Hollow Creek,Decatur,AR,19.4,10,70,0,,short-record,,high,/river/columbia-hollow-creek/decatur/
 excluded,,12078500,Kennedy Creek,New Kamilche,WA,19.4,10,71,0,,short-record,,auto2,/river/kennedy-creek/new-kamilche/
 excluded,,16345000,Opaeula Stream,Wahiawa Oahu,HI,19.3,10,0,0,,tiny-basin,,auto2,/river/opaeula-stream/wahiawa-oahu/
@@ -8844,8 +8844,8 @@ excluded,,08053025,Timber Creek,South Edmonds Ln Lewisville,TX,18.9,10,90,0,,sho
 excluded,,08158823,Div Of Little Bear Creek,Wenzel Near Manchaca,TX,18.9,10,90,0,,short-record,,low,/river/div-of-little-bear-creek/wenzel-near-manchaca/
 excluded,,041015313,Osborn Drain,Dewey Lake Saint Near Glenwood,MI,18.8,10,57,0,,excluded-name,,high,/river/osborn-drain/dewey-lake-saint-near-glenwood/
 excluded,,02403170,Shoal Creek,Heflin,AL,18.8,10,63,0,,short-record,,high,/river/shoal-creek-al/heflin/
-excluded,,12212430,Unnamed Tributary To Bertrand Creek,H Saint Near Lynden,WA,18.8,10,66,0,,tiny-basin,,low,/river/unnamed-tributary-to-bertrand-creek/h-saint-near-lynden/
-excluded,,01480777,Beaver Creek,Mary Saint Field At Downingtown,PA,18.8,10,65,0,,short-record,,high,/river/beaver-creek-pa/mary-saint-field-at-downingtown/
+excluded,,12212430,Unnamed Tributary To Bertrand Creek,H Street Near Lynden,WA,18.8,10,66,0,,tiny-basin,,low,/river/unnamed-tributary-to-bertrand-creek/h-street-near-lynden/
+excluded,,01480777,Beaver Creek,Mary Street Field At Downingtown,PA,18.8,10,65,0,,short-record,,high,/river/beaver-creek-pa/mary-street-field-at-downingtown/
 excluded,,02413215,Indian Creek,Of Teague Road Near Bowdon,GA,18.8,10,66,0,,short-record,,high,/river/indian-creek-ga/of-teague-road-near-bowdon/
 excluded,,11162737,San Mateo C,Below Junction Box A Dam1 Near Hillsborough,CA,18.7,10,83,40,,tiny-basin,,low,/river/san-mateo-c/below-junction-box-a-dam1-near-hillsborough/
 excluded,,04143220,Pine River,Pine River Road Near Standish,MI,18.7,30,22,30,,short-record,1404,high,/river/pine-river-mi/pine-river-road-near-standish/
@@ -8951,7 +8951,7 @@ excluded,,06892900,Turkey Creek,Mission,KS,12.3,10,88,0,,short-record,,high,/riv
 excluded,,16279200,Heeia Stream,Haiku Plantations Drive Oahu,HI,12.2,10,86,0,,tiny-basin,,auto2,/river/heeia-stream/haiku-plantations-drive-oahu/
 excluded,,08330492,Tijeras Arroyo,Coyote Springs Road Near Carnuel,NM,12.1,10,87,0,,short-record,,high,/river/tijeras-arroyo/coyote-springs-road-near-carnuel/
 excluded,,07385765,Bayou Teche,Adeline Bridge Near Jeanerette,LA,11.9,10,64,0,,tiny-basin,,high,/river/bayou-teche/adeline-bridge-near-jeanerette/
-excluded,,08474108,North Main Drain,Manzano Saint Brownsville,TX,11.9,10,82,0,,excluded-name,,high,/river/north-main-drain/manzano-saint-brownsville/
+excluded,,08474108,North Main Drain,Manzano Street Brownsville,TX,11.9,10,82,0,,excluded-name,,high,/river/north-main-drain/manzano-street-brownsville/
 excluded,,103087855,Leviathan Mine Pit Junction Box,Markleeville,CA,11.8,10,0,0,,tiny-basin,,auto2,/river/leviathan-mine-pit-junction-box/markleeville/
 excluded,,16647000,Ukumehame Gulch,Olowalu Maui,HI,11.6,10,0,0,,tiny-basin,,high,/river/ukumehame-gulch/olowalu-maui/
 excluded,,15215900,Glacier River Tributary,Cordova,AK,11.6,10,0,0,,tiny-basin,,high,/river/glacier-river-tributary/cordova/
@@ -9057,12 +9057,12 @@ excluded,,03400785,Martins Fork,Above Smith,KY,1.8,10,0,0,,tiny-basin,,high,/riv
 excluded,,10348801,Steamboat Creek,Washoe Lake Dam At New Washoe City,NV,1.7,10,80,0,,tiny-basin,,auto2,/river/steamboat-creek-nv/washoe-lake-dam-at-new-washoe-city/
 excluded,,08048890,Village Creek,Burleson,TX,1.5,10,83,0,,short-record,,high,/river/village-creek-tx/burleson/
 excluded,,05576193,Sugar Creek,Covered Bridge Road Near Chatham,IL,1.3,10,76,0,,tiny-basin,,high,/river/sugar-creek-il/covered-bridge-road-near-chatham/
-excluded,,12113310,Green River,Below Meeker Saint At Kent,WA,1.3,10,82,0,,short-record,,high,/river/green-river-wa/below-meeker-saint-at-kent/
+excluded,,12113310,Green River,Below Meeker Street At Kent,WA,1.3,10,82,0,,short-record,,high,/river/green-river-wa/below-meeker-street-at-kent/
 excluded,,11312968,Old River,Delta Mendota Canal,CA,1.1,10,81,0,,excluded-name,,high,/river/old-river/delta-mendota-canal/
 excluded,,11447905,Sacramento River,Below Georgiana Slough,CA,0.7,10,78,0,,short-record,,high,/river/sacramento-river/below-georgiana-slough/
 excluded,,11447890,Sacramento River,Above Delta Cross Channel,CA,0.7,10,78,0,,excluded-name,,high,/river/sacramento-river/above-delta-cross-channel/
 excluded,,07364078,Ouachita River,Felsenthal L&d (lower),AR,0.6,10,61,0,,tiny-basin,17076,high,/river/ouachita-river-ar/felsenthal-l-and-d-lower/
-excluded,,12113150,Green River,Above South 277th Saint At Kent,WA,0.6,10,83,0,,tiny-basin,,medium,/river/green-river-wa/above-south-277th-saint-at-kent/
+excluded,,12113150,Green River,Above South 277th Street At Kent,WA,0.6,10,83,0,,tiny-basin,,medium,/river/green-river-wa/above-south-277th-street-at-kent/
 excluded,,14015350,Mill Creek,Last Chance Road Branch Near College Place,WA,0.5,10,69,0,,tiny-basin,,high,/river/mill-creek-wa/last-chance-road-branch-near-college-place/
 excluded,,14070624,Middle Fork Tumalo Creek,Below Prowell Springs Near Bend,OR,0.3,10,0,0,,tiny-basin,,auto2,/river/middle-fork-tumalo-creek/below-prowell-springs-near-bend/
 excluded,,072632963,Maumelle River,Below Bringle Creek Near Wye,AR,0.3,10,70,0,,tiny-basin,,auto2,/river/maumelle-river/below-bringle-creek-near-wye/

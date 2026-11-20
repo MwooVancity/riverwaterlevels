@@ -1417,4 +1417,11 @@ if __name__ == "__main__":
     from lib import blocks3 as b3w_
     wb_ = b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})
     assert wb_ and wb_["tag"] == "ext" and 'href="https://lakeconroe.com/' in wb_["body"] and "<img" not in wb_["body"] and b3w_.b_webcams({"row": {"dashboard_url": "/lake/none/"}}) is None, "webcams: the hand-checked link is missing, an image was copied, or an unlisted water got a block"
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
+    from clean_names import street as st_
+    assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"
+    assert st_("Near Saint Xavier") == "Near Saint Xavier" and st_("Macklind Avenue Saint Louis") == "Macklind Avenue Saint Louis" and st_("Saint Johns") == "Saint Johns", "names: a real Saint place became Street"
+    import csv as csv_
+    bad_ = [r["site"] for r in csv_.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] != "live" and st_(r["place"]) != r["place"]]
+    assert not bad_, "names: queued gauges still say Saint for Street: %s" % bad_[:5]
     print("selftest OK")
