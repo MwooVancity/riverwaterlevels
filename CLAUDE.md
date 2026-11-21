@@ -2,6 +2,9 @@
 
 Status: PLAN.md (history docs/plan-history.md). Calcscrape rules do not apply. Where a rule names code, the code is the rule.
 
+## HARD, ABOVE EVERYTHING: make as much money as possible (owner 2026-11-20: "the entire point of this project")
+Every decision, plan, ChatGPT debate and file is judged first by: does this earn more money (AdSense and other revenue), now or later? Money works inside truth-first and Google's rules (a false or penalised site earns $0), never against them. Small keywords and small waters are never dropped for being small: order by money and ship everything that passes the truth, gain and HCU gates below (decisions 5 and 6 still apply: a page with no data of its own is not built); release 25 a day until the queue is empty (owner 2026-11-20); focus lists only decide what gets hand-improved first. Consult ChatGPT in Chrome before plan-changing decisions and brief it with this objective first (memory: feedback-no-chatgpt).
+
 ## HARD, FIRST: the reader (owner 2026-11-14, said twice)
 A swimmer, kayaker, sailor, surfer, angler, tuber or boater going out on this water for fun today, on a phone, 30 seconds. Water fun first on every template: a live alert, then water now, weather, level and flow, getting on the water, forecast, past years. Flood material only when near, alerted, forecast or unknown (`impacts_near`), else in the bottom fold. Judge every page as that person, never as a hydrologist or flood planner. One static page per gauge, official data, English.
 

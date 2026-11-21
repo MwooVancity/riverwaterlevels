@@ -15,6 +15,13 @@ from lib.common import flow_dir  # noqa: E402
 from lib.hero import beyond, coast_anomaly  # noqa: E402
 from lib.pages import load_effective  # noqa: E402
 
+# percentile jargon on home and state pages: an ordinal NOT followed by a capitalised word. A capitalised word after it is part of a name ('14th Street', '2nd Crossing'); that failed rivers/ga on 2026-11-19 and 11-20 and undid both releases.
+ORD_JARGON = r"\b\d+(?:st|nd|rd|th)\b(?!\s+[A-Z])"
+for _s in ("above the 95th of past years", "at the 5th.", "reading is 3rd highest", "42nd"):  # fixture: still jargon
+    assert re.search(ORD_JARGON, _s), _s
+for _s in ("Chattahoochee River at 14th Street at Columbus", "Pond Creek at 2nd Crossing", "Rock River at 22nd St", "3rd Fork Creek"):  # fixture: names pass
+    assert not re.search(ORD_JARGON, _s), _s
+
 bad = []
 
 
@@ -273,7 +280,7 @@ def main(only=None):
                 fail(rel, "a section heading has nothing under it")
             if rel == "index.html" or rel.startswith("rivers/"):  # home and state pages: plain words in tables, cards and tags; Source lines and the glossary may use the technical terms
                 vis = re.sub(r"<script.*?</script>|<meta[^>]*>|<p class=\"src\">.*?</p>", " ", h, flags=re.S)
-                for pat in (r"\b\d+(?:st|nd|rd|th)\b", r"\babove 95th\b", r"\bbelow 5th\b", r"percentile"):
+                for pat in (ORD_JARGON, r"\babove 95th\b", r"\bbelow 5th\b", r"percentile"):
                     mm = re.search(pat, re.sub(r"<[^>]+>", " ", vis) if pat != r"percentile" else vis)
                     if mm:
                         fail(rel, "jargon %r near %r" % (pat, re.sub(r"\s+", " ", (re.sub(r"<[^>]+>", " ", vis) if pat != r"percentile" else vis)[max(0, mm.start() - 40):mm.end() + 20])))
