@@ -20,6 +20,8 @@ LEVEL = ("62614", "62615", "72020", "00062")
 ELEV = {"62614", "62615", "72020"}  # lake surface elevation; 00062 is a gage height on a local datum
 MIN_YEARS = 1.0
 PRACTICE = 0  # 2026-11-21 Opus review: a gate on the top-tier rows stranded them (release.py never opens a practice gate); the nightly --every-kind practice run is the practice, so no row is gated here (raise only together with a gate that opens)
+STATE_RE = re.compile(r",\s*([A-Z]{2})(?:-[A-Z]{2})*\s*$")
+FAR_OK = {tuple(x.strip().split("|")) for x in open(os.path.join(ROOT, "data", "lake-far-ok.txt"), encoding="utf-8")} if os.path.exists(os.path.join(ROOT, "data", "lake-far-ok.txt")) else set()  # 'name|ST' lines (identity key): a lake with far-apart same-name gauges a person has approved as ONE lake (Opus follow-up: head-term lakes such as Okeechobee must not stay held for ever)
 NOT_LAKE = re.compile(r"\b(canal|lock|afterbay|forebay|tailrace|pond)\b", re.I)
 DROP = {"lake", "lk", "reservoir", "res", "dam"}
 
@@ -70,7 +72,7 @@ def qualify(cands):
     rows, rep = [], []
     for key in list(groups):  # one name in one state with gauges over 10 km apart is two lakes or one long reservoir: never guess (Opus review 2026-11-21), the whole group is held for a person; no second '#2' page
         far = max((km(a, b) for a in groups[key] for b in groups[key]), default=0)
-        if far > 10:
+        if far > 10 and key not in FAR_OK:
             held.extend((c["site"], c["name"], "same lake name and state but gauges %.0f km apart (two lakes or one long reservoir): needs a decision" % far) for c in groups.pop(key))
     for key, g in sorted(groups.items()):
         g.sort(key=lambda c: (-len(set(c["params"]) & ELEV), -len(set(c["params"]) & set(LEVEL)), -(c.get("years") or 0), c["site"]))  # measurement quality first (ChatGPT 2026-11-21): a gauge reporting lake ELEVATION (62614, 62615, 72020) outranks one reporting only 00062 gage height; then more level parameters, longer record, lower id (deterministic)
@@ -110,14 +112,15 @@ def fetch(state=None, days=30):
             yield from d["features"]
             seen.add(url)
             url = next((l["href"] for l in d.get("links", []) if l.get("rel") == "next"), None)
-            if url in seen:  # a next link that points back would loop for ever
+            if url in seen:  # a next link that points back would loop for ever; say so, a cut-short feed is never treated as complete
+                print("WARNING: the API next link repeated, the lake list may be incomplete: %s" % url)
                 break
     locs = [f for f in pages(BASE + q) if f["properties"].get("agency_code") == "USGS"]
     cut = (datetime.datetime.utcnow() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     out = {}
     for f in locs:
         p = f["properties"]
-        m = re.search(r",\s*([A-Z]{2})(?:-[A-Z]{2})*\s*$", p["monitoring_location_name"])  # ', AZ-NV' (Lake Mead, Powell) takes the first state
+        m = STATE_RE.search(p["monitoring_location_name"])  # ', AZ-NV' (Lake Mead, Powell) takes the first state
         out[p["monitoring_location_number"]] = {"site": p["monitoring_location_number"], "name": p["monitoring_location_name"], "state": m.group(1) if m else "",
                                                 "lat": (f.get("geometry") or {}).get("coordinates", [None, None])[1], "lon": (f.get("geometry") or {}).get("coordinates", [None, None])[0], "type": "LK", "params": set(), "years": 0.0}
     ids = sorted(out)
@@ -168,7 +171,7 @@ def show(rows, rep, new):
         print("LAKE %-34s gauges %s primary %s %s %.1f y%s" % (g["lake"], ",".join(g["gauges"]), g["primary"], g["param"], g["years"], "".join("\n     excluded %s: %s" % kv for kv in g["excluded"].items())))
     for s, n, why in rep["held"]:
         print("HELD %s %-40s %s" % (s, n, why))
-    print("accepted %d lakes, %d held, %d new to queue (first %d practice)" % (len(rows), len(rep["held"]), len(new), PRACTICE))
+    print("accepted %d lakes, %d held (%d of them same-name gauges far apart: read these first), %d new to queue (first %d practice)" % (len(rows), len(rep["held"]), sum(1 for _, _, w in rep["held"] if "apart" in w), len(new), PRACTICE))
 
 
 def selftest():
@@ -198,6 +201,12 @@ def selftest():
     assert far == [] and {s for s, _, _ in farrep["held"]} == {"40", "41", "42"} and "apart" in farrep["held"][0][2], (far, farrep)  # one name 150 km apart: the whole group is held, never a '#2' page
     oahe, _o = qualify([dict(c("60", "Lake Oahe nr Pierre, SD"), lat=44.4, lon=-100.4), dict(c("61", "Lake Oahe at Mobridge, SD"), lat=45.5, lon=-100.4)])
     assert oahe == [], oahe  # a long reservoir is held too, with the reason, not split into two pages
+    assert STATE_RE.search("Lake Mead at Hoover Dam, AZ-NV").group(1) == "AZ" and STATE_RE.search("Canyon Lk nr New Braunfels, TX").group(1) == "TX" and not STATE_RE.search("SHASTA DAM (USBR)")  # state from the name
+    assert "no coordinates" in {s: w for s, _, w in qualify([dict(c("70", "X Lk nr Y, MN"), lat=None)])[1]["held"]}["70"]  # a station with no coordinates is held with a reason
+    FAR_OK.add(("okee", "FL"))  # an approved far group becomes ONE lake through the normal primary-gauge path
+    okee = qualify([dict(c("80", "Okee Lk nr A, FL"), lat=26.9, lon=-80.8), dict(c("81", "Okee Lk nr B, FL"), lat=27.1, lon=-81.0)])[0]
+    FAR_OK.discard(("okee", "FL"))
+    assert [r["site"] for r in okee] == ["80"], okee
     near = qualify([dict(c("42", "Silver Lk nr Alpha, MI"), lat=45.0, lon=-85.0), dict(c("43", "Silver Lake near Alpha, MI"), lat=45.01, lon=-85.0)])[0]
     assert [r["site"] for r in near] == ["42"], near  # a second gauge 1 km away is the same lake: one page
     h = {s: w for s, _, w in qualify([c("50", "LK NR Y, MN"), dict(c("51", "Nameless Lk"), state="")])[1]["held"]}
