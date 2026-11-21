@@ -92,7 +92,7 @@ GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  #
 
 
 def lake_fail_h(site):
-    """Hours a lake page may lag USGS: lib/core.py lake_stale_h from the lake's own cached series (a daily lake: 72 h), never under the 12 h of rivers; no cache, 12 h."""
+    """Hours a lake page may lag USGS: lib/core.py lake_stale_h from the lake's own cached series (a daily lake: 48 h, the cap), never under the 12 h of rivers; no cache, 12 h."""
     try:
         from lib.core import lake_stale_h, series
         from lib.common import LAKE_CODES, load_cache

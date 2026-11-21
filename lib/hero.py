@@ -160,11 +160,12 @@ def daily_swing(G):
 
 def future_note(G):
     """Gate audit 0a: USGS sent a reading stamped later than now; it is held and the page shows the last good one, at its real time, and says why."""
+    parts = []  # both notes can apply to one lake (Opus review 2026-11-21): the stuck mark no longer hides the future-time note
     if G.get("lake_note"):
-        return '<p class="src">%s</p>' % esc(G["lake_note"].strip())
-    if not set(G["rec"].get("held_future") or ()) & {"00060", "00065", G.get("lake")}:  # only the series the first screen reads (a water-temperature slip is not the headline)
-        return ""
-    return '<p class="src">USGS sent a newer reading stamped later than the current time; it is held as a likely clock error, and the reading shown is the latest with a valid time.</p>'
+        parts.append(esc(G["lake_note"].strip()))
+    if set(G["rec"].get("held_future") or ()) & {"00060", "00065", G.get("lake")}:  # only the series the first screen reads (a water-temperature slip is not the headline)
+        parts.append("USGS sent a newer reading stamped later than the current time; it is held as a likely clock error, and the reading shown is the latest with a valid time.")
+    return '<p class="src">%s</p>' % " ".join(parts) if parts else ""
 
 
 def model_gap(G, first):
