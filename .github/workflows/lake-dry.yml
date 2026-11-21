@@ -4,6 +4,10 @@ name: lake-dry
 # It writes nothing to the repo: the report (lakes accepted, held with reasons, grouping) is uploaded as an artifact to read before any --apply.
 on:
   workflow_dispatch:
+    inputs:
+      apply:
+        description: 'true = also run --apply in the runner and upload the data diff (the repo is never written)'
+        default: 'false'
 
 permissions:
   contents: read
@@ -21,11 +25,13 @@ jobs:
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: |
-          rc=0; python -I tools/lake_match.py > lake-report.txt 2>&1 || rc=$?
+          rc=0; python -I tools/lake_match.py ${{ inputs.apply == 'true' && '--apply' || '' }} > lake-report.txt 2>&1 || rc=$?; git diff data/ > lake-apply.diff
           tail -3 lake-report.txt
           exit $rc
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: lake-report
-          path: lake-report.txt
+          path: |
+            lake-report.txt
+            lake-apply.diff
