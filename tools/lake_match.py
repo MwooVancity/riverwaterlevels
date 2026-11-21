@@ -125,18 +125,17 @@ def fetch(state=None, days=30):
         if os.environ.get("USGS_API_KEY"):
             h["X-Api-Key"] = os.environ["USGS_API_KEY"].strip()
         get.calls = getattr(get, "calls", 0) + 1
-        waits = (0.3, 30, 90, 180, 600, 900)  # the first nationwide cloud run died on a 429 after 30+90+180 s (2026-11-21): the hourly window needs up to 15 minutes
-        for i, wait in enumerate(waits):
+        wait = 0.3  # a 429 waits what the server says (Retry-After, at most an hour) plus a few seconds, up to 15 tries: the second nationwide run (2026-11-21) died after 6 tries because the first run had just used the hourly quota
+        for i in range(15):
             time.sleep(wait)
             try:
                 return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=120).read())
             except urllib.error.HTTPError as e:
-                if e.code != 429 or i == len(waits) - 1:
+                if e.code != 429 or i == 14:
                     raise
                 ra = str(e.headers.get("Retry-After") or "")
-                if ra.isdigit():  # the server says how long: wait that (at most an hour) plus a few seconds, instead of guessing (Opus review 2026-11-21)
-                    waits = waits[:i + 1] + (min(int(ra), 3600) + 5,) + waits[i + 2:]
-                print("429 on call %d, waiting %s s more (Retry-After: %s, key sent: %s)" % (get.calls, waits[i + 1], ra or "none", "X-Api-Key" in h), flush=True)
+                wait = min(int(ra), 3600) + 5 if ra.isdigit() else 300 * (i + 1)
+                print("429 on call %d, waiting %s s more (Retry-After: %s, key sent: %s)" % (get.calls, wait, ra or "none", "X-Api-Key" in h), flush=True)
     q = "monitoring-locations/items?site_type_code=LK&limit=1000&f=json" + ("&state_code=%s" % state if state else "")
     seen = set()
 
