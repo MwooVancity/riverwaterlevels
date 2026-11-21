@@ -7627,13 +7627,13 @@ held-names,,02387600,Oothkalooga Creek,Ga 53 Spur At Calhoun,GA,59.6,60,69,70,nr
 held-names,,02148000,Wateree River Near Camden,Wateree River Near Camden,SC,59.5,60,74,40,nri,,,low,/river/wateree-river-near-camden/wateree-river-near-camden/
 held-names,,07297910,Pr Dog Twn Fork Red River,Wayside,TX,59.5,85,0,40,"nri,nri-paddle,fame",,,low,/river/pr-dog-twn-fork-red-river/wayside/
 held-names,,04085108,East River @ Cnty Trunk Highway Zz,Greenleaf,WI,59.1,60,75,70,nri,,,low,/river/east-river-cnty-trunk-highway-zz/greenleaf/
-held-names,,05354500,Cannon River,Co Highway 29 Below Faribault,MN,58.8,85,66,70,"nri,nri-paddle,nri-fish",,3598,low,/river/cannon-river/co-highway-29-below-faribault/
+queue,67,05354500,Cannon River,Below Faribault,MN,62.4,85,66,70,"nri,nri-paddle,nri-fish",,3598,human,/river/cannon-river/below-faribault/
 held-names,,02344673,Flat Creek Ds Of Lake,Peachtree City,GA,58.6,65,76,60,tail,,,low,/river/flat-creek-ds-of-lake/peachtree-city/
 held-names,,02344655,Flat Creek Ds Of Lake Kedron,Peachtree City,GA,58.4,65,74,60,tail,,,low,/river/flat-creek-ds-of-lake-kedron/peachtree-city/
 held-names,,02365769,Bruce Creek,Sh 81 Near Redbay,FL,58.2,60,55,70,nri,,,low,/river/bruce-creek/sh-81-near-redbay/
 held-names,,02327355,Ochlockonee River,Ga 188 Near Coolidge,GA,57.9,60,63,70,nri,,,low,/river/ochlockonee-river-ga/ga-188-near-coolidge/
 held-names,,14202650,Wapato Creek,Sw Gaston Road At Gaston,OR,57.7,60,75,70,nri,,,low,/river/wapato-creek/sw-gaston-road-at-gaston/
-held-names,,06036805,Firehole River,Old Faithful Ynp,WY,57.5,70,27,70,"nri,fame",,8930,low,/river/firehole-river/old-faithful-ynp/
+queue,70,06036805,Firehole River,Old Faithful,WY,61.1,70,27,70,"nri,fame",,8930,human,/river/firehole-river/old-faithful/
 held-names,,10145400,Salt Creek,Below Nephi Powerplant Div Near Nephi,UT,57.2,65,59,50,tail,,,low,/river/salt-creek-ut/below-nephi-powerplant-div-near-nephi/
 held-names,,08079510,North Fork Dmf Brazos River,Loop 289 Near Lubbock,TX,56.9,70,85,40,fame,,,low,/river/north-fork-dmf-brazos-river/loop-289-near-lubbock/
 held-names,,02225270,Ohoopee River,Ga 297 Near Swainsboro,GA,56.9,60,57,70,nri,,,low,/river/ohoopee-river/ga-297-near-swainsboro/
@@ -7650,7 +7650,7 @@ held-names,,02356638,Spring Creek Approx 25 Mi US Us27,Colquitt,GA,55.2,60,51,70
 held-names,,05429500,Yahara River,Mc Farland,WI,54.9,30,83,70,,,,low,/river/yahara-river/mc-farland/
 held-names,,02392780,Little River,Ga 5 Near Woodstock,GA,54.8,70,75,70,fame,,,low,/river/little-river-ga/ga-5-near-woodstock/
 held-names,,02212735,Ocmulgee River,Ga 18 At Dames Ferry,GA,54.6,70,77,70,"nri,fame",,,low,/river/ocmulgee-river/ga-18-at-dames-ferry/
-held-names,,02315920,Alapaha River,Ga 125/32 Near Irwinville,GA,54.5,75,63,70,"nri,nri-fish",,6072,low,/river/alapaha-river-ga/ga-125-32-near-irwinville/
+queue,85,02315920,Alapaha River,Irwinville,GA,58.1,75,63,70,"nri,nri-fish",,6072,human,/river/alapaha-river-ga/irwinville/
 held-names,,02318380,Little River,Ga 122 Near Hahira,GA,53.3,70,69,70,fame,,,low,/river/little-river-ga/ga-122-near-hahira/
 held-names,,02301990,Hillsborough River,Above Crystal Spr Near Zephyrhills,FL,53.1,60,75,70,nri,,,low,/river/hillsborough-river/above-crystal-spr-near-zephyrhills/
 held-names,,08080500,Dmf Brazos River,Aspermont,TX,52.9,70,0,40,fame,,,low,/river/dmf-brazos-river/aspermont/
@@ -7660,7 +7660,7 @@ held-names,,08401900,Rocky Arroyo,Highway Brd Near Carlsbad,NM,52.4,30,67,70,,,,
 held-names,,12413470,South Fork Coeur D Alene River,Pinehurst,ID,52.4,60,0,70,nri,,,low,/river/south-fork-coeur-d-alene-river/pinehurst/
 held-names,,05046000,Otter Tail River,Below Orwell D Near Fergus Falls,MN,51.8,30,62,70,,,,low,/river/otter-tail-river/below-orwell-d-near-fergus-falls/
 held-names,,02418230,Sougahatchee Creek,Co Road 188 Near Loachapoka,AL,51.6,60,77,30,nri,,,low,/river/sougahatchee-creek/co-road-188-near-loachapoka/
-held-names,,04067500,Menominee River,Mc Allister,WI,51.5,70,60,40,fame,,7690,low,/river/menominee-river-wi/mc-allister/
+queue,115,04067500,Menominee River,McAllister,WI,55.1,70,60,40,fame,,7690,human,/river/menominee-river-wi/mcallister/
 held-names,,01109403,Ten Mile River Pawtucket Avenue,East Providence,RI,51.5,30,84,70,,,,low,/river/ten-mile-river-pawtucket-avenue/east-providence/
 held-names,,08202700,Seco Creek,Rowe Rh Near D'Hanis,TX,51.3,30,59,70,,,,low,/river/seco-creek/rowe-rh-near-dhanis/
 held-names,,02146381,Sugar Creek,Nc 51 Near Pineville,NC,51.3,30,92,70,,,,low,/river/sugar-creek-nc/nc-51-near-pineville/
@@ -7687,7 +7687,7 @@ held-names,,04136900,Au Sable River,Mc Kinley,MI,48.7,100,0,70,"wsr-rec,wsr-fish
 held-names,,02204520,South River,Ga 81 At Snapping Shoals,GA,48.7,60,69,70,nri,,,low,/river/south-river-ga/ga-81-at-snapping-shoals/
 held-names,,09333500,Dirty Devil River,Above Poison Springs Wsh Near Hanksville,UT,48.4,60,0,40,nri,,,low,/river/dirty-devil-river/above-poison-springs-wsh-near-hanksville/
 held-names,,15086225,Hatchery C,Forest Svc Road 23 Near Coffman Cove,AK,48.4,85,0,30,"nri,nri-paddle,nri-fish",,,low,/river/hatchery-c/forest-svc-road-23-near-coffman-cove/
-held-names,,08032700,Neches River,Sh 7 Near Pollok,TX,48.2,85,67,30,"nri,nri-paddle,nri-fish",,11648,low,/river/neches-river/sh-7-near-pollok/
+queue,144,08032700,Neches River,Pollok,TX,51.8,85,67,30,"nri,nri-paddle,nri-fish",,11648,human,/river/neches-river/pollok/
 held-names,,06043120,Gallatin River,Above Deer Creek Near Big Sky,MT,47.9,85,0,70,"nri,nri-paddle,nri-fish,fame",,,low,/river/gallatin-river/above-deer-creek-near-big-sky/
 held-names,,10171000,Jordan River @ 1700 South @ Salt Lake City,Jordan River @ 1700 South @ Salt Lake City,UT,47.7,30,85,40,,,,low,/river/jordan-river-1700-south-salt-lake-city/jordan-river-1700-south-salt-lake-city/
 held-names,,07327550,Little Washita River East Of Ninnekah,Little Washita River East Of Ninnekah,OK,47.7,30,65,70,,,,low,/river/little-washita-river-east-of-ninnekah/little-washita-river-east-of-ninnekah/
@@ -7752,7 +7752,7 @@ held-names,,06610770,Big Papillion Creek,Q Street At Omaha,NE,38.2,30,90,70,,,,l
 held-names,,09328920,Green River,Mineral Bottom Near Cynlnds Ntl Park,UT,38.0,100,0,0,"wsr,fame",,,low,/river/green-river-ut/mineral-bottom-near-cynlnds-ntl-park/
 held-names,,05429700,Yahara River @ Forton Street Bridge @ Stoughton,Yahara River @ Forton Street Bridge @ Stoughton,WI,38.0,30,80,30,,,,low,/river/yahara-river-forton-street-bridge-stoughton/yahara-river-forton-street-bridge-stoughton/
 held-names,,04073468,Green Lake Inlet,Ct Highway A Near Green Lake,WI,37.7,30,60,30,,,,low,/river/green-lake-inlet/ct-highway-a-near-green-lake/
-held-names,,08447300,Pecos River,Brotherton Rh Near Pandale,TX,37.3,85,32,40,"nri,nri-paddle,fame",,46027,low,/river/pecos-river-tx/brotherton-rh-near-pandale/
+queue,208,08447300,Pecos River,Pandale,TX,40.9,85,32,40,"nri,nri-paddle,fame",,46027,human,/river/pecos-river-tx/pandale/
 held-names,,09041400,Muddy Creek,Below Wolford Mtn Reser Near Kremmling,CO,37.3,30,0,70,,,,low,/river/muddy-creek-co/below-wolford-mtn-reser-near-kremmling/
 held-names,,14240525,North Fork Toutle River,Below Srs Near Kid Valley,WA,37.3,30,0,70,,,,low,/river/north-fork-toutle-river/below-srs-near-kid-valley/
 held-names,,08061548,Muddy Creek,Creek Crossing Ln Near Sachse,TX,37.3,30,91,30,,,,low,/river/muddy-creek-tx/creek-crossing-ln-near-sachse/
@@ -7775,7 +7775,7 @@ held-names,,11121900,Gibraltar Dam Div Weir A Gibraltar Dam,Gibraltar Dam Div We
 held-names,,02302010,Hillsborough River,Below Crystal Spr Near Zephyrhills,FL,34.7,60,75,40,nri,,,low,/river/hillsborough-river/below-crystal-spr-near-zephyrhills/
 held-names,,05549000,Boone Creek,Mc Henry,IL,34.6,10,72,40,,,,low,/river/boone-creek/mc-henry/
 held-names,,07142019,Cheyenne Bottoms Dv,Great Bend,KS,34.5,30,63,30,,,,low,/river/cheyenne-bottoms-dv/great-bend/
-held-names,,08200720,Hondo Creek,Sh 173 Near Hondo,TX,34.4,30,60,70,,,1775,low,/river/hondo-creek/sh-173-near-hondo/
+queue,224,08200720,Hondo Creek,Hondo,TX,38.0,30,60,70,,,1775,human,/river/hondo-creek/hondo/
 held-names,,02195470,Uchee Creek,Ga 104 Near Evans,GA,34.3,30,78,30,,,,low,/river/uchee-creek-ga/ga-104-near-evans/
 held-names,,103530001,Quinn River,Below Confl East Fork South Fork Quinn Near Mc Dermitt,NV,34.2,30,0,70,,,,low,/river/quinn-river/below-confl-east-fork-south-fork-quinn-near-mc-dermitt/
 held-names,,0214196125,Catawba River,Nc Highway 16 Near Millersville,NC,34.1,30,70,70,,,,low,/river/catawba-river-nc/nc-highway-16-near-millersville/
@@ -7796,7 +7796,7 @@ held-names,,02427020,Bogue Chitto Creek,Co Road 115 Below Orrville,AL,31.4,30,60
 held-names,,06794650,Clear Creek 1.75 Mile West Of Polk County Line,Clear Creek 1.75 Mile West Of Polk County Line,NE,30.9,10,67,40,,,,low,/river/clear-creek-1-75-mile-west-of-polk-county-line/clear-creek-1-75-mile-west-of-polk-county-line/
 held-names,,11449255,Scotts C,Above State Route 29 A Upper Lake,CA,30.8,30,55,30,,,,low,/river/scotts-c/above-state-route-29-a-upper-lake/
 held-names,,02335790,Willeo Creek,Ga 120 Near Roswell,GA,30.6,10,79,40,,,,low,/river/willeo-creek/ga-120-near-roswell/
-held-names,,08437710,Pecos River,Rr 1776 Near Grandfalls,TX,30.5,70,32,40,fame,,46027,low,/river/pecos-river-tx/rr-1776-near-grandfalls/
+queue,245,08437710,Pecos River,Grandfalls,TX,34.1,70,32,40,fame,,46027,human,/river/pecos-river-tx/grandfalls/
 held-names,,10301300,Walker River,Below Mason Vly Wma At Rr Xing Near Wabuska,NV,30.4,70,50,40,fame,,,low,/river/walker-river/below-mason-vly-wma-at-rr-xing-near-wabuska/
 held-names,,07241506,Crutcho Creek,Se 29th Street At Boone Township,OK,29.7,10,92,40,,,,low,/river/crutcho-creek/se-29th-street-at-boone-township/
 held-names,,02308950,Saint Joe Creek,62nd Street Near Pinellas Park,FL,29.6,10,85,40,,,,low,/river/saint-joe-creek/62nd-street-near-pinellas-park/
@@ -7809,7 +7809,7 @@ held-names,,01017060,Hardwood Brook,Below Glidden Brk Near Caribou Maine,ME,27.2
 held-names,,01446775,Bushkill Creek,Above Rt 33 Bridge At Tatamy,PA,26.8,30,75,30,,,,low,/river/bushkill-creek/above-rt-33-bridge-at-tatamy/
 held-names,,08012300,Byu Queue De Tortue @ Riceville,Byu Queue De Tortue @ Riceville,LA,26.7,10,59,40,,,,low,/river/byu-queue-de-tortue-riceville/byu-queue-de-tortue-riceville/
 held-names,,02202680,Ogeechee River,Ga 204 Near Ellabell,GA,26.5,30,78,70,,,,low,/river/ogeechee-river/ga-204-near-ellabell/
-held-names,,02207120,Yellow River,Ga 124 Near Lithonia,GA,26.4,30,68,70,,,3059,low,/river/yellow-river-ga/ga-124-near-lithonia/
+queue,213,02207120,Yellow River,Lithonia,GA,40.0,30,68,70,,,3059,human,/river/yellow-river-ga/lithonia/
 held-names,,08171290,Blanco River,Halifax Rch Near Kyle,TX,25.7,30,76,70,,,,low,/river/blanco-river/halifax-rch-near-kyle/
 held-names,,02372422,Conecuh River,Below Point A Dam Near River Falls,AL,25.6,30,61,30,,,,low,/river/conecuh-river/below-point-a-dam-near-river-falls/
 held-names,,10328500,L Humboldt River,Below Chimney Dm Near Paradise Valley,NV,25.4,30,0,30,,,,low,/river/l-humboldt-river/below-chimney-dm-near-paradise-valley/

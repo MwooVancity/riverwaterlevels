@@ -7,3 +7,12 @@ site,river,place,reason
 01555000,Penns Creek,Penns Creek,raw name repeats the creek; place is the village of Penns Creek
 05341498,Apple River,Above Park In Somerset,raw place carried a gauge number
 03266560,Mad River,West Liberty,raw place carried a state and gauge number
+08447300,Pecos River,Pandale,"USGS name 'Pecos Rv at Brotherton Rh nr Pandale, TX': place is the town; 'Rh' not expanded without proof"
+08437710,Pecos River,Grandfalls,"USGS name 'Pecos Rv at RR 1776 nr Grandfalls, TX': place is the town; road number dropped"
+08032700,Neches River,Pollok,"USGS name 'Neches Rv at SH 7 nr Pollok, TX': place is the town; road dropped"
+06036805,Firehole River,Old Faithful,"USGS name 'Firehole River at Old Faithful, YNP': YNP is Yellowstone National Park"
+04067500,Menominee River,McAllister,"USGS name 'MENOMINEE RIVER NEAR MC ALLISTER, WI': Mc Allister is McAllister, WI"
+02315920,Alapaha River,Irwinville,"USGS name 'ALAPAHA RIVER AT GA 125/32 NEAR IRWINVILLE, GA': place is the town; road dropped"
+05354500,Cannon River,Below Faribault,"USGS name 'CANNON RIVER AT CO. HWY. 29 BELOW FARIBAULT, MN': below the city; road dropped"
+02207120,Yellow River,Lithonia,"USGS name 'YELLOW RIVER AT GA 124, NEAR LITHONIA, GA': place is the town; road dropped"
+08200720,Hondo Creek,Hondo,"USGS name 'Hondo Ck at SH 173 nr Hondo, TX': place is the town; road dropped"
