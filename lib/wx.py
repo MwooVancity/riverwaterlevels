@@ -364,7 +364,7 @@ def met_forecast(hourly, daily, zone):
     return out
 
 
-def suspect(series, unit, now):
+def suspect(series, unit, now, lake=False):
     """(hold, note) for a reading that may be false, from its own series. A time in the future is wrong, so it holds; a flat week or a jump in one step may be real, so the page says so and shows it."""
     if not series:
         return False, ""
@@ -381,7 +381,8 @@ def suspect(series, unit, now):
         i -= 1
         lo, hi = min(lo, pts[i][1]), max(hi, pts[i][1])
     flat = pts[-1][0] - pts[i][0]
-    if len(pts) - i >= 24 and flat >= datetime.timedelta(hours=48):
+    need_n, need_h = (3, 168) if lake else (24, 48)  # a lake reports daily and sits still for days: 168 h flat (a 0.4 ft seiche is more than one step, so never flat)
+    if len(pts) - i >= need_n and flat >= datetime.timedelta(hours=need_h):
         return False, "Reading has not changed by %s or more in %s; the sensor may be stuck. " % ("1 cm" if unit == "cm" else "0.01 %s" % unit, ("%d days" % flat.days) if flat.days >= 3 else "%d hours" % (flat.total_seconds() // 3600))
     return False, ""
 

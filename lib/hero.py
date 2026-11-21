@@ -88,6 +88,10 @@ def ctx(site, row, rec, now):
         out["ldate"] = lt.astimezone(zoneinfo.ZoneInfo(out["agy"]["day_tz"])).date()
     if out["agy"] and out["agy"]["every"].startswith("daily"):  # a daily value is 1.5-3 days old when Reclamation posts it (Mead 2026-11-07: Nov 4 value posted Nov 5 13:58 UTC): "not reporting" only past 4 days
         out["offline"] = age_min > 96 * 60
+    out["lake_note"] = ""
+    if lake in ("62614", "62615", "72020", "00062") and sg:  # USGS lake elevation only; the limit never tightens the 24 h rule for a fast lake
+        out["offline"] = age_min > max(24.0, lake_stale_h([x[0] for x in sg])) * 60
+        out["lake_note"] = wx.suspect([(x[0].isoformat(), x[1]) for x in sg], "ft", now, lake=True)[1]
     out["coast"] = bool(row.get("coast"))  # USGS parameter code of the lake elevation, or None
     out["feed"] = rec.get("feed") or {}
     day_ago = min(sg, key=lambda x: abs((x[0] - (sg[-1][0] - datetime.timedelta(hours=24))).total_seconds())) if stage_only else None
@@ -156,6 +160,8 @@ def daily_swing(G):
 
 def future_note(G):
     """Gate audit 0a: USGS sent a reading stamped later than now; it is held and the page shows the last good one, at its real time, and says why."""
+    if G.get("lake_note"):
+        return '<p class="src">%s</p>' % esc(G["lake_note"].strip())
     if not set(G["rec"].get("held_future") or ()) & {"00060", "00065", G.get("lake")}:  # only the series the first screen reads (a water-temperature slip is not the headline)
         return ""
     return '<p class="src">USGS sent a newer reading stamped later than the current time; it is held as a likely clock error, and the reading shown is the latest with a valid time.</p>'

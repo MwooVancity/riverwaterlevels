@@ -91,7 +91,32 @@ def coops_verdict(pt, pv, got):
 GAUGE_ID = re.compile(r'var ID="USGS-(\d{7,15})"|USGS (?:lake )?gauge (\d+)')  # release 2026-11-08 stopped: 11 lake pages say "USGS lake gauge", the old pattern read no id
 
 
+def lake_fail_h(site):
+    """Hours a lake page may lag USGS: lib/core.py lake_stale_h from the lake's own cached series (a daily lake: 72 h), never under the 12 h of rivers; no cache, 12 h."""
+    try:
+        from lib.core import lake_stale_h, series
+        from lib.common import LAKE_CODES, load_cache
+        rec = load_cache(site)
+        s = next(x for x in (series(rec, c) for c in LAKE_CODES[:4]) if x)
+        return max(STALE_FAIL_H, lake_stale_h([x[0] for x in s]))
+    except Exception:
+        return STALE_FAIL_H
+
+
 def selftest():
+    from lib.core import lake_stale_h
+    from lib import wx
+    H_, N_ = datetime.timedelta(hours=1), datetime.datetime(2026, 11, 20, tzinfo=datetime.timezone.utc)
+    day_ = [N_ - 24 * H_ * i for i in range(10, 0, -1)]  # one reading a day
+    q15_ = [N_ - H_ * i / 4 for i in range(96, 0, -1)]  # one every 15 minutes
+    stale_ = lambda ts, age: age > lake_stale_h(ts)
+    assert not stale_(day_, 20) and not stale_(day_, 60) and stale_(day_, 100), "daily lake: 20 h and 60 h fresh (limit 72), 100 h stale"
+    assert stale_(q15_, 4) and not stale_(q15_, 2.9), "15-minute lake: 4 h stale (3 h floor)"
+    assert lake_stale_h([N_ - 40 * 24 * H_, N_]) == 96.0 and lake_stale_h([N_]) == 12.0, "cap 96 h; one reading falls back to 12 h"
+    z_ = lambda i: (N_ - H_ * i).isoformat()
+    assert "not changed" in wx.suspect([(z_(i), 1000.5) for i in range(168, -1, -24)], "ft", N_, lake=True)[1], "168 flat hours on a daily lake not marked"
+    assert wx.suspect([(z_(i), 1000.5 + 0.4 * (i // 24 % 2)) for i in range(168, -1, -24)], "ft", N_, lake=True) == (False, ""), "a 0.4 ft seiche over 168 h was called stuck"
+    assert wx.suspect([(z_(i), 1000.5) for i in range(100, -1, -24)], "ft", N_, lake=True) == (False, ""), "100 flat hours on a lake was called stuck"
     T_ = datetime.datetime(2026, 11, 8, 15, 50, tzinfo=datetime.timezone.utc)
     assert wt_verdict(T_, 54, [(T_, 12.0)]) is None and "USGS latest" in wt_verdict(T_, 60, [(T_, 12.0)]) and wt_verdict(T_, 60, [(T_ + datetime.timedelta(hours=1), 12.0)]) is None and wt_verdict(T_, None, [(T_, 12.0)]) is None and wt_verdict(T_, 60, [(T_, 12.0), (T_, 15.6)]) is None, "water temperature not compared with USGS"
     rj_ = {"results": [{"layerId": 7, "attributes": {"idp_issueddate": "11/9/2026 7:00:00 AM"}}, {"layerId": 8, "attributes": {"name": "nws_precip_last24hours_conus", "Service Pixel Value": "0.31"}}]}
@@ -327,8 +352,8 @@ def main():
             elif any(gt == pg["t"] for gt, _ in got):
                 if not any(gt == pg["t"] and abs(gv - pg["stage"]) <= 0.02 for gt, gv in got):
                     bad.append("%s: lake elevation %s on the page, USGS %s for the same time" % (pg["url"], pg["stage"], [gv for gt, gv in got if gt == pg["t"]]))
-            elif max(gt for gt, _ in got) > pg["t"] and (max(gt for gt, _ in got) - pg["t"]).total_seconds() / 3600 > STALE_FAIL_H:
-                bad.append("%s: page is more than %d h behind USGS" % (pg["url"], STALE_FAIL_H))
+            elif max(gt for gt, _ in got) > pg["t"] and (max(gt for gt, _ in got) - pg["t"]).total_seconds() / 3600 > lake_fail_h(site_of.get(pg["url"])):
+                bad.append("%s: page is more than %d h behind USGS" % (pg["url"], lake_fail_h(site_of.get(pg["url"]))))
             continue
         u = latest.get((sid, "00060"))
         if not u:

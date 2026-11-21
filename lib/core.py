@@ -295,6 +295,13 @@ def stale_after(bid):
     return STALE_H.get(bid, 12)
 
 
+def lake_stale_h(times):
+    """Lake gauges only (owner spec 2026-11-21): a lake that reports once a day is not 'not reporting' after 12 h. 3 x the series' own median reading interval, floor 3 h, cap 96 h. Page (lib/hero.py) and tools/truth_live.py both call this; rivers keep STALE_H."""
+    ts = sorted(times)
+    gaps = sorted((b - a).total_seconds() / 3600 for a, b in zip(ts, ts[1:]) if b > a)
+    return min(96.0, max(3.0, 3 * gaps[len(gaps) // 2])) if gaps else 12.0  # ponytail: one reading is no interval, so the old 12 h
+
+
 def age_chip(age_min):
     """The age chip's colour class (gauge page and status page): STALE_H, the same cut-offs as LIVE_JS and worker/index.js."""
     return "fresh" if age_min <= STALE_H["chip_fresh"] * 60 else "ageing" if age_min <= STALE_H["chip_ageing"] * 60 else "stale"
