@@ -1078,12 +1078,7 @@ def stat_range(comment):
 def fetch_floodfreq(site):
     """USGS StreamStats gage statistics: annual exceedance probability (AEP) peak flows with their published confidence intervals.
     Not shown (regulated=True or conflict=True) when the station is regulated or when USGS publishes more than one preferred set that disagree by over 10% at the 1% flow."""
-    try:
-        j = thr_json("https://streamstats.usgs.gov/gagestatsservices/stations/" + site, None, 60, gap=1.0)
-    except urllib.error.HTTPError as e:
-        if e.code == 400:  # 2026-11-21: StreamStats answers 400 'station not found' for a gauge it has no statistics for (21 of 21 failed every run): no statistics, not a failure; the page shows no flood-frequency block
-            return None
-        raise
+    j = thr_json("https://streamstats.usgs.gov/gagestatsservices/stations/" + site, None, 60, gap=1.0)  # 2026-11-21: 21 of 21 answer HTTP 400 every run; cause not yet proven (station not found, or our request), so the failure stays visible; the source lifecycle (PLAN.md) will classify it from the response body
     groups, dur = {}, {}
     for s in j.get("statistics") or []:
         md = re.match(r"^([\d.]+) Percent Duration$", (s.get("regressionType") or {}).get("name") or "")
@@ -2264,8 +2259,8 @@ def gbif_name(key):
     if key not in _GBIF_NAMES:
         sci, com = http_json("https://api.gbif.org/v1/species/%s" % key, None, 30).get("canonicalName") or "", None
         try:
-            hit = next((x["tsn"] for x in http_json("https://www.itis.gov/ITISWebService/jsonservice/searchByScientificName?srchKey=" + urllib.parse.quote(sci), None, 30).get("scientificNames") or [] if x and x.get("combinedName") == sci), None)
-            en = [c["commonName"] for c in http_json("https://www.itis.gov/ITISWebService/jsonservice/getCommonNamesFromTSN?tsn=" + hit, None, 30).get("commonNames") or [] if c and c.get("language") == "English"] if hit else []
+            hit = next((x["tsn"] for x in http_json("https://www.itis.gov/ITISWebService/jsonservice/searchByScientificName?srchKey=" + urllib.parse.quote(sci), None, 30, encoding="latin-1").get("scientificNames") or [] if x and x.get("combinedName") == sci), None)
+            en = [c["commonName"] for c in http_json("https://www.itis.gov/ITISWebService/jsonservice/getCommonNamesFromTSN?tsn=" + hit, None, 30, encoding="latin-1").get("commonNames") or [] if c and c.get("language") == "English"] if hit else []
             com = ", ".join(en[:3]) or None  # ITIS lists several with no preferred flag (blueback salmon, kokanee, red salmon...): up to three, as readers search any of them
         except Exception as e:  # ITIS down: the scientific name alone this time, never a guessed common name; not remembered, so the next page asks again
             note("itis", "failed", e)

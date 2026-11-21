@@ -46,7 +46,9 @@ def blame(pages, rows, rel, picks):
         parts = k.split("/")
         st = parts[1] if parts[0] == "rivers" and len(parts) == 3 else None
         hub = "/" + "/".join(parts[:-1]) + "/" if parts[0] == "river" and len(parts) == 3 else None
-        hit = [p for p in picks if p in rows and ((st and (rows[p].get("state") or "").lower() == st) or (hub and (rows[p].get("dashboard_url") or "").startswith(hub)))]
+        text = " ".join(v).lower()  # evidence, not just a state: a pick is blamed only when its own name appears in the failure message (2026-11-21 audit: a state hub failing for another reason must not send good gauges back)
+        hit = [p for p in picks if p in rows and ((st and (rows[p].get("state") or "").lower() == st) or (hub and (rows[p].get("dashboard_url") or "").startswith(hub)))
+               and any(len(n) > 3 and n.lower() in text for n in (rows[p].get("place"), rows[p].get("raw_name")) if n)]
         if not hit:
             return None
         for p in hit:
@@ -55,19 +57,20 @@ def blame(pages, rows, rel, picks):
 
 
 def selftest():
-    rows = {"A": {"state": "GA", "dashboard_url": "/river/chattahoochee-river/columbus/"}, "B": {"state": "CO", "dashboard_url": "/river/x/y/"}, "O": {"state": "GA", "dashboard_url": "/river/old/z/"}}
+    rows = {"A": {"state": "GA", "place": "Columbus", "dashboard_url": "/river/chattahoochee-river/columbus/"}, "B": {"state": "CO", "place": "Yampa", "dashboard_url": "/river/x/y/"}, "O": {"state": "GA", "place": "Old", "dashboard_url": "/river/old/z/"}}
     rel = {r["dashboard_url"].strip("/") + "/index.html": s for s, r in rows.items()}
     picks = {"A", "B"}
-    assert blame({"rivers/ga/index.html": ["jargon"]}, rows, rel, picks) == {"A": ["jargon"]}
+    assert blame({"rivers/ga/index.html": ["jargon near 'River at 14th Street at Columbus'"]}, rows, rel, picks) == {"A": ["jargon near 'River at 14th Street at Columbus'"]}
+    assert blame({"rivers/ga/index.html": ["template variable missing"]}, rows, rel, picks) is None  # the message does not name the pick: unattributable, the release is undone
+    assert blame({"river/x/y/index.html": ["Yampa x"]}, rows, rel, picks) == {"B": ["Yampa x"]}
     assert blame({"index.html": ["x"]}, rows, rel, picks) is None  # home page: site-level
     assert blame({"rivers/tx/index.html": ["x"]}, rows, rel, picks) is None  # a state with no new pick
-    assert blame({"river/x/y/index.html": ["x"]}, rows, rel, picks) == {"B": ["x"]}
     import tempfile
     from lib.common import fail_pages
-    d = tempfile.mkdtemp()
-    fail_pages(d, {"rivers/ga/index.html": ["m"]}, ["s"])
-    fail_pages(d, {"a/index.html": ["n"]})
-    f = json.load(open(os.path.join(d, "_failed.json"), encoding="utf-8"))
+    with tempfile.TemporaryDirectory() as d:
+        fail_pages(d, {"rivers/ga/index.html": ["m"]}, ["s"])
+        fail_pages(d, {"a/index.html": ["n"]})
+        f = json.load(open(os.path.join(d, "_failed.json"), encoding="utf-8"))
     assert set(f["pages"]) == {"rivers/ga/index.html", "a/index.html"} and f["site"] == ["s"]
     print("quarantine selftest OK")
 

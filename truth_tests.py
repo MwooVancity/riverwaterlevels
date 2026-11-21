@@ -17,10 +17,12 @@ from lib.pages import load_effective  # noqa: E402
 
 # percentile jargon on home and state pages: an ordinal NOT followed by a capitalised word. A capitalised word after it is part of a name ('14th Street', '2nd Crossing'); that failed rivers/ga on 2026-11-19 and 11-20 and undid both releases.
 ORD_JARGON = r"\b\d+(?:st|nd|rd|th)\b(?!\s+[A-Z])"
-for _s in ("above the 95th of past years", "at the 5th.", "reading is 3rd highest", "42nd"):  # fixture: still jargon
-    assert re.search(ORD_JARGON, _s), _s
+for _s in ("above the 95th of past years", "at the 5th.", "reading is 3rd highest", "42nd", re.sub(r"<[^>]+>", " | ", "<td>95th</td><td>Above normal</td>"), re.sub(r"<[^>]+>", " | ", "<b>90th</b> High")):  # fixture: still jargon, also across table cells and tags
+    if not re.search(ORD_JARGON, _s):  # explicit, so python -O cannot drop the fixture
+        raise SystemExit("ordinal fixture: should be jargon: %r" % _s)
 for _s in ("Chattahoochee River at 14th Street at Columbus", "Pond Creek at 2nd Crossing", "Rock River at 22nd St", "3rd Fork Creek"):  # fixture: names pass
-    assert not re.search(ORD_JARGON, _s), _s
+    if re.search(ORD_JARGON, _s):
+        raise SystemExit("ordinal fixture: a name must pass: %r" % _s)
 
 bad = []
 
@@ -280,8 +282,8 @@ def main(only=None):
                 fail(rel, "a section heading has nothing under it")
             if rel == "index.html" or rel.startswith("rivers/"):  # home and state pages: plain words in tables, cards and tags; Source lines and the glossary may use the technical terms
                 vis = re.sub(r"<script.*?</script>|<meta[^>]*>|<p class=\"src\">.*?</p>", " ", h, flags=re.S)
-                for pat in (ORD_JARGON, r"\babove 95th\b", r"\bbelow 5th\b", r"percentile"):
-                    mm = re.search(pat, re.sub(r"<[^>]+>", " ", vis) if pat != r"percentile" else vis)
+                for pat in (ORD_JARGON, r"(?i)\b\d+(?:st|nd|rd|th)\s+percentile\b", r"\babove 95th\b", r"\bbelow 5th\b", r"percentile"):  # the second: a capitalised 'Percentile' after an ordinal is not a name
+                    mm = re.search(pat, re.sub(r"<[^>]+>", " | " if pat == ORD_JARGON else " ", vis) if pat != r"percentile" else vis)  # ' | ' for the ordinal rule: its 'followed by a capitalised word' exemption must not jump from one table cell to the next (Opus review 2026-11-21)
                     if mm:
                         fail(rel, "jargon %r near %r" % (pat, re.sub(r"\s+", " ", (re.sub(r"<[^>]+>", " ", vis) if pat != r"percentile" else vis)[max(0, mm.start() - 40):mm.end() + 20])))
     # 9. related gauges are symmetric: when page A links B as upstream or downstream, B's page links back to A

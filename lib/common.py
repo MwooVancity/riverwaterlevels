@@ -73,13 +73,15 @@ def http_open(url, headers=None, timeout=40, tries=3):
             time.sleep(5 if i == 0 else 20)
 
 
-def http_json(url, headers=None, timeout=90):
+def http_json(url, headers=None, timeout=90, encoding=None):
     req = urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels-build"})
     raw = urllib.request.urlopen(req, timeout=timeout).read()
-    try:
-        return json.loads(raw)
-    except UnicodeDecodeError:  # ITIS sends latin-1 bytes ('Lacep\xe8de') that never decoded as utf-8; the source never worked (2026-11-21)
-        return json.loads(raw.decode("latin-1"))
+    if encoding:  # only for a source known to send another charset (ITIS sends latin-1, 2026-11-21): utf-8 first, so a reply that is really utf-8 is never garbled; every other source keeps the strict default
+        try:
+            raw = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            raw = raw.decode(encoding)
+    return json.loads(raw)
 
 
 def load_cache(site):
