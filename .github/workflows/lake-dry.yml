@@ -20,8 +20,12 @@ jobs:
       - name: Nationwide lake qualifier, dry run
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
-        run: python -I tools/lake_match.py > lake-report.txt 2>&1 || true; tail -3 lake-report.txt
-      - uses: actions/upload-artifact@v4
+        run: |
+          python -I tools/lake_match.py > lake-report.txt 2>&1; rc=$?
+          tail -3 lake-report.txt
+          exit $rc
+      - uses: actions/upload-artifact@v7
+        if: always()
         with:
           name: lake-report
           path: lake-report.txt

@@ -8,7 +8,7 @@ Keyword tiers only ORDER accepted lakes (the first PRACTICE of them ship noindex
 Dry run prints the grouping report and the held list. --apply appends data/lakes.csv and queues data/waves.csv (status queue, signals lake), never touches an
 existing row, so a re-run adds nothing. Network: fetch() only, the USGS Water Data API collect.py uses (BASE). Usage:
   python -I tools/lake_match.py [--state 48] [--apply] | --selftest"""
-import csv, datetime, os, re, sys, urllib.request, json
+import csv, datetime, os, re, sys, urllib.error, urllib.request, json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
