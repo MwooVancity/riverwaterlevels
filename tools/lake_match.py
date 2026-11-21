@@ -17,6 +17,7 @@ from lib.common import TAILWATER  # the one shared rule (below a dam, tailrace, 
 
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 LEVEL = ("62614", "62615", "72020", "00062")
+ELEV = {"62614", "62615", "72020"}  # lake surface elevation; 00062 is a gage height on a local datum
 MIN_YEARS = 1.0
 PRACTICE = 5
 NOT_LAKE = re.compile(r"\b(canal|lock|afterbay|forebay|tailrace|pond)\b", re.I)
@@ -60,7 +61,7 @@ def qualify(cands):
         groups.setdefault(identity(c["name"], c["state"]), []).append(c)
     rows, rep = [], []
     for key, g in sorted(groups.items()):
-        g.sort(key=lambda c: (-len(set(c["params"]) & set(LEVEL)), -(c.get("years") or 0), c["site"]))  # ponytail: deterministic, no scoring
+        g.sort(key=lambda c: (-len(set(c["params"]) & ELEV), -len(set(c["params"]) & set(LEVEL)), -(c.get("years") or 0), c["site"]))  # measurement quality first (ChatGPT 2026-11-21): a gauge reporting lake ELEVATION (62614, 62615, 72020) outranks one reporting only 00062 gage height; then more level parameters, longer record, lower id (deterministic)
         p = g[0]
         rows.append(dict(p, key=key))
         rep.append({"lake": "%s %s" % key, "gauges": [c["site"] for c in g], "primary": p["site"],
@@ -155,6 +156,8 @@ def selftest():
     held = {s: w for s, _, w in rep["held"]}
     assert set(held) == {"4", "5", "6", "7", "9"}, held  # tailrace and 'Savannah R below Hartwell Dam' held, 00065-only rejected, 4 months rejected, river type rejected
     assert "tailwater" in held["5"] and "last 30 days" in held["6"] and "history" in held["7"]
+    two = qualify([c("20", "Gage Lk nr A, OK", ("00062",), 30), c("30", "Gage Lake near B, OK", ("62614",), 2)])[0]  # a lake ELEVATION gauge beats a longer 00062 gage-height record (ChatGPT 2026-11-21)
+    assert [r["site"] for r in two] == ["30"], two
     assert qualify(cands) == (rows, rep)  # deterministic
     for _ in range(2):  # lowest id wins a full tie
         r2, _r = qualify([c("20", "Tie Lk, OH"), c("10", "Tie Lk, OH")])

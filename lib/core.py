@@ -299,7 +299,7 @@ def lake_stale_h(times):
     """Lake gauges only (owner spec 2026-11-21): a lake that reports once a day is not 'not reporting' after 12 h. 3 x the series' own median reading interval, floor 3 h, cap 96 h. Page (lib/hero.py) and tools/truth_live.py both call this; rivers keep STALE_H."""
     ts = sorted(times)
     gaps = sorted((b - a).total_seconds() / 3600 for a, b in zip(ts, ts[1:]) if b > a)
-    return min(96.0, max(3.0, 3 * gaps[len(gaps) // 2])) if gaps else 12.0  # ponytail: one reading is no interval, so the old 12 h
+    return min(48.0, max(3.0, 3 * gaps[len(gaps) // 2])) if gaps else 12.0  # cap 48 h (ChatGPT debate 2026-11-21: a boater deciding today must not see a four-day-old reading as current)  # ponytail: one reading is no interval, so the old 12 h
 
 
 def age_chip(age_min):

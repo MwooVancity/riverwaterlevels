@@ -110,9 +110,9 @@ def selftest():
     day_ = [N_ - 24 * H_ * i for i in range(10, 0, -1)]  # one reading a day
     q15_ = [N_ - H_ * i / 4 for i in range(96, 0, -1)]  # one every 15 minutes
     stale_ = lambda ts, age: age > lake_stale_h(ts)
-    assert not stale_(day_, 20) and not stale_(day_, 60) and stale_(day_, 100), "daily lake: 20 h and 60 h fresh (limit 72), 100 h stale"
+    assert not stale_(day_, 20) and not stale_(day_, 40) and stale_(day_, 60), "daily lake: 20 h and 40 h fresh, 60 h stale (limit 72 capped at 48)"
     assert stale_(q15_, 4) and not stale_(q15_, 2.9), "15-minute lake: 4 h stale (3 h floor)"
-    assert lake_stale_h([N_ - 40 * 24 * H_, N_]) == 96.0 and lake_stale_h([N_]) == 12.0, "cap 96 h; one reading falls back to 12 h"
+    assert lake_stale_h([N_ - 40 * 24 * H_, N_]) == 48.0 and lake_stale_h([N_]) == 12.0, "cap 48 h; one reading falls back to 12 h"
     z_ = lambda i: (N_ - H_ * i).isoformat()
     assert "not changed" in wx.suspect([(z_(i), 1000.5) for i in range(168, -1, -24)], "ft", N_, lake=True)[1], "168 flat hours on a daily lake not marked"
     assert wx.suspect([(z_(i), 1000.5 + 0.4 * (i // 24 % 2)) for i in range(168, -1, -24)], "ft", N_, lake=True) == (False, ""), "a 0.4 ft seiche over 168 h was called stuck"
