@@ -43,7 +43,7 @@ live,1,01108000,Taunton River,Bridgewater,MA,88.8,100,75,70,"wsr-rec,wsr-fish,ws
 live,1,09364500,Animas River,Farmington,NM,88.7,100,75,70,fame,,,high,/river/animas-river-nm/farmington/
 live,1,02235000,Wekiva River,Sanford,FL,88.6,100,74,70,"wsr-rec,wsr-fish,wsr",,,high,/river/wekiva-river/sanford/
 live,1,01097000,Assabet River,Maynard,MA,88.6,100,74,70,"wsr-rec,wsr",,,high,/river/assabet-river/maynard/
-excluded,1,02320700,Santa Fe River,Graham,FL,88.4,100,77,70,"nri,fame",,,auto2,/river/santa-fe-river-fl/graham/
+queue,1,02320700,Santa Fe River,Graham,FL,88.4,100,77,70,"nri,fame",,,auto2,/river/santa-fe-river-fl/graham/
 queue,1,07094500,Arkansas River,Parkdale,CO,88.3,100,72,70,"nri,nri-fish,fame",no-usgs-rows,104327,high,/river/arkansas-river-co/parkdale/
 live,1,01503000,Susquehanna River,Conklin,NY,88.2,100,71,70,fame,,,high,/river/susquehanna-river-ny/conklin/
 live,1,01668000,Rappahannock River,Fredericksburg,VA,88.2,100,72,70,"nri,nri-fish,fame",,,high,/river/rappahannock-river/fredericksburg/
