@@ -101,8 +101,18 @@ def plan(rows, have_sites, have_keys, tiers, have_slugs=()):
 
 def fetch(state=None, days=30):
     """The only network code. USGS lake locations (type LK, agency USGS), then their series metadata: params still reporting and the span of the level series."""
-    def get(url):
-        return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com lake_match"}), timeout=120).read())
+    def get(url):  # paced, with the USGS key when the environment has one, and a backoff on HTTP 429 (the laptop was rate-limited after repeated Texas runs, 2026-11-21)
+        import time
+        h = {"User-Agent": "riverwaterlevels.com lake_match"}
+        if os.environ.get("USGS_API_KEY"):
+            h["X-Api-Key"] = os.environ["USGS_API_KEY"].strip()
+        for wait in (0.3, 30, 90, 180):
+            time.sleep(wait)
+            try:
+                return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=120).read())
+            except urllib.error.HTTPError as e:
+                if e.code != 429 or wait == 180:
+                    raise
     q = "monitoring-locations/items?site_type_code=LK&limit=1000&f=json" + ("&state_code=%s" % state if state else "")
     seen = set()
 

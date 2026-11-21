@@ -1,0 +1,27 @@
+name: lake-dry
+
+# One controlled nationwide dry run of tools/lake_match.py in the cloud (ChatGPT debate 2026-11-21: never from the laptop, which was rate-limited).
+# It writes nothing to the repo: the report (lakes accepted, held with reasons, grouping) is uploaded as an artifact to read before any --apply.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Nationwide lake qualifier, dry run
+        env:
+          USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
+        run: python -I tools/lake_match.py > lake-report.txt 2>&1 || true; tail -3 lake-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lake-report
+          path: lake-report.txt
