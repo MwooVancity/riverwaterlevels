@@ -75,7 +75,11 @@ def http_open(url, headers=None, timeout=40, tries=3):
 
 def http_json(url, headers=None, timeout=90):
     req = urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels-build"})
-    return json.loads(urllib.request.urlopen(req, timeout=timeout).read())
+    raw = urllib.request.urlopen(req, timeout=timeout).read()
+    try:
+        return json.loads(raw)
+    except UnicodeDecodeError:  # ITIS sends latin-1 bytes ('Lacep\xe8de') that never decoded as utf-8; the source never worked (2026-11-21)
+        return json.loads(raw.decode("latin-1"))
 
 
 def load_cache(site):
@@ -431,6 +435,19 @@ def new_fail(d, u, msgs):
     f["site"] = f.get("site") or []
     json.dump(f, open(p, "w", encoding="utf-8"))
     print("NEW PAGE FAILED", u, "(its numbers did not match the source; the second try sends it back to the queue)")
+
+
+def fail_pages(d, pages, site=()):
+    """Merge {rel page: [why]} and site-level reasons into <d>/_failed.json, the file tools/quarantine.py reads (2026-11-21: truth_tests failures on a state page wrote nothing, so quarantine undid all 25 picks)."""
+    p = os.path.join(d, "_failed.json")
+    try:
+        f = json.load(open(p, encoding="utf-8"))
+    except (OSError, ValueError):
+        f = {}
+    f.setdefault("pages", {}).update(pages)
+    old = f.get("site") or []
+    f["site"] = (old if isinstance(old, list) else [str(old)]) + list(site)  # check.py may have written the site-level reason as text
+    json.dump(f, open(p, "w", encoding="utf-8"))
 
 
 # USGS peak qualifier codes (read live 2026-11-12 on 01646500, 09380000, 07289000, 03294500): one list for collect.py and the blocks

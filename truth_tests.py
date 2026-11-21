@@ -221,7 +221,7 @@ def main(only=None):
             fail(site, "forecast high %.1f below the latest stage %.2f without saying so" % (c["fc"]["v"], c["fc"]["cur"]))
         al = c["alerts"]
         if al is not None:
-            if al["n"] and ('class="abanner"' not in h or 'class="tile alrt off' in h):  # the answer sentence says "2 active NWS alerts"; the empty-alert TILE is what must not show
+            if al["n"] and ('class="abanner' not in h or 'class="tile alrt off' in h):  # the answer sentence says "2 active NWS alerts"; the empty-alert TILE is what must not show
                 fail(site, "active alert: banner missing or empty-alert tile still shown")
             if not al["n"] and (al.get("age_h") is None or al["age_h"] <= 3) and "No active NWS alerts" not in h:  # an old answer says so instead (contract 18); a fresh none is the answer pill
                 fail(site, "no alert: the answer pill does not say so")
@@ -311,7 +311,29 @@ def main(only=None):
         print("  FAIL", b)
     if bad and only is None and carry_bad(rows, n):
         return 0
+    if bad and only is None:
+        record_failed(rows)
     return 1 if bad else 0
+
+
+def record_failed(rows):
+    """2026-11-21: write every failure that names a page to dist_next/_failed.json so tools/quarantine.py can attribute it to this release's new gauges (a state page failing on one new gauge's name undid all 25 picks on 11-19 and 11-20). A failure that names no page is site-level and still undoes the release."""
+    from lib.common import fail_pages
+    pages, site = {}, []
+    for b_ in bad:
+        k, _, m = b_.partition(": ")
+        if k in rows and (rows[k].get("dashboard_url") or "").strip("/"):
+            pages.setdefault(rows[k]["dashboard_url"].strip("/") + "/index.html", []).append(m)
+        elif k.endswith("index.html"):
+            pages.setdefault(k, []).append(m)
+        elif k.startswith("/") and k.endswith("/"):
+            pages.setdefault(k.strip("/") + "/index.html", []).append(m)
+        else:
+            site.append(b_[:200])
+    try:
+        fail_pages(os.path.join(ROOT, "dist_next"), pages, site)
+    except OSError as e:  # no build folder (a local run): the failure still stops the run, nothing to attribute
+        print("  note: could not record failures for quarantine: %s" % e)
 
 
 def carry_bad(rows, n):

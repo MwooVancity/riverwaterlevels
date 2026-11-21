@@ -1078,7 +1078,12 @@ def stat_range(comment):
 def fetch_floodfreq(site):
     """USGS StreamStats gage statistics: annual exceedance probability (AEP) peak flows with their published confidence intervals.
     Not shown (regulated=True or conflict=True) when the station is regulated or when USGS publishes more than one preferred set that disagree by over 10% at the 1% flow."""
-    j = thr_json("https://streamstats.usgs.gov/gagestatsservices/stations/" + site, None, 60, gap=1.0)
+    try:
+        j = thr_json("https://streamstats.usgs.gov/gagestatsservices/stations/" + site, None, 60, gap=1.0)
+    except urllib.error.HTTPError as e:
+        if e.code == 400:  # 2026-11-21: StreamStats answers 400 'station not found' for a gauge it has no statistics for (21 of 21 failed every run): no statistics, not a failure; the page shows no flood-frequency block
+            return None
+        raise
     groups, dur = {}, {}
     for s in j.get("statistics") or []:
         md = re.match(r"^([\d.]+) Percent Duration$", (s.get("regressionType") or {}).get("name") or "")

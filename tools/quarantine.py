@@ -35,6 +35,43 @@ def world_new():
     return out
 
 
+def blame(pages, rows, rel, picks):
+    """{site: why} for the failing pages, or None when one cannot be attributed. A gauge page (or its embed) is its own pick (2026-10-31). A state page rivers/<st>/index.html blames this release's new picks in that state, and a river hub river/<slug>/index.html the new picks under it (2026-11-21: '14th Street' on rivers/ga undid all 25). Coarse: if the real cause is an old gauge the retry fails and the release is undone, nothing bad ships."""
+    bad = {}
+    for k, v in pages.items():
+        s = rel.get(k[6:] if k.startswith("embed/") else k)
+        if s is not None:
+            bad[s] = v
+            continue
+        parts = k.split("/")
+        st = parts[1] if parts[0] == "rivers" and len(parts) == 3 else None
+        hub = "/" + "/".join(parts[:-1]) + "/" if parts[0] == "river" and len(parts) == 3 else None
+        hit = [p for p in picks if p in rows and ((st and (rows[p].get("state") or "").lower() == st) or (hub and (rows[p].get("dashboard_url") or "").startswith(hub)))]
+        if not hit:
+            return None
+        for p in hit:
+            bad.setdefault(p, v)
+    return bad
+
+
+def selftest():
+    rows = {"A": {"state": "GA", "dashboard_url": "/river/chattahoochee-river/columbus/"}, "B": {"state": "CO", "dashboard_url": "/river/x/y/"}, "O": {"state": "GA", "dashboard_url": "/river/old/z/"}}
+    rel = {r["dashboard_url"].strip("/") + "/index.html": s for s, r in rows.items()}
+    picks = {"A", "B"}
+    assert blame({"rivers/ga/index.html": ["jargon"]}, rows, rel, picks) == {"A": ["jargon"]}
+    assert blame({"index.html": ["x"]}, rows, rel, picks) is None  # home page: site-level
+    assert blame({"rivers/tx/index.html": ["x"]}, rows, rel, picks) is None  # a state with no new pick
+    assert blame({"river/x/y/index.html": ["x"]}, rows, rel, picks) == {"B": ["x"]}
+    import tempfile
+    from lib.common import fail_pages
+    d = tempfile.mkdtemp()
+    fail_pages(d, {"rivers/ga/index.html": ["m"]}, ["s"])
+    fail_pages(d, {"a/index.html": ["n"]})
+    f = json.load(open(os.path.join(d, "_failed.json"), encoding="utf-8"))
+    assert set(f["pages"]) == {"rivers/ga/index.html", "a/index.html"} and f["site"] == ["s"]
+    print("quarantine selftest OK")
+
+
 def main():
     try:
         failed = json.load(open(os.path.join(ROOT, "dist_next", "_failed.json"), encoding="utf-8"))
@@ -68,9 +105,10 @@ def main():
         print("world gauges back out of this release: %s" % ", ".join("%s %s" % wnew[k] for k in sorted(wbad)))
         if not pages:
             return
-    bad = {rel.get(k[6:] if k.startswith("embed/") else k): v for k, v in pages.items()}  # a gauge's embed page fails with it (2026-10-31)
-    if None in bad or any(s in was for s in bad):
-        sys.exit("a failing page is not a new gauge: %s" % sorted(pages)[:5])
+    picks = {r["site"] for r in csv.DictReader(open(WAVES, encoding="utf-8")) if r["status"] == "live"} - was
+    bad = blame(pages, rows, rel, picks)
+    if bad is None or any(s in was for s in bad):
+        sys.exit("a failing page is not a new gauge or a state/hub of one: %s" % sorted(pages)[:5])
     all_ = list(csv.DictReader(open(WAVES, encoding="utf-8")))
     for r in all_:
         if r["site"] in bad:
@@ -91,4 +129,4 @@ def main():
     print("back to the queue: %s" % ", ".join(sorted(bad)))
 
 
-main()
+selftest() if "--selftest" in sys.argv else main()
