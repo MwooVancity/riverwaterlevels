@@ -23,7 +23,9 @@ PRACTICE = 0  # 2026-11-21 Opus review: a gate on the top-tier rows stranded the
 STATE_RE = re.compile(r",\s*([A-Z]{2})(?:-[A-Z]{2})*\s*$")
 FAR_OK = {tuple(x.strip().split("|")) for x in open(os.path.join(ROOT, "data", "lake-far-ok.txt"), encoding="utf-8")} if os.path.exists(os.path.join(ROOT, "data", "lake-far-ok.txt")) else set()  # 'name|ST' lines (identity key): a lake with far-apart same-name gauges a person has approved as ONE lake (Opus follow-up: head-term lakes such as Okeechobee must not stay held for ever)
 NOT_LAKE = re.compile(r"\b(canal|lock|afterbay|forebay|tailrace|pond)\b", re.I)
-DROP = {"lake", "lk", "reservoir", "res", "dam"}
+PLAIN = re.compile(r"\b(?:lake|reservoir|lac|lago|sea|flowage|impoundment)\b", re.I)  # a page name must read as a lake or reservoir ...
+NOT_PLAIN = re.compile(r"[\d()@/&]|\b(?:dam|causeway|inlet|outlet|spillway|channel|side|mi|miles|below|above)\b", re.I)  # ... with no gauge-location words; Creek, River and Diversion stay (Deep Creek Lake, Mosquito Creek Lake, Lake Diversion) (2026-11-21 apply: 'UBC Dam 11', 'Gsl S. Side Of Causeway', 'Richelieu R (Lake Champlain)', 'Lake Mattamuskeet E Of Nc Hwy 94')
+DROP = {"lake", "lk", "reservoir", "res", "re", "rsvr", "resv", "reservior", "dam"}
 US = {"Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE", "District of Columbia": "DC", "Florida": "FL", "Georgia": "GA", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS", "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD", "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS", "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV", "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK", "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC", "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT", "Vermont": "VT", "Virginia": "VA", "Washington": "WA", "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY", "Puerto Rico": "PR"}
 
 
@@ -33,7 +35,7 @@ def state_of(name, state_name):
     return m.group(1) if m else US.get((state_name or "").strip(), "")
 
 
-CUT = r",|\b(?:nr|near|at|ab|above)\b"  # one cut for identity, page name and place (Opus review: 'RES.NR.NEW BRITAIN' has no spaces around nr)
+CUT = r",|\b(?:nr|near|at|ab|abv|above|below|(?:north|south|east|west|[nsew]\.?) of)\b|@|\s\d+(?:\.\d+)?\s*mi\b|\s+a\s+(?!.*\b(?:lake|lk|reservoir|res)\b)"  # (a standalone A cuts only when no lake word follows: 'Howard A Hanson Reservoir' stays;'Hetch Hetchy Reservoir A Hetch Hetchy', 'Possum Kingdom Lake abv McGinnis Pt': 2026-11-21 apply) one cut for identity, page name and place (Opus review: 'RES.NR.NEW BRITAIN' has no spaces around nr)
 TAIL_ST = re.compile(r"[,\s]+([A-Z]{2})(?:-[A-Z]{2})*\.?\s*$")
 
 
@@ -54,7 +56,7 @@ def lake_name(name):
     n = re.split(CUT, no_state(name), flags=re.I)[0].strip(" .")  # the same cut as identity() as identity(), so the page name and the identity agree (Opus follow-up)
     if n.isupper():  # USGS often writes 'HARTWELL LAKE NEAR ANDERSON, SC' (Opus review 2026-11-21)
         n = n.title()
-    return re.sub(r"\bLk\b", "Lake", re.sub(r"\bRes\b", "Reservoir", n, flags=re.I), flags=re.I)
+    return re.sub(r"\bLk\b", "Lake", re.sub(r"\bRe\b$", "Reservoir", re.sub(r"\b(?:Res|Rsvr|Resv|Reservior)\b", "Reservoir", n, flags=re.I), flags=re.I), flags=re.I)  # USGS writes 'Cedar Bluff Re nr Ellis, KS' (Kansas and California reservoirs)
 
 
 def place_name(name):
@@ -79,6 +81,8 @@ def qualify(cands):
             why = "the name starts with a station code, not a lake name"
         elif TAILWATER.search(c["name"]) or NOT_LAKE.search(c["name"]):
             why = "name is a tailwater, canal, lock, afterbay, forebay, tailrace or pond"
+        elif not PLAIN.search(lake_name(c["name"])) or NOT_PLAIN.search(lake_name(c["name"])):
+            why = "the lake name is not a plain lake or reservoir name (a dam, river, inlet or gauge location)"
         elif not set(c["params"]) & set(LEVEL):
             why = "no lake level parameter (%s) reported in the last 30 days" % "/".join(LEVEL)
         elif (c.get("years") or 0) < MIN_YEARS:
@@ -252,6 +256,11 @@ def selftest():
     assert "station code" in {s: w for s, _, w in qualify([c("90", "10B LAKE OKEECHOBEE AT POINT 1, FL")])[1]["held"]}["90"]
     assert lake_name("SEBAGO LAKE ME") == "Sebago Lake" and identity("SEBAGO LAKE ME", "ME") == identity("SEBAGO LAKE AT X, ME", "ME") and lake_name("SHUTTLE MEADOW RES.NR.NEW BRITAIN,CT.") == "Shuttle Meadow Reservoir" and place_name("SHUTTLE MEADOW RES.NR.NEW BRITAIN,CT.") == "NEW BRITAIN" and place_name("PRINCETON LAKE NEAR PRINCETON ME") == "PRINCETON"
     assert "station code" in {s: w for s, _, w in qualify([c("91", "LAKE OKEECHOBEE POINT NO1, FL")])[1]["held"]}["91"]
+    assert lake_name("Hetch Hetchy Reservoir A Hetch Hetchy CA") == "Hetch Hetchy Reservoir" and lake_name("Possum Kingdom Lake abv McGinnis Pt, TX") == "Possum Kingdom Lake" and lake_name("Lake Champlain North Of Whitehall NY") == "Lake Champlain" and lake_name("CEDAR BLUFF RE NR ELLIS, KS") == "Cedar Bluff Reservoir" and lake_name("Big A Lake nr X, TX") == "Big A Lake"
+    assert lake_name("LAKE TAHOE A TAHOE CITY CA") == "Lake Tahoe" and lake_name("Howard A Hanson Reservoir nr X, WA") == "Howard A Hanson Reservoir" and lake_name("SWIFT RESERVOIR 3.2 MI EAST OF DAM NEAR COUGAR, WA") == "Swift Reservoir" and lake_name("NINETYNINE ISLAND RES. BELOW CHEROKEE FALLS, SC") == "Ninetynine Island Reservoir" and lake_name("LAKE MATTAMUSKEET E OF NC HWY 94 NR FAIRFIELD, NC") == "Lake Mattamuskeet" and lake_name("Lake of the Woods nr X, MN") == "Lake of the Woods" and lake_name("Shearon Harris Rsvr nr X, NC") == "Shearon Harris Reservoir"
+    assert identity("CEDAR BLUFF RE NR ELLIS, KS", "KS") == identity("Cedar Bluff Reservoir at X, KS", "KS") and "plain" not in " ".join(w for _, _, w in qualify([c("95", "Lago Patillas nr Patillas, PR")])[1]["held"])
+    held = {s: w for s, _, w in qualify([c("92", "UBC Dam 11 nr Round Rock, TX"), c("93", "Gsl S. Side Of Causeway, UT"), c("94", "Deep Creek Lake near Thayerville, MD")])[1]["held"]}
+    assert "plain" in held["92"] and "plain" in held["93"] and "94" not in held, held
     print("lake_match selftest OK")
 
 
