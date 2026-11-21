@@ -46,9 +46,13 @@ def no_state(name):
 
 def identity(name, state):
     """'Canyon Lk nr New Braunfels, TX' -> ('canyon', 'TX'). Text after nr/near/at is the place, not the lake."""
-    n = re.split(CUT, no_state(name).lower())[0]
-    words = [w for w in re.findall(r"[a-z0-9]+", n) if w not in DROP]
+    words = [w for w in re.findall(r"[a-z0-9]+", lake_name(name).lower()) if w not in DROP]  # from lake_name so 'Cedar Ck' and 'Cedar Creek' are one lake (Opus review)
     return " ".join(words), state.upper()
+
+
+EXPAND = {"ck": "Creek", "cr": "Creek", "fk": "Fork", "rv": "River", "bd": "Bend", "spgs": "Springs", "mtn": "Mountain", "ft": "Fort"}  # USGS abbreviations seen in cloud run 3 names
+EXPAND_RE = re.compile(r"\b(" + "|".join(EXPAND) + r")\b\.?", re.I)
+GREAT_LAKES = {"lake huron", "lake erie", "lake ontario", "lake michigan", "lake superior"}  # a gauge on one is a water-level station, not this lake page
 
 
 def lake_name(name):
@@ -56,7 +60,10 @@ def lake_name(name):
     n = re.split(CUT, no_state(name), flags=re.I)[0].strip(" .")  # the same cut as identity() as identity(), so the page name and the identity agree (Opus follow-up)
     if n.isupper():  # USGS often writes 'HARTWELL LAKE NEAR ANDERSON, SC' (Opus review 2026-11-21)
         n = n.title()
-    return re.sub(r"\bLk\b", "Lake", re.sub(r"\bRe\b$", "Reservoir", re.sub(r"\b(?:Res|Rsvr|Resv|Reservior)\b", "Reservoir", n, flags=re.I), flags=re.I), flags=re.I)  # USGS writes 'Cedar Bluff Re nr Ellis, KS' (Kansas and California reservoirs)
+    n = re.sub(r"\bLk\b", "Lake", re.sub(r"\bRe\b$", "Reservoir", re.sub(r"\b(?:Res|Rsvr|Resv|Reservior)\b", "Reservoir", n, flags=re.I), flags=re.I), flags=re.I)  # USGS writes 'Cedar Bluff Re nr Ellis, KS' (Kansas and California reservoirs)
+    n = EXPAND_RE.sub(lambda m: EXPAND[m.group(1).lower()], n)  # after the Res/Lk swaps; the period after an abbreviation goes too
+    n = re.sub(r"\bC\b(?=\s+(?:Reservoir|Lake)\b)", "Creek", n)  # 'Prosser C Res' = Prosser Creek Reservoir
+    return re.sub(r"\b([NSEW])\b\.?(?=\s+(?:Fork|Branch)\b)", lambda m: {"N": "North", "S": "South", "E": "East", "W": "West"}[m.group(1)], n)
 
 
 def place_name(name):
@@ -83,6 +90,8 @@ def qualify(cands):
             why = "name is a tailwater, canal, lock, afterbay, forebay, tailrace or pond"
         elif not PLAIN.search(lake_name(c["name"])) or NOT_PLAIN.search(lake_name(c["name"])):
             why = "the lake name is not a plain lake or reservoir name (a dam, river, inlet or gauge location)"
+        elif lake_name(c["name"]).lower() in GREAT_LAKES:
+            why = "a Great Lake water-level gauge, not a lake page of its own"
         elif not set(c["params"]) & set(LEVEL):
             why = "no lake level parameter (%s) reported in the last 30 days" % "/".join(LEVEL)
         elif (c.get("years") or 0) < MIN_YEARS:
@@ -261,6 +270,15 @@ def selftest():
     assert identity("CEDAR BLUFF RE NR ELLIS, KS", "KS") == identity("Cedar Bluff Reservoir at X, KS", "KS") and "plain" not in " ".join(w for _, _, w in qualify([c("95", "Lago Patillas nr Patillas, PR")])[1]["held"])
     held = {s: w for s, _, w in qualify([c("92", "UBC Dam 11 nr Round Rock, TX"), c("93", "Gsl S. Side Of Causeway, UT"), c("94", "Deep Creek Lake near Thayerville, MD")])[1]["held"]}
     assert "plain" in held["92"] and "plain" in held["93"] and "94" not in held, held
+    for raw, want in (("Cedar Ck Reservoir nr Kemp, TX", "Cedar Creek Reservoir"), ("Lake Fk Reservoir nr Quitman, TX", "Lake Fork Reservoir"), ("Toledo Bd Reservoir nr Burkeville, TX", "Toledo Bend Reservoir"),
+                      ("White Rv Reservoir nr Spur, TX", "White River Reservoir"), ("Prosser C Reservoir nr Truckee, CA", "Prosser Creek Reservoir"), ("N Fk Buffalo Ck Reservoir nr X, TX", "North Fork Buffalo Creek Reservoir"),
+                      ("Lake Cypress Spgs nr X, TX", "Lake Cypress Springs"), ("Eagle Mtn Reservoir nr X, TX", "Eagle Mountain Reservoir"), ("Ft Phantom Hill Reservoir nr X, TX", "Fort Phantom Hill Reservoir"),
+                      ("Lake William C. Bowen nr X, SC", "Lake William C. Bowen"), ("O. C. Fisher Lake nr X, TX", "O. C. Fisher Lake")):
+        assert lake_name(raw) == want, (raw, lake_name(raw))
+    for raw, want in (("PROSSER C RES NR TRUCKEE CA", "Prosser Creek Reservoir"), ("Bear C Lk nr X, UT", "Bear Creek Lake"), ("Ft. Peck Lake nr X, MT", "Fort Peck Lake"), ("N. Fk Reservoir nr X, TX", "North Fork Reservoir")):
+        assert lake_name(raw) == want, (raw, lake_name(raw))
+    assert identity("Cedar Ck Reservoir nr Kemp, TX", "TX") == identity("Cedar Creek Reservoir nr Trinidad, TX", "TX")
+    assert "Great Lake" in " ".join(w for _, _, w in qualify([c("96", "Lake Huron at Foo, WI")])[1]["held"])
     print("lake_match selftest OK")
 
 
