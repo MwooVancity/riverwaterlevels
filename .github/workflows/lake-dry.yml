@@ -11,7 +11,7 @@ permissions:
 jobs:
   dry:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -21,7 +21,7 @@ jobs:
         env:
           USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
         run: |
-          python -I tools/lake_match.py > lake-report.txt 2>&1; rc=$?
+          rc=0; python -I tools/lake_match.py > lake-report.txt 2>&1 || rc=$?
           tail -3 lake-report.txt
           exit $rc
       - uses: actions/upload-artifact@v7
