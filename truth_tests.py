@@ -321,8 +321,17 @@ def main(only=None):
 def record_failed(rows):
     """2026-11-21: write every failure that names a page to dist_next/_failed.json so tools/quarantine.py can attribute it to this release's new gauges (a state page failing on one new gauge's name undid all 25 picks on 11-19 and 11-20). A failure that names no page is site-level and still undoes the release."""
     from lib.common import fail_pages
+    pages, site = sort_failed(bad, rows)
+    try:
+        fail_pages(os.path.join(ROOT, "dist_next"), pages, site)
+    except OSError as e:  # no build folder (a local run): the failure still stops the run, nothing to attribute
+        print("  note: could not record failures for quarantine: %s" % e)
+
+
+def sort_failed(bad_, rows):
+    """({page path: [why]}, [site-level reasons]) from the 'where: message' failure strings; pure, so the fixture below can check it."""
     pages, site = {}, []
-    for b_ in bad:
+    for b_ in bad_:
         k, _, m = b_.partition(": ")
         if k in rows and (rows[k].get("dashboard_url") or "").strip("/"):
             pages.setdefault(rows[k]["dashboard_url"].strip("/") + "/index.html", []).append(m)
@@ -332,10 +341,12 @@ def record_failed(rows):
             pages.setdefault(k.strip("/") + "/index.html", []).append(m)
         else:
             site.append(b_[:200])
-    try:
-        fail_pages(os.path.join(ROOT, "dist_next"), pages, site)
-    except OSError as e:  # no build folder (a local run): the failure still stops the run, nothing to attribute
-        print("  note: could not record failures for quarantine: %s" % e)
+    return pages, site
+
+
+_p, _s = sort_failed(["X: m1", "rivers/ga/index.html: m2", "/river/a/b/: m3", "blocks: m4"], {"X": {"dashboard_url": "/river/x/y/"}})  # fixture: a gauge, a page path, a url and a site-level reason sort apart
+if _p != {"river/x/y/index.html": ["m1"], "rivers/ga/index.html": ["m2"], "river/a/b/index.html": ["m3"]} or _s != ["blocks: m4"]:
+    raise SystemExit("sort_failed fixture failed: %r %r" % (_p, _s))
 
 
 def carry_bad(rows, n):

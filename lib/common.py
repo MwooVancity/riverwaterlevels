@@ -73,6 +73,16 @@ def http_open(url, headers=None, timeout=40, tries=3):
             time.sleep(5 if i == 0 else 20)
 
 
+# A gauge below a dam is a river reading (releases, not a pool), never a lake page: one rule for hero.py's caption, tools/rescore.py's score and the lake pages (2026-11-21: two copies, neither knew 'tailrace').
+TAILWATER = re.compile(r"\b(below|bl|blw|downstream of|ds of)\b.*\b(dam|lake|lk|reservoir|res|powerplant|power plant)\b|\b(tailwater|tailrace|tail race)\b", re.I)
+for _n in ("SAVANNAH R BELOW HARTWELL DAM", "Lake Moultrie Tailrace", "Chattooga R tailwater nr Clayton", "Broad R BLW Lake Murray Dam", "Colorado River ds of Glen Canyon Dam"):  # fixture: tailwater
+    if not TAILWATER.search(_n):
+        raise SystemExit("TAILWATER fixture: should match: %r" % _n)
+for _n in ("HARTWELL LAKE NR HARTWELL, GA", "Lake Sidney Lanier near Buford, GA", "Allatoona Lake near Cartersville, GA", "Pond Creek at 2nd Crossing"):  # fixture: a lake or a plain river
+    if TAILWATER.search(_n):
+        raise SystemExit("TAILWATER fixture: must not match: %r" % _n)
+
+
 def http_json(url, headers=None, timeout=90, encoding=None):
     req = urllib.request.Request(url, headers=headers or {"User-Agent": "riverwaterlevels-build"})
     raw = urllib.request.urlopen(req, timeout=timeout).read()

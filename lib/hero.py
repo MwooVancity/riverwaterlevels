@@ -102,7 +102,7 @@ def tide_cycle(fl):
     return bool(fl) and wx.tidal([(t.isoformat(), v) for t, v, _ in fl]) is True
 
 
-TAILWATER = re.compile(r"\b(below|bl|blw|downstream of)\b.*\b(dam|lake|lk|reservoir|res|powerplant|power plant)\b|\btailwater\b", re.I)
+# TAILWATER (below a dam) now lives in lib/common.py, imported above, one rule for the caption, the score and the lake pages
 
 
 def flow_jitter(G):

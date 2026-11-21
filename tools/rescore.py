@@ -23,7 +23,7 @@ GEO = os.path.join(ROOT, "data", "geo")
 PER_DAY = 25
 KM = 3.0
 BAD = re.compile(r"\b(ditch|canal|drain|drainage|outfall|floodway|wasteway|spillway|diversion|sewer|storm|channel)\b", re.I)
-TAIL = re.compile(r"\b(below|bl|blw|downstream of|ds of)\b.*\b(dam|lake|reservoir|lk|res|powerplant|power plant)\b|\btailwater\b", re.I)
+from lib.common import TAILWATER as TAIL  # one rule (lib/common.py)
 RIVER_WORD = re.compile(r"(River|Creek|Brook|Run|Fork|Branch|Bayou|Stream|Rio)")
 
 

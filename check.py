@@ -799,6 +799,14 @@ def carried_unchanged(d):
     return {u + "/index.html" for u in old} | {"embed/" + u + "/index.html" for u in old}
 
 
+def drop_embed_orphans(orphans, depth):
+    """An embed panel is a noindex iframe opened from the Share dialog, never linked by href: it is reachable when its gauge page is. An embed whose gauge page is not reachable stays an orphan."""
+    return [u for u in orphans if not (u.startswith("/embed/") and u[6:] in depth)]
+
+
+assert drop_embed_orphans(["/embed/river/a/", "/embed/river/c/", "/river/b/"], {"/river/a/": 1}) == ["/embed/river/c/", "/river/b/"]  # fixture: the reachable gauge's embed drops, an embed with no reachable gauge and a plain orphan stay
+
+
 def unlinked_ok(u, kind, noindex_of):
     """A noindexed water page is unlinked on purpose (links rule 5: only indexable pages are linked), so it is no orphan; in hold mode (every page noindexed) the orphan rule still runs."""
     return bool(noindex_of.get(u)) and kind in ("gauge", "world") and any(not v for v in noindex_of.values())
@@ -979,7 +987,7 @@ def check_dir(d, only_rebuilt=False):
         pass
     kept |= {"/embed" + u for u in list(kept)}  # a kept gauge page keeps its embed panel too
     orphans = [u for u in urls if u not in depth and u not in kept and not unlinked_ok(u, kind_of(urls[u]), noindex_of)]  # a noindexed water page (pulled or held) is unlinked on purpose (links rule 5); in hold mode, every page noindexed, the orphan rule still runs
-    orphans = [u for u in orphans if not (u.startswith("/embed/") and u[6:] in depth)]  # 2026-11-21: an embed panel is a noindex iframe opened from the Share dialog, never linked by href; it is reachable when its gauge page is (176 of them were carried every run and kept the watchdog's 5% carried-page gate red)
+    orphans = drop_embed_orphans(orphans, depth)  # 2026-11-21: an embed panel is a noindex iframe opened from the Share dialog, never linked by href; it is reachable when its gauge page is (176 of them were carried every run and kept the watchdog's 5% carried-page gate red)
     deep = [u for u, k in depth.items() if k > 4]
     for what, us_ in (("not reachable from home", orphans), ("deeper than 4 clicks from home", deep)):  # a water page is held alone (carried or sent back); any other page is site-level
         for u in us_:
