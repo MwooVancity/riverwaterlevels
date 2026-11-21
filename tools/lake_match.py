@@ -33,7 +33,7 @@ def identity(name, state):
 
 def lake_name(name):
     """Display name: the part before nr/near/comma, as USGS wrote it, with Lk -> Lake."""
-    n = re.split(r",|\s+(?:nr|near)\s+", name, flags=re.I)[0].strip()
+    n = re.split(r",|\s+(?:nr|near|at|ab|above)\s+", name, flags=re.I)[0].strip()  # the same cut words as identity(), so the page name and the identity agree (Opus follow-up)
     if n.isupper():  # USGS often writes 'HARTWELL LAKE NEAR ANDERSON, SC' (Opus review 2026-11-21)
         n = n.title()
     return re.sub(r"\bLk\b", "Lake", re.sub(r"\bRes\b", "Reservoir", n, flags=re.I), flags=re.I)
@@ -53,6 +53,8 @@ def qualify(cands):
             why = "site type %s is not a lake or reservoir" % c.get("type")
         elif not c.get("state"):
             why = "no state in the station name"
+        elif c.get("lat") is None or c.get("lon") is None:
+            why = "no coordinates"
         elif not identity(c["name"], c["state"])[0]:
             why = "the lake name reduces to nothing"
         elif TAILWATER.search(c["name"]) or NOT_LAKE.search(c["name"]):
@@ -66,23 +68,17 @@ def qualify(cands):
             continue
         groups.setdefault(identity(c["name"], c["state"]), []).append(c)
     rows, rep = [], []
-    clusters = {}
-    for key, g in groups.items():  # two lakes of one name in one state (Silver Lk nr Alpha, MI and nr Beta, MI) are split when their gauges are over 10 km apart
-        for c in g:
-            for cl in clusters.setdefault(key, []):
-                if km(c, cl[0]) <= 10:
-                    cl.append(c)
-                    break
-            else:
-                clusters[key].append([c])
-    groups = {(key[0] if k == 0 else "%s #%d" % (key[0], k + 1), key[1]): cl for key, cls in clusters.items() for k, cl in enumerate(cls)}
+    for key in list(groups):  # one name in one state with gauges over 10 km apart is two lakes or one long reservoir: never guess (Opus review 2026-11-21), the whole group is held for a person; no second '#2' page
+        far = max((km(a, b) for a in groups[key] for b in groups[key]), default=0)
+        if far > 10:
+            held.extend((c["site"], c["name"], "same lake name and state but gauges %.0f km apart (two lakes or one long reservoir): needs a decision" % far) for c in groups.pop(key))
     for key, g in sorted(groups.items()):
         g.sort(key=lambda c: (-len(set(c["params"]) & ELEV), -len(set(c["params"]) & set(LEVEL)), -(c.get("years") or 0), c["site"]))  # measurement quality first (ChatGPT 2026-11-21): a gauge reporting lake ELEVATION (62614, 62615, 72020) outranks one reporting only 00062 gage height; then more level parameters, longer record, lower id (deterministic)
         p = g[0]
         rows.append(dict(p, key=key))
         rep.append({"lake": "%s %s" % key, "gauges": [c["site"] for c in g], "primary": p["site"],
                     "param": "/".join(sorted(set(p["params"]) & set(LEVEL))), "years": round(p.get("years") or 0, 1),
-                    "excluded": {c["site"]: "same lake and state; primary has %d level parameters, %.1f years, lower id on a tie" % (len(set(p["params"]) & set(LEVEL)), p.get("years") or 0) for c in g[1:]}})
+                    "excluded": {c["site"]: "same lake and state; primary has %d level parameters%s, %.1f years, lower id on a tie" % (len(set(p["params"]) & set(LEVEL)), " (an elevation gauge is preferred over 00062)" if set(p["params"]) & ELEV else "", p.get("years") or 0) for c in g[1:]}})
     return rows, {"groups": rep, "held": held}
 
 
@@ -106,19 +102,24 @@ def fetch(state=None, days=30):
     def get(url):
         return json.loads(urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com lake_match"}), timeout=120).read())
     q = "monitoring-locations/items?site_type_code=LK&limit=1000&f=json" + ("&state_code=%s" % state if state else "")
+    seen = set()
+
     def pages(url):  # follow the API's next links (a run without --state used to stop silently at 1000 sites, Opus review 2026-11-21)
         while url:
             d = get(url)
             yield from d["features"]
+            seen.add(url)
             url = next((l["href"] for l in d.get("links", []) if l.get("rel") == "next"), None)
+            if url in seen:  # a next link that points back would loop for ever
+                break
     locs = [f for f in pages(BASE + q) if f["properties"].get("agency_code") == "USGS"]
     cut = (datetime.datetime.utcnow() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
     out = {}
     for f in locs:
         p = f["properties"]
-        m = re.search(r",\s*([A-Z]{2})\s*$", p["monitoring_location_name"])
+        m = re.search(r",\s*([A-Z]{2})(?:-[A-Z]{2})*\s*$", p["monitoring_location_name"])  # ', AZ-NV' (Lake Mead, Powell) takes the first state
         out[p["monitoring_location_number"]] = {"site": p["monitoring_location_number"], "name": p["monitoring_location_name"], "state": m.group(1) if m else "",
-                                                "lat": f["geometry"]["coordinates"][1], "lon": f["geometry"]["coordinates"][0], "type": "LK", "params": set(), "years": 0.0}
+                                                "lat": (f.get("geometry") or {}).get("coordinates", [None, None])[1], "lon": (f.get("geometry") or {}).get("coordinates", [None, None])[0], "type": "LK", "params": set(), "years": 0.0}
     ids = sorted(out)
     for i in range(0, len(ids), 40):
         url = BASE + "time-series-metadata/items?monitoring_location_id=%s&parameter_code=%s&limit=1000&f=json&skipGeometry=true" % (",".join("USGS-" + s for s in ids[i:i + 40]), ",".join(LEVEL))
@@ -193,11 +194,16 @@ def selftest():
     new = plan(rows, set(), set(), t)
     assert new[0]["site"] == "8" and [r["gate"] for r in new] == [""] * 3  # tier orders; no row is gated (PRACTICE = 0)
     assert lake_name("HARTWELL LAKE NEAR ANDERSON, SC") == "Hartwell Lake" and lake_name("CANYON LK NR NEW BRAUNFELS, TX") == "Canyon Lake"  # upper-case USGS names (Opus review)
-    far = qualify([dict(c("40", "Silver Lk nr Alpha, MI"), lat=45.0, lon=-85.0), dict(c("41", "Silver Lk nr Beta, MI"), lat=46.0, lon=-86.0), dict(c("42", "Silver Lk nr Alpha2, MI"), lat=45.01, lon=-85.0)])[0]
-    assert sorted(r["site"] for r in far) == ["40", "41"], far  # two lakes of one name 150 km apart stay two; a gauge 1 km from the first joins it
+    far, farrep = qualify([dict(c("40", "Silver Lk nr Alpha, MI"), lat=45.0, lon=-85.0), dict(c("41", "Silver Lk nr Beta, MI"), lat=46.0, lon=-86.0), dict(c("42", "Silver Lk nr Alpha2, MI"), lat=45.01, lon=-85.0)])
+    assert far == [] and {s for s, _, _ in farrep["held"]} == {"40", "41", "42"} and "apart" in farrep["held"][0][2], (far, farrep)  # one name 150 km apart: the whole group is held, never a '#2' page
+    oahe, _o = qualify([dict(c("60", "Lake Oahe nr Pierre, SD"), lat=44.4, lon=-100.4), dict(c("61", "Lake Oahe at Mobridge, SD"), lat=45.5, lon=-100.4)])
+    assert oahe == [], oahe  # a long reservoir is held too, with the reason, not split into two pages
+    near = qualify([dict(c("42", "Silver Lk nr Alpha, MI"), lat=45.0, lon=-85.0), dict(c("43", "Silver Lake near Alpha, MI"), lat=45.01, lon=-85.0)])[0]
+    assert [r["site"] for r in near] == ["42"], near  # a second gauge 1 km away is the same lake: one page
     h = {s: w for s, _, w in qualify([c("50", "LK NR Y, MN"), dict(c("51", "Nameless Lk"), state="")])[1]["held"]}
     assert "reduces to nothing" in h["50"] and "no state" in h["51"], h  # nothing silently dropped
-    assert plan(rows, set(), set(), t, {"old-reservoir"}) == [r for r in plan(rows, set(), set(), t) if r["site"] != "8"]  # a new lake whose name matches a live lake is held back    assert plan(rows, {r["site"] for r in rows}, set(), t) == []  # re-run adds nothing
+    assert plan(rows, set(), set(), t, {"old-reservoir"}) == [r for r in plan(rows, set(), set(), t) if r["site"] != "8"]  # a new lake whose name matches a live lake is held back
+    assert plan(rows, {r["site"] for r in rows}, set(), t) == []  # re-run adds nothing
     assert plan(rows, set(), {r["key"] for r in rows}, t) == []  # a lake that already has a page is never replaced by another gauge
     assert urls(new, [{"lake": "Pleasant Lake"}])["1"].startswith("/lake/pleasant-lake-wi-1")  # shared name never shares an address
     print("lake_match selftest OK")
@@ -210,6 +216,9 @@ def main():
     lk, sites, keys, slugs = existing()
     rows, rep = qualify(fetch(st))
     new = plan(rows, sites, keys, tiers(), slugs)
+    for r in rows:  # a lake whose name matches a live lake in another state is not queued (it would move the live page's address); say so, never drop silently
+        if r["site"] not in sites and r["key"] not in keys and slug(lake_name(r["name"])) in slugs:
+            print("HELD %s %-40s same lake name as a live lake in another state: needs a fixed live address first" % (r["site"], r["name"]))
     show(rows, rep, new)
     if "--apply" in sys.argv:
         apply(new, lk)
