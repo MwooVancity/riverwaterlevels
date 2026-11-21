@@ -142,6 +142,8 @@ def thin_state_first(both, live_rows, n_max=3, least=3, top=200):
 
 both = thin_state_first(both, list(live_.values()))
 assert [x[3]["site"] for x in thin_state_first([(0, 1, 0, {"site": "a", "state": "TX"}), (0, 1, 1, {"site": "b", "state": "AL"}), (0, 1, 2, {"site": "c", "state": "AL"}), (0, 1, 3, {"site": "d", "state": "AL"})], [{"state": "TX", "status": "live"}] * 5 + [{"state": "AL", "status": "live"}])][:3] == ["b", "c", "a"], "release: a one-gauge state was not grown first, or grown past 3"
+import lake_share as _ls
+both = _ls.lake_first(both)  # PLAN.md 2026-11-21: up to LAKE_FIRST lakes in the day's N, the rest in money order, practice-gated lakes never
 UNREVIEWED_MAX = 0
 import json as _json
 from lib import pages as _pages
