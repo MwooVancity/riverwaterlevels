@@ -24,25 +24,41 @@ STATE_RE = re.compile(r",\s*([A-Z]{2})(?:-[A-Z]{2})*\s*$")
 FAR_OK = {tuple(x.strip().split("|")) for x in open(os.path.join(ROOT, "data", "lake-far-ok.txt"), encoding="utf-8")} if os.path.exists(os.path.join(ROOT, "data", "lake-far-ok.txt")) else set()  # 'name|ST' lines (identity key): a lake with far-apart same-name gauges a person has approved as ONE lake (Opus follow-up: head-term lakes such as Okeechobee must not stay held for ever)
 NOT_LAKE = re.compile(r"\b(canal|lock|afterbay|forebay|tailrace|pond)\b", re.I)
 DROP = {"lake", "lk", "reservoir", "res", "dam"}
+US = {"Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR", "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE", "District of Columbia": "DC", "Florida": "FL", "Georgia": "GA", "Hawaii": "HI", "Idaho": "ID", "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS", "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD", "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS", "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV", "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK", "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC", "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT", "Vermont": "VT", "Virginia": "VA", "Washington": "WA", "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY", "Puerto Rico": "PR"}
+
+
+def state_of(name, state_name):
+    """USPS state: the ', ST' at the end of the station name, else the API's own state_name ('Churchhill Lake at Churchill Lake ME' has no comma; 18,988 held in the 2026-11-21 dry run, 'no state in the station name')."""
+    m = STATE_RE.search(name)
+    return m.group(1) if m else US.get((state_name or "").strip(), "")
+
+
+CUT = r",|\b(?:nr|near|at|ab|above)\b"  # one cut for identity, page name and place (Opus review: 'RES.NR.NEW BRITAIN' has no spaces around nr)
+TAIL_ST = re.compile(r"[,\s]+([A-Z]{2})(?:-[A-Z]{2})*\.?\s*$")
+
+
+def no_state(name):
+    """'SEBAGO LAKE ME' -> 'SEBAGO LAKE': a bare trailing USPS code is the state, not part of the name."""
+    return TAIL_ST.sub(lambda m: "" if m.group(1) in US.values() else m.group(0), name)
 
 
 def identity(name, state):
     """'Canyon Lk nr New Braunfels, TX' -> ('canyon', 'TX'). Text after nr/near/at is the place, not the lake."""
-    n = re.split(r",|\b(?:nr|near|at|ab|above)\b", name.lower())[0]
+    n = re.split(CUT, no_state(name).lower())[0]
     words = [w for w in re.findall(r"[a-z0-9]+", n) if w not in DROP]
     return " ".join(words), state.upper()
 
 
 def lake_name(name):
     """Display name: the part before nr/near/comma, as USGS wrote it, with Lk -> Lake."""
-    n = re.split(r",|\s+(?:nr|near|at|ab|above)\s+", name, flags=re.I)[0].strip()  # the same cut words as identity(), so the page name and the identity agree (Opus follow-up)
+    n = re.split(CUT, no_state(name), flags=re.I)[0].strip(" .")  # the same cut as identity() as identity(), so the page name and the identity agree (Opus follow-up)
     if n.isupper():  # USGS often writes 'HARTWELL LAKE NEAR ANDERSON, SC' (Opus review 2026-11-21)
         n = n.title()
     return re.sub(r"\bLk\b", "Lake", re.sub(r"\bRes\b", "Reservoir", n, flags=re.I), flags=re.I)
 
 
 def place_name(name):
-    m = re.search(r"\b(?:nr|near)\s+([^,]+)", name, re.I)
+    m = re.search(r"\b(?:nr|near)\b[\s.]+([^,]+)", no_state(name), re.I)
     return m.group(1).strip() if m else ""
 
 
@@ -59,6 +75,8 @@ def qualify(cands):
             why = "no coordinates"
         elif not identity(c["name"], c["state"])[0]:
             why = "the lake name reduces to nothing"
+        elif re.match(r"[A-Za-z]?-?\d+[A-Za-z]*\s", c["name"]) or re.search(r"\b(?:no\.?\s*\d+|point\s*(?:no\.?\s*)?\d+|site\s*\d+|station)\b", c["name"], re.I):
+            why = "the name starts with a station code, not a lake name"
         elif TAILWATER.search(c["name"]) or NOT_LAKE.search(c["name"]):
             why = "name is a tailwater, canal, lock, afterbay, forebay, tailrace or pond"
         elif not set(c["params"]) & set(LEVEL):
@@ -136,8 +154,8 @@ def fetch(state=None, days=30):
     out = {}
     for f in locs:
         p = f["properties"]
-        m = STATE_RE.search(p["monitoring_location_name"])  # ', AZ-NV' (Lake Mead, Powell) takes the first state
-        out[p["monitoring_location_number"]] = {"site": p["monitoring_location_number"], "name": p["monitoring_location_name"], "state": m.group(1) if m else "",
+        # ', AZ-NV' (Lake Mead, Powell) takes the first state (STATE_RE in state_of)
+        out[p["monitoring_location_number"]] = {"site": p["monitoring_location_number"], "name": p["monitoring_location_name"], "state": state_of(p["monitoring_location_name"], p.get("state_name")),
                                                 "lat": (f.get("geometry") or {}).get("coordinates", [None, None])[1], "lon": (f.get("geometry") or {}).get("coordinates", [None, None])[0], "type": "LK", "params": set(), "years": 0.0}
     ids = sorted(out)
     for i in range(0, len(ids), 40):
@@ -231,6 +249,10 @@ def selftest():
     assert plan(rows, {r["site"] for r in rows}, set(), t) == []  # re-run adds nothing
     assert plan(rows, set(), {r["key"] for r in rows}, t) == []  # a lake that already has a page is never replaced by another gauge
     assert urls(new, [{"lake": "Pleasant Lake"}])["1"].startswith("/lake/pleasant-lake-wi-1")  # shared name never shares an address
+    assert state_of("Churchhill Lake at Churchill Lake ME", "Maine") == "ME" and state_of("Canyon Lk nr New Braunfels, TX", "Texas") == "TX" and state_of("LAKE X", "New Hampshire") == "NH" and state_of("LAKE X", "Narnia") == "" and state_of("LAKE X", None) == ""
+    assert "station code" in {s: w for s, _, w in qualify([c("90", "10B LAKE OKEECHOBEE AT POINT 1, FL")])[1]["held"]}["90"]
+    assert lake_name("SEBAGO LAKE ME") == "Sebago Lake" and identity("SEBAGO LAKE ME", "ME") == identity("SEBAGO LAKE AT X, ME", "ME") and lake_name("SHUTTLE MEADOW RES.NR.NEW BRITAIN,CT.") == "Shuttle Meadow Reservoir" and place_name("SHUTTLE MEADOW RES.NR.NEW BRITAIN,CT.") == "NEW BRITAIN" and place_name("PRINCETON LAKE NEAR PRINCETON ME") == "PRINCETON"
+    assert "station code" in {s: w for s, _, w in qualify([c("91", "LAKE OKEECHOBEE POINT NO1, FL")])[1]["held"]}["91"]
     print("lake_match selftest OK")
 
 
