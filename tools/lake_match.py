@@ -13,10 +13,7 @@ import csv, datetime, os, re, sys, urllib.request, json
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from lib.pages import slug  # noqa: E402
-try:
-    from lib.hero import TAILWATER  # the shared rule
-except ImportError:  # ponytail: copy of lib/hero.py TAILWATER for trees without lib/hero.py; delete once it is everywhere
-    TAILWATER = re.compile(r"\b(below|bl|blw|downstream of)\b.*\b(dam|lake|lk|reservoir|res|powerplant|power plant)\b|\btailwater\b", re.I)
+from lib.common import TAILWATER  # the one shared rule (below a dam, tailrace, tailwater)
 
 BASE = "https://api.waterdata.usgs.gov/ogcapi/v1/collections/"
 LEVEL = ("62614", "62615", "72020", "00062")
