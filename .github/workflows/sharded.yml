@@ -73,7 +73,7 @@ jobs:
     needs: [plan, shard]
     if: ${{ !cancelled() }}  # a failed shard must not stop the others' work from being published
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150  # release at 50 collects about 58 gauges one after another (about 1 min each); 90 was sized for 25
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
       RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
@@ -144,7 +144,9 @@ jobs:
           if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           python -I tools/world_match.py | head -3 || true
           python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
-          python -I tools/release.py 50 && python -I tools/open_wave.py 50 --apply && echo "released=1" >> "$GITHUB_OUTPUT"
+          N=50  # owner 2026-11-22; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
+          if [ -n "$rem" ] && [ $((rem / 22)) -lt "$N" ]; then N=$((rem / 22)); fi
+          python -I tools/release.py $N && python -I tools/open_wave.py $N --apply && echo "released=1" >> "$GITHUB_OUTPUT"
       - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
         if: steps.rel.outputs.released != '1'
         run: git checkout -- data/waves.csv data/index-allow.json data/world-pages.json legacy/ && git clean -fdq legacy/

@@ -205,7 +205,7 @@ if "--every-kind" in sys.argv:  # practice only (owner 2026-11-08 "practice run 
 # Spares (owner 2026-11-14 "I want 25 a day"): 9 releases in 12 days added 175 gauges, about 19 a release, because a pick that fails a page or
 # truth check went back and nothing took its place (11-14: 6 tide-table coasts). The next river, lake or coast picks in the same order are
 # collected and built too; the first ones that pass fill the day up to the cap and the rest go back to the queue with no gate, first in line tomorrow.
-SPARE = n // 3  # ponytail: a third more collects (8 at 25: about 40 USGS calls); raise it if a day still ships short
+SPARE = min(n // 3, 8)  # ponytail: a third more collects, never over 8 (a gauge costs 15-20 USGS calls, not 5: review 2026-11-22; at 50 the uncapped 16 spares pushed a release past the hour's quota)
 _in = {id(x) for x in _k}
 _spare = [x for x in both if id(x) not in _in and x[1] == 1 and not _u(x)][:SPARE] if any(x[1] == 1 for x in _k) else []  # review: world gauges took every slot = no spares (they would be trimmed to nothing and fail the day)
 both = _k
