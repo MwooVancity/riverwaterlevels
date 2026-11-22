@@ -443,7 +443,7 @@ queue,17,03453500,French Broad River,Marshall,NC,78.4,100,73,70,"nri,nri-paddle,
 queue,17,04056500,Manistique River,Manistique,MI,78.4,85,51,70,"nri,nri-paddle,nri-fish",,,high,/river/manistique-river/manistique/
 queue,17,08047500,Clear Fork Trinity River,Fort Worth,TX,78.4,70,96,70,fame,,,high,/river/clear-fork-trinity-river/fort-worth/
 queue,17,03503000,Little Tennessee River,Needmore,NC,78.4,85,51,70,"nri,nri-paddle,fame",,,high,/river/little-tennessee-river/needmore/
-queue,17,02487500,Strong River,D`lo,MS,78.4,85,51,70,"nri,nri-paddle","retry after 2026-11-19: release undone 2026-11-19, the refresh did not pass with it",,high,/river/strong-river/d-lo/
+live,17,02487500,Strong River,D`lo,MS,78.4,85,51,70,"nri,nri-paddle",,,high,/river/strong-river/d-lo/
 queue,17,04150500,Cass River,Cass City,MI,78.4,85,51,70,"nri,nri-paddle,nri-fish",,,high,/river/cass-river/cass-city/
 queue,17,03409500,Clear Fork,Robbins,TN,78.4,85,51,70,"nri,nri-paddle",,,high,/river/clear-fork-tn/robbins/
 queue,17,03115400,Little Muskingum River,Bloomfield,OH,78.4,85,58,70,"nri,nri-paddle,nri-fish",,,high,/river/little-muskingum-river/bloomfield/
@@ -465,7 +465,7 @@ queue,18,03263000,Great Miami River,Taylorsville,OH,78.2,75,79,70,"nri,nri-fish,
 queue,18,01361000,Kinderhook Creek,Rossman,NY,78.2,85,55,70,"nri,nri-paddle,nri-fish",,1250,high,/river/kinderhook-creek-ny/rossman/
 queue,18,07064440,Current River,Montauk State Park,MO,78.2,100,51,70,"nri,fame",,,high,/river/current-river/montauk-state-park/
 live,18,09355500,San Juan River,Archuleta,NM,78.1,100,54,40,fame,,,high,/river/san-juan-river-nm/archuleta/
-queue,18,05483600,Middle Raccoon River,Panora,IA,78.1,85,54,70,"nri,nri-paddle,nri-fish","retry after 2026-11-19: release undone 2026-11-19, the refresh did not pass with it",,high,/river/middle-raccoon-river/panora/
+live,18,05483600,Middle Raccoon River,Panora,IA,78.1,85,54,70,"nri,nri-paddle,nri-fish",,,high,/river/middle-raccoon-river/panora/
 live,18,05419000,Apple River,Hanover,IL,78.1,85,49,70,"nri,nri-paddle,nri-fish",,,high,/river/apple-river-il/hanover/
 queue,18,05327000,High Island Creek,Henderson,MN,78.1,85,57,70,"nri,nri-paddle,nri-fish",,,high,/river/high-island-creek/henderson/
 queue,18,11102300,Rio Hondo,Below Whittier Narrows Dam,CA,78.1,65,78,90,tail,,,auto2,/river/rio-hondo-ca/below-whittier-narrows-dam/
@@ -499,7 +499,7 @@ queue,19,01525500,Canisteo River,West Cameron,NY,77.6,85,54,70,"nri,nri-paddle,n
 queue,19,05550300,Tyler Creek,Elgin,IL,77.6,85,82,70,"nri,nri-paddle,nri-fish",,,high,/river/tyler-creek/elgin/
 live,19,01186000,West Branch Farmington River,Riverton,CT,77.6,100,67,30,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/west-branch-farmington-river-ct/riverton/
 queue,19,01186500,Still River,Robertsville,CT,77.6,100,68,30,"wsr-rec,wsr-fish,wsr",,,high,/river/still-river/robertsville/
-queue,20,01046500,Kennebec River,Bingham Maine,ME,77.5,100,0,70,fame,,,high,/river/kennebec-river/bingham-maine/
+live,20,01046500,Kennebec River,Bingham Maine,ME,77.5,100,0,70,fame,,,high,/river/kennebec-river/bingham-maine/
 queue,20,06334500,Little Missouri River,Camp Crook,SD,77.5,100,0,70,fame,,,high,/river/little-missouri-river-sd/camp-crook/
 live,20,13336500,Selway River,Lowell,ID,77.5,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/selway-river/lowell/
 queue,20,05333500,Saint Croix River,Danbury,WI,77.5,100,0,70,"wsr-rec,wsr",,,high,/river/saint-croix-river-wi/danbury/
@@ -1719,7 +1719,7 @@ queue,68,07010350,Meramec River,Cook Station,MO,64.1,85,52,70,"nri,nri-paddle,fa
 queue,68,09471400,Babocomari River,Tombstone,AZ,64.1,60,69,70,nri,,,high,/river/babocomari-river/tombstone/
 queue,68,07179795,North Cottonwood River,Below Marion Lake,KS,64.1,65,51,50,tail,,,high,/river/north-cottonwood-river/below-marion-lake/
 queue,68,14158798,Smith River,Above Trail Brdg Resv Near Belknap Springs,OR,64.1,90,0,70,"wsr,fame",,,high,/river/smith-river-or/above-trail-brdg-resv-near-belknap-springs/
-queue,68,02331000,Chattahoochee River,Leaf,GA,64.1,100,56,30,"nri,fame",,,high,/river/chattahoochee-river/leaf/
+live,68,02331000,Chattahoochee River,Leaf,GA,64.1,100,56,30,"nri,fame",,,high,/river/chattahoochee-river/leaf/
 queue,68,08067650,West Fork San Jacinto River,Below Lake Conroe Near Conroe,TX,64.1,65,80,50,tail,,,high,/river/west-fork-san-jacinto-river/below-lake-conroe-near-conroe/
 queue,68,09424450,Big Sandy River,Wikieup,AZ,64.0,70,0,70,"nri,fame",,,high,/river/big-sandy-river-az/wikieup/
 queue,68,01138500,Connecticut River,Wells River,VT,64.0,70,0,70,fame,,,high,/river/connecticut-river-vt/wells-river/
@@ -1786,7 +1786,7 @@ queue,71,14165500,Mckenzie River,Coburg,OR,63.3,70,82,70,"nri,fame",,,high,/rive
 queue,71,10128500,Weber River,Oakley,UT,63.3,70,62,70,fame,,5664,high,/river/weber-river/oakley/
 queue,71,09126000,Cimarron River,Cimarron,CO,63.3,70,0,70,fame,,,high,/river/cimarron-river-co/cimarron/
 queue,71,02298880,Myakka River,Control Near Laurel,FL,63.3,60,73,70,nri,,,high,/river/myakka-river/control-near-laurel/
-queue,71,11462080,Russian River,Talmage,CA,63.3,85,67,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/russian-river/talmage/
+live,71,11462080,Russian River,Talmage,CA,63.3,85,67,70,"nri,nri-paddle,nri-fish,fame",,,high,/river/russian-river/talmage/
 queue,71,01410784,Great Egg Harbor River,Sicklerville,NJ,63.3,100,70,40,"wsr-rec,wsr,nri",,,auto2,/river/great-egg-harbor-river/sicklerville/
 queue,71,05369500,Chippewa River,Durand,WI,63.2,85,0,40,"nri,nri-paddle,nri-fish",,,high,/river/chippewa-river-wi/durand/
 queue,71,09306500,White River,Watson Utah,UT,63.2,85,0,40,"nri,nri-paddle,nri-fish",,,high,/river/white-river-ut/watson-utah/
@@ -1837,7 +1837,7 @@ queue,73,03030500,Clarion River,Piney,PA,62.7,70,58,70,"nri,fame",,3440,high,/ri
 queue,73,03598000,Duck River,Shelbyville,TN,62.7,70,70,70,fame,,,high,/river/duck-river-tn/shelbyville-03598000/
 queue,73,09021000,Willow Creek,Below Willow Creek Reservoir,CO,62.7,65,0,90,tail,,,high,/river/willow-creek-co/below-willow-creek-reservoir/
 queue,73,12324680,Clark Fork,Goldcreek,MT,62.7,100,47,30,fame,,,high,/river/clark-fork/goldcreek/
-queue,73,11463500,Russian River,Geyserville,CA,62.7,85,64,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/russian-river/geyserville/
+live,73,11463500,Russian River,Geyserville,CA,62.7,85,64,70,"nri,nri-paddle,nri-fish,fame",,,auto2,/river/russian-river/geyserville/
 queue,73,07301500,North Fork Red River,Carter,OK,62.6,70,57,70,fame,,,high,/river/north-fork-red-river-ok/carter/
 queue,73,02210500,Ocmulgee River,Jackson,GA,62.6,70,58,70,"nri,fame",,,high,/river/ocmulgee-river/jackson/
 queue,73,08188800,Guadalupe River,Tivoli,TX,62.6,100,57,40,fame,,,high,/river/guadalupe-river-tx/tivoli/
@@ -1878,7 +1878,7 @@ queue,75,10130500,Weber River,Coalville,UT,62.3,70,56,70,fame,,5664,high,/river/
 queue,75,03332555,Tippecanoe River,Norway,IN,62.3,85,60,70,"nri,nri-paddle,nri-fish",,,high,/river/tippecanoe-river/norway/
 queue,75,09503300,Granite Creek,Below Watson Lake Near Prescott,AZ,62.3,65,75,50,tail,,,high,/river/granite-creek-az/below-watson-lake-near-prescott/
 queue,75,14325000,South Fork Coquille River,Powers,OR,62.2,60,18,70,nri,,434,high,/river/south-fork-coquille-river/powers/
-queue,75,06040000,Madison River,Cameron,MT,62.2,100,0,70,fame,,,high,/river/madison-river/cameron/
+live,75,06040000,Madison River,Cameron,MT,62.2,100,0,70,fame,,,high,/river/madison-river/cameron/
 live,75,04125550,Manistee River,Wellston,MI,62.2,100,0,70,"wsr-rec,wsr-fish,wsr,fame",,,high,/river/manistee-river/wellston/
 queue,75,05403000,Yellow River,Necedah,WI,62.2,60,48,70,nri,,,high,/river/yellow-river-wi/necedah/
 queue,75,06925250,Little Niangua River,Macks Creek,MO,62.2,75,20,70,"nri,nri-fish",,731,high,/river/little-niangua-river/macks-creek/
@@ -1927,7 +1927,7 @@ queue,76,07064533,Current River,Above Akers,MO,61.5,100,0,70,"nri,fame",,,high,/
 queue,77,10343500,Sagehen Creek,Truckee,CA,61.5,60,65,40,nri,,,auto2,/river/sagehen-creek/truckee/
 queue,77,12135000,Wallace River,Gold Bar,WA,61.5,85,58,0,"nri,nri-paddle",,,auto2,/river/wallace-river/gold-bar/
 queue,77,08401500,Pecos River,Below Brantley Dam Near Carlsbad,NM,61.4,70,72,60,"tail,fame",,46027,high,/river/pecos-river-nm/below-brantley-dam-near-carlsbad/
-queue,77,06040800,Madison River,Above Powerplant Near McAllister,MT,61.4,100,0,70,"nri,fame",,,high,/river/madison-river/above-powerplant-near-mcallister/
+live,77,06040800,Madison River,Above Powerplant Near McAllister,MT,61.4,100,0,70,"nri,fame",,,high,/river/madison-river/above-powerplant-near-mcallister/
 queue,77,10289000,Virginia Creek,Bridgeport,CA,61.4,75,0,70,"nri,nri-fish",,,high,/river/virginia-creek/bridgeport/
 queue,77,07087050,Arkansas River,Below Granite,CO,61.4,100,64,30,"nri,nri-fish,fame",,104327,high,/river/arkansas-river-co/below-granite/
 queue,77,01027200,North Branch Penobscot River,Pittston Farm,ME,61.4,100,0,30,fame,,,high,/river/north-branch-penobscot-river/pittston-farm/
@@ -9173,7 +9173,7 @@ live,,03310900,Nolin Lake,Kyrock,KY,0,,,0,lake,,,human,/lake/nolin-lake/
 live,,03318005,Rough River Lake,Falls of Rough,KY,0,,,0,lake,,,human,/lake/rough-river-lake/
 live,,08109900,Somerville Lake,Somerville,TX,0,,,0,lake,,,human,/lake/somerville-lake/
 live,,02193900,Thurmond Lake,Plum Branch,SC,0,,,0,lake,,,human,/lake/thurmond-lake/
-queue,,COOPS-9087031,Lake Michigan,Holland,MI,88.8,,,0,lake,,321337,human,/lake/lake-michigan/
+live,,COOPS-9087031,Lake Michigan,Holland,MI,88.8,,,0,lake,,321337,human,/lake/lake-michigan/
 live,,8729108,Panama City,Panama City,FL,0,,,0,coast,,,human,/coast/panama-city/
 live,,9449211,Bellingham,Bellingham,WA,0,,,0,coast,,,human,/coast/bellingham/
 live,,8775870,Corpus Christi,Corpus Christi,TX,0,,,0,coast,,,human,/coast/corpus-christi/
@@ -9224,11 +9224,11 @@ live,,8720554,Vilano Beach,Vilano Beach,FL,0,,,0,coast,,,human,/coast/vilano-bea
 live,,8446613,Wellfleet,Wellfleet,MA,0,,,0,coast,,,human,/coast/wellfleet/
 queue,,01018900,West Grand Lake,,ME,15.0,,,0,lake,,,human,/lake/west-grand-lake/
 queue,,01019300,Lewy Lake,,ME,15.0,,,0,lake,,,human,/lake/lewy-lake/
-queue,,01063995,Sebago Lake,North Windham,ME,68.6,,,0,lake,,18021,human,/lake/sebago-lake/
+queue,,01063995,Sebago Lake,North Windham,ME,68.6,,,0,lake,no-usgs-rows,18021,human,/lake/sebago-lake/
 queue,,01102505,Upper Mystic Lake,,MA,15.0,,,0,lake,,,human,/lake/upper-mystic-lake/
 queue,,01304250,Laurel Lake,MATTITUCK,NY,15.0,,,0,lake,,,human,/lake/laurel-lake/
 queue,,0131079450,Hempstead Lake,,NY,15.0,,,0,lake,,,human,/lake/hempstead-lake/
-queue,,01323500,Great Sacandaga Lake,,NY,68.0,,,0,lake,,16494,human,/lake/great-sacandaga-lake/
+queue,,01323500,Great Sacandaga Lake,,NY,68.0,,,0,lake,no-usgs-rows,16494,human,/lake/great-sacandaga-lake/
 queue,,01330884,Saratoga Lake,,NY,59.5,,,0,lake,,4917,human,/lake/saratoga-lake/
 queue,,01350100,Schoharie Reservoir,GRAND GORGE,NY,57.7,,,0,lake,,3755,human,/lake/schoharie-reservoir/
 queue,,01376531,Ohrback Lake,,NY,15.0,,,0,lake,,,human,/lake/ohrback-lake/
@@ -9263,7 +9263,7 @@ queue,,01541180,Curwensville Lake,Curwensville,PA,42.8,,,0,lake,,448,human,/lake
 queue,,01541340,Glendale Lake,Flinton,PA,15.0,,,0,lake,,,human,/lake/glendale-lake/
 queue,,01543900,First Fork Sinnemahoning Creek Reservoir,,PA,15.0,,,0,lake,,,human,/lake/first-fork-sinnemahoning-creek-reservoir/
 queue,,01547480,Foster Joseph Sayers Lake,Blanchard,PA,15.0,,,0,lake,,,human,/lake/foster-joseph-sayers-lake/
-queue,,01563100,Raystown Lake,Huntingdon,PA,70.8,,,0,lake,,24544,human,/lake/raystown-lake/
+queue,,01563100,Raystown Lake,Huntingdon,PA,70.8,,,0,lake,no-usgs-rows,24544,human,/lake/raystown-lake/
 queue,,0158175720,Lake Serene,,MD,15.0,,,0,lake,,,human,/lake/lake-serene/
 queue,,01595790,Jennings Randolph Lake,ELK GARDEN,WV,58.6,,,0,lake,,4282,human,/lake/jennings-randolph-lake/
 queue,,01597490,Savage River Reservoir,BLOOMINGTON,MD,47.5,,,0,lake,,884,human,/lake/savage-river-reservoir/
@@ -9314,7 +9314,7 @@ queue,,02381400,Carters Lake,CARTERS,GA,15.0,,,0,lake,,,human,/lake/carters-lake
 queue,,02382400,Carters Re-Regulation Lake,CARTERS,GA,15.0,,,0,lake,,,human,/lake/carters-re-regulation-lake/
 queue,,02464800,Lake Tuscaloosa,TUSCALOOSA,AL,55.2,,,0,lake,,2657,human,/lake/lake-tuscaloosa/
 queue,,03012520,Allegheny Reservoir,Warren,PA,60.9,,,0,lake,,5990,human,/lake/allegheny-reservoir/
-queue,,03013946,Chautauqua Lake,,NY,70.4,,,0,lake,,23113,human,/lake/chautauqua-lake/
+queue,,03013946,Chautauqua Lake,,NY,70.4,,,0,lake,no-usgs-rows,23113,human,/lake/chautauqua-lake/
 queue,,03019500,Tionesta Creek Reservoir,,PA,15.0,,,0,lake,,,human,/lake/tionesta-creek-reservoir/
 queue,,03022550,Woodcock Creek Lake,Saegertown,PA,15.0,,,0,lake,,,human,/lake/woodcock-creek-lake/
 queue,,03027000,East Branch Clarion River Lake,Glen Hazel,PA,49.7,,,0,lake,,1202,human,/lake/east-branch-clarion-river-lake/
@@ -9325,7 +9325,7 @@ queue,,03046500,Loyalhanna Creek Lake,,PA,15.0,,,0,lake,,,human,/lake/loyalhanna
 queue,,03055500,Tygart Lake,GRAFTON,WV,15.0,,,0,lake,,,human,/lake/tygart-lake/
 queue,,03057900,Stonewall Jackson Lake,WESTON,WV,54.7,,,0,lake,,2473,human,/lake/stonewall-jackson-lake/
 queue,,03071590,Cheat Lake,STEWARTSTOWN,WV,57.7,,,0,lake,,3788,human,/lake/cheat-lake/
-queue,,03075871,Deep Creek Lake,THAYERVILLE,MD,70.3,,,0,lake,,22914,human,/lake/deep-creek-lake/
+queue,,03075871,Deep Creek Lake,THAYERVILLE,MD,70.3,,,0,lake,no-usgs-rows,22914,human,/lake/deep-creek-lake/
 queue,,03077000,Youghiogheny River Lake,Confluence,PA,58.7,,,0,lake,,4343,human,/lake/youghiogheny-river-lake/
 queue,,03090000,Berlin Lake,Berlin Center,OH,15.0,,,0,lake,,,human,/lake/berlin-lake/
 queue,,03091000,Milton Reservoir,Pricetown,OH,15.0,,,0,lake,,,human,/lake/milton-reservoir/
@@ -9347,7 +9347,7 @@ queue,,03228400,Hoover Reservoir,,OH,61.9,,,0,lake,,6902,human,/lake/hoover-rese
 queue,,03242340,Caesar Creek Lake,,OH,61.5,,,0,lake,,6508,human,/lake/caesar-creek-lake/
 queue,,03247040,East Fork Lake,Bantam,OH,57.0,,,0,lake,,3443,human,/lake/east-fork-lake/
 queue,,03256500,West Fork Mill Creek Reservoir,Greenhills,OH,15.0,,,0,lake,,,human,/lake/west-fork-mill-creek-reservoir/
-queue,,03260500,Indian Lake,,OH,67.3,,,0,lake,,14930,human,/lake/indian-lake/
+queue,,03260500,Indian Lake,,OH,67.3,,,0,lake,no-usgs-rows,14930,human,/lake/indian-lake/
 queue,,03261800,Lake Loramie,Fort Loramie,OH,15.0,,,0,lake,,,human,/lake/lake-loramie/
 queue,,03268090,Clarence J Brown Reservoir,Springfield,OH,15.0,,,0,lake,,,human,/lake/clarence-j-brown-reservoir/
 queue,,03275990,Brookville Lake,,IN,54.8,,,0,lake,,2515,human,/lake/brookville-lake/
@@ -9371,17 +9371,17 @@ queue,,04129950,Mullett Lake,CHEBOYGAN,MI,60.5,,,0,lake,,5621,human,/lake/mullet
 queue,,04224000,Mount Morris Lake,MOUNT MORRIS,NY,15.0,,,0,lake,,,human,/lake/mount-morris-lake/
 queue,,04227980,Conesus Lake,LAKEVILLE,NY,60.2,,,0,lake,,5426,human,/lake/conesus-lake/
 queue,,04235396,Owasco Lake,AUBURN,NY,59.1,,,0,lake,,4625,human,/lake/owasco-lake/
-queue,,04240495,Onondaga Lake,,NY,70.1,,,0,lake,,22195,human,/lake/onondaga-lake/
+queue,,04240495,Onondaga Lake,,NY,70.1,,,0,lake,no-usgs-rows,22195,human,/lake/onondaga-lake/
 queue,,04256500,Stillwater Reservoir,BEAVER RIVER,NY,53.2,,,0,lake,,1996,human,/lake/stillwater-reservoir/
-queue,,04278000,Lake George,,NY,78.2,,,0,lake,,70965,human,/lake/lake-george/
+queue,,04278000,Lake George,,NY,78.2,,,0,lake,no-usgs-rows,70965,human,/lake/lake-george/
 queue,,04283500,East Barre Detention Reservoir,,VT,15.0,,,0,lake,,,human,/lake/east-barre-detention-reservoir/
 queue,,04285000,Wrightsville Detention Reservoir,,VT,15.0,,,0,lake,,,human,/lake/wrightsville-detention-reservoir/
 queue,,04288500,Waterbury Reservoir,WATERBURY,VT,15.0,,,0,lake,,,human,/lake/waterbury-reservoir/
-queue,,04295500,Lake Memphremagog,,VT,68.7,,,0,lake,,18236,human,/lake/lake-memphremagog/
+queue,,04295500,Lake Memphremagog,,VT,68.7,,,0,lake,no-usgs-rows,18236,human,/lake/lake-memphremagog/
 queue,,05015500,Lake Sherburne,,MT,48.1,,,0,lake,,958,human,/lake/lake-sherburne/
 queue,,05049995,Mud Lake,WHITE ROCK,SD,39.7,,,0,lake,,289,human,/lake/mud-lake/
 queue,,05056241,Dry Lake,PENN,ND,15.0,,,0,lake,,,human,/lake/dry-lake/
-queue,,05056500,Devils Lake,DEVILS LAKE,ND,70.6,,,0,lake,,23673,human,/lake/devils-lake/
+queue,,05056500,Devils Lake,DEVILS LAKE,ND,70.6,,,0,lake,no-usgs-rows,23673,human,/lake/devils-lake/
 queue,,05057500,Lake Ashtabula,,ND,49.4,,,0,lake,,1150,human,/lake/lake-ashtabula/
 queue,,05088500,Homme Reservoir,PARK RIVER,ND,15.0,,,0,lake,,,human,/lake/homme-reservoir/
 queue,,05113750,E. Branch Short Creek Reservoir,COLUMBUS,ND,15.0,,,0,lake,,,human,/lake/e-branch-short-creek-reservoir/
@@ -9389,8 +9389,8 @@ queue,,05115500,Lake Darling,FOXHOLM,ND,15.0,,,0,lake,,,human,/lake/lake-darling
 queue,,05390100,Lac Vieux Desert,LAND O'LAKES,WI,62.7,,,0,lake,,7720,human,/lake/lac-vieux-desert/
 queue,,05390500,Anvil Lake,EAGLE RIVER,WI,15.0,,,0,lake,,,human,/lake/anvil-lake/
 queue,,05427235,Lake Koshkonong,NEWVILLE,WI,63.0,,,0,lake,,8032,human,/lake/lake-koshkonong/
-queue,,05428000,Lake Mendota,,WI,69.5,,,0,lake,,20485,human,/lake/lake-mendota/
-queue,,05429000,Lake Monona,,WI,68.9,,,0,lake,,18779,human,/lake/lake-monona/
+queue,,05428000,Lake Mendota,,WI,69.5,,,0,lake,no-usgs-rows,20485,human,/lake/lake-mendota/
+queue,,05429000,Lake Monona,,WI,68.9,,,0,lake,no-usgs-rows,18779,human,/lake/lake-monona/
 queue,,05429485,Lake Waubesa,,WI,53.7,,,0,lake,,2121,human,/lake/lake-waubesa/
 queue,,05507820,Monroe City Lake,Monroe City,MO,15.0,,,0,lake,,,human,/lake/monroe-city-lake/
 queue,,06038000,Hebgen Lake,West Yellowstone,MT,62.4,,,0,lake,,7394,human,/lake/hebgen-lake/
@@ -9458,9 +9458,9 @@ queue,,08046500,Benbrook Lake,Benbrook,TX,55.9,,,0,lake,,2919,human,/lake/benbro
 queue,,08049200,Lake Arlington,,TX,54.2,,,0,lake,,2298,human,/lake/lake-arlington/
 queue,,08049800,Joe Pool Lake,Duncanville,TX,63.0,,,0,lake,,8031,human,/lake/joe-pool-lake/
 queue,,08051100,Ray Roberts Lake,Pilot Point,TX,60.5,,,0,lake,,5656,human,/lake/ray-roberts-lake/
-queue,,08052800,Lewisville Lake,Lewisville,TX,68.0,,,0,lake,,16534,human,/lake/lewisville-lake/
+queue,,08052800,Lewisville Lake,Lewisville,TX,68.0,,,0,lake,no-usgs-rows,16534,human,/lake/lewisville-lake/
 queue,,08054500,Grapevine Lake,Grapevine,TX,64.8,,,0,lake,,10397,human,/lake/grapevine-lake/
-queue,,08061550,Lake Ray Hubbard,Forney,TX,69.5,,,0,lake,,20290,human,/lake/lake-ray-hubbard/
+queue,,08061550,Lake Ray Hubbard,Forney,TX,69.5,,,0,lake,no-usgs-rows,20290,human,/lake/lake-ray-hubbard/
 queue,,08062730,New Terrell City Lake,Terrell,TX,15.0,,,0,lake,,,human,/lake/new-terrell-city-lake/
 queue,,08063050,Navarro Mills Lake,Dawson,TX,43.9,,,0,lake,,529,human,/lake/navarro-mills-lake/
 queue,,08063600,Lake Waxahachie,Waxahachie,TX,50.0,,,0,lake,,1267,human,/lake/lake-waxahachie/
@@ -9511,8 +9511,8 @@ queue,,09213700,Big Sandy Reservoir,FARSON,WY,15.0,,,0,lake,,,human,/lake/big-sa
 queue,,09362800,Lemon Reservoir,DURANGO,CO,15.0,,,0,lake,,,human,/lake/lemon-reservoir/
 queue,,09386189,Zuni Salt Lake,QUEMADO,NM,55.5,,,0,lake,,2756,human,/lake/zuni-salt-lake/
 queue,,10055000,Bear Lake,GARDEN CITY,UT,15.0,,,0,lake,,,human,/lake/bear-lake/
-queue,,10254005,Salton Sea,WESTMORLAND,CA,90.8,,,0,lake,,426145,human,/lake/salton-sea/
-queue,,10288500,Walker Lake,HAWTHORNE,NV,69.2,,,0,lake,,19410,human,/lake/walker-lake/
+queue,,10254005,Salton Sea,WESTMORLAND,CA,90.8,,,0,lake,no-usgs-rows,426145,human,/lake/salton-sea/
+queue,,10288500,Walker Lake,HAWTHORNE,NV,69.2,,,0,lake,no-usgs-rows,19410,human,/lake/walker-lake/
 queue,,10290300,Upper Twin Lake,BRIDGEPORT,CA,15.0,,,0,lake,,,human,/lake/upper-twin-lake/
 queue,,10290400,Lower Twin Lake,BRIDGEPORT,CA,15.0,,,0,lake,,,human,/lake/lower-twin-lake/
 queue,,10292500,Bridgeport Reservoir,BRIDGEPORT,CA,49.6,,,0,lake,,1187,human,/lake/bridgeport-reservoir-ca-10292500/
@@ -9522,7 +9522,7 @@ queue,,10312100,Lahontan Reservoir,FALLON,NV,54.5,,,0,lake,,2381,human,/lake/lah
 queue,,10334500,Rye Patch Reservoir,RYE PATCH,NV,52.1,,,0,lake,,1691,human,/lake/rye-patch-reservoir/
 queue,,10336500,Pyramid Lake,NIXON,NV,15.0,,,0,lake,,,human,/lake/pyramid-lake/
 queue,,10336710,Marlette Lake,CARSON CITY,NV,15.0,,,0,lake,,,human,/lake/marlette-lake/
-queue,,10338400,Donner Lake,TRUCKEE,CA,77.2,,,0,lake,,60804,human,/lake/donner-lake/
+queue,,10338400,Donner Lake,TRUCKEE,CA,77.2,,,0,lake,no-usgs-rows,60804,human,/lake/donner-lake/
 queue,,10342900,Independence Lake,TRUCKEE,CA,51.1,,,0,lake,,1479,human,/lake/independence-lake/
 queue,,10344300,Stampede Reservoir,BOCA,CA,15.0,,,0,lake,,,human,/lake/stampede-reservoir/
 queue,,10344490,Boca Reservoir,TRUCKEE,CA,49.1,,,0,lake,,1115,human,/lake/boca-reservoir/
@@ -9537,16 +9537,16 @@ queue,,11162618,Pilarcitos Lake,HILLSBOROUGH,CA,15.0,,,0,lake,,,human,/lake/pila
 queue,,11162730,San Andreas Lake,MILLBRAE,CA,64.0,,,0,lake,,9349,human,/lake/san-andreas-lake/
 queue,,11162750,Lower Crystal Springs Reservoir,SAN MATEO,CA,15.0,,,0,lake,,,human,/lake/lower-crystal-springs-reservoir/
 queue,,11173490,Calaveras Reservoir,SUNOL,CA,58.0,,,0,lake,,3960,human,/lake/calaveras-reservoir/
-queue,,11275500,Hetch Hetchy Reservoir,,CA,77.1,,,0,lake,,60193,human,/lake/hetch-hetchy-reservoir/
+queue,,11275500,Hetch Hetchy Reservoir,,CA,77.1,,,0,lake,no-usgs-rows,60193,human,/lake/hetch-hetchy-reservoir/
 queue,,11277200,Cherry Lake,HETCH HETCHY,CA,55.2,,,0,lake,,2634,human,/lake/cherry-lake/
 queue,,11277500,Lake Eleanor,HETCH HETCHY,CA,15.0,,,0,lake,,,human,/lake/lake-eleanor/
 queue,,11287500,Don Pedro Reservoir,LA GRANGE,CA,60.3,,,0,lake,,5512,human,/lake/don-pedro-reservoir/
 queue,,11292600,Donnell Lake,DARDANELLE,CA,48.6,,,0,lake,,1031,human,/lake/donnell-lake/
 queue,,11292800,Beardsley Lake,STRAWBERRY,CA,15.0,,,0,lake,,,human,/lake/beardsley-lake/
 queue,,11299995,Tulloch Reservoir,KNIGHTS FERRY,CA,15.0,,,0,lake,,,human,/lake/tulloch-reservoir/
-queue,,11450000,Clear Lake,,CA,75.1,,,0,lake,,45277,human,/lake/clear-lake/
+queue,,11450000,Clear Lake,,CA,75.1,,,0,lake,no-usgs-rows,45277,human,/lake/clear-lake/
 queue,,11451290,Indian Valley Reservoir,,CA,50.9,,,0,lake,,1424,human,/lake/indian-valley-reservoir/
-queue,,11492200,Crater Lake,CRATER LAKE,OR,88.1,,,0,lake,,290281,human,/lake/crater-lake/
+queue,,11492200,Crater Lake,CRATER LAKE,OR,88.1,,,0,lake,no-usgs-rows,290281,human,/lake/crater-lake/
 queue,,11507001,Upper Klamath Lake,K.FALLS(WEIGHT/MEAN ELEV),OR,15.0,,,0,lake,,,human,/lake/upper-klamath-lake/
 queue,,11509380,Keno Reservoir,,OR,15.0,,,0,lake,,,human,/lake/keno-reservoir/
 queue,,12035380,Wynoochee Lake,GRISDALE,WA,52.0,,,0,lake,,1685,human,/lake/wynoochee-lake/
@@ -9559,7 +9559,7 @@ queue,,12147900,South Fork Tolt Reservoir,CARNATION,WA,15.0,,,0,lake,,,human,/la
 queue,,12191600,Baker Lake,CONCRETE,WA,57.6,,,0,lake,,3707,human,/lake/baker-lake/
 queue,,12193000,Lake Shannon,,WA,52.0,,,0,lake,,1677,human,/lake/lake-shannon/
 queue,,12362000,Hungry Horse Reservoir,Hungry Horse,MT,15.0,,,0,lake,,,human,/lake/hungry-horse-reservoir/
-queue,,12371550,Flathead Lake,,MT,76.8,,,0,lake,,58099,human,/lake/flathead-lake/
+queue,,12371550,Flathead Lake,,MT,76.8,,,0,lake,no-usgs-rows,58099,human,/lake/flathead-lake/
 queue,,12439000,Osoyoos Lake,OROVILLE,WA,60.4,,,0,lake,,5524,human,/lake/osoyoos-lake/
 queue,,12469500,Lenore Lake,SOAP LK,WA,52.9,,,0,lake,,1896,human,/lake/lenore-lake/
 queue,,12470000,Soap Lake,SOAP LK,WA,62.8,,,0,lake,,7800,human,/lake/soap-lake/
@@ -9593,11 +9593,11 @@ queue,,14312450,Diamond Lake,DIAMOND LAKE,OR,61.1,,,0,lake,,6117,human,/lake/dia
 queue,,14313000,Lemolo Lake,TOKETEE FALLS,OR,15.0,,,0,lake,,,human,/lake/lemolo-lake/
 queue,,14335040,Lost Creek Lake,MCLEOD,OR,56.2,,,0,lake,,3072,human,/lake/lost-creek-lake/
 queue,,14361900,Applegate Lake,COPPER,OR,53.6,,,0,lake,,2119,human,/lake/applegate-lake/
-queue,,312914093422701,Toledo Bend Reservoir,Negreet,LA,70.0,,,0,lake,,21771,human,/lake/toledo-bend-reservoir/
+queue,,312914093422701,Toledo Bend Reservoir,Negreet,LA,70.0,,,0,lake,no-usgs-rows,21771,human,/lake/toledo-bend-reservoir/
 queue,,391007121240701,Miller Lake,HAMMONTON,CA,15.0,,,0,lake,,,human,/lake/miller-lake/
 queue,,395540082291600,Buckeye Lake,Watkins Island,OH,60.8,,,0,lake,,5851,human,/lake/buckeye-lake/
 queue,,403204084342601,Grand Lake St Marys,Celina,OH,15.0,,,0,lake,,,human,/lake/grand-lake-st-marys/
-queue,,423525088260400,Geneva Lake,,WI,70.1,,,0,lake,,22204,human,/lake/geneva-lake/
+queue,,423525088260400,Geneva Lake,,WI,70.1,,,0,lake,no-usgs-rows,22204,human,/lake/geneva-lake/
 queue,,425715089164700,Lake Kegonsa,STOUGHTON,WI,52.0,,,0,lake,,1677,human,/lake/lake-kegonsa/
 queue,,435857089325301,Pleasant Lake,WESTFIELD,WI,15.0,,,0,lake,,,human,/lake/pleasant-lake/
 queue,,01544800,Kettle Creek Lake,Westport,PA,15.0,,,0,lake,,,human,/lake/kettle-creek-lake/
@@ -9615,7 +9615,7 @@ queue,,08082800,Millers Creek Reservoir,Bomarton,TX,15.0,,,0,lake,,,human,/lake/
 queue,,08083500,Fort Phantom Hill Reservoir,Nugent,TX,15.0,,,0,lake,,,human,/lake/fort-phantom-hill-reservoir/
 queue,,08086400,Hubbard Creek Reservoir,Breckenridge,TX,15.0,,,0,lake,,,human,/lake/hubbard-creek-reservoir/
 queue,,08091730,Comanche Creek Reservoir,Glen Rose,TX,15.0,,,0,lake,,,human,/lake/comanche-creek-reservoir/
-queue,,08111058,Gibbons Creek Reservoir,Shiro,TX,66.4,,,0,lake,,13059,human,/lake/gibbons-creek-reservoir/
+queue,,08111058,Gibbons Creek Reservoir,Shiro,TX,66.4,,,0,lake,no-usgs-rows,13059,human,/lake/gibbons-creek-reservoir/
 queue,,08123600,Champion Creek Reservoir,Colorado City,TX,42.5,,,0,lake,,431,human,/lake/champion-creek-reservoir/
 queue,,08123755,Moss Creek Lake,Coahoma,TX,15.0,,,0,lake,,,human,/lake/moss-creek-lake/
 queue,,08125500,Oak Creek Reservoir,Blackwell,TX,15.0,,,0,lake,,,human,/lake/oak-creek-reservoir/
