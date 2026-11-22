@@ -10,9 +10,10 @@ FILE = os.path.join(D, "keyword-tiers-water.csv")
 
 
 def kind(k):
-    if any(w in k for w in ("tide", "tides", "surf", "wave")):
+    w = set(k.split())
+    if w & {"tide", "tides", "surf", "wave", "waves"}:
         return "ocean"
-    if any(w in k for w in ("lake", "reservoir", "loch", "dam")):
+    if w & {"lake", "reservoir", "loch", "dam"}:
         return "lake"
     return "river"
 
@@ -26,7 +27,7 @@ def parse(path):
     for r in rows[hi + 1:]:
         if len(r) < 4 or not r[0] or r[2] in ("All", "United States"):
             continue
-        vol = int(float(r[3])) if r[3] else None
+        vol = int(float(r[3].replace(",", ""))) if r[3] else None
         bid = r[9] if len(r) > 9 and r[9] else ""
         out.append((r[0].lower().strip(), vol, bid))
     return out
@@ -50,6 +51,7 @@ def _selftest():
     add, unk = merge([("a river level", 500, "2.5"), ("b river level", None, ""), ("c lake level", 0, ""), ("old", 50, "")], {"old"})
     assert [a["keyword"] for a in add] == ["a river level", "c lake level"] and unk == ["b river level"], (add, unk)
     assert kind("x tide chart") == "ocean" and kind("x lake level") == "lake" and kind("x river flow") == "river"
+    assert kind("lochsa river level") == "river" and kind("adams river level") == "river"
     print("kp_merge selftest OK")
 
 

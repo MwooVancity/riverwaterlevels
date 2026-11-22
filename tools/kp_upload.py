@@ -33,10 +33,10 @@ def low_confidence(name):
 
 def river_phrases(name):
     n = re.sub(r"\s+", " ", name.lower().replace("&", "and")).strip()
-    n = re.sub(r"[^a-z0-9 '\-]", "", n)
+    n = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 '\-]", "", n)).strip()
     if not n:
         return []
-    base = n if n.endswith(("river", "creek", "fork", "brook", "run", "bayou", "canal")) else n + " river"
+    base = n if n.endswith(("river", "creek", "fork", "brook", "run", "bayou", "canal", "lake", "reservoir")) else n + " river"
     return [base + " level", base + " flow"]
 
 
@@ -60,6 +60,7 @@ def _selftest():
     assert river_phrases("Fall Creek") == ["fall creek level", "fall creek flow"]
     assert river_phrases("Yampa") == ["yampa river level", "yampa river flow"]
     assert river_phrases("   ") == []
+    assert river_phrases("Richland-Chambers  Reservoir")[0] == "richland-chambers reservoir level"
     r = build(["lake mead water level"], ["Boise River"], {"lake mead level"})
     assert [x[0] for x in r] == ["lake mead water level", "boise river level", "boise river flow"], r
     assert len(controls({"a%d" % i: i % 5 * 5 for i in range(60)}, 2)) == 10, "2 control phrases per band"
