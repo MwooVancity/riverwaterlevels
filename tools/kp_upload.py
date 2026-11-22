@@ -75,7 +75,9 @@ def main():
     names |= {r["river"] for r in csv.DictReader(open(os.path.join(D, "waves.csv"), encoding="utf-8")) if r["status"] == "queue" and "lake" not in r["signals"].split(",")}
     tiers = {r["keyword"].lower(): int(float(r["tier"] or 0)) for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8"))}
     low = sorted(n for n in names if low_confidence(n))
-    rows = build(seeds, sorted(n for n in names if not low_confidence(n)), set(tiers))
+    unk = os.path.join(D, "kp-unknown.txt")  # blank Planner rows: asked once, never again
+    asked = set(tiers) | (set(open(unk, encoding="utf-8").read().split("\n")) if os.path.exists(unk) else set())
+    rows = build(seeds, sorted(n for n in names if not low_confidence(n)), asked)
     ctl = controls(tiers)
     out = os.path.join(D, "kp-upload")
     os.makedirs(out, exist_ok=True)
