@@ -22,6 +22,15 @@ def controls(tiers, per_band=4):
     return [k for t in sorted(by) for k in by[t][:per_band]]
 
 
+LOW = ("creek", "brook", "fork", "run")  # 0 of ~60 such names got a Planner band in the 2026-11-22 probe: kept apart, not deleted
+JUNK = (" on ", "highway", "cutoff", "  ")
+
+
+def low_confidence(name):
+    n = name.lower().strip()
+    return n.endswith(LOW) or any(j in n for j in JUNK) or bool(re.search(r"\d", n))
+
+
 def river_phrases(name):
     n = re.sub(r"\s+", " ", name.lower().replace("&", "and")).strip()
     n = re.sub(r"[^a-z0-9 '\-]", "", n)
@@ -55,6 +64,8 @@ def _selftest():
     assert [x[0] for x in r] == ["lake mead water level", "boise river level", "boise river flow"], r
     assert len(controls({"a%d" % i: i % 5 * 5 for i in range(60)}, 2)) == 10, "2 control phrases per band"
     assert build(["a"], ["a"], {"a"}) == [("a river level", "queued-river"), ("a river flow", "queued-river")]
+    assert low_confidence("Fall Creek") and low_confidence("Arkansas River on Highway 160") and low_confidence("Route 9 River")
+    assert not low_confidence("Boise River") and not low_confidence("Yampa")
     print("kp_upload selftest OK")
 
 
@@ -63,10 +74,12 @@ def main():
     names = {r["river"] for r in csv.DictReader(open(os.path.join(D, "world-queue.csv"), encoding="utf-8")) if r["gauge"] and r["river"]}
     names |= {r["river"] for r in csv.DictReader(open(os.path.join(D, "waves.csv"), encoding="utf-8")) if r["status"] == "queue" and "lake" not in r["signals"].split(",")}
     tiers = {r["keyword"].lower(): int(float(r["tier"] or 0)) for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8"))}
-    rows = build(seeds, sorted(names), set(tiers))
+    low = sorted(n for n in names if low_confidence(n))
+    rows = build(seeds, sorted(n for n in names if not low_confidence(n)), set(tiers))
     ctl = controls(tiers)
     out = os.path.join(D, "kp-upload")
     os.makedirs(out, exist_ok=True)
+    open(os.path.join(out, "low-confidence-names.txt"), "w", encoding="utf-8").write("\n".join(low) + "\n")
     with open(os.path.join(out, "manifest.csv"), "w", newline="", encoding="utf-8") as m:
         w = csv.writer(m)
         w.writerow(["phrase", "batch", "source", "known_band"])
