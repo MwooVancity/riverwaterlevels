@@ -130,11 +130,19 @@ except (OSError, ValueError, KeyError):
     _TW = {}  # a torn file ranks lakes at 0, never crashes the release (load_bids does the same)
 
 
+_NAMED = {_ld.norm(x.get("river") or "") for x in live_.values() if x.get("status") == "live"}  # waters that already have a live page: another gauge on the name gets 5%
+_SEEN = set()
+
+
 def us_tier(r):
-    """Money tier of a US pick: world-queue.csv, else for a lake (its gauges are not in that file, so they sorted last at 0) the Keyword Planner band of its name (tools/lake_demand.py tier_of; no row = 0)."""
-    if r["site"] in tier_ or "lake" not in (r.get("signals") or "").split(","):  # in the file = its own share (even 0), Opus review 2026-11-22
+    """Money tier of a US pick. A row with a keyword in world-queue.csv keeps that share (even 0). A lake gauge with no keyword there (all 402 queued) gets the Keyword Planner band of its name (tools/lake_demand.py tier_of; no row = 0), the first gauge on a name the full band, later ones 5%."""
+    if kw_.get(r["site"]) or "lake" not in (r.get("signals") or "").split(","):  # rivers: name-only matching took Fall River MA's 5000 for Fall River KS and a lake's band for Cedar Creek (dry run 2026-11-22); keyword rows carry no state, so rivers stay on the state-aware world-queue tier
         return tier_.get(r["site"], 0)
-    return _ld.tier_of(r.get("river") or "", _TW) or 0
+    t = _ld.tier_of(r.get("river") or "", _TW) or 0
+    n = _ld.norm(r.get("river") or "")
+    full = n not in _NAMED and n not in _SEEN
+    _SEEN.add(n)
+    return t if full else t * 0.05
 
 
 both = sorted([(-us_tier(r) * rate(kw_.get(r["site"]), None, BIDS, BID_MID), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * rate(w["keyword"], w["feed"], BIDS, BID_MID), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
