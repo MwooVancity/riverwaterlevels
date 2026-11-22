@@ -1,11 +1,12 @@
 """Daily lake share for tools/release.py (PLAN.md DECIDED 2026-11-21: lakes first, 5-10 a day of the 25, a guess).
 lake_first(both, cap) puts at most `cap` lake rows at the front of the money order; the rest keep their order, so the day's cut at N stays N.
 A row is (-money, kind, i, row); kind 1 = US row. A lake row has 'lake' in its signals. Practice-gated rows are never picked by the real release.
+LAKE_FIRST is 25 since owner 2026-11-21 (was 5-10): while lakes are queued all of a day's 25 are lakes.
 Usage: python -I tools/lake_share.py --selftest
 """
 import sys
 
-LAKE_FIRST = 8  # ChatGPT 2026-11-21: start at 5-10 a day; a guess, raise it only when the lake cohort numbers (PLAN.md) hold
+LAKE_FIRST = 25  # owner 2026-11-21: "raise it 25 a day" (was 8, a ChatGPT guess); all 25 daily slots go to lakes while lakes are queued, other rows fill what lakes cannot
 
 
 def is_lake(x):
@@ -29,8 +30,10 @@ def _selftest():
     lakes = [row(i, "l", "lake", money=-50 + i) for i in range(30)]
     both = sorted(rivers + lakes, key=lambda x: x[:3])
     top = lake_first(both)[:n]
-    assert sum(is_lake(x) for x in top) == 8 and len(top) == n and sum(not is_lake(x) for x in top) == 17, "30 lakes + 30 rivers: 8 lakes, 17 others"
-    assert [x for x in top if not is_lake(x)] == [x for x in both if not is_lake(x)][:17], "non-lake order unchanged"
+    assert sum(is_lake(x) for x in top) == 25 and len(top) == n and sum(not is_lake(x) for x in top) == 0, "30 lakes + 30 rivers: 25 lakes, 0 others"
+    assert [x for x in top if not is_lake(x)] == [x for x in both if not is_lake(x)][:0], "non-lake order unchanged"
+    wide = lake_first(both)[:30]
+    assert [x for x in wide if not is_lake(x)] == [x for x in both if not is_lake(x)][:5] and sum(is_lake(x) for x in wide) == 25, "N=30: 25 lakes then the rivers in their own order"
     few = sorted(rivers + lakes[:3], key=lambda x: x[:3])
     top = lake_first(few)[:n]
     assert sum(is_lake(x) for x in top) == 3 and len(top) == n and sum(not is_lake(x) for x in top) == 22, "3 lakes: 3 lakes + 22 others"

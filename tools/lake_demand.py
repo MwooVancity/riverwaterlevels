@@ -3,7 +3,8 @@ Why: every queued lake had score 0, so the daily release took lakes by gauge num
 A lake with no matching article keeps a small score (UNKNOWN), not zero: unknown is not zero. Only status=queue rows of kind lake are touched; all others stay byte-for-byte.
 Usage: python -I tools/lake_demand.py [--dry]
 """
-import csv, json, math, os, sys, time, urllib.error, urllib.parse, urllib.request
+import csv, json, math, os, re, sys, time, urllib.error, urllib.parse, urllib.request
+FAILS = []  # calls that failed after every retry (not a 404): a rerun during a Wikimedia outage must never overwrite real view counts
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,6 +27,7 @@ def get(url):
             time.sleep(3 * (i + 1))
         except Exception:
             time.sleep(3 * (i + 1))
+    FAILS.append(url)
     return None
 
 
@@ -34,6 +36,10 @@ def title_views(title):
     j = get("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/%s/monthly/%s/%s" % (t, START, END))
     time.sleep(0.25)
     return sum(x["views"] for x in j["items"]) if j and j.get("items") else None
+
+
+def has_word(w, text):
+    return re.search(r"\b" + re.escape(w.lower()) + r"\b", text) is not None
 
 
 def resolve(name, st):
@@ -45,7 +51,7 @@ def resolve(name, st):
         if not j or j.get("type") == "disambiguation":
             continue
         text = ((j.get("description") or "") + " " + (j.get("extract") or "")).lower()
-        if state.lower() in text and any(w in text for w in ("lake", "reservoir", "sea", "lagoon")):
+        if has_word(state, text) and any(has_word(w, text) for w in ("lake", "reservoir", "sea", "lagoon")):  # whole words: 'kansas' is not in 'arkansas', 'sea' not in 'season' (Opus review)
             t = (j.get("titles") or {}).get("canonical") or cand
             return t, title_views(t)
     return None, None
@@ -57,6 +63,7 @@ def score(v):
 
 def selftest():
     assert score(None) == UNKNOWN and score(0) == UNKNOWN and score(1_200_000) == 98.1 and score(10 ** 7) == 100.0 and score(100) < score(10_000), "lake_demand score"
+    assert has_word("Kansas", "a lake in arkansas") is False and has_word("Virginia", "in west virginia") is True and has_word("sea", "season") is False and has_word("sea", "a salt sea in california") is True, "whole-word match"
     print("lake_demand selftest OK")
 
 
@@ -74,6 +81,9 @@ def main():
         rows[i][ix["wikipedia_views_12m"]] = "" if v is None else str(v)
         n_found += v is not None
     print("found", n_found, "unknown", len(todo) - n_found)
+    if FAILS:
+        print("REFUSED: %d calls failed after every retry (not a 404); nothing written, rerun later" % len(FAILS))
+        return
     top = sorted(((score(v), rows[i][ix["river"]], rows[i][ix["state"]], v) for i, (t, v) in zip(todo, got)), reverse=True)[:25]
     for x in top:
         print(" ", x)

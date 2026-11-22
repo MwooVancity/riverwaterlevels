@@ -27,6 +27,10 @@ import fix_list as _fl
 _FIXED = {c for d, _, c in (l.strip().partition("	") for l in open(os.path.join(ROOT, "data", "fixed-causes.txt"), encoding="utf-8") if l.strip() and not l.startswith("#")) if d >= (_dt.date.fromisoformat(TODAY) - _dt.timedelta(days=3)).isoformat()} if os.path.exists(os.path.join(ROOT, "data", "fixed-causes.txt")) else set()  # review 2026-11-15: a fix reopens its pages for 3 days, then stops (a gauge that still fails must not be re-picked forever)
 open_gate = lambda g: not g or (g.startswith("retry after ") and g[12:22] < TODAY) or _fl.cause(g) in _FIXED  # owner 2026-11-15 "make sure shit gets fixed": a cause fixed in code (data/fixed-causes.txt, as tools/fix_list.py prints it) reopens every gauge it held  # readiness debate 2026-11-07: a failed release's picks wait one day, then return by themselves
 picks = [r for r in csv.DictReader(open(lst, encoding="utf-8")) if live_.get(r["site"], {}).get("status") == "queue" and open_gate(live_.get(r["site"], {}).get("gate"))] if os.path.exists(lst) else []
+for r in picks:  # the owner list has no signals or gate column: read them from the queue row so a listed lake (Lake Michigan) still counts as a lake and a practice gate still holds (Opus review 2026-11-21)
+    w_ = live_.get(r["site"], {})
+    r.setdefault("signals", w_.get("signals", ""))
+    r.setdefault("gate", w_.get("gate", ""))
 seen_ = {r["site"] for r in picks}
 picks += sorted((dict(r, category=r.get("activity") or "") for r in live_.values() if r["status"] == "queue" and open_gate(r.get("gate")) and r["site"] not in seen_),
                 key=lambda r: -float(r.get("score") or 0))  # after the owner's list: the scored queue, best first
