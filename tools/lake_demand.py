@@ -88,22 +88,32 @@ def norm(n):
 def tier_of(name, T):
     """Keyword Planner band of the lake's level searches (data/keyword-tiers-water.csv, 'X water level' phrasings only), or None when the file has no row for the name."""
     n = norm(name)
-    forms = {n}
-    for end in (" lake", " reservoir"):
-        if n.endswith(end):
-            forms.add("lake " + n[: -len(end)])
-    ks = [f + s for f in forms for s in (" water level", " level", " water levels", " levels") if f + s in T]
-    return max(T[k] for k in ks) if ks else None
+    base = re.sub(r"^lake | lake$| reservoir$", "", n)
+    groups = [  # the lake's own phrasing wins whenever the file has a row for it (Opus review: 'pleasant lake' = 0 must not take 'lake pleasant' = 5000, a lake in Arizona)
+        [n],
+        [re.sub(r"\b([a-z]) (?=[a-z]\b)", r"\1", n)],  # 'lake j b thomas' -> 'lake jb thomas'
+        [base + " lake", "lake " + base, base + " reservoir", base],  # only then the other lake-word forms
+    ]
+    for g in groups:
+        ks = [f + s for f in g for s in (" water level", " level", " water levels", " levels") if f + s in T]
+        if ks:
+            return max(T[k] for k in ks)
+    return None
+
+
+NO_ROW = 17.0  # no Keyword Planner row at all: unknown is not zero (below the 50 band at 34, above a measured 0)
 
 
 def final(tier, views):
-    """Keyword Planner first (owner 2026-11-22: 'the only thing that matters'): band = 20 * log10(tier + 1) (50 -> 34, 500 -> 54, 5000 -> 74), Wikipedia views only break ties inside a band (max +9)."""
-    wiki = score(views) if views else 0.0
-    return round(20 * math.log10((tier or 0) + 1) + (wiki if views else 0.0) * 0.09, 1)
+    """Keyword Planner first (owner 2026-11-22: 'the only thing that matters'): band = 20 * log10(tier + 1) (50 -> 34, 500 -> 54, 5000 -> 74), Wikipedia views only break ties inside a band (max +9); no row = NO_ROW."""
+    base = NO_ROW if tier is None else 20 * math.log10(tier + 1)
+    return round(base + (score(views) if views else 0.0) * 0.09, 1)
 
 
 def selftest():
-    assert final(5000, None) > final(500, 10 ** 7) > final(50, 10 ** 7) > final(0, 10 ** 7) > final(None, None) == 0.0, "keyword band beats Wikipedia views"
+    assert final(5000, None) > final(500, 10 ** 7) > final(50, 10 ** 7) > final(50, None) > final(None, 10 ** 7) > final(0, None) and final(None, None) == NO_ROW, "keyword band beats Wikipedia views; no row is not zero"
+    P = {"pleasant lake water level": 0, "lake pleasant water level": 5000, "lake fork water level": 5000, "cedar creek lake water level": 5000, "lake jb thomas water level": 500}
+    assert tier_of("Pleasant Lake", P) == 0 and tier_of("Lake Fork Reservoir", P) == 5000 and tier_of("Cedar Creek Reservoir", P) == 5000 and tier_of("Lake J. B. Thomas", P) == 500, "exact name wins; bare, swapped and initials forms fall back"
     assert tier_of("Lake Toledo Bend", {"lake toledo bend water level": 5000}) == 5000 and tier_of("Toledo Bend Reservoir", {"lake toledo bend water level": 5000}) == 5000 and tier_of("Nope Lake", {}) is None, "tier_of forms"
     assert score(None) == UNKNOWN and score(0) == UNKNOWN and score(1_200_000) == 98.1 and score(10 ** 7) == 100.0 and score(100) < score(10_000), "lake_demand score"
     assert has_word("Kansas", "a lake in arkansas") is False and has_word("Virginia", "in west virginia") is True and has_word("sea", "season") is False and has_word("sea", "a salt sea in california") is True, "whole-word match"

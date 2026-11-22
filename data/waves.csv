@@ -9285,15 +9285,15 @@ queue,,0208728880,Shelley Lake,,NC,0.0,,,0,lake,,,human,/lake/shelley-lake/
 queue,,02087339,Lake Johnson,,NC,34.2,,,0,lake,,,human,/lake/lake-johnson/
 queue,,02111391,W. Kerr Scott Reservoir,WILKESBORO,NC,34.2,,,0,lake,,,human,/lake/w-kerr-scott-reservoir/
 queue,,02153051,Gaston Shoals Reservoir,,SC,0.0,,,0,lake,,,human,/lake/gaston-shoals-reservoir/
-queue,,02153550,Ninetynine Island Reservoir,,SC,0.0,,,0,lake,,,human,/lake/ninetynine-island-reservoir/
-queue,,02154950,Lake William C. Bowen,FINGERVILLE,SC,0.0,,,0,lake,,,human,/lake/lake-william-c-bowen/
+queue,,02153550,Ninetynine Island Reservoir,,SC,17.0,,,0,lake,,,human,/lake/ninetynine-island-reservoir/
+queue,,02154950,Lake William C. Bowen,FINGERVILLE,SC,17.0,,,0,lake,,,human,/lake/lake-william-c-bowen/
 queue,,021556524,Lake Blalock,COWPENS,SC,4.5,,,0,lake,,1220,human,/lake/lake-blalock/
 queue,,02156449,Neal Shoals Reservoir,CARLISLE,SC,0.0,,,0,lake,,,human,/lake/neal-shoals-reservoir/
 queue,,021569988,Tyger Lake,WELLFORD,SC,0.0,,,0,lake,,,human,/lake/tyger-lake/
 queue,,02160900,Monticello Reservoir,JENKINSVILLE,SC,4.9,,,0,lake,,2361,human,/lake/monticello-reservoir-sc-02160900/
 queue,,02160990,Parr Shoals Reservoir,,SC,0.0,,,0,lake,,,human,/lake/parr-shoals-reservoir/
 queue,,02166500,Lake Greenwood,CHAPPELLS,SC,59.3,,,0,lake,,4568,human,/lake/lake-greenwood/
-queue,,02188100,Russell Lake,,SC,54.0,,,0,lake,,,human,/lake/russell-lake/
+queue,,02188100,Russell Lake,,SC,0.0,,,0,lake,,,human,/lake/russell-lake/
 queue,,02196838,Butler Creek Reservoir,,GA,0.0,,,0,lake,,,human,/lake/butler-creek-reservoir/
 queue,,02207414,Randy Poynter Lake,MILSTEAD,GA,0.0,,,0,lake,,,human,/lake/randy-poynter-lake/
 queue,,02236840,Lake Minnehaha,,FL,39.0,,,0,lake,,2241,human,/lake/lake-minnehaha/
@@ -9311,7 +9311,7 @@ queue,,02344650,Lake Kedron,PEACHTREE CITY,GA,38.2,,,0,lake,,578,human,/lake/lak
 queue,,02344671,Lake Peachtree Headwater,,GA,0.0,,,0,lake,,,human,/lake/lake-peachtree-headwater/
 queue,,02357500,Lake Seminole,CHATTAHOOCHEE,FL,34.2,,,0,lake,,,human,/lake/lake-seminole/
 queue,,02381400,Carters Lake,CARTERS,GA,34.2,,,0,lake,,,human,/lake/carters-lake/
-queue,,02382400,Carters Re-Regulation Lake,CARTERS,GA,0.0,,,0,lake,,,human,/lake/carters-re-regulation-lake/
+queue,,02382400,Carters Re-Regulation Lake,CARTERS,GA,17.0,,,0,lake,,,human,/lake/carters-re-regulation-lake/
 queue,,02464800,Lake Tuscaloosa,TUSCALOOSA,AL,39.1,,,0,lake,,2657,human,/lake/lake-tuscaloosa/
 queue,,03012520,Allegheny Reservoir,Warren,PA,59.5,,,0,lake,,5990,human,/lake/allegheny-reservoir/
 queue,,03013946,Chautauqua Lake,,NY,40.5,,,0,lake,,23113,human,/lake/chautauqua-lake/
@@ -9328,7 +9328,7 @@ queue,,03071590,Cheat Lake,STEWARTSTOWN,WV,39.3,,,0,lake,,3788,human,/lake/cheat
 queue,,03075871,Deep Creek Lake,THAYERVILLE,MD,40.5,,,0,lake,,22914,human,/lake/deep-creek-lake/
 queue,,03077000,Youghiogheny River Lake,Confluence,PA,59.3,,,0,lake,,4343,human,/lake/youghiogheny-river-lake/
 queue,,03090000,Berlin Lake,Berlin Center,OH,54.0,,,0,lake,,,human,/lake/berlin-lake/
-queue,,03091000,Milton Reservoir,Pricetown,OH,34.2,,,0,lake,,,human,/lake/milton-reservoir/
+queue,,03091000,Milton Reservoir,Pricetown,OH,0.0,,,0,lake,,,human,/lake/milton-reservoir/
 queue,,03092450,Michael J Kirwan Reservoir,,OH,34.2,,,0,lake,,,human,/lake/michael-j-kirwan-reservoir/
 queue,,03095000,Mosquito Creek Lake,Cortland,OH,34.2,,,0,lake,,,human,/lake/mosquito-creek-lake/
 queue,,03100500,Pymatuning Reservoir,,PA,5.6,,,0,lake,,7266,human,/lake/pymatuning-reservoir/
@@ -9352,10 +9352,10 @@ queue,,03261800,Lake Loramie,Fort Loramie,OH,0.0,,,0,lake,,,human,/lake/lake-lor
 queue,,03268090,Clarence J Brown Reservoir,Springfield,OH,0.0,,,0,lake,,,human,/lake/clarence-j-brown-reservoir/
 queue,,03275990,Brookville Lake,,IN,58.9,,,0,lake,,2515,human,/lake/brookville-lake/
 queue,,03286000,Herrington Lake,BURGIN,KY,59.3,,,0,lake,,4437,human,/lake/herrington-lake/
-queue,,03323450,J. Edward Roush Lake,HUNTINGTON,IN,4.6,,,0,lake,,1433,human,/lake/j-edward-roush-lake/
+queue,,03323450,J. Edward Roush Lake,HUNTINGTON,IN,21.6,,,0,lake,,1433,human,/lake/j-edward-roush-lake/
 queue,,03324450,Salamonie Lake,,IN,58.5,,,0,lake,,1252,human,/lake/salamonie-lake/
 queue,,03326950,Mississinewa Lake,,IN,58.7,,,0,lake,,1862,human,/lake/mississinewa-lake/
-queue,,03340870,Cecil M. Harden Lake,,IN,0.0,,,0,lake,,,human,/lake/cecil-m-harden-lake/
+queue,,03340870,Cecil M. Harden Lake,,IN,17.0,,,0,lake,,,human,/lake/cecil-m-harden-lake/
 queue,,03350400,Morse Reservoir,,IN,38.6,,,0,lake,,1218,human,/lake/morse-reservoir/
 queue,,03351700,Geist Reservoir,,IN,39.7,,,0,lake,,7186,human,/lake/geist-reservoir/
 queue,,03353450,Eagle Creek Reservoir,INDIANAPOLIS,IN,39.9,,,0,lake,,9707,human,/lake/eagle-creek-reservoir/
@@ -9364,7 +9364,7 @@ queue,,03374498,Patoka Lake,CUZCO,IN,54.0,,,0,lake,,,human,/lake/patoka-lake/
 queue,,03400798,Martins Fork Lake,SMITH,KY,4.4,,,0,lake,,1039,human,/lake/martins-fork-lake/
 queue,,04035995,Lake Gogebic,BERGLAND,MI,5.6,,,0,lake,,7596,human,/lake/lake-gogebic/
 queue,,04037400,Cisco Lake,WATERSMEET,MI,34.2,,,0,lake,,,human,/lake/cisco-lake/
-queue,,04057811,Greenwood Reservoir,GREENWOOD,MI,54.0,,,0,lake,,,human,/lake/greenwood-reservoir/
+queue,,04057811,Greenwood Reservoir,GREENWOOD,MI,0.0,,,0,lake,,,human,/lake/greenwood-reservoir/
 queue,,04058190,Schweitzer Reservoir,PALMER,MI,0.0,,,0,lake,,,human,/lake/schweitzer-reservoir/
 queue,,04097188,Austin Lake,KALAMAZOO,MI,58.4,,,0,lake,,1155,human,/lake/austin-lake/
 queue,,04129950,Mullett Lake,CHEBOYGAN,MI,59.4,,,0,lake,,5621,human,/lake/mullett-lake/
@@ -9384,7 +9384,7 @@ queue,,05056241,Dry Lake,PENN,ND,0.0,,,0,lake,,,human,/lake/dry-lake/
 queue,,05056500,Devils Lake,DEVILS LAKE,ND,40.5,,,0,lake,,23673,human,/lake/devils-lake/
 queue,,05057500,Lake Ashtabula,,ND,4.4,,,0,lake,,1150,human,/lake/lake-ashtabula/
 queue,,05088500,Homme Reservoir,PARK RIVER,ND,0.0,,,0,lake,,,human,/lake/homme-reservoir/
-queue,,05113750,E. Branch Short Creek Reservoir,COLUMBUS,ND,0.0,,,0,lake,,,human,/lake/e-branch-short-creek-reservoir/
+queue,,05113750,E. Branch Short Creek Reservoir,COLUMBUS,ND,17.0,,,0,lake,,,human,/lake/e-branch-short-creek-reservoir/
 queue,,05115500,Lake Darling,FOXHOLM,ND,0.0,,,0,lake,,,human,/lake/lake-darling/
 queue,,05390100,Lac Vieux Desert,LAND O'LAKES,WI,5.6,,,0,lake,,7720,human,/lake/lac-vieux-desert/
 queue,,05390500,Anvil Lake,EAGLE RIVER,WI,0.0,,,0,lake,,,human,/lake/anvil-lake/
@@ -9421,7 +9421,7 @@ queue,,07205500,Eagle Nest Lake,EAGLE NEST,NM,38.6,,,0,lake,,1097,human,/lake/ea
 queue,,07226800,Ute Reservoir,LOGAN,NM,34.2,,,0,lake,,,human,/lake/ute-reservoir/
 queue,,07227900,Lake Meredith,Sanford,TX,59.5,,,0,lake,,5932,human,/lake/lake-meredith/
 queue,,07233550,Palo Duro Reservoir,Spearman,TX,0.0,,,0,lake,,,human,/lake/palo-duro-reservoir/
-queue,,07298100,MacKenzie Reservoir,Silverton,TX,34.2,,,0,lake,,,human,/lake/mackenzie-reservoir/
+queue,,07298100,MacKenzie Reservoir,Silverton,TX,0.0,,,0,lake,,,human,/lake/mackenzie-reservoir/
 queue,,07299840,Greenbelt Lake,Clarendon,TX,54.0,,,0,lake,,,human,/lake/greenbelt-lake/
 queue,,07312000,Lake Kemp,Mabelle,TX,54.0,,,0,lake,,,human,/lake/lake-kemp/
 queue,,07312109,Diversion Lake,Dundee,TX,34.2,,,0,lake,,,human,/lake/diversion-lake/
@@ -9432,7 +9432,7 @@ queue,,07315950,Moss Lake,Gainesville,TX,34.2,,,0,lake,,,human,/lake/moss-lake/
 queue,,07332610,Lake Bonham,Bonham,TX,34.2,,,0,lake,,,human,/lake/lake-bonham/
 queue,,07332621,Bois D'Arc Lake,Honey Grove,TX,5.0,,,0,lake,,2822,human,/lake/bois-darc-lake/
 queue,,07335600,Lake Crook,Paris,TX,4.0,,,0,lake,,561,human,/lake/lake-crook/
-queue,,07342495,Jim L. Chapman Lake,Cooper,TX,0.0,,,0,lake,,,human,/lake/jim-l-chapman-lake/
+queue,,07342495,Jim L. Chapman Lake,Cooper,TX,17.0,,,0,lake,,,human,/lake/jim-l-chapman-lake/
 queue,,07344200,Wright Patman Lake,Texarkana,TX,59.0,,,0,lake,,2844,human,/lake/wright-patman-lake/
 queue,,07344488,Monticello Reservoir,Mount Pleasant,TX,0.0,,,0,lake,,,human,/lake/monticello-reservoir-tx-07344488/
 queue,,07344489,Lake Bob Sandlin,Mount Pleasant,TX,54.0,,,0,lake,,,human,/lake/lake-bob-sandlin/
@@ -9449,8 +9449,8 @@ queue,,08032200,Lake Jacksonville,Jacksonville,TX,34.2,,,0,lake,,,human,/lake/la
 queue,,08033810,Lake Striker,Reklaw,TX,0.0,,,0,lake,,,human,/lake/lake-striker/
 queue,,08034000,Lake Tyler,Whitehouse,TX,58.8,,,0,lake,,1988,human,/lake/lake-tyler/
 queue,,08036700,Lake Nacogdoches,Nacogdoches,TX,39.3,,,0,lake,,3306,human,/lake/lake-nacogdoches/
-queue,,08040000,B. A. Steinhagen Lake,,TX,0.0,,,0,lake,,,human,/lake/b-a-steinhagen-lake/
-queue,,08043000,Bridgeport Reservoir,,TX,54.0,,,0,lake,,,human,/lake/bridgeport-reservoir-tx-08043000/
+queue,,08040000,B. A. Steinhagen Lake,,TX,17.0,,,0,lake,,,human,/lake/b-a-steinhagen-lake/
+queue,,08043000,Bridgeport Reservoir,,TX,34.2,,,0,lake,,,human,/lake/bridgeport-reservoir-tx-08043000/
 queue,,08043700,Lake Amon G Carter,Bowie,TX,34.2,,,0,lake,,,human,/lake/lake-amon-g-carter/
 queue,,08045400,Lake Worth,,TX,59.3,,,0,lake,,4778,human,/lake/lake-worth/
 queue,,08045800,Lake Weatherford,Weatherford,TX,58.7,,,0,lake,,1769,human,/lake/lake-weatherford/
@@ -9478,7 +9478,7 @@ queue,,08088400,Lake Graham,Graham,TX,37.9,,,0,lake,,368,human,/lake/lake-graham
 queue,,08090300,Lake Palo Pinto,Santo,TX,57.9,,,0,lake,,499,human,/lake/lake-palo-pinto/
 queue,,08090700,Lake Mineral Wells,Mineral Wells,TX,38.9,,,0,lake,,1790,human,/lake/lake-mineral-wells/
 queue,,08091900,Lake Pat Cleburne,Cleburne,TX,38.6,,,0,lake,,1196,human,/lake/lake-pat-cleburne/
-queue,,08092500,Whitney Lake,Whitney,TX,54.0,,,0,lake,,,human,/lake/whitney-lake/
+queue,,08092500,Whitney Lake,Whitney,TX,34.2,,,0,lake,,,human,/lake/whitney-lake/
 queue,,08093350,Aquilla Lake,,TX,34.2,,,0,lake,,,human,/lake/aquilla-lake/
 queue,,08095550,Waco Lake,Waco,TX,54.0,,,0,lake,,,human,/lake/waco-lake/
 queue,,08098470,Lake Eastland,Eastland,TX,34.2,,,0,lake,,,human,/lake/lake-eastland/
@@ -9486,15 +9486,15 @@ queue,,08099400,Proctor Lake,Proctor,TX,58.9,,,0,lake,,2441,human,/lake/proctor-
 queue,,08104050,Stillhouse Hollow Lake,Belton,TX,58.9,,,0,lake,,2556,human,/lake/stillhouse-hollow-lake/
 queue,,08105600,Granger Lake,Granger,TX,58.8,,,0,lake,,1989,human,/lake/granger-lake/
 queue,,08110300,Lake Mexia,Mexia,TX,54.0,,,0,lake,,,human,/lake/lake-mexia/
-queue,,08118000,Lake J. B. Thomas,Vincent,TX,0.0,,,0,lake,,,human,/lake/lake-j-b-thomas/
+queue,,08118000,Lake J. B. Thomas,Vincent,TX,54.0,,,0,lake,,,human,/lake/lake-j-b-thomas/
 queue,,08123000,Lake Colorado City,Colorado City,TX,54.0,,,0,lake,,,human,/lake/lake-colorado-city/
-queue,,08123950,E. V. Spence Reservoir,Robert Lee,TX,0.0,,,0,lake,,,human,/lake/e-v-spence-reservoir/
+queue,,08123950,E. V. Spence Reservoir,Robert Lee,TX,54.0,,,0,lake,,,human,/lake/e-v-spence-reservoir/
 queue,,08131200,Twin Buttes Reservoir,San Angelo,TX,39.0,,,0,lake,,2086,human,/lake/twin-buttes-reservoir/
 queue,,08132000,Lake Nasworthy,San Angelo,TX,39.0,,,0,lake,,2318,human,/lake/lake-nasworthy/
-queue,,08134500,O. C. Fisher Lake,,TX,0.0,,,0,lake,,,human,/lake/o-c-fisher-lake/
+queue,,08134500,O. C. Fisher Lake,,TX,17.0,,,0,lake,,,human,/lake/o-c-fisher-lake/
 queue,,08140770,Lake Coleman,Novice,TX,54.0,,,0,lake,,,human,/lake/lake-coleman/
 queue,,08294200,Nambe Falls Reservoir,NAMBE,NM,0.0,,,0,lake,,,human,/lake/nambe-falls-reservoir/
-queue,,08315500,Mcclure Reservoir,SANTA FE N MEX,NM,54.0,,,0,lake,,,human,/lake/mcclure-reservoir/
+queue,,08315500,Mcclure Reservoir,SANTA FE N MEX,NM,0.0,,,0,lake,,,human,/lake/mcclure-reservoir/
 queue,,08316500,Nichols Reservoir,SANTA FE N MEX,NM,0.0,,,0,lake,,,human,/lake/nichols-reservoir/
 queue,,08341400,Bluewater Lake,BLUEWATER,NM,34.2,,,0,lake,,,human,/lake/bluewater-lake/
 queue,,08401450,Brantley Lake,CARLSBAD,NM,38.4,,,0,lake,,913,human,/lake/brantley-lake/
@@ -9515,7 +9515,7 @@ queue,,10254005,Salton Sea,WESTMORLAND,CA,62.2,,,0,lake,,426145,human,/lake/salt
 queue,,10288500,Walker Lake,HAWTHORNE,NV,40.4,,,0,lake,,19410,human,/lake/walker-lake/
 queue,,10290300,Upper Twin Lake,BRIDGEPORT,CA,0.0,,,0,lake,,,human,/lake/upper-twin-lake/
 queue,,10290400,Lower Twin Lake,BRIDGEPORT,CA,0.0,,,0,lake,,,human,/lake/lower-twin-lake/
-queue,,10292500,Bridgeport Reservoir,BRIDGEPORT,CA,58.5,,,0,lake,,1187,human,/lake/bridgeport-reservoir-ca-10292500/
+queue,,10292500,Bridgeport Reservoir,BRIDGEPORT,CA,38.6,,,0,lake,,1187,human,/lake/bridgeport-reservoir-ca-10292500/
 queue,,10297000,Topaz Lake,TOPAZ,CA,39.7,,,0,lake,,6147,human,/lake/topaz-lake/
 queue,,10301700,Weber Reservoir,SCHURZ,NV,34.2,,,0,lake,,,human,/lake/weber-reservoir/
 queue,,10312100,Lahontan Reservoir,FALLON,NV,39.1,,,0,lake,,2381,human,/lake/lahontan-reservoir/
@@ -9534,7 +9534,7 @@ queue,,11042510,Vail Lake,TEMECULA,CA,34.2,,,0,lake,,,human,/lake/vail-lake/
 queue,,11109700,Lake Piru,PIRU,CA,54.0,,,0,lake,,,human,/lake/lake-piru/
 queue,,11128300,Alisal Reservoir,SOLVANG,CA,0.0,,,0,lake,,,human,/lake/alisal-reservoir/
 queue,,11162618,Pilarcitos Lake,HILLSBOROUGH,CA,0.0,,,0,lake,,,human,/lake/pilarcitos-lake/
-queue,,11162730,San Andreas Lake,MILLBRAE,CA,5.8,,,0,lake,,9349,human,/lake/san-andreas-lake/
+queue,,11162730,San Andreas Lake,MILLBRAE,CA,22.8,,,0,lake,,9349,human,/lake/san-andreas-lake/
 queue,,11162750,Lower Crystal Springs Reservoir,SAN MATEO,CA,0.0,,,0,lake,,,human,/lake/lower-crystal-springs-reservoir/
 queue,,11173490,Calaveras Reservoir,SUNOL,CA,39.4,,,0,lake,,3960,human,/lake/calaveras-reservoir/
 queue,,11275500,Hetch Hetchy Reservoir,,CA,41.1,,,0,lake,,60193,human,/lake/hetch-hetchy-reservoir/
@@ -9553,7 +9553,7 @@ queue,,12035380,Wynoochee Lake,GRISDALE,WA,4.7,,,0,lake,,1685,human,/lake/wynooc
 queue,,12098000,Mud Mountain Lake,BUCKLEY,WA,0.0,,,0,lake,,,human,/lake/mud-mountain-lake/
 queue,,12101000,Lake Tapps,SUMNER,WA,59.8,,,0,lake,,10031,human,/lake/lake-tapps/
 queue,,12105800,Howard A Hanson Reservoir,PALMER,WA,0.0,,,0,lake,,,human,/lake/howard-a-hanson-reservoir/
-queue,,12122000,Sammamish Lake,REDMOND,WA,40.1,,,0,lake,,11951,human,/lake/sammamish-lake/
+queue,,12122000,Sammamish Lake,REDMOND,WA,5.9,,,0,lake,,11951,human,/lake/sammamish-lake/
 queue,,12137300,Spada Lake,STARTUP,WA,39.0,,,0,lake,,2091,human,/lake/spada-lake/
 queue,,12147900,South Fork Tolt Reservoir,CARNATION,WA,0.0,,,0,lake,,,human,/lake/south-fork-tolt-reservoir/
 queue,,12191600,Baker Lake,CONCRETE,WA,39.3,,,0,lake,,3707,human,/lake/baker-lake/
@@ -9593,31 +9593,31 @@ queue,,14312450,Diamond Lake,DIAMOND LAKE,OR,39.7,,,0,lake,,6117,human,/lake/dia
 queue,,14313000,Lemolo Lake,TOKETEE FALLS,OR,34.2,,,0,lake,,,human,/lake/lemolo-lake/
 queue,,14335040,Lost Creek Lake,MCLEOD,OR,59.1,,,0,lake,,3072,human,/lake/lost-creek-lake/
 queue,,14361900,Applegate Lake,COPPER,OR,58.8,,,0,lake,,2119,human,/lake/applegate-lake/
-queue,,312914093422701,Toledo Bend Reservoir,Negreet,LA,80.3,,,0,lake,,21771,human,/lake/toledo-bend-reservoir/
+queue,,312914093422701,Toledo Bend Reservoir,Negreet,LA,60.3,,,0,lake,,21771,human,/lake/toledo-bend-reservoir/
 queue,,391007121240701,Miller Lake,HAMMONTON,CA,0.0,,,0,lake,,,human,/lake/miller-lake/
 queue,,395540082291600,Buckeye Lake,Watkins Island,OH,59.5,,,0,lake,,5851,human,/lake/buckeye-lake/
 queue,,403204084342601,Grand Lake St Marys,Celina,OH,34.2,,,0,lake,,,human,/lake/grand-lake-st-marys/
-queue,,423525088260400,Geneva Lake,,WI,40.5,,,0,lake,,22204,human,/lake/geneva-lake/
+queue,,423525088260400,Geneva Lake,,WI,6.3,,,0,lake,,22204,human,/lake/geneva-lake/
 queue,,425715089164700,Lake Kegonsa,STOUGHTON,WI,38.8,,,0,lake,,1677,human,/lake/lake-kegonsa/
-queue,,435857089325301,Pleasant Lake,WESTFIELD,WI,74.0,,,0,lake,,,human,/lake/pleasant-lake/
+queue,,435857089325301,Pleasant Lake,WESTFIELD,WI,0.0,,,0,lake,,,human,/lake/pleasant-lake/
 queue,,01544800,Kettle Creek Lake,Westport,PA,0.0,,,0,lake,,,human,/lake/kettle-creek-lake/
 queue,,06886900,Tuttle Creek Lake,MANHATTAN,KS,54.0,,,0,lake,,,human,/lake/tuttle-creek-lake/
-queue,,07312380,North Fork Buffalo Creek Reservoir,Iowa Pk,TX,0.0,,,0,lake,,,human,/lake/north-fork-buffalo-creek-reservoir/
+queue,,07312380,North Fork Buffalo Creek Reservoir,Iowa Pk,TX,17.0,,,0,lake,,,human,/lake/north-fork-buffalo-creek-reservoir/
 queue,,07343460,Lake Sulphur Springs,Sulphur Springs,TX,4.3,,,0,lake,,910,human,/lake/lake-sulphur-springs/
 queue,,07344484,Lake Cypress Springs,Mount Vernon,TX,59.2,,,0,lake,,4030,human,/lake/lake-cypress-springs/
-queue,,08018800,Lake Fork Reservoir,Quitman,TX,5.7,,,0,lake,,8678,human,/lake/lake-fork-reservoir/
+queue,,08018800,Lake Fork Reservoir,Quitman,TX,79.7,,,0,lake,,8678,human,/lake/lake-fork-reservoir/
 queue,,08042820,Lost Creek Reservoir,Jacksboro,TX,34.2,,,0,lake,,,human,/lake/lost-creek-reservoir/
 queue,,08045000,Eagle Mountain Reservoir,,TX,54.0,,,0,lake,,,human,/lake/eagle-mountain-reservoir/
 queue,,08050050,Mountain Creek Lake,Grand Prairie,TX,4.9,,,0,lake,,2495,human,/lake/mountain-creek-lake/
-queue,,08063010,Cedar Creek Reservoir,Trinidad,TX,5.9,,,0,lake,,11808,human,/lake/cedar-creek-reservoir/
-queue,,08080910,White River Reservoir,Spur,TX,0.0,,,0,lake,,,human,/lake/white-river-reservoir/
+queue,,08063010,Cedar Creek Reservoir,Trinidad,TX,79.9,,,0,lake,,11808,human,/lake/cedar-creek-reservoir/
+queue,,08080910,White River Reservoir,Spur,TX,54.0,,,0,lake,,,human,/lake/white-river-reservoir/
 queue,,08082800,Millers Creek Reservoir,Bomarton,TX,34.2,,,0,lake,,,human,/lake/millers-creek-reservoir/
 queue,,08083500,Fort Phantom Hill Reservoir,Nugent,TX,0.0,,,0,lake,,,human,/lake/fort-phantom-hill-reservoir/
 queue,,08086400,Hubbard Creek Reservoir,Breckenridge,TX,34.2,,,0,lake,,,human,/lake/hubbard-creek-reservoir/
-queue,,08091730,Comanche Creek Reservoir,Glen Rose,TX,0.0,,,0,lake,,,human,/lake/comanche-creek-reservoir/
-queue,,08111058,Gibbons Creek Reservoir,Shiro,TX,6.0,,,0,lake,,13059,human,/lake/gibbons-creek-reservoir/
+queue,,08091730,Comanche Creek Reservoir,Glen Rose,TX,17.0,,,0,lake,,,human,/lake/comanche-creek-reservoir/
+queue,,08111058,Gibbons Creek Reservoir,Shiro,TX,23.0,,,0,lake,,13059,human,/lake/gibbons-creek-reservoir/
 queue,,08123600,Champion Creek Reservoir,Colorado City,TX,38.0,,,0,lake,,431,human,/lake/champion-creek-reservoir/
-queue,,08123755,Moss Creek Lake,Coahoma,TX,0.0,,,0,lake,,,human,/lake/moss-creek-lake/
+queue,,08123755,Moss Creek Lake,Coahoma,TX,17.0,,,0,lake,,,human,/lake/moss-creek-lake/
 queue,,08125500,Oak Creek Reservoir,Blackwell,TX,34.2,,,0,lake,,,human,/lake/oak-creek-reservoir/
 queue,,08141000,Hords Creek Lake,Valera,TX,54.0,,,0,lake,,,human,/lake/hords-creek-lake/
 queue,,08177400,Coleto Creek Reservoir,Victoria,TX,38.4,,,0,lake,,878,human,/lake/coleto-creek-reservoir/
