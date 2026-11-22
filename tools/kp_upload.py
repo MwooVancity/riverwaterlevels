@@ -14,6 +14,14 @@ def have():
     return {r["keyword"].lower() for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8"))}
 
 
+def controls(tiers, per_band=4):
+    """Phrases already answered, spread over every band: each batch repeats them, so a changed band flags a drifting run."""
+    by = {}
+    for k in sorted(tiers):
+        by.setdefault(tiers[k], []).append(k)
+    return [k for t in sorted(by) for k in by[t][:per_band]]
+
+
 def river_phrases(name):
     n = re.sub(r"\s+", " ", name.lower().replace("&", "and")).strip()
     n = re.sub(r"[^a-z0-9 '\-]", "", n)
@@ -31,9 +39,7 @@ def build(seeds, river_names, known):
             seen.add(p)
             out.append((p, src))
     for s in seeds:
-        add(s, "ai-seed")
-        if s.endswith(" water level"):
-            add(s[: -len(" water level")] + " level", "ai-seed-variant")
+        add(s, "ai-seed")  # one phrasing per intent: 'X lake level' and 'X lake water level' got the same band in 3,221 of 3,531 file pairs
     for r in river_names:
         for p in river_phrases(r):
             add(p, "queued-river")
@@ -47,6 +53,7 @@ def _selftest():
     assert river_phrases("   ") == []
     r = build(["lake mead water level"], ["Boise River"], {"lake mead level"})
     assert [x[0] for x in r] == ["lake mead water level", "boise river level", "boise river flow"], r
+    assert len(controls({"a%d" % i: i % 5 * 5 for i in range(60)}, 2)) == 10, "2 control phrases per band"
     assert build(["a"], ["a"], {"a"}) == [("a river level", "queued-river"), ("a river flow", "queued-river")]
     print("kp_upload selftest OK")
 
@@ -55,17 +62,19 @@ def main():
     seeds = [l.strip() for l in open(os.path.join(D, "kp-seeds-ai-2026-11-22.txt"), encoding="utf-8") if l.strip()]
     names = {r["river"] for r in csv.DictReader(open(os.path.join(D, "world-queue.csv"), encoding="utf-8")) if r["gauge"] and r["river"]}
     names |= {r["river"] for r in csv.DictReader(open(os.path.join(D, "waves.csv"), encoding="utf-8")) if r["status"] == "queue" and "lake" not in r["signals"].split(",")}
-    rows = build(seeds, sorted(names), have())
+    tiers = {r["keyword"].lower(): int(float(r["tier"] or 0)) for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8"))}
+    rows = build(seeds, sorted(names), set(tiers))
+    ctl = controls(tiers)
     out = os.path.join(D, "kp-upload")
     os.makedirs(out, exist_ok=True)
     with open(os.path.join(out, "manifest.csv"), "w", newline="", encoding="utf-8") as m:
         w = csv.writer(m)
-        w.writerow(["phrase", "batch", "source"])
+        w.writerow(["phrase", "batch", "source", "known_band"])
         for i in range(0, len(rows), BATCH):
             chunk = rows[i:i + BATCH]
             n = i // BATCH + 1
-            open(os.path.join(out, "batch-%02d.txt" % n), "w", encoding="utf-8").write("\n".join(p for p, _ in chunk) + "\n")
-            w.writerows([[p, n, s] for p, s in chunk])
+            open(os.path.join(out, "batch-%02d.txt" % n), "w", encoding="utf-8").write("\n".join(ctl + [p for p, _ in chunk]) + "\n")
+            w.writerows([[p, n, "control", tiers[p]] for p in ctl] + [[p, n, s, ""] for p, s in chunk])
     print(len(rows), "phrases,", (len(rows) + BATCH - 1) // BATCH, "batches ->", out)
 
 
