@@ -123,7 +123,21 @@ BID_MID = sorted(BIDS.values())[len(BIDS) // 2] if BIDS else 0
 print("ad rate: Keyword Planner bid_high_cad for %d keywords (data/keyword-tiers-water.csv, %s, median %.2f CAD = 1.0); country guesses for the rest: %s" % (len(BIDS), BID_DATE, BID_MID, RATE))
 assert rate("x", "imi", {}, 0) == 0.8 and rate("x", None, {}, 0) == 1.0 and rate("X ", "zz", {"x": 6.0}, 3.0) == 2.0 and rate("y", "zz", {"x": 6.0}, 3.0) == 0.1, "release: ad rate (bid first, country guess else)"
 kw_ = {r["gauge"]: r["keyword"] for r in q_ if r["gauge"]}
-both = sorted([(-tier_.get(r["site"], 0) * rate(kw_.get(r["site"]), None, BIDS, BID_MID), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * rate(w["keyword"], w["feed"], BIDS, BID_MID), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
+import lake_demand as _ld
+try:
+    _TW = {r_["keyword"].lower(): int(float(r_["tier"] or 0)) for r_ in csv.DictReader(open(_bp, encoding="utf-8"))}
+except (OSError, ValueError, KeyError):
+    _TW = {}  # a torn file ranks lakes at 0, never crashes the release (load_bids does the same)
+
+
+def us_tier(r):
+    """Money tier of a US pick: world-queue.csv, else for a lake (its gauges are not in that file, so they sorted last at 0) the Keyword Planner band of its name (tools/lake_demand.py tier_of; no row = 0)."""
+    if r["site"] in tier_ or "lake" not in (r.get("signals") or "").split(","):  # in the file = its own share (even 0), Opus review 2026-11-22
+        return tier_.get(r["site"], 0)
+    return _ld.tier_of(r.get("river") or "", _TW) or 0
+
+
+both = sorted([(-us_tier(r) * rate(kw_.get(r["site"]), None, BIDS, BID_MID), 1, i, r) for i, r in enumerate(picks)] + [(-share(w["tier"], w["keyword"], w["station"]) * rate(w["keyword"], w["feed"], BIDS, BID_MID), 0, j, w) for j, w in enumerate(ready)], key=lambda x: x[:3])  # a tie goes to the world row
 # readiness debate 2026-11-07: a lake or coast enters Google only after a phone review (data/reviewed.json), so an unreviewed one earns nothing until a
 # person reviews it. Owner 2026-11-07 ("worried about oceans and lakes, the new stuff"): the 2026-11-07 phone review failed 20 of 26 new lakes and coasts
 # that every machine check passed, so a new lake or coast is published only after its review passed (truth first: a false page is worse than none);
@@ -147,7 +161,7 @@ def thin_state_first(both, live_rows, n_max=3, least=3, top=200):
 both = thin_state_first(both, list(live_.values()))
 assert [x[3]["site"] for x in thin_state_first([(0, 1, 0, {"site": "a", "state": "TX"}), (0, 1, 1, {"site": "b", "state": "AL"}), (0, 1, 2, {"site": "c", "state": "AL"}), (0, 1, 3, {"site": "d", "state": "AL"})], [{"state": "TX", "status": "live"}] * 5 + [{"state": "AL", "status": "live"}])][:3] == ["b", "c", "a"], "release: a one-gauge state was not grown first, or grown past 3"
 import lake_share as _ls
-both = _ls.lake_first(both)  # PLAN.md 2026-11-21: up to LAKE_FIRST lakes in the day's N, the rest in money order, practice-gated lakes never
+both = _ls.lake_first(both, 0)  # owner 2026-11-22: no forced lake slots, one Keyword Planner money order for rivers and lakes (was LAKE_FIRST; lakes sorted last only because they had no tier). Older note: PLAN.md 2026-11-21: up to LAKE_FIRST lakes in the day's N, the rest in money order, practice-gated lakes never
 UNREVIEWED_MAX = 0
 import json as _json
 from lib import pages as _pages

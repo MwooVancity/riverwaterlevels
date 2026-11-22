@@ -15,6 +15,8 @@ def is_lake(x):
 
 def lake_first(both, cap=LAKE_FIRST):
     both = [x for x in both if (x[3].get("gate") or "") != "practice"]
+    if not cap:  # cap 0 = pure money order (owner 2026-11-22: Keyword Planner decides, rivers and lakes together)
+        return both
     lakes = [x for x in both if is_lake(x)]  # money order kept: keyword tier x ad rate
     others = [x for x in both if not is_lake(x)]
     return lakes[:cap] + others + lakes[cap:]  # surplus lakes only fill slots the other rows cannot
@@ -43,6 +45,7 @@ def _selftest():
     assert "g99" not in site_list(lake_first(sorted(both + [gated], key=lambda x: x[:3]))), "practice-gated lake never picked"
     by_tier = [row(1, "a", "lake", money=-5), row(2, "b", "lake", money=-500), row(3, "c", "lake", money=-50)]
     assert site_list(lake_first(sorted(by_tier, key=lambda x: x[:3]))) == ["b2", "c3", "a1"], "lake share ordered by tier"
+    assert site_list(lake_first(sorted(rivers + lakes, key=lambda x: x[:3]), 0)) == site_list(sorted(rivers + lakes, key=lambda x: x[:3])), "cap 0 keeps pure money order"
     world = (-9999, 0, 0, {"site": "w", "signals": "lake"})
     assert not is_lake(world) and lake_first([world])[0] is world, "a world row is not a US lake row and keeps its place"
     print("lake_share selftest OK")
