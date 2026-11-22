@@ -4,6 +4,8 @@ A lake with no matching article keeps a small score (UNKNOWN), not zero: unknown
 Usage: python -I tools/lake_demand.py [--dry]
 """
 import csv, json, math, os, re, sys, time, urllib.error, urllib.parse, urllib.request
+import threading
+FAILED = set()  # threads whose current lake had a failed call
 FAILS = []  # calls that failed after every retry (not a 404): a rerun during a Wikimedia outage must never overwrite real view counts
 from concurrent.futures import ThreadPoolExecutor
 
@@ -28,13 +30,14 @@ def get(url):
         except Exception:
             time.sleep(3 * (i + 1))
     FAILS.append(url)
+    FAILED.add(threading.get_ident())
     return None
 
 
 def title_views(title):
     t = urllib.parse.quote(title.replace(" ", "_"), safe="")
     j = get("https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/%s/monthly/%s/%s" % (t, START, END))
-    time.sleep(0.25)
+    time.sleep(0.6)
     return sum(x["views"] for x in j["items"]) if j and j.get("items") else None
 
 
@@ -43,25 +46,65 @@ def has_word(w, text):
 
 
 def resolve(name, st):
+    FAILED.discard(threading.get_ident())
+    t, v = _resolve(name, st)
+    return t, v, threading.get_ident() in FAILED
+
+
+def _resolve(name, st):
     """-> (title, views) of the lake's article, else (None, None). The article must name the state and be a lake, reservoir or sea."""
     state = STATE_NAMES.get(st, st)
-    for cand in ("%s (%s)" % (name, state), name):
-        j = get("https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(cand.replace(" ", "_"), safe=""))
-        time.sleep(0.25)
-        if not j or j.get("type") == "disambiguation":
-            continue
-        text = ((j.get("description") or "") + " " + (j.get("extract") or "")).lower()
-        if has_word(state, text) and any(has_word(w, text) for w in ("lake", "reservoir", "sea", "lagoon")):  # whole words: 'kansas' is not in 'arkansas', 'sea' not in 'season' (Opus review)
-            t = (j.get("titles") or {}).get("canonical") or cand
+    cands = ["%s (%s)" % (name, state), name]
+    for cand in cands:
+        t = match(cand, state)
+        if t:
             return t, title_views(t)
+    # a search-API rescue was tried 2026-11-21 and dropped: it matched the wrong lake (Hubbard Creek Reservoir took Lake Ray Hubbard's views, Chambers Lake PA got 1.38M); a wrong high score is worse than UNKNOWN
     return None, None
+
+
+def match(cand, state):
+    """canonical title if the article for cand names the state and is a lake, reservoir or sea, else None."""
+    if not cand:
+        return None
+    j = get("https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(cand.replace(" ", "_"), safe=""))
+    time.sleep(0.6)
+    if not j or j.get("type") == "disambiguation":
+        return None
+    text = ((j.get("description") or "") + " " + (j.get("extract") or "")).lower()
+    if has_word(state, text) and any(has_word(w, text) for w in ("lake", "reservoir", "sea", "lagoon")):  # whole words: 'kansas' is not in 'arkansas', 'sea' not in 'season' (Opus review)
+        return (j.get("titles") or {}).get("canonical") or cand
+    return None
 
 
 def score(v):
     return round(min(100.0, 100.0 * math.log10(v) / 6.2), 1) if v and v > 0 else UNKNOWN
 
 
+def norm(n):
+    return re.sub(r"[^a-z0-9 ]", "", n.lower()).strip()
+
+
+def tier_of(name, T):
+    """Keyword Planner band of the lake's level searches (data/keyword-tiers-water.csv, 'X water level' phrasings only), or None when the file has no row for the name."""
+    n = norm(name)
+    forms = {n}
+    for end in (" lake", " reservoir"):
+        if n.endswith(end):
+            forms.add("lake " + n[: -len(end)])
+    ks = [f + s for f in forms for s in (" water level", " level", " water levels", " levels") if f + s in T]
+    return max(T[k] for k in ks) if ks else None
+
+
+def final(tier, views):
+    """Keyword Planner first (owner 2026-11-22: 'the only thing that matters'): band = 20 * log10(tier + 1) (50 -> 34, 500 -> 54, 5000 -> 74), Wikipedia views only break ties inside a band (max +9)."""
+    wiki = score(views) if views else 0.0
+    return round(20 * math.log10((tier or 0) + 1) + (wiki if views else 0.0) * 0.09, 1)
+
+
 def selftest():
+    assert final(5000, None) > final(500, 10 ** 7) > final(50, 10 ** 7) > final(0, 10 ** 7) > final(None, None) == 0.0, "keyword band beats Wikipedia views"
+    assert tier_of("Lake Toledo Bend", {"lake toledo bend water level": 5000}) == 5000 and tier_of("Toledo Bend Reservoir", {"lake toledo bend water level": 5000}) == 5000 and tier_of("Nope Lake", {}) is None, "tier_of forms"
     assert score(None) == UNKNOWN and score(0) == UNKNOWN and score(1_200_000) == 98.1 and score(10 ** 7) == 100.0 and score(100) < score(10_000), "lake_demand score"
     assert has_word("Kansas", "a lake in arkansas") is False and has_word("Virginia", "in west virginia") is True and has_word("sea", "season") is False and has_word("sea", "a salt sea in california") is True, "whole-word match"
     print("lake_demand selftest OK")
@@ -71,22 +114,36 @@ def main():
     rows = list(csv.reader(open(WAVES, encoding="utf-8", newline="")))
     h = rows[0]
     ix = {k: h.index(k) for k in ("status", "site", "river", "state", "score", "wikipedia_views_12m", "signals")}
-    todo = [i for i, r in enumerate(rows[1:], 1) if r[ix["status"]] == "queue" and "lake" in r[ix["signals"]].split(",")]
-    print("queued lakes", len(todo), flush=True)
-    with ThreadPoolExecutor(3) as ex:
+    todo = [i for i, r in enumerate(rows[1:], 1) if r[ix["status"]] == "queue" and "lake" in r[ix["signals"]].split(",") and ("--all" in sys.argv or not r[ix["wikipedia_views_12m"]])]  # incremental: a lake that already has views keeps them (an outage never wipes them)
+    if "--tier-only" in sys.argv:
+        todo = []  # no Wikipedia calls: only re-score from Keyword Planner bands and the views already stored
+    print("lakes to look up", len(todo), flush=True)
+    with ThreadPoolExecutor(2) as ex:
         got = list(ex.map(lambda i: resolve(rows[i][ix["river"]], rows[i][ix["state"]]), todo))
-    n_found = 0
-    for i, (t, v) in zip(todo, got):
+    n_found = n_failed = 0
+    done = []
+    for i, (t, v, failed) in zip(todo, got):
+        if failed:  # a lookup that hit a failed call keeps its row untouched; the next incremental run retries it (an outage never writes a false 'unknown')
+            n_failed += 1
+            continue
         rows[i][ix["score"]] = str(score(v))
         rows[i][ix["wikipedia_views_12m"]] = "" if v is None else str(v)
         n_found += v is not None
-    print("found", n_found, "unknown", len(todo) - n_found)
-    if FAILS:
-        print("REFUSED: %d calls failed after every retry (not a 404); nothing written, rerun later" % len(FAILS))
-        return
-    top = sorted(((score(v), rows[i][ix["river"]], rows[i][ix["state"]], v) for i, (t, v) in zip(todo, got)), reverse=True)[:25]
+        done.append((i, v))
+    print("found", n_found, "unknown", len(done) - n_found, "left for a rerun (failed calls)", n_failed)
+    top = sorted(((score(v), rows[i][ix["river"]], rows[i][ix["state"]], v) for i, v in done), reverse=True)[:25]
     for x in top:
         print(" ", x)
+    T = {r["keyword"].lower(): int(float(r["tier"] or 0)) for r in csv.DictReader(open(os.path.join(ROOT, "data", "keyword-tiers-water.csv"), encoding="utf-8"))}
+    missing = []
+    for r in rows[1:]:
+        if r[ix["status"]] == "queue" and "lake" in r[ix["signals"]].split(","):
+            t = tier_of(r[ix["river"]], T)
+            if t is None:
+                missing.append(r[ix["river"]] + " " + r[ix["state"]])
+            v = r[ix["wikipedia_views_12m"]]
+            r[ix["score"]] = str(final(t, int(v) if v else None))
+    print("queued lakes with no Keyword Planner row at all (need a run):", len(missing), missing)
     if "--dry" not in sys.argv:
         with open(WAVES, "w", encoding="utf-8", newline="") as f:
             csv.writer(f, lineterminator="\n").writerows(rows)
