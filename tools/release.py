@@ -45,7 +45,7 @@ q_ = list(csv.DictReader(open(os.path.join(ROOT, "data", "world-queue.csv"), enc
 live_kw = {r["keyword"] for r in q_ if r["gauge"] and live_.get(r["gauge"], {}).get("status") == "live"}
 first_ = {}
 for r in q_:
-    if r["keyword"] and r["gauge"] and r["keyword"] not in live_kw:
+    if r["keyword"] and r["gauge"] and r["keyword"] not in live_kw and (r["gauge"] not in live_ or open_gate((live_[r["gauge"]] or {}).get("gate"))):  # a held gauge never takes the full band: 19 keywords (weber, yampa, neches river...) left every releasable gauge at 5% (Opus review 2026-11-22)
         first_.setdefault(r["keyword"], r["gauge"])
 import functools
 
