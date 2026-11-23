@@ -1417,6 +1417,7 @@ if __name__ == "__main__":
     from lib import blocks3 as b3w_
     wb_ = b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})
     assert wb_ and wb_["tag"] == "ext" and 'href="https://lakeconroe.com/' in wb_["body"] and "<img" not in wb_["body"] and b3w_.b_webcams({"row": {"dashboard_url": "/lake/none/"}}) is None, "webcams: the hand-checked link is missing, an image was copied, or an unlisted water got a block"
+    assert wb_["body"].count("<iframe") == 1 and 'src="https://lakeconroe.com/live-ez-video-embed/"' in wb_["body"] and 'href="https://ezboat.com"' in wb_["body"] and "ABC 13" in wb_["body"] and "abc" not in wb_["body"].split("<iframe")[1].split("</iframe>")[0].lower(), "webcams: the E-Z embed is missing, credits the wrong party, or something besides the operator's own embed was framed"
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from clean_names import street as st_
     assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"

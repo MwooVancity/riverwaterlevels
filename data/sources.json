@@ -802,14 +802,17 @@
   },
   {
    "id": "webcams",
-   "name": "Webcam pages run by others (hand-checked links)",
-   "status": "quoted",
+   "name": "Webcam pages run by others (hand-checked links) and cameras their operators gave us an embed code for",
+   "status": "owner-permission",
+   "permission": "Dana Richardson, LakeConroe.com, email 2026-11-18 21:55 (written embed codes for the E-Z Boat Storage and Palms Marina cameras, credit to the businesses with their own links; she refused the ABC 13 camera because it is not hers)",
+   "evidence": "Email thread read 2026-11-22. Only the embeds she sent are framed; every other webcam stays a link.",
    "ads": "allowed",
    "commercial": "allowed",
    "cache": "allowed",
    "terms_url": "https://lakeconroe.com/live-web-cams-on-lake-conroe/",
-   "summary": "We only link to the operator's public webcam page; no image or video is copied, framed or cached (cache: our own link list only).",
+   "summary": "We link to the operator's public webcam page; nothing is copied or cached. The one exception is a camera whose operator sent us its embed code in writing: it is framed live from the operator's own embed address, credited to the business and linked to its site.",
    "credit": "Webcams: their operators",
+   "read_on": "2026-11-22",
    "blocks": [
     "webcams"
    ]

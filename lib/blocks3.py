@@ -606,9 +606,16 @@ def b_webcams(G):
         return None
     if not rows:
         return None
-    body = "<ul>%s</ul>" % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a> <small>run by %s</small></li>' % (esc(r["url"]), esc(r["label"]), esc(r["operator"])) for r in rows)
+    rows = [{k: v or "" for k, v in r.items()} for r in rows]  # a short hand-edited CSV row reads as blank, never None
+    emb = [r for r in rows if r.get("embed") == "https://lakeconroe.com/live-ez-video-embed/" and (r.get("operator_url") or "").startswith("https://")]  # only an embed address the operator sent in writing (sources.json owner-permission); any other host stays a link
+    lnk = [r for r in rows if r not in emb]
+    body = "".join('<figure class="cam"><iframe src="%s" title="%s" width="800" height="450" style="width:100%%;height:auto;aspect-ratio:16/9;border:0" loading="lazy" allowfullscreen></iframe>'
+                   '<figcaption>Camera: <a href="%s" rel="noopener" target="_blank">%s</a>, shown with the operator\'s permission</figcaption></figure>'
+                   % (esc(r["embed"]), esc(r["label"]), esc(r["operator_url"]), esc(r["operator"])) for r in emb)
+    if lnk:
+        body += "<ul>%s</ul>" % "".join('<li><a href="%s" rel="noopener" target="_blank">%s</a> <small>run by %s</small></li>' % (esc(r["url"]), esc(r["label"]), esc(r["operator"])) for r in lnk)
     return block("webcams", "Live webcams on this water", "ext", body,
-                 "Links to webcams run by others, checked %s; their images stay on their sites. We do not control what they show or when." % esc(max(r["checked_on"] for r in rows)), "webcams")
+                 "%s Checked %s. We do not control what they show or when." % ("Live camera framed from its operator's own embed address; other webcams are links to sites run by others." if emb else "Links to webcams run by others; their images stay on their sites.", esc(max(r["checked_on"] for r in rows))), "webcams")
 
 
 def b_camera(G):

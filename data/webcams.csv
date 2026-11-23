@@ -1,2 +1,3 @@
-water_url,label,url,operator,checked_on
-/lake/lake-conroe/,"Live webcams on Lake Conroe (ABC 13, E-Z Boat Storage, Palms Marina)",https://lakeconroe.com/live-web-cams-on-lake-conroe/,LakeConroe.com,2026-11-19
+water_url,label,url,operator,checked_on,embed,operator_url
+/lake/lake-conroe/,"Live webcams on Lake Conroe (ABC 13, E-Z Boat Storage, Palms Marina)",https://lakeconroe.com/live-web-cams-on-lake-conroe/,LakeConroe.com,2026-11-19,,
+/lake/lake-conroe/,"Live camera: E-Z Boat Storage",https://ezboat.com,E-Z Boat Storage,2026-11-22,https://lakeconroe.com/live-ez-video-embed/,https://ezboat.com
