@@ -1433,6 +1433,7 @@ if __name__ == "__main__":
     _mp = dr_.map_page(_mb, _mg, [["Rhine at X", "/world/x/", 50.0, 8.0, "Germany Europe"]])
     assert _mp and _mp.count('class="dot ') == 1 and 'href="/river/test-river-tx/town/"' in _mp and "far-river-ak" not in _mp, "map: a dot is missing, or a gauge outside the lower-48 picture got one"
     assert 'href="/rivers/ak/"' in _mp and 'href="/rivers/tx/"' in _mp and '<h3>Germany</h3>' in _mp and 'href="/world/x/"' in _mp, "map: a state list or a world water is missing from the lists"
+    assert _mp.count("<div") == _mp.count("</div>") and 'min-width:900px' in _mp and 'overflow-x:auto' in _mp, "map: the sideways-scroll wrapper is unbalanced or missing (dots overlap on a phone without it)"
     assert dr_.map_page([], {}, []) is None, "map: a page with no gauges must not be built"
     _mp2 = dr_.map_page(_mb, _mg, [], ["TX"])
     assert 'href="/rivers/ak/"' not in _mp2 and 'href="/rivers/tx/"' in _mp2 and " title=" not in _mp2.split('class="gmap"')[1].split("</div>")[0], "map: a state without a list page got a link (broken link refuses the deploy), or a dot kept its tooltip (330 bytes each)"

@@ -92,6 +92,7 @@ def map_page(built, Gs, world_rows, states=None):
     mp = conus_map(built, Gs, cap=len(built), titles=False)
     if not mp:
         return None
+    mp = mp.replace('<div class="gmap">', '<div style="overflow-x:auto"><div class="gmap" style="min-width:900px">', 1).replace('</div><div class="keyrow">', '</div></div><div class="keyrow">', 1)  # a phone is 343 px wide: 508 dots of 14 px overlap, so the picture keeps its 900 px and scrolls sideways inside its card
     sts = sorted(states) if states is not None else sorted({r["state"] for r in built})  # only states that have a /rivers/xx/ page (a coast-only state has none: a broken link refused the first deploy, review 2026-11-24)
     st_html = "".join('<a class="pill" href="/rivers/%s/">%s</a>' % (s.lower(), esc(STATE_NAMES.get(s, s))) for s in sts)
     by_c = collections.defaultdict(list)
@@ -100,7 +101,7 @@ def map_page(built, Gs, world_rows, states=None):
     w_html = "".join('<h3>%s</h3><p>%s</p>' % (esc(c), " &middot; ".join('<a href="%s">%s</a>' % (esc(x[1]), esc(x[0])) for x in sorted(g, key=lambda x: x[0]))) for c, g in sorted(by_c.items()))
     body = ("<p>Every water with a page on this site, on one map. Each dot is one official gauge: tap it to open that gauge's page with the reading, the time it was taken and the source. "
             "The colour compares today's flow with the same date in past years at that gauge, in the colours the U.S. Geological Survey uses; grey means no comparison exists yet. "
-            "The map is rebuilt about once an hour, so a dot's colour can be up to an hour old; the page it opens shows the time of its own reading.</p>"
+            "The map is rebuilt about once an hour, so a dot's colour can be up to an hour old; the page it opens shows the time of its own reading. On a phone, swipe the map sideways to move across it.</p>"
             + mp
             + "<h2>By state</h2><p>The picture shows the lower 48 states. Each state with river gauges has its own list, including states the picture does not show:</p><div class=\"pills\">%s</div>" % st_html
             + ("<h2>Outside the United States</h2>%s" % w_html if w_html else ""))
