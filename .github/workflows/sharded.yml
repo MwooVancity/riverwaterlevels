@@ -148,7 +148,7 @@ jobs:
           if [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           python -I tools/world_match.py | head -3 || true
           python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
-          N=25  # owner 2026-11-24: back to 25 until the core-update drop is understood (was 50 from 11-23); owner 2026-11-22 raised it; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
+          N=50  # owner 2026-11-24 "just keep adding 50 pages a day" (overruled ChatGPT and Claude, who said pause until 12-03); the calls-left cap below usually lowers it to 25-37; owner 2026-11-22 raised it; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
           while [ "$N" -gt 1 ] && [ $(( (N + (N / 3 > 8 ? 8 : N / 3)) * 22 )) -gt "$rem" ]; do N=$((N - 1)); done  # picks plus their spares (release.py SPARE = min(n // 3, 8)) must fit the calls left
           echo "ran=1" >> "$GITHUB_OUTPUT"  # a release was attempted: the Discord note reports it even when release.py crashes
           python -I tools/release.py $N && python -I tools/open_wave.py $N --apply && echo "released=1" >> "$GITHUB_OUTPUT"
