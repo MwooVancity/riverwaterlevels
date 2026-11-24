@@ -144,7 +144,7 @@ jobs:
           if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           python -I tools/world_match.py | head -3 || true
           python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
-          N=50  # owner 2026-11-22; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
+          N=25  # owner 2026-11-24: back to 25 until the core-update drop is understood (was 50 from 11-23); owner 2026-11-22 raised it; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
           if [ -n "$rem" ] && [ $((rem / 22)) -lt "$N" ]; then N=$((rem / 22)); fi
           python -I tools/release.py $N && python -I tools/open_wave.py $N --apply && echo "released=1" >> "$GITHUB_OUTPUT"
       - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
@@ -196,6 +196,14 @@ jobs:
         id: passed
         if: always()
         run: grep -q 'refresh OK' refresh-out.log && echo 'ok=1' >> "$GITHUB_OUTPUT" || true
+      - name: Tell the owner on Discord (a release ran or a refresh failed; silent otherwise; no webhook = log only)
+        if: always()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          PASSED: ${{ steps.passed.outputs.ok }}
+          RELEASED: ${{ steps.rel.outputs.released }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: python -I tools/discord_note.py || true
       - name: Save the data cache (a failed restore must not replace the good copy; readiness debate 2026-11-07, a lost cache must not stay lost)
         if: ${{ always() && (steps.datacache.outputs.cache-matched-key != '' || steps.passed.outputs.ok == '1') }}
         uses: actions/cache/save@v6
