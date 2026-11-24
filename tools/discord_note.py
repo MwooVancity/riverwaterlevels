@@ -15,7 +15,7 @@ def message(rows, passed, released, url, kept=True):
     c = collections.Counter(r["status"] for r in rows)
     gates = collections.Counter(r["gate"] for r in rows if r["status"] == "queue" and r["gate"])
     head = ("FAILED: the refresh did not pass, the site kept yesterday's pages." if not passed else "Release done." if kept else "Release dropped: the site updated without today's new pages; they wait until tomorrow.")
-    lines = [head, "live %d, queued %d, held %d" % (c["live"], c["queue"], c["held-names"] + sum(gates.values()))]
+    lines = [head, ("last known counts: live %d, queued %d, held %d" if rows else "page counts unreadable (data/waves.csv): live %d, queued %d, held %d") % (c["live"], c["queue"] - sum(gates.values()), c["held-names"] + sum(gates.values()))]  # a gated row counts as held, not also as queued
     if gates:
         lines.append("held by gate: " + ", ".join("%s %d" % (g[:40], n) for g, n in gates.most_common(5)))
     if url:
@@ -28,13 +28,16 @@ def _selftest():
     assert message(rows, True, False, "") is None, "a passing hourly refresh must stay silent"
     assert message(rows, False, False, "u").startswith("FAILED") and "u" in message(rows, False, False, "u")
     m = message(rows, True, True, "")
-    assert m.startswith("Release done") and "live 1, queued 2" in m and "no-usgs-rows 1" in m, m
+    assert m.startswith("Release done") and "live 1, queued 1, held 1" in m and "last known" in m and "no-usgs-rows 1" in m, m
     assert message(rows, True, True, "", kept=False).startswith("Release dropped"), "a passing refresh with an undone release must not say Release done"
     print("discord_note selftest OK")
 
 
 def main():
-    rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
+    try:
+        rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
+    except (OSError, csv.Error, UnicodeError):  # the alert must go out even when the data file is the thing that broke
+        rows = []
     text = message(rows, os.environ.get("PASSED") == "1", os.environ.get("RELEASED") == "1", os.environ.get("RUN_URL", ""), os.environ.get("KEPT") == "1")
     if not text:
         return

@@ -73,7 +73,7 @@ jobs:
     needs: [plan, shard]
     if: ${{ !cancelled() }}  # a failed shard must not stop the others' work from being published
     runs-on: ubuntu-latest
-    timeout-minutes: 150  # release at 50 collects about 58 gauges one after another (about 1 min each); 90 was sized for 25
+    timeout-minutes: 150  # a release collects up to 33 gauges one after another (about 1 min each) plus the refresh; sized with room for 50 a day
     env:
       USGS_API_KEY: ${{ secrets.USGS_API_KEY }}
       RIDB_API_KEY: ${{ secrets.RIDB_API_KEY }}
@@ -144,11 +144,13 @@ jobs:
             if [ "$k" -ge 10 ]; then skip "Cloudflare stopped the Worker $k times in 24 h"; fi
           fi
           rem=$(curl -sI --max-time 20 https://riverwaterlevels.com/live/00000000.json | tr -d '\r' | awk 'tolower($1)=="x-rwl-usgs-remaining:"{print int($2)}')
-          if [ -n "$rem" ] && [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
+          if ! [[ "$rem" =~ ^[0-9]+$ ]]; then skip "the USGS calls left this hour are unknown (the live header did not answer)"; fi  # fails closed (ChatGPT review 2026-11-24); the next hour tries again
+          if [ "$rem" -lt 300 ]; then skip "only $rem USGS calls left this hour"; fi
           python -I tools/world_match.py | head -3 || true
           python -I tools/coast_match.py --apply | grep -v '^skip' | head -5 || true  # PLAN fully automatic d: exact-name NOAA stations join the queue without a session
           N=25  # owner 2026-11-24: back to 25 until the core-update drop is understood (was 50 from 11-23); owner 2026-11-22 raised it; a new gauge costs about 15-20 USGS calls, so a day never asks for more than the hour's calls left allow (the key is 1,000 an hour, shared with the Worker)
-          if [ -n "$rem" ] && [ $((rem / 22)) -lt "$N" ]; then N=$((rem / 22)); fi
+          while [ "$N" -gt 1 ] && [ $(( (N + (N / 3 > 8 ? 8 : N / 3)) * 22 )) -gt "$rem" ]; do N=$((N - 1)); done  # picks plus their spares (release.py SPARE = min(n // 3, 8)) must fit the calls left
+          echo "ran=1" >> "$GITHUB_OUTPUT"  # a release was attempted: the Discord note reports it even when release.py crashes
           python -I tools/release.py $N && python -I tools/open_wave.py $N --apply && echo "released=1" >> "$GITHUB_OUTPUT"
       - name: Undo a release that did not complete (its gauges stay queued; the refresh builds yesterday's set)
         if: steps.rel.outputs.released != '1'
@@ -205,7 +207,7 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           PASSED: ${{ steps.passed.outputs.ok }}
-          RELEASED: ${{ steps.rel.outputs.released }}
+          RELEASED: ${{ steps.rel.outputs.ran }}
           KEPT: ${{ steps.keep.outputs.kept }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: python -I tools/discord_note.py || true

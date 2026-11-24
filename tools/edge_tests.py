@@ -1418,6 +1418,14 @@ if __name__ == "__main__":
     wb_ = b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})
     assert wb_ and wb_["tag"] == "ext" and 'href="https://lakeconroe.com/' in wb_["body"] and "<img" not in wb_["body"] and b3w_.b_webcams({"row": {"dashboard_url": "/lake/none/"}}) is None, "webcams: the hand-checked link is missing, an image was copied, or an unlisted water got a block"
     assert wb_["body"].count("<iframe") == 1 and 'src="https://lakeconroe.com/live-ez-video-embed/"' in wb_["body"] and 'href="https://ezboat.com"' in wb_["body"] and "ABC 13" in wb_["body"] and "abc" not in wb_["body"].split("<iframe")[1].split("</iframe>")[0].lower(), "webcams: the E-Z embed is missing, credits the wrong party, or something besides the operator's own embed was framed"
+    _w = os.path.join(ROOT, "data", "webcams.csv"); _old = open(_w, encoding="utf-8").read()
+    try:  # an embed row with the wrong business, link or host must never become an iframe
+        open(_w, "w", encoding="utf-8").write(_old.replace("E-Z Boat Storage,2026-11-22", "Other Business,2026-11-22"))
+        assert "<iframe" not in b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})["body"], "webcams: a changed credit link still framed the camera"
+        open(_w, "w", encoding="utf-8").write(_old.replace("https://lakeconroe.com/live-ez", "https://evil.example/live-ez"))
+        assert "<iframe" not in b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})["body"], "webcams: another host got framed"
+    finally:
+        open(_w, "w", encoding="utf-8").write(_old)
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from clean_names import street as st_
     assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"

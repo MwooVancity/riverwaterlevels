@@ -33,7 +33,7 @@ def low_confidence(name):
 
 def river_phrases(name):
     n = re.sub(r"\s+", " ", name.lower().replace("&", "and")).strip()
-    n = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 '\-]", "", n)).strip()
+    n = re.sub(r"\s+", " ", re.sub(r"[^\w '\-]", "", n.replace("_", " "))).strip()  # \w keeps accented and non-Latin letters (worldwide names)
     if not n:
         return []
     base = n if n.endswith(("river", "creek", "fork", "brook", "run", "bayou", "canal", "lake", "reservoir")) else n + " river"
@@ -60,6 +60,7 @@ def _selftest():
     assert river_phrases("Fall Creek") == ["fall creek level", "fall creek flow"]
     assert river_phrases("Yampa") == ["yampa river level", "yampa river flow"]
     assert river_phrases("   ") == []
+    assert river_phrases("Rivière Québec")[0] == "rivière québec river level", river_phrases("Rivière Québec")
     assert river_phrases("Richland-Chambers  Reservoir")[0] == "richland-chambers reservoir level"
     r = build(["lake mead water level"], ["Boise River"], {"lake mead level"})
     assert [x[0] for x in r] == ["lake mead water level", "boise river level", "boise river flow"], r
@@ -74,7 +75,7 @@ def main():
     seeds = [l.strip() for l in open(os.path.join(D, "kp-seeds-ai-2026-11-22.txt"), encoding="utf-8") if l.strip()]
     names = {r["river"] for r in csv.DictReader(open(os.path.join(D, "world-queue.csv"), encoding="utf-8")) if r["gauge"] and r["river"]}
     names |= {r["river"] for r in csv.DictReader(open(os.path.join(D, "waves.csv"), encoding="utf-8")) if r["status"] == "queue" and "lake" not in r["signals"].split(",")}
-    tiers = {r["keyword"].lower(): int(float(r["tier"] or 0)) for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8"))}
+    tiers = {r["keyword"].lower(): int(float(r["tier"])) for r in csv.DictReader(open(os.path.join(D, "keyword-tiers-water.csv"), encoding="utf-8")) if (r["tier"] or "").strip()}  # a blank tier is unknown, never 0
     low = sorted(n for n in names if low_confidence(n))
     unk = os.path.join(D, "kp-unknown.txt")  # blank Planner rows: asked once, never again
     asked = set(tiers) | (set(open(unk, encoding="utf-8").read().split("\n")) if os.path.exists(unk) else set())
@@ -82,6 +83,9 @@ def main():
     ctl = controls(tiers)
     out = os.path.join(D, "kp-upload")
     os.makedirs(out, exist_ok=True)
+    for old in os.listdir(out):  # a shorter run must not leave last run's batch files to be uploaded by mistake
+        if old.startswith("batch-") and old.endswith(".txt"):
+            os.remove(os.path.join(out, old))
     open(os.path.join(out, "low-confidence-names.txt"), "w", encoding="utf-8").write("\n".join(low) + "\n")
     with open(os.path.join(out, "manifest.csv"), "w", newline="", encoding="utf-8") as m:
         w = csv.writer(m)

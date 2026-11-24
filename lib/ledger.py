@@ -6,7 +6,7 @@ import datetime, json, os
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "cache", "_ledger.jsonl")
 LIMIT_S = {"shard collect": 45 * 60, "shard 0 collect": 45 * 60, "release": 30 * 60}  # a shard job dies at 60 min; the release shares the 45-min brake with the refresh
 DEFAULT_S = 45 * 60  # any other stage: the 45-min brake
-GROWTH = 50 * 30  # pages added in 30 days at the daily 50
+GROWTH = 25 * 30  # pages added in 30 days at the daily 25
 KEEP = 4000  # lines: ~24 runs x ~8 stages a day = 90 days at most
 
 

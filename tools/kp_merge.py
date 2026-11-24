@@ -23,12 +23,16 @@ def parse(path):
     txt = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8-sig")
     rows = list(csv.reader(txt.splitlines(), delimiter="\t"))
     hi = next(i for i, r in enumerate(rows) if r and r[0] == "Keyword")
+    col = {h.strip(): i for i, h in enumerate(rows[hi])}
+    seg, vi, bi = col.get("Segmentation"), col.get("Avg. monthly searches"), col.get("Top of page bid (high range)")
+    if vi is None:  # a changed export layout must stop the merge, never read the wrong column
+        raise SystemExit("kp_merge: no 'Avg. monthly searches' column in %s (columns: %s)" % (path, sorted(col)))
     out = []
     for r in rows[hi + 1:]:
-        if len(r) < 4 or not r[0] or r[2] in ("All", "United States"):
+        if len(r) <= vi or not r[0] or (seg is not None and len(r) > seg and r[seg] in ("All", "United States")):
             continue
-        vol = int(float(r[3].replace(",", ""))) if r[3] else None
-        bid = r[9] if len(r) > 9 and r[9] else ""
+        vol = int(float(r[vi].replace(",", ""))) if r[vi] else None
+        bid = r[bi] if bi is not None and len(r) > bi and r[bi] else ""
         out.append((r[0].lower().strip(), vol, bid))
     return out
 
@@ -63,6 +67,8 @@ def main(path):
     add, unknown = merge(parse(path), have)
     os.makedirs(os.path.join(D, "kp-raw"), exist_ok=True)
     shutil.copy(path, os.path.join(D, "kp-raw", os.path.basename(path).replace(" ", "_")))
+    if open(FILE, "rb").read()[-1:] != b"\n":  # a file cut short must not glue the first new row onto its last line
+        open(FILE, "ab").write(b"\n")
     with open(FILE, "a", newline="", encoding="utf-8") as f:
         csv.DictWriter(f, ["keyword", "tier", "bid_high_cad", "kind"], lineterminator="\n").writerows(add)
     with open(os.path.join(D, "kp-unknown.txt"), "a", encoding="utf-8") as f:
