@@ -13,15 +13,15 @@ BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "V
           r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"(?<!ZIP )(?<!\d)-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
+BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600, "map": 2500}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
 NEIGHBOURS = 3  # census line only (owner 2026-11-09: no forced internal links; an isolated page links none and is reached through its hub)
-FLOOR = {"hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing. Owner 2026-11-08: no thin gate on a water page (gauge, world): a different river or lake is never thin; the floor stays only on hubs and site pages, where it catches a broken empty template.
+FLOOR = {"hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650, "map": 600}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing. Owner 2026-11-08: no thin gate on a water page (gauge, world): a different river or lake is never thin; the floor stays only on hubs and site pages, where it catches a broken empty template.
 
 
 WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
-CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
+CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust", "map")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
 
 
 def link_count(h):
@@ -36,6 +36,8 @@ def kind_of(rel):
         return "home"
     if parts[0] == "rivers":
         return "state"
+    if parts[0] == "map":  # /map/: one link dot per built gauge, grows with the site (owner 2026-11-24); its own link budget like /status/
+        return "map"
     if parts[0] == "status":  # the all-gauges freshness dashboard: one link per gauge, grows with the site, not a prose page
         return "status"
     if parts[0] in WORLD and len(parts) == 3:

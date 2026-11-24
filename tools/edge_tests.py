@@ -1426,6 +1426,14 @@ if __name__ == "__main__":
         assert "<iframe" not in b3w_.b_webcams({"row": {"dashboard_url": "/lake/lake-conroe/"}})["body"], "webcams: another host got framed"
     finally:
         open(_w, "w", encoding="utf-8").write(_old)
+    from lib import directory as dr_  # /map/ (owner 2026-11-24): a dot only for a built gauge inside the picture, every state and world water in the lists, no page when nothing is built
+    _mb = [{"site": "1", "state": "TX", "river": "Test River", "place": "Town", "water_url": "/river/test-river-tx/town/", "drainage_sqmi": "10"},
+           {"site": "2", "state": "AK", "river": "Far River", "place": "North", "water_url": "/river/far-river-ak/north/", "drainage_sqmi": "5"}]
+    _mg = {"1": {"lat": 30.0, "lon": -98.0, "p": 50.0}, "2": {"lat": 61.0, "lon": -150.0, "p": None}}
+    _mp = dr_.map_page(_mb, _mg, [["Rhine at X", "/world/x/", 50.0, 8.0, "Germany Europe"]])
+    assert _mp and _mp.count('class="dot ') == 1 and 'href="/river/test-river-tx/town/"' in _mp and "far-river-ak" not in _mp, "map: a dot is missing, or a gauge outside the lower-48 picture got one"
+    assert 'href="/rivers/ak/"' in _mp and 'href="/rivers/tx/"' in _mp and '<h3>Germany</h3>' in _mp and 'href="/world/x/"' in _mp, "map: a state list or a world water is missing from the lists"
+    assert dr_.map_page([], {}, []) is None, "map: a page with no gauges must not be built"
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from clean_names import street as st_
     assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"

@@ -34,6 +34,12 @@ def indexable(url, cfg):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
+    if url == "/map/":  # a new template: noindex until its phone shots were read and /map/ is listed in data/reviewed.json "passed" (CLAUDE.md Reviews)
+        try:
+            ok = "/map/" in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "reviewed.json"), encoding="utf-8")).get("passed", [])
+        except (OSError, ValueError):
+            ok = False
+        return bool(cfg["site_pages"]) and ok
     return bool(cfg["site_pages"])
 
 

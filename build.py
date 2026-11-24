@@ -263,6 +263,9 @@ def main():
     pp = os.path.join(CACHE, "_ea-proof.json")  # England's alert proof (collect.py ea_probe), published so a lost cache reads it back
     if os.path.exists(pp):
         shutil.copy2(pp, os.path.join(nxt, "_proofs.json"))
+    map_html = directory.map_page(built, Gs, world_rows)  # /map/: every built gauge on one map (owner 2026-11-24); built after the world pages so its list matches this build
+    if map_html:
+        emit("/map/", map_html)
     # Cloudflare counts every rule after the first dynamic one as dynamic, limit 100 (deploy refused 2026-11-01, site frozen 7 h), and one
     # rule per river would pass 2,000 static anyway, so rivers with a single gauge go to single-rivers.json and worker/index.js sends the 301
     redirects = ["/river/apple-river-wi/above-05341499-at-park-in-somerset/ /river/apple-river-wi/above-park-in-somerset/ 301", "/river/:hub/:place/water/ /river/:hub/:place/ 301", "/river/:hub/:place/forecast/ /river/:hub/:place/ 301", "/rivers/ / 301"]
