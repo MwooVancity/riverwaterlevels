@@ -126,7 +126,8 @@ jobs:
           skip() { echo "release SKIPPED: $1"; echo "$1" > state/release-skip.txt; exit 0; }; rm -f state/release-skip.txt
           today=$(date -u +%F); last=$(cat data/last-release.txt 2>/dev/null || true)
           if [ $((10#$(date -u +%H))) -lt 11 ] || [ "$today" = "$last" ]; then echo "no release this run (before 11 UTC, or released today: ${last:-never})"; exit 0; fi  # first run from 11 UTC on that has not released today: GitHub skips most scheduled hours (2026-10-29 had no 11 UTC run)
-          until=$(tr -d '\r\n ' < data/release-pause-until.txt 2>/dev/null || true)  # owner 2026-11-24: new pages paused while the Google drop is read; a date (YYYY-MM-DD) in that file holds the daily release until then, delete the file to resume
+          until=$(tr -d '\r\n ' 2>/dev/null < data/release-pause-until.txt || true)  # owner 2026-11-24: new pages paused while the Google drop is read; a date (YYYY-MM-DD) in that file holds the daily release until then, delete the file to resume
+          if [ -n "$until" ] && ! [[ "$until" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then skip "data/release-pause-until.txt is not a YYYY-MM-DD date: $until"; fi
           if [ -n "$until" ] && [ "$today" \< "$until" ]; then skip "paused until $until (data/release-pause-until.txt)"; fi
           # The brakes fail closed (audit 2026-11-10 #32, #40): a number that cannot be read holds the release for this hour; the next run tries again.
           m=$(python -I lib/ledger.py --last-run-min)  # the newest run's own collect + refresh minutes from the run-time ledger, not the worst of two runs in 24 h
