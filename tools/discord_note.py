@@ -8,13 +8,13 @@ import csv, collections, json, os, sys, urllib.request
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 
-def message(rows, passed, released, url):
-    """Text to send, or None when nothing needs saying."""
+def message(rows, passed, released, url, kept=True):
+    """Text to send, or None when nothing needs saying. kept = the day's gauges were committed (a passing refresh alone can mean the release was undone)."""
     if passed and not released:
         return None
     c = collections.Counter(r["status"] for r in rows)
     gates = collections.Counter(r["gate"] for r in rows if r["status"] == "queue" and r["gate"])
-    head = ("FAILED: the refresh did not pass, the site kept yesterday's pages." if not passed else "Release done.")
+    head = ("FAILED: the refresh did not pass, the site kept yesterday's pages." if not passed else "Release done." if kept else "Release dropped: the site updated without today's new pages; they wait until tomorrow.")
     lines = [head, "live %d, queued %d, held %d" % (c["live"], c["queue"], c["held-names"] + sum(gates.values()))]
     if gates:
         lines.append("held by gate: " + ", ".join("%s %d" % (g[:40], n) for g, n in gates.most_common(5)))
@@ -29,12 +29,13 @@ def _selftest():
     assert message(rows, False, False, "u").startswith("FAILED") and "u" in message(rows, False, False, "u")
     m = message(rows, True, True, "")
     assert m.startswith("Release done") and "live 1, queued 2" in m and "no-usgs-rows 1" in m, m
+    assert message(rows, True, True, "", kept=False).startswith("Release dropped"), "a passing refresh with an undone release must not say Release done"
     print("discord_note selftest OK")
 
 
 def main():
     rows = list(csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")))
-    text = message(rows, os.environ.get("PASSED") == "1", os.environ.get("RELEASED") == "1", os.environ.get("RUN_URL", ""))
+    text = message(rows, os.environ.get("PASSED") == "1", os.environ.get("RELEASED") == "1", os.environ.get("RUN_URL", ""), os.environ.get("KEPT") == "1")
     if not text:
         return
     hook = os.environ.get("DISCORD_WEBHOOK", "")

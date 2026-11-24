@@ -167,6 +167,7 @@ jobs:
             python refresh.py --no-collect 2>&1 | tee refresh-out.log
           fi
       - name: Keep the day's new gauges only if the refresh passed
+        id: keep
         if: ${{ steps.rel.outputs.released == '1' }}
         continue-on-error: true
         env:
@@ -177,7 +178,7 @@ jobs:
             python -I tools/reindex.py --queue || true  # the day's new pages join the daily Request-indexing queue (one writer: this step)
             date -u +%F > data/last-release.txt; if git diff data/waves.csv | grep -q '^+live,'; then date -u +%F > data/last-success.txt; fi; git add -f docs/research/priority/picks.csv; git add data/reindex-new.txt data/last-success.txt data/coasts.csv data/world-queue.csv data/waves.csv data/index-allow.json data/world-pages.json data/world-ready.csv data/last-release.txt data/open-wave-last.json legacy/
             git commit -m "daily release: next gauges from picks.csv, every gate passed ($(date -u +%F))"
-            git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed"
+            git pull --rebase --autostash -q origin main && git push origin HEAD:main && echo "release committed" && echo "kept=1" >> "$GITHUB_OUTPUT"
             python -I tools/indexnow.py --new || true  # tell Bing the pages that just opened; never fails the release
             pip install -q google-api-python-client google-auth >/dev/null 2>&1; python -I tools/gsc_submit.py || true  # tell Google the sitemap changed (needs the service account at Full)
           else  # readiness debate 2026-11-07: the release was undone; its picks wait until tomorrow and today is done, never the same 25 every hour
@@ -202,6 +203,7 @@ jobs:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           PASSED: ${{ steps.passed.outputs.ok }}
           RELEASED: ${{ steps.rel.outputs.released }}
+          KEPT: ${{ steps.keep.outputs.kept }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: python -I tools/discord_note.py || true
       - name: Save the data cache (a failed restore must not replace the good copy; readiness debate 2026-11-07, a lost cache must not stay lost)
