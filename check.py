@@ -12,6 +12,7 @@ from lib.common import ROOT, SITE_URL, MOJI, demoji, r1
 BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "View all 1 gauges" on the live home page (crawl 2026-11-04)
           r"\bin our data\b", r"\bpage as built\b", r"live check did not answer", r"\(water first\)",  # hater round 2 (2026-10-27): builder's jargon a reader cannot parse
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"(?<!ZIP )(?<!\d)-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
+MAX_BYTES_MAP = 520_000  # /map/ raw HTML: about 200 bytes a dot, 2,500 dots; split the map by region before that (lib/directory.py map_page)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
 BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600, "map": 2500}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
 NEIGHBOURS = 3  # census line only (owner 2026-11-09: no forced internal links; an isolated page links none and is reached through its hub)
@@ -241,7 +242,7 @@ def check_html(h, rel):
         bad.append("no canonical")
     elif m.group(1) != SITE_URL + url:
         bad.append("canonical %s != %s" % (m.group(1), SITE_URL + url))
-    if len(h.encode()) > MAX_BYTES:
+    if len(h.encode()) > (MAX_BYTES_MAP if kind_of(rel) == "map" else MAX_BYTES):  # /map/ has a link dot per gauge and grows with the site; its reader limit is still MAX_GZ
         bad.append("page weight %d bytes over budget" % len(h.encode()))
     if not rel.replace("\\", "/").startswith("embed/"):  # an embed is a self-contained iframe page; every other page shares one cacheable stylesheet
         if not re.search(r'<link rel="stylesheet" href="/(site|dir)\.[0-9a-f]{10}\.css">', h):

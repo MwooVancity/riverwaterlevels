@@ -59,7 +59,7 @@ def featured(built, n=FEATURED):
     return sorted(built, key=lambda r: (-sc.get(r["site"], 0), -float(r["drainage_sqmi"] or 0)))[:n]
 
 
-def conus_map(built, Gs, cap=FEATURED):
+def conus_map(built, Gs, cap=FEATURED, titles=True):
     """USGS Topo image of the lower 48 with a link dot per featured gauge (the `cap` highest scored), coloured by percentile bucket."""
     mx = lambda lon: merc(0, lon)[0]
     my = lambda lat: merc(lat, 0)[1]
@@ -75,7 +75,7 @@ def conus_map(built, Gs, cap=FEATURED):
         p = G["p"]
         cls = ww_cls(p) or "d-na"
         lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", flow compared with past years on this date: %s" % band_word(p).lower()) if p is not None else "")
-        dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s" title="%s" aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], esc(lab), esc(lab))
+        dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s"%s aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], (' title="%s"' % esc(lab)) if titles else "", esc(lab))  # the map page drops the tooltip: the label twice per dot was 330 bytes
         shown += 1
     if not shown:
         return ""
@@ -84,15 +84,15 @@ def conus_map(built, Gs, cap=FEATURED):
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
 
-def map_page(built, Gs, world_rows):
+def map_page(built, Gs, world_rows, states=None):
     """/map/ (owner 2026-11-24, ChatGPT recovery debate): every built US gauge as one link dot on the lower-48 map, coloured by how today's flow compares with past
     years (the home page's conus_map with no cap), plus a link to each state list and each built water outside the US. Server-rendered, no script, no tile server.
     The map shows only pages built in this same build (a dot never links to a page that is not there). Alaska, Hawaii and the world have no dot on the picture:
     they are in the lists under it. At about 2,000 dots split the map by region (MAP_CAP)."""
-    mp = conus_map(built, Gs, cap=len(built))
+    mp = conus_map(built, Gs, cap=len(built), titles=False)
     if not mp:
         return None
-    sts = sorted({r["state"] for r in built})
+    sts = sorted(states) if states is not None else sorted({r["state"] for r in built})  # only states that have a /rivers/xx/ page (a coast-only state has none: a broken link refused the first deploy, review 2026-11-24)
     st_html = "".join('<a class="pill" href="/rivers/%s/">%s</a>' % (s.lower(), esc(STATE_NAMES.get(s, s))) for s in sts)
     by_c = collections.defaultdict(list)
     for w in world_rows:
@@ -102,7 +102,7 @@ def map_page(built, Gs, world_rows):
             "The colour compares today's flow with the same date in past years at that gauge, in the colours the U.S. Geological Survey uses; grey means no comparison exists yet. "
             "The map is rebuilt about once an hour, so a dot's colour can be up to an hour old; the page it opens shows the time of its own reading.</p>"
             + mp
-            + "<h2>By state</h2><p>The picture shows the lower 48 states. Every state, including Alaska and Hawaii, has its own list of gauges:</p><div class=\"pills\">%s</div>" % st_html
+            + "<h2>By state</h2><p>The picture shows the lower 48 states. Each state with river gauges has its own list, including states the picture does not show:</p><div class=\"pills\">%s</div>" % st_html
             + ("<h2>Outside the United States</h2>%s" % w_html if w_html else ""))
     return prose_page("Map of live river and lake gauges", "/map/", body, "One map of every gauge on this site, coloured by how today's flow compares with past years. Open a dot for the reading, its time and its source.")
 
