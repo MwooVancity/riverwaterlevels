@@ -273,7 +273,7 @@ def ad_slot():
     js = ('(function(){var a=document.getElementById("adsl"),b=document.getElementById("adsl-box"),z="";try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}'
           'if(!a||!b||!("IntersectionObserver" in window)||z.indexOf("Europe/")==0||z.indexOf("Atlantic/")==0||z.indexOf("Arctic/")==0||"Asia/Nicosia Asia/Famagusta Africa/Ceuta Indian/Reunion Indian/Mayotte America/Guadeloupe America/Martinique America/Cayenne America/Marigot America/St_Barthelemy".indexOf(z)>-1&&z){if(a)a.style.display="none";return}'
           'new IntersectionObserver(function(e,o){if(!e[0].isIntersecting)return;o.disconnect();window.atOptions={key:"%s",format:"iframe",height:%d,width:%d,params:{}};'
-          'var s=document.createElement("script");s.src="%s";b.appendChild(s)},{rootMargin:"200px"}).observe(b)})()' % (k, h, w, src))
+          'var s=document.createElement("script");s.src="%s";b.appendChild(s);setTimeout(function(){if(!b.querySelector("iframe"))a.style.display="none"},6000)},{rootMargin:"200px"}).observe(b)})()' % (k, h, w, src))
     return ('<aside id="adsl" class="adsl" aria-label="Advertisement" style="min-height:%dpx;margin:20px auto;text-align:center"><small style="display:block;color:#666;font-size:12px">Advertisement</small><div id="adsl-box"></div></aside><script>%s</script>' % (h + 40, js))
 
 
