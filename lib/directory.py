@@ -81,7 +81,7 @@ def conus_map(built, Gs, cap=FEATURED, titles=True):
         shown += 1
     if not shown:
         return ""
-    key = '<div class="keyrow">Gauge color, flow compared with past years on this date, in the USGS Water Data colors: %s<span class="kk"><b class="d-na"></b>no comparison available, or the gauge has stopped reporting.</span> %d gauges shown.</div>' % ("".join('<span class="kk"><b class="%s"></b>%s</span> ' % (k, esc(lab.lower())) for k, (lab, _) in OFFICIAL["ww"].items()), shown)
+    key = '<div class="keyrow">Gauge color, flow compared with past years on this date, in the USGS Water Data colors: %s<span class="kk"><b class="d-na"></b>no</span> comparison available, or the gauge has stopped reporting. %d gauges shown.</div>' % ("".join('<span class="kk"><b class="%s"></b>%s</span> ' % (k, esc(lab.lower())) for k, (lab, _) in OFFICIAL["ww"].items()), shown)
     return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="800" height="%d" fetchpriority="high" decoding="async">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
@@ -105,9 +105,9 @@ def map_page(built, Gs, world_rows, states=None):
     for w in world_rows:
         by_c[{"Germany Europe": "Germany", "England UK": "England"}.get(w[4], w[4]) or "Other"].append(w)  # world_rows[4] is the search text of the page's country
     w_html = "".join('<h3>%s</h3><p>%s</p>' % (esc(c), " &middot; ".join('<a href="%s" style="display:inline-block;padding:9px 0">%s</a>' % (esc(x[1]), esc(x[0])) for x in sorted(g, key=lambda x: x[0]))) for c, g in sorted(by_c.items()))
-    body = ("<p>Every lower-48 gauge with a page on this site is one dot on this map; Alaska, Hawaii and the waters outside the United States are in the lists under it. Each dot is one official gauge: tap it to open that gauge's page with the reading, the time it was taken and the source. "
+    body = ("<p>Every lower-48 gauge with a page on this site is one dot on this map; Alaska and the waters outside the United States are in the lists under it. Each dot is one official gauge: tap it to open that gauge's page with the reading, the time it was taken and the source. "
             "The color compares today's flow (for a lake, its water level) with the same date in past years at that gauge, in the colors the U.S. Geological Survey uses; grey means no comparison exists yet or the gauge has stopped reporting. "
-            "The map is rebuilt about once an hour, so a dot's colour can be up to an hour old; the page it opens shows the time of its own reading. On a phone, swipe the map sideways to move across it.</p>"
+            "The map is rebuilt about once an hour, so a dot's color can be up to an hour old; the page it opens shows the time of its own reading. On a phone, swipe the map sideways to move across it.</p>"
             + mp
             + "<h2>By state</h2><p>The picture shows the lower 48 states. Each state with river gauges has its own list, including states the picture does not show:</p><div class=\"pills\">%s</div>" % st_html
             + ("<h2>Outside the United States</h2>%s" % w_html if w_html else ""))

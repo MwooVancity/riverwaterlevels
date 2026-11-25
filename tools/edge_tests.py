@@ -1439,6 +1439,7 @@ if __name__ == "__main__":
     assert 'class="dot d-na"' in dr_.map_page(_mb, _mg_off, []) and 'class="dot w5"' not in dr_.map_page(_mb, _mg_off, []), "map: a gauge that stopped reporting kept a confident colour"
     _mg_lake = {"1": {"lat": 30.0, "lon": -98.0, "p": 95.0, "lake": "62614"}, "2": _mg["2"]}
     assert "water level compared with past years" in dr_.map_page(_mb, _mg_lake, [], ["TX"]).replace('title=""', "") or "water level compared" in dr_.map_page(_mb, _mg_lake, []), "map: a lake dot says flow"
+    assert _mp.index('class="keyrow"') < _mp.index('class="gmap"') and 'white-space:nowrap' in dr_.EXTRA_CSS and '<span class="kk"><b class="d-na"></b>no</span>' in _mp, "map: the color key must come before the picture, and the long grey label must be able to wrap (a nowrap line pushes a phone sideways)"
     assert dr_.map_page([], {}, []) is None, "map: a page with no gauges must not be built"
     _mp2 = dr_.map_page(_mb, _mg, [], ["TX"])
     assert 'href="/rivers/ak/"' not in _mp2 and 'href="/rivers/tx/"' in _mp2 and " title=" not in _mp2.split('class="gmap"')[1].split("</div>")[0], "map: a state without a list page got a link (broken link refuses the deploy), or a dot kept its tooltip (330 bytes each)"
