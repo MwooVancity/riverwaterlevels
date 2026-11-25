@@ -73,8 +73,10 @@ def conus_map(built, Gs, cap=FEATURED, titles=True):
         if not (lon0 <= G["lon"] <= lon1 and lat0 <= G["lat"] <= lat1):
             continue
         p = G["p"]
+        if G.get("offline"):  # a gauge that stopped reporting has no colour: grey, like every other list (bug review 2026-11-25)
+            p = None
         cls = ww_cls(p) or "d-na"
-        lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", flow compared with past years on this date: %s" % band_word(p).lower()) if p is not None else "")
+        lab = "%s, %s" % (river_at(r["river"], r["place"]), r["state"]) + ((", %s compared with past years on this date: %s" % ("water level" if G.get("lake") else "flow", band_word(p).lower())) if p is not None else "")
         dots += '<a class="dot %s" tabindex="-1" style="left:%.2f%%;top:%.2f%%" href="%s"%s aria-label="%s"></a>' % (cls, (mx(G["lon"]) - x0) / (x1 - x0) * 100, (y1 - my(G["lat"])) / (y1 - y0) * 100, r["water_url"], (' title="%s"' % esc(lab)) if titles else "", esc(lab))  # the map page drops the tooltip: the label twice per dot was 330 bytes
         shown += 1
     if not shown:
@@ -100,12 +102,12 @@ def map_page(built, Gs, world_rows, states=None):
         by_c[{"Germany Europe": "Germany", "England UK": "England"}.get(w[4], w[4]) or "Other"].append(w)  # world_rows[4] is the search text of the page's country
     w_html = "".join('<h3>%s</h3><p>%s</p>' % (esc(c), " &middot; ".join('<a href="%s">%s</a>' % (esc(x[1]), esc(x[0])) for x in sorted(g, key=lambda x: x[0]))) for c, g in sorted(by_c.items()))
     body = ("<p>Every water with a page on this site, on one map. Each dot is one official gauge: tap it to open that gauge's page with the reading, the time it was taken and the source. "
-            "The colour compares today's flow with the same date in past years at that gauge, in the colours the U.S. Geological Survey uses; grey means no comparison exists yet. "
+            "The colour compares today's flow (for a lake, its water level) with the same date in past years at that gauge, in the colours the U.S. Geological Survey uses; grey means no comparison exists yet or the gauge has stopped reporting. "
             "The map is rebuilt about once an hour, so a dot's colour can be up to an hour old; the page it opens shows the time of its own reading. On a phone, swipe the map sideways to move across it.</p>"
             + mp
             + "<h2>By state</h2><p>The picture shows the lower 48 states. Each state with river gauges has its own list, including states the picture does not show:</p><div class=\"pills\">%s</div>" % st_html
             + ("<h2>Outside the United States</h2>%s" % w_html if w_html else ""))
-    return prose_page("Map of live river and lake gauges", "/map/", body, "One map of every gauge on this site, coloured by how today's flow compares with past years. Open a dot for the reading, its time and its source.")
+    return prose_page("Map of live river and lake gauges", "/map/", body, "One map of every gauge on this site, coloured by how today's flow compares with past years. Open a dot for the reading, its time and its source.").replace('<div class="prose">', '<div class="prose" style="max-width:none">', 1)  # the 720 px reading column clipped the 900 px picture on a laptop too (bug review 2026-11-25)
 
 
 ALLTAB_JS = """<script>(function(){var t=document.getElementById('alltab');if(!t)return;var hs=t.querySelectorAll('th[data-k]');hs.forEach(function(h,c){h.style.cursor='pointer';h.tabIndex=0;function go(){var d=h.getAttribute('data-d')==='1'?-1:1,b=t.tBodies[0],r=[].slice.call(b.rows),i=parseInt(h.getAttribute('data-i'));hs.forEach(function(x){x.removeAttribute('data-d');x.removeAttribute('aria-sort')});h.setAttribute('data-d',d===1?'1':'0');h.setAttribute('aria-sort',d===1?'ascending':'descending');r.sort(function(x,y){var a=x.cells[i].getAttribute('data-v'),z=y.cells[i].getAttribute('data-v');if(h.getAttribute('data-k')==='n'){a=a===''?-1e18:parseFloat(a);z=z===''?-1e18:parseFloat(z);if(a===-1e18)return 1;if(z===-1e18)return -1;return (a-z)*d}return a.localeCompare(z)*d});r.forEach(function(x){b.appendChild(x)})}h.addEventListener('click',go);h.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})})})();</script>"""

@@ -1434,6 +1434,11 @@ if __name__ == "__main__":
     assert _mp and _mp.count('class="dot ') == 1 and 'href="/river/test-river-tx/town/"' in _mp and "far-river-ak" not in _mp, "map: a dot is missing, or a gauge outside the lower-48 picture got one"
     assert 'href="/rivers/ak/"' in _mp and 'href="/rivers/tx/"' in _mp and '<h3>Germany</h3>' in _mp and 'href="/world/x/"' in _mp, "map: a state list or a world water is missing from the lists"
     assert _mp.count("<div") == _mp.count("</div>") and 'min-width:900px' in _mp and 'overflow-x:auto' in _mp, "map: the sideways-scroll wrapper is unbalanced or missing (dots overlap on a phone without it)"
+    assert 'class="prose" style="max-width:none"' in _mp, "map: the 720 px reading column clips the 900 px picture on a laptop"
+    _mg_off = {"1": {"lat": 30.0, "lon": -98.0, "p": 95.0, "offline": True}, "2": _mg["2"]}
+    assert 'class="dot d-na"' in dr_.map_page(_mb, _mg_off, []) and 'class="dot w5"' not in dr_.map_page(_mb, _mg_off, []), "map: a gauge that stopped reporting kept a confident colour"
+    _mg_lake = {"1": {"lat": 30.0, "lon": -98.0, "p": 95.0, "lake": "62614"}, "2": _mg["2"]}
+    assert "water level compared with past years" in dr_.map_page(_mb, _mg_lake, [], ["TX"]).replace('title=""', "") or "water level compared" in dr_.map_page(_mb, _mg_lake, []), "map: a lake dot says flow"
     assert dr_.map_page([], {}, []) is None, "map: a page with no gauges must not be built"
     _mp2 = dr_.map_page(_mb, _mg, [], ["TX"])
     assert 'href="/rivers/ak/"' not in _mp2 and 'href="/rivers/tx/"' in _mp2 and " title=" not in _mp2.split('class="gmap"')[1].split("</div>")[0], "map: a state without a list page got a link (broken link refuses the deploy), or a dot kept its tooltip (330 bytes each)"
