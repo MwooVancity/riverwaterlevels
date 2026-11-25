@@ -1019,7 +1019,7 @@ def block_ids():
     return out
 
 
-WORLD_HOSTS = ("pagead2.googlesyndication.com", "www.googletagmanager.com", "riverwaterlevels.com")  # own origin written absolute: the embed preview iframe (2026-11-18); all a world page's scripts, images and calls may reach; its own origin needs no entry
+WORLD_HOSTS = ("pagead2.googlesyndication.com", "www.googletagmanager.com", "bauval.org", "riverwaterlevels.com")  # own origin written absolute: the embed preview iframe (2026-11-18); all a world page's scripts, images and calls may reach; its own origin needs no entry
 
 
 def world_rules(h):
@@ -1062,6 +1062,13 @@ def ad_gaps(rel, h):
         bad.append("Google ad tag before the consent defaults")
     if "adsbygoogle.js" in h and "/" + rel.replace("\\", "/").replace("index.html", "") in __import__("lib.common", fromlist=["NO_ADS"]).NO_ADS:
         bad.append("ad tag on a legal or contact page (AdSense review 2026-11-15: lib/common.py NO_ADS)")
+    if 'id="adsl"' in h:  # Adsterra banner (owner 2026-11-24): one slot, never on legal pages, display banner only, never a pop-under (Google bars AdSense on pop-under sites)
+        if "/" + rel.replace("\\", "/").replace("index.html", "") in __import__("lib.common", fromlist=["NO_ADS"]).NO_ADS:
+            bad.append("Adsterra slot on a legal or contact page (lib/common.py NO_ADS)")
+        if h.count('id="adsl"') != 1:
+            bad.append("more than one Adsterra slot on a page")
+        if re.search(r"pop-?under|social-?bar|smartlink|window\.open", h, re.I):
+            bad.append("pop-under, social bar or smartlink code on a page with the Adsterra slot")
     if rel.replace("\\", "/") == "privacy/index.html":
         bad += ["privacy page lost %r" % w for w in ("use cookies to serve ads", "opt out of personalized advertising", "aboutads.info", "adssettings.google.com", "consent message") if w not in h]
     return bad

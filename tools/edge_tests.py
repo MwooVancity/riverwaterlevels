@@ -1437,6 +1437,21 @@ if __name__ == "__main__":
     assert dr_.map_page([], {}, []) is None, "map: a page with no gauges must not be built"
     _mp2 = dr_.map_page(_mb, _mg, [], ["TX"])
     assert 'href="/rivers/ak/"' not in _mp2 and 'href="/rivers/tx/"' in _mp2 and " title=" not in _mp2.split('class="gmap"')[1].split("</div>")[0], "map: a state without a list page got a link (broken link refuses the deploy), or a dot kept its tooltip (330 bytes each)"
+    from lib import common as cm_, page as pg_  # Adsterra banner (owner 2026-11-24): one slot, display only, off the legal pages, off the 404, off with a bad key
+    _sl = cm_.ad_slot()
+    assert _sl.count('id="adsl"') == 1 and "IntersectionObserver" in _sl and "Europe/" in _sl and "popunder" not in _sl.lower() and "window.open" not in _sl, "adsterra: slot missing, not lazy, loads for Europe, or carries popunder code"
+    assert pg_.footer().startswith('<aside id="adsl"') and 'id="adsl"' not in pg_.footer(ads=False), "adsterra: footer slot missing, or still present where ads are off (legal pages, 404)"
+    import check as ck_
+    assert any("legal" in x for x in ck_.ad_gaps("terms/index.html", _sl)) and not ck_.ad_gaps("river/x/y/index.html", _sl), "adsterra: the gate misses a slot on a legal page, or flags a normal page"
+    assert any("pop-under" in x for x in ck_.ad_gaps("river/x/y/index.html", _sl + "<script>window.open('x')</script>")), "adsterra: the gate misses pop-under code"
+    _old_dir = cm_.DATA
+    try:
+        cm_.DATA = os.path.join(ROOT, "tools", "no-such-dir")
+        cm_.ad_slot.cache_clear()
+        assert cm_.ad_slot() == "", "adsterra: a missing config must turn the slot off"
+    finally:
+        cm_.DATA = _old_dir
+        cm_.ad_slot.cache_clear()
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     from clean_names import street as st_
     assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"

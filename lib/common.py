@@ -258,6 +258,25 @@ NO_ADS = ("/contact/", "/terms/", "/privacy/", "/disclaimer/")  # AdSense review
 ADSENSE = CONSENT + AD_LOADER + ANALYTICS[len(CONSENT):]  # consent, ad loader, analytics: the order the pages had
 
 
+@__import__("functools").lru_cache(maxsize=1)
+def ad_slot():
+    """One Adsterra 300x250 display banner above the footer (owner 2026-11-24: "just do adsterra"); '' when data/adsterra.json has no valid key.
+    Space is reserved (no layout shift); the script loads only when the slot nears the screen, after the page; readers whose time zone is in Europe or the Atlantic
+    (EEA, UK, Switzerland: no consent tool for this network) never load it. Same HTML for everyone: no user-agent or country test. Display banner only."""
+    try:
+        cfg = json.load(open(os.path.join(DATA, "adsterra.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""
+    k, src, w, h = cfg.get("key", ""), cfg.get("src", ""), cfg.get("width"), cfg.get("height")
+    if not (re.fullmatch(r"[0-9a-f]{32}", k or "") and re.fullmatch(r"https://[a-z0-9.-]+/[A-Za-z0-9/_-]+", src or "") and src.endswith(k) and isinstance(w, int) and isinstance(h, int)):
+        return ""
+    js = ('(function(){var a=document.getElementById("adsl"),b=document.getElementById("adsl-box"),z="";try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}'
+          'if(!a||!b||!("IntersectionObserver" in window)||z.indexOf("Europe/")==0||z.indexOf("Atlantic/")==0){if(a)a.style.display="none";return}'
+          'new IntersectionObserver(function(e,o){if(!e[0].isIntersecting)return;o.disconnect();window.atOptions={key:"%s",format:"iframe",height:%d,width:%d,params:{}};'
+          'var s=document.createElement("script");s.src="%s";b.appendChild(s)},{rootMargin:"200px"}).observe(b)})()' % (k, h, w, src))
+    return ('<aside id="adsl" class="adsl" aria-label="Advertisement" style="min-height:%dpx;margin:20px auto;text-align:center"><small style="display:block;color:#666;font-size:12px">Advertisement</small><div id="adsl-box"></div></aside><script>%s</script>' % (h + 40, js))
+
+
 PCT_PHRASE = {"Much above normal": "much above normal", "Above normal": "above normal", "Typical for this date": "typical for this date", "Below normal": "below normal", "Much below normal": "much below normal", "\u2013": "not classed"}
 
 
