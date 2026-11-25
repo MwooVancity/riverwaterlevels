@@ -81,7 +81,7 @@ def conus_map(built, Gs, cap=FEATURED, titles=True):
         shown += 1
     if not shown:
         return ""
-    key = '<div class="keyrow">Gauge color, flow compared with past years on this date, in the USGS Water Data colors: %s<b class="d-na"></b>no comparison available. %d gauges shown.</div>' % ("".join('<b class="%s"></b>%s ' % (k, esc(lab.lower())) for k, (lab, _) in OFFICIAL["ww"].items()), shown)
+    key = '<div class="keyrow">Gauge color, flow compared with past years on this date, in the USGS Water Data colors: %s<b class="d-na"></b>no comparison available, or the gauge has stopped reporting. %d gauges shown.</div>' % ("".join('<b class="%s"></b>%s ' % (k, esc(lab.lower())) for k, (lab, _) in OFFICIAL["ww"].items()), shown)
     return ('<div class="card" style="margin-top:14px"><h2>%s</h2><div class="gmap"><img src="%s" alt="USGS topographic map of the lower 48 states with a marker for each gauge" width="800" height="%d" fetchpriority="high" decoding="async">%s</div>%s'
             '<p class="src">Source: map services and data available from U.S. Geological Survey, National Geospatial Program (USGS Topo). Percentiles are estimates from USGS daily statistics.</p></div>' % ("Gauges on this site" if len(built) <= cap else "Featured gauges (all %d are in the state lists and search)" % len(built), src, h, dots, key))
 
