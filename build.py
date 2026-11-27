@@ -6,7 +6,7 @@ import glob, os, sys, json, shutil, hashlib, datetime, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
 from lib.pages import load_effective
-from lib import coverage, render, directory, indexing, related, world
+from lib import coverage, render, directory, indexing, related, world, es
 from lib import page as pagelib
 from lib.blocks2 import flow_behind
 
@@ -186,6 +186,25 @@ def main():
     report["block_errors"] = render.BLOCK_ERRORS[:50]
     if render.BLOCK_ERRORS:
         print("BLOCKS HIDDEN BY THE GUARD (%d): %s" % (len(render.BLOCK_ERRORS), "; ".join(render.BLOCK_ERRORS[:5])))
+    # Spain reservoirs (/es/): from cache/_es.json alone. A page that cannot be rendered (cache lost or torn included) keeps its live copy; with none it is left out.
+    es_cache, es_pages, es_bad = {}, {}, []
+    try:
+        es_cache = json.load(open(os.path.join(CACHE, "_es.json"), encoding="utf-8"))
+        es_pages, es_bad = es.pages(es_cache, now.date())
+    except Exception as e:
+        print("FAIL es pages: %s: %s" % (type(e).__name__, str(e)[:160]))
+    for url, html in es_pages.items():
+        emit(url, html)
+    missing = [u for u in es.all_urls() if u not in es_pages]
+    for url in missing:
+        old = prev_page(url)  # ponytail: before the first release this asks the live site once per page when there is no data
+        if old:
+            write(nxt, url, old)
+            live_copies.append(url.strip("/") + "/index.html")
+            urls.append(url)
+            hashes[url] = hashlib.sha256(old.encode()).hexdigest()[:16]
+            print("CARRIED", url, dict(es_bad).get(url, "no Spain data"))
+    print("spain pages: %d built, %d not built" % (len(es_pages), len(missing)))
     if live_copies:
         json.dump(live_copies, open(os.path.join(nxt, "_carried.json"), "w"))
     print("gauge pages: %s" % ", ".join("%s %d" % kv for kv in sorted(why.items())))
@@ -194,7 +213,7 @@ def main():
         shown = [r for r in built if r["_built"]]  # links rule 5: lists name only pages Google may index
         rivers_ = [r for r in shown if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
         waters_ = [r for r in shown if r.get("lake")]
-        emit("/", directory.home(rivers_, Gs, waters_).replace('src="/conus.webp"', 'src="/%s"' % conus_name()))  # lakes and coasts get their home link (basics audit 2026-11-08); the map under its hashed, year-cached name
+        emit("/", directory.home(rivers_, Gs, waters_, spain="/es/" in es_pages and indexing.indexable("/es/", ix)).replace('src="/conus.webp"', 'src="/%s"' % conus_name()))  # lakes and coasts get their home link (basics audit 2026-11-08); the map under its hashed, year-cached name
         state_data = {}
         for st in sorted({r["state"] for r in rivers_}):
             sp = os.path.join(ROOT, "cache", "state-%s.json" % st.lower())
@@ -255,7 +274,7 @@ def main():
         emit("/status/", directory.status_page(built, Gs, report["built_at"]))
         ages = [Gs[r["site"]]["age_min"] for r in built]
         json.dump({"built_at": report["built_at"], "sha": os.environ.get("GITHUB_SHA") or "", "gauges": len(built), "newest_age_min": round(min(ages)), "oldest_age_min": round(max(ages)), "median_age_min": round(sorted(ages)[len(ages) // 2]),
-                   "pages": len(urls), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "world": {"listed": wlisted, "shown": sum(len(v) for v in wkeep.values()), "gaps": {k: v[:6] for k, v in list(world.GAPS.items())[:40]}, "thin": {k: v[:3] for k, v in list(world.THIN.items())[:400]}}, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
+                   "pages": len(urls), "es_newest": es_cache.get("newest"), "es_pages": len(es_pages), "failed_urls": [f["url"] for f in report["failed"] if f.get("url")], "block_errors": render.BLOCK_ERRORS[:30], "world": {"listed": wlisted, "shown": sum(len(v) for v in wkeep.values()), "gaps": {k: v[:6] for k, v in list(world.GAPS.items())[:40]}, "thin": {k: v[:3] for k, v in list(world.THIN.items())[:400]}}, "by_gauge": {r["site"]: round(Gs[r["site"]]["age_min"]) for r in built}}, open(os.path.join(nxt, "status.json"), "w"), separators=(",", ":"))
     json.dump(built_map, open(os.path.join(nxt, "_built.json"), "w"), separators=(",", ":"))
     hp = os.path.join(ROOT, "state", "source-health.json")  # every source's last outcome and when it last worked (collect.py write_health), read by tools/watchdog.py
     if os.path.exists(hp):

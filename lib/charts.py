@@ -5,13 +5,13 @@ from lib.core import *
 
 
 # ---------------------------------------------------------------- blocks (each returns a block dict or None)
-def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs", aria=None, xfmt="%b %d"):
+def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs", aria=None, xfmt="%b %d", yr=None, one=False):
     """Several gauges' last 7 days on one time axis (river hub, owner 2026-11-11 option 2): series = [(label, [(datetime, cfs), ...])], up to 4 lines.
     Same axis rules as the gauge chart: round ticks, labels in the gauge's own time zone. ponytail: linear axis; a log axis if a river's gauges differ 100-fold."""
     pts = [p for _, s in series for p in s]
     t0, t1 = min(p[0] for p in pts), max(p[0] for p in pts)
     span = (t1 - t0).total_seconds() or 1
-    vmin, vmax, ticks = nice_ticks(min(p[1] for p in pts), max(p[1] for p in pts))
+    vmin, vmax, ticks = nice_ticks(*(yr or (min(p[1] for p in pts), max(p[1] for p in pts))))  # yr: a fixed range (percent full starts at 0)
     L, B = (56, 30) if W > 500 else (46, 28)
     L = axis_l(L, fs, ticks)
     X = lambda t: L + (t - t0).total_seconds() / span * (W - L - 14)
@@ -22,7 +22,7 @@ def river_svg(series, zone, W, Hh, fs, nx, cls, what="Flow in cfs", aria=None, x
         X(t0 + datetime.timedelta(seconds=span * k / (nx - 1))), Hh - 8, fs, "start" if k == 0 else "end" if k == nx - 1 else "middle",
         (t0 + datetime.timedelta(seconds=span * k / (nx - 1))).astimezone(zone).strftime(xfmt).replace(" 0", " ")) for k in range(nx))
     lines = "".join('<polyline points="%s" fill="none" stroke="%s" stroke-width="2.2"%s/>' % (
-        " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in s), YCOL[n], (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "") for n, (_, s) in enumerate(series))
+        " ".join("%.1f,%.1f" % (X(t), Y(v)) for t, v in s), YCOL[n], (' stroke-dasharray="%s"' % YDASH[n]) if YDASH[n] else "") for n, s in ((0 if one else i, s) for i, (_, s) in enumerate(series)))  # one: pieces of one broken line, one style
     return '<svg class="%s" viewBox="0 0 %d %d" width="100%%" role="img" aria-label="%s">%s%s%s</svg>' % (cls, W, Hh, esc(aria or "%s at %d gauges over the last 7 days" % (what, len(series))), grid, xl, lines)
 
 

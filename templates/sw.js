@@ -57,6 +57,7 @@ async function keep(name, key, res) {
 
 async function offline(res) {
   const t = Number(res.headers.get("x-rwl-saved")), html = await res.text();
-  const line = '<p class="offl" role="status">Offline: showing this page as saved ' + (t ? age(t) + " ago" : "earlier") + "</p>";
+  const line = '<p class="offl" role="status">' + (/<html lang="es"/.test(html) ? "Sin conexión: copia guardada " + (t ? "hace " + age(t) : "anteriormente")
+    : "Offline: showing this page as saved " + (t ? age(t) + " ago" : "earlier")) + "</p>";
   return new Response(html.replace(/<main\b[^>]*>/, (m) => m + line), { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
 }

@@ -176,7 +176,7 @@ def waters_list(waters):
     return out
 
 
-def home(built, Gs, waters=()):
+def home(built, Gs, waters=(), spain=False):
     cards = ""
     for r in sorted(featured(built), key=lambda r: -float(r["drainage_sqmi"] or 0))[:12]:
         G = Gs[r["site"]]
@@ -211,7 +211,7 @@ def home(built, Gs, waters=()):
     h1 = "River levels and flows" + (", lake levels" if nl else "") + (" and tides" if nc else "")  # the searcher's words for every water the site has, never one it lacks
     body = ('<h1>%s</h1><p class="sub">Flow and water level at %d USGS river gauges across the US%s, with National Weather Service forecasts and alerts%s.</p>'
             '%s<p><button type="button" class="pill" id="nearbtn" hidden>Find gauges near me</button></p><div id="near" class="card" hidden></div>%s%s%s%s<h2 class="bst">Browse by state</h2>%s%s'
-            % (esc(h1), len(built), esc(extra), esc(plus_world()), world_links(), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", waters_list(waters), secs, SEARCH_JS + NEAR_JS))
+            % (esc(h1), len(built), esc(extra), esc(plus_world()), world_links() + ('<p class="sub">Reservoirs in Spain, in Spanish: <a href="/es/" hreflang="es" lang="es">Embalses de España</a></p>' if spain else ""), conus_map(built, Gs), tools, all_gauges_table(built, Gs) if len(built) <= 60 else "", waters_list(waters), secs, SEARCH_JS + NEAR_JS))
     return shell(h1 + " | " + BRAND, "Flow, gage height and how it compares with normal for US river gauges, from USGS and the National Weather Service" + plus_world() + ".", "/", body, ld=SITE_LD)
 
 

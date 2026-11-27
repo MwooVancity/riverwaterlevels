@@ -816,6 +816,21 @@
    "blocks": [
     "webcams"
    ]
+  },
+  {
+   "id": "miteco_embalses",
+   "name": "MITECO Boletín Hidrológico: weekly reservoir history (BD-Embalses), Spain",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://www.miteco.gob.es/es/atencion-al-ciudadano/aviso-legal.html",
+   "summary": "MITECO legal notice: \"Esta información puede ser utilizada en parte o en su integridad, sin necesidad de autorización expresa, siempre que se cite la fuente\" (third-party rights excepted). It also bars suggesting that the ministry takes part in, sponsors or supports the reuse, requires the update date and reuse conditions to be kept, and bars framing its portal. The notice does not name commercial use: that, with advertising and caching, rests on Ley 37/2007 (arts. 3.1 and 4.1), which the notice cites; its art. 8 conditions: cite the source, keep the meaning, state the last update. Weekly, provisional data.",
+   "credit": "Origen de los datos: Ministerio para la Transición Ecológica y el Reto Demográfico (MITECO), Boletín Hidrológico",
+   "read_on": "2026-11-26",
+   "blocks": [
+    "es_reservoir"
+   ]
   }
  ]
 }

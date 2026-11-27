@@ -34,9 +34,10 @@ def indexable(url, cfg):
         return False
     if GAUGE.match(url):
         return url.replace("forecast/", "") in cfg["allow"]
-    if url == "/map/":  # a new template: noindex until its phone shots were read and /map/ is listed in data/reviewed.json "passed" (CLAUDE.md Reviews)
+    gate = "/es/" if url.startswith("/es/") else url if url == "/map/" else None  # the Spain pages are one template: one "/es/" entry opens the hub and all of them
+    if gate:  # a new template: noindex until its phone shots were read and it is listed in data/reviewed.json "passed" (CLAUDE.md Reviews)
         try:
-            ok = "/map/" in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "reviewed.json"), encoding="utf-8")).get("passed", [])
+            ok = gate in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "reviewed.json"), encoding="utf-8")).get("passed", [])
         except (OSError, ValueError):
             ok = False
         return bool(cfg["site_pages"]) and ok
