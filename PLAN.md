@@ -225,3 +225,10 @@ Cost: about 7 agents, roughly 1M tokens. Cloud: the 10.4 MB zip is fetched only 
 Edge cases: the list under "OWNER 2026-11-26" above; each is done only when a named test passes.
 - LIVE 2026-11-27 UTC: /es/ + 50 reservoir pages open. Read on the live site: 50 of 50 linked pages HTTP 200, lang="es", no noindex, no ad code; sitemap has 51 /es/ addresses; home links /es/. Cloud mdb-export proven ("ok es 50 reservoirs, newest 2026-11-24"). Independent shot read PASS (run 45935497961). Reread Search Console for /es/ at 2026-12-04 and 12-25.
 - Open: no Spanish consent message or privacy page (Analytics runs consent-denied there, may send cookieless pings: UNVERIFIED live); first next-week file update not yet seen; minor polish from the shot read (date repeated per hub row, hm3 column wraps).
+
+## 2026-11-27 traffic-drop checks (Search Console in Chrome, API, cloud logs)
+- Manual actions: none. Security issues: none. Search data to 11-26 still down (11-19: 187 impressions; 11-20..11-26: 8 to 19 a day). Queries with impressions: 615 (11-12..19), 28 (11-20..27).
+- Crawl stats to 11-24: 6.75K requests, 74 server errors: 1 on 11-04, 73 on 11-18 and 11-19 (57 /river/ pages, 17 /live/ files: both are Worker-first paths). Crawl continued afterwards. Three failed pages read 200 today.
+- Watchdog logs, Worker requests in 24 h against the free 100,000: peak seen 167,181 (11-18); over the cap in samples 11-18..11-20; 98,536 on 11-26; 81,926 on 11-27. Likely cause of the 5xx (not proven: no per-status Cloudflare read for those days). Which script spends the requests: UNKNOWN (cap is per account).
+- Not proven to cause the 11-20 fall. It is a real outage risk on its own.
+- OPEN next: split the requests by script and path; then choose free fix (fewer paths through the Worker) or Workers Paid $5/mo (OWNER: payment). Edge cases: /river/ also does single-river 301s, 307 to 301 and security headers (a free fix must keep them in _redirects/_headers; test: live headers and redirect read); live number swap in HTML is lost (page JS must still refresh it; test: live page read).
