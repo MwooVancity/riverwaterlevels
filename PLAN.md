@@ -189,3 +189,4 @@ RESULT 2026-11-25 READ-ONLY AUDIT WORKFLOW (4 parallel audits + merge, 5 agents,
 - Then: push, confirm live, reshoot, independent read, only then add "/map/" to data/reviewed.json.
 - Known gap: Honolulu's coast page is in no list on /map/ (outside the picture, no state list).
 - Adsterra (read 11-25): 11-24 107 impressions $0.08; 11-25 partial 59, $0.04; CPM about $0.63-0.73; balance $2.64 (source unread). The banner serves.
+- LIVE 2026-11-27 UTC: /map/ open to Google. Read on the live site: no noindex tag, /map/ in sitemap.xml, new key present. Independent shot read PASS (run 45918360617). Polish left: dot separators in world lists, long grey key label.
