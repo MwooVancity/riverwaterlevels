@@ -5,9 +5,10 @@ Usage: python -I collect.py [site ...]   (default: wave 0)
 import collections
 import email.utils
 import csv, os, sys, json, math, re, html, datetime, urllib.parse, urllib.request, urllib.error
+import shutil, subprocess, tempfile, zipfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.common import *
-from lib import wx
+from lib import es_data, wx
 import zoneinfo
 
 CODES = "00060,00065,00010,00300,63680,00400,00095,99133,00045,00055,72255,00480,62614,62615,72020,00062,00054,72036"  # last six: lake elevation (62614 and 72020 NGVD29, 62615 NAVD88, 00062 above the reservoir datum) and storage (00054 acre-ft, 72036 thousand acre-ft: Lanier and Allatoona publish only 72036, audit 2026-11-10 #4)
@@ -3470,6 +3471,89 @@ def fetch_twdb_state():
         print("FAIL twdb texas", str(e)[:100])
 
 
+ES_ZIP = "https://www.miteco.gob.es/content/dam/miteco/es/agua/temas/evaluacion-de-los-recursos-hidricos/boletin-hidrologico/Historico-de-embalses/BD-Embalses.zip"
+ES_TABLE = "T_Datos Embalses 1988-2026"  # the year is in the name: a January rename fails here and keeps the old data until the new name is read, never guessed
+ES_MAX = 5_000_000  # bytes of cache/_es.json (real file 2026-11-24: about 2.7 MB)
+
+
+def es_export(mdb, out):
+    """mdbtools on Linux. Installed here, in CI only, so the hourly runs that find an unchanged file install nothing."""
+    if not shutil.which("mdb-export"):
+        if not os.environ.get("CI"):
+            raise OSError("mdb-export is not installed")
+        for args, limit in ((["update", "-qq"], 180), (["install", "-y", "-qq", "mdbtools"], 240)):
+            subprocess.run(["sudo", "apt-get"] + args, check=(args[0] == "install"), timeout=limit)
+    with open(out, "wb") as f:
+        subprocess.run(["mdb-export", "-D", "%Y-%m-%d", "-T", "%Y-%m-%d", mdb, ES_TABLE], stdout=f, check=True, timeout=300)
+
+
+def fetch_es():
+    """Spain's top 50 reservoirs (data/es-reservoirs.csv ranks 1-50) from MITECO's weekly history, into cache/_es.json (the _ keeps it out of the gauge scans).
+    One HEAD an hour; the 10 MB zip is downloaded only when Last-Modified changes (no header: once a day). Any failure keeps the old file and
+    returns: Spain must never stop the US build. A file the checks refuse is tried again after a day, not every hour."""
+    path, bad = os.path.join(CACHE, "_es.json"), os.path.join(CACHE, "_es-refused.json")
+
+    def read(p):
+        try:
+            with open(p, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            return None
+
+    def young(stamp):
+        return bool(stamp) and (datetime.datetime.now(datetime.timezone.utc) - parse_t(stamp)).total_seconds() < 24 * 3600
+
+    try:
+        with open(os.path.join(ROOT, "data", "es-reservoirs.csv"), encoding="utf-8") as f:
+            names = {r["name"] for r in csv.DictReader(f) if int(r["rank"]) <= 50}
+        if len(names) != 50:
+            raise ValueError("es-reservoirs.csv gives %d names for ranks 1-50" % len(names))
+        old, no = read(path), read(bad)
+        head = {"User-Agent": NWS_H["User-Agent"]}
+        with urllib.request.urlopen(urllib.request.Request(ES_ZIP, headers=head, method="HEAD"), timeout=60) as r:
+            modified = r.headers.get("Last-Modified") or ""
+        if old and set(old.get("rows") or {}) == names and (old.get("modified") == modified if modified else young(old.get("fetched_at"))):
+            print("ok es unchanged, newest", old["newest"])
+            return
+        if no and no.get("modified") == modified and young(no.get("at")):
+            print("FAIL es (old copy kept): this file was refused under a day ago: %s" % no.get("why"))
+            return
+        with tempfile.TemporaryDirectory() as tmp:
+            zp, mdb, out = (os.path.join(tmp, n) for n in ("es.zip", "es.mdb", "es.csv"))
+            with urllib.request.urlopen(urllib.request.Request(ES_ZIP, headers=head), timeout=60) as r, open(zp, "wb") as f:
+                want = int(r.headers.get("Content-Length") or 0)
+                modified = r.headers.get("Last-Modified") or modified
+                shutil.copyfileobj(r, f)
+            if want and os.path.getsize(zp) != want:
+                raise OSError("download cut short: %d of %d bytes" % (os.path.getsize(zp), want))
+            with zipfile.ZipFile(zp) as z:  # a cut or damaged zip raises here (directory and CRC)
+                members = [i for i in z.infolist() if i.filename.lower().endswith(".mdb")]
+                if len(members) != 1 or members[0].file_size > 1_000_000_000:  # real 223 MB
+                    raise ValueError("expected one .mdb under 1 GB in the zip")
+                with z.open(members[0]) as a, open(mdb, "wb") as b:
+                    shutil.copyfileobj(a, b)
+            es_export(mdb, out)
+            with open(out, encoding="utf-8", newline="") as f:
+                new = es_data.pack(*es_data.parse(f, names))
+        body = json.dumps(dict(new, fetched_at=now_iso(), modified=modified), ensure_ascii=False, separators=(",", ":"))
+        why = es_data.refusal(new, old, names, datetime.datetime.now(datetime.timezone.utc).date())
+        if not why and len(body.encode()) > ES_MAX:
+            why = "the cache would be %d bytes, cap %d" % (len(body.encode()), ES_MAX)
+        if why:
+            with open(bad, "w", encoding="utf-8") as f:
+                json.dump({"modified": modified, "at": now_iso(), "why": why}, f)
+            raise ValueError(why)
+        os.makedirs(CACHE, exist_ok=True)
+        with open(path + ".tmp", "w", encoding="utf-8") as f:
+            f.write(body)
+        os.replace(path + ".tmp", path)
+        if os.path.exists(bad):
+            os.remove(bad)
+        print("ok es", len(new["rows"]), "reservoirs, newest", new["newest"], len(body.encode()), "bytes")
+    except Exception as e:
+        print("FAIL es (old copy kept):", str(e)[:200])
+
+
 def fetch_states(sites):
     for st in sorted(states_of(sites)):
         try:
@@ -3549,5 +3633,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if "--es" in sys.argv:  # Spain only: no USGS call
+        fetch_es()
+        sys.exit(0)
     USGS_OUT[0] = usgs_low()
     main()

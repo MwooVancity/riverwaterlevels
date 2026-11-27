@@ -119,6 +119,10 @@ jobs:
         run: |
           python -I tools/merge_shards.py shards ${{ inputs.shards }} | tee merge-out.log
           cat merge-out.log >> "$GITHUB_STEP_SUMMARY"
+      - name: Spain reservoirs (weekly MITECO file, downloaded only when it changes; any failure keeps the old copy and never stops the US build)
+        continue-on-error: true
+        timeout-minutes: 15
+        run: python -I collect.py --es
       - name: Daily release (owner cap 25 gauges/day; first run from 11:00 UTC that has not released today; collects its own new gauges before the build)
         id: rel
         continue-on-error: true

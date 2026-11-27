@@ -6,7 +6,8 @@ import datetime
 import statistics
 
 NEED = ("AMBITO_NOMBRE", "EMBALSE_NOMBRE", "FECHA", "AGUA_TOTAL", "AGUA_ACTUAL")
-STALE_DAYS = 15  # weekly bulletin: one missed week is shown as old, two make the current figure Unknown
+MIN_ROWS = 500  # first sight of a reservoir: the real ranked 50 have 1,052 to 2,030 weeks (file of 2026-11-24)
+STALE_DAYS = 15# weekly bulletin: one missed week is shown as old, two make the current figure Unknown
 
 
 def hm3(text):
@@ -39,8 +40,39 @@ def parse(lines, names):
         except ValueError:
             continue
         out[n][d] = (hm3(r["AGUA_TOTAL"]), hm3(r["AGUA_ACTUAL"]))  # one row per date: a repeated date keeps the last
-        basin[n] = (r["AMBITO_NOMBRE"] or "").strip()
+        b = (r["AMBITO_NOMBRE"] or "").strip()
+        if basin.setdefault(n, b) != b:  # two reservoirs with one name would mix their weeks
+            raise ValueError("%s is listed in two basins, %s and %s" % (n, basin[n], b))
     return {n: [(d,) + v for d, v in sorted(rows.items())] for n, rows in out.items() if rows}, basin
+
+
+def pack(data, basin):
+    """The cache file's data part: {"newest", "basin", "rows": {name: [[iso, capacity, volume]]}}. About 28 bytes a week a reservoir."""
+    return {"newest": max((r[-1][0] for r in data.values()), default=datetime.date.min).isoformat(), "basin": basin,
+            "rows": {n: [[d.isoformat(), c, v] for d, c, v in r] for n, r in data.items()}}
+
+
+def unpack(cache):
+    """The cache file back to what parse() returns: ({name: [(date, capacity, volume)]}, {name: basin})."""
+    return {n: [(datetime.date.fromisoformat(d), c, v) for d, c, v in r] for n, r in cache["rows"].items()}, cache["basin"]
+
+
+def refusal(new, old, names, today):
+    """Why a freshly packed file must NOT replace the cache, or None. `old` is the cache in use, None on the first run."""
+    gone = sorted(set(names) - set(new["rows"]))
+    if gone:
+        return "%d of %d reservoirs missing: %s" % (len(gone), len(names), ", ".join(gone[:5]))
+    if new["newest"] > (today + datetime.timedelta(days=1)).isoformat():
+        return "a reading is dated in the future (%s)" % new["newest"]
+    if old and new["newest"] < old["newest"]:
+        return "newest date %s is older than the stored %s" % (new["newest"], old["newest"])
+    for n in sorted(names):
+        rows, was = new["rows"][n], (old or {}).get("rows", {}).get(n)
+        if was and (rows[-1][0] < was[-1][0] or len(rows) < len(was) - 4):  # 4: room for the agency removing a few bad weeks
+            return "%s lost weeks: now %d to %s, stored %d to %s (cut-short file?)" % (n, len(rows), rows[-1][0], len(was), was[-1][0])
+        if not was and len(rows) < MIN_ROWS:
+            return "%s has only %d weeks (cut-short file?)" % (n, len(rows))
+    return None
 
 
 def pct(cap, vol):
@@ -105,6 +137,21 @@ def selftest():
         pass
     else:
         raise AssertionError("a changed file format passed")
+    today = datetime.date(2026, 12, 2)
+    weeks = [(datetime.date(2026, 11, 24) - datetime.timedelta(weeks=k), 10.0, None if k == 1 else 5.0) for k in range(600, -1, -1)]
+    old = pack({"A": weeks, "B": weeks}, {"A": "Tajo", "B": "Ebro"})
+    assert unpack(old)[0]["A"] == weeks and old["newest"] == "2026-11-24"
+    assert refusal(old, None, {"A", "B"}, today) is None and refusal(old, old, {"A", "B"}, today) is None
+    for bad, was in ((pack({"A": weeks}, {}), old), (pack({}, {}), old), (pack({"A": weeks[:-1], "B": weeks[:-1]}, {}), old), (pack({"A": weeks, "B": weeks[:-1]}, {}), old),
+                     (pack({"A": weeks[10:], "B": weeks}, {}), old), (pack({"A": weeks[-100:], "B": weeks}, {}), None)):
+        assert refusal(bad, was, {"A", "B"}, today), "a bad file would have replaced the cache"
+    assert refusal(old, None, {"A", "B"}, datetime.date(2026, 11, 1)), "a future date passed"
+    try:
+        parse([head, 'Tajo,A,2026-11-24,"1,00","1,00",0', 'Ebro,A,2026-11-17,"1,00","1,00",0'], {"A"})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("one name in two basins was merged")
     print("es_data selftest OK")
 
 
