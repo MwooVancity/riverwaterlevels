@@ -203,7 +203,7 @@ def related(name, basin, found):
 
 ACCESS_DAYS = 365  # an older map reading is not shown
 ACCESS = (("ramp", "Rampas para embarcaciones", "Rampa", "rampa para embarcaciones", "rampas para embarcaciones"),
-          ("bathing", "Zonas de baño señaladas", "Zona de baño", "zona de baño señalada", "zonas de baño señaladas"),
+          ("bathing", "Lugares de baño en el mapa", "Lugar de baño", "lugar de baño", "lugares de baño"),
           ("beach", "Playas", "Playa", "playa", "playas"),
           ("boats", "Náutica: puertos, clubes y alquiler", "Instalación náutica", "punto de náutica", "puntos de náutica"),
           ("camp", "Campings y áreas de acampada cercanas", "Acampada", "camping o área de acampada", "campings o áreas de acampada"))
@@ -234,9 +234,10 @@ def access_section(name, today, data):
         if not here:
             continue
         counts.append("%d %s" % (len(here), one if len(here) == 1 else many))
+        unnamed = [p for p in here[:SHOWN] if not p["name"]]
         items = "".join('<li><a href="https://www.openstreetmap.org/%s" rel="noopener">%s</a>%s</li>' % (
-            esc(p["osm"]), esc(p["name"] or "%s sin nombre (%d)" % (label, i + 1)), " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
-            for i, p in enumerate(here[:SHOWN]))
+            esc(p["osm"]), esc(p["name"] or "%s sin nombre (%d)" % (label, unnamed.index(p) + 1)), " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
+            for p in here[:SHOWN])
         lists += "<h3>%s</h3><ul>%s</ul>%s" % (heading, items, '<p class="sub">Y %d más marcados en el mapa.</p>' % (len(here) - SHOWN) if len(here) > SHOWN else "")
     return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>Junto a este embalse el mapa marca: %s. Cada enlace abre el sitio en el mapa.</p>%s'
             '<p class="sub">Que un sitio esté en el mapa no indica que esté abierto, que tenga acceso público ni que se permita bañarse o navegar: compruébalo antes de ir. '
@@ -251,12 +252,14 @@ def month_section(f, rows, updated):
         return ""
     hi, lo = max(mo, key=lambda r: r[1]), min(mo, key=lambda r: r[1])
     span = "%d–%d" % (f["date"].year - 10, f["date"].year - 1)
-    if round(hi[1] - lo[1], 1) < 3:
+    if coarse(f):
+        say = "Cifras de %s. Es un embalse pequeño: no destacamos un mes frente a otro." % span
+    elif round(hi[1] - lo[1], 1) < 3:
         say = "En %s el llenado habitual cambió poco de un mes a otro: la mediana mensual fue de %s a %s." % (span, pc(lo[1]), pc(hi[1]))
     else:
         say = "En %s, el mes con la mediana más alta fue %s (%s) y el de la más baja, %s (%s)." % (span, MONTHS[hi[0] - 1], pc(hi[1]), MONTHS[lo[0] - 1], pc(lo[1]))
     return section("es_meses", "El llenado mes a mes", "<p>%s No es una previsión.</p>%s" % (
-        say, table(("Mes", "Mediana", "Año más bajo", "Año más alto"), [(MONTHS[m - 1].capitalize(), pc(md), pc(a), pc(b)) for m, md, a, b, _ in mo])), updated)
+        say, table(("Mes", "Mediana", "Mínimo", "Máximo"), [(MONTHS[m - 1].capitalize(), pc(md), pc(a), pc(b)) for m, md, a, b, _ in mo])), updated)
 
 
 def reservoir(name, found, updated, today):

@@ -59,6 +59,21 @@ def usable(t):
     return t.get("access") not in ("private", "no", "military") and not re.search(r"(?i)\bmilitar\b", t.get("name", ""))
 
 
+WRONG_NAME = {"camp": r"(?i)^(presa|club n[aá]utic)", "beach": r"(?i)^embarcadero$", "boats": r"(?i)de arousa"}  # review 2026-11-27: the name says it is not that kind of place, or not this place (Arousa is in Galicia)
+SAME_M = 300  # two map objects with one name this close are one place
+
+
+def tidy(places):
+    """Drop a place whose name contradicts it, and the second copy of a place mapped twice."""
+    out = []
+    for g in places:
+        if g["name"] and (re.search(WRONG_NAME.get(g["kind"], r"(?!)"), g["name"]) or any(
+                o["kind"] == g["kind"] and o["name"] and words(o["name"]) == words(g["name"]) and metres((o["lat"], o["lon"]), (g["lat"], g["lon"])) <= SAME_M for o in out)):
+            continue
+        out.append(g)
+    return out
+
+
 def metres(a, b):
     return 111200 * math.hypot(a[0] - b[0], (a[1] - b[1]) * math.cos(math.radians(a[0])))
 
@@ -107,8 +122,9 @@ def main():
             k = kind(t)
             if min(metres(p, q) for q in outline) <= (CAMP_M if k == "camp" else NEAR_M):  # ponytail: distance to outline corners, not edges; a straight shore with far corners can drop a point, never add one
                 got.append({"kind": k, "name": t.get("name"), "lat": round(p[0], 5), "lon": round(p[1], 5), "access": t.get("access"), "osm": "%s/%d" % (e["type"], e["id"])})
+        got = tidy(sorted(got, key=lambda g: (g["kind"], not g["name"], g["name"] or "", g["osm"])))
         if got:
-            out[n] = sorted(got, key=lambda g: (g["kind"], not g["name"], g["name"] or "", g["osm"]))
+            out[n] = got
         b = hs[0]["bounds"]
         print("%-22s %6.2f %6.2f  %d places" % (n, b["minlat"], b["minlon"], len(got)))
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
@@ -134,7 +150,12 @@ def selftest():
     assert "1 rampa para embarcaciones, 1 playa" in h and "Rampa sin nombre (1)" in h and "&lt;B&gt;" in h and "solo clientes" in h and not check.es_access_claims(h, "A", day, data)
     assert es.access_section("Z", day, data) == "" and es.access_section("A", day, {}) == "" and es.access_section("A", datetime.date(2028, 1, 1), data) == "", "no data or an old map reading made a block"
     assert check.es_access_claims(h.replace("way/1", "way/9"), "A", day, data) and check.es_access_claims(h.replace("no indica que", "indica que"), "A", day, data), "a foreign place or a missing warning passed"
-    assert not check.es_rules.__doc__ is None
+    def p(kind, name, lat):
+        return {"kind": kind, "name": name, "lat": lat, "lon": -2.0, "access": None, "osm": "node/%d" % int(lat * 1e4)}
+    kept = tidy([p("beach", "Playa Uno", 39.0), p("beach", "Playa Uno", 39.001), p("beach", "Playa Uno", 39.05), p("camp", "Presa La Vinuela", 39.0), p("beach", "Embarcadero", 39.0), p("ramp", None, 39.0), p("ramp", None, 39.0001)])
+    assert [(g["kind"], g["lat"]) for g in kept] == [("beach", 39.0), ("beach", 39.05), ("ramp", 39.0), ("ramp", 39.0001)], kept
+    two = es.access_section("A", day, {"read_on": "2026-11-27", "reservoirs": {"A": [{"kind": "beach", "name": "X", "osm": "node/1", "access": None}, {"kind": "beach", "name": None, "osm": "node/2", "access": None}]}})
+    assert "Playa sin nombre (1)" in two, "unnamed places are not numbered from 1"
     print("es_access selftest OK")
 
 

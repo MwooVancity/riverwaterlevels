@@ -119,14 +119,6 @@
   "Alloz": [
    {
     "kind": "beach",
-    "name": "Embarcadero",
-    "lat": 42.72133,
-    "lon": -1.93976,
-    "access": null,
-    "osm": "way/297820039"
-   },
-   {
-    "kind": "beach",
     "name": null,
     "lat": 42.72191,
     "lon": -1.93584,
@@ -390,14 +382,6 @@
     "lon": -4.18511,
     "access": null,
     "osm": "way/396763003"
-   },
-   {
-    "kind": "camp",
-    "name": "Presa La Vinuela",
-    "lat": 36.87367,
-    "lon": -4.18514,
-    "access": null,
-    "osm": "node/728825754"
    }
   ],
   "Ulldecona": [
@@ -428,14 +412,6 @@
     "lon": -5.25536,
     "access": null,
     "osm": "node/5308823652"
-   },
-   {
-    "kind": "beach",
-    "name": "Playa Los Llanos",
-    "lat": 38.95549,
-    "lon": -5.25508,
-    "access": null,
-    "osm": "way/1028420200"
    },
    {
     "kind": "beach",
@@ -620,14 +596,6 @@
     "lon": -2.25352,
     "access": null,
     "osm": "node/7609677531"
-   },
-   {
-    "kind": "beach",
-    "name": "Playa Manchamar",
-    "lat": 39.70246,
-    "lon": -2.25533,
-    "access": null,
-    "osm": "way/814646187"
    }
   ],
   "Belesar": [
@@ -659,14 +627,6 @@
    }
   ],
   "Atazar, El": [
-   {
-    "kind": "boats",
-    "name": "Centro Internacional de Navegación de Arousa",
-    "lat": 40.91842,
-    "lon": -3.53267,
-    "access": null,
-    "osm": "node/3522057043"
-   },
    {
     "kind": "camp",
     "name": "Camping de Cervera",
@@ -726,16 +686,6 @@
     "lon": -1.50863,
     "access": null,
     "osm": "node/5147105024"
-   }
-  ],
-  "Barrios de Luna": [
-   {
-    "kind": "camp",
-    "name": "Club Nautico de León",
-    "lat": 42.87475,
-    "lon": -5.85397,
-    "access": null,
-    "osm": "node/13724255201"
    }
   ],
   "Cuerda del Pozo": [
