@@ -1,6 +1,7 @@
 {
   "note": "Lake and coast pages whose phone-width screenshot review passed (CLAUDE.md Reviews). tools/open_wave.py opens a /lake/ or /coast/ page to Google only if it is listed here. Add a page only after a reviewer who did not build it read its screenshots; name the date and what was read. 2026-11-07: the 2026-11-06 coast reviews were dropped: today's review failed every coast on the desktop tide tile overflow (CSS fixed, re-review needed).",
   "passed": {
+    "/es/": "2026-11-27 UTC: independent Opus read of cloud shots run 45935497961 (hub, La Serena, Sau, Iznajar): PASS; desktop only first screen, dark mode not viewed",
     "/map/": "2026-11-26: independent Opus read of cloud shots run 45918360617 (phone-01..04, desktop-01 top 900 px): PASS; tapped-dot state not captured",
     "/lake/kerr-lake/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
     "/lake/lake-hartwell/": "2026-11-07: first review by hater-first on code 40b5b80e8fba",
