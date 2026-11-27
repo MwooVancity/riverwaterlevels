@@ -28,7 +28,7 @@ A person at or near this water today, on a phone, with 30 seconds (full text: CL
 - Bing did not fall (about 1.2K impressions a day, read 11-24).
 - Crawl stats to 11-24: 6.75K requests, 74 server errors (73 on 11-18 and 11-19: 57 /river/, 17 /live/; both Worker-first paths). Three failed pages read 200 on 11-27.
 - Worker requests in 24 h of 100,000 (watchdog logs): 167,181 peak seen 11-18; 98,536 on 11-26; 81,926 on 11-27. Earlier note: asmrregistry used 123,517 on 11-18 and /river/ answered 429 until midnight UTC.
-- Adsterra: 11-24 107 impressions $0.08; 11-25 partial 59, $0.04.
+- Adsterra: 11-24 107 impressions $0.08; 11-25 partial 59, $0.04. 11-27 LIVE: banner moved under the reading on Now tabs (proof: /coast/fort-lauderdale/ slot before footer); compare daily impressions 11-28 vs 11-24.
 
 ## Checkpoints (tools/gsc_read.py)
 | Date | Pages | Views/month | Google clicks/month | Lever if missed |
