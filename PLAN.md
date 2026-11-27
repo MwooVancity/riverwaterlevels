@@ -196,3 +196,12 @@ RESULT 2026-11-25 READ-ONLY AUDIT WORKFLOW (4 parallel audits + merge, 5 agents,
 - Spain, same seeds plus "embalses", 50 ideas, only the top 6 rows read: "embalses net" (a competitor's name) 10K-100K, "pantanos de ..." 10K-100K (name cut off; bid CA$0.54-2.51), several reservoir names 1K-10K. Several show -90% change: seasonal or news-driven, unchecked.
 - Search Console 90 days: Spanish-speaking countries 74 of 4,372 impressions.
 - DECIDED: no translation of US pages. Candidate: Spain reservoirs, only after (1) the rest of the 50 rows and named-reservoir volumes, (2) Spain's reservoir data reuse terms allow ads, (3) who ranks now, (4) ChatGPT debate (plan-changing).
+
+## 2026-11-26 Spain reservoirs: research done, DECIDED not built (no information gain found)
+- All 45 rows of a 10-seed Spain run: 10K-100K bucket for La Serena, Iznajar, La Vinuela name searches (variants, do not add); 1K-10K Mequinenza, Cijara, Entrepenas, Buendia forms; "embalses hoy" 100-1K. Intent unverified.
+- Rights: Ley 37/2007 art 3.1 and 4.1 cover commercial reuse; MITECO notice allows reuse with source (commercial not named in it). MITECO data is weekly. BD-Embalses.zip not opened.
+- ChatGPT (full packet docs/chatgpt-prompts/2026-11-26-spain-reservoirs.md, read to the end): conditional GO, 1 pilot page, "history comparison is not an edge, others have it".
+- VERIFIED by fetch: Nivelmap Iznajar has median, normal range, year compare, CSV, says no ads, weekly. embalses.net Iznajar and La Serena have near-real-time readings, same week last year and 10-year mean. Snowy Cijara: one year-ago value, 12-week table.
+- DISAGREE with ChatGPT's go: its proposed edges (percentile, range, CSV) are largely on Nivelmap already, and weekly is less fresh than embalses.net. Our rule: no information gain, no page.
+- UNKNOWN (ChatGPT gap list): google.es rankings and intent, zip contents, Spain ad rates, GDPR setup, SAIH commercial terms. NOT MATERIAL until a real edge is found.
+- Reopen only if a google.es check shows a need the top results miss.
