@@ -3,7 +3,7 @@
 History: `docs/plan-history.md` (the whole pre-trim file is there under "Trimmed 2026-11-27"). Rules: `CLAUDE.md`.
 
 ## NOW
-- Cloudflare daily request cap (free 100,000, shared by the whole account): find who spends it, then fix. Outage risk; likely behind the 73 Googlebot errors of 11-18/19 (not proven to cause the 11-20 search fall).
+- Cloudflare daily cap (100,000, whole account), FOUND 11-27 (Cloudflare analytics, UTC days 11-16..11-27): asmrregistry is 90-95% on the over-cap days (11-16 102k, 11-18 131k, 11-19 127k, 11-26 102k); this site 7-12k a day. 11-18/19 match the Googlebot errors (cause of the 11-20 search fall still unproven). Fix at source: asmrregistry (folder 'Downloads/claude files', wrangler.toml runs the Worker first on /creators/*; why it is called so often: not read). Own session there. Backup here (not built): take /river/* off the Worker (keep redirects, headers, live numbers). Or $5/mo Workers Paid (owner).
 - Google fall 11-20: no manual action, no security issue (11-27). Cause unproven. Compare again 12-03.
 - Spain: 50 pages live and open. No more Spain work until Search Console 12-04 and 12-25.
 - Bug, not fixed: collect.py fetch_es does not wait a day after a parse or zip failure (re-downloads hourly). Nits: chart aria label lower-cases names; CLAUDE.md still says English only and "same tags" (Spain has no ad loader).
