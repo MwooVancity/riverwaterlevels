@@ -3472,7 +3472,7 @@ def fetch_twdb_state():
 
 
 ES_ZIP = "https://www.miteco.gob.es/content/dam/miteco/es/agua/temas/evaluacion-de-los-recursos-hidricos/boletin-hidrologico/Historico-de-embalses/BD-Embalses.zip"
-ES_TABLE = "T_Datos Embalses 1988-2026"  # the year is in the name: a January rename fails here and keeps the old data until the new name is read, never guessed
+ES_TABLE = r"T_Datos Embalses 1988-20\d\d"  # the end year is in the name and changes in January: exactly one table must match
 ES_MAX = 5_000_000  # bytes of cache/_es.json (real file 2026-11-24: about 2.7 MB)
 
 
@@ -3483,8 +3483,12 @@ def es_export(mdb, out):
             raise OSError("mdb-export is not installed")
         for args, limit in ((["update", "-qq"], 180), (["install", "-y", "-qq", "mdbtools"], 240)):
             subprocess.run(["sudo", "apt-get"] + args, check=(args[0] == "install"), timeout=limit)
+    tables = subprocess.run(["mdb-tables", "-1", mdb], capture_output=True, check=True, timeout=120).stdout.decode("utf-8").splitlines()
+    found = [t.strip() for t in tables if re.fullmatch(ES_TABLE, t.strip())]
+    if len(found) != 1:
+        raise ValueError("expected one history table, found %s" % found)
     with open(out, "wb") as f:
-        subprocess.run(["mdb-export", "-D", "%Y-%m-%d", "-T", "%Y-%m-%d", mdb, ES_TABLE], stdout=f, check=True, timeout=300)
+        subprocess.run(["mdb-export", "-D", "%Y-%m-%d", "-T", "%Y-%m-%d", mdb, found[0]], stdout=f, check=True, timeout=300)
 
 
 def fetch_es():
@@ -3532,7 +3536,13 @@ def fetch_es():
                     raise ValueError("expected one .mdb under 1 GB in the zip")
                 with z.open(members[0]) as a, open(mdb, "wb") as b:
                     shutil.copyfileobj(a, b)
-            es_export(mdb, out)
+            try:
+                es_export(mdb, out)
+            except Exception as e:  # a broken install or export: wait a day, not 10 MB and an apt install every hour
+                os.makedirs(CACHE, exist_ok=True)
+                with open(bad, "w", encoding="utf-8") as f:
+                    json.dump({"modified": modified, "at": now_iso(), "why": str(e)[:200]}, f)
+                raise
             with open(out, encoding="utf-8", newline="") as f:
                 new = es_data.pack(*es_data.parse(f, names))
         body = json.dumps(dict(new, fetched_at=now_iso(), modified=modified), ensure_ascii=False, separators=(",", ":"))

@@ -63,6 +63,16 @@ def num(v, d=1):
     return s.replace(",", "\x00").replace(".", ",").replace("\x00", ".")
 
 
+def hm(v):
+    """Volumes as the source publishes them: whole hm3 stay whole (no invented decimal)."""
+    return num(v, 0 if v is not None and v == int(v) else 1)
+
+
+def coarse(f):
+    """1 hm3 is over NEAR_USUAL points of this reservoir: too coarse to call it fuller or emptier than usual."""
+    return 100.0 / f["capacity"] > NEAR_USUAL
+
+
 def pc(v):
     return "Desconocido" if v is None else num(v) + "&nbsp;%"
 
@@ -80,37 +90,60 @@ def moved(delta, since):
         return "Cambio %s: desconocido (no hay dato publicado cerca de esa fecha)." % since
     r = round(delta, 1)
     if r == 0:
-        return "Cambio %s: ninguno (menos de 0,1 puntos porcentuales)." % since
+        return "Cambio %s: ninguno (sin cambio apreciable en las cifras publicadas)." % since
     return "%s: %s %s puntos porcentuales de llenado." % (since[0].upper() + since[1:], "ha subido" if r > 0 else "ha bajado", num(abs(r)))
 
 
 def usual(f):
     """'above' | 'below' | 'near' | None against the median of the same week, on the rounded figures the page prints."""
-    if f["median"] is None:
+    if f["median"] is None or coarse(f):
         return None
     d = round(round(f["pct"], 1) - round(f["median"], 1), 1)
     return "near" if abs(d) < NEAR_USUAL else "above" if d > 0 else "below"
 
 
 def sentence(f, today):
-    k, v = usual(f), "estaba" if f["stale"] else "está"
-    if k is None:
-        s = "Solo hay %d años anteriores con dato para esta semana: con menos de 10 no calculamos qué es lo habitual." % f["years"]
+    """Always dated: a static copy must never say "this week"."""
+    k, when = usual(f), "En la semana del %s" % day(f["date"])
+    if k is not None:
+        s = "%s estaba %s para esas fechas del año: %s, frente a una mediana del %s en %d años anteriores." % (
+            when, {"above": "más lleno de lo habitual", "below": "más vacío de lo habitual", "near": "cerca de lo habitual"}[k], pc(f["pct"]), pc(f["median"]), f["years"])
+    elif f["median"] is None:
+        s = "%s estaba al %s. Solo hay %d años anteriores con dato para esas fechas: con menos de 10 no calculamos qué es lo habitual." % (when, pc(f["pct"]), f["years"])
     else:
-        s = "%s %s para esta semana del año: %s, frente a una mediana del %s en %d años anteriores." % (
-            v[0].upper() + v[1:], {"above": "más lleno de lo habitual", "below": "más vacío de lo habitual", "near": "cerca de lo habitual"}[k], pc(f["pct"]), pc(f["median"]), f["years"])
+        s = "%s estaba al %s. Es un embalse pequeño: 1 hm³ son %s puntos de llenado, así que no lo calificamos frente a lo habitual." % (when, pc(f["pct"]), num(100.0 / f["capacity"]))
+    if f["week_change"] is not None and abs(f["week_change"]) > es_data.SPIKE:
+        s += " Es un cambio muy grande para una semana; la fuente puede corregirlo."
     if f["stale"]:
-        s = "Dato antiguo: el último publicado es del %s, hace %d días; el llenado de esta semana es desconocido. Con aquel dato: %s" % (day(f["date"]), (today - f["date"]).days, s[0].lower() + s[1:])
+        s = "Dato antiguo: el último publicado es del %s, hace %d días; el llenado posterior es desconocido. %s" % (day(f["date"]), (today - f["date"]).days, s)
     return s
 
 
+OLD_ID = 'id="es_antiguo"'
+
+
+def mark_old(html, today):
+    """A carried live copy is never rebuilt, so it cannot turn old by itself: past STALE_DAYS it gets a banner and an old-data headline label."""
+    found = [datetime.date(int(y), MONTHS.index(m) + 1, int(d)) for d, m, y in
+             re.findall(r"(?:Dato semanal del|Último dato:|el último publicado es del) (\d{1,2}) de (%s) de (\d{4})" % "|".join(MONTHS), html)]
+    if OLD_ID in html or not found or (today - max(found)).days <= es_data.STALE_DAYS:
+        return html
+    note = '<p class="answer" %s><span>Dato antiguo: esta copia no se ha renovado. Su último dato es del %s; el llenado posterior es desconocido.</span></p>' % (OLD_ID, day(max(found)))
+    return html.replace('<p class="sub">Porcentaje de llenado</p>', '<p class="sub">Último porcentaje de llenado publicado</p>').replace("</h1>", "</h1>" + note, 1)
+
+
 def source_line(updated):
-    return ('<p class="src">Fuente: <a href="%s" rel="noopener">MITECO, Boletín Hidrológico</a> (datos semanales y provisionales). Archivo actualizado por la fuente el %s. '
-            'Los porcentajes, cambios y comparaciones son cálculos propios.</p>' % (OFFICIAL_URL, day(updated)))
+    """The full credit, once a page (credit_block). `updated` is None when the source sent no file date: it is then said, never invented."""
+    when = "Archivo actualizado por la fuente el %s." % day(updated[0]) if updated[0] else "La fuente no indica la fecha de actualización del archivo; último dato: %s." % day(updated[1])
+    return ('<p class="src">Fuente: <a href="%s" rel="noopener">MITECO, Boletín Hidrológico</a> (Histórico de embalses, BD-Embalses; datos semanales y provisionales). %s '
+            'Los porcentajes, cambios y comparaciones son cálculos propios.</p>' % (OFFICIAL_URL, when))
+
+
+SHORT_SOURCE = '<p class="src">Fuente: <a href="%s" rel="noopener">MITECO, Boletín Hidrológico</a>, dato semanal. Cálculos propios.</p>' % OFFICIAL_URL
 
 
 def section(bid, heading, body, updated):
-    return '<section class="card blk" id="%s"><h2>%s</h2>%s%s</section>' % (bid, heading, body, source_line(updated))
+    return '<section class="card blk" id="%s"><h2>%s</h2>%s%s</section>' % (bid, heading, body, SHORT_SOURCE)
 
 
 def table(head, rows):
@@ -138,7 +171,9 @@ def chart(sec_id, heading, rows, since, xfmt, name, updated):
 
 def shell(title, desc, url, crumbs, body):
     visible = " / ".join('<a href="%s">%s</a>' % (u, esc(n)) if u else esc(n) for n, u in crumbs)
-    og = re.sub(r'(property="og:image:alt" content=")[^"]*', lambda m: m.group(1) + "River Water Levels: niveles de ríos y embalses", og_tags(title, desc, SITE_URL + url))
+    og = og_tags(title, desc, SITE_URL + url).replace("/og.png", "/og-es.png")  # /og.png is English and credits USGS
+    og = re.sub(r'(property="og:image:alt" content=")[^"]*', lambda m: m.group(1) + "Embalses de España: porcentaje de llenado, dato semanal. Fuente: MITECO", og)
+    og += '<meta property="og:locale" content="es_ES">'
     # ANALYTICS = consent defaults (cookies denied in the EEA, UK and Switzerland, lib/common.py CONSENT) + Google Analytics. No AdSense loader, no ad slot.
     return ('<!doctype html><html lang="es" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>%s</title><meta name="description" content="%s">'
             '<link rel="canonical" href="%s">%s</head><body><a class="skip" href="#main">Saltar al contenido</a><nav class="nav" aria-label="Sitio"><a class="brand" href="/es/"><span class="logo"></span>%s</a>'
@@ -161,37 +196,38 @@ def related(name, basin, found):
     same = [(n, x) for n, x in found.items() if n != name and x["basin"] == basin][:5]
     if not same:
         return ""
-    return '<section class="card" id="es_cuenca"><h2>Otros embalses de la cuenca: %s</h2><ul>%s</ul></section>' % (
+    return '<section class="card" id="es_cuenca"><h2>Más embalses · %s</h2><ul>%s</ul></section>' % (
         esc(basin), "".join('<li><a href="%s">%s: %s</a> (%s)</li>' % (url_of(n), esc(full_name(n)), pc(x["f"]["pct"]), short(x["f"]["date"])) for n, x in same))
 
 
 def reservoir(name, found, updated, today):
     x = found[name]
     f, rows, basin, title_name = x["f"], x["rows"], x["basin"], full_name(name)
-    vol, cap = num(f["volume"]), num(f["capacity"])
+    vol, cap = hm(f["volume"]), hm(f["capacity"])
     head = ('<h1>%s</h1><p class="sub">Cuenca: %s</p><p class="answer"><span>%s</span></p>'
             '<div class="card"><p class="sub">%s</p><p style="font-size:2.4rem;font-weight:700;margin:0">%s</p><p><b>%s hm³ embalsados de %s hm³ de capacidad</b></p>'
-            '<p>Dato semanal del %s%s.</p></div>') % (
+            '<p>Dato semanal del %s%s.</p><p class="sub">Pantano o embalse: 1 hm³ son %s puntos de llenado aquí.</p></div>') % (
         esc(title_name), esc(basin), sentence(f, today), "Último porcentaje de llenado publicado" if f["stale"] else "Porcentaje de llenado", pc(f["pct"]), vol, cap, day(f["date"]),
-        " (dato antiguo: hace %d días)" % (today - f["date"]).days if f["stale"] else "")
+        " (dato antiguo: hace %d días)" % (today - f["date"]).days if f["stale"] else "", num(100.0 / f["capacity"]))
     body = section("es_cambios", "Cambio en 1 y 4 semanas",
                    "<p>%s</p><p>%s</p><p class=\"sub\">Contado hacia atrás desde el dato del %s.</p>" % (moved(f["week_change"], "en 1 semana"), moved(f["month_change"], "en 4 semanas"), day(f["date"])), updated)
-    ly = "La misma semana del año anterior (%d) estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
+    ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
     if f["median"] is None:
         past = "<p>%s</p><p>Hay %d años anteriores con dato para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"])
     else:
-        past = ("<p>%s</p><p>En esta misma semana de %d años anteriores con dato, el llenado fue desde el %s hasta el %s. En %d de esos %d años el porcentaje era menor que el del %s.</p>"
-                '<p class="sub">Habitual significa a menos de %d puntos de la mediana (criterio propio). La mediana es el valor central de esos años.</p>%s') % (
-            ly, f["years"], pc(f["low"]), pc(f["high"]), f["below"], f["years"], day(f["date"]), NEAR_USUAL,
+        past = ("<p>%s</p><p>En esta misma semana de %d años anteriores con dato, el llenado osciló entre el %s y el %s. En %d de esos %d años había un porcentaje menor que el del %s.</p>"
+                '<p class="sub">%sLa mediana es el valor central de esos años.</p>%s') % (
+            ly, f["years"], pc(f["low"]), pc(f["high"]), f["below"], f["years"], day(f["date"]),
+            "" if coarse(f) else "Habitual significa a menos de %d puntos de la mediana (criterio propio). " % NEAR_USUAL,
             table(("Misma semana, años anteriores", "Llenado"), (("Mínimo", pc(f["low"])), ("Mediana", pc(f["median"])), ("Máximo", pc(f["high"])))))
     body += section("es_anos", "La misma semana en otros años", past, updated)
     body += chart("es_grafico_1", "Último año", rows, f["date"] - datetime.timedelta(days=366), "%m/%Y", name, updated)
     body += chart("es_grafico_10", "Últimos 10 años", rows, es_data.year_back(f["date"], 10), "%Y", name, updated)
     last = [r for r in rows if r[0] <= today][-8:][::-1]
-    body += section("es_historial", "Últimas semanas publicadas", "<p>Las %d últimas fechas del archivo, de la más reciente a la más antigua. Si falta un valor, figura como Desconocido.</p>%s" % (
-        len(last), table(("Fecha", "Llenado", "Volumen (hm³)", "Capacidad (hm³)"), [(short(d), pc(es_data.pct(c, v)), num(v) if es_data.pct(c, v) is not None else "Desconocido", num(c)) for d, c, v in last])), updated)
-    body = head + body + related(name, basin, found) + '<p><a href="/es/">Ver los demás embalses de España de esta web</a></p>' + credit_block(updated)
-    title = "%s: porcentaje y volumen embalsado | dato semanal" % title_name
+    body += section("es_historial", "Últimas semanas publicadas", "<p>Las %d últimas fechas del archivo, de la más reciente a la más antigua. Si un valor falta o no lo mostramos por incoherente (supera la capacidad en más de un 5 %%, o salta más de 25 puntos y vuelve a la semana siguiente), figura como Desconocido.</p>%s" % (
+        len(last), table(("Fecha", "Llenado", "Volumen (hm³)", "Capacidad (hm³)"), [(short(d), pc(es_data.pct(c, v)), hm(v) if es_data.pct(c, v) is not None else "Desconocido", hm(c)) for d, c, v in last])), updated)
+    body = head + body + related(name, basin, found) + '<p><a href="/es/">Ver todos los embalses de esta web</a></p>' + credit_block(updated)
+    title = "%s (pantano): agua embalsada y llenado | dato semanal" % title_name
     desc = "%s: %s%s de llenado, %s de %s hm³. Dato semanal del %s. Cambios y años anteriores. Fuente: MITECO." % (
         title_name, "último dato, " if f["stale"] else "", pc(f["pct"]).replace("&nbsp;", " "), vol, cap, day(f["date"]))
     if len(desc) > 200:
@@ -204,7 +240,7 @@ def hub(found, updated, today):
     fresh = [x["f"] for x in found.values() if not x["f"]["stale"]]
     kinds = [usual(f) for f in fresh]
     if fresh:
-        say = "De %d embalses con dato reciente, %d están más llenos de lo habitual para esta semana, %d más vacíos y %d cerca de lo habitual%s. Último dato: %s." % (
+        say = "De %d embalses con dato reciente al preparar esta página, %d estaban más llenos de lo habitual para esas fechas, %d más vacíos y %d cerca de lo habitual%s. Último dato: %s." % (
             len(fresh), kinds.count("above"), kinds.count("below"), kinds.count("near"), "; %d sin comparación" % kinds.count(None) if None in kinds else "", day(newest))
     else:
         say = "No hay dato reciente: el último publicado es del %s, hace %d días." % (day(newest), (today - newest).days)
@@ -213,11 +249,11 @@ def hub(found, updated, today):
     word = {"above": "más lleno", "below": "más vacío", "near": "habitual", None: "sin comparación"}
     for i, basin in enumerate(sorted({x["basin"] for x in found.values()})):
         here = sorted((n for n, x in found.items() if x["basin"] == basin), key=slug)
-        rows = [('<a href="%s">%s</a>' % (url_of(n), esc(display(n))), pc(found[n]["f"]["pct"]), "%s de %s" % (num(found[n]["f"]["volume"]), num(found[n]["f"]["capacity"])),
+        rows = [('<a href="%s">%s</a>' % (url_of(n), esc(display(n))), pc(found[n]["f"]["pct"]), "%s de %s" % (hm(found[n]["f"]["volume"]), hm(found[n]["f"]["capacity"])),
                  "dato antiguo: " + short(found[n]["f"]["date"]) if found[n]["f"]["stale"] else "%s (%s)" % (word[usual(found[n]["f"])], short(found[n]["f"]["date"]))) for n in here]
-        med = statistics.median(found[n]["f"]["pct"] for n in here)
-        lead = "<p>%d embalses en esta lista; la mitad está al %s o más (último dato de cada uno).</p>" % (len(here), pc(med)) if len(here) > 2 else ""
-        body += section("cuenca_%d" % i, esc(basin), lead + table(("Embalse", "Llenado", "hm³", "Esta semana"), rows), updated)
+        recent = [found[n]["f"]["pct"] for n in here if not found[n]["f"]["stale"]]
+        lead = "<p>Mediana de los %d embalses de esta lista con dato reciente: %s. No es el nivel de la cuenca.</p>" % (len(recent), pc(statistics.median(recent))) if len(recent) > 2 else ""
+        body += section("cuenca_%d" % i, esc(basin), lead + table(("Embalse", "Llenado", "hm³", "Frente a lo habitual (fecha)"), rows), updated)
     desc = "Porcentaje de llenado y volumen embalsado de %d embalses de España, por cuenca, con dato semanal del %s. Fuente: MITECO." % (len(found), day(newest))
     return shell("Embalses de España: porcentaje de llenado por cuenca | dato semanal", desc, HUB, [("Inicio (en inglés)", "/"), ("Embalses de España", None)], body + credit_block(updated))
 
@@ -251,9 +287,10 @@ def pages(cache, today, skip=()):
     """({url: html}, [(url, reason)]) from the cache object. A reservoir with no usable reading, or whose render raises, is left out and named."""
     data, basins = es_data.unpack(cache)
     try:
-        updated = email.utils.parsedate_to_datetime(cache["modified"]).date()
+        modified = email.utils.parsedate_to_datetime(cache["modified"]).date()
     except (KeyError, TypeError, ValueError):
-        updated = datetime.date.fromisoformat(cache["newest"])
+        modified = None
+    updated = (modified, datetime.date.fromisoformat(cache["newest"]))  # (file date or None, newest reading)
     found, bad = {}, []
     for n in top_names():  # rank order: related() relies on it
         f = es_data.figures(data.get(n, []), today)

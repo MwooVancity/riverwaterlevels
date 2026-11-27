@@ -223,7 +223,7 @@ def es_rules(h, rel):
         bad.append("es: weekly data shown as live (%r)" % (m.group(0) if m else "data-live"))
     if not re.search(r"(?i)dato semanal", text) or not re.search(ES_DATE, text):
         bad.append("es: the page does not say the data is weekly, with its date")
-    if not re.search(r"Fuente: MITECO, Boletín Hidrológico", text) or not re.search(r"Archivo actualizado por la fuente el " + ES_DATE, text):
+    if not re.search(r"Fuente: MITECO, Boletín Hidrológico", text) or not re.search(r"(?:Archivo actualizado por la fuente el |La fuente no indica la fecha de actualización del archivo; último dato: )" + ES_DATE, text):
         bad.append("es: MITECO credit or the file's last-update date missing")
     m = re.search(ES_ENGLISH, text.replace("River Water Levels", " "))
     if m:
@@ -261,17 +261,45 @@ def es_claims(h, rel, cache, today):
     def dm(d):
         return "%02d/%02d/%d" % (d.day, d.month, d.year)
 
+    def hm(v):
+        return n1(v)[:-2] if v is not None and v == int(v) else n1(v)
+
     if kind_of(rel) == "eshub":
         rows = re.findall(r'<tr><td><a href="(/es/embalse/[^"]+)">[^<]*</a></td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>', h)
         if not rows:
             return ["es: the hub lists no reservoir"]
-        bad = []
+        bad, shown, kinds, basins = [], [], [], es_data.unpack(cache)[1]
+        linked = re.findall(r'<td><a href="(/es/embalse/[^"]+)"', h)
+        if linked != [r[0] for r in rows]:
+            bad.append("es: %d hub rows link a reservoir but only %d can be read and checked" % (len(linked), len(rows)))
         for u, p, vc, week in rows:
             f = es_data.figures(data.get(names.get(u), []), today)
             if not f:
                 bad.append("es: hub row %s has no cached reading" % u)
-            elif (p.replace("&nbsp;", " "), vc) != (pc(f["pct"]), "%s de %s" % (n1(f["volume"]), n1(f["capacity"]))) or dm(f["date"]) not in week or f["stale"] != ("dato antiguo" in week):
+            elif (p.replace("&nbsp;", " "), vc) != (pc(f["pct"]), "%s de %s" % (hm(f["volume"]), hm(f["capacity"]))) or dm(f["date"]) not in week or f["stale"] != ("dato antiguo" in week):
                 bad.append("es: hub row %s does not match the data: %s | %s | %s" % (u, p, vc, week))
+            if f:
+                k = None
+                if f["median"] is not None and 100.0 / f["capacity"] <= 5:
+                    gap = round(round(f["pct"], 1) - round(f["median"], 1), 1)
+                    k = "habitual" if abs(gap) < 5 else "más lleno" if gap > 0 else "más vacío"
+                shown.append((basins[names[u]], f))
+                if not f["stale"]:
+                    kinds.append(k or "sin comparación")
+                    if not week.startswith(kinds[-1] + " ("):
+                        bad.append("es: hub row %s says %r, the data says %r" % (u, week, kinds[-1]))
+        if kinds:
+            want = "De %d embalses con dato reciente al preparar esta página, %d estaban más llenos de lo habitual para esas fechas, %d más vacíos y %d cerca" % (
+                len(kinds), kinds.count("más lleno"), kinds.count("más vacío"), kinds.count("habitual"))
+            if want not in t:
+                bad.append("es: the hub summary counts differ from the data: expected %r" % want)
+        meds = []
+        for b in sorted({b for b, _ in shown}):
+            v = sorted(f["pct"] for b_, f in shown if b_ == b and not f["stale"])
+            if len(v) > 2:
+                meds.append("con dato reciente: " + pc((v[(len(v) - 1) // 2] + v[len(v) // 2]) / 2))
+        if re.findall(r"con dato reciente: [\d.,]+ %", t) != meds:
+            bad.append("es: the hub basin medians differ from the data")
         return bad
     u = "/" + os.path.dirname(rel).replace("\\", "/") + "/"
     rows = data.get(names.get(u), [])
@@ -279,14 +307,14 @@ def es_claims(h, rel, cache, today):
     if not f:
         return ["es: no cached reading for %s (a figure cannot be checked)" % u]
     day = "%d de %s de %d" % (f["date"].day, ES_MONTHS[f["date"].month - 1], f["date"].year)
-    need = ["%s hm³ embalsados de %s hm³ de capacidad" % (n1(f["volume"]), n1(f["capacity"])), "Dato semanal del " + day]
+    need = ["%s hm³ embalsados de %s hm³ de capacidad" % (hm(f["volume"]), hm(f["capacity"])), "Dato semanal del " + day]
     for v, since in ((f["week_change"], "en 1 semana"), (f["month_change"], "en 4 semanas")):
         r = None if v is None else round(v, 1)
         need.append("Cambio %s: desconocido" % since if r is None else "Cambio %s: ninguno" % since if r == 0 else
                     "%s: %s %s puntos" % (since.capitalize(), "ha subido" if r > 0 else "ha bajado", n1(abs(r))))
     need.append("estaba al " + pc(f["last_year"]) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior")
     if f["median"] is not None:
-        need += ["de %d años anteriores con dato, el llenado fue desde el %s hasta el %s. En %d de esos" % (f["years"], pc(f["low"]), pc(f["high"]), f["below"]),
+        need += ["de %d años anteriores con dato, el llenado osciló entre el %s y el %s. En %d de esos" % (f["years"], pc(f["low"]), pc(f["high"]), f["below"]),
                  "Mediana %s" % pc(f["median"])]
     bad = ["es: the page does not say what the data says: %r" % x for x in need if x not in t]
     big = re.search(r'font-size:2\.4rem[^>]*>(.*?)</p>', h)
@@ -296,7 +324,7 @@ def es_claims(h, rel, cache, today):
         bad.append("es: an old reading is not marked old, or a fresh one is")
     hist = re.search(r'(?s)id="es_historial".*?<tbody>(.*?)</tbody>', h)
     got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", hist.group(1))] if hist else []
-    want = [[dm(d), pc(es_data.pct(c, v)), n1(v) if es_data.pct(c, v) is not None else "Desconocido", n1(c)] for d, c, v in [r for r in rows if r[0] <= today][-8:][::-1]]
+    want = [[dm(d), pc(es_data.pct(c, v)), hm(v) if es_data.pct(c, v) is not None else "Desconocido", hm(c)] for d, c, v in [r for r in rows if r[0] <= today][-8:][::-1]]
     if got != want:
         bad.append("es: the weekly table differs from the data (a blank must read Desconocido; each row has its own capacity): %s" % next((g for g, w in zip(got, want) if g != w), len(got)))
     return bad
@@ -306,7 +334,9 @@ def es_page_claims(h, rel):
     try:
         with open(os.path.join(ROOT, "cache", "_es.json"), encoding="utf-8") as f:
             cache = json.load(f)
-        return es_claims(h, rel, cache, datetime.datetime.now(datetime.timezone.utc).date())
+        today = datetime.datetime.now(datetime.timezone.utc).date()
+        bad = es_claims(h, rel, cache, today)
+        return bad and es_claims(h, rel, cache, today - datetime.timedelta(days=1)) and bad  # built before midnight, checked after it
     except (OSError, ValueError, KeyError, TypeError) as e:
         return ["es: the Spain data cannot be read, so no figure can be checked (%s)" % type(e).__name__]
 
@@ -1834,6 +1864,13 @@ def carry(d, fails, got=None, new=None):
                 url = "https://riverwaterlevels.com/" + rel.replace("\\", "/").rsplit("index.html", 1)[0]
                 body = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "riverwaterlevels.com publish"}), timeout=30).read()
                 open(dst, "wb").write(body)
+            if kind_of(rel) in ("es", "eshub"):  # an old weekly copy must say it is old
+                from lib import render  # noqa: F401  (build import order)
+                from lib import es
+                with open(dst, encoding="utf-8") as fh:
+                    page = fh.read()
+                with open(dst, "w", encoding="utf-8") as fh:
+                    fh.write(es.mark_old(page, datetime.datetime.now(datetime.timezone.utc).date()))
             got.append(rel)
             print("CARRIED previous live page for", rel, "(this build's page failed:", "; ".join(str(x) for x in fails[rel])[:160] + ")")
         except urllib.error.HTTPError as e:
@@ -1856,6 +1893,38 @@ def carry(d, fails, got=None, new=None):
     return ok
 
 
+def spain_to_live(d):
+    """Spain never stops the US deploy (review 2026-11-26): when a Spain page fails in the built site, every Spain page goes back to its live copy, and one
+    the live site does not have is removed with its sitemap entry; a home link to a hub that is then gone goes too. The live set already passed these checks.
+    False when a live copy could not be fetched (the run then fails as before, and no live page is dropped)."""
+    rels = [os.path.relpath(os.path.join(root, f), d) for root, _, fs in os.walk(os.path.join(d, "es")) for f in fs if f == "index.html"]
+    new = []
+    if not carry(d, {r: ["Spain set back to the live copies"] for r in rels}, new=new):
+        return False
+    gone = []
+    for rel in new:
+        os.remove(os.path.join(d, rel))
+        gone.append("/" + os.path.dirname(rel).replace("\\", "/") + "/")
+
+    def edit(name, fn):
+        p = os.path.join(d, name)
+        if os.path.isfile(p):
+            with open(p, encoding="utf-8") as fh:
+                s = fh.read()
+            if fn(s) != s:
+                with open(p, "w", encoding="utf-8") as fh:
+                    fh.write(fn(s))
+
+    for name in os.listdir(d):
+        if name.startswith("sitemap") and name.endswith(".xml"):
+            for u in gone:
+                edit(name, lambda s, u=u: re.sub(r"<url><loc>https://[^/<]+%s</loc>.*?</url>\s*" % re.escape(u), "", s, flags=re.S))
+    if "/es/" in gone:
+        edit("index.html", lambda s: re.sub(r'<p class="sub">Reservoirs in Spain, in Spanish: .*?</p>', "", s))
+    print("SPAIN back to the live copies: %d pages, %d new ones removed" % (len(rels) - len(new), len(new)))
+    return True
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")  # review notes quote page symbols (a Windows console is cp1252)
     if "--selftest" in sys.argv:
@@ -1868,6 +1937,13 @@ def main():
     except (OSError, ValueError):
         done = set()
     fails = {k: v for k, v in res.items() if v and k not in done}
+    if "--carry" in sys.argv and any(kind_of(k) in ("es", "eshub") for k in fails) and spain_to_live(d):
+        res, site_bad, maxd = check_dir(d, True)
+        try:
+            done = {r.replace("/", os.sep) for r in json.load(open(os.path.join(d, "_carried.json")))}
+        except (OSError, ValueError):
+            done = set()
+        fails = {k: v for k, v in res.items() if v and k not in done}
     if too_many(len(fails), sum(1 for k in res if kind_of(k) in CARRYABLE)):  # a template or checker fault: said loudly, still page by page (owner 2026-11-08 fully automatic: no count stops the release)
         print("WARNING: %d pages failed at once (template or checker fault?); each keeps its live copy or goes back to the queue" % len(fails))
     if "--carry" in sys.argv and fails and not site_bad and all(kind_of(k) in CARRYABLE for k in fails):

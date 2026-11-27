@@ -78,15 +78,50 @@ def es_edges():
     # numbers on the page equal es_data.figures
     fg = es_data.figures(data[names[0]], today)
     for what, page in (("headline percent", re.sub(r"(font-size:2\.4rem[^>]*>)[^&<]+", r"\g<1>99,9", h)),
-                       ("volume", swap("%s hm³ embalsados" % es.num(fg["volume"]), "1,0 hm³ embalsados")),
+                       ("volume", swap("%s hm³ embalsados" % es.hm(fg["volume"]), "1,0 hm³ embalsados")),
                        ("blank shown as 0", swap("<td>Desconocido</td><td>Desconocido</td>", "<td>0,0&nbsp;%</td><td>0,0</td>"))):
         assert page != h and ck.es_claims(page, r, cache, today), "es gate: a wrong %s passed" % what
     other = {**cache, "rows": {**cache["rows"], names[0]: [[d, c and c * 2, v] for d, c, v in cache["rows"][names[0]]]}}
     assert ck.es_claims(h, r, other, today), "es gate: a percent from the wrong capacity passed"
     assert ck.es_claims(h, r, {**cache, "rows": {}}, today), "es gate: a page with no cached row passed"
-    wrong_hub = pages["/es/"].replace(" de %s</td>" % es.num(fg["capacity"]), " de 1,0</td>")
+    wrong_hub = pages["/es/"].replace(" de %s</td>" % es.hm(fg["capacity"]), " de 1,0</td>")
     assert wrong_hub != pages["/es/"] and ck.es_claims(wrong_hub, "es/index.html", cache, today), "es gate: a wrong hub row passed"
     assert ck.es_claims(h, r, cache, today + datetime.timedelta(days=30)), "es gate: an old reading shown as current passed"
+    # review 2026-11-26: dated wording, old carried copies, no invented file date, Spain never stops the deploy
+    assert "esta semana" not in h and "En la semana del 24 de noviembre de 2026" in h and "/og.png" not in h and "/og-es.png" in h, "es edge: undated 'this week' or the English share image"
+    for u_, h_ in ((u, h), ("/es/", pages["/es/"])):
+        marked = es.mark_old(h_, today + datetime.timedelta(days=30))
+        assert es.mark_old(h_, today) == h_ and es.OLD_ID in marked and es.mark_old(marked, today + datetime.timedelta(days=60)) == marked, "es edge: an old carried copy is not marked %s" % u_
+        assert not ck.es_rules(marked, rel(u_)), "es edge: the old-copy banner fails the gate"
+    nodate = es.pages(dict(cache, modified=""), today)[0][u]
+    assert "Archivo actualizado" not in nodate and not ck.es_rules(nodate, r), "es edge: a file date was invented"
+    unread = pages["/es/"].replace('</a></td><td>', '</a></td><td class="x">', 1)
+    assert ck.es_claims(unread, "es/index.html", cache, today), "es gate: an unreadable hub row passed"
+    assert ck.es_claims(re.sub(r"(con dato reciente: )[\d,]+", r"\g<1>1,0", pages["/es/"], count=1), "es/index.html", cache, today), "es gate: a wrong basin median passed"
+    d_ = tempfile.mkdtemp()
+    real_open, urllib_open = ck.ROOT, urllib.request.urlopen
+    try:
+        def put(name, text):
+            os.makedirs(os.path.dirname(os.path.join(d_, name)), exist_ok=True)
+            with open(os.path.join(d_, name), "w", encoding="utf-8") as fo:
+                fo.write(text)
+
+        put("es/embalse/x/index.html", h)
+        put("index.html", 'a<p class="sub">Reservoirs in Spain, in Spanish: <a href="/es/">E</a></p>b')
+        put("es/index.html", pages["/es/"])
+        put("sitemap.xml", "<urlset><url><loc>https://riverwaterlevels.com/es/</loc></url><url><loc>https://riverwaterlevels.com/es/embalse/x/</loc></url></urlset>")
+
+        def absent(q, timeout=0):
+            raise urllib.error.HTTPError("u", 404, "no", {}, None)
+
+        urllib.request.urlopen, ck.ROOT = absent, d_
+        assert ck.spain_to_live(d_) and not os.path.exists(os.path.join(d_, "es", "index.html")), "es edge: an unpublished Spain set was not removed"
+        for name, want in (("index.html", "ab"), ("sitemap.xml", "<urlset></urlset>")):
+            with open(os.path.join(d_, name), encoding="utf-8") as fi:
+                assert fi.read() == want, "es edge: %s still names the removed Spain pages" % name
+    finally:
+        urllib.request.urlopen, ck.ROOT = urllib_open, real_open
+        shutil.rmtree(d_, ignore_errors=True)
     # a bad NEW page is left out and nothing links to it; with a live copy it stays linked and build.py carries the copy
     flag = lambda w, h_: ["boom"] if w == u else []
     out, why = es.checked(cache, today, flag, lambda w: None)

@@ -196,10 +196,15 @@ def main():
         print("FAIL es pages: %s: %s" % (type(e).__name__, str(e)[:160]))
     for url, html in es_pages.items():
         emit(url, html)
-    missing = [u for u in es.all_urls() if u not in es_pages]
+    try:
+        missing = [u for u in es.all_urls() if u not in es_pages]
+    except Exception as e:  # a bad es-reservoirs.csv never stops the US build
+        print("FAIL es list: %s: %s" % (type(e).__name__, str(e)[:160]))
+        missing = []
     for url in missing:
         old = prev_page(url)  # ponytail: before the first release this asks the live site once per page when there is no data
         if old:
+            old = es.mark_old(old, now.date())
             write(nxt, url, old)
             live_copies.append(url.strip("/") + "/index.html")
             urls.append(url)
@@ -214,7 +219,7 @@ def main():
         shown = [r for r in built if r["_built"]]  # links rule 5: lists name only pages Google may index
         rivers_ = [r for r in shown if not r.get("lake")]  # flow lists (home, state hubs) list rivers; a lake has no cfs to show there
         waters_ = [r for r in shown if r.get("lake")]
-        emit("/", directory.home(rivers_, Gs, waters_, spain="/es/" in es_pages and indexing.indexable("/es/", ix)).replace('src="/conus.webp"', 'src="/%s"' % conus_name()))  # lakes and coasts get their home link (basics audit 2026-11-08); the map under its hashed, year-cached name
+        emit("/", directory.home(rivers_, Gs, waters_, spain="/es/" in urls and indexing.indexable("/es/", ix)).replace('src="/conus.webp"', 'src="/%s"' % conus_name()))  # lakes and coasts get their home link (basics audit 2026-11-08); the map under its hashed, year-cached name
         state_data = {}
         for st in sorted({r["state"] for r in rivers_}):
             sp = os.path.join(ROOT, "cache", "state-%s.json" % st.lower())
@@ -315,6 +320,7 @@ def main():
     open(os.path.join(nxt, "_redirects"), "w", encoding="utf-8").write("\n".join(list(redirects) + ["/favicon.ico /favicon.svg 301"]) + "\n")
     open(os.path.join(nxt, "_headers"), "w", encoding="utf-8").write(indexing.headers(open(os.path.join(ROOT, "templates", "_headers"), encoding="utf-8").read(), ix))
     shutil.copy(os.path.join(ROOT, "templates", "og.png"), os.path.join(nxt, "og.png"))
+    shutil.copy(os.path.join(ROOT, "templates", "og-es.png"), os.path.join(nxt, "og-es.png"))
     shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, conus_name()))  # home map, static, cached a year under its hashed name
     shutil.copy(os.path.join(ROOT, "templates", "conus.webp"), os.path.join(nxt, "conus.webp"))  # ponytail: the old name for a home page cached before the hashed one; delete after 2026-12
     for name in ("sw.js", "icon-192.png", "icon-512.png"):

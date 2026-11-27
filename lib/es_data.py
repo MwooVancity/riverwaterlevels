@@ -3,11 +3,13 @@ Input is the CSV `mdb-export -D '%Y-%m-%d' BD-Embalses.mdb "T_Datos Embalses 198
 AGUA_ACTUAL, ELECTRICO_FLAG; volumes are text in hm3 with a decimal comma. A blank or unreadable value is Unknown (None), never 0."""
 import csv
 import datetime
+import re
 import statistics
 
 NEED = ("AMBITO_NOMBRE", "EMBALSE_NOMBRE", "FECHA", "AGUA_TOTAL", "AGUA_ACTUAL")
 MIN_ROWS = 500  # first sight of a reservoir: the real ranked 50 have 1,052 to 2,030 weeks (file of 2026-11-24)
-STALE_DAYS = 15# weekly bulletin: one missed week is shown as old, two make the current figure Unknown
+STALE_DAYS = 15  # weekly bulletin: a reading older than this is marked old and the later fill is called unknown
+SPIKE = 25.0  # percentage points of capacity
 
 
 def hm3(text):
@@ -17,6 +19,8 @@ def hm3(text):
         return None
     if "," in t:
         t = t.replace(".", "").replace(",", ".")
+    elif re.fullmatch(r"\d{1,3}(\.\d{3})+", t):  # '1.505' with no comma: thousands or a decimal point, so Unknown
+        return None
     try:
         v = float(t)
     except ValueError:
@@ -54,7 +58,18 @@ def pack(data, basin):
 
 def unpack(cache):
     """The cache file back to what parse() returns: ({name: [(date, capacity, volume)]}, {name: basin})."""
-    return {n: [(datetime.date.fromisoformat(d), c, v) for d, c, v in r] for n, r in cache["rows"].items()}, cache["basin"]
+    return {n: held([(datetime.date.fromisoformat(d), c, v) for d, c, v in r]) for n, r in cache["rows"].items()}, cache["basin"]
+
+
+def held(rows):
+    """A one-week jump over SPIKE that reverses the next week (La Serena 1324, 13, 1322 hm3, Oct 2018) is a source error: that volume becomes Unknown.
+    ponytail: the newest week has no next week yet, so it cannot be held; the page notes a large last-week change instead."""
+    out = list(rows)
+    for i in range(1, len(rows) - 1):
+        a, m, z = (pct(r[1], r[2]) for r in rows[i - 1:i + 2])
+        if None not in (a, m, z) and (rows[i + 1][0] - rows[i - 1][0]).days <= 21 and min(abs(m - a), abs(m - z)) > SPIKE and (m - a) * (m - z) > 0:
+            out[i] = (rows[i][0], rows[i][1], None)
+    return out
 
 
 def refusal(new, old, names, today):
@@ -152,6 +167,9 @@ def selftest():
         pass
     else:
         raise AssertionError("one name in two basins was merged")
+    w = [(datetime.date(2018, 10, d), 3219.0, v) for d, v in ((2, 1330.0), (9, 1324.0), (16, 13.0), (23, 1322.0))]
+    assert [r[2] for r in held(w)] == [1330.0, 1324.0, None, 1322.0], "the La Serena spike was published"
+    assert held(w[:3]) == w[:3] and hm3("1.505") is None
     print("es_data selftest OK")
 
 
