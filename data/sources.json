@@ -123,7 +123,7 @@
    "summary": "OpenStreetMap boat ramps, put-ins and marinas near the gauge via the Overpass API; open data under ODbL, used with attribution.",
    "blocks": [
     "access",
-    "access_points"
+    "access_points", "es_access"
    ],
    "credit": "Access points: © OpenStreetMap contributors (ODbL)",
    "read_on": "2026-11-11",

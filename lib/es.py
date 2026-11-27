@@ -3,6 +3,7 @@ lib/es_data.py, the data from cache/_es.json (collect.py --es). Its own shell: n
 import csv
 import datetime
 import email.utils
+import json
 import os
 import re
 import statistics
@@ -200,6 +201,64 @@ def related(name, basin, found):
         esc(basin), "".join('<li><a href="%s">%s: %s</a> (%s)</li>' % (url_of(n), esc(full_name(n)), pc(x["f"]["pct"]), short(x["f"]["date"])) for n, x in same))
 
 
+ACCESS_DAYS = 365  # an older map reading is not shown
+ACCESS = (("ramp", "Rampas para embarcaciones", "Rampa", "rampa para embarcaciones", "rampas para embarcaciones"),
+          ("bathing", "Zonas de baño señaladas", "Zona de baño", "zona de baño señalada", "zonas de baño señaladas"),
+          ("beach", "Playas", "Playa", "playa", "playas"),
+          ("boats", "Náutica: puertos, clubes y alquiler", "Instalación náutica", "punto de náutica", "puntos de náutica"),
+          ("camp", "Campings y áreas de acampada cercanas", "Acampada", "camping o área de acampada", "campings o áreas de acampada"))
+SHOWN = 6  # per group; the rest are counted
+ACCESS_NOTE = {"customers": "solo clientes", "permit": "con permiso"}
+
+
+def access_data():
+    """data/es-access.json (tools/es_access.py); unreadable means no block, never "there is none"."""
+    try:
+        with open(os.path.join(DATA, "es-access.json"), encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def access_section(name, today, data):
+    try:
+        read = datetime.date.fromisoformat(data["read_on"])
+        places = data["reservoirs"][name]
+    except (KeyError, TypeError, ValueError):
+        return ""
+    if not places or (today - read).days > ACCESS_DAYS:
+        return ""
+    counts, lists = [], ""
+    for kind, heading, label, one, many in ACCESS:
+        here = [p for p in places if p["kind"] == kind]
+        if not here:
+            continue
+        counts.append("%d %s" % (len(here), one if len(here) == 1 else many))
+        items = "".join('<li><a href="https://www.openstreetmap.org/%s" rel="noopener">%s</a>%s</li>' % (
+            esc(p["osm"]), esc(p["name"] or "%s sin nombre (%d)" % (label, i + 1)), " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
+            for i, p in enumerate(here[:SHOWN]))
+        lists += "<h3>%s</h3><ul>%s</ul>%s" % (heading, items, '<p class="sub">Y %d más marcados en el mapa.</p>' % (len(here) - SHOWN) if len(here) > SHOWN else "")
+    return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>Junto a este embalse el mapa marca: %s. Cada enlace abre el sitio en el mapa.</p>%s'
+            '<p class="sub">Que un sitio esté en el mapa no indica que esté abierto, que tenga acceso público ni que se permita bañarse o navegar: compruébalo antes de ir. '
+            'Con el embalse bajo, una rampa o una orilla puede quedar lejos del agua. La lista puede estar incompleta.</p>'
+            '<p class="src">Fuente: <a href="https://www.openstreetmap.org/copyright" rel="noopener">© colaboradores de OpenStreetMap</a> (licencia ODbL). Mapa consultado el %s.</p></section>') % (
+        ", ".join(counts), lists, day(read))
+
+
+def month_section(f, rows, updated):
+    mo = es_data.monthly(rows, f["date"].year)
+    if not mo:
+        return ""
+    hi, lo = max(mo, key=lambda r: r[1]), min(mo, key=lambda r: r[1])
+    span = "%d–%d" % (f["date"].year - 10, f["date"].year - 1)
+    if round(hi[1] - lo[1], 1) < 3:
+        say = "En %s el llenado habitual cambió poco de un mes a otro: la mediana mensual fue de %s a %s." % (span, pc(lo[1]), pc(hi[1]))
+    else:
+        say = "En %s, el mes con la mediana más alta fue %s (%s) y el de la más baja, %s (%s)." % (span, MONTHS[hi[0] - 1], pc(hi[1]), MONTHS[lo[0] - 1], pc(lo[1]))
+    return section("es_meses", "El llenado mes a mes", "<p>%s No es una previsión.</p>%s" % (
+        say, table(("Mes", "Mediana", "Año más bajo", "Año más alto"), [(MONTHS[m - 1].capitalize(), pc(md), pc(a), pc(b)) for m, md, a, b, _ in mo])), updated)
+
+
 def reservoir(name, found, updated, today):
     x = found[name]
     f, rows, basin, title_name = x["f"], x["rows"], x["basin"], full_name(name)
@@ -211,6 +270,7 @@ def reservoir(name, found, updated, today):
         " (dato antiguo: hace %d días)" % (today - f["date"]).days if f["stale"] else "")
     body = section("es_cambios", "Cambio en 1 y 4 semanas",
                    "<p>%s</p><p>%s</p><p class=\"sub\">Contado hacia atrás desde el dato del %s.</p>" % (moved(f["week_change"], "en 1 semana"), moved(f["month_change"], "en 4 semanas"), day(f["date"])), updated)
+    body += access_section(name, today, access_data())
     ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
     if f["median"] is None:
         past = "<p>%s</p><p>Hay %d años anteriores con dato para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"])
@@ -223,6 +283,7 @@ def reservoir(name, found, updated, today):
     body += section("es_anos", "La misma semana en otros años", past, updated)
     body += chart("es_grafico_1", "Último año", rows, f["date"] - datetime.timedelta(days=366), "%m/%Y", name, updated)
     body += chart("es_grafico_10", "Últimos 10 años", rows, es_data.year_back(f["date"], 10), "%Y", name, updated)
+    body += month_section(f, rows, updated)
     last = [r for r in rows if r[0] <= today][-8:][::-1]
     body += section("es_historial", "Últimas semanas publicadas", "<p>Las %d últimas fechas del archivo, de la más reciente a la más antigua. Si un valor falta o no lo mostramos por incoherente (supera la capacidad en más de un 5 %%, o salta más de 25 puntos y vuelve a la semana siguiente), figura como Desconocido.</p>%s" % (
         len(last), table(("Fecha", "Llenado", "Volumen (hm³)", "Capacidad (hm³)"), [(short(d), pc(es_data.pct(c, v)), hm(v) if es_data.pct(c, v) is not None else "Desconocido", hm(c)) for d, c, v in last])), updated)

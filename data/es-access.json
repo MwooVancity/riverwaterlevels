@@ -1,0 +1,846 @@
+{
+ "read_on": "2026-11-27",
+ "licence": "Data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
+ "reservoirs": {
+  "San Juan": [
+   {
+    "kind": "beach",
+    "name": "Cala Tiburón",
+    "lat": 40.37898,
+    "lon": -4.32795,
+    "access": null,
+    "osm": "node/12120451044"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa nudista",
+    "lat": 40.38166,
+    "lon": -4.31644,
+    "access": null,
+    "osm": "node/9029374819"
+   },
+   {
+    "kind": "beach",
+    "name": "Virgen de la Nueva",
+    "lat": 40.40662,
+    "lon": -4.38043,
+    "access": null,
+    "osm": "node/8949703031"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 40.36947,
+    "lon": -4.31616,
+    "access": null,
+    "osm": "node/331474505"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 40.40642,
+    "lon": -4.38212,
+    "access": null,
+    "osm": "node/344181472"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 40.38236,
+    "lon": -4.34667,
+    "access": null,
+    "osm": "way/298566239"
+   },
+   {
+    "kind": "boats",
+    "name": "Club Motonáutico de España",
+    "lat": 40.39276,
+    "lon": -4.37642,
+    "access": null,
+    "osm": "node/344279731"
+   },
+   {
+    "kind": "boats",
+    "name": "Club Náutico San Ramón",
+    "lat": 40.3816,
+    "lon": -4.34587,
+    "access": null,
+    "osm": "way/298566242"
+   },
+   {
+    "kind": "boats",
+    "name": "Embarcadero El Ancla",
+    "lat": 40.37029,
+    "lon": -4.32054,
+    "access": null,
+    "osm": "node/331104696"
+   },
+   {
+    "kind": "boats",
+    "name": "Náutico de San Juan",
+    "lat": 40.37115,
+    "lon": -4.32053,
+    "access": null,
+    "osm": "node/331104700"
+   },
+   {
+    "kind": "boats",
+    "name": "Real Club Náutico de Madrid",
+    "lat": 40.37376,
+    "lon": -4.32211,
+    "access": null,
+    "osm": "node/329979000"
+   },
+   {
+    "kind": "boats",
+    "name": null,
+    "lat": 40.37052,
+    "lon": -4.31855,
+    "access": null,
+    "osm": "node/309005075"
+   },
+   {
+    "kind": "camp",
+    "name": "Campamento Las Tórtolas",
+    "lat": 40.39996,
+    "lon": -4.41971,
+    "access": null,
+    "osm": "node/13865557055"
+   },
+   {
+    "kind": "camp",
+    "name": "La Ardilla Roja",
+    "lat": 40.37103,
+    "lon": -4.32445,
+    "access": null,
+    "osm": "way/38694818"
+   }
+  ],
+  "Alloz": [
+   {
+    "kind": "beach",
+    "name": "Embarcadero",
+    "lat": 42.72133,
+    "lon": -1.93976,
+    "access": null,
+    "osm": "way/297820039"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72191,
+    "lon": -1.93584,
+    "access": null,
+    "osm": "way/721881697"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72115,
+    "lon": -1.93701,
+    "access": null,
+    "osm": "way/721881698"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72109,
+    "lon": -1.94103,
+    "access": null,
+    "osm": "way/721881699"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72116,
+    "lon": -1.93839,
+    "access": null,
+    "osm": "way/956661380"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72033,
+    "lon": -1.94326,
+    "access": null,
+    "osm": "way/956661421"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.71806,
+    "lon": -1.94414,
+    "access": null,
+    "osm": "way/956661434"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.72255,
+    "lon": -1.93782,
+    "access": null,
+    "osm": "way/956736555"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Aritzaleku",
+    "lat": 42.7201,
+    "lon": -1.94,
+    "access": null,
+    "osm": "way/297819661"
+   }
+  ],
+  "Valmayor": [
+   {
+    "kind": "boats",
+    "name": null,
+    "lat": 40.54013,
+    "lon": -4.04899,
+    "access": null,
+    "osm": "node/299250675"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 40.54044,
+    "lon": -4.04894,
+    "access": null,
+    "osm": "node/2442746842"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 40.53973,
+    "lon": -4.04938,
+    "access": null,
+    "osm": "node/287069084"
+   }
+  ],
+  "Valdecañas": [
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 39.8336,
+    "lon": -5.36172,
+    "access": null,
+    "osm": "node/10756137332"
+   }
+  ],
+  "Iznájar": [
+   {
+    "kind": "camp",
+    "name": "Camping La Isla",
+    "lat": 37.28685,
+    "lon": -4.38746,
+    "access": null,
+    "osm": "node/12415266413"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Nuevo Valdearenas",
+    "lat": 37.26306,
+    "lon": -4.32369,
+    "access": null,
+    "osm": "way/343892974"
+   }
+  ],
+  "Alange": [
+   {
+    "kind": "beach",
+    "name": "Playa de Alange",
+    "lat": 38.78321,
+    "lon": -6.23899,
+    "access": null,
+    "osm": "way/477269896"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 38.78257,
+    "lon": -6.24023,
+    "access": null,
+    "osm": "node/4693858168"
+   }
+  ],
+  "Entrepeñas": [
+   {
+    "kind": "boats",
+    "name": "Club Náutico Orillas del Alocén",
+    "lat": 40.56347,
+    "lon": -2.72354,
+    "access": null,
+    "osm": "way/1482179112"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Sacedón",
+    "lat": 40.48246,
+    "lon": -2.72725,
+    "access": null,
+    "osm": "way/194028739"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 40.48758,
+    "lon": -2.73082,
+    "access": null,
+    "osm": "way/640334965"
+   }
+  ],
+  "Orellana": [
+   {
+    "kind": "bathing",
+    "name": null,
+    "lat": 39.01358,
+    "lon": -5.50229,
+    "access": null,
+    "osm": "node/8419846104"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa de Campanario",
+    "lat": 38.98454,
+    "lon": -5.5305,
+    "access": null,
+    "osm": "way/834163033"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa de Orellana la Vieja",
+    "lat": 38.99591,
+    "lon": -5.52969,
+    "access": null,
+    "osm": "way/693336283"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa de las Casetas",
+    "lat": 38.98468,
+    "lon": -5.53324,
+    "access": null,
+    "osm": "way/834163032"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa de los Calicantos",
+    "lat": 39.08879,
+    "lon": -5.30451,
+    "access": null,
+    "osm": "node/13704091913"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Balcón de Orellana",
+    "lat": 38.99551,
+    "lon": -5.52512,
+    "access": null,
+    "osm": "way/834163030"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Puerto Peña",
+    "lat": 39.13681,
+    "lon": -5.18354,
+    "access": null,
+    "osm": "way/48359346"
+   }
+  ],
+  "Riaño": [
+   {
+    "kind": "boats",
+    "name": "Club Naútico",
+    "lat": 42.97325,
+    "lon": -5.00181,
+    "access": null,
+    "osm": "node/2678013863"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping de Riaño",
+    "lat": 42.97614,
+    "lon": -4.99808,
+    "access": "yes",
+    "osm": "way/53043883"
+   }
+  ],
+  "Aguilar": [
+   {
+    "kind": "beach",
+    "name": "Playa del embalse de Aguilar",
+    "lat": 42.78841,
+    "lon": -4.30168,
+    "access": null,
+    "osm": "way/366309265"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Monte Royal",
+    "lat": 42.78511,
+    "lon": -4.30066,
+    "access": "customers",
+    "osm": "way/366315281"
+   }
+  ],
+  "Viñuela, La": [
+   {
+    "kind": "camp",
+    "name": "Camping Presa La Viñuela",
+    "lat": 36.87405,
+    "lon": -4.18511,
+    "access": null,
+    "osm": "way/396763003"
+   },
+   {
+    "kind": "camp",
+    "name": "Presa La Vinuela",
+    "lat": 36.87367,
+    "lon": -4.18514,
+    "access": null,
+    "osm": "node/728825754"
+   }
+  ],
+  "Ulldecona": [
+   {
+    "kind": "camp",
+    "name": null,
+    "lat": 40.67359,
+    "lon": 0.23056,
+    "access": null,
+    "osm": "node/482849459"
+   }
+  ],
+  "Cazalegas": [
+   {
+    "kind": "camp",
+    "name": "Camping Cazalegas",
+    "lat": 40.01291,
+    "lon": -4.69446,
+    "access": null,
+    "osm": "way/655035632"
+   }
+  ],
+  "La Serena": [
+   {
+    "kind": "beach",
+    "name": "Playa Los Llanos",
+    "lat": 38.95601,
+    "lon": -5.25536,
+    "access": null,
+    "osm": "node/5308823652"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa Los Llanos",
+    "lat": 38.95549,
+    "lon": -5.25508,
+    "access": null,
+    "osm": "way/1028420200"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa de agua dulce Galizuela",
+    "lat": 38.94107,
+    "lon": -5.22642,
+    "access": null,
+    "osm": "way/1002357341"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 38.83052,
+    "lon": -5.1103,
+    "access": null,
+    "osm": "way/366909862"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 38.95669,
+    "lon": -5.25452,
+    "access": "yes",
+    "osm": "way/1028820286"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 38.94115,
+    "lon": -5.22633,
+    "access": "yes",
+    "osm": "way/1028820287"
+   }
+  ],
+  "Buendía": [
+   {
+    "kind": "camp",
+    "name": "Los Romerales",
+    "lat": 40.40726,
+    "lon": -2.77664,
+    "access": null,
+    "osm": "way/578658525"
+   }
+  ],
+  "Mequinenza": [
+   {
+    "kind": "boats",
+    "name": "Puerto deportivo de Caspe",
+    "lat": 41.25224,
+    "lon": -0.05014,
+    "access": null,
+    "osm": "way/554993521"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Lake Caspe",
+    "lat": 41.29296,
+    "lon": 0.06316,
+    "access": null,
+    "osm": "way/132641843"
+   },
+   {
+    "kind": "ramp",
+    "name": "Embarcadereo Mediano Cero",
+    "lat": 41.25977,
+    "lon": -0.01792,
+    "access": null,
+    "osm": "way/460231932"
+   },
+   {
+    "kind": "ramp",
+    "name": "Embarcadero",
+    "lat": 41.31763,
+    "lon": 0.09084,
+    "access": null,
+    "osm": "way/460232388"
+   },
+   {
+    "kind": "ramp",
+    "name": "Embarcadero de Chipriana",
+    "lat": 41.27587,
+    "lon": -0.13715,
+    "access": null,
+    "osm": "way/460155974"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.29552,
+    "lon": 0.06239,
+    "access": null,
+    "osm": "node/1459541811"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.25233,
+    "lon": -0.04962,
+    "access": null,
+    "osm": "node/7508843270"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.27499,
+    "lon": -0.1413,
+    "access": null,
+    "osm": "way/460229465"
+   }
+  ],
+  "Ricobayo": [
+   {
+    "kind": "bathing",
+    "name": null,
+    "lat": 41.53815,
+    "lon": -5.98187,
+    "access": "yes",
+    "osm": "node/9953475634"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa Fluvial Las Regatinas",
+    "lat": 41.59461,
+    "lon": -5.92251,
+    "access": null,
+    "osm": "node/14098547001"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa del embalse de Ricobayo",
+    "lat": 41.53808,
+    "lon": -5.98223,
+    "access": null,
+    "osm": "way/366319368"
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 41.61191,
+    "lon": -5.9159,
+    "access": null,
+    "osm": "way/402114560"
+   },
+   {
+    "kind": "boats",
+    "name": "Alquiler de embarcaciones",
+    "lat": 41.53992,
+    "lon": -5.98169,
+    "access": null,
+    "osm": "node/3702946390"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.70172,
+    "lon": -5.80972,
+    "access": null,
+    "osm": "way/366353601"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.61194,
+    "lon": -5.91409,
+    "access": null,
+    "osm": "way/513605214"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.53789,
+    "lon": -5.982,
+    "access": null,
+    "osm": "way/648563304"
+   }
+  ],
+  "Alarcón": [
+   {
+    "kind": "beach",
+    "name": "Playa Manchamar",
+    "lat": 39.70112,
+    "lon": -2.25352,
+    "access": null,
+    "osm": "node/7609677531"
+   },
+   {
+    "kind": "beach",
+    "name": "Playa Manchamar",
+    "lat": 39.70246,
+    "lon": -2.25533,
+    "access": null,
+    "osm": "way/814646187"
+   }
+  ],
+  "Belesar": [
+   {
+    "kind": "camp",
+    "name": "Santa Mariña",
+    "lat": 42.80729,
+    "lon": -7.60758,
+    "access": null,
+    "osm": "way/1420726848"
+   }
+  ],
+  "Mediano": [
+   {
+    "kind": "camp",
+    "name": "Camping 1º de Mayo",
+    "lat": 42.37664,
+    "lon": 0.15251,
+    "access": null,
+    "osm": "way/485475539"
+   },
+   {
+    "kind": "camp",
+    "name": null,
+    "lat": 42.37626,
+    "lon": 0.15594,
+    "access": null,
+    "osm": "way/436017332"
+   }
+  ],
+  "Atazar, El": [
+   {
+    "kind": "boats",
+    "name": "Centro Internacional de Navegación de Arousa",
+    "lat": 40.91842,
+    "lon": -3.53267,
+    "access": null,
+    "osm": "node/3522057043"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping de Cervera",
+    "lat": 40.92,
+    "lon": -3.53286,
+    "access": null,
+    "osm": "way/91119625"
+   }
+  ],
+  "Itoiz": [
+   {
+    "kind": "beach",
+    "name": "Artziko hondartza",
+    "lat": 42.86343,
+    "lon": -1.37673,
+    "access": null,
+    "osm": "way/1079761868"
+   },
+   {
+    "kind": "beach",
+    "name": "Nagoreko hondartza",
+    "lat": 42.85795,
+    "lon": -1.37471,
+    "access": null,
+    "osm": "node/12033902529"
+   },
+   {
+    "kind": "beach",
+    "name": "Nagoreko hondartza",
+    "lat": 42.85265,
+    "lon": -1.37453,
+    "access": null,
+    "osm": "way/1079761870"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 42.85723,
+    "lon": -1.37393,
+    "access": null,
+    "osm": "way/1299101657"
+   }
+  ],
+  "Contreras": [
+   {
+    "kind": "camp",
+    "name": "Kiko Park Rural",
+    "lat": 39.55256,
+    "lon": -1.47504,
+    "access": null,
+    "osm": "way/329004507"
+   },
+   {
+    "kind": "camp",
+    "name": "Venta de Contreras",
+    "lat": 39.54086,
+    "lon": -1.50863,
+    "access": null,
+    "osm": "node/5147105024"
+   }
+  ],
+  "Barrios de Luna": [
+   {
+    "kind": "camp",
+    "name": "Club Nautico de León",
+    "lat": 42.87475,
+    "lon": -5.85397,
+    "access": null,
+    "osm": "node/13724255201"
+   }
+  ],
+  "Cuerda del Pozo": [
+   {
+    "kind": "beach",
+    "name": "Playa Pita",
+    "lat": 41.85288,
+    "lon": -2.78217,
+    "access": null,
+    "osm": "relation/18319246"
+   },
+   {
+    "kind": "boats",
+    "name": "Embarcadero Club náutico",
+    "lat": 41.87296,
+    "lon": -2.71287,
+    "access": null,
+    "osm": "node/2320339490"
+   },
+   {
+    "kind": "boats",
+    "name": null,
+    "lat": 41.84045,
+    "lon": -2.77614,
+    "access": null,
+    "osm": "node/4300804135"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Urbión",
+    "lat": 41.84178,
+    "lon": -2.77995,
+    "access": null,
+    "osm": "way/366389272"
+   },
+   {
+    "kind": "ramp",
+    "name": "Club Nautico de Soria",
+    "lat": 41.87326,
+    "lon": -2.71318,
+    "access": null,
+    "osm": "node/2320339505"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.84729,
+    "lon": -2.77459,
+    "access": null,
+    "osm": "node/256924273"
+   }
+  ],
+  "Santa Ana": [
+   {
+    "kind": "camp",
+    "name": "Camping Las Planas",
+    "lat": 41.90716,
+    "lon": 0.56495,
+    "access": null,
+    "osm": "way/491773028"
+   }
+  ],
+  "Benagéber": [
+   {
+    "kind": "camp",
+    "name": "Cámping",
+    "lat": 39.73348,
+    "lon": -1.11569,
+    "access": null,
+    "osm": "node/13094812701"
+   }
+  ],
+  "Sotonera": [
+   {
+    "kind": "boats",
+    "name": "Club de vela Alcalá de Gurrea La Sotonera",
+    "lat": 42.10872,
+    "lon": -0.70605,
+    "access": null,
+    "osm": "node/8712306693"
+   },
+   {
+    "kind": "camp",
+    "name": "Camping La Sotonera",
+    "lat": 42.10125,
+    "lon": -0.69738,
+    "access": null,
+    "osm": "way/393185766"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 42.1086,
+    "lon": -0.7056,
+    "access": null,
+    "osm": "way/1141582928"
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 42.10184,
+    "lon": -0.6962,
+    "access": null,
+    "osm": "way/393143355"
+   }
+  ]
+ }
+}

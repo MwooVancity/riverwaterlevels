@@ -18,7 +18,7 @@ def census(out):
             print("      " + ln[:200], flush=True)
 
 
-GATE_1 = [("spain data self-test", PY + ["lib/es_data.py"]), ("build", PY + ["build.py"]),("page checks", PY + ["check.py", "--carry"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
+GATE_1 = [("spain data self-test", PY + ["lib/es_data.py"]), ("spain places self-test", PY + ["tools/es_access.py", "--selftest"]), ("build", PY + ["build.py"]),("page checks", PY + ["check.py", "--carry"]), ("page rules self-test", PY + ["check.py", "--selftest"]),
           ("break every input", PY + ["tools/break_blocks.py", "--gate"]),  # missing, stale, empty, duplicated data on 4 sample gauges (owner 2026-10-28)
           ("edge worker bundles", [NPX, "wrangler", "deploy", "--dry-run", "--outdir", ".wrangler/dry", "--assets", "dist_next"]),
           ("edge one-gauge read self-test", ["node", "tools/worker_slice_test.mjs"])]  # dist/ does not exist yet in CI at gate time

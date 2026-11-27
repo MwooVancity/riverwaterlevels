@@ -327,6 +327,50 @@ def es_claims(h, rel, cache, today):
     want = [[dm(d), pc(es_data.pct(c, v)), hm(v) if es_data.pct(c, v) is not None else "Desconocido", hm(c)] for d, c, v in [r for r in rows if r[0] <= today][-8:][::-1]]
     if got != want:
         bad.append("es: the weekly table differs from the data (a blank must read Desconocido; each row has its own capacity): %s" % next((g for g, w in zip(got, want) if g != w), len(got)))
+    # month by month, worked out again here
+    per = {}
+    for d, c, v in rows:
+        if es_data.pct(c, v) is not None and f["date"].year - 10 <= d.year < f["date"].year:
+            per.setdefault(d.month, {}).setdefault(d.year, []).append(es_data.pct(c, v))
+
+    def mid(v):
+        v = sorted(v)
+        return (v[(len(v) - 1) // 2] + v[len(v) // 2]) / 2
+
+    want = []
+    if len(per) == 12 and all(len(y) >= 8 for y in per.values()):
+        for m in range(1, 13):
+            ys = [mid(v) for v in per[m].values()]
+            want.append([ES_MONTHS[m - 1].capitalize(), pc(mid(ys)), pc(min(ys)), pc(max(ys))])
+    sec = re.search(r'(?s)id="es_meses".*?<tbody>(.*?)</tbody>', h)
+    got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", sec.group(1))] if sec else []
+    if got != want:
+        bad.append("es: the month-by-month table differs from the data")
+    return bad + es_access_claims(h, names.get(u), today)
+
+
+def es_access_claims(h, name, today, data=None):
+    """Mapped places on the page are this reservoir's rows in data/es-access.json, none private, with the map's reading date and the not-permission line."""
+    sec = re.search(r'(?s)<section class="card blk" id="es_acceso">.*?</section>', h)
+    if not sec:
+        return []
+    if data is None:
+        try:
+            with open(os.path.join(ROOT, "data", "es-access.json"), encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            data = {}
+    s, bad = sec.group(0), []
+    rows = (data.get("reservoirs") or {}).get(name) or []
+    known = {r["osm"] for r in rows if r.get("access") not in ("private", "no", "military")}
+    got = re.findall(r'href="https://www\.openstreetmap\.org/((?:node|way|relation)/\d+)"', s)
+    if not got or set(got) - known:
+        bad.append("es: a mapped place is not in this reservoir's data, or is private: %s" % sorted(set(got) - known)[:3])
+    read = datetime.date.fromisoformat(data["read_on"]) if rows else None
+    if not read or (today - read).days > 365 or "Mapa consultado el %d de %s de %d" % (read.day, ES_MONTHS[read.month - 1], read.year) not in s:
+        bad.append("es: the map's reading date is missing, wrong or over a year old")
+    if "no indica que esté abierto" not in s or "OpenStreetMap" not in s:
+        bad.append("es: the not-open, not-permission line or the OpenStreetMap credit is missing")
     return bad
 
 
