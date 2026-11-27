@@ -2,30 +2,62 @@
  "read_on": "2026-11-27",
  "licence": "Data (c) OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
  "reservoirs": {
-  "San Juan": [
+  "Sau": [
    {
-    "kind": "beach",
-    "name": "Cala Tiburón",
-    "lat": 40.37898,
-    "lon": -4.32795,
+    "kind": "motorhome",
+    "name": "Mas la Riba",
+    "lat": 41.97666,
+    "lon": 2.40895,
     "access": null,
-    "osm": "node/12120451044"
+    "osm": "node/8929178757",
+    "m": 470
    },
+   {
+    "kind": "parking",
+    "name": "Parking 1",
+    "lat": 41.97624,
+    "lon": 2.39663,
+    "access": null,
+    "osm": "way/726883152",
+    "m": 50
+   },
+   {
+    "kind": "parking",
+    "name": "Parking 2",
+    "lat": 41.97637,
+    "lon": 2.39658,
+    "access": null,
+    "osm": "way/1107974257",
+    "m": 60
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.96385,
+    "lon": 2.39804,
+    "access": null,
+    "osm": "way/1323840459",
+    "m": 70
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 41.97566,
+    "lon": 2.39523,
+    "access": null,
+    "osm": "node/10137975927",
+    "m": 40
+   }
+  ],
+  "San Juan": [
    {
     "kind": "beach",
     "name": "Playa nudista",
     "lat": 40.38166,
     "lon": -4.31644,
     "access": null,
-    "osm": "node/9029374819"
-   },
-   {
-    "kind": "beach",
-    "name": "Virgen de la Nueva",
-    "lat": 40.40662,
-    "lon": -4.38043,
-    "access": null,
-    "osm": "node/8949703031"
+    "osm": "node/9029374819",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -33,7 +65,8 @@
     "lat": 40.36947,
     "lon": -4.31616,
     "access": null,
-    "osm": "node/331474505"
+    "osm": "node/331474505",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -41,7 +74,8 @@
     "lat": 40.40642,
     "lon": -4.38212,
     "access": null,
-    "osm": "node/344181472"
+    "osm": "node/344181472",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -49,15 +83,26 @@
     "lat": 40.38236,
     "lon": -4.34667,
     "access": null,
-    "osm": "way/298566239"
+    "osm": "way/298566239",
+    "m": 10
    },
    {
-    "kind": "boats",
-    "name": "Club Motonáutico de España",
-    "lat": 40.39276,
-    "lon": -4.37642,
+    "kind": "beach",
+    "name": "Cala Tiburón",
+    "lat": 40.37898,
+    "lon": -4.32795,
     "access": null,
-    "osm": "node/344279731"
+    "osm": "node/12120451044",
+    "m": 20
+   },
+   {
+    "kind": "beach",
+    "name": "Virgen de la Nueva",
+    "lat": 40.40662,
+    "lon": -4.38043,
+    "access": null,
+    "osm": "node/8949703031",
+    "m": 20
    },
    {
     "kind": "boats",
@@ -65,7 +110,8 @@
     "lat": 40.3816,
     "lon": -4.34587,
     "access": null,
-    "osm": "way/298566242"
+    "osm": "way/298566242",
+    "m": 20
    },
    {
     "kind": "boats",
@@ -73,7 +119,8 @@
     "lat": 40.37029,
     "lon": -4.32054,
     "access": null,
-    "osm": "node/331104696"
+    "osm": "node/331104696",
+    "m": 20
    },
    {
     "kind": "boats",
@@ -81,15 +128,17 @@
     "lat": 40.37115,
     "lon": -4.32053,
     "access": null,
-    "osm": "node/331104700"
+    "osm": "node/331104700",
+    "m": 40
    },
    {
     "kind": "boats",
-    "name": "Real Club Náutico de Madrid",
-    "lat": 40.37376,
-    "lon": -4.32211,
+    "name": "Club Motonáutico de España",
+    "lat": 40.39276,
+    "lon": -4.37642,
     "access": null,
-    "osm": "node/329979000"
+    "osm": "node/344279731",
+    "m": 80
    },
    {
     "kind": "boats",
@@ -97,7 +146,17 @@
     "lat": 40.37052,
     "lon": -4.31855,
     "access": null,
-    "osm": "node/309005075"
+    "osm": "node/309005075",
+    "m": 110
+   },
+   {
+    "kind": "boats",
+    "name": "Real Club Náutico de Madrid",
+    "lat": 40.37376,
+    "lon": -4.32211,
+    "access": null,
+    "osm": "node/329979000",
+    "m": 120
    },
    {
     "kind": "camp",
@@ -105,7 +164,8 @@
     "lat": 40.39996,
     "lon": -4.41971,
     "access": null,
-    "osm": "node/13865557055"
+    "osm": "node/13865557055",
+    "m": 290
    },
    {
     "kind": "camp",
@@ -113,17 +173,55 @@
     "lat": 40.37103,
     "lon": -4.32445,
     "access": null,
-    "osm": "way/38694818"
+    "osm": "way/38694818",
+    "m": 310
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.37516,
+    "lon": -4.32289,
+    "access": null,
+    "osm": "node/8685707663",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.37202,
+    "lon": -4.32185,
+    "access": null,
+    "osm": "node/6284299822",
+    "m": 70
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.3722,
+    "lon": -4.32216,
+    "access": null,
+    "osm": "node/6284300273",
+    "m": 90
    }
   ],
   "Alloz": [
    {
     "kind": "beach",
     "name": null,
+    "lat": 42.72109,
+    "lon": -1.94103,
+    "access": null,
+    "osm": "way/721881699",
+    "m": 0
+   },
+   {
+    "kind": "beach",
+    "name": null,
     "lat": 42.72191,
     "lon": -1.93584,
     "access": null,
-    "osm": "way/721881697"
+    "osm": "way/721881697",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -131,15 +229,8 @@
     "lat": 42.72115,
     "lon": -1.93701,
     "access": null,
-    "osm": "way/721881698"
-   },
-   {
-    "kind": "beach",
-    "name": null,
-    "lat": 42.72109,
-    "lon": -1.94103,
-    "access": null,
-    "osm": "way/721881699"
+    "osm": "way/721881698",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -147,7 +238,8 @@
     "lat": 42.72116,
     "lon": -1.93839,
     "access": null,
-    "osm": "way/956661380"
+    "osm": "way/956661380",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -155,15 +247,8 @@
     "lat": 42.72033,
     "lon": -1.94326,
     "access": null,
-    "osm": "way/956661421"
-   },
-   {
-    "kind": "beach",
-    "name": null,
-    "lat": 42.71806,
-    "lon": -1.94414,
-    "access": null,
-    "osm": "way/956661434"
+    "osm": "way/956661421",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -171,7 +256,17 @@
     "lat": 42.72255,
     "lon": -1.93782,
     "access": null,
-    "osm": "way/956736555"
+    "osm": "way/956736555",
+    "m": 20
+   },
+   {
+    "kind": "beach",
+    "name": null,
+    "lat": 42.71806,
+    "lon": -1.94414,
+    "access": null,
+    "osm": "way/956661434",
+    "m": 40
    },
    {
     "kind": "camp",
@@ -179,7 +274,73 @@
     "lat": 42.7201,
     "lon": -1.94,
     "access": null,
-    "osm": "way/297819661"
+    "osm": "way/297819661",
+    "m": 130
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.72066,
+    "lon": -1.93858,
+    "access": null,
+    "osm": "way/721881712",
+    "m": 60
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.72067,
+    "lon": -1.93541,
+    "access": null,
+    "osm": "way/590228715",
+    "m": 130
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.71575,
+    "lon": -1.95951,
+    "access": null,
+    "osm": "way/760458341",
+    "m": 150
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 42.7201,
+    "lon": -1.93531,
+    "access": null,
+    "osm": "node/8866903589",
+    "m": 180
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.72007,
+    "lon": -1.93534,
+    "access": null,
+    "osm": "node/14096057612",
+    "m": 180
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.7184,
+    "lon": -1.93525,
+    "access": null,
+    "osm": "node/14096095003",
+    "m": 190
+   }
+  ],
+  "Susqueda": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.97757,
+    "lon": 2.52372,
+    "access": "yes",
+    "osm": "way/938865641",
+    "m": 20
    }
   ],
   "Valmayor": [
@@ -189,7 +350,35 @@
     "lat": 40.54013,
     "lon": -4.04899,
     "access": null,
-    "osm": "node/299250675"
+    "osm": "node/299250675",
+    "m": 10
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.52162,
+    "lon": -4.05664,
+    "access": null,
+    "osm": "way/235468457",
+    "m": 60
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.52285,
+    "lon": -4.05895,
+    "access": null,
+    "osm": "way/235468454",
+    "m": 120
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.58987,
+    "lon": -4.04785,
+    "access": "yes",
+    "osm": "way/1198261378",
+    "m": 140
    },
    {
     "kind": "ramp",
@@ -197,7 +386,8 @@
     "lat": 40.54044,
     "lon": -4.04894,
     "access": null,
-    "osm": "node/2442746842"
+    "osm": "node/2442746842",
+    "m": 0
    },
    {
     "kind": "ramp",
@@ -205,7 +395,28 @@
     "lat": 40.53973,
     "lon": -4.04938,
     "access": null,
-    "osm": "node/287069084"
+    "osm": "node/287069084",
+    "m": 0
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.52276,
+    "lon": -4.05875,
+    "access": "yes",
+    "osm": "node/13989755911",
+    "m": 110
+   }
+  ],
+  "Cijara": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 39.37393,
+    "lon": -5.01756,
+    "access": "yes",
+    "osm": "way/1121192444",
+    "m": 40
    }
   ],
   "Valdecañas": [
@@ -215,25 +426,100 @@
     "lat": 39.8336,
     "lon": -5.36172,
     "access": null,
-    "osm": "node/10756137332"
+    "osm": "node/10756137332",
+    "m": 90
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 39.77725,
+    "lon": -5.61284,
+    "access": null,
+    "osm": "way/1380959453",
+    "m": 70
    }
   ],
   "Iznájar": [
-   {
-    "kind": "camp",
-    "name": "Camping La Isla",
-    "lat": 37.28685,
-    "lon": -4.38746,
-    "access": null,
-    "osm": "node/12415266413"
-   },
    {
     "kind": "camp",
     "name": "Camping Nuevo Valdearenas",
     "lat": 37.26306,
     "lon": -4.32369,
     "access": null,
-    "osm": "way/343892974"
+    "osm": "way/343892974",
+    "m": 50
+   },
+   {
+    "kind": "camp",
+    "name": "Camping La Isla",
+    "lat": 37.28685,
+    "lon": -4.38746,
+    "access": null,
+    "osm": "node/12415266413",
+    "m": 220
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 37.26122,
+    "lon": -4.32239,
+    "access": null,
+    "osm": "way/397438190",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 37.26011,
+    "lon": -4.31922,
+    "access": null,
+    "osm": "way/1388959403",
+    "m": 100
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 37.2561,
+    "lon": -4.30757,
+    "access": "yes",
+    "osm": "way/621919399",
+    "m": 110
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 37.2581,
+    "lon": -4.30796,
+    "access": null,
+    "osm": "node/13705360402",
+    "m": 150
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 37.26244,
+    "lon": -4.31402,
+    "access": null,
+    "osm": "node/9560909292",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 37.26438,
+    "lon": -4.32505,
+    "access": null,
+    "osm": "node/7762657002",
+    "m": 70
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 37.25935,
+    "lon": -4.32045,
+    "access": null,
+    "osm": "node/7762657565",
+    "m": 70
    }
   ],
   "Alange": [
@@ -243,7 +529,17 @@
     "lat": 38.78321,
     "lon": -6.23899,
     "access": null,
-    "osm": "way/477269896"
+    "osm": "way/477269896",
+    "m": 50
+   },
+   {
+    "kind": "motorhome",
+    "name": "Aparcamiento día y noche con servicios de aguas. Alange",
+    "lat": 38.78305,
+    "lon": -6.24278,
+    "access": null,
+    "osm": "node/13022548158",
+    "m": 30
    },
    {
     "kind": "ramp",
@@ -251,7 +547,8 @@
     "lat": 38.78257,
     "lon": -6.24023,
     "access": null,
-    "osm": "node/4693858168"
+    "osm": "node/4693858168",
+    "m": 30
    }
   ],
   "Entrepeñas": [
@@ -261,7 +558,8 @@
     "lat": 40.56347,
     "lon": -2.72354,
     "access": null,
-    "osm": "way/1482179112"
+    "osm": "way/1482179112",
+    "m": 50
    },
    {
     "kind": "camp",
@@ -269,7 +567,35 @@
     "lat": 40.48246,
     "lon": -2.72725,
     "access": null,
-    "osm": "way/194028739"
+    "osm": "way/194028739",
+    "m": 440
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.59756,
+    "lon": -2.71845,
+    "access": null,
+    "osm": "way/1301617881",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.5539,
+    "lon": -2.67201,
+    "access": null,
+    "osm": "way/1301272052",
+    "m": 100
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.49181,
+    "lon": -2.75161,
+    "access": null,
+    "osm": "way/437051472",
+    "m": 100
    },
    {
     "kind": "ramp",
@@ -277,7 +603,17 @@
     "lat": 40.48758,
     "lon": -2.73082,
     "access": null,
-    "osm": "way/640334965"
+    "osm": "way/640334965",
+    "m": 110
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.48425,
+    "lon": -2.73152,
+    "access": null,
+    "osm": "node/9196314975",
+    "m": 230
    }
   ],
   "Orellana": [
@@ -287,7 +623,8 @@
     "lat": 39.01358,
     "lon": -5.50229,
     "access": null,
-    "osm": "node/8419846104"
+    "osm": "node/8419846104",
+    "m": 20
    },
    {
     "kind": "beach",
@@ -295,15 +632,8 @@
     "lat": 38.98454,
     "lon": -5.5305,
     "access": null,
-    "osm": "way/834163033"
-   },
-   {
-    "kind": "beach",
-    "name": "Playa de Orellana la Vieja",
-    "lat": 38.99591,
-    "lon": -5.52969,
-    "access": null,
-    "osm": "way/693336283"
+    "osm": "way/834163033",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -311,7 +641,8 @@
     "lat": 38.98468,
     "lon": -5.53324,
     "access": null,
-    "osm": "way/834163032"
+    "osm": "way/834163032",
+    "m": 30
    },
    {
     "kind": "beach",
@@ -319,15 +650,17 @@
     "lat": 39.08879,
     "lon": -5.30451,
     "access": null,
-    "osm": "node/13704091913"
+    "osm": "node/13704091913",
+    "m": 40
    },
    {
-    "kind": "camp",
-    "name": "Camping Balcón de Orellana",
-    "lat": 38.99551,
-    "lon": -5.52512,
+    "kind": "beach",
+    "name": "Playa de Orellana la Vieja",
+    "lat": 38.99591,
+    "lon": -5.52969,
     "access": null,
-    "osm": "way/834163030"
+    "osm": "way/693336283",
+    "m": 50
    },
    {
     "kind": "camp",
@@ -335,7 +668,44 @@
     "lat": 39.13681,
     "lon": -5.18354,
     "access": null,
-    "osm": "way/48359346"
+    "osm": "way/48359346",
+    "m": 110
+   },
+   {
+    "kind": "camp",
+    "name": "Camping Balcón de Orellana",
+    "lat": 38.99551,
+    "lon": -5.52512,
+    "access": null,
+    "osm": "way/834163030",
+    "m": 140
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.99454,
+    "lon": -5.52454,
+    "access": null,
+    "osm": "way/834163037",
+    "m": 60
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.98423,
+    "lon": -5.53247,
+    "access": "yes",
+    "osm": "way/374996530",
+    "m": 70
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 39.13987,
+    "lon": -5.18416,
+    "access": null,
+    "osm": "node/8614089447",
+    "m": 110
    }
   ],
   "Riaño": [
@@ -345,7 +715,8 @@
     "lat": 42.97325,
     "lon": -5.00181,
     "access": null,
-    "osm": "node/2678013863"
+    "osm": "node/2678013863",
+    "m": 30
    },
    {
     "kind": "camp",
@@ -353,7 +724,129 @@
     "lat": 42.97614,
     "lon": -4.99808,
     "access": "yes",
-    "osm": "way/53043883"
+    "osm": "way/53043883",
+    "m": 380
+   },
+   {
+    "kind": "motorhome",
+    "name": "Area de Autocaravanas de Riaño",
+    "lat": 42.97554,
+    "lon": -5.0034,
+    "access": null,
+    "osm": "node/14096204720",
+    "m": 60
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.96729,
+    "lon": -5.01868,
+    "access": "yes",
+    "osm": "way/969641812",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.9753,
+    "lon": -5.00352,
+    "access": "yes",
+    "osm": "way/996984795",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.9679,
+    "lon": -5.01883,
+    "access": "yes",
+    "osm": "way/283358468",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.97459,
+    "lon": -5.01249,
+    "access": null,
+    "osm": "node/5630272222",
+    "m": 70
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.97595,
+    "lon": -5.00652,
+    "access": null,
+    "osm": "node/5552380348",
+    "m": 160
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.97135,
+    "lon": -4.93753,
+    "access": null,
+    "osm": "node/11148455323",
+    "m": 170
+   }
+  ],
+  "Santa Teresa": [
+   {
+    "kind": "motorhome",
+    "name": "Área de Autocaravanas de Salvatierra de Tormes",
+    "lat": 40.5877,
+    "lon": -5.59853,
+    "access": null,
+    "osm": "node/13703676966",
+    "m": 70
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.66682,
+    "lon": -5.59799,
+    "access": "yes",
+    "osm": "way/1081357236",
+    "m": 70
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.58839,
+    "lon": -5.59866,
+    "access": null,
+    "osm": "node/13703677588",
+    "m": 130
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.58834,
+    "lon": -5.59844,
+    "access": null,
+    "osm": "node/13703676909",
+    "m": 130
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 40.5887,
+    "lon": -5.59795,
+    "access": null,
+    "osm": "node/6347237742",
+    "m": 150
+   }
+  ],
+  "Yesa": [
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 42.58871,
+    "lon": -1.07672,
+    "access": null,
+    "osm": "node/1667428968",
+    "m": 230
    }
   ],
   "Aguilar": [
@@ -363,7 +856,8 @@
     "lat": 42.78841,
     "lon": -4.30168,
     "access": null,
-    "osm": "way/366309265"
+    "osm": "way/366309265",
+    "m": 70
    },
    {
     "kind": "camp",
@@ -371,7 +865,53 @@
     "lat": 42.78511,
     "lon": -4.30066,
     "access": "customers",
-    "osm": "way/366315281"
+    "osm": "way/366315281",
+    "m": 310
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.80893,
+    "lon": -4.28447,
+    "access": null,
+    "osm": "node/10282104721",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.80004,
+    "lon": -4.2885,
+    "access": null,
+    "osm": "way/713003356",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.80955,
+    "lon": -4.2857,
+    "access": null,
+    "osm": "node/10282104720",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": "Fuente De Los Cinco Caños",
+    "lat": 42.79532,
+    "lon": -4.28562,
+    "access": null,
+    "osm": "node/4942613803",
+    "m": 120
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.78648,
+    "lon": -4.30201,
+    "access": null,
+    "osm": "node/8900822017",
+    "m": 230
    }
   ],
   "Viñuela, La": [
@@ -381,7 +921,84 @@
     "lat": 36.87405,
     "lon": -4.18511,
     "access": null,
-    "osm": "way/396763003"
+    "osm": "way/396763003",
+    "m": 210
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 36.86524,
+    "lon": -4.15533,
+    "access": "yes",
+    "osm": "way/425098819",
+    "m": 220
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 36.90264,
+    "lon": -4.1817,
+    "access": null,
+    "osm": "way/423930227",
+    "m": 250
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 36.86447,
+    "lon": -4.15742,
+    "access": "permissive",
+    "osm": "node/10780034637",
+    "m": 180
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 36.87388,
+    "lon": -4.1848,
+    "access": null,
+    "osm": "node/13302537232",
+    "m": 200
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 36.87392,
+    "lon": -4.18511,
+    "access": "customers",
+    "osm": "node/13302577001",
+    "m": 230
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 36.8652,
+    "lon": -4.15518,
+    "access": null,
+    "osm": "node/10853306982",
+    "m": 230
+   }
+  ],
+  "Peñarroya": [
+   {
+    "kind": "motorhome",
+    "name": "Parking Autocaravanas \"Castillo Peñarroya\"",
+    "lat": 39.06304,
+    "lon": -3.00793,
+    "access": null,
+    "osm": "node/11682283070",
+    "m": 240
+   }
+  ],
+  "Ordunte": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 43.16121,
+    "lon": -3.28238,
+    "access": "yes",
+    "osm": "way/415155982",
+    "m": 20
    }
   ],
   "Ulldecona": [
@@ -391,7 +1008,26 @@
     "lat": 40.67359,
     "lon": 0.23056,
     "access": null,
-    "osm": "node/482849459"
+    "osm": "node/482849459",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.66965,
+    "lon": 0.22474,
+    "access": null,
+    "osm": "way/712986642",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.67083,
+    "lon": 0.23068,
+    "access": null,
+    "osm": "way/981234364",
+    "m": 20
    }
   ],
   "Cazalegas": [
@@ -401,7 +1037,8 @@
     "lat": 40.01291,
     "lon": -4.69446,
     "access": null,
-    "osm": "way/655035632"
+    "osm": "way/655035632",
+    "m": 220
    }
   ],
   "La Serena": [
@@ -411,7 +1048,8 @@
     "lat": 38.95601,
     "lon": -5.25536,
     "access": null,
-    "osm": "node/5308823652"
+    "osm": "node/5308823652",
+    "m": 0
    },
    {
     "kind": "beach",
@@ -419,7 +1057,8 @@
     "lat": 38.94107,
     "lon": -5.22642,
     "access": null,
-    "osm": "way/1002357341"
+    "osm": "way/1002357341",
+    "m": 30
    },
    {
     "kind": "beach",
@@ -427,7 +1066,26 @@
     "lat": 38.83052,
     "lon": -5.1103,
     "access": null,
-    "osm": "way/366909862"
+    "osm": "way/366909862",
+    "m": 40
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.9409,
+    "lon": -5.2271,
+    "access": "yes",
+    "osm": "way/892493916",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.9373,
+    "lon": -5.21055,
+    "access": null,
+    "osm": "way/1041753520",
+    "m": 40
    },
    {
     "kind": "ramp",
@@ -435,7 +1093,8 @@
     "lat": 38.95669,
     "lon": -5.25452,
     "access": "yes",
-    "osm": "way/1028820286"
+    "osm": "way/1028820286",
+    "m": 20
    },
    {
     "kind": "ramp",
@@ -443,7 +1102,46 @@
     "lat": 38.94115,
     "lon": -5.22633,
     "access": "yes",
-    "osm": "way/1028820287"
+    "osm": "way/1028820287",
+    "m": 40
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 38.95607,
+    "lon": -5.25572,
+    "access": null,
+    "osm": "way/571636854",
+    "m": 20
+   }
+  ],
+  "Almendra": [
+   {
+    "kind": "motorhome",
+    "name": "Área de Autocaravanas Villaseco de Salce",
+    "lat": 41.26849,
+    "lon": -6.21921,
+    "access": "yes",
+    "osm": "way/940934597",
+    "m": 280
+   },
+   {
+    "kind": "motorhome",
+    "name": "Àrea d'autocaravanes de Ledesma, Salamanca",
+    "lat": 41.09,
+    "lon": -6.00455,
+    "access": null,
+    "osm": "way/1237096419",
+    "m": 430
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.09298,
+    "lon": -5.99854,
+    "access": null,
+    "osm": "way/699837474",
+    "m": 90
    }
   ],
   "Buendía": [
@@ -453,7 +1151,35 @@
     "lat": 40.40726,
     "lon": -2.77664,
     "access": null,
-    "osm": "way/578658525"
+    "osm": "way/578658525",
+    "m": 190
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.40045,
+    "lon": -2.78432,
+    "access": null,
+    "osm": "way/1301675897",
+    "m": 80
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 40.40055,
+    "lon": -2.78405,
+    "access": null,
+    "osm": "way/1370917467",
+    "m": 80
+   },
+   {
+    "kind": "parking",
+    "name": "Aparcamiento Ruta de Las Caras",
+    "lat": 40.40226,
+    "lon": -2.75533,
+    "access": "yes",
+    "osm": "node/13159241757",
+    "m": 210
    }
   ],
   "Mequinenza": [
@@ -463,7 +1189,8 @@
     "lat": 41.25224,
     "lon": -0.05014,
     "access": null,
-    "osm": "way/554993521"
+    "osm": "way/554993521",
+    "m": 20
    },
    {
     "kind": "camp",
@@ -471,15 +1198,26 @@
     "lat": 41.29296,
     "lon": 0.06316,
     "access": null,
-    "osm": "way/132641843"
+    "osm": "way/132641843",
+    "m": 170
    },
    {
-    "kind": "ramp",
-    "name": "Embarcadereo Mediano Cero",
-    "lat": 41.25977,
-    "lon": -0.01792,
+    "kind": "parking",
+    "name": null,
+    "lat": 41.25191,
+    "lon": -0.04974,
     "access": null,
-    "osm": "way/460231932"
+    "osm": "way/484897821",
+    "m": 0
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.36504,
+    "lon": 0.26884,
+    "access": null,
+    "osm": "way/1041761141",
+    "m": 60
    },
    {
     "kind": "ramp",
@@ -487,15 +1225,8 @@
     "lat": 41.31763,
     "lon": 0.09084,
     "access": null,
-    "osm": "way/460232388"
-   },
-   {
-    "kind": "ramp",
-    "name": "Embarcadero de Chipriana",
-    "lat": 41.27587,
-    "lon": -0.13715,
-    "access": null,
-    "osm": "way/460155974"
+    "osm": "way/460232388",
+    "m": 0
    },
    {
     "kind": "ramp",
@@ -503,7 +1234,8 @@
     "lat": 41.29552,
     "lon": 0.06239,
     "access": null,
-    "osm": "node/1459541811"
+    "osm": "node/1459541811",
+    "m": 0
    },
    {
     "kind": "ramp",
@@ -511,7 +1243,17 @@
     "lat": 41.25233,
     "lon": -0.04962,
     "access": null,
-    "osm": "node/7508843270"
+    "osm": "node/7508843270",
+    "m": 0
+   },
+   {
+    "kind": "ramp",
+    "name": "Embarcadereo Mediano Cero",
+    "lat": 41.25977,
+    "lon": -0.01792,
+    "access": null,
+    "osm": "way/460231932",
+    "m": 20
    },
    {
     "kind": "ramp",
@@ -519,7 +1261,17 @@
     "lat": 41.27499,
     "lon": -0.1413,
     "access": null,
-    "osm": "way/460229465"
+    "osm": "way/460229465",
+    "m": 20
+   },
+   {
+    "kind": "ramp",
+    "name": "Embarcadero de Chipriana",
+    "lat": 41.27587,
+    "lon": -0.13715,
+    "access": null,
+    "osm": "way/460155974",
+    "m": 40
    }
   ],
   "Ricobayo": [
@@ -529,7 +1281,8 @@
     "lat": 41.53815,
     "lon": -5.98187,
     "access": "yes",
-    "osm": "node/9953475634"
+    "osm": "node/9953475634",
+    "m": 20
    },
    {
     "kind": "beach",
@@ -537,7 +1290,8 @@
     "lat": 41.59461,
     "lon": -5.92251,
     "access": null,
-    "osm": "node/14098547001"
+    "osm": "node/14098547001",
+    "m": 0
    },
    {
     "kind": "beach",
@@ -545,7 +1299,8 @@
     "lat": 41.53808,
     "lon": -5.98223,
     "access": null,
-    "osm": "way/366319368"
+    "osm": "way/366319368",
+    "m": 10
    },
    {
     "kind": "beach",
@@ -553,7 +1308,8 @@
     "lat": 41.61191,
     "lon": -5.9159,
     "access": null,
-    "osm": "way/402114560"
+    "osm": "way/402114560",
+    "m": 10
    },
    {
     "kind": "boats",
@@ -561,23 +1317,53 @@
     "lat": 41.53992,
     "lon": -5.98169,
     "access": null,
-    "osm": "node/3702946390"
+    "osm": "node/3702946390",
+    "m": 40
    },
    {
-    "kind": "ramp",
-    "name": null,
-    "lat": 41.70172,
-    "lon": -5.80972,
+    "kind": "motorhome",
+    "name": "Area de Autocaravanas Ricobayo",
+    "lat": 41.53772,
+    "lon": -5.98141,
     "access": null,
-    "osm": "way/366353601"
+    "osm": "node/11879504478",
+    "m": 30
    },
    {
-    "kind": "ramp",
+    "kind": "motorhome",
     "name": null,
-    "lat": 41.61194,
-    "lon": -5.91409,
+    "lat": 41.65092,
+    "lon": -5.80884,
     "access": null,
-    "osm": "way/513605214"
+    "osm": "node/11031961826",
+    "m": 90
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.53781,
+    "lon": -5.98176,
+    "access": null,
+    "osm": "way/366349461",
+    "m": 10
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.52614,
+    "lon": -5.98476,
+    "access": "yes",
+    "osm": "way/696825635",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.53765,
+    "lon": -5.97224,
+    "access": "yes",
+    "osm": "way/366349354",
+    "m": 40
    },
    {
     "kind": "ramp",
@@ -585,7 +1371,44 @@
     "lat": 41.53789,
     "lon": -5.982,
     "access": null,
-    "osm": "way/648563304"
+    "osm": "way/648563304",
+    "m": 10
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.70172,
+    "lon": -5.80972,
+    "access": null,
+    "osm": "way/366353601",
+    "m": 20
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 41.61194,
+    "lon": -5.91409,
+    "access": null,
+    "osm": "way/513605214",
+    "m": 20
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 41.53757,
+    "lon": -5.98275,
+    "access": "yes",
+    "osm": "node/9953518440",
+    "m": 80
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 41.59439,
+    "lon": -5.92356,
+    "access": null,
+    "osm": "node/9624175764",
+    "m": 20
    }
   ],
   "Alarcón": [
@@ -595,7 +1418,8 @@
     "lat": 39.70112,
     "lon": -2.25352,
     "access": null,
-    "osm": "node/7609677531"
+    "osm": "node/7609677531",
+    "m": 130
    }
   ],
   "Belesar": [
@@ -605,25 +1429,129 @@
     "lat": 42.80729,
     "lon": -7.60758,
     "access": null,
-    "osm": "way/1420726848"
+    "osm": "way/1420726848",
+    "m": 140
+   },
+   {
+    "kind": "motorhome",
+    "name": "Área de Autocaravanas de Portomarín",
+    "lat": 42.80664,
+    "lon": -7.61772,
+    "access": null,
+    "osm": "way/542598478",
+    "m": 160
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.81747,
+    "lon": -7.60542,
+    "access": null,
+    "osm": "way/1000273620",
+    "m": 200
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.81812,
+    "lon": -7.60537,
+    "access": null,
+    "osm": "way/1000273621",
+    "m": 210
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 42.80738,
+    "lon": -7.6083,
+    "access": null,
+    "osm": "way/1420726849",
+    "m": 160
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.62594,
+    "lon": -7.71396,
+    "access": null,
+    "osm": "node/14051750001",
+    "m": 150
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.80632,
+    "lon": -7.61673,
+    "access": null,
+    "osm": "node/796758877",
+    "m": 170
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.80728,
+    "lon": -7.61459,
+    "access": null,
+    "osm": "node/11101583827",
+    "m": 220
+   }
+  ],
+  "Tranco de Beas": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.17985,
+    "lon": -2.75375,
+    "access": null,
+    "osm": "way/1118668984",
+    "m": 40
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 38.08687,
+    "lon": -2.81481,
+    "access": null,
+    "osm": "way/388329645",
+    "m": 60
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 38.1213,
+    "lon": -2.80619,
+    "access": null,
+    "osm": "node/11913123115",
+    "m": 190
    }
   ],
   "Mediano": [
-   {
-    "kind": "camp",
-    "name": "Camping 1º de Mayo",
-    "lat": 42.37664,
-    "lon": 0.15251,
-    "access": null,
-    "osm": "way/485475539"
-   },
    {
     "kind": "camp",
     "name": null,
     "lat": 42.37626,
     "lon": 0.15594,
     "access": null,
-    "osm": "way/436017332"
+    "osm": "way/436017332",
+    "m": 110
+   },
+   {
+    "kind": "camp",
+    "name": "Camping 1º de Mayo",
+    "lat": 42.37664,
+    "lon": 0.15251,
+    "access": null,
+    "osm": "way/485475539",
+    "m": 340
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.37494,
+    "lon": 0.15252,
+    "access": "yes",
+    "osm": "way/434887716",
+    "m": 150
    }
   ],
   "Atazar, El": [
@@ -633,25 +1561,28 @@
     "lat": 40.92,
     "lon": -3.53286,
     "access": null,
-    "osm": "way/91119625"
+    "osm": "way/91119625",
+    "m": 110
    }
   ],
   "Itoiz": [
-   {
-    "kind": "beach",
-    "name": "Artziko hondartza",
-    "lat": 42.86343,
-    "lon": -1.37673,
-    "access": null,
-    "osm": "way/1079761868"
-   },
    {
     "kind": "beach",
     "name": "Nagoreko hondartza",
     "lat": 42.85795,
     "lon": -1.37471,
     "access": null,
-    "osm": "node/12033902529"
+    "osm": "node/12033902529",
+    "m": 10
+   },
+   {
+    "kind": "beach",
+    "name": "Artziko hondartza",
+    "lat": 42.86343,
+    "lon": -1.37673,
+    "access": null,
+    "osm": "way/1079761868",
+    "m": 20
    },
    {
     "kind": "beach",
@@ -659,7 +1590,26 @@
     "lat": 42.85265,
     "lon": -1.37453,
     "access": null,
-    "osm": "way/1079761870"
+    "osm": "way/1079761870",
+    "m": 40
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.80141,
+    "lon": -1.36437,
+    "access": null,
+    "osm": "way/1299104132",
+    "m": 20
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.85767,
+    "lon": -1.3753,
+    "access": null,
+    "osm": "way/1299101636",
+    "m": 70
    },
    {
     "kind": "ramp",
@@ -667,7 +1617,35 @@
     "lat": 42.85723,
     "lon": -1.37393,
     "access": null,
-    "osm": "way/1299101657"
+    "osm": "way/1299101657",
+    "m": 0
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.85154,
+    "lon": -1.3759,
+    "access": null,
+    "osm": "node/11447084858",
+    "m": 10
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.85194,
+    "lon": -1.37454,
+    "access": null,
+    "osm": "node/14094595011",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 42.85291,
+    "lon": -1.37586,
+    "access": "yes",
+    "osm": "node/12117363555",
+    "m": 140
    }
   ],
   "Contreras": [
@@ -677,7 +1655,8 @@
     "lat": 39.55256,
     "lon": -1.47504,
     "access": null,
-    "osm": "way/329004507"
+    "osm": "way/329004507",
+    "m": 190
    },
    {
     "kind": "camp",
@@ -685,7 +1664,28 @@
     "lat": 39.54086,
     "lon": -1.50863,
     "access": null,
-    "osm": "node/5147105024"
+    "osm": "node/5147105024",
+    "m": 340
+   }
+  ],
+  "Barrios de Luna": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.86789,
+    "lon": -5.88345,
+    "access": "yes",
+    "osm": "way/23442830",
+    "m": 170
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 42.86857,
+    "lon": -5.88433,
+    "access": "yes",
+    "osm": "node/10284218976",
+    "m": 190
    }
   ],
   "Cuerda del Pozo": [
@@ -695,15 +1695,8 @@
     "lat": 41.85288,
     "lon": -2.78217,
     "access": null,
-    "osm": "relation/18319246"
-   },
-   {
-    "kind": "boats",
-    "name": "Embarcadero Club náutico",
-    "lat": 41.87296,
-    "lon": -2.71287,
-    "access": null,
-    "osm": "node/2320339490"
+    "osm": "relation/18319246",
+    "m": 30
    },
    {
     "kind": "boats",
@@ -711,7 +1704,17 @@
     "lat": 41.84045,
     "lon": -2.77614,
     "access": null,
-    "osm": "node/4300804135"
+    "osm": "node/4300804135",
+    "m": 0
+   },
+   {
+    "kind": "boats",
+    "name": "Embarcadero Club náutico",
+    "lat": 41.87296,
+    "lon": -2.71287,
+    "access": null,
+    "osm": "node/2320339490",
+    "m": 10
    },
    {
     "kind": "camp",
@@ -719,7 +1722,35 @@
     "lat": 41.84178,
     "lon": -2.77995,
     "access": null,
-    "osm": "way/366389272"
+    "osm": "way/366389272",
+    "m": 270
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.85006,
+    "lon": -2.77936,
+    "access": "yes",
+    "osm": "way/1336990635",
+    "m": 30
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.8533,
+    "lon": -2.78666,
+    "access": "yes",
+    "osm": "way/1336990629",
+    "m": 40
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.85316,
+    "lon": -2.78666,
+    "access": "yes",
+    "osm": "way/1336990630",
+    "m": 50
    },
    {
     "kind": "ramp",
@@ -727,7 +1758,8 @@
     "lat": 41.87326,
     "lon": -2.71318,
     "access": null,
-    "osm": "node/2320339505"
+    "osm": "node/2320339505",
+    "m": 0
    },
    {
     "kind": "ramp",
@@ -735,7 +1767,26 @@
     "lat": 41.84729,
     "lon": -2.77459,
     "access": null,
-    "osm": "node/256924273"
+    "osm": "node/256924273",
+    "m": 0
+   },
+   {
+    "kind": "toilets",
+    "name": "Baños púplicos",
+    "lat": 41.84716,
+    "lon": -2.77619,
+    "access": null,
+    "osm": "way/368543954",
+    "m": 110
+   },
+   {
+    "kind": "toilets",
+    "name": "Baños públicos",
+    "lat": 41.85157,
+    "lon": -2.78482,
+    "access": null,
+    "osm": "way/366388061",
+    "m": 120
    }
   ],
   "Santa Ana": [
@@ -745,7 +1796,26 @@
     "lat": 41.90716,
     "lon": 0.56495,
     "access": null,
-    "osm": "way/491773028"
+    "osm": "way/491773028",
+    "m": 340
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.89382,
+    "lon": 0.6072,
+    "access": null,
+    "osm": "way/305288253",
+    "m": 50
+   },
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 41.9002,
+    "lon": 0.6066,
+    "access": null,
+    "osm": "way/1287294570",
+    "m": 100
    }
   ],
   "Benagéber": [
@@ -755,7 +1825,44 @@
     "lat": 39.73348,
     "lon": -1.11569,
     "access": null,
-    "osm": "node/13094812701"
+    "osm": "node/13094812701",
+    "m": 30
+   },
+   {
+    "kind": "toilets",
+    "name": null,
+    "lat": 39.73281,
+    "lon": -1.11555,
+    "access": null,
+    "osm": "node/13094812401",
+    "m": 70
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 39.7333,
+    "lon": -1.11547,
+    "access": null,
+    "osm": "node/13094812601",
+    "m": 40
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 39.73356,
+    "lon": -1.11604,
+    "access": null,
+    "osm": "node/13094812301",
+    "m": 50
+   },
+   {
+    "kind": "water",
+    "name": null,
+    "lat": 39.73283,
+    "lon": -1.11556,
+    "access": null,
+    "osm": "node/13094812501",
+    "m": 70
    }
   ],
   "Sotonera": [
@@ -765,7 +1872,8 @@
     "lat": 42.10872,
     "lon": -0.70605,
     "access": null,
-    "osm": "node/8712306693"
+    "osm": "node/8712306693",
+    "m": 20
    },
    {
     "kind": "camp",
@@ -773,15 +1881,8 @@
     "lat": 42.10125,
     "lon": -0.69738,
     "access": null,
-    "osm": "way/393185766"
-   },
-   {
-    "kind": "ramp",
-    "name": null,
-    "lat": 42.1086,
-    "lon": -0.7056,
-    "access": null,
-    "osm": "way/1141582928"
+    "osm": "way/393185766",
+    "m": 70
    },
    {
     "kind": "ramp",
@@ -789,7 +1890,39 @@
     "lat": 42.10184,
     "lon": -0.6962,
     "access": null,
-    "osm": "way/393143355"
+    "osm": "way/393143355",
+    "m": 0
+   },
+   {
+    "kind": "ramp",
+    "name": null,
+    "lat": 42.1086,
+    "lon": -0.7056,
+    "access": null,
+    "osm": "way/1141582928",
+    "m": 10
+   }
+  ],
+  "San Rafael de Navallana": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 37.97628,
+    "lon": -4.65174,
+    "access": null,
+    "osm": "node/7786720222",
+    "m": 20
+   }
+  ],
+  "Finisterre": [
+   {
+    "kind": "parking",
+    "name": null,
+    "lat": 39.65089,
+    "lon": -3.65693,
+    "access": null,
+    "osm": "node/12988012701",
+    "m": 50
    }
   ]
  }

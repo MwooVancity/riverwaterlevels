@@ -314,7 +314,7 @@ def es_claims(h, rel, cache, today):
                     "%s: %s %s puntos" % (since.capitalize(), "ha subido" if r > 0 else "ha bajado", n1(abs(r))))
     need.append("estaba al " + pc(f["last_year"]) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior")
     if f["median"] is not None:
-        need += ["de %d años anteriores con dato, el llenado osciló entre el %s y el %s. En %d de esos" % (f["years"], pc(f["low"]), pc(f["high"]), f["below"]),
+        need += ["de %d años anteriores con dato%s, el llenado osciló entre el %s y el %s. En %d de esos" % (f["years"], " y capacidad comparable" if f["other_capacity"] else "", pc(f["low"]), pc(f["high"]), f["below"]),
                  "Mediana %s" % pc(f["median"])]
     bad = ["es: the page does not say what the data says: %r" % x for x in need if x not in t]
     big = re.search(r'font-size:2\.4rem[^>]*>(.*?)</p>', h)
@@ -329,7 +329,8 @@ def es_claims(h, rel, cache, today):
         bad.append("es: the weekly table differs from the data (a blank must read Desconocido; each row has its own capacity): %s" % next((g for g, w in zip(got, want) if g != w), len(got)))
     # month by month, worked out again here
     per = {}
-    for d, c, v in rows:
+    scale = [r for r in rows if r[1] and abs(r[1] / f["capacity"] - 1) <= 0.10]  # another capacity is another scale
+    for d, c, v in scale:
         if es_data.pct(c, v) is not None and f["date"].year - 10 <= d.year < f["date"].year:
             per.setdefault(d.month, {}).setdefault(d.year, []).append(es_data.pct(c, v))
 
@@ -347,6 +348,35 @@ def es_claims(h, rel, cache, today):
     got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", sec.group(1))] if sec else []
     if got != want:
         bad.append("es: the month-by-month table differs from the data")
+    if any(r[1] and es_data.pct(r[1], r[2]) is not None and abs(r[1] / f["capacity"] - 1) > 0.10 for r in rows if r[0] <= today) and "En otras fechas la fuente ha dado a este embalse una capacidad" not in t:
+        bad.append("es: the source changed this reservoir's capacity and the page does not say so")
+    for sid, since in (("es_grafico_1", f["date"] - datetime.timedelta(days=366)), ("es_grafico_10", f["date"].replace(year=f["date"].year - 10, day=min(f["date"].day, 28)))):
+        blk = re.search(r'(?s)id="%s".*?</section>' % sid, h)
+        if blk and any(r[0] >= since + datetime.timedelta(days=7) and es_data.pct(r[1], r[2]) is not None and abs(r[1] / f["capacity"] - 1) > 0.10 for r in rows) and "se movió entre" in blk.group(0):
+            bad.append("es: a chart sentence compares percents of two different capacities")
+    # the weeks after these dates, worked out again here
+    want = []
+    if not f["stale"] and 100.0 / f["capacity"] <= 5:
+        good = [r for r in scale if r[0] <= today and es_data.pct(r[1], r[2]) is not None]
+        for k in range(10, 0, -1):
+            try:
+                start = f["date"].replace(year=f["date"].year - k)
+            except ValueError:
+                start = f["date"].replace(year=f["date"].year - k, day=28)
+            got = []
+            for w in (0, 4, 8):
+                aim = start + datetime.timedelta(weeks=w)
+                c_ = [r for r in good if abs((r[0] - aim).days) <= 4]
+                if c_:
+                    r = min(c_, key=lambda r: abs((r[0] - aim).days))
+                    got.append(pc(100.0 * r[2] / r[1]))
+            if len(got) == 3:
+                want.append([str(start.year)] + got)
+        want = want if len(want) >= 8 else []
+    sec = re.search(r'(?s)id="es_despues".*?<tbody>(.*?)</tbody>', h)
+    got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", sec.group(1))] if sec else []
+    if got != want:
+        bad.append("es: the weeks-after table differs from the data")
     return bad + es_access_claims(h, names.get(u), today)
 
 

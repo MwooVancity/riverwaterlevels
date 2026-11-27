@@ -10,6 +10,7 @@ NEED = ("AMBITO_NOMBRE", "EMBALSE_NOMBRE", "FECHA", "AGUA_TOTAL", "AGUA_ACTUAL")
 MIN_ROWS = 500  # first sight of a reservoir: the real ranked 50 have 1,052 to 2,030 weeks (file of 2026-11-24)
 STALE_DAYS = 15  # weekly bulletin: a reading older than this is marked old and the later fill is called unknown
 SPIKE = 25.0  # percentage points of capacity
+CAP_TOL = 0.10  # a week whose capacity differs more than this from today's is on another scale: its percent is never compared (Contreras 852 -> 361 hm3)
 
 
 def hm3(text):
@@ -97,6 +98,27 @@ def pct(cap, vol):
     return 100.0 * vol / cap
 
 
+def comparable(rows, cap):
+    """The rows whose percent can be set beside a percent of today's capacity."""
+    return [r for r in rows if r[1] and abs(r[1] / cap - 1) <= CAP_TOL]
+
+
+def later(rows, day):
+    """For each of the 10 years before `day`: (year, fill that week, fill 4 weeks on, fill 8 weeks on), all three on today's scale.
+    A year missing any of the three is left out; fewer than 8 years gives None."""
+    good = [r for r in rows if r[0] <= day and pct(r[1], r[2]) is not None]
+    if not good:
+        return None
+    same = comparable(good, good[-1][1])
+    out = []
+    for k in range(10, 0, -1):
+        start = year_back(good[-1][0], k)
+        got = [near(same, start + datetime.timedelta(weeks=w)) for w in (0, 4, 8)]
+        if all(got):
+            out.append((start.year,) + tuple(pct(r[1], r[2]) for r in got))
+    return out if len(out) >= 8 else None
+
+
 def near(rows, day, window=4):
     """The row closest to `day` within `window` days, with a usable percent."""
     c = [r for r in rows if abs((r[0] - day).days) <= window and pct(r[1], r[2]) is not None]
@@ -117,25 +139,26 @@ def figures(rows, today):
         return None
     d, cap, vol = good[-1]
     now = pct(cap, vol)
-    past = [pct(r[1], r[2]) for r in (near(good, year_back(d, k)) for k in range(1, d.year - good[0][0].year + 1)) if r]
+    same = comparable(good, cap)
+    past = [pct(r[1], r[2]) for r in (near(same, year_back(d, k)) for k in range(1, d.year - good[0][0].year + 1)) if r]
 
     def change(days):
-        r = near(good, d - datetime.timedelta(days=days))
+        r = near(same, d - datetime.timedelta(days=days))
         return None if r is None else now - pct(r[1], r[2])
 
-    prior = near(good, year_back(d, 1))
+    prior = near(same, year_back(d, 1))
     return {"date": d, "capacity": cap, "volume": vol, "pct": now, "stale": (today - d).days > STALE_DAYS,
             "week_change": change(7), "month_change": change(28), "last_year": None if prior is None else pct(prior[1], prior[2]),
-            "years": len(past), "median": statistics.median(past) if len(past) >= 10 else None,
+            "other_capacity": sorted({r[1] for r in good if r[1] and abs(r[1] / cap - 1) > CAP_TOL}), "years": len(past), "median": statistics.median(past) if len(past) >= 10 else None,
             "low": min(past) if len(past) >= 10 else None, "high": max(past) if len(past) >= 10 else None,
             "below": sum(1 for p in past if p < now) if len(past) >= 10 else None}
 
 
-def monthly(rows, last_year):
+def monthly(rows, last_year, cap=None):
     """Month by month over the 10 whole years before `last_year`: [(month, median, low, high, years)] of each year's median fill in that month; low and high are the lowest and highest single weekly readings of that month.
     None unless every month has at least 8 of those years: a short or gappy record gives no 'usual year'."""
     got = {}
-    for d, c, v in rows:
+    for d, c, v in (comparable(rows, cap) if cap else rows):
         p = pct(c, v)
         if p is not None and last_year - 10 <= d.year < last_year:
             got.setdefault((d.month, d.year), []).append(p)
@@ -194,6 +217,13 @@ def selftest():
     two = monthly(wk + [(datetime.date(2020, 1, 22), 100.0, 3.0)], 2026)
     assert two[0][2] == 3.0, "a single low week was hidden behind its month's median"
     assert monthly([r for r in wk if not (r[0].month == 7 and r[0].year < 2019)], 2026) is None, "a month with 7 years gave a usual year"
+    cut = [(d, 400.0 if d.year < 2020 else 100.0, v) for d, c, v in wk]
+    assert monthly(cut, 2026, 100.0) is None, "years on another capacity got into the usual year"
+    ten = [(datetime.date(2016, 1, 5) + datetime.timedelta(weeks=k), 100.0, float(k % 50)) for k in range(570)]
+    lt = later(ten, ten[-1][0])
+    assert lt and len(lt) >= 8 and lt[0][0] < lt[-1][0] and all(len(r) == 4 for r in lt)
+    assert later(ten[-150:], ten[-1][0]) is None, "three years made a pattern"
+    assert later([(d, 400.0 if d.year < 2021 else 100.0, v) for d, c, v in ten], ten[-1][0]) is None, "another capacity was compared"
     print("es_data selftest OK")
 
 

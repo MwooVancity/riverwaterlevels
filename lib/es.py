@@ -103,6 +103,11 @@ def usual(f):
     return "near" if abs(d) < NEAR_USUAL else "above" if d > 0 else "below"
 
 
+def comparable_words(f):
+    """Appended to "años anteriores con dato" when weeks on another capacity were left out: the record is longer than the count."""
+    return " y capacidad comparable" if f["other_capacity"] else ""
+
+
 def sentence(f, today):
     """Always dated: a static copy must never say "this week"."""
     k, when = usual(f), "En la semana del %s" % day(f["date"])
@@ -110,7 +115,7 @@ def sentence(f, today):
         s = "%s estaba %s para esas fechas del año: %s, frente a una mediana del %s en %d años anteriores." % (
             when, {"above": "más lleno de lo habitual", "below": "más vacío de lo habitual", "near": "cerca de lo habitual"}[k], pc(f["pct"]), pc(f["median"]), f["years"])
     elif f["median"] is None:
-        s = "%s estaba al %s. Solo hay %d años anteriores con dato para esas fechas: con menos de 10 no calculamos qué es lo habitual." % (when, pc(f["pct"]), f["years"])
+        s = "%s estaba al %s. Solo hay %d años anteriores con dato%s para esas fechas: con menos de 10 no calculamos qué es lo habitual." % (when, pc(f["pct"]), f["years"], comparable_words(f))
     else:
         s = "%s estaba al %s. Es un embalse pequeño: 1 hm³ son %s puntos de llenado, así que no lo calificamos frente a lo habitual." % (when, pc(f["pct"]), num(100.0 / f["capacity"]))
     if f["week_change"] is not None and abs(f["week_change"]) > es_data.SPIKE:
@@ -152,7 +157,7 @@ def table(head, rows):
         "".join('<th scope="col">%s</th>' % h for h in head), "".join("<tr>%s</tr>" % "".join("<td>%s</td>" % c for c in r) for r in rows))
 
 
-def chart(sec_id, heading, rows, since, xfmt, name, updated):
+def chart(sec_id, heading, rows, since, xfmt, name, updated, cap):
     """Percent-full line, 0 to at least 100. A run of missing weeks breaks the line instead of being drawn across."""
     pts = [(r[0], es_data.pct(r[1], r[2])) for r in rows if r[0] >= since and es_data.pct(r[1], r[2]) is not None]
     if len(pts) < 8:
@@ -165,6 +170,9 @@ def chart(sec_id, heading, rows, since, xfmt, name, updated):
         runs[-1].append((datetime.datetime(d.year, d.month, d.day, 12, tzinfo=utc), v))
     lo, hi = min(pts, key=lambda p: p[1]), max(pts, key=lambda p: p[1])
     say = "Entre el %s y el %s, el llenado se movió entre el %s (%s) y el %s (%s)." % (day(pts[0][0]), day(pts[-1][0]), pc(lo[1]), short(lo[0]), pc(hi[1]), short(hi[0]))
+    window = [r for r in rows if r[0] >= since and es_data.pct(r[1], r[2]) is not None]
+    if len(es_data.comparable(window, cap)) < len(window):
+        say = "La fuente cambió la capacidad de este embalse dentro de este periodo: los porcentajes de antes y de después no se pueden comparar, así que no damos un mínimo ni un máximo del gráfico."
     aria = "Porcentaje de llenado del %s entre %s y %s" % (full_name(name).lower(), short(pts[0][0]), short(pts[-1][0]))
     svgs = "".join(river_svg([("", r) for r in runs], utc, w, h, fs, nx, cls, aria=aria, xfmt=xfmt, yr=(0, max(100.0, hi[1])), one=True) for w, h, fs, nx, cls in ((860, 260, 13, 6, "cw"), (360, 220, 12, 3, "cn")))
     return section(sec_id, heading, "<p>%s</p>%s<p class=\"sub\">Eje vertical: porcentaje de llenado.</p>" % (say, svgs), updated)
@@ -207,6 +215,7 @@ ACCESS = (("ramp", "Rampas para embarcaciones", "Rampa", "rampa para embarcacion
           ("beach", "Playas", "Playa", "playa", "playas"),
           ("boats", "Náutica: puertos, clubes y alquiler", "Instalación náutica", "punto de náutica", "puntos de náutica"),
           ("camp", "Campings y áreas de acampada cercanas", "Acampada", "camping o área de acampada", "campings o áreas de acampada"))
+SERVICES = (("parking", "Aparcamiento"), ("water", "Fuente de agua"), ("toilets", "Aseos"), ("motorhome", "Área de autocaravanas"))
 SHOWN = 6  # per group; the rest are counted
 ACCESS_NOTE = {"customers": "solo clientes", "permit": "con permiso"}
 
@@ -239,15 +248,59 @@ def access_section(name, today, data):
             esc(p["osm"]), esc(p["name"] or "%s sin nombre (%d)" % (label, unnamed.index(p) + 1)), " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
             for p in here[:SHOWN])
         lists += "<h3>%s</h3><ul>%s</ul>%s" % (heading, items, '<p class="sub">Y %d más marcados en el mapa.</p>' % (len(here) - SHOWN) if len(here) > SHOWN else "")
-    return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>Junto a este embalse o cerca de él, el mapa marca: %s. Cada enlace abre el sitio en el mapa.</p>%s'
-            '<p class="sub">Que un sitio esté en el mapa no indica que esté abierto, que tenga acceso público ni que se permita bañarse o navegar: compruébalo antes de ir. '
-            'Con el embalse bajo, una rampa o una orilla puede quedar lejos del agua. La lista puede estar incompleta.</p>'
+    items, kinds = "", []
+    for kind, label in SERVICES:
+        here = [p for p in places if p["kind"] == kind]
+        if here:
+            kinds.append(label.lower())
+        unnamed = [p for p in here if not p["name"]]
+        for p in here:
+            what = "%s: %s" % (label, p["name"]) if p["name"] else "%s sin nombre (%d)" % (label, unnamed.index(p) + 1)
+            items += '<li><a href="https://www.openstreetmap.org/%s" rel="noopener">%s</a>, %s en línea recta del contorno del agua en el mapa%s</li>' % (
+                esc(p["osm"]), esc(what), "a unos %d m" % p["m"] if p["m"] >= 10 else "a menos de 10 m", " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
+    if items:
+        lists += ('<h3>Servicios cerca del agua</h3><ul>%s</ul><p class="sub">Como mucho 3 de cada tipo, los más cercanos entre los editados en el mapa desde 2021. El camino real puede ser más largo.%s%s</p>') % (
+            items, " Una fuente puede estar seca o no ser potable." if "fuente de agua" in kinds else "",
+            " Que figure en el mapa no indica que sea gratis ni que se permita pernoctar." if {"aparcamiento", "área de autocaravanas"} & set(kinds) else "")
+    if not lists:
+        return ""
+
+    def joined(v):
+        return " y ".join([", ".join(v[:-1]), v[-1]] if len(v) > 1 else v)
+
+    lead = "Junto a este embalse o cerca de él, el mapa marca: %s. " % joined(counts) if counts else "Cerca del agua, el mapa marca estos tipos de servicio: %s. " % joined(kinds)
+    low = " Con el embalse bajo, una rampa o una orilla puede quedar lejos del agua." if counts else " Con el embalse bajo, el agua puede quedar más lejos."
+    return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>%sCada enlace abre el sitio en el mapa.</p>%s'
+            '<p class="sub">Que un sitio esté en el mapa no indica que esté abierto, que tenga acceso público ni que se permita bañarse o navegar: compruébalo antes de ir.%s '
+            'La lista puede estar incompleta.</p>'
             '<p class="src">Fuente: <a href="https://www.openstreetmap.org/copyright" rel="noopener">© colaboradores de OpenStreetMap</a> (licencia ODbL). Mapa consultado el %s.</p></section>') % (
-        " y ".join([", ".join(counts[:-1]), counts[-1]] if len(counts) > 1 else counts), lists, day(read))
+        lead, lists, low, day(read))
+
+
+def capacity_note(f):
+    """Said wherever a comparison dropped weeks measured against another capacity."""
+    if not f["other_capacity"]:
+        return ""
+    lo, hi = hm(f["other_capacity"][0]), hm(f["other_capacity"][-1])
+    was = "de %s hm³" % lo if lo == hi else "de entre %s y %s hm³" % (lo, hi)
+    return ('<p class="sub">En otras fechas la fuente ha dado a este embalse una capacidad %s (la actual es de %s hm³). Las comparaciones entre fechas usan solo las semanas con una capacidad '
+            'a menos del %d %% de la actual. Los gráficos muestran cada fecha con su propia capacidad.</p>') % (was, hm(f["capacity"]), round(es_data.CAP_TOL * 100))
+
+
+def later_section(f, rows, today, updated):
+    """What followed these dates in past years. No count of ups and downs: shifting the start week changes it, and past starts can be far from today's."""
+    lt = None if f["stale"] or coarse(f) else es_data.later(rows, today)
+    if not lt:
+        return ""
+    starts = [r[1] for r in lt]
+    say = ("Así evolucionó el embalse en las 8 semanas siguientes a estas fechas en %d de los 10 años anteriores. Aquellos años partían de entre el %s y el %s; "
+           "esta vez se parte del %s (%s). No es una previsión.") % (len(lt), pc(min(starts)), pc(max(starts)), pc(f["pct"]), day(f["date"]))
+    return section("es_despues", "Qué pasó después, otros años", "<p>%s</p>%s%s" % (
+        say, table(("Año de partida", "Esa semana", "4 semanas después", "8 semanas después"), [(str(y), pc(a), pc(b), pc(c)) for y, a, b, c in lt]), ""), updated)
 
 
 def month_section(f, rows, updated):
-    mo = es_data.monthly(rows, f["date"].year)
+    mo = es_data.monthly(rows, f["date"].year, f["capacity"])
     if not mo:
         return ""
     hi, lo = max(mo, key=lambda r: r[1]), min(mo, key=lambda r: r[1])
@@ -277,16 +330,17 @@ def reservoir(name, found, updated, today):
     body += access_section(name, today, access_data())
     ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
     if f["median"] is None:
-        past = "<p>%s</p><p>Hay %d años anteriores con dato para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"])
+        past = "<p>%s</p><p>Hay %d años anteriores con dato%s para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"], comparable_words(f))
     else:
-        past = ("<p>%s</p><p>En esta misma semana de %d años anteriores con dato, el llenado osciló entre el %s y el %s. En %d de esos %d años había un porcentaje menor que el del %s.</p>"
+        past = ("<p>%s</p><p>En esta misma semana de %d años anteriores con dato%s, el llenado osciló entre el %s y el %s. En %d de esos %d años había un porcentaje menor que el del %s.</p>"
                 '<p class="sub">%sLa mediana es el valor central de esos años.</p>%s') % (
-            ly, f["years"], pc(f["low"]), pc(f["high"]), f["below"], f["years"], day(f["date"]),
+            ly, f["years"], comparable_words(f), pc(f["low"]), pc(f["high"]), f["below"], f["years"], day(f["date"]),
             "" if coarse(f) else "Habitual significa a menos de %d puntos de la mediana (criterio propio). " % NEAR_USUAL,
             table(("Misma semana, años anteriores", "Llenado"), (("Mínimo", pc(f["low"])), ("Mediana", pc(f["median"])), ("Máximo", pc(f["high"])))))
-    body += section("es_anos", "La misma semana en otros años", past, updated)
-    body += chart("es_grafico_1", "Último año", rows, f["date"] - datetime.timedelta(days=366), "%m/%Y", name, updated)
-    body += chart("es_grafico_10", "Últimos 10 años", rows, es_data.year_back(f["date"], 10), "%Y", name, updated)
+    body += section("es_anos", "La misma semana en otros años", past + capacity_note(f), updated)
+    body += later_section(f, rows, today, updated)
+    body += chart("es_grafico_1", "Último año", rows, f["date"] - datetime.timedelta(days=366), "%m/%Y", name, updated, f["capacity"])
+    body += chart("es_grafico_10", "Últimos 10 años", rows, es_data.year_back(f["date"], 10), "%Y", name, updated, f["capacity"])
     body += month_section(f, rows, updated)
     last = [r for r in rows if r[0] <= today][-8:][::-1]
     body += section("es_historial", "Últimas semanas publicadas", "<p>Las %d últimas fechas del archivo, de la más reciente a la más antigua. Si un valor falta o no lo mostramos por incoherente (supera la capacidad en más de un 5 %%, o salta más de 25 puntos y vuelve a la semana siguiente), figura como Desconocido.</p>%s" % (

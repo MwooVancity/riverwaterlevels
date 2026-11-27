@@ -19,8 +19,13 @@ STOP = {"embalse", "de", "del", "la", "el", "los", "las", "pantano", "presa", "e
 PICK = {"San Juan": lambda e: e["bounds"]["minlat"] < 41,  # Tajo (Madrid); the other Embalse/Pantano de San Juan is on the Ebro side
         "Pena": lambda e: e["tags"].get("name") == "Embalse de Pena"}  # Teruel; 'Embalse de La Pena' (Huesca) is another reservoir
 FILTERS = ('["leisure"="slipway"]', '["leisure"~"^(bathing_place|swimming_area|marina)$"]', '["natural"="beach"]', '["amenity"="boat_rental"]',
-           '["sport"~"canoe|kayak|sailing|water_ski|rowing"]', '["tourism"="camp_site"]')
+           '["sport"~"canoe|kayak|sailing|water_ski|rowing"]', '["tourism"="camp_site"]',
+           '["amenity"~"^(parking|drinking_water|toilets)$"]', '["tourism"="caravan_site"]')
 NEAR_M, CAMP_M = 250, 500  # from the mapped water outline
+SERVICES = ("parking", "water", "toilets", "motorhome")
+SINCE = 2021  # a service object not edited since is left out: the 2009 car parks and kiosks are still on the map
+KEEP = 3  # the nearest of each service
+LOT_NOT = r"(?i)cine|aventura|hotel|hostal|restaurante|mercadillo|b[aá]scula|wanderpark|caravan|camper|autocaravana|privad|clientes"
 SPREAD = 0.35  # degrees: name matches further apart than this are different waters
 
 
@@ -44,6 +49,12 @@ def match(name, elements):
 
 
 def kind(t):
+    if t.get("amenity") in ("parking", "toilets"):
+        return t["amenity"]
+    if t.get("amenity") == "drinking_water":
+        return "water"
+    if t.get("tourism") == "caravan_site":
+        return "motorhome"
     if t.get("leisure") == "slipway":
         return "ramp"
     if t.get("leisure") in ("bathing_place", "swimming_area"):
@@ -59,7 +70,32 @@ def usable(t):
     return t.get("access") not in ("private", "no", "military") and not re.search(r"(?i)\bmilitar\b", t.get("name", ""))
 
 
-WRONG_NAME = {"camp": r"(?i)^(presa|club n[aá]utic)", "beach": r"(?i)^embarcadero$", "boats": r"(?i)de arousa"}  # review 2026-11-27: the name says it is not that kind of place, or not this place (Arousa is in Galicia)
+def service_ok(k, t, edited):
+    """A service is shown only when recently edited, open to the public as far as the tags say (an allow-list), and not marked unsafe or gone."""
+    if edited < SINCE or any(x.split(":")[0] in ("disused", "abandoned", "was", "closed") for x in t) or t.get("seasonal") not in (None, "no") or t.get("opening_hours") == "closed":
+        return False
+    if t.get("access") not in ((None, "yes", "permissive", "customers") if k in ("toilets", "water", "motorhome") else (None, "yes", "permissive")):
+        return False
+    if k == "water" and t.get("drinking_water") in ("no", "untreated"):
+        return False
+    if k == "parking" and (re.search(LOT_NOT, t.get("name", "")) or t.get("parking") in ("street_side", "lane") or t.get("motorcar") == "no"):
+        return False
+    return True
+
+
+def nearest(places):
+    """At most KEEP of each service, the nearest; other kinds are left whole."""
+    left, seen = [], {}
+    for g in sorted(places, key=lambda g: (g["kind"] in SERVICES and g["m"], g["kind"])):
+        if g["kind"] in SERVICES:
+            seen[g["kind"]] = seen.get(g["kind"], 0) + 1
+            if seen[g["kind"]] > KEEP:
+                continue
+        left.append(g)
+    return sorted(left, key=lambda g: (g["kind"], g.get("m", 0), not g["name"], g["name"] or "", g["osm"]))
+
+
+WRONG_NAME = {"camp": r"(?i)^(presa|club n[aá]utic)", "beach": r"(?i)^embarcadero$", "boats": r"(?i)de arousa", "motorhome": r"(?i)^playa"}  # review 2026-11-27: the name says it is not that kind of place, or not this place (Arousa is in Galicia)
 SAME_M = 300  # two map objects with one name this close are one place
 
 
@@ -76,6 +112,23 @@ def tidy(places):
 
 def metres(a, b):
     return 111200 * math.hypot(a[0] - b[0], (a[1] - b[1]) * math.cos(math.radians(a[0])))
+
+
+def off(p, lines):
+    """Metres from p to the nearest edge of the outline (lines: lists of corner points, in order)."""
+    k = math.cos(math.radians(p[0]))
+
+    def xy(q):
+        return 111200 * (q[1] - p[1]) * k, 111200 * (q[0] - p[0])
+
+    best = float("inf")
+    for line in lines:
+        pts = [xy(q) for q in line]
+        for (ax, ay), (bx, by) in zip(pts, pts[1:] or pts):
+            dx, dy = bx - ax, by - ay
+            t = max(0.0, min(1.0, -(ax * dx + ay * dy) / (dx * dx + dy * dy))) if dx or dy else 0.0
+            best = min(best, math.hypot(ax + t * dx, ay + t * dy))
+    return best
 
 
 def over(q):
@@ -101,16 +154,16 @@ def main():
         raise SystemExit("only %d of 50 matched: file left as it was" % len(found))
     ids = {t: [str(h["id"]) for hs in found.values() for h in hs if h["type"] == t] for t in ("way", "relation")}
     geo = over("[out:json][timeout:200];(%s);out geom;" % "".join("%s(id:%s);" % (t, ",".join(v)) for t, v in ids.items() if v))
-    shape = {(e["type"], e["id"]): [(p["lat"], p["lon"]) for p in e.get("geometry", [])] + [(p["lat"], p["lon"]) for m in e.get("members", []) for p in m.get("geometry", [])] for e in geo}
+    shape = {(e["type"], e["id"]): [[(p["lat"], p["lon"]) for p in part] for part in [e.get("geometry", [])] + [m.get("geometry", []) for m in e.get("members", [])] if part] for e in geo}
 
     def box(h):
         b = h["bounds"]
         return b["minlat"] - .006, b["minlon"] - .008, b["maxlat"] + .006, b["maxlon"] + .008
 
-    pois = over("[out:json][timeout:230];(%s);out center tags;" % "".join("nwr%s(%.4f,%.4f,%.4f,%.4f);" % ((f,) + box(h)) for hs in found.values() for h in hs for f in FILTERS))
+    pois = over("[out:json][timeout:230];(%s);out center meta;" % "".join("nwr%s(%.4f,%.4f,%.4f,%.4f);" % ((f,) + box(h)) for hs in found.values() for h in hs for f in FILTERS))
     out = {}
     for n, hs in found.items():
-        outline = [p for h in hs for p in shape.get((h["type"], h["id"]), [])]
+        outline = [line for h in hs for line in shape.get((h["type"], h["id"]), [])]
         if not outline:
             continue
         got = []
@@ -120,9 +173,12 @@ def main():
             if not usable(t) or not any(a <= p[0] <= x and b <= p[1] <= y for a, b, x, y in map(box, hs)):
                 continue
             k = kind(t)
-            if min(metres(p, q) for q in outline) <= (CAMP_M if k == "camp" else NEAR_M):  # ponytail: distance to outline corners, not edges; a straight shore with far corners can drop a point, never add one
-                got.append({"kind": k, "name": t.get("name"), "lat": round(p[0], 5), "lon": round(p[1], 5), "access": t.get("access"), "osm": "%s/%d" % (e["type"], e["id"])})
-        got = tidy(sorted(got, key=lambda g: (g["kind"], not g["name"], g["name"] or "", g["osm"])))
+            if k in SERVICES and not service_ok(k, t, int(e.get("timestamp", "0")[:4])):
+                continue
+            away = off(p, outline)
+            if away <= (CAMP_M if k in ("camp", "motorhome") else NEAR_M):
+                got.append({"kind": k, "name": t.get("name"), "lat": round(p[0], 5), "lon": round(p[1], 5), "access": t.get("access"), "osm": "%s/%d" % (e["type"], e["id"]), "m": int(round(away, -1))})
+        got = nearest(tidy(sorted(got, key=lambda g: (g["kind"], not g["name"], g["name"] or "", g["osm"]))))
         if got:
             out[n] = got
         b = hs[0]["bounds"]
@@ -156,6 +212,16 @@ def selftest():
     assert [(g["kind"], g["lat"]) for g in kept] == [("beach", 39.0), ("beach", 39.05), ("ramp", 39.0), ("ramp", 39.0001)], kept
     two = es.access_section("A", day, {"read_on": "2026-11-27", "reservoirs": {"A": [{"kind": "beach", "name": "X", "osm": "node/1", "access": None}, {"kind": "beach", "name": None, "osm": "node/2", "access": None}]}})
     assert "Playa sin nombre (1)" in two, "unnamed places are not numbered from 1"
+    assert service_ok("parking", {}, 2024) and not service_ok("parking", {}, 2009), "a 2009 car park passed"
+    for bad in ({"access": "customers"}, {"access": "residents"}, {"name": "Hotel Hospederia"}):
+        assert not service_ok("parking", bad, 2024), bad
+    assert not service_ok("water", {"drinking_water": "untreated"}, 2024) and not service_ok("toilets", {"disused:amenity": "toilets"}, 2024)
+    lots = [{"kind": "parking", "name": None, "osm": "node/%d" % i, "m": i * 10} for i in (9, 1, 5, 3)]
+    assert [g["m"] for g in nearest(lots)] == [10, 30, 50], "not the three nearest"
+    svc = es.access_section("A", day, {"read_on": "2026-11-27", "reservoirs": {"A": [{"kind": "water", "name": None, "osm": "node/3", "access": None, "m": 40}]}})
+    assert "a unos 40 m en línea recta" in svc and "mapa marca: ." not in svc and "potable" in svc and not check.es_access_claims(svc, "A", day, {"read_on": "2026-11-27", "reservoirs": {"A": [{"osm": "node/3"}]}})
+    side = [[(39.0, -2.0), (39.0, -1.99)]]
+    assert off((39.0009, -1.995), side) < 110, "distance was measured to the corners, not the shore"
     print("es_access selftest OK")
 
 
