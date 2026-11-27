@@ -218,3 +218,8 @@ RESULT 2026-11-25 READ-ONLY AUDIT WORKFLOW (4 parallel audits + merge, 5 agents,
 - TODO 3 lib/es.py: Spanish (Spain) page /es/embalse/<slug>/ + /es/ hub: lang="es", weekly stated with date, percent full, change 1 and 52 weeks, same week past years (median, range), 1-year and 10-year chart, source, provisional note. No ad slot until EU consent is settled; check what analytics tags do for EU visitors.
 - TODO 4 check.py/indexing/sitemap/breadcrumb support for /es/, fixtures, banned-English check, doorway census.
 - TODO 5 independent code review, phone shots read by a non-builder, data/reviewed.json, push, read live pages, open all 50 together.
+
+## SPAIN 50 WORKFLOW (owner 2026-11-26: "plan the workflow then deploy 50 pages")
+Order: A map (2 read-only agents in parallel: build/publish path; every gate that would fail or silently skip a Spanish page) > B build (sequential, one writer: collector + cloud wiring; pages + sources row + sitemap/indexing; gates + fixtures + edge tests) > C review (2 read-only in parallel: truth/code; Spanish reader + HCU + EU consent) > D one fix agent. No push inside. Then the session: independent check of the fix diff, review mark, push to check with /es/ noindex, cloud phone shots read by a non-builder, reviewed.json, push, read the live pages.
+Cost: about 7 agents, roughly 1M tokens. Cloud: the 10.4 MB zip is fetched only when its Last-Modified changes (weekly), not on each hourly refresh. At 375 reservoirs the same one download covers all.
+Edge cases: the list under "OWNER 2026-11-26" above; each is done only when a named test passes.
