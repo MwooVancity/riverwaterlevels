@@ -23,7 +23,7 @@ def es_edges():
     got = es_data.parse(lines, {"A"})[0]["A"]
     assert got[1][1:] == (1505.0, 752.5) and got[2][2] is None, "es edge: decimal comma misread, or a blank read as a number"
     f = es_data.figures(got, today)
-    assert f["date"] == datetime.date(2026, 11, 17) and f["pct"] == 50.0 and f["last_year"] == 50.0, "es edge: blank shown as 0, or another row's capacity used"
+    assert f["date"] == datetime.date(2026, 11, 17) and f["pct"] == 50.0 and f["last_year"] is None, "es edge: blank shown as 0, or a year on another capacity (1,000 vs 1,505 hm3) compared"
     # slug clash and accents
     slugs = [es.slug(n) for n in names]
     assert len(set(slugs)) == 50 and all(re.fullmatch(r"[a-z0-9-]+", x) for x in slugs) and es.slug("Iznájar") == "iznajar" and es.slug("Riaño") == "riano", "es edge: slug clash or a broken accent"

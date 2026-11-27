@@ -357,7 +357,7 @@ def reservoir(name, found, updated, today):
     body += boat_section(name, today, boat_data())
     ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
     if f["median"] is None:
-        past = "<p>%s</p><p>Hay %d años anteriores con dato%s para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"], comparable_words(f))
+        past = "<p>%s</p><p>Hay %d años anteriores con dato%s para esas fechas; hacen falta 10 para comparar.</p>" % (ly, f["years"], comparable_words(f))
     else:
         past = ("<p>%s</p><p>En esta misma semana de %d años anteriores con dato%s, el llenado osciló entre el %s y el %s. En %d de esos %d años había un porcentaje menor que el del %s.</p>"
                 '<p class="sub">%sLa mediana es el valor central de esos años.</p>%s') % (

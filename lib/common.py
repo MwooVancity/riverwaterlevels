@@ -260,7 +260,7 @@ ADSENSE = CONSENT + AD_LOADER + ANALYTICS[len(CONSENT):]  # consent, ad loader, 
 
 @__import__("functools").lru_cache(maxsize=1)
 def ad_slot():
-    """One Adsterra 300x250 display banner above the footer (owner 2026-11-24: "just do adsterra"); '' when data/adsterra.json has no valid key.
+    """One Adsterra 300x250 display banner under the reading on Now tabs, above the footer elsewhere (owner 2026-11-24: "just do adsterra"); '' when data/adsterra.json has no valid key.
     Space is reserved (no layout shift); the script loads only when the slot nears the screen, after the page; readers whose time zone is in Europe or the Atlantic
     (EEA, UK, Switzerland: no consent tool for this network) never load it. Same HTML for everyone: no user-agent or country test. Display banner only."""
     try:
@@ -273,7 +273,7 @@ def ad_slot():
     js = ('(function(){var a=document.getElementById("adsl"),b=document.getElementById("adsl-box"),z="";try{z=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}'
           'if(!a||!b||!("IntersectionObserver" in window)||z.indexOf("Europe/")==0||z.indexOf("Atlantic/")==0||z.indexOf("Arctic/")==0||"Asia/Nicosia Asia/Famagusta Africa/Ceuta Indian/Reunion Indian/Mayotte America/Guadeloupe America/Martinique America/Cayenne America/Marigot America/St_Barthelemy".indexOf(z)>-1&&z){if(a)a.style.display="none";return}'
           'new IntersectionObserver(function(e,o){if(!e[0].isIntersecting)return;o.disconnect();window.atOptions={key:"%s",format:"iframe",height:%d,width:%d,params:{}};'
-          'var s=document.createElement("script");s.src="%s";b.appendChild(s);setTimeout(function(){if(!b.querySelector("iframe"))a.style.display="none"},6000)},{rootMargin:"200px"}).observe(b)})()' % (k, h, w, src))
+          'var s=document.createElement("script");s.src="%s";b.appendChild(s);setTimeout(function(){if(!b.querySelector("iframe"))a.style.visibility="hidden"},6000)},{rootMargin:"200px"}).observe(b)})()' % (k, h, w, src))
     return ('<aside id="adsl" class="adsl" aria-label="Advertisement" style="min-height:%dpx;margin:20px auto;text-align:center"><small style="display:block;color:#666;font-size:12px">Advertisement</small><div id="adsl-box"></div></aside><script>%s</script>' % (h + 40, js))
 
 
