@@ -206,9 +206,9 @@ def reservoir(name, found, updated, today):
     vol, cap = hm(f["volume"]), hm(f["capacity"])
     head = ('<h1>%s</h1><p class="sub">Cuenca: %s</p><p class="answer"><span>%s</span></p>'
             '<div class="card"><p class="sub">%s</p><p style="font-size:2.4rem;font-weight:700;margin:0">%s</p><p><b>%s hm³ embalsados de %s hm³ de capacidad</b></p>'
-            '<p>Dato semanal del %s%s.</p><p class="sub">Pantano o embalse: 1 hm³ son %s puntos de llenado aquí.</p></div>') % (
+            '<p>Dato semanal del %s%s.</p></div>') % (
         esc(title_name), esc(basin), sentence(f, today), "Último porcentaje de llenado publicado" if f["stale"] else "Porcentaje de llenado", pc(f["pct"]), vol, cap, day(f["date"]),
-        " (dato antiguo: hace %d días)" % (today - f["date"]).days if f["stale"] else "", num(100.0 / f["capacity"]))
+        " (dato antiguo: hace %d días)" % (today - f["date"]).days if f["stale"] else "")
     body = section("es_cambios", "Cambio en 1 y 4 semanas",
                    "<p>%s</p><p>%s</p><p class=\"sub\">Contado hacia atrás desde el dato del %s.</p>" % (moved(f["week_change"], "en 1 semana"), moved(f["month_change"], "en 4 semanas"), day(f["date"])), updated)
     ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
