@@ -190,3 +190,9 @@ RESULT 2026-11-25 READ-ONLY AUDIT WORKFLOW (4 parallel audits + merge, 5 agents,
 - Known gap: Honolulu's coast page is in no list on /map/ (outside the picture, no state list).
 - Adsterra (read 11-25): 11-24 107 impressions $0.08; 11-25 partial 59, $0.04; CPM about $0.63-0.73; balance $2.64 (source unread). The banner serves.
 - LIVE 2026-11-27 UTC: /map/ open to Google. Read on the live site: no noindex tag, /map/ in sitemap.xml, new key present. Independent shot read PASS (run 45918360617). Polish left: dot separators in world lists, long grey key label.
+
+## 2026-11-26 Spanish demand check (Keyword Planner, owner's account, lookup only, no campaign)
+- Mexico, Spanish, Nov 2025-Oct 2026, 4 seeds, 9 ideas: top rows 100-1K ("nivel de presas", one Cutzamala dam idea); the other rows read were 10-100 or less (not every row read).
+- Spain, same seeds plus "embalses", 50 ideas, only the top 6 rows read: "embalses net" (a competitor's name) 10K-100K, "pantanos de ..." 10K-100K (name cut off; bid CA$0.54-2.51), several reservoir names 1K-10K. Several show -90% change: seasonal or news-driven, unchecked.
+- Search Console 90 days: Spanish-speaking countries 74 of 4,372 impressions.
+- DECIDED: no translation of US pages. Candidate: Spain reservoirs, only after (1) the rest of the 50 rows and named-reservoir volumes, (2) Spain's reservoir data reuse terms allow ads, (3) who ranks now, (4) ChatGPT debate (plan-changing).
