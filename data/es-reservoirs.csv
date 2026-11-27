@@ -1,0 +1,86 @@
+rank,name,basin,capacity_hm3,kwp_best_bucket,kwp_terms_at_1k_plus,kwp_read_on
+1,Sau,Cuencas Internas de Cataluña,165.0,10K-100K,2,2026-11-26
+2,San Juan,Tajo,138.0,10K-100K,2,2026-11-26
+3,Alloz,Ebro,66.0,10K-100K,2,2026-11-26
+4,Susqueda,Cuencas Internas de Cataluña,233.0,10K-100K,1,2026-11-26
+5,Valmayor,Tajo,124.0,10K-100K,1,2026-11-26
+6,Cijara,Guadiana,1505.0,1K-10K,2,2026-11-26
+7,Valdecañas,Tajo,1446.0,1K-10K,2,2026-11-26
+8,Iznájar,Guadalquivir,920.0,1K-10K,2,2026-11-26
+9,Alange,Guadiana,852.0,1K-10K,2,2026-11-26
+10,Entrepeñas,Tajo,813.0,1K-10K,2,2026-11-26
+11,Orellana,Guadiana,808.0,1K-10K,2,2026-11-26
+12,Riaño,Duero,641.0,1K-10K,2,2026-11-26
+13,Santa Teresa,Duero,496.0,1K-10K,2,2026-11-26
+14,Yesa,Ebro,447.0,1K-10K,2,2026-11-26
+15,Aguilar,Duero,247.0,1K-10K,2,2026-11-26
+16,Bornos,Guadalete-Barbate,200.0,1K-10K,2,2026-11-26
+17,"Viñuela, La",Cuenca Mediterránea Andaluza,165.0,1K-10K,2,2026-11-26
+18,Peñarroya,Guadiana,51.0,1K-10K,2,2026-11-26
+19,Ordunte,Cantábrico Oriental,22.0,1K-10K,2,2026-11-26
+20,Pena,Ebro,18.0,1K-10K,2,2026-11-26
+21,Guadalest,Júcar,13.0,1K-10K,2,2026-11-26
+22,Ulldecona,Júcar,11.0,1K-10K,2,2026-11-26
+23,Cazalegas,Tajo,7.0,1K-10K,2,2026-11-26
+24,Riudecanyes,Cuencas Internas de Cataluña,5.0,1K-10K,2,2026-11-26
+25,La Serena,Guadiana,3219.0,1K-10K,1,2026-11-26
+26,Almendra,Duero,2649.0,1K-10K,1,2026-11-26
+27,Buendía,Tajo,1705.0,1K-10K,1,2026-11-26
+28,Mequinenza,Ebro,1373.0,1K-10K,1,2026-11-26
+29,Ricobayo,Duero,1145.0,1K-10K,1,2026-11-26
+30,Alarcón,Júcar,1118.0,1K-10K,1,2026-11-26
+31,Belesar,Miño - Sil,655.0,1K-10K,1,2026-11-26
+32,Tranco de Beas,Guadalquivir,506.0,1K-10K,1,2026-11-26
+33,Cenajo,Segura,437.0,1K-10K,1,2026-11-26
+34,Mediano,Ebro,435.0,1K-10K,1,2026-11-26
+35,"Atazar, El",Tajo,426.0,1K-10K,1,2026-11-26
+36,Itoiz,Ebro,417.0,1K-10K,1,2026-11-26
+37,Contreras,Júcar,361.0,1K-10K,1,2026-11-26
+38,Bárcena,Miño - Sil,341.0,1K-10K,1,2026-11-26
+39,Porma-(Juan Benet),Duero,318.0,1K-10K,1,2026-11-26
+40,Barrios de Luna,Duero,311.0,1K-10K,1,2026-11-26
+41,Portodemouros,Galicia Costa,297.0,1K-10K,1,2026-11-26
+42,Cuerda del Pozo,Duero,249.0,1K-10K,1,2026-11-26
+43,Santa Ana,Ebro,237.0,1K-10K,1,2026-11-26
+44,Zahara-El Gastor,Guadalete-Barbate,223.0,1K-10K,1,2026-11-26
+45,Benagéber,Júcar,221.0,1K-10K,1,2026-11-26
+46,Fuensanta,Segura,210.0,1K-10K,1,2026-11-26
+47,Sotonera,Ebro,189.0,1K-10K,1,2026-11-26
+48,Alcorlo,Tajo,180.0,1K-10K,1,2026-11-26
+49,San Rafael de Navallana,Guadalquivir,160.0,1K-10K,1,2026-11-26
+50,Finisterre,Tajo,133.0,1K-10K,1,2026-11-26
+51,Rules,Cuenca Mediterránea Andaluza,111.0,1K-10K,1,2026-11-26
+52,Santillana,Tajo,91.0,1K-10K,1,2026-11-26
+53,Barasona,Ebro,85.0,1K-10K,1,2026-11-26
+54,Loriguilla,Júcar,73.0,1K-10K,1,2026-11-26
+55,Urrunaga,Ebro,72.0,1K-10K,1,2026-11-26
+56,Canales,Guadalquivir,70.0,1K-10K,1,2026-11-26
+57,Bellús,Júcar,69.0,1K-10K,1,2026-11-26
+58,Boadella,Cuencas Internas de Cataluña,61.0,1K-10K,1,2026-11-26
+59,Francisco Abellán,Guadalquivir,58.0,1K-10K,1,2026-11-26
+60,Beleña,Tajo,53.0,1K-10K,1,2026-11-26
+61,Sichar,Júcar,49.0,1K-10K,1,2026-11-26
+62,Colomera,Guadalquivir,40.0,1K-10K,1,2026-11-26
+63,Gasset,Guadiana,39.0,1K-10K,1,2026-11-26
+64,Pinilla,Tajo,38.0,1K-10K,1,2026-11-26
+65,Añarbe,Cantábrico Oriental,38.0,1K-10K,1,2026-11-26
+66,Forata,Júcar,37.0,1K-10K,1,2026-11-26
+67,Bolarque,Tajo,31.0,1K-10K,1,2026-11-26
+68,Beniarrés,Júcar,27.0,1K-10K,1,2026-11-26
+69,Santomera,Segura,26.0,1K-10K,1,2026-11-26
+70,Cecebre,Galicia Costa,22.0,1K-10K,1,2026-11-26
+71,Sobrón,Ebro,20.0,1K-10K,1,2026-11-26
+72,Villameca,Duero,19.0,1K-10K,1,2026-11-26
+73,Llauset,Ebro,17.0,1K-10K,1,2026-11-26
+74,Lanuza,Ebro,17.0,1K-10K,1,2026-11-26
+75,Vadiello,Ebro,16.0,1K-10K,1,2026-11-26
+76,Picadas,Tajo,15.0,1K-10K,1,2026-11-26
+77,Quéntar,Guadalquivir,14.0,1K-10K,1,2026-11-26
+78,Irabia,Ebro,14.0,1K-10K,1,2026-11-26
+79,Cubillas,Guadalquivir,14.0,1K-10K,1,2026-11-26
+80,Navacerrada,Tajo,11.0,1K-10K,1,2026-11-26
+81,Buseo,Júcar,8.0,1K-10K,1,2026-11-26
+82,"Jarosa, La",Tajo,7.0,1K-10K,1,2026-11-26
+83,Sallente,Ebro,6.0,1K-10K,1,2026-11-26
+84,Proserpina,Guadiana,5.0,1K-10K,1,2026-11-26
+85,Nagore,Ebro,5.0,1K-10K,1,2026-11-26
