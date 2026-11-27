@@ -184,6 +184,10 @@ def main():
             pass
         for c_ in (s.get("coverage") or {}).get("drops") or []:
             bad.append("blocks vanished: %s" % c_)
+        if "es_pages" in s:
+            from lib.es import short_report
+            es_ = short_report(s, datetime.date.today())
+            (bad if es_ else ok).append(es_ or "Spain reservoirs: %d pages, newest data %s" % (s["es_pages"], s.get("es_newest")))
         live = {r["site"] for r in csv.DictReader(open(os.path.join(ROOT, "data", "waves.csv"), encoding="utf-8")) if r["status"] == "live"}
         on = set(s.get("by_gauge") or {})
         missing = sorted(live - on)

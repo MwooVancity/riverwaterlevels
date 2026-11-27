@@ -14,15 +14,15 @@ BANNED = [r"(?<![\d.,])\b1 (?:gauges|rivers|years|days|hours|readings)\b",  # "V
           r"\bForecast page\b", r"\bsecond .{0,20}page\b", r"prototype", r"(?<!FERC )licen[cs]e(?!d under the Open Government| - Canada)", r"\bConf\b", r"\bSr\d{3,}", r"__[A-Z_]+__", r"\bundefined\b", r"\bNaN\b", r"\bNone\b", r"Unnamed [a-z ]*(boat ramp|fishing spot)", r"-?\b9{5,}\b", r"(?<!ZIP )(?<!\d)-?999\d{2,}\b", r"\b20\d\d-\d\d-\d\d[T ]\d\d:\d\d", r"&lt;/?[a-zA-Z]+[\s>&/]"]  # last: source HTML shown to the reader as text (NWS impact link, Clear Creek 2026-10-26)  # the last three (the ISO one: a raw machine timestamp shown to a reader; the other two: USGS sentinel values (-999999) must never be shown as readings)
 MAX_BYTES_MAP = 520_000  # /map/ raw HTML: about 200 bytes a dot, 2,500 dots; split the map by region before that (lib/directory.py map_page)
 MAX_BYTES = 260_000  # raw HTML; the reader limit is MAX_GZ (90 KB compressed). Raised 2026-10-21 for the camera, air-quality and recreation blocks (Roaring Fork 231 KB raw, 56 KB gzipped)
-BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "trust": 60, "status": 600, "map": 2500}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
+BUDGET = {"gauge": 125, "hub": 80, "state": 700, "home": 300, "world": 125, "country": 700, "es": 60, "eshub": 80, "trust": 60, "status": 600, "map": 2500}  # status 2026-10-25: the freshness dashboard links every gauge (69 at 53 gauges); own budget so it doesn't share the prose-page trust cap. At scale (~500+ gauges) the status page needs pagination - a known scale item, like the state 480-link ceiling.  # trust 40->60 2026-10-21 (footer "Add to your site" + status page); gauge 110->125 2026-10-23: new data blocks (stocking, UV, sustained flow, access points) each add source/record links on data-heavy gauges like the Potomac  # world 60->125 2026-11-05: a world gauge page is the same standard page as a US one (owner decision 2)
 NEIGHBOURS = 3  # census line only (owner 2026-11-09: no forced internal links; an isolated page links none and is reached through its hub)
-FLOOR = {"hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650, "map": 600}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing. Owner 2026-11-08: no thin gate on a water page (gauge, world): a different river or lake is never thin; the floor stays only on hubs and site pages, where it catches a broken empty template.
+FLOOR = {"hub": 700, "home": 1500, "trust": 300, "country": 300, "state": 650, "map": 600, "eshub": 600}  # min visible chars for an INDEXABLE page; a thinner indexable page reads as thin/near-duplicate to Google. State hubs carry statewide drought + NWS alerts + a conditions table (~1000+ chars); the 650 floor catches a genuinely broken/empty hub while tolerating a transient missing-drought blip. 2026-10-23: the long-tail thin-page guard the whole-project review flagged as missing. Owner 2026-11-08: no thin gate on a water page (gauge, world): a different river or lake is never thin; the floor stays only on hubs and site pages, where it catches a broken empty template.
 
 
 WORLD = {p["slug"] for p in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "world-pages.json"), encoding="utf-8"))}
 
 
-CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust", "map")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
+CARRYABLE = ("gauge", "world", "country", "hub", "state", "home", "status", "trust", "map", "es", "eshub")  # a failing page keeps its live copy and the rest ship (2026-11-03: one German ramp name held every page 3 h; readiness debate 2026-11-07: a hub or state page stopped the whole site, so every kind carries; a page with no live copy still stops it)
 
 
 def link_count(h):
@@ -49,6 +49,8 @@ def kind_of(rel):
         return "hub" if len(parts) == 3 else "gauge"
     if parts[0] in ("lake", "coast"):  # a lake page is a gauge page: every gauge check runs on it (review 2026-11-06)
         return "gauge"
+    if parts[0] == "es":  # Spain reservoirs, in Spanish (lib/es.py): /es/ is the hub, /es/embalse/<slug>/ a reservoir; es_rules judges both
+        return "es" if len(parts) > 2 else "eshub"
     return "trust"
 
 
@@ -118,13 +120,14 @@ def door_sig(h):
     Owner decision 4 (narrowed 2026-11-09): two places on one gauge are two pages, but one that is the other word for word with the name swapped is a doorway page."""
     gid = re.search(r'<p class="sub">([^<&]+?)\s*&middot;', h)  # every kind names its station first: "USGS gauge 06041000", "NOAA tide station 8443970", "Gauge 4091" (first draft read var ID: US rivers only, so the census said 0)
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", h, re.S)
+    gid = gid.group(1) if gid else "es" if re.search(r'<p class="sub">Cuenca: ', h) else None  # Spain reservoirs share one bucket: each is compared with all the others
     if not gid or not h1:
         return None
     own = set(re.findall(r"[a-z0-9]+", html.unescape(re.sub(r"<[^>]+>", " ", h1.group(1))).lower()))
     body = html.unescape(re.sub(r"<[^>]+>", " ", re.sub(r"<(script|style)[^>]*>.*?</\1>", " ", h, flags=re.S))).lower()
     w = [x for x in re.findall(r"[a-z]+", body) if x not in own]  # words only: the readings and times differ by build minute, not by page
     hs = [int(hashlib.md5(" ".join(w[i:i + 5]).encode()).hexdigest()[:8], 16) for i in range(max(1, len(w) - 4))]  # one md5 per shingle; the 64 hash functions are XOR salts (code review 2026-11-09: 64 md5s per shingle = billions at 14,000 pages)
-    return gid.group(1).strip(), tuple(min(x ^ salt for x in hs) for salt in DOOR_SALTS)
+    return gid.strip(), tuple(min(x ^ salt for x in hs) for salt in DOOR_SALTS)
 
 
 def door_pairs(door, cut=0.95):
@@ -185,7 +188,127 @@ def page_checks(h, rel):
     cp = os.path.join(ROOT, "cache", sid.group(1) + ".json") if sid else None
     if cp and os.path.exists(cp):
         out += claims_vs_cache(h, json.load(open(cp, encoding="utf-8")))
+    if kind_of(rel) in ("es", "eshub"):
+        out += es_rules(h, rel) + es_page_claims(h, rel)
     return out + ad_gaps(rel, h) + stats_gap(h) + datum_named(h, u) + lake_wording(h, u)
+
+
+ES_DATE = r"\d{1,2} de (?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre) de 20\d\d"
+ES_MONTHS = "enero febrero marzo abril mayo junio julio agosto septiembre octubre noviembre diciembre".split()
+ES_ENGLISH = r"\b(?:Source|Unknown|Skip to content|Not available|Rivers|About|Privacy|Terms|Updated|Today|today|reservoir|storage|gauge|weekly|cfs|ft|mph|acre|acre-ft|feet|inches)\b|°F"
+ES_VERDICT = r"(?i)\b(?:aptos?|aptas?) para\b|\bpeligros\w*|\bsegur[oa]s? (?:para|bañ|naveg|nadar)|\brecomend\w+|\bse puede (?:bañar|nadar|navegar|pescar)"
+
+
+def es_text(h):
+    """What a reader (or a screen reader) gets from a page: the visible words, the description and the aria labels."""
+    extra = re.findall(r'(?:aria-label|alt)="([^"]*)"', h) + re.findall(r'<meta (?:name="description"|property="og:(?:title|description|image:alt)") content="([^"]*)"', h)
+    t = re.sub(r"<[^>]+>", " ", re.sub(r"(?s)<(script|style)\b.*?</\1>", " ", h))
+    return re.sub(r"\s+", " ", html.unescape(t + " | " + " | ".join(extra)).replace("\xa0", " "))
+
+
+def es_rules(h, rel):
+    """Spain pages (PLAN 2026-11-26 edge cases): Spanish, weekly and dated, never shown as live, MITECO credited with its update date, no ad code,
+    no English or US units, Spanish number format, no verdicts. The numbers themselves: es_claims."""
+    bad = []
+    if '<html lang="es"' not in h:
+        bad.append("es: page is not marked lang=es")
+    if re.search(r'adsbygoogle|pagead2|id="adsl"|adsterra|doubleclick', h, re.I):
+        bad.append("es: ad code on a Spain page (no ad script until EU consent is settled)")
+    if "googletagmanager" in h and not -1 < h.find('gtag("consent","default"') < h.find("googletagmanager"):
+        bad.append("es: analytics before the consent defaults")
+    text = es_text(h)
+    claim = text.replace("No son una medida en directo", "")  # the one sentence that says what the data is not
+    m = re.search(r"(?i)\ben directo\b|\btiempo real\b|\bahora\b|\bhoy\b|\ben vivo\b|\bactualmente\b", claim)
+    if m or "data-live" in h:
+        bad.append("es: weekly data shown as live (%r)" % (m.group(0) if m else "data-live"))
+    if not re.search(r"(?i)dato semanal", text) or not re.search(ES_DATE, text):
+        bad.append("es: the page does not say the data is weekly, with its date")
+    if not re.search(r"Fuente: MITECO, Boletín Hidrológico", text) or not re.search(r"Archivo actualizado por la fuente el " + ES_DATE, text):
+        bad.append("es: MITECO credit or the file's last-update date missing")
+    m = re.search(ES_ENGLISH, text.replace("River Water Levels", " "))
+    if m:
+        bad.append("es: English or a US unit on a Spanish page: %r" % m.group(0))
+    m = re.search(r"\d\.\d{1,2}(?![\d.])\s*(?:%|hm)", text)
+    if m:
+        bad.append("es: a number with a decimal point, not a decimal comma: %r" % m.group(0))
+    m = re.search(r"(?<![\w,.])[-−]0(?:,0+)?(?![\d,])\s*(?:%|hm|puntos)", text)
+    if m:
+        bad.append("es: negative zero %r" % m.group(0))
+    m = re.search(ES_VERDICT, text)
+    if m:
+        bad.append("es: a verdict in Spanish: %r" % m.group(0))
+    if '"BreadcrumbList"' not in h:
+        bad.append("es: no breadcrumb markup")
+    if len(gzip.compress(h.encode("utf-8"), 6)) > MAX_GZ:
+        bad.append("es: over %d KB compressed" % (MAX_GZ // 1000))
+    return bad
+
+
+def es_claims(h, rel, cache, today):
+    """Every figure a Spain page prints equals lib/es_data.figures on the cached file. Formatted here on purpose, not with lib/es.py, so a formatter fault shows."""
+    from lib import render  # noqa: F401  (build import order)
+    from lib import es, es_data
+    data = es_data.unpack(cache)[0]
+    names = {es.url_of(n): n for n in es.top_names()}
+    t = es_text(h)
+
+    def n1(v):
+        return "Desconocido" if v is None else "{:,.1f}".format(round(v, 1) + 0.0).replace(",", " ").replace(".", ",").replace(" ", ".")
+
+    def pc(v):
+        return "Desconocido" if v is None else n1(v) + " %"
+
+    def dm(d):
+        return "%02d/%02d/%d" % (d.day, d.month, d.year)
+
+    if kind_of(rel) == "eshub":
+        rows = re.findall(r'<tr><td><a href="(/es/embalse/[^"]+)">[^<]*</a></td><td>(.*?)</td><td>(.*?)</td><td>(.*?)</td></tr>', h)
+        if not rows:
+            return ["es: the hub lists no reservoir"]
+        bad = []
+        for u, p, vc, week in rows:
+            f = es_data.figures(data.get(names.get(u), []), today)
+            if not f:
+                bad.append("es: hub row %s has no cached reading" % u)
+            elif (p.replace("&nbsp;", " "), vc) != (pc(f["pct"]), "%s de %s" % (n1(f["volume"]), n1(f["capacity"]))) or dm(f["date"]) not in week or f["stale"] != ("dato antiguo" in week):
+                bad.append("es: hub row %s does not match the data: %s | %s | %s" % (u, p, vc, week))
+        return bad
+    u = "/" + os.path.dirname(rel).replace("\\", "/") + "/"
+    rows = data.get(names.get(u), [])
+    f = es_data.figures(rows, today)
+    if not f:
+        return ["es: no cached reading for %s (a figure cannot be checked)" % u]
+    day = "%d de %s de %d" % (f["date"].day, ES_MONTHS[f["date"].month - 1], f["date"].year)
+    need = ["%s hm³ embalsados de %s hm³ de capacidad" % (n1(f["volume"]), n1(f["capacity"])), "Dato semanal del " + day]
+    for v, since in ((f["week_change"], "en 1 semana"), (f["month_change"], "en 4 semanas")):
+        r = None if v is None else round(v, 1)
+        need.append("Cambio %s: desconocido" % since if r is None else "Cambio %s: ninguno" % since if r == 0 else
+                    "%s: %s %s puntos" % (since.capitalize(), "ha subido" if r > 0 else "ha bajado", n1(abs(r))))
+    need.append("estaba al " + pc(f["last_year"]) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior")
+    if f["median"] is not None:
+        need += ["de %d años anteriores con dato, el llenado fue desde el %s hasta el %s. En %d de esos" % (f["years"], pc(f["low"]), pc(f["high"]), f["below"]),
+                 "Mediana %s" % pc(f["median"])]
+    bad = ["es: the page does not say what the data says: %r" % x for x in need if x not in t]
+    big = re.search(r'font-size:2\.4rem[^>]*>(.*?)</p>', h)
+    if not big or big.group(1).replace("&nbsp;", " ") != pc(f["pct"]):
+        bad.append("es: the headline percent %r is not the data's %s" % (big and big.group(1), pc(f["pct"])))
+    if f["stale"] != ("Dato antiguo" in t) or (f["stale"] and "desconocido" not in t):
+        bad.append("es: an old reading is not marked old, or a fresh one is")
+    hist = re.search(r'(?s)id="es_historial".*?<tbody>(.*?)</tbody>', h)
+    got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", hist.group(1))] if hist else []
+    want = [[dm(d), pc(es_data.pct(c, v)), n1(v) if es_data.pct(c, v) is not None else "Desconocido", n1(c)] for d, c, v in [r for r in rows if r[0] <= today][-8:][::-1]]
+    if got != want:
+        bad.append("es: the weekly table differs from the data (a blank must read Desconocido; each row has its own capacity): %s" % next((g for g, w in zip(got, want) if g != w), len(got)))
+    return bad
+
+
+def es_page_claims(h, rel):
+    try:
+        with open(os.path.join(ROOT, "cache", "_es.json"), encoding="utf-8") as f:
+            cache = json.load(f)
+        return es_claims(h, rel, cache, datetime.datetime.now(datetime.timezone.utc).date())
+    except (OSError, ValueError, KeyError, TypeError) as e:
+        return ["es: the Spain data cannot be read, so no figure can be checked (%s)" % type(e).__name__]
 
 
 def lake_wording(h, u):
@@ -268,7 +391,7 @@ def check_html(h, rel):
             bad.append("doubled word %r near %r" % (mm.group(0), own[max(0, mm.start() - 40):mm.end() + 40].strip()))
     for sec in re.findall(r'<section class="card blk".*?</section>', body, re.S):
         sid = re.search(r'id="([^"]+)"', sec).group(1)
-        if not re.search(r'<p class="src">Source', sec):
+        if not re.search(r'<p class="src">%s' % ("Fuente" if kind_of(rel) in ("es", "eshub") else "Source"), sec):
             bad.append("block %s has no source line" % sid)
         if re.search(r"<tbody>\s*</tbody>", sec):
             bad.append("block %s has an empty table" % sid)
@@ -773,7 +896,7 @@ def glossary_gaps(h):
 def noindex_link(src_noindex, href, urls, noindex_of):
     """Full audit 2026-11-10 #24 (live /lake/barren-river-lake/, noindexed, linked from home and Bowling Green): an indexable page links a built water page
     only when that page is indexable too. Embeds and /status/ are not water pages (kind trust or status), so their noindex never counts."""
-    return not src_noindex and href in urls and bool(noindex_of.get(href)) and kind_of(urls[href]) in ("gauge", "world")
+    return not src_noindex and href in urls and bool(noindex_of.get(href)) and kind_of(urls[href]) in ("gauge", "world", "es", "eshub")
 
 
 def attribute(us, urls, results, why):
@@ -812,7 +935,7 @@ assert drop_embed_orphans(["/embed/river/a/", "/embed/river/c/", "/river/b/"], {
 
 def unlinked_ok(u, kind, noindex_of):
     """A noindexed water page is unlinked on purpose (links rule 5: only indexable pages are linked), so it is no orphan; in hold mode (every page noindexed) the orphan rule still runs."""
-    return bool(noindex_of.get(u)) and kind in ("gauge", "world") and any(not v for v in noindex_of.values())
+    return bool(noindex_of.get(u)) and kind in ("gauge", "world", "es", "eshub") and any(not v for v in noindex_of.values())
 
 
 def check_dir(d, only_rebuilt=False):
@@ -845,7 +968,7 @@ def check_dir(d, only_rebuilt=False):
                 titles[t.group(1) if t else ""].append(rel)
                 u = urlof(rel)
                 rel_of[u] = rel
-                sig_ = door_sig(h) if kind_of(rel) in ("gauge", "world") else None
+                sig_ = door_sig(h) if kind_of(rel) in ("gauge", "world", "es") else None
                 if sig_:
                     DOOR[(rel.replace("\\", "/").split("/")[0] if kind_of(rel) == "world" else "") + sig_[0]].append((u, sig_[1]))  # a world 'Gauge 4091' is per country feed
                     READ["door_pages"] = READ.get("door_pages", 0) + 1

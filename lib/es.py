@@ -222,7 +222,32 @@ def hub(found, updated, today):
     return shell("Embalses de España: porcentaje de llenado por cuenca | dato semanal", desc, HUB, [("Inicio (en inglés)", "/"), ("Embalses de España", None)], body + credit_block(updated))
 
 
-def pages(cache, today):
+def checked(cache, today, check, has_old):
+    """pages(), then the gate's one-page rules on each (build.py passes check.page_checks): a bad new page must never stop the release.
+    A failing page with a live copy is left out here (build.py carries that copy). One with no live copy is rendered away, so no link points at it."""
+    skip = set()
+    while True:
+        out, bad = pages(cache, today, skip)
+        fail = {u: f for u, f in ((u, check(u, h)) for u, h in out.items()) if f}
+        why = [(u, "; ".join(f)[:200]) for u, f in fail.items()]
+        for u, w in why:
+            print("SPAIN PAGE FAILED %s: %s" % (u, w))
+        gone = {u for u in fail if not has_old(u)}
+        if HUB in gone:  # every reservoir links the hub
+            return {}, bad + why
+        if not gone:
+            return {u: h for u, h in out.items() if u not in fail}, bad + why
+        skip |= gone
+
+
+def short_report(s, today):
+    """Why the Spain pages need a look, or "": data older than two missed weeks, or fewer than the 50 reservoirs and their hub built."""
+    if not s.get("es_newest") or (today - datetime.date.fromisoformat(s["es_newest"])).days > es_data.STALE_DAYS:
+        return "Spain reservoir data is old or missing (newest %s): see the 'Spain reservoirs' step log" % s.get("es_newest")
+    return "" if s.get("es_pages") == 51 else "Spain: %s of 51 pages built" % s.get("es_pages")
+
+
+def pages(cache, today, skip=()):
     """({url: html}, [(url, reason)]) from the cache object. A reservoir with no usable reading, or whose render raises, is left out and named."""
     data, basins = es_data.unpack(cache)
     try:
@@ -232,7 +257,9 @@ def pages(cache, today):
     found, bad = {}, []
     for n in top_names():  # rank order: related() relies on it
         f = es_data.figures(data.get(n, []), today)
-        if f:
+        if url_of(n) in skip:
+            bad.append((url_of(n), "failed the page rules"))
+        elif f:
             found[n] = {"f": f, "rows": data[n], "basin": basins[n]}
         else:
             bad.append((url_of(n), "no usable reading"))

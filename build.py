@@ -8,6 +8,7 @@ from lib.common import *
 from lib.pages import load_effective
 from lib import coverage, render, directory, indexing, related, world, es
 from lib import page as pagelib
+import check
 from lib.blocks2 import flow_behind
 
 
@@ -190,7 +191,7 @@ def main():
     es_cache, es_pages, es_bad = {}, {}, []
     try:
         es_cache = json.load(open(os.path.join(CACHE, "_es.json"), encoding="utf-8"))
-        es_pages, es_bad = es.pages(es_cache, now.date())
+        es_pages, es_bad = es.checked(es_cache, now.date(), lambda u, h: check.page_checks(h.replace(" ", " "), u.strip("/") + "/index.html"), prev_page)
     except Exception as e:
         print("FAIL es pages: %s: %s" % (type(e).__name__, str(e)[:160]))
     for url, html in es_pages.items():

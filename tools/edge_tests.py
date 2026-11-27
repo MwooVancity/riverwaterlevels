@@ -7,6 +7,163 @@ from lib import world
 from lib import wx as wx_mod
 
 
+def es_edges():
+    """Spain reservoirs: asserts for each PLAN.md 'OWNER 2026-11-26' edge case, on made-up data (no cache needed)."""
+    import io, shutil, urllib.request, zipfile, csv as csvm
+    from lib import render  # noqa: F401  (build import order)
+    import check as ck
+    from lib import es, es_data, indexing
+    today = datetime.date(2026, 11, 26)
+    names = es.top_names()
+    with open(os.path.join(ROOT, "data", "es-reservoirs.csv"), encoding="utf-8") as fh:
+        basins = {r["name"]: r["basin"] for r in csvm.DictReader(fh)}
+    head = "AMBITO_NOMBRE,EMBALSE_NOMBRE,FECHA,AGUA_TOTAL,AGUA_ACTUAL,ELECTRICO_FLAG"
+    # decimal comma and hm3; a blank row; a capacity that changed over the years
+    lines = [head] + ['Tajo,A,%s,"%s","%s",0' % r for r in (("2025-11-18", "1.000,0", "500,0"), ("2026-11-17", "1.505,0", "752,5"), ("2026-11-24", "2.000,0", ""))]
+    got = es_data.parse(lines, {"A"})[0]["A"]
+    assert got[1][1:] == (1505.0, 752.5) and got[2][2] is None, "es edge: decimal comma misread, or a blank read as a number"
+    f = es_data.figures(got, today)
+    assert f["date"] == datetime.date(2026, 11, 17) and f["pct"] == 50.0 and f["last_year"] == 50.0, "es edge: blank shown as 0, or another row's capacity used"
+    # slug clash and accents
+    slugs = [es.slug(n) for n in names]
+    assert len(set(slugs)) == 50 and all(re.fullmatch(r"[a-z0-9-]+", x) for x in slugs) and es.slug("Iznájar") == "iznajar" and es.slug("Riaño") == "riano", "es edge: slug clash or a broken accent"
+    real_slug, es.slug = es.slug, lambda n: "same"
+    try:
+        es.top_names()
+        raise AssertionError("es edge: two reservoirs with one address passed")
+    except ValueError:
+        pass
+    finally:
+        es.slug = real_slug
+    # 50 made-up reservoirs, 12 years weekly; the first has a blank week and a capacity that changed
+    last = datetime.date(2026, 11, 24)
+    data = {n: [(last - datetime.timedelta(weeks=k), 800.0 if k > 300 else 1000.0 + i, 300.0 + i + (k % 7)) for k in range(620, -1, -1)] for i, n in enumerate(names)}
+    data[names[0]][-2] = data[names[0]][-2][:2] + (None,)
+    cache = dict(es_data.pack(data, {n: basins[n] for n in names}), modified="Tue, 24 Nov 2026 13:24:21 GMT")
+    pages, nobad = es.pages(cache, today)
+    assert len(pages) == 51 and not nobad, "es edge: not 50 reservoirs and a hub: %s" % nobad[:3]
+    rel = lambda u: u.strip("/") + "/index.html"
+    for day in (today, today + datetime.timedelta(days=30)):  # fresh, and old
+        for u, h in es.pages(cache, day)[0].items():
+            h = h.replace("\xa0", " ")
+            probs = ck.check_html(h, rel(u)) + ck.wide_tables(h) + ck.es_rules(h, rel(u)) + ck.es_claims(h, rel(u), cache, day) + ck.ad_gaps(rel(u), h)
+            assert not probs, "es edge: a good page fails %s: %s" % (u, probs[:4])
+            assert ck.link_count(h) <= ck.BUDGET[ck.kind_of(rel(u))], "es edge: over the link budget %s" % u
+    assert ck.kind_of("es/index.html") == "eshub" and ck.kind_of("es/embalse/x/index.html") == "es" and ck.kind_of("about/index.html") == "trust"
+    u = es.url_of(names[0])
+    h, r = pages[u], rel(u)
+
+    def swap(old, new):
+        assert old in h, "es fixture text gone: " + old
+        return h.replace(old, new, 1)
+
+    for what, page, want in (
+            ("weekly data shown as live", swap("Dato semanal del", "En directo, dato del"), "shown as live"),
+            ("a today claim", swap("<h1>", "<p>El nivel hoy</p><h1>"), "shown as live"),
+            ("no weekly wording", re.sub("(?i)dato semanal", "dato", h), "weekly"),
+            ("no source", h.replace("Fuente: <a", "<a"), "credit"),
+            ("no update date", h.replace("Archivo actualizado por la fuente el ", "Archivo "), "last-update"),
+            ("an ad script", swap("</head>", '<script src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script></head>'), "ad code"),
+            ("an ad slot", swap("<footer>", '<aside id="adsl"></aside><footer>'), "ad code"),
+            ("English leak", swap("<h1>", "<p>Unknown</p><h1>"), "English"),
+            ("a US unit", swap("<h1>", "<p>12 cfs</p><h1>"), "English"),
+            ("English aria label", swap('aria-label="Sitio"', 'aria-label="About"'), "English"),
+            ("a decimal point", swap("<h1>", "<p>75.8 %</p><h1>"), "decimal point"),
+            ("negative zero", swap("<h1>", "<p>-0,0 puntos</p><h1>"), "negative zero"),
+            ("a Spanish verdict", swap("<h1>", "<p>Apto para el baño</p><h1>"), "verdict"),
+            ("English lang", swap('<html lang="es"', '<html lang="en"'), "lang=es")):
+        assert any(want in x for x in ck.es_rules(page, r)), "es gate missed %s: %s" % (what, ck.es_rules(page, r))
+    assert any("source line" in x for x in ck.check_html(h.replace('<p class="src">Fuente', '<p class="src">Nota'), r)), "es gate: a block with no source passed"
+    assert any("source line" in x for x in ck.check_html(h, "about/index.html")), "es edge: 'Fuente' must not count as a source line outside /es/"
+    # numbers on the page equal es_data.figures
+    fg = es_data.figures(data[names[0]], today)
+    for what, page in (("headline percent", re.sub(r"(font-size:2\.4rem[^>]*>)[^&<]+", r"\g<1>99,9", h)),
+                       ("volume", swap("%s hm³ embalsados" % es.num(fg["volume"]), "1,0 hm³ embalsados")),
+                       ("blank shown as 0", swap("<td>Desconocido</td><td>Desconocido</td>", "<td>0,0&nbsp;%</td><td>0,0</td>"))):
+        assert page != h and ck.es_claims(page, r, cache, today), "es gate: a wrong %s passed" % what
+    other = {**cache, "rows": {**cache["rows"], names[0]: [[d, c and c * 2, v] for d, c, v in cache["rows"][names[0]]]}}
+    assert ck.es_claims(h, r, other, today), "es gate: a percent from the wrong capacity passed"
+    assert ck.es_claims(h, r, {**cache, "rows": {}}, today), "es gate: a page with no cached row passed"
+    wrong_hub = pages["/es/"].replace(" de %s</td>" % es.num(fg["capacity"]), " de 1,0</td>")
+    assert wrong_hub != pages["/es/"] and ck.es_claims(wrong_hub, "es/index.html", cache, today), "es gate: a wrong hub row passed"
+    assert ck.es_claims(h, r, cache, today + datetime.timedelta(days=30)), "es gate: an old reading shown as current passed"
+    # a bad NEW page is left out and nothing links to it; with a live copy it stays linked and build.py carries the copy
+    flag = lambda w, h_: ["boom"] if w == u else []
+    out, why = es.checked(cache, today, flag, lambda w: None)
+    assert u not in out and len(out) == 50 and not any('href="%s"' % u in x for x in out.values()) and why, "es edge: a failing new page shipped or is still linked"
+    out = es.checked(cache, today, flag, lambda w: "old copy")[0]
+    assert u not in out and 'href="%s"' % u in out["/es/"], "es edge: a failing page with a live copy lost its hub link"
+    assert es.checked(cache, today, lambda w, h_: ["boom"] if w == "/es/" else [], lambda w: None)[0] == {}, "es edge: reservoirs shipped without their hub"
+    # noindex until "/es/" is in data/reviewed.json
+    cfg = {"open": True, "site_pages": True, "allow": set()}
+    with open(os.path.join(ROOT, "data", "reviewed.json"), encoding="utf-8") as fh:
+        listed = "/es/" in json.load(fh).get("passed", [])
+    assert indexing.indexable(u, cfg) == listed and indexing.indexable("/es/", cfg) == listed and indexing.indexable("/about/", cfg), "es edge: a Spain page indexable without its review entry"
+    from lib import page as pg
+    was, pg.INDEX_CFG = pg.INDEX_CFG, cfg
+    try:
+        assert ('content="noindex' in es.pages(cache, today)[0][u]) != listed, "es edge: an unreviewed Spain page carries no noindex"
+    finally:
+        pg.INDEX_CFG = was
+    assert ck.unlinked_ok(u, "es", {u: True, "/": False}) and ck.noindex_link(False, u, {u: r}, {u: True}), "es edge: orphan or noindexed-link rule wrong"
+    # doorway census reads Spain pages
+    a, b = (ck.door_sig(pages[es.url_of(n)]) for n in names[1:3])
+    assert a and b and a[0] == b[0] == "es", "es edge: doorway census skips Spain pages"
+    es_short = es.short_report
+    assert es_short({"es_pages": 51, "es_newest": "2026-11-24"}, today) == "" and es_short({"es_pages": 51, "es_newest": "2026-11-03"}, today) and es_short({"es_pages": 40, "es_newest": "2026-11-24"}, today), "es edge: watchdog misses old or missing Spain data"
+    # file moved, cut short or changed format: the cache stays byte for byte, so the old pages stay
+    tmp = tempfile.mkdtemp()
+    saved = collect.CACHE, collect.es_export, urllib.request.urlopen
+    try:
+        collect.CACHE = tmp
+        path = os.path.join(tmp, "_es.json")
+        body = json.dumps(dict(cache, modified="old", fetched_at="2026-11-01T00:00:00Z"))
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        zb = io.BytesIO()
+        with zipfile.ZipFile(zb, "w") as z:
+            z.writestr("a.mdb", "x" * 1000)
+        zb = zb.getvalue()
+
+        class Resp(io.BytesIO):
+            def __init__(self, b_):
+                super().__init__(b_)
+                self.headers = {"Last-Modified": "new", "Content-Length": str(len(zb))}
+
+        def export(text):
+            def write(mdb, out):
+                with open(out, "w", encoding="utf-8") as fo:
+                    fo.write(text)
+            return write
+
+        def kept(what):
+            marker = os.path.join(tmp, "_es-refused.json")
+            if os.path.exists(marker):
+                os.remove(marker)
+            collect.fetch_es()
+            with open(path, encoding="utf-8") as fr:
+                assert fr.read() == body, "es edge: %s replaced the cache" % what
+
+        full = [head] + ['%s,"%s",%s,"1000,00","500,00",0' % (basins[n], n, d.isoformat()) for n in names for d, c, v in data[n]]
+        for what, served, text in (("a cut-short download", zb[:len(zb) // 2], "\n".join(full)),
+                                   ("not a zip", b"<html>moved</html>".ljust(len(zb)), ""),
+                                   ("changed columns", zb, "a,b\n1,2\n"),
+                                   ("a truncated table", zb, "\n".join(full[:len(full) // 2]))):
+            urllib.request.urlopen = lambda q, timeout=0, _b=served: Resp(_b)
+            collect.es_export = export(text)
+            kept(what)
+
+        def moved(*a_, **k_):
+            raise OSError("HTTP 404")
+
+        urllib.request.urlopen = moved
+        kept("a moved file")
+    finally:
+        collect.CACHE, collect.es_export, urllib.request.urlopen = saved
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("es edge tests OK")
+
+
 def run():
     import gates as g_  # gate catch census: a page gate counts each caught page, a self-test only its own failure (fixtures print FAULT on purpose)
     out_ = "FAIL river/a/index.html\n    no Source line\nCARRIED previous live page for b\n  MISMATCH c: 5 vs 6\nKAUB FAULT page says no alerts\nworld truth: 1 fault(s)\npages 9, failing 1"
@@ -1459,6 +1616,7 @@ if __name__ == "__main__":
         cm_.DATA = _old_dir
         cm_.ad_slot.cache_clear()
     sys.path.insert(0, os.path.join(ROOT, "tools"))
+    es_edges()
     from clean_names import street as st_
     assert st_("14th Saint At Columbus") == "14th Street At Columbus" and st_("Ks-mo Saint Line") == "Ks-mo State Line", "names: 'St' after a street name still reads Saint (fix list 2026-11-19)"
     assert st_("Near Saint Xavier") == "Near Saint Xavier" and st_("Macklind Avenue Saint Louis") == "Macklind Avenue Saint Louis" and st_("Saint Johns") == "Saint Johns", "names: a real Saint place became Street"
