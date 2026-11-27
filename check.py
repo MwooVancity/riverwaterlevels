@@ -377,7 +377,37 @@ def es_claims(h, rel, cache, today):
     got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", sec.group(1))] if sec else []
     if got != want:
         bad.append("es: the weeks-after table differs from the data")
-    return bad + es_access_claims(h, names.get(u), today)
+    return bad + es_access_claims(h, names.get(u), today) + es_boat_claims(h, names.get(u), today)
+
+
+def es_boat_claims(h, name, today, data=None):
+    """The boating block says exactly this reservoir's transcribed lines, credits every source (BOE terms: a link to boe.es) and says the official text rules."""
+    sec = re.search(r'(?s)<section class="card blk" id="es_navegar">.*?</section>', h)
+    if data is None:
+        try:
+            with open(os.path.join(ROOT, "data", "es-boat.json"), encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            data = {}
+    r = (data.get("reservoirs") or {}).get(name)
+    if not sec:
+        return ["es: this reservoir has official boating rules in data/es-boat.json but no block"] if r and (today - datetime.date.fromisoformat(data["read_on"])).days <= 365 else []
+    if not r:
+        return ["es: a boating block on a reservoir with no transcribed rules"]
+    s, bad = sec.group(0), []
+    if r.get("basin") not in (data.get("common") or {}) or any(k not in (data.get("sources") or {}) for k in r.get("src", [])):
+        return ["es: data/es-boat.json names a basin or source it does not define"]
+    if any(k.startswith("boe") for k in r["src"]) and "Basado en datos de la Agencia Estatal Boletín Oficial del Estado" not in s:
+        bad.append("es: the BOE credit required by its reuse terms is missing")
+    got = [html.unescape(x) for x in re.findall(r"<li>(.*?)</li>", s)]
+    if got != r["lines"] + data["common"][r["basin"]]:
+        bad.append("es: the boating rules differ from data/es-boat.json")
+    for k in r["src"]:
+        if 'href="%s"' % html.escape(data["sources"][k][1]) not in s:
+            bad.append("es: a boating source link is missing: %s" % k)
+    if "lo que vale es el texto oficial" not in s or "No indica que se pueda navegar en este momento" not in s:
+        bad.append("es: the boating block lacks the official-text or not-today line")
+    return bad
 
 
 def es_access_claims(h, name, today, data=None):

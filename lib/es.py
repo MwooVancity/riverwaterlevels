@@ -299,6 +299,32 @@ def later_section(f, rows, today, updated):
         say, table(("Año de partida", "Esa semana", "4 semanas después", "8 semanas después"), [(str(y), pc(a), pc(b), pc(c)) for y, a, b, c in lt]), ""), updated)
 
 
+def boat_data():
+    """data/es-boat.json, transcribed from the basin authority and BOE; unreadable means no block."""
+    try:
+        with open(os.path.join(DATA, "es-boat.json"), encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return {}
+
+
+def boat_section(name, today, data):
+    try:
+        read = datetime.date.fromisoformat(data["read_on"])
+        r = data["reservoirs"][name]
+        lines = r["lines"] + data["common"][r["basin"]]
+        src = [data["sources"][k] for k in r["src"]]
+    except (KeyError, TypeError, ValueError):
+        return ""
+    if (today - read).days > ACCESS_DAYS:
+        return ""
+    return ('<section class="card blk" id="es_navegar"><h2>Navegar aquí: normas oficiales</h2><p>Esto dicen las normas de navegación publicadas para este embalse (resumen propio; lo que vale es el texto oficial).</p>'
+            '<ul>%s</ul><p class="sub">Las normas pueden cambiar, y la Confederación puede cerrar zonas o suspender la navegación: consulta la fuente antes de ir. No indica que se pueda navegar en este momento.</p>'
+            '<p class="src">Fuente: %s. Leído el %s.%s</p></section>') % (
+        "".join("<li>%s</li>" % esc(x) for x in lines), " &middot; ".join('<a href="%s" rel="noopener">%s</a>' % (esc(u), esc(t)) for t, u in src), day(read),
+        ' Basado en datos de la Agencia Estatal Boletín Oficial del Estado (<a href="https://www.boe.es" rel="noopener">https://www.boe.es</a>), texto resumido.' if any(k.startswith("boe") for k in r["src"]) else "")
+
+
 def month_section(f, rows, updated):
     mo = es_data.monthly(rows, f["date"].year, f["capacity"])
     if not mo:
@@ -328,6 +354,7 @@ def reservoir(name, found, updated, today):
     body = section("es_cambios", "Cambio en 1 y 4 semanas",
                    "<p>%s</p><p>%s</p><p class=\"sub\">Contado hacia atrás desde el dato del %s.</p>" % (moved(f["week_change"], "en 1 semana"), moved(f["month_change"], "en 4 semanas"), day(f["date"])), updated)
     body += access_section(name, today, access_data())
+    body += boat_section(name, today, boat_data())
     ly = "En la misma semana de %d estaba al %s." % (f["date"].year - 1, pc(f["last_year"])) if f["last_year"] is not None else "No hay dato publicado de la misma semana del año anterior."
     if f["median"] is None:
         past = "<p>%s</p><p>Hay %d años anteriores con dato%s para esta semana; hacen falta 10 para compararla.</p>" % (ly, f["years"], comparable_words(f))

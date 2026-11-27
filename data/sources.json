@@ -132,6 +132,42 @@
    "evidence_phrase": "OpenStreetMap is open data, licensed under the Open Data Commons Open Database License (ODbL). You are free to copy, distribute, transmit and adapt our data, as long as you credit OpenStreetMap and its contributors."
   },
   {
+   "id": "che_nav",
+   "name": "Confederación Hidrográfica del Ebro: navegación en embalses",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://www.chebro.es/web/guest/aviso-legal",
+   "summary": "Per-reservoir boating rules (craft allowed, motor limit, dam distance, minimum level, zebra mussel class) for 7 Ebro reservoirs, transcribed into data/es-boat.json.",
+   "blocks": [
+    "es_navegar"
+   ],
+   "credit": "Confederación Hidrográfica del Ebro",
+   "read_on": "2026-11-27",
+   "evidence": "Legal notice read 2026-11-27: reproduction authorised without a purpose limit if the origin is cited (ads and commercial use not named; no restriction stated)",
+   "evidence_url": "https://www.chebro.es/web/guest/aviso-legal",
+   "evidence_phrase": "Salvo que se indique lo contrario, la reproducción queda autorizada siempre que se cite su origen."
+  },
+  {
+   "id": "boe_nav",
+   "name": "BOE: Guadiana navigation resolutions (BOE-A-2020-9897, BOE-A-2024-14200)",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://www.boe.es/informacion/aviso_legal/index.php",
+   "summary": "Boating rules and banned zones for 5 Guadiana reservoirs, summarised into data/es-boat.json.",
+   "blocks": [
+    "es_navegar"
+   ],
+   "credit": "Basado en datos de la Agencia Estatal Boletín Oficial del Estado (https://www.boe.es)",
+   "read_on": "2026-11-27",
+   "evidence": "BOE legal notice read 2026-11-27",
+   "evidence_url": "https://www.boe.es/informacion/aviso_legal/index.php",
+   "evidence_phrase": "Las presentes condiciones permiten la reutilización de los documentos sometidos a ellas para fines comerciales y no comerciales"
+  },
+  {
    "id": "ridb",
    "name": "Recreation.gov RIDB (federal recreation facilities)",
    "status": "quoted",

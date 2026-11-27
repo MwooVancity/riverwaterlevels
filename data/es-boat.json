@@ -1,0 +1,181 @@
+{
+ "read_on": "2026-11-27",
+ "note": "Official boating rules per reservoir, transcribed by hand from the sources below (CHE: reproduction allowed citing origin, chebro.es/web/guest/aviso-legal; BOE: commercial reuse allowed citing the source with a link to https://www.boe.es, boe.es/informacion/aviso_legal). Re-read about quarterly; lib/es.py hides the block after a year. Each line is a plain restatement of the source, never a verdict.",
+ "sources": {
+  "che": [
+   "Confederación Hidrográfica del Ebro: navegación en embalses",
+   "https://www.chebro.es/web/guest/navegacion-en-embalses"
+  ],
+  "che_pdf": [
+   "CHE: instrucciones de la declaración responsable de navegación (19-03-2026)",
+   "https://www.chebro.es/documents/20121/318767/Instrucciones_cumplimiento_declaracion_responsable_navegacion+19-03-2026+%281%29.pdf/e38133b8-8eb5-5a6c-c41c-bb2465365644?t=1774005612378"
+  ],
+  "boe2020": [
+   "BOE-A-2020-9897 (Confederación Hidrográfica del Guadiana, navegación)",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2020-9897"
+  ],
+  "boe2024": [
+   "BOE-A-2024-14200 (Orellana)",
+   "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-14200"
+  ]
+ },
+ "common": {
+  "Ebro": [
+   "Hace falta una declaración responsable ante la Confederación Hidrográfica del Ebro, y la embarcación declarada solo puede navegar en un embalse (o en su grupo de navegación conjunta).",
+   "Tablas de windsurf, kitesurf y paddle surf: la Confederación las trata como artefactos complementarios del baño; no necesitan declaración y solo se usan donde no esté prohibido bañarse.",
+   "En los embalses de tipo A o R la Confederación suspende la navegación si no hay una estación de limpieza que preste servicio al embalse."
+  ],
+  "Guadiana": [
+   "Hace falta una declaración responsable ante la Confederación Hidrográfica del Guadiana. En toda la cuenca: solo de día (de la salida a la puesta del sol), motor de hasta 240 CV, sin motores de dos tiempos de carburación, como mucho 16 nudos, a más de 200 m de la presa y donde el agua tenga más de 1 m de profundidad.",
+   "Prohibido navegar a menos de 200 m de una zona de baño y a menos de 50 m de una isla. Sin motor de combustión en la franja de 50 m junto a la orilla, salvo para cruzarla a 3 nudos como máximo.",
+   "Una embarcación usada fuera de la cuenca debe limpiarse antes.",
+   "Tablas de windsurf y paddle surf: pueden contar como artefacto flotante de recreo, sin declaración, fuera de las zonas de baño."
+  ]
+ },
+ "reservoirs": {
+  "Mequinenza": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo, vela y motor: sí.",
+    "Mejillón cebra: embalse de tipo A (afectado).",
+    "Navegación conjunta con Ribarroja y Flix.",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Yesa": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo, vela y motor: sí.",
+    "A más de 400 m de la presa.",
+    "Mejillón cebra: embalse de tipo R (en riesgo).",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Mediano": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo, vela y motor: sí.",
+    "A más de 200 m de la presa. Cota mínima de navegación: 490 m (no la comparamos con el nivel actual: el dato semanal es de volumen).",
+    "Mejillón cebra: embalse de tipo R (en riesgo).",
+    "Navegación conjunta con El Grado (allí, motor de 50 CV como máximo).",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Alloz": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo y vela: sí. Motor: no.",
+    "La zona de navegación está balizada.",
+    "Mejillón cebra: embalse de tipo A (afectado).",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Santa Ana": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo, vela y motor: sí; motor de 50 CV como máximo.",
+    "A más de 200 m de la presa. Cota mínima de navegación: 357 m (no la comparamos con el nivel actual: el dato semanal es de volumen).",
+    "Mejillón cebra: embalse de tipo A (afectado).",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Sotonera": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo, vela y motor: sí; motor de 50 CV como máximo.",
+    "A más de 200 m de la presa. Cota mínima de navegación: 409 m (no la comparamos con el nivel actual: el dato semanal es de volumen).",
+    "Aquí cargan agua hidroaviones contra incendios.",
+    "Mejillón cebra: embalse de tipo A (afectado).",
+    "Limpieza oficial obligatoria al entrar por primera vez, al salir del embalse (por renuncia o pasado el plazo declarado), al pasar a otra agua de la cuenca tras el año mínimo, al volver de otra cuenca y en eventos."
+   ]
+  },
+  "Pena": {
+   "basin": "Ebro",
+   "src": [
+    "che",
+    "che_pdf"
+   ],
+   "lines": [
+    "Remo: sí. Vela y motor: no.",
+    "Cota mínima de navegación: 420 m (no la comparamos con el nivel actual: el dato semanal es de volumen).",
+    "Mejillón cebra: embalse de tipo L.",
+    "Limpieza oficial obligatoria si la embarcación viene de un agua de tipo A o R o de otra cuenca, si va a desplazarse a otra cuenca, y en eventos."
+   ]
+  },
+  "Cijara": {
+   "basin": "Guadiana",
+   "src": [
+    "boe2020"
+   ],
+   "lines": [
+    "Remo, vela y motor (eléctrico o de combustión): sí.",
+    "Hay zonas excluidas en las colas de los brazos (Estena, Fresnedoso, Corazoncillo, Encinarejo y Guadiana) y hay que mantenerse a 100 m de la orilla norte de las islas de Dos Sierras y La Solana de la Dehesa."
+   ]
+  },
+  "La Serena": {
+   "basin": "Guadiana",
+   "src": [
+    "boe2020"
+   ],
+   "lines": [
+    "Remo, vela y motor (eléctrico o de combustión): sí.",
+    "Prohibida la navegación en todo el brazo del Esteras y en el Zújar aguas arriba de la carretera de Capilla a Guadalmez; sin motor aguas arriba del puente de Siruela a Talarrubias en el Guadalemar."
+   ]
+  },
+  "Orellana": {
+   "basin": "Guadiana",
+   "src": [
+    "boe2020",
+    "boe2024"
+   ],
+   "lines": [
+    "Remo, vela y motor (eléctrico o de combustión): sí, con zonas prohibidas.",
+    "Desde 2024, sin motor en una zona delimitada hacia la presa (BOE-A-2024-14200); 3 nudos como máximo en el canal balizado de Campanario.",
+    "Excluida la cola del Guadiana aguas arriba del arroyo de Las Valsecas."
+   ]
+  },
+  "Alange": {
+   "basin": "Guadiana",
+   "src": [
+    "boe2020"
+   ],
+   "lines": [
+    "Remo, vela y motor (eléctrico o de combustión): sí.",
+    "Prohibida toda navegación en el Matachel aguas arriba del puente de la carretera de Palomas a Almendralejo. En el San Juan no se puede pasar el límite con motor; remo y vela, por la margen derecha, sin parar ni hacer ruido. Del 1 de abril al 31 de julio, a 100 m del Peñón de La Porquera."
+   ]
+  },
+  "Peñarroya": {
+   "basin": "Guadiana",
+   "src": [
+    "boe2020"
+   ],
+   "lines": [
+    "Remo y vela: sí. Motor: no."
+   ]
+  }
+ }
+}
