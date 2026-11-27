@@ -12,6 +12,7 @@ os.chdir(ROOT)
 from lib.common import *
 from lib.pages import load_effective
 from lib import render, related
+from lib.common import NEG_ZERO
 
 import check  # a module since full audit #47 (its main() runs only as a script)
 ck = vars(check)
@@ -107,6 +108,7 @@ def page_faults(G, rows):
     n0 = len(render.BLOCK_ERRORS)
     try:
         h, meta = render.build_tab("dashboard", G, rows)
+        h = NEG_ZERO.sub(chr(92) + "1", h)  # as build.py write() does: without it the gate held a page that would ship clean (a -0.0 ft tide stopped a deploy, 2026-11-25)
         h = h.replace(" ", " ")  # as check.py reads built pages
     except Exception as e:
         return {"PAGE CRASH %s: %s" % (type(e).__name__, str(e)[:80])}, {}
