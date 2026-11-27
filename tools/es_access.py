@@ -147,7 +147,7 @@ def selftest():
     data = {"read_on": "2026-11-27", "reservoirs": {"A": [{"kind": "ramp", "name": None, "osm": "way/1", "access": None}, {"kind": "beach", "name": "Playa <B>", "osm": "node/2", "access": "customers"}]}}
     day = datetime.date(2026, 11, 28)
     h = es.access_section("A", day, data)
-    assert "1 rampa para embarcaciones, 1 playa" in h and "Rampa sin nombre (1)" in h and "&lt;B&gt;" in h and "solo clientes" in h and not check.es_access_claims(h, "A", day, data)
+    assert "1 rampa para embarcaciones y 1 playa" in h and "Rampa sin nombre (1)" in h and "&lt;B&gt;" in h and "solo clientes" in h and not check.es_access_claims(h, "A", day, data)
     assert es.access_section("Z", day, data) == "" and es.access_section("A", day, {}) == "" and es.access_section("A", datetime.date(2028, 1, 1), data) == "", "no data or an old map reading made a block"
     assert check.es_access_claims(h.replace("way/1", "way/9"), "A", day, data) and check.es_access_claims(h.replace("no indica que", "indica que"), "A", day, data), "a foreign place or a missing warning passed"
     def p(kind, name, lat):

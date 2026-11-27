@@ -239,11 +239,11 @@ def access_section(name, today, data):
             esc(p["osm"]), esc(p["name"] or "%s sin nombre (%d)" % (label, unnamed.index(p) + 1)), " &middot; " + ACCESS_NOTE[p["access"]] if p.get("access") in ACCESS_NOTE else "")
             for p in here[:SHOWN])
         lists += "<h3>%s</h3><ul>%s</ul>%s" % (heading, items, '<p class="sub">Y %d más marcados en el mapa.</p>' % (len(here) - SHOWN) if len(here) > SHOWN else "")
-    return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>Junto a este embalse el mapa marca: %s. Cada enlace abre el sitio en el mapa.</p>%s'
+    return ('<section class="card blk" id="es_acceso"><h2>Para ir al agua: lo que marca el mapa</h2><p>Junto a este embalse o cerca de él, el mapa marca: %s. Cada enlace abre el sitio en el mapa.</p>%s'
             '<p class="sub">Que un sitio esté en el mapa no indica que esté abierto, que tenga acceso público ni que se permita bañarse o navegar: compruébalo antes de ir. '
             'Con el embalse bajo, una rampa o una orilla puede quedar lejos del agua. La lista puede estar incompleta.</p>'
             '<p class="src">Fuente: <a href="https://www.openstreetmap.org/copyright" rel="noopener">© colaboradores de OpenStreetMap</a> (licencia ODbL). Mapa consultado el %s.</p></section>') % (
-        ", ".join(counts), lists, day(read))
+        " y ".join([", ".join(counts[:-1]), counts[-1]] if len(counts) > 1 else counts), lists, day(read))
 
 
 def month_section(f, rows, updated):
@@ -258,8 +258,9 @@ def month_section(f, rows, updated):
         say = "En %s el llenado habitual cambió poco de un mes a otro: la mediana mensual fue de %s a %s." % (span, pc(lo[1]), pc(hi[1]))
     else:
         say = "En %s, el mes con la mediana más alta fue %s (%s) y el de la más baja, %s (%s)." % (span, MONTHS[hi[0] - 1], pc(hi[1]), MONTHS[lo[0] - 1], pc(lo[1]))
-    return section("es_meses", "El llenado mes a mes", "<p>%s No es una previsión.</p>%s" % (
-        say, table(("Mes", "Mediana", "Mínimo", "Máximo"), [(MONTHS[m - 1].capitalize(), pc(md), pc(a), pc(b)) for m, md, a, b, _ in mo])), updated)
+    key = ("Mediana: el valor central de las cifras de ese mes en cada año. Mínimo y máximo: la lectura semanal más baja y la más alta de ese mes entre %s." % span)
+    return section("es_meses", "El llenado mes a mes", '<p>%s No es una previsión.</p><p class="sub">%s</p>%s' % (
+        say, key, table(("Mes", "Mediana", "Mínimo", "Máximo"), [(MONTHS[m - 1].capitalize(), pc(md), pc(a), pc(b)) for m, md, a, b, _ in mo])), updated)
 
 
 def reservoir(name, found, updated, today):

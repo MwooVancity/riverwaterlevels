@@ -132,7 +132,7 @@ def figures(rows, today):
 
 
 def monthly(rows, last_year):
-    """Month by month over the 10 whole years before `last_year`: [(month, median, low, high, years)] of each year's median fill in that month.
+    """Month by month over the 10 whole years before `last_year`: [(month, median, low, high, years)] of each year's median fill in that month; low and high are the lowest and highest single weekly readings of that month.
     None unless every month has at least 8 of those years: a short or gappy record gives no 'usual year'."""
     got = {}
     for d, c, v in rows:
@@ -144,7 +144,8 @@ def monthly(rows, last_year):
         ys = [statistics.median(v) for (mm, _), v in got.items() if mm == m]
         if len(ys) < 8:
             return None
-        out.append((m, statistics.median(ys), min(ys), max(ys), len(ys)))
+        weeks = [x for (mm, _), v in got.items() if mm == m for x in v]
+        out.append((m, statistics.median(ys), min(weeks), max(weeks), len(ys)))
     return out
 
 
@@ -190,6 +191,8 @@ def selftest():
     wk = [(datetime.date(y, m, 15), 100.0, float(20 + m)) for y in range(2016, 2026) for m in range(1, 13)]
     mo = monthly(wk + [(datetime.date(2026, 1, 15), 100.0, 99.0), (datetime.date(2015, 1, 15), 100.0, 99.0)], 2026)
     assert mo[0] == (1, 21.0, 21.0, 21.0, 10) and mo[11][1] == 32.0, "the running year or an 11th year got into the usual year"
+    two = monthly(wk + [(datetime.date(2020, 1, 22), 100.0, 3.0)], 2026)
+    assert two[0][2] == 3.0, "a single low week was hidden behind its month's median"
     assert monthly([r for r in wk if not (r[0].month == 7 and r[0].year < 2019)], 2026) is None, "a month with 7 years gave a usual year"
     print("es_data selftest OK")
 

@@ -341,7 +341,8 @@ def es_claims(h, rel, cache, today):
     if len(per) == 12 and all(len(y) >= 8 for y in per.values()):
         for m in range(1, 13):
             ys = [mid(v) for v in per[m].values()]
-            want.append([ES_MONTHS[m - 1].capitalize(), pc(mid(ys)), pc(min(ys)), pc(max(ys))])
+            weeks = [x for v in per[m].values() for x in v]
+            want.append([ES_MONTHS[m - 1].capitalize(), pc(mid(ys)), pc(min(weeks)), pc(max(weeks))])
     sec = re.search(r'(?s)id="es_meses".*?<tbody>(.*?)</tbody>', h)
     got = [[c.replace("&nbsp;", " ") for c in re.findall(r"<td>(.*?)</td>", r)] for r in re.findall(r"<tr>(.*?)</tr>", sec.group(1))] if sec else []
     if got != want:
