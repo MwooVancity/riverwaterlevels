@@ -2047,7 +2047,9 @@ def usace_levels(js, loc):
         m = re.fullmatch(r"Elev \(ft ([A-Z0-9]+)\)", x["values"]["parameter"])
         if not m:
             raise RuntimeError("CWMS %s parameter %r is not ft on a named datum" % (x["name"], x["values"]["parameter"]))
-        out[key] = (float(x["values"]["segments"][-1]["values"][-1][1]), m.group(1))
+        now = parse_t(now_iso())  # CWMS sends about -24 h to +24 h: take the point nearest now, never the last (tomorrow's) one (review 2026-11-28)
+        pts = [v for s in x["values"]["segments"] for v in s["values"]]
+        out[key] = (float(min(pts, key=lambda v: abs((parse_t(v[0]) - now).total_seconds()))[1]), m.group(1))
     if "top" not in out:
         raise RuntimeError("CWMS has no Top of Conservation for %s" % loc)
     return out

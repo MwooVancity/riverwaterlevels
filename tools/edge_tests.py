@@ -380,10 +380,12 @@ def run():
     ub_ = b3_.b_reservoir(ug_("00062", "NAVD88", 0.18, 829.65))
     assert "About 1.9 ft below the Corps seasonal target (831.7 ft today)." in ub_["body"] and "Bottom of operating pool" in ub_["body"] and "800.08 ft" in ub_["body"] and "full" not in ub_["body"].lower() and not ub_["amber"], "Corps target block: lead, bottom of operating pool or wording wrong"
     assert b3_.b_reservoir(dict(ug_("00062", "NAVD88", 0.18, 829.65), now=t0_ + datetime.timedelta(hours=80)))["amber"], "Corps target: a value older than STALE_H (72 h) was not marked stale"
-    js_ = {"location-levels": {"location-levels": [{"name": "Allatoona.Elev.Inst.0.Top of Conservation", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 831.6522]]}]}},
-                                                   {"name": "Allatoona.Elev.Inst.0.Bottom of Operating", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 800]]}]}},
-                                                   {"name": "Allatoona.Elev.Inst.0.Top of Conservation Zone 2", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 824.7]]}]}}]}}
-    assert collect.usace_levels(js_, "Allatoona") == {"top": (831.6522, "NGVD29"), "bottom": (800.0, "NGVD29")}, "CWMS parse: zone 2 taken for the target, or datum misread"
+    uo_ = b3_.b_reservoir(dict(ug_("00062", "NAVD88", 0.18, 829.65), now=t0_ + datetime.timedelta(days=8)))
+    assert uo_ and "Unknown" in uo_["body"] and "seasonal target (" not in uo_["body"], "Corps target: a value past HIDE_H (7 days) still printed as today"
+    js_ = {"location-levels": {"location-levels": [{"name": "Allatoona.Elev.Inst.0.Top of Conservation", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [[iso(ago(hours=24)), 831.9114], [iso(ago(minutes=5)), 831.6522], [iso(ago(hours=-24)), 831.4]]}]}},
+                                                   {"name": "Allatoona.Elev.Inst.0.Bottom of Operating", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [[iso(ago(minutes=5)), 800], [iso(ago(hours=-24)), 799]]}]}},
+                                                   {"name": "Allatoona.Elev.Inst.0.Top of Conservation Zone 2", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [[iso(ago(minutes=5)), 824.7]]}]}}]}}
+    assert collect.usace_levels(js_, "Allatoona") == {"top": (831.6522, "NGVD29"), "bottom": (800.0, "NGVD29")}, "CWMS parse: zone 2 or tomorrow's (last) point taken for the target, or datum misread"
     for bad_ in ({"location-levels": {"location-levels": []}}, {"location-levels": {"location-levels": [dict(js_["location-levels"]["location-levels"][0], values={"parameter": "Elev (m)", "segments": [{"values": [["t", 253.4]]}]})]}}):
         try:
             collect.usace_levels(bad_, "Allatoona")

@@ -1390,6 +1390,8 @@ def usace_full(G):
     p = G["rec"].get("usace_pool") or {}
     if p.get("top_ft") is None or not p.get("datum"):
         return "the Corps' CWMS target pool was not read in this build"
+    if G.get("now") and (G["now"] - parse_t(p["fetched_at"])).total_seconds() / 3600 > HIDE_H["usace_cwms"]:
+        return "the Corps' CWMS target pool was last read over %d days ago" % (HIDE_H["usace_cwms"] // 24)
     loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
     vd = str(loc.get("vertical_datum") or "").replace(" ", "").upper()
     lv = G["sg"][-1][1]

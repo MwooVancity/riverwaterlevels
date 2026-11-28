@@ -308,7 +308,7 @@ def age_chip(age_min):
 
 
 HIDE_H = {"river_forecast": 72, "nwm_guidance": 72, "nwm_medium_range": 72, "forecast_rain_totals": 72, "hourly_forecast": 72, "hourly_heatmap": 72,
-          "weather_forecast": 48, "air_obs": 12, "air_quality": 12, "wpc_outlooks": 6}  # hours after which a source is too old to show at all: the only list of hide limits
+          "weather_forecast": 48, "air_obs": 12, "air_quality": 12, "wpc_outlooks": 6, "usace_cwms": 168}  # hours after which a source is too old to show at all: the only list of hide limits
 
 
 # colour means one thing on every page: now (live gauge, weather station), fc (official forecasts, model guidance), rec (records, computed comparisons), area (agency data, map layers), safe (alerts, impacts, offline gauge)
