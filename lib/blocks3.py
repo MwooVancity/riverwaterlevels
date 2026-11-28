@@ -1,7 +1,7 @@
 """Blocks for the second wave of government sources (NWS forecast point facts, FEMA declarations, NCEI storm events, dams, Reclamation releases, ACIS rain, StreamCat, FEMA flood zones).
 Same registry rules as render.py and blocks2.py. Each block is gated by its source row in data/sources.json.
 """
-import collections, datetime, math, re
+import collections, datetime, json, math, os, re
 from lib.render import *  # block, table, tr, esc, fmt, tzl, parse_t, fdate, SOURCES, ...
 from lib.hero import cdec_avg
 
@@ -1376,20 +1376,59 @@ def lc_day(G):
     return (day_, m["days"][day_][0], m["days"][day_][1]) if day_ else None
 
 
+CWMS_LAKES = {k for k in json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "cwms-lakes.json"), encoding="utf-8")) if not k.startswith("_")}
+SHIFT_MAX_FT = 0.3  # a datum shift bigger than this is not applied: the line is held
+
+
 def usace_full(G):
-    """(full pool ft, datum, USACE estimate?, latest - full) for a USGS lake gauge whose datum USACE also publishes, or None. PLAN 9a.
-    The gauge's own datum decides (00062 at 0 ft above NAVD88 or NGVD29, 62614 NGVD29, 62615 NAVD88); any other datum, or a gap over 30 ft
-    (another project or a scale mismatch), shows nothing: a full-pool number on the wrong datum is a wrong number."""
-    p = G["rec"].get("usace_pool")
-    if not G.get("lake") or not p or not G.get("sg") or not cleared("usace_cwms"):
+    """The Corps seasonal target pool (CWMS 'Top of Conservation') against the USGS lake reading. Four states:
+    None = this lake has no CWMS level (data/cwms-lakes.json): nothing shown. A str = unavailable, why (the page says Unknown): CWMS not read,
+    gauge datum unknown, a datum shift NCAT did not give or over SHIFT_MAX_FT, or a gap over 30 ft (another project or scale).
+    A dict = valid: target, bottom (or None), reading and gap all in the gauge's datum; 'age_h' lets the block mark it stale (lib/core STALE_H)."""
+    if not G.get("lake") or G.get("site") not in CWMS_LAKES or not G.get("sg") or not cleared("usace_cwms"):
         return None
+    p = G["rec"].get("usace_pool") or {}
+    if p.get("top_ft") is None or not p.get("datum"):
+        return "the Corps' CWMS target pool was not read in this build"
     loc = ((G["rec"].get("meta") or {}).get("loc")) or {}
     vd = str(loc.get("vertical_datum") or "").replace(" ", "").upper()
-    datum = {"62614": "NGVD29", "62615": "NAVD88"}.get(G["lake"]) or (vd if G["lake"] == "00062" and vd in ("NAVD88", "NGVD29") and loc.get("altitude") is not None and abs(float(loc["altitude"])) < 0.05 else None)  # 0.0 ft is a real altitude (falsy-zero caught by the fixture)
-    full = (p.get(datum) or {}) if datum else {}
-    if full.get("ft") is None or abs(G["sg"][-1][1] - full["ft"]) > 30:
-        return None
-    return full["ft"], datum, bool(full.get("estimated")), G["sg"][-1][1] - full["ft"]
+    lv = G["sg"][-1][1]
+    if G["lake"] in ("62614", "72020"):
+        gd = "NGVD29"
+    elif G["lake"] == "62615":
+        gd = "NAVD88"
+    elif G["lake"] == "00062" and vd in ("NAVD88", "NGVD29") and loc.get("altitude") is not None:
+        gd, lv = vd, lv + float(loc["altitude"])  # reading above the gauge datum + the datum's own altitude = elevation on that datum (0.0 is a real altitude)
+    else:
+        return "the gauge's vertical datum is not stated"
+    shift = 0.0
+    if gd != p["datum"]:
+        s = p.get("shift") or {}
+        if (s.get("from"), s.get("to")) != (p["datum"], gd) or s.get("ft") is None:
+            return "no datum shift from %s to %s could be read" % (p["datum"], gd)
+        if abs(s["ft"]) > SHIFT_MAX_FT:
+            return "the %s to %s shift here is %.2f ft, too large to apply" % (p["datum"], gd, s["ft"])
+        shift = s["ft"]
+    top = p["top_ft"] + shift
+    if abs(lv - top) > 30:
+        return "the reading and the Corps target are over 30 ft apart"
+    bot = p.get("bottom_ft")
+    return {"top": top, "bottom": None if bot is None else bot + shift, "datum": gd, "level": lv, "gap": lv - top, "shift": shift, "from": p["datum"],
+            "age_h": (G["now"] - parse_t(p["fetched_at"])).total_seconds() / 3600 if G.get("now") else None, "p": p}
+
+
+def target_words(u):
+    """'About 1.9 ft below the Corps seasonal target (831.7 ft today)'; within 0.2 ft 'Near the Corps seasonal target (...)'. Never 'full', never a verdict."""
+    tail = "the Corps seasonal target (%s ft today)" % "{:,.1f}".format(u["top"])
+    g = gap_01(u["gap"])
+    if g <= 0.2:
+        return "Near " + tail
+    return "About %.1f ft %s %s" % (g, "below" if u["gap"] < 0 else "above", tail)
+
+
+def gap_01(x):
+    """|x| rounded half-up to 0.1 ft (round() gives 0.2 for 0.25); one rule for the block, the tile and the near band."""
+    return math.floor(abs(x) * 10 + 0.5 + 1e-9) / 10
 
 
 def b_reservoir(G):
@@ -1404,14 +1443,18 @@ def b_reservoir(G):
         return block("reservoir", "How full the reservoir is", "agency", table(["Measure", esc(tzl(t_, G["zone"]))], rows, right=(1,)),
                      "Source: California Data Exchange Center reservoir profile for station %s (capacity, %s-%s monthly averages, read %s) and its hourly storage. The two percents are our calculation: storage divided by CDEC's capacity, and by CDEC's average for the month." % (esc(G.get("agy_st") or ""), c["avg_from"], c["avg_to"], esc(fdate(c["fetched_at"][:10]))), "cdec")
     uf = usace_full(G)
-    if uf:  # PLAN 9a: USACE's normal full pool (top of conservation; it moves with the season)
-        ft, dat, est, gap = uf
-        lead = '<p class="lead">%.2f ft %s full pool today (US Army Corps of Engineers).</p>' % (abs(gap), "below" if gap < 0 else "above")
-        rows = "".join(tr([a, b], right=(1,)) for a, b in (("Full pool today: USACE top of conservation, ft %s%s" % (dat, ", USACE's own estimate" if est else ""), "{:,.2f} ft".format(ft)),
-                                                          ("Latest reading (USGS)", "{:,.2f} ft".format(G["sg"][-1][1])),
-                                                          ("Difference (our calculation)", "%+.2f ft" % gap)))
-        return block("reservoir", "How full the lake is", "agency", lead + table(["Measure", "Value"], rows, right=(1,)),
-                     "Source: US Army Corps of Engineers, Corps Water Management System, %s %s 'Top of Conservation', fetched %s; preliminary, for general information only. The lake reading is USGS's on the same datum; the difference is our calculation." % (esc(G["rec"]["usace_pool"]["office"]), esc(G["rec"]["usace_pool"]["loc"]), esc(fdate(G["rec"]["usace_pool"]["fetched_at"][:10]))), "usace_cwms")
+    src_ = 'Source: <a href="https://water.usace.army.mil/" rel="noopener">US Army Corps of Engineers, CWMS</a>'
+    if isinstance(uf, str):  # unavailable: the page says Unknown and why, never a guessed target
+        return block("reservoir", "The Corps seasonal target", "agency", "<p>Unknown: %s.</p>" % esc(uf), src_ + ".", "usace_cwms")
+    if uf:  # the Corps' seasonal target pool (Top of Conservation, the guide curve; it moves with the season)
+        p = uf["p"]
+        rows = [("Corps seasonal target today (Top of Conservation), ft %s" % uf["datum"], "{:,.2f} ft".format(uf["top"])), ("Latest reading (USGS), ft %s" % uf["datum"], "{:,.2f} ft".format(uf["level"])),
+                ("Difference (our calculation)", "%s%.1f ft" % ("-" if uf["gap"] < 0 and gap_01(uf["gap"]) else "+", gap_01(uf["gap"])))]
+        if uf["bottom"] is not None:
+            rows.append(("Bottom of operating pool (Corps), ft %s" % uf["datum"], "{:,.2f} ft".format(uf["bottom"])))
+        conv = (" The Corps publishes %s; we added NOAA NGS NCAT's %+.2f ft shift to %s here." % (uf["from"], uf["shift"], uf["datum"])) if uf["from"] != uf["datum"] else " The Corps and USGS use the same datum here."
+        return block("reservoir", "The Corps seasonal target", "agency", '<p class="lead">%s.</p>' % target_words(uf) + table(["Measure", "Value"], "".join(tr([esc(a), b], right=(1,)) for a, b in rows), right=(1,)),
+                     "%s, %s %s 'Top of Conservation'%s, read %s; preliminary, for general information only.%s The difference is our calculation." % (src_, esc(p["office"]), esc(p["loc"]), " and 'Bottom of Operating'" if uf["bottom"] is not None else "", esc(tzl(parse_t(p["fetched_at"]), G["zone"])), conv), "usace_cwms", amber=uf["age_h"])
     hit = lc_day(G)
     if hit:  # Lake Mead: Reclamation Lower Colorado Region's daily table
         m = dict(G["rec"]["usbr_lc"], date=hit[0], elev_ft=hit[1], content_af=hit[2])

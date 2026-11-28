@@ -394,6 +394,7 @@ def hero(G, pages=None):
         tw_, lc_ = G["rec"].get("twdb") or {}, b3.lc_day(G)  # hater review 2026-11-07: "Not published" beside the page's own TWDB or Reclamation storage table
         alt_ = (lc_[2], "Water stored, Reclamation daily table, %s" % fdate(lc_[0])) if lc_ else (tw_["storage_af"], "Total storage, all pools, TWDB daily estimate, %s (conservation storage is in the table below)" % fdate(tw_["date"])) if not st_ and tw_.get("storage_af") is not None and b3.b_reservoir(G) else None
         uf_ = None if st_ or alt_ else b3.usace_full(G)
+        uf_ = uf_ if isinstance(uf_, dict) else None  # unavailable says Unknown in its block; the tile shows only a valid target
         if not (st_ or alt_):  # no storage number: the page still says so (never blank), after the elevation; truth_tests lake contract. Gate 2026-11-11: the full-pool branch dropped it and Hartwell, Lanier, Barren were carried
             late_ = (ui.tile("flow", "flow", "Storage", "Not applicable", "<small>A Great Lake has no reservoir storage.</small>") if G["lake"] == "IGLD" else
                      ui.tile("flow", "flow", "Storage", "Unknown" if G.get("agy") or (G["rec"].get("usgs") or {}).get("truncated") else "Not published",
@@ -402,8 +403,8 @@ def hero(G, pages=None):
             tiles = (ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(alt_[0]), "<small>%s</small>" % esc(alt_[1])) if alt_ and not st_ else
                      ui.tile("flow", "flow", "Storage", '%s <small><abbr title="acre-feet">acre-ft</abbr></small>' % "{:,.0f}".format(st_[-1][1]), "<small>Water stored in the reservoir, USGS, %s</small>" % esc(tzl(st_[-1][0], G["zone"]))))
         elif uf_:  # audit 2026-11-10 #8: what lake searchers check, from the USACE row the reservoir block already shows
-            tiles = ui.tile("flow", "flow", "Compared with full pool", '%.2f <small>ft %s</small>' % (abs(uf_[3]), "below" if uf_[3] < 0 else "above"),
-                            "<small>USACE full pool today %s ft %s%s; the difference from the USGS reading is our calculation.</small>" % ("{:,.2f}".format(uf_[0]), esc(uf_[1]), " (USACE estimate)" if uf_[2] else ""))
+            tiles = ui.tile("flow", "flow", "Compared with the Corps seasonal target", ("Near" if b3.gap_01(uf_["gap"]) <= 0.2 else '%.1f <small>ft %s</small>' % (b3.gap_01(uf_["gap"]), "below" if uf_["gap"] < 0 else "above")),
+                            "<small>%s. US Army Corps of Engineers, ft %s; the difference from the USGS reading is our calculation.</small>" % (esc(b3.target_words(uf_)), esc(uf_["datum"])))
         else:  # audit 2026-11-10 #8: a tile with no number never leads; it follows the elevation (late_ above)
             tiles = ""
         late_, tiles = tiles + late_, ""  # owner 2026-11-18 "one set template": the lake level leads like every page's water level; storage or full pool follows it

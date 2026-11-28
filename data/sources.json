@@ -148,7 +148,8 @@
    "evidence": "Legal notice read 2026-11-27: reproduction authorised without a purpose limit if the origin is cited (ads and commercial use not named; no restriction stated)",
    "evidence_url": "https://www.chebro.es/web/guest/aviso-legal",
    "evidence_phrase": "Salvo que se indique lo contrario, la reproducción queda autorizada siempre que se cite su origen."
-  },
+  },
+
   {
    "id": "boe_nav",
    "name": "BOE: Guadiana navigation resolutions (BOE-A-2020-9897, BOE-A-2024-14200)",
@@ -166,7 +167,8 @@
    "evidence": "BOE legal notice read 2026-11-27",
    "evidence_url": "https://www.boe.es/informacion/aviso_legal/index.php",
    "evidence_phrase": "Las presentes condiciones permiten la reutilización de los documentos sometidos a ellas para fines comerciales y no comerciales"
-  },
+  },
+
   {
    "id": "ridb",
    "name": "Recreation.gov RIDB (federal recreation facilities)",
@@ -784,9 +786,26 @@
    "id": "usace_cwms",
    "name": "USACE Corps Water Management System (CWMS) data dissemination",
    "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
    "terms_url": "https://water.usace.army.mil/",
    "read_on": "2026-11-09",
-   "summary": "Read 2026-11-09 in the owner's Chrome: 'The CWMS Data Dissemination website is a public accessible map based repository of water resources data that includes elevation, precipitation, storage, and flow status'; 'All data contained herein is preliminary in nature and therefore subject to change. The data is for general information purposes ONLY'. Plus the DoD website banner (monitoring consent). No bar on reuse, ads or caching. Label every value preliminary, USACE.",
+   "summary": "Read 2026-11-09 in the owner's Chrome: 'The CWMS Data Dissemination website is a public accessible map based repository of water resources data that includes elevation, precipitation, storage, and flow status'; 'All data contained herein is preliminary in nature and therefore subject to change. The data is for general information purposes ONLY'. Plus the DoD website banner (monitoring consent). No bar on reuse, ads or caching. Label every value preliminary, USACE. USACE is a federal agency: 17 U.S.C. 105, 'Copyright protection under this title is not available for any work of the United States Government'. 2026-11-27: the site and the CDA API root are script-only pages (curl reads no text), so the 2026-11-09 reading stands; levels endpoint re-read live (Allatoona.Elev*, 13 levels, parameter 'Elev (ft NGVD29)').",
+   "blocks": [
+    "reservoir"
+   ]
+  },
+  {
+   "id": "ngs_ncat",
+   "name": "NOAA National Geodetic Survey, NCAT coordinate conversion (vertical datum shift NGVD29 to NAVD88)",
+   "status": "quoted",
+   "ads": "allowed",
+   "commercial": "allowed",
+   "cache": "allowed",
+   "terms_url": "https://geodesy.noaa.gov/NCAT/",
+   "read_on": "2026-11-27",
+   "summary": "Used only to put the Corps target (NGVD29) on the USGS gauge's datum (NAVD88); no NCAT number is shown alone, the shift is named in the Source line. NOAA is a federal agency: 17 U.S.C. 105, 'Copyright protection under this title is not available for any work of the United States Government'. NGS's own disclaimer page was not found by curl on 2026-11-27 (geodesy.noaa.gov/disclaimer.shtml returned no text); no NGS term barring reuse, ads or caching was seen. Reply read 2026-11-27 at Allatoona: srcOrthoht 253.488 m NGVD29, destOrthoht 253.511 m NAVD88 (+0.023 m).",
    "blocks": []
   },
   {

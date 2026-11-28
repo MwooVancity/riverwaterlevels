@@ -364,10 +364,32 @@ def run():
     lv_ = collect.imi_live("station_id,longitude,latitude,time,Water_Level_OD_Malin\n,degrees_east,degrees_north,UTC,metres\nGalway Port,-9.048,53.269,2026-11-10T02:20:00Z,0.409\nGalway Port 2,-9.047911,53.26926,2026-11-10T02:20:00Z,0.534\nGalway Port,-9.048,53.269,2026-11-10T02:10:00Z,0.38\nHowth Water Level 2,-6.06,53.39,2026-11-10T02:20:00Z,NaN\n")
     assert lv_["Galway Port"]["series"] == [["2026-11-10T02:10:00+00:00", 0.38], ["2026-11-10T02:20:00+00:00", 0.409]] and lv_["Galway Port 2"]["series"][-1][1] == 0.534 and "Howth Water Level 2" not in lv_, "Irish live tides: sensors mixed, order wrong, or a NaN kept"
     from lib import blocks3 as b3_
-    up_ = {"office": "SAM", "loc": "Buford", "fetched_at": "2026-11-10T03:17:03+00:00", "NGVD29": {"ft": 1070.346, "estimated": False}, "NAVD88": {"ft": 1070.571, "estimated": True}}
-    ug_ = lambda lake, vd, alt, lv: {"lake": lake, "sg": [(t0_, lv, {})], "rec": {"usace_pool": up_, "meta": {"loc": {"vertical_datum": vd, "altitude": alt}}}}
-    assert b3_.usace_full(ug_("00062", "NAVD88", 0.0, 1062.5)) == (1070.571, "NAVD88", True, 1062.5 - 1070.571) and b3_.usace_full(ug_("62614", "", None, 1062.5))[1] == "NGVD29", "Lanier full pool: the gauge's datum was not matched to USACE's value in that datum"
-    assert b3_.usace_full(ug_("00062", "NAVD88", 812.4, 30.1)) is None and b3_.usace_full(ug_("00062", "NAVD88", 0.0, 1020.0)) is None, "full pool shown for a gauge datum with an offset, or a 50 ft gap (another project)"
+    up_ = {"office": "SAM", "loc": "Allatoona", "fetched_at": "2026-11-09T14:00:00+00:00", "datum": "NGVD29", "top_ft": 831.6522, "bottom_ft": 800.0, "shift": {"from": "NGVD29", "to": "NAVD88", "ft": 0.075}}
+    ug_ = lambda lake, vd, alt, lv, p=up_, site="02393500": {"site": site, "lake": lake, "now": t0_, "zone": zoneinfo.ZoneInfo("America/New_York"), "sg": [(t0_, lv, {})], "rec": {"usace_pool": p, "meta": {"loc": {"vertical_datum": vd, "altitude": alt}}}}
+    u_ = b3_.usace_full(ug_("00062", "NAVD88", 0.18, 829.65))  # Allatoona 2026-11-27: gauge datum 0.18 ft NAVD88, Corps NGVD29, NCAT +0.075 ft
+    assert abs(u_["top"] - 831.7272) < 1e-6 and abs(u_["level"] - 829.83) < 1e-6 and b3_.target_words(u_) == "About 1.9 ft below the Corps seasonal target (831.7 ft today)", "Corps target: shift or gauge-datum altitude not applied, or wording/rounding wrong: %r" % (u_,)
+    assert b3_.usace_full(ug_("62614", "", None, 831.0))["shift"] == 0.0, "Corps target: same datum (NGVD29) must compare without a shift"
+    assert b3_.target_words(dict(u_, gap=-0.2)).startswith("Near the Corps seasonal target") and b3_.target_words(dict(u_, gap=0.25)) == "About 0.3 ft above the Corps seasonal target (831.7 ft today)" and b3_.target_words(dict(u_, gap=-0.04)).startswith("Near"), "Corps target: near-target band (0.2 ft) or 0.1 ft rounding wrong"
+    assert isinstance(b3_.usace_full(ug_("00062", "NAVD88", 0.18, 829.65, dict(up_, shift={"from": "NGVD29", "to": "NAVD88", "ft": None}))), str), "Corps target: NCAT failed but the line was not held"
+    assert isinstance(b3_.usace_full(ug_("00062", "NAVD88", 0.18, 829.65, dict(up_, shift={"from": "NGVD29", "to": "NAVD88", "ft": 0.41}))), str), "Corps target: a datum shift over 0.3 ft was applied"
+    assert isinstance(b3_.usace_full(ug_("00062", "IGLD85", 0.0, 829.65)), str) and isinstance(b3_.usace_full(ug_("00062", "NAVD88", None, 829.65)), str), "Corps target: unknown gauge datum or altitude not held"
+    assert isinstance(b3_.usace_full(ug_("00062", "NAVD88", 0.0, 790.0)), str), "Corps target: a 30 ft gap (another project or scale) was shown"
+    assert b3_.usace_full(ug_("00062", "NAVD88", 0.18, 829.65, site="00000000")) is None and b3_.b_reservoir(ug_("00062", "NAVD88", 0.18, 829.65, site="00000000")) is None, "Corps target: a lake with no CWMS level must show nothing"
+    ue_ = b3_.b_reservoir(ug_("00062", "NAVD88", 0.18, 829.65, {}))
+    assert ue_ and "Unknown" in ue_["body"] and "seasonal target (" not in ue_["body"], "Corps target: CWMS empty or not read must say Unknown"
+    ub_ = b3_.b_reservoir(ug_("00062", "NAVD88", 0.18, 829.65))
+    assert "About 1.9 ft below the Corps seasonal target (831.7 ft today)." in ub_["body"] and "Bottom of operating pool" in ub_["body"] and "800.08 ft" in ub_["body"] and "full" not in ub_["body"].lower() and not ub_["amber"], "Corps target block: lead, bottom of operating pool or wording wrong"
+    assert b3_.b_reservoir(dict(ug_("00062", "NAVD88", 0.18, 829.65), now=t0_ + datetime.timedelta(hours=80)))["amber"], "Corps target: a value older than STALE_H (72 h) was not marked stale"
+    js_ = {"location-levels": {"location-levels": [{"name": "Allatoona.Elev.Inst.0.Top of Conservation", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 831.6522]]}]}},
+                                                   {"name": "Allatoona.Elev.Inst.0.Bottom of Operating", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 800]]}]}},
+                                                   {"name": "Allatoona.Elev.Inst.0.Top of Conservation Zone 2", "values": {"parameter": "Elev (ft NGVD29)", "segments": [{"values": [["t", 824.7]]}]}}]}}
+    assert collect.usace_levels(js_, "Allatoona") == {"top": (831.6522, "NGVD29"), "bottom": (800.0, "NGVD29")}, "CWMS parse: zone 2 taken for the target, or datum misread"
+    for bad_ in ({"location-levels": {"location-levels": []}}, {"location-levels": {"location-levels": [dict(js_["location-levels"]["location-levels"][0], values={"parameter": "Elev (m)", "segments": [{"values": [["t", 253.4]]}]})]}}):
+        try:
+            collect.usace_levels(bad_, "Allatoona")
+            raise AssertionError("CWMS parse: an empty reply or a parameter without unit ft and datum was accepted")
+        except RuntimeError:
+            pass
     lcg_ = lambda days: {"lake": True, "sg": [(t0_, 1039.66, {})], "rec": {"usbr_lc": {"days": days, "cap_af": 26120000, "cap_elev_ft": 1219.6}}}
     assert b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000], "2026-11-08": [1039.66, 6954000]})) == ("2026-11-08", 1039.66, 6954000) and b3_.lc_day(lcg_({"2026-11-07": [1039.55, 6947000]})) == ("2026-11-07", 1039.55, 6947000), "Lake Mead storage: the matching day was not used, or a table one day behind RISE left storage Unknown (live 2026-11-09)"
     nw = datetime.datetime(2026, 11, 7, 18, tzinfo=datetime.timezone.utc)

@@ -1,0 +1,7 @@
+{
+ "_note": "USGS lake gauge -> [USACE office, CWMS location] whose '<loc>.Elev.Inst.0.Top of Conservation' level is that same reservoir. Hand-checked, never fuzzy: Buford (aliases name USGS 02334400), Hartwell, Allatoona (alias GA03742) and Barren probed 2026-11-09; Allatoona re-read 2026-11-27 (13 levels, Top of Conservation 831.65 ft NGVD29). A lake not listed shows no Corps target line.",
+ "02334400": ["SAM", "Buford"],
+ "02187010": ["SAS", "Hartwell"],
+ "02393500": ["SAM", "Allatoona"],
+ "03312900": ["LRL", "Barren"]
+}

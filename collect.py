@@ -2033,24 +2033,53 @@ def fetch_glsea(letter):
     return {"fetched_at": now_iso(), "lake": letter, "date": day.isoformat(), "temp_f": val, "avg_f": avg, "avg_from": m.group(1), "avg_to": m.group(2)}
 
 
-LAKE_USACE = {"02334400": ("SAM", "Buford"), "02187010": ("SAS", "Hartwell"), "02393500": ("SAM", "Allatoona"), "03312900": ("LRL", "Barren")}  # PLAN 9a, probed 2026-11-09: each CWMS project with a 'Top of Conservation' level (Buford's aliases name USGS 02334400; the rest matched by project name and checked on the page by distance)
+LAKE_USACE = {k: tuple(v) for k, v in json.load(open(os.path.join(ROOT, "data", "cwms-lakes.json"), encoding="utf-8")).items() if not k.startswith("_")}  # explicit, hand-checked table (never a fuzzy name match); lib/blocks3 reads the same file
 
 
-def usace_level(js):
-    """(value ft, parameter text) of the newest point of a CWMS location-level reply, or raises (never a guessed value)."""
-    x = js["location-levels"]["location-levels"][0]
-    return float(x["values"]["segments"][-1]["values"][-1][1]), x["values"]["parameter"]
+def usace_levels(js, loc):
+    """{'top': (ft, datum), 'bottom': (ft, datum) or absent} from one CWMS '<loc>.Elev*' reply in ft. Raises when the reply has no Top of
+    Conservation or a parameter that is not 'Elev (ft <DATUM>)' (never a guessed unit or datum); the previous cache is then kept."""
+    out = {}
+    for x in js["location-levels"]["location-levels"]:
+        key = {loc + ".Elev.Inst.0.Top of Conservation": "top", loc + ".Elev.Inst.0.Bottom of Operating": "bottom"}.get(x.get("name"))
+        if not key:
+            continue
+        m = re.fullmatch(r"Elev \(ft ([A-Z0-9]+)\)", x["values"]["parameter"])
+        if not m:
+            raise RuntimeError("CWMS %s parameter %r is not ft on a named datum" % (x["name"], x["values"]["parameter"]))
+        out[key] = (float(x["values"]["segments"][-1]["values"][-1][1]), m.group(1))
+    if "top" not in out:
+        raise RuntimeError("CWMS has no Top of Conservation for %s" % loc)
+    return out
 
 
-def fetch_usace_pool(office, loc):
-    """USACE CWMS 'Top of Conservation' (the normal full pool, seasonal) in NGVD29 and USACE's own NAVD88 conversion; preliminary, USACE. 2 calls a day."""
-    out = {"fetched_at": now_iso(), "office": office, "loc": loc}
-    for datum in ("NGVD29", "NAVD88"):
-        url = "https://cwms-data.usace.army.mil/cwms-data/levels?office=%s&level-id-mask=%s&unit=EN&format=json%s" % (office, urllib.parse.quote(loc + ".Elev.Inst.0.Top of Conservation"), "" if datum == "NGVD29" else "&datum=NAVD88")
-        v, par = usace_level(json.loads(get_text(url, headers={"Accept": "application/json;version=2"})))
-        if datum not in par:
-            raise RuntimeError("CWMS returned %r for %s" % (par, datum))
-        out[datum] = {"ft": v, "estimated": "estimated" in par}
+def fetch_ncat(lat, lon, frm, to, m):
+    """NOAA NGS NCAT vertical shift (ft) from datum frm to to at this point; raises on anything but NGVD29 -> NAVD88 or a reply without a number."""
+    if (frm, to) != ("NGVD29", "NAVD88"):
+        raise RuntimeError("no NCAT shift for %s -> %s" % (frm, to))
+    d = http_json("https://geodesy.noaa.gov/api/ncat/llh?" + urllib.parse.urlencode({"lat": lat, "lon": lon, "inDatum": "NAD83(1986)", "outDatum": "NAD83(1986)", "inVertDatum": frm, "outVertDatum": to, "orthoHt": m}), timeout=60)
+    return round((float(d["destOrthoht"]) - float(d["srcOrthoht"])) / 0.3048, 3)
+
+
+def fetch_usace_pool(office, loc, rec):
+    """USACE CWMS seasonal target pool ('Top of Conservation', the guide curve) and Bottom of Operating, in the datum CWMS states; preliminary, USACE.
+    One CWMS call a day per mapped lake: an office-wide mask ('*.Elev.Inst.0.*') returns ORA-20998 (tried 2026-11-27), so it is per location.
+    When the gauge's datum differs, the NCAT shift is fetched once per site and kept (it never changes); a failed NCAT stores None and the page holds the line."""
+    lv = usace_levels(json.loads(get_text("https://cwms-data.usace.army.mil/cwms-data/levels?office=%s&level-id-mask=%s&unit=EN&format=json" % (office, urllib.parse.quote(loc + ".Elev*")), headers={"Accept": "application/json;version=2"})), loc)
+    out = {"fetched_at": now_iso(), "office": office, "loc": loc, "datum": lv["top"][1], "top_ft": lv["top"][0]}
+    if "bottom" in lv and lv["bottom"][1] == lv["top"][1]:
+        out["bottom_ft"] = lv["bottom"][0]
+    gd = str((((rec.get("meta") or {}).get("loc")) or {}).get("vertical_datum") or "").replace(" ", "").upper()
+    if gd and gd != out["datum"]:
+        old = (rec.get("usace_pool") or {}).get("shift") or {}
+        if old.get("from") == out["datum"] and old.get("to") == gd and old.get("ft") is not None:
+            out["shift"] = old
+        else:
+            try:
+                out["shift"] = {"from": out["datum"], "to": gd, "ft": fetch_ncat(rec["lat"], rec["lon"], out["datum"], gd, round(out["top_ft"] * 0.3048, 3))}
+            except Exception as e:
+                note("ncat", "failed", e)
+                out["shift"] = {"from": out["datum"], "to": gd, "ft": None}
     return out
 
 
@@ -2361,7 +2390,7 @@ def fetch_extras(site, rec, h, log):
                     *((("twdb", lambda: fetch_twdb(LAKE_TWDB[site])),) if LAKE_TWDB.get(site) else ()),
                     *((("cdec_res", lambda: fetch_cdec_res(AGENCY[site][5:])),) if AGENCY.get(site, "").startswith("cdec:") else ()),
                     *((("usbr_lc", fetch_lc_mead),) if AGENCY.get(site) == "rise:6123" else ()),
-                    *((("usace_pool", lambda: fetch_usace_pool(*LAKE_USACE[site])),) if site in LAKE_USACE else ()),
+                    *((("usace_pool", lambda: fetch_usace_pool(*LAKE_USACE[site], rec)),) if site in LAKE_USACE else ()),
                     *((("nid", lambda: fetch_nid(site, rec)),) if nid_key(site, rec) else ()),
                     *((("glsea", lambda: fetch_glsea(GLSEA_LAKE[LAKE_NAME[site]])),) if LAKE_NAME.get(site) in GLSEA_LAKE else ()),
                     *((("usno", lambda: fetch_usno(lat, lon)),) if site in COASTS else ()),
@@ -2381,6 +2410,7 @@ def fetch_extras(site, rec, h, log):
             continue
         early = key == "fieldmeas" and rec.get("fieldmeas") is not None and "chan" not in rec["fieldmeas"]  # one early refresh per gauge for depth (2026-11-09): 216 gauges x 2 calls once; new gauges fetch it anyway
         early = early or (key == "floodtide" and rec.get("floodtide") is None and (stamp.get(key) or "") < "2026-11-14T15" and now_iso() < "2026-11-21")  # one early refetch: a 404 for flood levels was stamped as read (Clearwater 8726706, 2026-11-14); 3 NOAA calls per coast once
+        early = early or (key == "usace_pool" and "top_ft" not in (rec.get("usace_pool") or {"top_ft": 0}))  # 2026-11-27 new shape (one call, datum named): a cache in the old shape refetches once
         early = early or (key == "peaks" and any(len(r) < 5 for r in ((rec.get("peaks") or {}).get("rows") or [])))
         early = early or (key == "floodfreq" and rec.get("floodfreq") is not None and rec["floodfreq"].get("rangev") != 2)  # peer review #7: one early refresh for the 1% row's record years, about 264 StreamStats calls once  # PLAN 17: one early refresh for the qualifier codes, about 264 gauges x 1 call once
         if not want and not early and not (due(stamp.get(key), 720) if key in MONTHLY else week_due(stamp.get(key), site) if key in WEEKLY else daily_due(stamp.get(key)) if key in DAILY else due(stamp.get(key), 24 if NEXT and key in ("near_wtemp", "cameras") else 6)):
