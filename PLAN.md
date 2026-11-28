@@ -13,6 +13,7 @@ History: `docs/plan-history.md` (the whole pre-trim file is there under "Trimmed
 - LIVE 2026-11-27 SPAIN MAX HELPFUL (owner: no pause): places from OpenStreetMap (27 of 50 pages; refresh by hand about quarterly, tools/es_access.py; block hides after a year) and fill month by month, last 10 years (50 pages). Read live: 50 pages, place links match data, none noindex; two independent reviews, phone shots read (first read FAIL on the month table, fixed and live).
   Not built: official bathing list (ministry download has a bot check: owner downloads censoaguasbano_2025.zip, CC BY 4.0); weather warnings (AEMET key and warning-feed terms unconfirmed); fishing and boating rules per reservoir (reuse unconfirmed, not researched per reservoir). Still no ads on /es/. Map-place edge cases open: distance uses outline corners; names not checked on the ground; one beach name may appear twice when over 300 m apart.
 - Bug, not fixed: collect.py fetch_es does not wait a day after a parse or zip failure (re-downloads hourly). Nits: chart aria label lower-cases names; CLAUDE.md still says English only and "same tags" (Spain has no ad loader).
+- Candidate: Kinneret (Sea of Galilee) level page, Israel Water Authority daily level; first read its reuse terms (decision 7), then demand check. Edge cases: Hebrew-only source, level below sea level (negative metres), red-line thresholds quoted only from the agency.
 - Open Spain gaps: no Spanish consent or privacy page; Analytics consent-denied pings UNVERIFIED; first changed weekly file not yet seen.
 
 ## Goal
